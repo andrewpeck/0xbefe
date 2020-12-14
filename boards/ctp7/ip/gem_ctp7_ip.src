@@ -1,0 +1,12 @@
+# -*- mode: TCL;-*-
+
+# CTP7 IP
+boards/ctp7/ip/daq_spy_fifo/daq_spy_fifo.xci
+boards/ctp7/ip/gth_amc13_1/gth_amc13_1.xci
+boards/ctp7/ip/ila_clk_phase_check/ila_clk_phase_check.xci
+boards/ctp7/ip/ila_gbt_clock/ila_gbt_clock.xci
+boards/ctp7/ip/ila_ttc_clocks/ila_ttc_clocks.xci
+boards/ctp7/ip/vio_lpgbt_loopback/vio_lpgbt_loopback.xci
+boards/ctp7/ip/vio_ttc_clocks/vio_ttc_clocks.xci
+boards/ctp7/ip/vio_vfat3_sc/vio_vfat3_sc.xci
+

@@ -1,0 +1,17 @@
+# -*- mode: TCL;-*-
+
+# CVP13 IP
+boards/cvp13/ip/pcie_qdma/pcie_qdma.xci
+boards/cvp13/ip/axi_bram_ctrl_test/axi_bram_ctrl_test.xci
+boards/cvp13/ip/vio_qsfp_control/vio_qsfp_control.xci
+boards/cvp13/ip/vio_test/vio_test.xci
+# the following IPs are not really needed, they're just there for testing and experimentation
+boards/cvp13/ip/axi_lite_bram_ctrl/axi_lite_bram_ctrl.xci
+boards/cvp13/ip/gty_gbt/gty_gbt.xci
+boards/cvp13/ip/gty_gbt_rx_buf/gty_gbt_rx_buf.xci
+boards/cvp13/ip/gty_lpgbt/gty_lpgbt.xci
+boards/cvp13/ip/ibert_qsfp/ibert_qsfp.xci
+boards/cvp13/ip/ibert_qsfp_10g/ibert_qsfp_10g.xci
+boards/cvp13/ip/ila_gty_reset/ila_gty_reset.xci
+boards/cvp13/ip/ila_test/ila_test.xci
+boards/cvp13/ip/pcie_qdma_simple/pcie_qdma_simple.xci
