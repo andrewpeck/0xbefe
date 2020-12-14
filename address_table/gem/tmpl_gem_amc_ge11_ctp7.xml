@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE node [
+<!ENTITY STATION "1">
+<!ENTITY NUM_OHS "12">
+<!ENTITY NUM_GBTS_PER_OH "3">
+<!ENTITY NUM_VFATS_PER_OH "24">
+<!ENTITY NUM_OPTICAL_LINKS "64">
+<!ENTITY ADDRESS_TABLE_TTC SYSTEM "../common/ttc.xml">
+<!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
+<!ENTITY ADDRESS_TABLE_CTP7 SYSTEM "../boards/ctp7.xml">
+]>
+<node id="GEM_AMC" xmlns:xi="http://www.w3.org/2001/XInclude">
+  &ADDRESS_TABLE_TTC;
+  &ADDRESS_TABLE_GEM_AMC;
+  &ADDRESS_TABLE_CTP7;  
+</node>

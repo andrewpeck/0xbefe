@@ -1,0 +1,68 @@
+<!-- Optical links module -->
+<node id="OPTICAL_LINKS"  address="0x1400000"
+      description="This module contains counters and control registers of all the optical links on the board (regardless of link rate or what they connect to)"
+      fw_is_module="true"
+      fw_is_module_external="true">
+
+  <node id="MGT_CHANNEL_${MGT}" address="0x0"
+        description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer here for MGT channel to fiber mapping: https://docs.google.com/spreadsheets/d/1-AE7GeeU10GfLB-9FYOMN4k0-Z7bVkiQpLfXC4G2irI"
+        generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000040" generate_idx_var="MGT">
+
+    <node id="RESET" address="0x1" permission="rw"
+          description="Writing 1 to bit 0 will trigger MGT TX channel reset, and writing 1 to bit 1 will trigger the MGT RX channel reset (write 3 to trigger both)">
+      <node id="TX_RESET" address="0x0" mask="0x00000001" permission="rw"
+            description="Writing 1 to this reg will trigger MGT TX channel reset"/>
+      <node id="RX_RESET" address="0x0" mask="0x00000002" permission="rw"
+            description="Writing 1 to this reg will trigger MGT RX channel reset"/>
+      <node id="CPLL_RESET" address="0x0" mask="0x00000004" permission="rw"
+            description="Writing 1 to this reg will trigger MGT CPLL reset"/>
+    </node>
+
+    <node id="CTRL" address="0x2" permission="rw"
+          description="This register exposes multiple MGT controls: bit 0 -- TX powerdown, bit 1 -- RX powerdown, bit 2 -- TX polarity, bit 3 -- RX polarity, bit 4 -- loopback, bit 5 -- TX inhibit, bit 6 -- RX low power mode enable">
+      <node id="TX_POWERDOWN" address="0x0" mask="0x00000001" permission="rw"
+            description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"/>
+      <node id="RX_POWERDOWN" address="0x0" mask="0x00000002" permission="rw"
+            description="Setting this to 1 will powerdown the RX (writes 11 to RXPD), and 0 will put it in normal power mode (writes 00 to RXPD)"/>
+      <node id="TX_POLARITY" address="0x0" mask="0x00000004" permission="rw"
+            description="Setting this to 1 will invert the polarity of TX, setting to 0 will result in normal TX polarity"/>
+      <node id="RX_POLARITY" address="0x0" mask="0x00000008" permission="rw"
+            description="Setting this to 1 will invert the polarity of RX, setting to 0 will result in normal RX polarity"/>
+      <node id="LOOPBACK" address="0x0" mask="0x00000010" permission="rw"
+            description="Setting this to 1 will enable the near-end PMA loopback of the MGT (sets MGT LOOPBACK port to 010). This is an expert debug feature."/>
+      <node id="TX_INHIBIT" address="0x0" mask="0x00000020" permission="rw"
+            description="Setting this to 1 will inhibit the TX channel (forces MGTHTXP to 0 and MGTHTXN to 1). This is an expert debug feature."/>
+      <node id="RX_LOW_POWER_MODE" address="0x0" mask="0x00000040" permission="rw"
+            description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."/>
+      <node id="RX_PRBS_SEL" address="0x1" mask="0x00000007" permission="rw"
+            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"/>
+      <node id="TX_PRBS_SEL" address="0x1" mask="0x00000070" permission="rw"
+            description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"/>
+      <node id="PRBS_CNT_RESET" address="0x2" mask="0x00000001" permission="w"
+            description="Writing 1 here resets the PRBS error counters"/>
+      <node id="RX_ERROR_CNT_RESET" address="0x3" mask="0x00000001" permission="w"
+            description="Writing 1 here resets the RX error counters for this channel (not in table and disperr)"/>
+    </node>
+
+    <node id="STATUS" address="0x0" permission="r">
+      <node id="TX_RESET_DONE" address="0x0" mask="0x00000001" permission="r"
+            description="TX reset done signal"/>
+      <node id="RX_RESET_DONE" address="0x0" mask="0x00000002" permission="r"
+            description="RX reset done signal"/>
+      <node id="CPLL_LOCKED" address="0x0" mask="0x00000004" permission="r"
+            description="CPLL locked signal"/>
+      <node id="CPLL_REF_CLK_LOST" address="0x0" mask="0x00000008" permission="r"
+            description="CPLL reference clock is lost if this is 1"/>
+      <node id="PRBS_ERROR_CNT" address="0x4" permission="r"
+            description="PRBS error counter"/>
+      <node id="PRBS_ERROR_CNT" address="0x4" permission="r"
+            description="PRBS error counter"/>
+      <node id="RX_NOT_IN_TABLE_CNT" address="0x5" permission="r"
+            description="RX not-in-table counter"/>
+      <node id="RX_DISPERR_CNT" address="0x6" permission="r"
+            description="RX disparity error counter"/>
+    </node>
+
+  </node>
+
+</node> <!--End of optical links module -->

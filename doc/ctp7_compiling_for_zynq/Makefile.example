@@ -1,0 +1,23 @@
+PETA_STAGE=/path/to/petalinux/stage
+
+CFLAGS= -fomit-frame-pointer -pipe -fno-common -fno-builtin \
+	-Wall \
+	-march=armv7-a -mfpu=neon -mfloat-abi=softfp \
+	-mthumb-interwork -mtune=cortex-a9 \
+	-DEMBED -Dlinux -D__linux__ -Dunix -fPIC \
+	-I$(PETA_STAGE)/usr/include \
+	-I$(PETA_STAGE)/include
+
+LDLIBS= -L$(PETA_STAGE)/stage/lib \
+	-L$(PETA_STAGE)/stage/usr/lib
+
+CXX=arm-xilinx-linux-gnueabi-g++
+CC=arm-xilinx-linux-gnueabi-gcc
+
+build: my_c_app my_cpp_app
+
+my_c_app: my_c_app.c
+	$(CC) $(CFLAGS) $(LDLIBS) -o $@ $<
+
+my_cpp_app: my_cpp_app.cpp
+	$(CXX) $(CFLAGS) $(LDLIBS) -o $@ $<

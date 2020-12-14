@@ -1,0 +1,73 @@
+1/30/2016 version 0x14
+Fixed a bug in checking event number in header and trailer
+module daq_link_7s.vhd modified
+module TTS_TRIG_if.vhd modified
+12/22/2015 version 0x13
+Added logic to protect against illeagal input data
+from collapsing the system
+module daq_link_7s.vhd modified
+11/12/2015 version 0x12
+Output port Ready is now permanently connected to '1'(Always ready)
+When InitLink received, the signal is extended until all data in AMC are
+emptied, which is important if AMC got more data than expected when ReSync
+is received.
+module DAQ_link_7s.vhd modified
+8/18/2015 version 0x11
+Added input signal ReSyncAndEmpty for
+proper ReSync operation
+After receiving a ReSync TTC command, an AMC module can either continue 
+to send the data in its buffer until the buffer is empty, or simply clear the
+buffer. Once its buffer is empty, the AMC module should assert the ReSyncAndEmpty
+signal high for at least 10ns and when it is ready to receive L1A, set TTS to ready.
+(According to ReSync spec, AMC should set its TTS to busy after receiving the ReSync)
+AMC13 will forward AMC data to the DAQ and fill with fake event data if necessary.
+4/11/2015 version 0x10
+fixed a bug which causes TTC-trigger data bit errors
+modules hamming.vhd and DAQ_LINK_7s.vhd changed
+4/10/2015 version 0xf
+fixed a bug which causes evn mismatche
+Only module DAQ_LINK_7s.vhd changed
+4/3/2015 version 0xe
+fixed a potential bug which can cause evn, bcn and ocn mismatches
+Only module DAQ_LINK_7s.vhd changed
+4/2/2015 version 0xd
+bug introduced in 0xc fixed
+modules DAQ_Link_V6.vhd and TTS_TRIG_IF.vhd changed
+4/1/2015 version 0xc
+CriticalTTS added to DAQ_Link_7s.vhd(bit 11-9 of reg 0x2e) 
+reset(Ready_i low) lengthened
+Only module DAQ_LINK_7s.vhd changed
+3/29/2015 version 0xb
+This new version fixed a bug in TTS_TRIG_if.vhd which can cause amc13 to
+amc connection difficulties.
+The generic parameter USE_TRIGGER_PORT has been moved to an input port.
+There are three other new ports at the end of the port list.
+During instantiation, connect '0' to port sysclk and assign open to ports
+L1A_DATA_we and L1A_DATA. These ports are used in other designs and now
+they can share the same code.
+
+In module's declaration or its instantiation, set the
+generic parameter F_REFCLK as your design's frequency of the GTX reference
+clock
+
+If you are using amc13 firmware 0x4xxx, input port USE_TRIGGER_PORT
+should be set to boolean value TRUE in your instantiation, otherwise
+set it to FALSE
+
+please include the following line in your xst file:
+
+create_clock -period 4.000 -name DAQ_usrclk [get_pins */i_DAQ_Link_7s/i_UsrClk/o]
+
+where i_DAQ_Link_7s is the instance name of the module DAQ_Link_7s
+in its upper level module.
+
+This zip file includes following files:
+
+DAQ_LINK_7s.vhd		top module
+FIFO_rest_7S.vhd
+EthernetCRCD32.vhd
+CRC16D16.vhd
+TTS_TRIG_if.vhd
+RAM32x6Db.vhd
+Hamming.vhd
+ReleaseNote.txt		this file

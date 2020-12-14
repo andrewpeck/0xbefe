@@ -1,0 +1,1310 @@
+<!--Trigger module -->
+<node id="TRIGGER"  address="0x00800000"
+      description="Trigger module handles everything related to sbit cluster data
+                   (link synchronization, monitoring, local triggering, matching to L1A and reporting data to DAQ)"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/trigger/trigger.vhd"
+      fw_user_clock_signal="ttc_clk_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="12"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0"
+        description="Trigger control">
+    <node id="MODULE_RESET" address="0x0" permission="w"
+          description="Trigger module reset"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="CNT_RESET" address="0x1" permission="w"
+          description="Trigger counter reset"
+          fw_write_pulse_signal="reset_cnt"
+          sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
+    <node id="OH_KILL_MASK" address="0x2" mask="0x00ffffff" permission="rw"
+          description="OH trigger kill mask (kills all sbits from the corresponding OHs)"
+          fw_signal="oh_mask"
+          fw_default="0x000000"/>
+  </node>
+
+  <node id="STATUS" address="0x10"
+        description="Trigger status">
+    <node id="OR_TRIGGER_RATE" address="0x0" permission="r"
+          description="OR-Trigger rate (Hz) -- this trigger fires whenever there's at least one valid sbit cluster on any link"
+          fw_signal="or_trigger_rate"
+          sw_monitor_warn_min_threshold="1000000"/>
+    <node id="OR_TRIGGER_CNT" address="0x1" permission="r"
+          description="OR-Trigger count -- this trigger fires whenever there's at least one valid sbit cluster on any link"
+          fw_signal="or_trigger_cnt"/>
+  </node>
+
+  <node id="SBIT_MONITOR" address="0x80"
+        description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
+    <node id="RESET" address="0x0" permission="w"
+          description="Reset the sbit monitor module and re-arm for triggering"
+          fw_write_pulse_signal="sbitmon_reset"/>
+    <node id="OH_SELECT" address="0x1" mask="0x0000000f" permission="rw"
+          description="Selects the OH to monitor and trigger on"
+          fw_signal="sbitmon_link_select"
+          fw_default="0x0"/>
+    <node id="CLUSTER${CLUSTER_IDX}" address="0x2" mask="0x0000ffff" permission="r"
+          description="Last cluster ${CLUSTER_IDX}"
+          fw_signal="'0' &amp; sbitmon_sbits(${CLUSTER_IDX}).size &amp; '0' &amp; sbitmon_sbits(${CLUSTER_IDX}).address"
+          generate="true" generate_size="8" generate_address_step="0x1" generate_idx_var="CLUSTER_IDX"/>
+    <node id="L1A_DELAY" address="0xa" mask="0xffffffff" permission="r"
+          description="Number of BX between this sbit and the subsequent L1A"
+          fw_signal="sbitmon_l1a_delay"/>
+  </node>
+
+  <node id="OH${OH_IDX}" address="0x100"
+        description="Trigger link for OH ${OH_IDX}"
+        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x100" generate_idx_var="OH_IDX">
+    <node id="TRIGGER_RATE" address="0x0" permission="r"
+          description="Trigger rate (Hz) -- this trigger fires whenever there's at least one valid sbit cluster"
+          fw_signal="trigger_rate(${OH_IDX})"
+          sw_monitor_warn_min_threshold="1000000"/>
+    <node id="TRIGGER_CNT" address="0x1" permission="r"
+          description="Trigger count -- this trigger fires whenever there's at least one valid sbit cluster"
+          fw_signal="trigger_cnt(${OH_IDX})"
+          sw_monitor_warn_min_threshold="1000000"/>
+    <node id="CLUSTER_SIZE_${CS_IDX}_RATE" address="0x10" permission="r"
+          description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
+          fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
+          generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
+    <node id="CLUSTER_SIZE_${CS_IDX}_CNT" address="0x20" permission="r"
+          description="Count of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
+          fw_signal="cluster_cnt(${OH_IDX} * 9 + ${CS_IDX})"
+          generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
+    <node id="LINK0_SBIT_OVERFLOW_CNT" address="0xa0" mask="0x0000ffff" permission="r"
+          description="Count of overflow markers received from OH on lin 0"
+          fw_signal="sbit_overflow_cnt(${OH_IDX})(15 downto 0)"
+          sw_monitor_error_min_threshold="100"/>
+    <node id="LINK1_SBIT_OVERFLOW_CNT" address="0xa0" mask="0xffff0000" permission="r"
+          description="Count of overflow markers received from OH on link 1"
+          fw_signal="sbit_overflow_cnt(${OH_IDX})(31 downto 16)"
+          sw_monitor_error_min_threshold="100"/>
+    <node id="LINK0_MISSED_COMMA_CNT" address="0xa1" mask="0x0000ffff" permission="r"
+          description="Count of missed comma character at the expected time for link 0 (this indicates an out-of-sync condition)"
+          fw_signal="missed_comma_cnt(${OH_IDX})(15 downto 0)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK1_MISSED_COMMA_CNT" address="0xa1" mask="0xffff0000" permission="r"
+          description="Count of missed comma character at the expected time for link 1 (this indicates an out-of-sync condition)"
+          fw_signal="missed_comma_cnt(${OH_IDX})(31 downto 16)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK0_OVERFLOW_CNT" address="0xa3" mask="0x0000ffff" permission="r"
+          description="Count of overflow occurances in the sync FIFO for link 0"
+          fw_signal="link_overflow_cnt(${OH_IDX})(15 downto 0)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK1_OVERFLOW_CNT" address="0xa3" mask="0xffff0000" permission="r"
+          description="Count of overflow occurances in the sync FIFO for link 1"
+          fw_signal="link_overflow_cnt(${OH_IDX})(31 downto 16)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK0_UNDERFLOW_CNT" address="0xa4" mask="0x0000ffff" permission="r"
+          description="Count of underflow occurances in the sync FIFO for link 0"
+          fw_signal="link_underflow_cnt(${OH_IDX})(15 downto 0)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK1_UNDERFLOW_CNT" address="0xa4" mask="0xffff0000" permission="r"
+          description="Count of underflow occurances in the sync FIFO for link 1"
+          fw_signal="link_underflow_cnt(${OH_IDX})(31 downto 16)"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="LINK0_SYNC_WORD_CNT" address="0xa5" mask="0x0000ffff" permission="r"
+          description="Count of sync words seen on link 0"
+          fw_signal="sync_word_cnt(${OH_IDX})(15 downto 0)"/>
+    <node id="LINK1_SYNC_WORD_CNT" address="0xa5" mask="0xffff0000" permission="r"
+          description="Count of sync words seen on link 1"
+          fw_signal="sync_word_cnt(${OH_IDX})(31 downto 16)"/>
+  </node>
+
+</node>
+<!--end trigger module -->
+
+<!--GEM System module -->
+<node id="GEM_SYSTEM"  address="0x00900000"
+      description="This module is controlling GEM AMC System wide settings"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/misc/gem_system_regs.vhd"
+      fw_user_clock_signal="ttc_clks_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="16"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x100">
+    <node id="GLOBAL_RESET" address="0x0" permission="w"
+          description="Global reset of the GEM logic, including the reset of all registers to the default value"
+          fw_write_pulse_signal="global_reset_trig"
+          sw_ctrl_configure_set="0x1"/>
+    <node id="LINK_RESET" address="0x1" permission="w"
+          description="Reset the links to and from OHs and redo VFAT3 sync procedure"
+          fw_write_pulse_signal="manual_link_reset_o"
+          sw_ctrl_configure_set="0x1"/>
+  </node>
+
+  <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
+        description="Board ID that gets embedded in the AMC13 header"
+        fw_signal="board_id" fw_default="0xbeef"/>
+  <node id="BOARD_TYPE" address="0x2" mask="0x000f0000" permission="r"
+        description="Board type: 0 means GLIB, 1 means CTP7"
+        fw_signal="board_type"/>
+
+  <node id="RELEASE" address="0x3">
+    <node id="MAJOR" address="0x0" mask="0x00ff0000" permission="r"
+          description="Firmware release major version"
+          fw_signal="std_logic_vector(to_unsigned(version_major, 8))"/>
+    <node id="MINOR" address="0x0" mask="0x0000ff00" permission="r"
+          description="Firmware release minor version"
+          fw_signal="std_logic_vector(to_unsigned(version_minor, 8))"/>
+    <node id="BUILD" address="0x0" mask="0x000000ff" permission="r"
+          description="Firmware release build version"
+          fw_signal="std_logic_vector(to_unsigned(version_build, 8))"/>
+    <node id="GEM_STATION" address="0x0" mask="0x03000000" permission="r"
+          description="GEM station that this firmware was compiled for (0 means ME0, 1 means GE1/1, 2 means GE2/1)"
+          fw_signal="std_logic_vector(to_unsigned(gem_station, 2))"/>
+    <node id="DATE" address="0x1" permission="r"
+          description="Firmware release date (read as hex)"
+          fw_signal="firmware_date"/>
+  </node>
+
+  <node id="CONFIG" address="0x5">
+    <node id="NUM_OF_OH" address="0x0" mask="0x0000001f" permission="r"
+          description="Number of supported optohybrids"
+          fw_signal="num_of_oh"/>
+  </node>
+
+  <node id="VFAT3" address="0x10">
+    <node id="SC_ONLY_MODE" address="0x1" mask="0x00000002" permission="rw"
+          description="When this is set to 0 then comm port of VFAT3s will be set to normal mode, otherwise they will be set to slow-control-only mode. This setting is applied to all VFATs during link reset and whenever this value is changed."
+          fw_signal="vfat3_sc_only_mode" fw_default="0b0"/>
+    <node id="USE_OH_V3B_MAPPING" address="0x1" mask="0x00000004" permission="rw"
+          description="If set high, then will use the v3b elink assignments for the OH FPGA communication, otherwise v3a"
+          fw_signal="use_v3b_elink_mapping" fw_default="0b1"/>
+    <node id="USE_VFAT_ADDRESSING" address="0x1" mask="0x00000008" permission="rw"
+          description="If set high, then HDLC address will be set to the same number as the slot number when sending slow control packets to VFATs -- note this requires that the HDLC address is set accordingly on the GEB. If this is 0, then an HDLC address of 0 is always used for all slots (default VFAT address when HDLC address pins are left unconnected)"
+          fw_signal="use_vfat_addressing" fw_default="0b0"/>
+  </node>
+
+  <node id="TESTS" address="0x200">
+    <node id="GBT_LOOPBACK_EN" address="0x0" mask="0x00000001" permission="rw"
+          description="GBT Loopback test enable -- if this is true then all GBT links are redirected to the loopback test
+                       module and the test module is enabled (communication with optohybrid is not possible during the test)"
+          fw_signal="loopback_gbt_test_en" fw_default="0b0"
+          sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x0"/>
+  </node>
+
+  <node id="GEM_LOADER" address="0x400">
+    <node id="LOAD_REQUEST_CNT" address="0x0" mask="0x0000ffff" permission="r"
+          description="Number of OH programming requests (note, the counter is 16bit rolling)"
+          fw_signal="gemloader_stats_i.load_request_cnt"/>
+    <node id="LOAD_SUCCESS_CNT" address="0x0" mask="0xffff0000" permission="r"
+          description="Number of successful OH programming attempts (note, the counter is 16bit rolling)"
+          fw_signal="gemloader_stats_i.success_cnt"/>
+    <node id="LOAD_FAIL_CNT" address="0x1" mask="0x0000ffff" permission="r"
+          description="Number of failed OH programming attempts (note, the counter is 16bit rolling)"
+          fw_signal="gemloader_stats_i.fail_cnt"/>
+    <node id="STREAM_GAP_CNT" address="0x1" mask="0xffff0000" permission="r"
+          description="Number of times that a gap has been detected in the bitfile stream before reaching the end (note, the counter is 16bit rolling)"
+          fw_signal="gemloader_stats_i.gap_detect_cnt"/>
+    <node id="LOADER_OVF_UNF_CNT" address="0x2" mask="0x0000ffff" permission="r"
+          description="Number of times that the gemloader IP has reported a FIFO overflow or underflow (note, the counter is 16bit rolling)"
+          fw_signal="gemloader_stats_i.loader_ovf_unf_cnt"/>
+  </node>
+
+  <node id="LEGACY_SYSTEM" address="0x10000"
+        description="Legacy system registers (taken from GLIB system core). These should be removed once the software is
+                     made compatible with the new system registers.">
+
+    <node id="BOARD_ID" address="0x0" permission="r"
+          description="GLIB Board ID code"
+          fw_signal="legacy_board_id"/>
+    <node id="SYSTEM_ID" address="0x1" permission="r"
+          description="GLIB System ID code"
+          fw_signal="legacy_sys_id"/>
+    <node id="FIRMWARE_VERSION" address="0x2" permission="r"
+          description="GLIB firmware version + firmware date"
+          fw_signal="legacy_fw_version"/>
+  </node>
+</node>
+
+<!--GEM Tests module -->
+<node id="GEM_TESTS"  address="0x00A00000"
+      description="This module is controlling various hardware tests e.g. fiber loopback"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/tests/gem_tests.vhd"
+      fw_user_clock_signal="ttc_clk_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="16"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="reset all test modules"
+          fw_write_pulse_signal="reset_local"/>
+  </node>
+
+  <node id="OH_LOOPBACK" address="0x1000"
+          description="This module controls the OH PRBS loopback tester (this tester can be connected to one OH at a time by using the OH_SELECT register). This module sends a PRBS7 8b sequence to all elinks of the chosen OH, and checks each elink of that OH with the same sequence checker">
+    <node id="CTRL" address="0x0">
+      <node id="RESET" address="0x0" permission="w"
+            description="reset the PRBS loopback module"
+            fw_write_pulse_signal="gbt_loop_reset"/>
+      <node id="OH_SELECT" address="0x1" mask="0x0000000f" permission="rw"
+        description="This register sets the index of the OH that the loopback tester is going to be testing"
+        fw_signal="gbt_loop_oh_select" fw_default="0x0"/>
+      <node id="INJECT_ERR" address="0x2" permission="w"
+        description="Writing to this register will result in one error being injected to the PRBS TX data going to the OH"
+        fw_write_pulse_signal="gbt_loop_err_inject"/>
+    </node>
+    <node id="GBT_${GBT_IN_OH_IDX}"  address="0x10"
+          description="Link specific registers for GBT ${GBT_IN_OH_IDX}"
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x100" generate_idx_var="GBT_IN_OH_IDX">
+
+      <node id="ELINK_${ELINK_IDX}"  address="0x0"
+            description="E-link specific registers for e-link ${ELINK_IDX}"
+            generate="true" generate_size="14" generate_address_step="0x2" generate_idx_var="ELINK_IDX">
+
+        <node id="PRBS_LOCKED" mask="0x80000000" permission="r" address="0x0"
+              description="Indicates whether or not the PRBS7 checker is locked on this elink"
+              fw_signal="gbt_loop_locked_arr(${GBT_IN_OH_IDX} * 14 + ${ELINK_IDX})"/>
+        <node id="MEGA_WORD_CNT" permission="r" address="0x1"
+              description="Number of generated data words in units of one million received by this RX elink after PRBS checker has locked"
+              fw_signal="gbt_loop_mega_word_cnt_arr(${GBT_IN_OH_IDX} * 14 + ${ELINK_IDX})"/>
+        <node id="ERROR_CNT" mask="0x7fffffff" permission="r" address="0x0"
+              description="Number of PRBS7 errors found in the received data for this elink"
+              fw_signal="gbt_loop_error_cnt_arr(${GBT_IN_OH_IDX} * 14 + ${ELINK_IDX})(30 downto 0)"/>
+      </node>
+    </node>
+  </node>
+
+  <node id="VFAT_DAQ_MONITOR" address="0x2000"
+          description="This module listens to the DAQ data of 24 VFATs from a selected OH 
+                       and counts the number of good events received and the number of times a selected channel (or any channel) has fired.
+                       This is useful for various scan routines.">
+    <node id="CTRL" address="0x0">
+      <node id="RESET" address="0x0" permission="w"
+            description="reset all the VFAT DAQMON modules"
+            fw_write_pulse_signal="vfat_daqmon_reset"/>
+    <node id="ENABLE" address="0x1" mask="0x00000001" permission="rw"
+        description="This register lets you enable and disable all VFAT DAQMON modules. When disabled all the counters are frozen."
+        fw_signal="vfat_daqmon_enable" fw_default="0b0"/>
+    <node id="OH_SELECT" address="0x1" mask="0x000000f0" permission="rw"
+        description="Selects the desired OH"
+        fw_signal="vfat_daqmon_oh_select" fw_default="0x0"/>
+    <node id="VFAT_CHANNEL_SELECT" address="0x1" mask="0x00007f00" permission="rw"
+        description="Selects the VFAT channel number to listen to"
+        fw_signal="vfat_daqmon_chan_select" fw_default="0x0"/>
+    <node id="VFAT_CHANNEL_GLOBAL_OR" address="0x1" mask="0x00008000" permission="rw"
+        description="If this is set to 1 then the VFAT DAQMONs will OR all the VFAT channels together and ignore the VFAT_CHANNEL_SELECT"
+        fw_signal="vfat_daqmon_chan_global_or" fw_default="0x0"/>
+    </node>
+    <node id="VFAT${VFAT_IDX}"  address="0x10"
+          description="VFAT DAQMON counters for VFAT${VFAT_IDX}"
+          generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x10" generate_idx_var="VFAT_IDX">
+
+      <node id="GOOD_EVENTS_COUNT" mask="0x0000ffff" permission="r" address="0x0"
+            description="Number of good events received from this VFAT (good event means that CRC check has passed ok)"
+            fw_signal="vfat_daqmon_good_evt_cnt_arr(${VFAT_IDX})"/>
+      <node id="CHANNEL_FIRE_COUNT" mask="0xffff0000" permission="r" address="0x0"
+            description="Number of times the selected channel has fired"
+            fw_signal="vfat_daqmon_chan_fire_cnt_arr(${VFAT_IDX})"/>
+
+    </node>
+  </node>
+
+</node>
+
+<!--DAQ module -->
+<node id="DAQ"  address="0x00700000"
+      description="DAQ module buffers track data, builds events, analyses the data for consistency
+                   and ships off the events with all the needed headers and trailers to AMC13 over DAQLink"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/daq/daq.vhd"
+      fw_user_clock_signal="ipb_clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="8"
+      fw_reg_addr_lsb="0">
+
+  <node id="CONTROL"  address="0x0"
+        description="DAQ Control">
+    <node id="DAQ_ENABLE"         address="0x0" mask="0x00000001" permission="rw"
+          description="If this is set to 0, there will be no data sent to AMC13 and TTS state will always be READY (0x8)"
+          fw_signal="daq_enable" fw_default="0b0"/>
+    <node id="DAQ_LINK_RESET"     address="0x0" mask="0x00000004" permission="rw"
+          description="Directly connected to DAQLink module reset port. BU is
+                       advising against ever using it except for powerup, but it
+                       may clear some error conditions (like daqlink_almost_ful
+                       stuck at 1). AMC13 reset is probably required after this."
+          fw_signal="reset_daqlink_ipb" fw_default="0b0"/>
+    <node id="RESET"              address="0x0" mask="0x00000008" permission="rw"
+          description="Clears all FIFOs, state flags and counters. It also stops and
+                       resets all state machines (no events will be built, recorded
+                       or sent during reset)
+                       When set to 1, it will be held in reset state until 0 is
+                       explicitly written (this can be changed in the future if
+                       necessary)"
+          fw_signal="reset_local" fw_default="0b0"/>
+    <node id="ZERO_SUPPRESSION_EN"              address="0x0" mask="0x00000002" permission="rw"
+          description="Enable/disable VFAT2 zero suppression"
+          fw_signal="zero_suppression_en" fw_default="0b0"/>
+    <node id="TTS_OVERRIDE"       address="0x0" mask="0x000000f0" permission="rw"
+          description="When not 0, it will override the AMC TTS state with the
+                       provided value (e.g. writing 0x8 will force AMC to always be
+                       in TTS READY state)"
+          fw_signal="tts_override" fw_default="0x0"/>
+    <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
+          description="This is a bitmask telling AMC to enable certain inputs (least
+                       significant bit is input 0). Only first is enabled by default"
+          fw_signal="input_mask" fw_default="0x1"/>
+    <node id="DAV_TIMEOUT"        address="0x1"  mask="0x00ffffff" permission="rw"
+          description="This setting controls how long DAQ will wait for individual
+                       inputs to report data before calling it timed-out  (if timeout
+                       occurs a header and trailer for that chamber will still be
+                       inserted and timeout flag will be set there, though no VFAT
+                       payload will be present). Units = clock cycles @ 25MHz
+                       (current DAQLink clk frequency)"
+          fw_signal="dav_timeout" fw_default="0x00500"/>
+    <node id="DBG_FANOUT_ENABLE"        address="0x1"  mask="0x01000000" permission="rw"
+          description="This register enables and disables the fanout feature.
+                       This feature is used for testing only. When enabled it will
+                       take the data input from one OH and fan it out to all DAQ module
+                       inputs. The input to be used is controlled by DBG_FANOUT_INPUT reg."
+          fw_signal="dbg_fanout_enable" fw_default="0b0"/>
+    <node id="DBG_FANOUT_INPUT"        address="0x1"  mask="0xf0000000" permission="rw"
+          description="Selects the input to be faned out when the fanout feature is enabled (see DBG_FANOUT_ENABLE)."
+          fw_signal="dbg_fanout_input" fw_default="0x0"/>
+    <node id="DBG_IGNORE_DAQLINK"        address="0x1"  mask="0x02000000" permission="rw"
+          description="This register when set to 1 will cause the DAQ module to ignore the DAQLink ready and DAQLink backpressure signals.
+                       It can be used for fake datarate testing without involving AMC13."
+          fw_signal="dbg_daqlink_ignore" fw_default="0b0"/>
+    <node id="CALIBRATION_MODE_EN"       address="0x2"  mask="0x00000080" permission="rw"
+          description="When set, this enables calibration mode data format, which strips the VFAT payload of most of the data, just leaving 8 bits per VFAT, where [4:0] is the VFAT position, [6:5] is EC, and bit 7 is the chanel information for the channel selected in CALIBRATION_MODE_CHAN (see below)"
+          fw_signal="format_calib_mode" fw_default="0b0"/>
+    <node id="CALIBRATION_MODE_CHAN"       address="0x2"  mask="0x0000007f" permission="rw"
+          description="Channel number for which data will be included in the calibration mode data format (see CALIBRATION_MODE_EN)"
+          fw_signal="format_calib_chan" fw_default="0b0000000"/>
+  </node>
+
+  <node id="EXT_CONTROL"  address="0x40"
+        description="DAQ global extended configuration registers">
+    <node id="RUN_TYPE"       address="0x0"  mask="0x0f000000" permission="rw"
+          description="User settable run type that gets embedded into the AMC header"
+          fw_signal="run_type" fw_default="0x0"/>
+    <node id="RUN_PARAMS"     address="0x0"  mask="0x00ffffff" permission="rw"
+          description="User settable run params that gets embedded into the AMC header"
+          fw_signal="run_params" fw_default="0x000000"/>
+  </node>
+
+  <node id="STATUS"  address="0x50"
+        description="DAQ global status registers">
+    <node id="DAQ_LINK_RDY"    address="0x0"  mask="0x00000001" permission="r"
+          description="When this is 1, it means that AMC is in good communication
+                       with AMC13. It must be 1 for AMC to be able to send data."
+          fw_signal="daq_ready"/>
+    <node id="DAQ_CLK_LOCKED"  address="0x0"  mask="0x00000002" permission="r"
+          description="This flag is 1 if DAQ clock is locked at this moment"
+          fw_signal="daq_clk_locked_i"/>
+    <node id="TTC_RDY"         address="0x0"  mask="0x00000004" permission="r"
+          description="This flag is 1 if TTC clock MMCM is locked"
+          fw_signal="ttc_status_i.clk_status.mmcm_locked"/>
+    <node id="DAQ_LINK_AFULL"       address="0x0"  mask="0x00000008" permission="r"
+          description="This bit comes directly from DAQLink module, indicating
+                       that its internal buffers are almost full. No events will be sent
+                       when this bit is 1 (though events can still be built and
+                       stored in the Input and Event FIFOs)"
+          fw_signal="daq_almost_full"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="DAQ_OUTPUT_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00000010" permission="r"
+          description="This bit is set if DAQ output FIFO has ever been full (critical -- data loss)"
+          fw_signal="err_daqfifo_full"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="TTC_BC0_LOCKED"       address="0x0"  mask="0x00000020" permission="r"
+          description="This bit is set if BC0 is currently locked (last BC0 arrived at the expected time)"
+          fw_signal="ttc_status_i.bc0_status.locked"/>
+    <node id="L1A_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00800000" permission="r"
+          description="This bit is latched whenever L1A FIFO overflow is asserted.
+                       This means that one or more L1As were lost, so we are
+                       out-of-sync: resync or reset is needed"
+          fw_signal="err_l1afifo_full"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="L1A_FIFO_IS_UNDERFLOW"       address="0x0"  mask="0x01000000" permission="r"
+          description="L1A FIFO is in underflow at this moment (this bit is not latched)"
+          fw_signal="l1afifo_underflow"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="L1A_FIFO_IS_FULL"       address="0x0"  mask="0x02000000" permission="r"
+          description="L1A FIFO is full at this moment (this bit is not latched)"
+          fw_signal="l1afifo_full"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="L1A_FIFO_IS_NEAR_FULL"       address="0x0"  mask="0x04000000" permission="r"
+          description="This bit gets asserted when L1A FIFO gets 75% full and deasserted when it gets down to 50%"
+          fw_signal="l1afifo_near_full"/>
+    <node id="L1A_FIFO_IS_EMPTY"       address="0x0"  mask="0x08000000" permission="r"
+          description="L1A FIFO is empty at this moment (this bit is not latched)"
+          fw_signal="l1afifo_empty"/>
+    <node id="TTS_STATE"       address="0x0"  mask="0xf0000000" permission="r"
+          description="Current TTS state (READY, BUSY, ERROR, WARN, OUT-OF-SYNC)"
+          fw_signal="tts_state"/>
+  </node>
+
+  <node id="EXT_STATUS"  address="0x80"
+        description="DAQ global extended status registers">
+    <node id="NOTINTABLE_ERR"  address="0x0"  mask="0x0000ffff" permission="r"
+          description="This counter is counting DAQLink GTX/GTH not-in-table errors"
+          fw_signal="daq_notintable_err_cnt"/>
+    <node id="DISPER_ERR"      address="0x1"  mask="0x0000ffff" permission="r"
+          description="This counter is counting DAQLink GTX/GTH dispersion errors"
+          fw_signal="daq_disper_err_cnt"/>
+    <node id="L1AID"           address="0x2"  mask="0x00ffffff" permission="r"
+          description="Current L1A ID (similar to event number, but this may be a bit ahead of
+                       that if we're still waiting for data for unprocessed L1As)"
+          fw_signal="ttc_daq_cntrs_i.l1id"/>
+    <node id="EVT_SENT"        address="0x3"  permission="r"
+          description="Number of events shipped out to DAQLink"
+          fw_signal="std_logic_vector(cnt_sent_events)"/>
+    <node id="MAX_DAV_TIMER"   address="0x5"  mask="0x00ffffff" permission="r"
+          description="This indicates the maximum amount of time that DAQ had
+                       to wait for all inputs to report data (can be used to optimize
+                       DAV timeout setting). Units = clock cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)
+                       (current DAQLink clk frequency)"
+          fw_signal="std_logic_vector(max_dav_timer)"/>
+    <node id="LAST_DAV_TIMER"  address="0x6"  mask="0x00ffffff" permission="r"
+          description="This indicates how DAQ had to wait for all inputs to report
+                       data for the last event (mostly for debugging). Units = clock
+                       cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)"
+          fw_signal="std_logic_vector(last_dav_timer)"/>
+    <node id="L1A_FIFO_DATA_CNT"  address="0x7"  mask="0x00001fff" permission="r"
+          description="Current number of words in the L1A FIFO (current depth is 8192)"
+          fw_signal="l1afifo_data_cnt"/>
+    <node id="DAQ_FIFO_DATA_CNT"  address="0x7"  mask="0x1fff0000" permission="r"
+          description="Current number of words in the DAQ output FIFO (current depth is 8192)"
+          fw_signal="daqfifo_data_cnt"/>
+    <node id="L1A_FIFO_NEAR_FULL_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
+          description="Number of clocks L1A FIFO was near-full (asserted at 75%, deasserted at 50%)"
+          fw_signal="l1afifo_near_full_cnt"
+          sw_monitor_warn_min_threshold="100"/>
+    <node id="DAQ_FIFO_NEAR_FULL_CNT"  address="0x8"  mask="0xffff0000" permission="r"
+          description="Number of clocks DAQ output FIFO was near-full (asserted at 75%, deasserted at 50%)"
+          fw_signal="daqfifo_near_full_cnt"
+          sw_monitor_warn_min_threshold="100"/>
+    <node id="DAQ_ALMOST_FULL_CNT"  address="0x9"  mask="0x0000ffff" permission="r"
+          description="Number of clocks DAQLink has asserted almost-full flag"
+          fw_signal="daqlink_afull_cnt"/>
+    <node id="TTS_WARN_CNT"  address="0x9"  mask="0xffff0000" permission="r"
+          description="Number of clocks we reported TTS WARNING state"
+          fw_signal="tts_warning_cnt"
+          sw_monitor_warn_min_threshold="100"/>
+    <node id="DAQ_WORD_RATE"  address="0xa"  permission="r"
+          description="Rate of 64bit words being sent out to the DAQLink in Hz (multiply by 64 to get bitrate)"
+          fw_signal="daq_word_rate"
+          sw_monitor_warn_min_threshold="40000"/> <!-- currently running DAQ at 50MHz, which is 3.2Gbs, so warning at 2.5Gbs (could increase to 80MHz to get 5Gbs) -->
+  </node>
+
+  <node id="OH${OH_IDX}"  address="0x100"
+        description="Link specific registers for OH${OH_IDX}"
+        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x10" generate_idx_var="OH_IDX">
+
+    <node id="CONTROL"  address="0x0">
+      <node id="EOE_TIMEOUT" address="0x3"  mask="0x00ffffff" permission="rw"
+            description="Units = clock cycles @ 160MHz.
+                         If no new data was received in this amount of time, AMC
+                         will close the current event and report it to DAQ. This is one
+                         of the two ways to close an event, the other is to get new
+                         data with different BX number"
+            fw_signal="input_control_arr(${OH_IDX}).eb_timeout_delay" fw_default="0x000100"/>
+    </node>
+
+    <node id="STATUS"  address="0x0">
+      <node id="VFAT_MIXED_EC"    mask="0x00000002" permission="r" address="0x0"
+            description="There was at least one event with mixed VFAT Event IDs"
+            fw_signal="input_status_arr(${OH_IDX}).err_mixed_vfat_ec"/>
+      <node id="VFAT_MIXED_BC"  mask="0x00000004" permission="r" address="0x0"
+            description="There was at least one event with mixed VFAT BX IDs"
+            fw_signal="input_status_arr(${OH_IDX}).err_mixed_vfat_bc"/>
+      <node id="OH_MIXED_BC"         mask="0x00000008" permission="r" address="0x0"
+            description="There was at least one event with mixed OH BX IDs (OH BX
+                         ID is reported for every VFAT block, but not sent to
+                         AMC13)."
+            fw_signal="input_status_arr(${OH_IDX}).err_mixed_oh_bc"/>
+
+      <node id="VFAT_TOO_MANY"      mask="0x00000010" permission="r" address="0x0"
+            description="Corruption: more than 24 VFATs in event"
+            fw_signal="input_status_arr(${OH_IDX}).err_event_bigger_than_24"/>
+      <node id="VFAT_SMALL_BLOCK"   mask="0x00000020" permission="r" address="0x0"
+            description="Corruption: VFAT block smaller than 192bits"
+            fw_signal="input_status_arr(${OH_IDX}).err_vfat_block_too_small"/>
+      <node id="VFAT_LARGE_BLOCK"   mask="0x00000040" permission="r" address="0x0"
+            description="Corruption: VFAT block bigger than 192bits"
+            fw_signal="input_status_arr(${OH_IDX}).err_vfat_block_too_big"/>
+      <node id="VFAT_NO_MARKER"     mask="0x00000080" permission="r" address="0x0"
+            description="Corruption: VFAT marker not detected.
+                         There was at least one VFAT block not conforming to the
+                         pattern of Axxx Cxxx Exxx... (see VFAT data format)
+                         Note that this data will still be included in the current event
+                         and sent to AMC13, but it will not be considered in
+                         end-of-event detection"
+            fw_signal="input_status_arr(${OH_IDX}).err_corrupted_vfat_data"/>
+      <node id="INPUT_FIFO_HAD_OFLOW"   mask="0x00000100" permission="r" address="0x0"
+            description="Critical: Input FIFO overflow occurred.
+                         This bit is latched if Input FIFO was ever full when receiving
+                         new data - this means data was lost.
+                         TTS ERROR is asserted when this bit is 1"
+            fw_signal="input_status_arr(${OH_IDX}).err_infifo_full"/>
+      <node id="INPUT_FIFO_HAD_UFLOW"   mask="0x00000200" permission="r" address="0x0"
+            description="Critical: Input FIFO underflow occurred.
+                         This bit is latched if Input FIFO underflow was ever
+                         detected. This means that Event FIFO indicated that there
+                         should be more data than was stored in Input FIFO. This
+                         might happen due to overflow or some other malfunction.
+                         TTS ERROR is asserted when this bit is 1"
+            fw_signal="input_status_arr(${OH_IDX}).err_infifo_underflow"/>
+      <node id="EVENT_FIFO_HAD_OFLOW"   mask="0x00000400" permission="r" address="0x0"
+            description="Critical: Event FIFO overflow occurred.
+                         This bit is latched if Event FIFO was ever full when trying to
+                         build a new event. This means data was lost.
+                         It's not likely that this will ever be asserted because Input
+                         FIFO should overflow first.
+                         TTS ERROR is asserted when this bit is 1"
+            fw_signal="input_status_arr(${OH_IDX}).err_evtfifo_full"/>
+      <node id="EVT_SIZE_ERR"           mask="0x00000800" permission="r" address="0x0"
+            description="Critical: Event size overflow occurred.
+                         This bit is latched if there was an event containing more
+                         than 4096 VFAT blocks. Input FIFO and Event FIFO will be
+                         out-of-sync. This might happen if end-of-event is not
+                         detected properly or for whatever reason AMC is receiving
+                         a stream of VFAT blocks indicating that they belong to the
+                         same event (EC/BC is the same)
+                         TTS ERROR is asserted when this bit is 1"
+            fw_signal="input_status_arr(${OH_IDX}).err_event_too_big"/>
+      <node id="VFAT_INPUT_HAD_OVF"           mask="0x00010000" permission="r" address="0x0"
+            description="Individual VFAT input buffer had overflow. This indicates a logic problem in the firmware and therefore is a critical error"
+            fw_signal="input_status_arr(${OH_IDX}).vfat_fifo_ovf"/>
+      <node id="VFAT_INPUT_HAD_UNF"           mask="0x00020000" permission="r" address="0x0"
+            description="Individual VFAT input buffer had underflow. This indicates a logic problem in the firmware and therefore is a critical error"
+            fw_signal="input_status_arr(${OH_IDX}).vfat_fifo_unf"/>
+      <node id="TTS_STATE"           mask="0x0000f000" permission="r" address="0x0"
+            description="Input TTS state (gets integrated into global TTS state later)"
+            fw_signal="input_status_arr(${OH_IDX}).tts_state"/>
+      <node id="INPUT_FIFO_IS_UFLOW"    mask="0x01000000" permission="r" address="0x0"
+            description="Current status: Input FIFO is in underflow"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_underflow"/>
+      <node id="INPUT_FIFO_IS_FULL"     mask="0x02000000" permission="r" address="0x0"
+            description="Current status: Input FIFO is full"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_full"/>
+      <node id="INPUT_FIFO_IS_AFULL"    mask="0x04000000" permission="r" address="0x0"
+            description="Current status: Input FIFO is near-full (asserted at 75% and deasserted at 50%)"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_near_full"/>
+      <node id="INPUT_FIFO_IS_EMPTY"    mask="0x08000000" permission="r" address="0x0"
+            description="Current status: Input FIFO is empty"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_empty"/>
+      <node id="EVENT_FIFO_IS_UFLOW"    mask="0x10000000" permission="r" address="0x0"
+            description="Current status: Event FIFO is in underflow"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_underflow"/>
+      <node id="EVENT_FIFO_IS_FULL"     mask="0x20000000" permission="r" address="0x0"
+            description="Current status: Event FIFO is full"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_full"/>
+      <node id="EVENT_FIFO_IS_AFULL"    mask="0x40000000" permission="r" address="0x0"
+            description="Current status: Event FIFO is near-full (asserted at 75% and deasserted at 50%)"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_near_full"/>
+      <node id="EVENT_FIFO_IS_EMPTY"    mask="0x80000000" permission="r" address="0x0"
+            description="Current status: Event FIFO is empty"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_empty"/>
+    </node>
+
+    <node id="COUNTERS">
+      <node id="CORRUPT_VFAT_BLK_CNT"  address="0x1" permission="r"
+            description="This counter is incremented when a VFAT block does not
+                         conform to the pattern of Axxx Cxxx Exxx... (see VFAT
+                         data format)
+                         Note that this data is still included in events and sent to
+                         AMC13, but it does not participate in end-of-event
+                         detection."
+            fw_signal="input_status_arr(${OH_IDX}).cnt_corrupted_vfat"/>
+      <node id="EVN"                   address="0x2" mask="0x00ffffff" permission="r"
+            description="Current event number of the event builder.
+                         This counter starts at 1 and increments with each
+                         end-of-event detection. This number should be similar to
+                         the number of events sent to AMC13 in normal operation,
+                         but it might not always be exactly the same because there's
+                         some latency between building an event and sending it. In
+                         addition, event sending could stop due to DAQ FIFO being
+                         almost full or DAQLink not being ready."
+            fw_signal="input_status_arr(${OH_IDX}).eb_event_num"/>
+      <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00000fff" permission="r"
+            description="Current number of words in the Input FIFO (current depth is 4096)"
+            fw_signal="chamber_infifos(${OH_IDX}).data_cnt"/>
+      <node id="EVT_FIFO_DATA_CNT"  address="0x4"  mask="0x0fff0000" permission="r"
+            description="Current number of words in the Event FIFO (current depth is 4096)"
+            fw_signal="chamber_evtfifos(${OH_IDX}).data_cnt"/>
+      <node id="INPUT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0x0000ffff" permission="r"
+            description="Number of times Input FIFO was near-full (asserted at 75%, deasserted at 50%)"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_near_full_cnt"
+            sw_monitor_warn_min_threshold="100"/>
+      <node id="EVT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0xffff0000" permission="r"
+            description="Number of times Event FIFO was near-full (asserted at 75%, deasserted at 50%)"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_near_full_cnt"
+            sw_monitor_warn_min_threshold="100"/>
+      <node id="VFAT_BLOCK_RATE"  address="0x6"  mask="0x00007fff" permission="r"
+            description="Rate of VFAT blocks (192bit words) being written to Input FIFO in Hz (multiply by 192 to get bitrate)"
+            fw_signal="input_status_arr(${OH_IDX}).infifo_wr_rate"
+            sw_monitor_warn_min_threshold="13000"/>
+      <node id="EVT_RATE"  address="0x6"  mask="0xffff8000" permission="r"
+            description="Rate of events being written to Event FIFO in Hz"
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_wr_rate"/>
+      <node id="MAX_EOE_TIMER"         address="0x7" mask="0x00ffffff" permission="r"
+            description="Units = clock cycles @ 160MHz.
+                         This indicates the maximum amount of time that event
+                         builder took to build and close the event. Note: this is
+                         mostly for debugging, most of the time it should be equal
+                         to 'End of event timeout'"
+            fw_signal="input_status_arr(${OH_IDX}).eb_max_timer"/>
+      <node id="LAST_EOE_TIMER"        address="0x8" mask="0x00ffffff" permission="r"
+            description="Units = clock cycles @ 160MHz.
+                         This shows how long event builder took to build and close
+                         the last event. Note: this is mostly for debugging, but could
+                         be used to tune the 'end of event timeout'"
+            fw_signal="input_status_arr(${OH_IDX}).eb_last_timer"/>
+    </node>
+
+  </node>
+</node>
+
+<!-- OH link module -->
+<node id="OH_LINKS"  address="0x00600000"
+      description="OH Link monitoring registers"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/oh/oh_link_regs.vhd"
+      fw_user_clock_signal="clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="12"
+      fw_reg_addr_lsb="0">
+
+  <node id="OH${OH_IDX}" address="0x100"
+        description="Links for OH ${OH_IDX}"
+        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x100" generate_idx_var="OH_IDX">
+
+    <node id="GBT0_READY" address="0x0" mask="0x00000001" permission="r"
+          description="If this is set to 1 it means that CTP7 is receiving valid GBT frames from this GBT link"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 0).gbt_rx_ready"
+          sw_monitor_error_value="0"/>
+    <node id="GBT1_READY" address="0x0" mask="0x00000002" permission="r"
+          description="If this is set to 1 it means that CTP7 is receiving valid GBT frames from this GBT link"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 1).gbt_rx_ready"
+          sw_monitor_error_value="0"/>
+    <node id="GBT2_READY" address="0x0" mask="0x00000004" permission="r" ignore="&STATION;!=1"
+          description="If this is set to 1 it means that CTP7 is receiving valid GBT frames from this GBT link"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_ready"
+          sw_monitor_error_value="0"/>
+
+    <node id="GBT0_WAS_NOT_READY" address="0x0" mask="0x00000008" permission="r"
+          description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 0).gbt_rx_had_not_ready"
+          sw_monitor_warn_value="0"/>
+    <node id="GBT1_WAS_NOT_READY" address="0x0" mask="0x00000010" permission="r"
+          description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 1).gbt_rx_had_not_ready"
+          sw_monitor_warn_value="0"/>
+    <node id="GBT2_WAS_NOT_READY" address="0x0" mask="0x00000020" permission="r" ignore="&STATION;!=1"
+          description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_had_not_ready"
+          sw_monitor_warn_value="0"/>
+
+    <node id="GBT0_RX_HAD_OVERFLOW" address="0x0" mask="0x00000040" permission="r"
+          description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 0).gbt_rx_sync_status.had_ovf"
+          sw_monitor_error_value="0"/>
+    <node id="GBT1_RX_HAD_OVERFLOW" address="0x0" mask="0x00000080" permission="r"
+          description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 1).gbt_rx_sync_status.had_ovf"
+          sw_monitor_error_value="0"/>
+    <node id="GBT2_RX_HAD_OVERFLOW" address="0x0" mask="0x00000100" permission="r" ignore="&STATION;!=1"
+          description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_sync_status.had_ovf"
+          sw_monitor_error_value="0"/>
+
+    <node id="GBT0_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000200" permission="r"
+          description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 0).gbt_rx_sync_status.had_unf"
+          sw_monitor_error_value="0"/>
+    <node id="GBT1_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000400" permission="r"
+          description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 1).gbt_rx_sync_status.had_unf"
+          sw_monitor_error_value="0"/>
+    <node id="GBT2_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000800" permission="r" ignore="&STATION;!=1"
+          description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_sync_status.had_unf"
+          sw_monitor_error_value="0"/>
+
+    <node id="VFAT_MASK" address="0x1" mask="0x00ffffff" permission="rw"
+          description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
+          fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
+
+    <node id="VFAT${VFAT_IDX}" address="0x10"
+          description="Link status of VFAT ${VFAT_IDX} on ${OH_IDX}"
+          generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_IDX">
+
+      <node id="LINK_GOOD" address="0x0" mask="0x00000001" permission="r"
+            description="This flag is set high after detecting 10 consecutive good sync verify replies and set bad after 100 bad ones in a row (sync verify is done once per orbit). This flag can only go high if the initial sync procedure and RX bitslipping was done successfully"
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_good"
+            sw_monitor_error_value="0"/>
+      <node id="SYNC_ERR_CNT" address="0x0" mask="0x000000f0" permission="r"
+            description="This counter counts the total number of times that VFAT3 didn't reply to sync_verify command correctly. This counter doesn't roll over, and is reset on link reset."
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_error_cnt"
+            sw_monitor_error_value="0"/>
+      <node id="DAQ_EVENT_CNT" address="0x0" mask="0x0000ff00" permission="r"
+            description="This counter counts the number of DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_event_cnt"/>
+      <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0x00ff0000" permission="r"
+            description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
+            sw_monitor_warn_value="100"/>
+
+    </node>
+    
+  </node>
+</node>
+
+<!--GEM slow control module -->
+<node id="SLOW_CONTROL"  address="0x00B00000"
+      description="This module is handling slow control (mainly OH SCA and OH GBTx IC related communication)"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/slow_control/slow_control.vhd"
+      fw_user_clock_signal="ttc_clk_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="16"
+      fw_reg_addr_lsb="0">
+
+  <node id="SCA" address="0x0">
+    <node id="CTRL" address="0x0">
+      <node id="MODULE_RESET" address="0x0" permission="w"
+            description="SCA controller reset (coming out of module reset it will also reset and reconfigure the SCA chip)"
+            fw_write_pulse_signal="sca_reset"/>
+      <node id="OH_FPGA_HARD_RESET" address="0x1" permission="w"
+            description="Writing to this register will trigger OH FPGA hard reset"
+            fw_write_pulse_signal="manual_hard_reset"/>
+      <node id="TTC_HARD_RESET_EN" address="0x2" permission="rw"
+            description="This is a bitmask (one bit per OH) that determines whether or not TTC hard reset commands are forwarded to the SCA to reset the OH FPGA (Nth bit set to 1 will enable TTC hard resets to the Nth OH)"
+            fw_signal="sca_ttc_hr_enable" fw_default="0xffffffff"/>
+      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0xffffffff" permission="rw"
+            description="This bitmask defines which SCAs will be reset uppon receipt of MODULE_RESET command."
+            fw_signal="sca_reset_mask" fw_default="0xffffffff"/>
+    </node>
+
+    <node id="STATUS" address="0x100">
+      <node id="READY" address="0x0" mask="0xffffffff" permission="r"
+            description="Bits in this register indicate that the SCA controller for the corresponding link has good communication with the SCA chip"
+            fw_signal="sca_ready_arr"/>
+      <node id="CRITICAL_ERROR" address="0x1" mask="0xffffffff" permission="r"
+            description="Bits in this register indicate that the SCA controller for the corresponding link has encountered a critical error (needs reset)"
+            fw_signal="sca_critical_error_arr"/>
+      <node id="NOT_READY_CNT_OH${OH_IDX}" address="0x2" mask="0x0000ffff" permission="r" 
+            description="Counts the number of times that the SCA controller READY signal went to 0 since last SCA reset"
+            generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00000001" generate_idx_var="OH_IDX"
+            fw_signal="sca_not_ready_cnt_arr(${OH_IDX})"/>
+
+      <!--node id="RX_ERR_CNT" address="0x1" mask="0x0000ffff" permission="r"
+            description="Number of RX errors"
+            fw_signal="sca_rx_err_cnt"/>
+      <node id="SEQ_NUM_ERR_CNT" address="0x1" mask="0xffff0000" permission="r"
+            description="Number of sequence number errors"
+            fw_signal="sca_seq_num_err_cnt"/>
+      <node id="CRC_ERR_CNT" address="0x2" mask="0x0000ffff" permission="r"
+            description="Number of CRC errors"
+            fw_signal="sca_crc_err_cnt"/>
+      <node id="TRANSACTION_TIMEOUT_CNT" address="0x2" mask="0xffff0000" permission="r"
+            description="Number of transaction timeouts"
+            fw_signal="sca_tr_timeout_cnt"/>
+      <node id="TRANSACTION_FAIL_CNT" address="0x3" mask="0x0000ffff" permission="r"
+            description="Number of transaction failures (all retries used up)"
+            fw_signal="sca_tr_fail_cnt"/>
+      <node id="LAST_SCA_ERROR" address="0x3" mask="0x007f0000" permission="r"
+            description="Last error reported by the SCA chip"
+            fw_signal="sca_last_sca_error"/>
+      <node id="TRANSACTION_DONE_CNT" address="0x4" permission="r"
+            description="Number of transactions successfully executed"
+            fw_signal="sca_tr_done_cnt"/-->
+    </node>
+
+    <node id="MANUAL_CONTROL" address="0x1000">
+      <node id="LINK_ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+            description="This is a bitmask of enabled links for the SCA manual command.
+                         Multiple channels can be enabled at the same time, which will 
+                         result in a broadcast command to these channels when writing to the command registers"
+            fw_signal="sca_user_command_en_mask" fw_default="0x00000000"/>
+
+      <node id="SCA_CMD" address="0x1">
+        <node id="SCA_CMD_CHANNEL" address="0x0" mask="0x000000ff" permission="rw"
+              description="Manual SCA command: channel"
+              fw_signal="sca_user_command.channel" fw_default="0x00"/>
+        <node id="SCA_CMD_COMMAND" address="0x0" mask="0x0000ff00" permission="rw"
+              description="Manual SCA command: command"
+              fw_signal="sca_user_command.command" fw_default="0x00"/>
+        <node id="SCA_CMD_LENGTH" address="0x0" mask="0x00ff0000" permission="rw"
+              description="Manual SCA command: length (range = 0 to 4)"
+              fw_signal="sca_user_command.length" fw_default="0x00"/>
+        <node id="SCA_CMD_DATA" address="0x1" permission="rw"
+              description="Manual SCA command: data"
+              fw_signal="sca_user_command.data" fw_default="0x00000000"/>
+        <node id="SCA_CMD_EXECUTE" address="0x2" permission="w"
+              description="Manual SCA command: writing to this register will trigger the execution of the SCA command"
+              fw_write_pulse_signal="sca_user_command_en" fw_write_done_signal="sca_user_command_done_all"/>
+      </node>
+
+      <node id="SCA_REPLY_OH${OH_IDX}" address="0x4"
+            description="SCA reply for Optohybrid ${OH_IDX}"
+            generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00000002" generate_idx_var="OH_IDX">
+
+        <node id="SCA_RPY_CHANNEL" address="0x0" mask="0x000000ff" permission="r"
+              description="SCA reply to the manual command: channel"
+              fw_signal="sca_user_reply_arr(${OH_IDX}).channel"/>
+        <node id="SCA_RPY_ERROR" address="0x0" mask="0x0000ff00" permission="r"
+              description="SCA reply to the manual command: command"
+              fw_signal="sca_user_reply_arr(${OH_IDX}).error"/>
+        <node id="SCA_RPY_LENGTH" address="0x0" mask="0x00ff0000" permission="r"
+              description="SCA reply to the manual command: length (range = 0 to 4)"
+              fw_signal="sca_user_reply_arr(${OH_IDX}).length"/>
+        <node id="SCA_RPY_DATA" address="0x1" permission="r"
+              description="SCA reply to the manual command: data"
+              fw_signal="sca_user_reply_arr(${OH_IDX}).data"/>
+      </node>
+    </node>
+
+    <node id="JTAG" address="0x2500">
+      <node id="CTRL" address="0x0">
+        <node id="ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+              description="This is a bitmask of enabled links for the SCA JTAG commands.
+                           Multiple channels can be enabled at the same time, which will 
+                           result in a broadcast command to these channels when writing to the TDO and TMS registers"
+              fw_signal="jtag_enabled_mask" fw_default="0x00000000"/>
+        <node id="SHIFT_MSB" address="0x1" mask="0x00000002" permission="rw"
+              description="If this is 1 then SCA will shift out bits MSB to LSB and if this is 0 then LSB to MSB (default)"
+              fw_signal="jtag_shift_msb_first" fw_default="0b0"/>
+        <node id="EXPERT" address="0x1">
+          <node id="EXEC_ON_EVERY_TDO" address="0x0" mask="0x00000004" permission="rw"
+                description="EXPERT ONLY: used to optimize firmware downloading, when set high the controller will execute
+                             JTAG_GO after every TDO shift (even if length is higher than 32)"
+                fw_signal="jtag_exec_on_every_tdo" fw_default="0b0"/>
+          <node id="NO_SCA_LENGTH_UPDATE" address="0x0" mask="0x00000008" permission="rw"
+                description="EXPERT ONLY: used to optimize firmware downloading, when set high the controller will
+                             assume that SCA already has the correct length and will not update it before each JTAG_GO"
+                fw_signal="jtag_no_length_update" fw_default="0b0"/>
+          <node id="SHIFT_TDO_ASYNC" address="0x0" mask="0x00000010" permission="rw"
+                description="kindof expert: if this is set high then JTAG controller will acknowledge the TDO shift
+                             command immediately, but if the second command is received while it's still busy it
+                             won't assert jtag_shift_done_o until the previous command is done"
+                fw_signal="jtag_shift_tdo_async" fw_default="0b0"/>
+        </node>
+      </node>
+      <node id="NUM_BITS" address="0x2" mask="0x000007f" permission="rw"
+            description="Number of bits in the JTAG command (0 means 128). Once you shift this number of bits of
+                         TDO data, the JTAG command will be executed and TDI is available for reading"
+            fw_signal="jtag_cmd_length" fw_default="0b0000000"/>
+      <node id="TMS" address="0x3" permission="w"
+            description="TMS bits to shift to the SCA chip. 32 bits are shifted with each write to this register.
+                         The write transaction completes once the bit shifting to the SCA is already done and
+                         confirmed by the SCA, so there's no need to sleep between the consecutive writes to this register."
+            fw_signal="jtag_tms" fw_write_pulse_signal="jtag_shift_tms_en" fw_write_done_signal="jtag_shift_done_all"
+            fw_default="0x00000000"/>
+      <node id="TDO" address="0x4" permission="w"
+            description="TDO bits to shift to the SCA chip. 32 bits are shifted with each write to this register.
+                         Once the number of bits shifted is equal to or greater than the NUM_BITS the JTAG command
+                         will be executed. The write transaction completes once the bit shifting to the SCA is
+                         already done and confirmed by the SCA, so there's no need to sleep between the consecutive
+                         writes to this register."
+            fw_signal="jtag_tdo" fw_write_pulse_signal="jtag_shift_tdo_en" fw_write_done_signal="jtag_shift_done_all"
+            fw_default="0x00000000"/>
+
+      <node id="TDI_OH${OH_IDX}" address="0x5" permission="r"
+            description="When reading this register the TDI bits are shifted from the SCA of OH${OH_IDX} (32 bits with each read)."
+            generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00000001" generate_idx_var="OH_IDX"
+            fw_signal="jtag_tdi_arr(${OH_IDX})" fw_read_pulse_signal="jtag_shift_tdi_en_arr(${OH_IDX})" fw_read_ready_signal="jtag_shift_done_arr(${OH_IDX})"/>
+    </node>
+
+    <!--node id="DEBUG" address="0x3000">
+      <node id="RAW_TX_LAST_CMD_0" address="0x0" permission="r"
+            description="Last raw output on the TX, bits [31:0]"
+            fw_signal="sca_tx_raw_last_cmd(31 downto 0)"/>
+      <node id="RAW_TX_LAST_CMD_1" address="0x1" permission="r"
+            description="Last raw output on the TX, bits [63:32]"
+            fw_signal="sca_tx_raw_last_cmd(63 downto 32)"/>
+      <node id="RAW_TX_LAST_CMD_2" address="0x2" permission="r"
+            description="Last raw output on the TX, bits [95:64]"
+            fw_signal="sca_tx_raw_last_cmd(95 downto 64)"/>
+      <node id="RAW_RX_LAST_RPY_0" address="0x3" permission="r"
+            description="Last raw input on the RX, bits [31:0]"
+            fw_signal="sca_rx_raw_last_reply(31 downto 0)"/>
+      <node id="RAW_RX_LAST_RPY_1" address="0x4" permission="r"
+            description="Last raw input on the RX, bits [63:32]"
+            fw_signal="sca_rx_raw_last_reply(63 downto 32)"/>
+      <node id="RAW_RX_LAST_RPY_2" address="0x5" permission="r"
+            description="Last raw input on the RX, bits [95:64]"
+            fw_signal="sca_rx_raw_last_reply(95 downto 64)"/>
+      <node id="RX_LAST_CALC_CRC" address="0x6" mask="0x0000ffff" permission="r"
+            description="RX last calculated CRC"
+            fw_signal="sca_rx_last_calc_crc"/>
+    </node-->
+
+  </node>
+
+  <node id="IC" address="0x3000">
+    <node id="ADDRESS" address="0x0" mask="0x0000ffff" permission="rw"
+          description="GBTx register address to read or write"
+          fw_signal="ic_address" fw_default="0x0000"/>
+    <node id="READ_WRITE_LENGTH" address="0x1" mask="0x00000007" permission="rw"
+          description="Number of data bytes to be written or read e.g. if you set it to 4 then 4 consecutive
+                       GBTx registers will be written with the 4 bytes in WRITE_DATA register. Max is 4."
+          fw_signal="ic_rw_length" fw_default="0x01"/>
+    <node id="WRITE_DATA" address="0x2" permission="rw"
+          description="GBTx register value to write"
+          fw_signal="ic_write_data" fw_default="0x00"/>
+    <node id="EXECUTE_WRITE" address="0x3" permission="w"
+          description="writing any value here will execute a GBTx register write operation"
+          fw_write_pulse_signal="ic_write_req" fw_write_done_signal="ic_write_done"/>
+    <node id="EXECUTE_READ" address="0x4" permission="w"
+          description="writing any value here will execute a GBTx register read operation"
+          fw_write_pulse_signal="ic_read_req"/>
+    <node id="GBTX_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
+          description="GBTx I2C address as defined by the I2CADDRESS pins of the GBTx chip"
+          fw_signal="ic_gbtx_i2c_addr" fw_default="0b0000001"/>
+    <node id="GBTX_LINK_SELECT" address="0x6" mask="0x0000003f" permission="rw"
+          description="Selects the GBT link to use"
+          fw_signal="ic_link_select" fw_default="0b000000"/>
+  </node>
+
+  <node id="VFAT3" address="0x4000">
+    <node id="CRC_ERROR_CNT" address="0x0" mask="0x0000ffff" permission="r"
+          description="Number of CRC errors in the VFAT3 slow control reply packets"
+          fw_signal="vfat3_sc_status_i.crc_error_cnt"/>
+    <node id="PACKET_ERROR_CNT" address="0x0" mask="0xffff0000" permission="r"
+          description="Number of packet errors in the VFAT3 slow control reply packets. Packet error means that either a received packet was too long, or a packet with good CRC was received but the contents were not as expected, more specifically one or more of the following fields were not correct: transaction ID, HDLC address, HDLC control, IPBus version, IPBus write flag."
+          fw_signal="vfat3_sc_status_i.packet_error_cnt"/>
+    <node id="BITSTUFFING_ERROR_CNT" address="0x1" mask="0x0000ffff" permission="r"
+          description="Number of bitstuffing errors in the VFAT3 slow control reply packets. Bitstuffing error means that more than 5 SC1 characters were received in a row and it was not a frame separator (frame separator is 01111110)."
+          fw_signal="vfat3_sc_status_i.bitstuff_error_cnt"/>
+    <node id="TIMEOUT_ERROR_CNT" address="0x1" mask="0xffff0000" permission="r"
+          description="Number of timeouts while waiting for a slow control reply from a VFAT3."
+          fw_signal="vfat3_sc_status_i.timeout_error_cnt"/>
+    <node id="AXI_STROBE_ERROR_CNT" address="0x2" mask="0x0000ffff" permission="r"
+          description="Number of AXI strobe errors in VFAT3 slow control transactions. An AXI strobe error means that the AXI strobe went away before the VFAT3 slow control state machine replied or timed out. This might be caused by force closing the AXI transaction upstream e.g. a safety timeout in Zynq AXI master."
+          fw_signal="vfat3_sc_status_i.axi_strobe_error_cnt"/>
+    <node id="TRANSACTION_CNT" address="0x2" mask="0xffff0000" permission="r"
+          description="Total number of VFAT3 transactions done so far. This counter rolls over."
+          fw_signal="vfat3_sc_status_i.transaction_cnt"/>
+  </node>
+
+</node>
+
+<!--OptoHybrid module -->
+<node id="OH"  address="0x00400000"
+      description="Optohybrid Registers"
+      fw_is_module="true"
+      fw_is_module_external="true">
+
+  <node id="OH${OH_IDX}"  address="0x0"
+        description="Optohybrid ${OH_IDX}"
+        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00010000" generate_idx_var="OH_IDX">
+
+        <!--Insert here the OH FPGA module -->
+        <xi:include href="optohybrid_registers.xml"/>
+
+    <node id="GEB"  address="0x100000"
+          description="VFAT3 registers">
+
+        <node id="VFAT${VFAT_IDX}"  address="0x0"
+              description="VFAT ${VFAT_IDX}"
+              generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x00000800" generate_idx_var="VFAT_IDX">
+
+          <node id="VFAT_CHANNELS"  address="0x0"
+                description="Registers for the individual VFAT channels
+                             Hardwired sleep value 0x00
+                             Software default value 0x00">
+            <node id="CHANNEL${CHANNEL_IDX}"  address="0x00"  permission="rw"
+                  description="Config register for VFAT channel ${CHANNEL_IDX}"
+                  generate="true" generate_size="128" generate_address_step="0x1" generate_idx_var="CHANNEL_IDX">
+
+              <node id="CALPULSE_ENABLE"  address="0x0" mask="0x00008000"  permission="rw"
+                    description="Enable the calibration pulse to the channel input">
+              </node>
+              <node id="MASK"  address="0x0" mask="0x00004000"  permission="rw"
+                    description="Mask the channel output for trigger and readout">
+              </node>
+              <node id="ZCC_TRIM_POLARITY"  address="0x0" mask="0x00002000"  permission="rw"
+                    description="Zero Crossing Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)">
+              </node>
+              <node id="ZCC_TRIM_AMPLITUDE"  address="0x0" mask="0x00001f80"  permission="rw"
+                    description="Zero Crossing Comparator threshold trimming: correction amplitude (steps of 0.5mV)">
+              </node>
+              <node id="ARM_TRIM_POLARITY"  address="0x0" mask="0x00000040"  permission="rw"
+                    description="Arming Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)">
+              </node>
+              <node id="ARM_TRIM_AMPLITUDE"  address="0x0" mask="0x0000003f"  permission="rw"
+                    description="Arming Comparator threshold trimming: correction amplitude (steps of 0.5mV)">
+              </node>
+              
+            </node>
+          </node> <!-- end of VFATChannels -->
+
+          <!-- a catch-all for all config registers (individual bits are extracted below), may want to use these registers for faster configuration to set all 32 bits at once instead of individual pieces -->
+          <node id="CFG_${CFG_REG_IDX}"  address="0x81"  permission="rw"
+                description="VFAT control register number ${CFG_REG_IDX}"
+                generate="true" generate_size="17" generate_address_step="0x1" generate_idx_var="CFG_REG_IDX">
+          </node>
+          <!-- -->
+
+          <node id="CFG_PULSE_STRETCH"  address="0x81" mask="0x0000e000"  permission="rw"
+                description="Pulse Stretcher control. Range is from 1 to 8 clock cycles (0 means 1 cycle, 7 means 8 cycles)">
+          </node>
+          <node id="CFG_SYNC_LEVEL_MODE"  address="0x81" mask="0x00000004"  permission="rw"
+                description="Switch the input synchronizer from edge to level mode (0 = edge, 1 = level)">
+          </node>
+          <node id="CFG_SELF_TRIGGER_MODE"  address="0x81" mask="0x00000002"  permission="rw"
+                description="Enable self trigger mode (0 = disable, 1 = enable)">
+          </node>
+          <node id="CFG_DDR_TRIGGER_MODE"  address="0x81" mask="0x00000001"  permission="rw"
+                description="Enable DDR trigger output mode (0 = SDR, 1 = DDR)">
+          </node>
+
+          <node id="CFG_SPZS_SUMMARY_ONLY"  address="0x82" mask="0x00008000"  permission="rw"
+                description="When set high, the SPZS mode will send only the 16bit partition summary (no sub-partition data at all)">
+          </node>
+          <node id="CFG_SPZS_MAX_PARTITIONS"  address="0x82" mask="0x00003c00"  permission="rw"
+                description="Maximum number of sub-partition data to send in SPZS mode (range: 1-16)">
+          </node>
+          <node id="CFG_SPZS_ENABLE"  address="0x82" mask="0x00000100"  permission="rw"
+                description="Enable SPZS zero suppression mode">
+          </node>
+          <node id="CFG_SZP_ENABLE"  address="0x82" mask="0x00000080"  permission="rw"
+                description="Enable SZP zero suppression mode (suppress zero packets -- only send the header)">
+          </node>
+          <node id="CFG_SZD_ENABLE"  address="0x82" mask="0x00000040"  permission="rw"
+                description="Enable SZD zero suppression mode (suppress zero data only -- still send header, EC, BC and CRC)">
+          </node>
+          <node id="CFG_TIME_TAG"  address="0x82" mask="0x00000030"  permission="rw"
+                description="Time tag format (00 = EC and BC, 01 = EC, 10 = BC, 11 = EC+BC)">
+          </node>
+          <node id="CFG_EC_BYTES"  address="0x82" mask="0x00000006"  permission="rw"
+                description="Event counter bytes (00 = 1B, 01 = 2B, 10 = 3B, 11 = 1B)">
+          </node>
+          <node id="CFG_BC_BYTES"  address="0x82" mask="0x00000001"  permission="rw"
+                description="Bunch counter bytes (0 = 2B, 1 = 3B)">
+          </node>
+          <node id="CFG_FP_FE"  address="0x83" mask="0x000000e0"  permission="rw"
+                description="Front end peaking time (000 = 25ns, 001 = 50ns, 011 = 75ns, 111 = 100ns)">
+          </node>
+          <node id="CFG_RES_PRE"  address="0x83" mask="0x0000001c"  permission="rw"
+                description="Preamplifier resistance set (001 = high gain, 010 = middle gain, 100 = low gain)">
+          </node>
+          <node id="CFG_CAP_PRE"  address="0x83" mask="0x00000003"  permission="rw"
+                description="Preamplifier capacity set (00 = high gain, 01 = middle gain, 11 = low gain)">
+          </node>
+          <node id="CFG_PT"  address="0x84" mask="0x000003c0"  permission="rw"
+                description="CFD Time Constant (0001 = 25ns, 0011 = 50ns, 0111 = 75ns, 1111 = 100ns)">
+          </node>
+          <node id="CFG_EN_HYST"  address="0x84" mask="0x00000020"  permission="rw"
+                description="Arming comparator hysteresis (0 = disable, 1 = enable)">
+          </node>
+          <node id="CFG_SEL_POL"  address="0x84" mask="0x00000010"  permission="rw"
+                description="CFD input charge polarity (0 = positive, 1 = negative/GEM )">
+          </node>
+          <node id="CFG_FORCE_EN_ZCC"  address="0x84" mask="0x00000008"  permission="rw"
+                description="Debug and calibration: force ZCC output, independent from arming comp (0 = disable, 1 = enable)">
+          </node>
+          <node id="CFG_FORCE_TH"  address="0x84" mask="0x00000004"  permission="rw"
+                description="Debug: force active ZCC threshold (0 = disable, 1 = enable)">
+          </node>
+          <node id="CFG_SEL_COMP_MODE"  address="0x84" mask="0x00000003"  permission="rw"
+                description="CFD output mode (00 = normal, 01 = arming, 10 = ZCC, 11 = 0)">
+          </node>
+          <node id="CFG_VREF_ADC"  address="0x85" mask="0x00000300"  permission="rw"
+                description="ADC internal reference tuning, 50mV steps to adjust to 1.0V during production calibration (range: 0-3)">
+          </node>
+          <node id="CFG_MON_GAIN"  address="0x85" mask="0x00000080"  permission="rw"
+                description="Gain of ADC monitoring buffer (0 = gain 1, 1 = gain 5)">
+          </node>
+          <node id="CFG_MONITOR_SELECT"  address="0x85" mask="0x0000003f"  permission="rw"
+                description="Monitoring selection (0 = Imon Iref, 1 = Imon Calib IDC, 2 = Imon Preamp InpTran, 3 = Imon Preamp LC, 4 = Imon Preamp SF, 5 = Imon Shap FC, 6 = Imon Shap Inpair, 7 = Imon SD Inpair, 8 = Imon SD FC, 9 = Imon SD SF, 10 = Imon CFD Bias1, 11 = Imon CFD Bias2, 12 = Imon CFD Hyst, 13 = Imon CFD Ireflocal, 14 = Imon CFD ThArm, 15 = Imon CFD ThZcc, 16 = Imon SLVS Ibias, 32 = Vmon BGR, 33 = Vmon Calib Vstep, 34 = Vmon Preamp Vref, 35 = Vmon Vth Arm, 36 = Vmon Vth ZCC, 37 = V Tsens Int, 38 = V Tsens Ext, 39 = ADC ref, 40 = ADC VinM, 41 = SLVS Vref">
+          </node>
+          <node id="CFG_IREF"  address="0x86" mask="0x0000003f"  permission="rw"
+                description="Tuning of global reference current generated by Bandgap reference circuit. Target value: 10uA. Nominal: 310nA/bit">
+          </node>
+
+          <node id="CFG_THR_ZCC_DAC"  address="0x87" mask="0x0000ff00" permission="rw"
+                description="ZCC global threshold: nominal 0.5mV/bit (range: 0x00-0xff)">
+          </node>
+          <node id="CFG_THR_ARM_DAC"  address="0x87" mask="0x000000ff" permission="rw"
+                description="Arming global threshold: nominal 2mV/bit (range: 0x00-0xff)">
+          </node>
+
+          <node id="CFG_HYST"  address="0x88" mask="0x0000003f" permission="rw"
+                description="Global hysteresis DAC: nominal 0.4mV/bit (range: 0x00-0x3f)">
+          </node>
+
+          <node id="CFG_LATENCY"  address="0x89" mask="0x0000ffff" permission="rw"
+                description="Internal L1A latency (range: 0-1023)">
+          </node>
+
+          <node id="CFG_CAL_SEL_POL"  address="0x8a" mask="0x00004000" permission="rw"
+                description="Calibration pulse polarity (0 = positive, 1 = negative)">
+          </node>
+          <node id="CFG_CAL_PHI"  address="0x8a" mask="0x00003800" permission="rw"
+                description="Pulse phase in 1/320MHz (3.125ns) delay (range: 0-7, where 0 = no delay and 7 = 21.87ns)">
+          </node>
+          <node id="CFG_CAL_EXT"  address="0x8a" mask="0x00000400" permission="rw"
+                description="External analog voltage step (0 = disable, 1 = enable)">
+          </node>
+          <node id="CFG_CAL_DAC"  address="0x8a" mask="0x000003fc" permission="rw"
+                description="CAL DAC: amplitude of current pulse. 256-CAL DAC: amplitude of voltage step. Range: 0-255">
+          </node>
+          <node id="CFG_CAL_MODE"  address="0x8a" mask="0x00000003" permission="rw"
+                description="Cal pulse mode (00 = disabled, 01 = voltage pulse, 1x = current pulse">
+          </node>
+          <node id="CFG_CAL_FS"  address="0x8b" mask="0x00000600" permission="rw"
+                description="Cal current pulse scale factor. Q = CAL DUR[s] * CAL DAC * 10nA * CAL FS[%] (00 = 25%, 01 = 50%, 10 = 75%, 11 = 100%)">
+          </node>
+          <node id="CFG_CAL_DUR"  address="0x8b" mask="0x000001ff" permission="rw"
+                description="Cal pulse duration in 40MHz clock cycles (range: 0-0x1ff)">
+          </node>
+
+          <node id="CFG_BIAS_CFD_DAC_2"  address="0x8c" mask="0x00000fc0" permission="rw"
+                description="CFD Bias 2 (current). Range: 0-0x3f (default = 0x28)">
+          </node>
+          <node id="CFG_BIAS_CFD_DAC_1"  address="0x8c" mask="0x0000003f" permission="rw"
+                description="CFD Bias 1 (current). Range: 0-0x3f (default = 0x28)">
+          </node>
+          <node id="CFG_BIAS_PRE_I_BSF"  address="0x8d" mask="0x00003f00" permission="rw"
+                description="Preamplifier bias source follower (current). Range: 0-0x3f (default = 1 = 2uA)">
+          </node>
+          <node id="CFG_BIAS_PRE_I_BIT"  address="0x8d" mask="0x000000ff" permission="rw"
+                description="Preamplifier bias input transistor (current). Range: 0-0xff (default = 1 = 1uA)">
+          </node>
+          <node id="CFG_BIAS_PRE_I_BLCC"  address="0x8e" mask="0x00003f00" permission="rw"
+                description="Preamplifier bias leakage compensation (current). Range: 0-0x3f (default = 15 = 15nA)">
+          </node>
+          <node id="CFG_BIAS_PRE_VREF"  address="0x8e" mask="0x000000ff" permission="rw"
+                description="Preamplifier VREF. Range: 0-0xff (default = 86 = 430mV)">
+          </node>
+          <node id="CFG_BIAS_SH_I_BFCAS"  address="0x8f" mask="0x0000ff00" permission="rw"
+                description="Shaper folded cascode (current). Range: 0-0xff (default = 1 = 100nA)">
+          </node>
+          <node id="CFG_BIAS_SH_I_BDIFF"  address="0x8f" mask="0x000000ff" permission="rw"
+                description="Shaper input pair (current). Range: 0-0xff (default = 1 = 100nA)">
+          </node>
+          <node id="CFG_BIAS_SH_I_BFAMP"  address="0x90" mask="0x00003f00" permission="rw"
+                description="Shaper feed amplifier (current). Range: 0-0x3f (default = 1 = 1nA)">
+          </node>
+          <node id="CFG_BIAS_SD_I_BDIFF"  address="0x90" mask="0x000000ff" permission="rw"
+                description="SD input pair (current). Range: 0-0xff (default = 1 = 100nA)">
+          </node>
+          <node id="CFG_BIAS_SD_I_BSF"  address="0x91" mask="0x00003f00" permission="rw"
+                description="SD source follower (current). Range: 0-0x3f (default = 1 = 2uA)">
+          </node>
+          <node id="CFG_BIAS_SD_I_BFCAS"  address="0x91" mask="0x000000ff" permission="rw"
+                description="SD folded cascode (current). Range: 0-0xff (default = 1 = 100nA)">
+          </node>
+
+          <node id="CFG_RUN" address="0x300" mask="0x00000001" permission="rw"
+                description="SLEEP/RUN mode (0 = SLEEP, 1 = RUN)">
+          </node>
+
+          <node id="HW_ID"  address="0x100"  permission="r"
+                description="Device hardware ID register. Reports 0x56464154 (ASCII 'VFAT') on read.">
+          </node>
+          <node id="HW_ID_VER"  address="0x101"  permission="r"
+                description="Hardware version. Reports 0x00030000 (v3.0.0) on read.">
+          </node>
+          <node id="TEST_REG"  address="0x102"  permission="rw"
+                description="General purpose read/write register.">
+          </node>
+          <node id="HW_CHIP_ID"  address="0x103"  permission="r"
+                description="Chip ID from eFuses.">
+          </node>
+          
+          <!-- probably better to leave these out as they should only be used during fusing
+          <node id="HW_PROG_TIME"  address="0x104" mask="0x0007ff00" permission="w"
+                description="eFuse: program time in 25ns units. Range: 0-0x7ff">
+          </node>
+          <node id="HW_PROG_BIT_ADDR"  address="0x104" mask="0x0000001f" permission="w"
+                description="eFuse: address of the bit to be programmed. Range: 0-0x1f">
+          </node>
+          -->
+
+          <node id="ADC0_CACHED"  address="0x280" mask="0x000003ff" permission="r"
+                description="Primary ADC read (using the internal reference). Note, this value is returned from CTP7's cache (last known value of ADC0 for this VFAT since ADC0_UPDATE was called). To update the cache, read or write ADC0_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)">
+          </node>
+          <node id="ADC0_UPDATE"  address="0x200" mask="0x00000001" permission="rw"
+                description="Reading or writing this register will trigger a read of the ADC0 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC0_CACHED">
+          </node>
+
+          <node id="ADC1_CACHED"  address="0x281" mask="0x000003ff" permission="r"
+                description="ADC1 read (using the external reference). Note, this value is returned from CTP7's cache. To update the cache, read or write ADC1_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)">
+          </node>
+          <node id="ADC1_UPDATE"  address="0x201" mask="0x00000001" permission="rw"
+                description="Reading or writing this register will trigger a read of the ADC1 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC1_CACHED">
+          </node>
+
+
+        </node>
+    </node>
+
+  </node> <!-- end OH${OH_IDX} block -->
+</node> <!-- end OptoHybrid block -->
+
+<!--Config Blaster module -->
+<node id="CONFIG_BLASTER"  address="0x00c00000"
+      description="Configuration Blaster. This module stores configuration data for all GBTXs, VFAT3s, and OH FPGAs, and then streams this configuration data to each device after a hard-reset."
+      fw_is_module="true"
+      fw_is_module_external="true">
+
+  <node id="CTRL" address="0x0">
+    <node id="BLASTER_ENABLE" address="0x0" mask="0x00000001" permission="rw"
+          description="Set this to 1 to enable the configuration blasting after the hard reset. By default this is disabled, because config RAM is empty on startup, so only enable this after the config RAM has been written with valid config data.">
+    </node>
+  </node>        
+
+  <node id="STATUS" address="0x100">
+    <node id="GBT_RAM_SIZE" address="0x0" permission="r" description="Size of the GBT config RAM (in 32bit words, or number of available addresses)"/>
+    <node id="VFAT_RAM_SIZE" address="0x1" permission="r" description="Size of the VFAT config RAM (in 32bit words, or number of available addresses)"/>
+    <node id="OH_RAM_SIZE" address="0x2" permission="r" description="Size of the OH config RAM (in 32bit words, or number of available addresses)"/>
+  </node>        
+
+  <node id="RAM" address="0x10000">
+    <node id="GBT" address="0x00000" mode="block" size="3312" permission="rw"
+          description="Configuration RAM for GBTX chips. Each GBTX has 366 x 8bit registers, and each address in this RAM holds 4 register values in LSB format (so in total there are 92 RAM addresses for each chip, where the last one is only partially filled).
+                       The actual RAM in the firmware is sized according to the number of OH links present in the firmware, so software should check how many OHs are supported by the firmware and only fill out the corresponding number of configuration entries.
+                       RAM size is also provided in the STATUS registers of this module.
+                       If the software attempts to write outside the bounds of the RAM, it may be overwriting other data."/>
+    <node id="VFAT" address="0x10000" mode="block" size="21312" permission="rw"
+          description="Configuration RAM for VFAT chips. Each VFAT has 147 x 16bit registers, and each address in this RAM holds 2 register values in LSB format (so in total there are 74 RAM addresses for each chip, where the last one is only partially filled).
+                       The actual RAM in the firmware is sized according to the number of OH links present in the firmware, so software should check how many OHs are supported by the firmware and only fill out the corresponding number of configuration entries.
+                       RAM size is also provided in the STATUS registers of this module.
+                       If the software attempts to write outside the bounds of the RAM, it may be overwriting other data."/>
+
+    <node id="OH_FPGA" address="0x20000" mode="block" size="2400" permission="rw"
+          description="Configuration RAM for OH FPGAs. 100 32bit registers are allocated for each OH at the moment. For each register, a 32bit OH register address (local to OH address space) has to be written to this RAM, followed by a 32bit register value.
+                       The actual RAM in the firmware is sized according to the number of OH links present in the firmware, so software should check how many OHs are supported by the firmware and only fill out the corresponding number of configuration entries.
+                       RAM size is also provided in the STATUS registers of this module.
+                       If the software attempts to write outside the bounds of the RAM, it may be overwriting other data."/>
+    <node id="GBT_OH${OH_IDX}"  address="0x00000" mode="block" size="276" permission="rw"
+          description="GBTX configuration RAM pointer to OH${OH_IDX}. This part of the RAM contains configuration of all 3 GBTXs for this OH."
+    generate="true" generate_size="&NUM_OHS;" generate_address_step="0x144" generate_idx_var="OH_IDX"/>
+    <node id="VFAT_OH${OH_IDX}"  address="0x10000" mode="block" size="1776" permission="rw"
+          description="VFAT configuration RAM pointer to OH#${OH_IDX}. This part of the RAM contains configuration of all 24 VFATs for this OH."
+    generate="true" generate_size="&NUM_OHS;" generate_address_step="0x6f0" generate_idx_var="OH_IDX"/>
+    <node id="OH_FPGA_OH${OH_IDX}"  address="0x20000" mode="block" size="200" permission="rw"
+          description="OH FPGA configuration RAM pointer to OH#${OH_IDX}."
+    generate="true" generate_size="&NUM_OHS;" generate_address_step="0xc8" generate_idx_var="OH_IDX"/>
+  </node>
+
+</node> <!-- end Config Blaster block -->
+

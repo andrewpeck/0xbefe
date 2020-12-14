@@ -1,0 +1,319 @@
+<node id="TTC"  address="0x00300000"
+      description="TTC control and monitoring. It takes care of locking to the TTC clock coming from the
+                   backplane as well as decoding TTC commands and forwarding that to all other modules in
+                   the design. It also provides several control and monitoring registers (resets, command
+                   decoding configuration, clock and data status, bc0 status, command counters and a small spy buffer)"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/ttc/ttc.vhd"
+      fw_user_clock_signal="ttc_clks_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="7"
+      fw_reg_addr_lsb="0">
+  <node id="CTRL" address="0x0"
+        description="TTC control">
+    <node id="MODULE_RESET" address="0x0" permission="w"
+          description="TTC module reset"
+          fw_write_pulse_signal="ttc_ctrl.reset_local"/>
+    <node id="MMCM_RESET" address="0x1" permission="w"
+          description="Main MMCM reset. Note that resetting this MMCM normally shouldn't be needed.
+                       It may screw up the fiber links, requiring a GTH reset.
+                       This will also re-initiate the phase alignment procedure.
+                       In case of doubt, always try the phase alignment reset first, before resorting to MMCM reset."
+          fw_write_pulse_signal="ttc_ctrl.clk_ctrl.reset_mmcm"/>
+    <node id="CNT_RESET" address="0x2" permission="w"
+          description="TTC counter reset"
+          fw_write_pulse_signal="ttc_ctrl.cnt_reset"
+          sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
+    <node id="PHASE_ALIGNMENT_RESET" address="0x3" permission="w"
+          description="This will restart the procedure of aligning the main jitter cleaned clock to the backplane TTC ref clock.
+                       It may or may not screw up the fiber links (needs testing), and if it does, a GTH reset should help."
+          fw_write_pulse_signal="ttc_ctrl.clk_ctrl.reset_sync_fsm"/>
+    <node id="L1A_ENABLE" address="0x4" mask="0x00000001" permission="rw"
+          description="Enable L1As (L1As are blocked if this is 0)"
+          fw_signal="ttc_ctrl.l1a_enable" fw_default="0b1"
+          sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"/>
+    <node id="CALIBRATION_MODE" address="0x4" mask="0x00000002" permission="rw"
+          description="Enables calibration mode when set to 1. In calibration mode the incoming L1A commands will actually trigger a calpulse signal to the frontend,
+                       followed by an L1A after a fixed delay, which is controlled by the CALPULSE_L1A_DELAY register below."
+          fw_signal="ttc_ctrl.calib_mode" fw_default="0b0"
+          sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x0" sw_ctrl_stop_set="0x0"/>
+    <node id="CALPULSE_L1A_DELAY" address="0x4" mask="0xfff00000" permission="rw"
+          description="When calibration mode is enabled, this register controls the delay between the calpulse and the L1A to the frontend
+                       e.g. a setting of 1 will have the calpulse and L1A sent in consecutive clock cycles, a setting of 2 will have one empty BX between the calpulse and L1a, etc..
+                       Note that 0 is not a valid setting and will result in no L1As being sent to frontend.
+                       Also note that if another L1A comes in while this delay is still being processed, it will restart the delay and result in the previous L1A to the frontend being cancelled,
+                       so don't set this delay longer than the delay between consecutive L1As in AMC13."
+          fw_signal="ttc_ctrl.calib_l1a_delay" fw_default="0x064"/>
+    <node id="DISABLE_PHASE_ALIGNMENT" address="0x4" mask="0x00000010" permission="rw"
+          description="Setting this to 1 will disable the phase alignment to backplane ref clock.
+                       This is intended to be used only in setups that don't have an AMC13 and thus no backplane TTC clock, but generate the TTC clock internally in CTP7."
+          fw_signal="ttc_ctrl.clk_ctrl.phase_align_disable" fw_default="0b0"/>
+    <node id="PA_DISABLE_INIT_SHIFT_OUT" address="0x4" mask="0x00000020" permission="rw"
+          description="If this is set to 0 (default), then when the phase alignment FSM is reset,
+                       it will first shift the phase out of lock if it is currently locked,
+                       and then start searching for lock as usual"
+          fw_signal="ttc_ctrl.clk_ctrl.pa_no_init_shift_out" fw_default="0b0"/>
+    <node id="PA_MANUAL_OVERRIDE" address="0x4" mask="0x00000040" permission="rw"
+          description="Manual phase shifting override"
+          fw_signal="ttc_ctrl.clk_ctrl.pa_manual_shift_ovrd" fw_default="0b0"/>
+    <node id="PA_MANUAL_SHIFT_DIR" address="0x4" mask="0x00000080" permission="rw"
+          description="Manual phase shifting direction"
+          fw_signal="ttc_ctrl.clk_ctrl.pa_manual_shift_dir" fw_default="0b0"/>
+    <node id="PA_MANUAL_SHIFT_EN" address="0x5" permission="w"
+          description="Each write to this register will trigger one shift step when PA_MANUAL_OVERRIDE is set to 1"
+          fw_write_pulse_signal="ttc_ctrl.clk_ctrl.pa_manual_shift_en"/>
+    <node id="PHASEMON_MMCM_RESET" address="0x6" permission="w"
+          description="Resets the phase monitor clock MMCMs."
+          fw_write_pulse_signal="ttc_ctrl.clk_ctrl.reset_phase_mon_mmcm"/>
+    <node id="PHASEMON_LOG2_N_AVG" address="0x4" mask="0x00000f00" permission="rw"
+          description="Number of samples to average in the phase monitor. The setting is in units of log2(n), meaning that e.g. a setting of 4 will result in averaging 16 samples, a setting of 5 will average 32 samples, etc"
+          fw_signal="ttc_ctrl.clk_ctrl.phase_mon_log2_navg" fw_default="0x5"/>
+    <node id="PHASEMON_JUMP_THRESH" address="0x7" mask="0x0000ffff" permission="rw"
+          description="The threshold on the difference of the two consecutive phase samples that is considered a phase jump (default = 1.5ns). These occurences are counted and reported through the PHASE_JUMP_CNT reg"
+          fw_signal="ttc_ctrl.clk_ctrl.phase_mon_jump_thresh" fw_default="0x0aeb"/>
+    <node id="LOCKMON_LOG2_N_AVG" address="0x7" mask="0x000f0000" permission="rw"
+          description="Phase lock monitor (used in phase alignment): Number of phase samples to average. The setting is in units of log2(n), meaning that e.g. a setting of 4 will result in averaging 16 samples, a setting of 5 will average 32 samples, etc. The higher the number, the better the accuracy, but it will also take longer to complete the phase alignment."
+          fw_signal="ttc_ctrl.clk_ctrl.lock_mon_log2_navg" fw_default="0x7"/>
+    <node id="LOCKMON_TARGET_PHASE" address="0x8" mask="0x0000ffff" permission="rw"
+          description="Phase lock monitor (used in phase alignment): the target phase between the TTC clock and the fabric clocks that is considered locked. The units are the same as in the phase monitor. NOTE: do not set this at or close to 0 or the maximum phase -- this could result in unreliable phase alignment, it should be placed at least 1ns away from the 0/max rollover point."
+          fw_signal="ttc_ctrl.clk_ctrl.lock_mon_target_phase" fw_default="0x2f1a"/>
+    <node id="LOCKMON_TOLLERANCE" address="0x8" mask="0xffff0000" permission="rw"
+          description="Phase lock monitor (used in phase alignment): this is the half-size of the lock window, or the number of phase units plus/minus the target (LOCKMON_TARGET_PHASE) where the phase is considered locked"
+          fw_signal="ttc_ctrl.clk_ctrl.lock_mon_tollerance" fw_default="0x0035"/>
+  </node>
+  <node id="CONFIG" address="0x10"
+        description="TTC configuration -- used for setup TTC command decoding">
+    <node id="CMD_BC0" address="0x0" mask="0x000000ff" permission="rw"
+          description="BC0 command code"
+          fw_signal="ttc_conf.cmd_bc0" fw_default="0x01"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_EC0" address="0x0" mask="0x0000ff00" permission="rw"
+          description="EC0 command code"
+          fw_signal="ttc_conf.cmd_ec0" fw_default="0x02"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_RESYNC" address="0x0" mask="0x00ff0000" permission="rw"
+          description="Resync command code"
+          fw_signal="ttc_conf.cmd_resync" fw_default="0x04"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_OC0" address="0x0" mask="0xff000000" permission="rw"
+          description="OC0 command code"
+          fw_signal="ttc_conf.cmd_oc0" fw_default="0x08"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_HARD_RESET" address="0x1" mask="0x000000ff" permission="rw"
+          description="Hard-reset command code"
+          fw_signal="ttc_conf.cmd_hard_reset" fw_default="0x10"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_CALPULSE" address="0x1" mask="0x0000ff00" permission="rw"
+          description="Calibration pulse command code"
+          fw_signal="ttc_conf.cmd_calpulse" fw_default="0x14"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_START" address="0x1" mask="0x00ff0000" permission="rw"
+          description="START command code"
+          fw_signal="ttc_conf.cmd_start" fw_default="0x18"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_STOP" address="0x1" mask="0xff000000" permission="rw"
+          description="STOP command code"
+          fw_signal="ttc_conf.cmd_stop" fw_default="0x1c"
+          sw_ctrl_configure_confdb_check_set="true"/>
+    <node id="CMD_TEST_SYNC" address="0x2" mask="0x000000ff" permission="rw"
+          description="Test-sync command code"
+          fw_signal="ttc_conf.cmd_test_sync" fw_default="0x20"
+          sw_ctrl_configure_confdb_check_set="true"/>
+  </node>
+
+  <node id="STATUS" address="0x20"
+        description="TTC status">
+
+    <node id="CLK" address="0x0"
+          description="Clock status">
+      <node id="MMCM_LOCKED" address="0x0" mask="0x00000001" permission="r"
+            description="Main MMCM lock status (input is jitter cleaned 160MHz clock)"
+            fw_signal="ttc_clks_status_i.mmcm_locked"
+            sw_monitor_error_value="0"/>
+      <node id="SYNC_DONE" address="0x0" mask="0x00000002" permission="r"
+            description="Jitter cleaned clock is locked and phase alignment with backplane TTC ref clock is finished"
+            fw_signal="ttc_clks_status_i.sync_done"
+            sw_monitor_error_value="0"/>
+      <node id="PHASE_LOCKED" address="0x0" mask="0x00000004" permission="r"
+            description="Jitter cleaned 40MHz clock is currently in phase with the backplane 40MHz TTC clock"
+            fw_signal="ttc_clks_status_i.phase_locked"
+            sw_monitor_error_value="0"/>
+      <node id="PHASEMON_MMCM_LOCKED" address="0x0" mask="0x00000008" permission="r"
+            description="The phase measurement MMCM is locked (DMTD clock)"
+            fw_signal="ttc_clks_status_i.phasemon_mmcm_locked"
+            sw_monitor_error_value="0"/>
+      <node id="TTC_CLK_PRESENT" address="0x0" mask="0x00000010" permission="r"
+            description="Indicates whether or not the backplane 40MHz TTC clock is present."
+            fw_signal="ttc_clks_status_i.ttc_clk_present"
+            sw_monitor_error_value="0"/>
+      <node id="MMCM_UNLOCK_CNT" address="0x0" mask="0xffff0000" permission="r"
+            description="Number of times the MMCM lock signal has gone low (this counter doesn't roll over)"
+            fw_signal="ttc_clks_status_i.mmcm_unlock_cnt"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="TTC_CLK_LOSS_CNT" address="0x1" mask="0x0000ffff" permission="r"
+            description="number of times that the TTC clock was lost (the TTC_CLK_PRESENT has gone low)"
+            fw_signal="ttc_clks_status_i.ttc_clk_loss_cnt"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="PHASE_UNLOCK_CNT" address="0x1" mask="0xffff0000" permission="r"
+            description="Number of times the phase monitoring PLL lock signal has gone low (note: loosing phase lock doesn't restart the phase alignment automatically)"
+            fw_signal="ttc_clks_status_i.phase_unlock_cnt"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="SYNC_DONE_TIME" address="0x2" mask="0x0000ffff" permission="r"
+            description="Number of seconds since last sync was done (max = around 18.2 hours)"
+            fw_signal="ttc_clks_status_i.sync_done_time"/>
+      <node id="PHASE_UNLOCK_TIME" address="0x2" mask="0xffff0000" permission="r"
+            description="Number of seconds since last phase unlock (max = around 18.2 hours)"
+            fw_signal="ttc_clks_status_i.phase_unlock_time"/>
+      <node id="TTC_CLK_LOSS_TIME" address="0x3" mask="0x0000ffff" permission="r"
+            description="number of seconds since last TTC clock loss"
+            fw_signal="ttc_clks_status_i.ttc_clk_loss_time"/>
+
+      <node id="PHASE_MONITOR" address="0x6" description="Monitoring of the phase between the TTC backplane clock, and the fabric clocks">
+          <node id="PHASE" address="0x0" mask="0x0000ffff" permission="r"
+                description="TTC Phase monitoring: phase difference between the rising edges of the jitter cleaned 40MHz and backplane TTC 40MHz clocks.
+                             Each count is about 1.8633ps (1/13417 of the 25ns period)
+                             Note that absolute value is not very important, because these clocks will always have some offset due to routing on the FPGA,
+                             the important thing is that this value doesn't change much."
+                fw_signal="ttc_clks_status_i.phase_monitor.phase"/>
+          <node id="SAMPLE_COUNTER" address="0x0" mask="0xffff0000" permission="r"
+                description="simple wrapping counter of samples - this can be used by fast reading applications to check if the phase value has been updated since the last reading"
+                fw_signal="ttc_clks_status_i.phase_monitor.sample_counter"/>
+          <node id="PHASE_MIN" address="0x1" mask="0x0000ffff" permission="r"
+                description="TTC Phase monitoring: the minimum measured phase value since last counter reset"
+                fw_signal="ttc_clks_status_i.phase_monitor.phase_min"/>
+          <node id="PHASE_MAX" address="0x1" mask="0xffff0000" permission="r"
+                description="TTC Phase monitoring: the maximum measured phase value since last counter reset"
+                fw_signal="ttc_clks_status_i.phase_monitor.phase_max"/>
+          <node id="PHASE_JUMP_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                description="TTC Phase monitoring: number of times a phase jump has been detected.
+                             A phase jump detection is triggered by a large difference between two subsequent phase measurements
+                             (threshold is set by the PHASE_MONITOR_JUMP_THRESH register)"
+                fw_signal="ttc_clks_status_i.phase_monitor.phase_jump_cnt"/>
+      </node>
+
+    </node>
+
+    <node id="TTC_SINGLE_ERROR_CNT" address="0x20" mask="0x0000ffff" permission="r"
+          description="TTC stream single bit error count"
+          fw_signal="ttc_status.single_err"
+          sw_monitor_warn_min_threshold="1"/>
+    <node id="TTC_DOUBLE_ERROR_CNT" address="0x20" mask="0xffff0000" permission="r"
+          description="TTC stream double bit error count"
+          fw_signal="ttc_status.double_err"
+          sw_monitor_error_min_threshold="1"/>
+    <node id="BC0" address="0x21"
+          description="TTC status">
+      <node id="LOCKED" address="0x0" mask="0x00000001" permission="r"
+            description="BC0 locked flag"
+            fw_signal="ttc_status.bc0_status.locked"
+            sw_monitor_error_value="0"/>
+      <node id="UNLOCK_CNT" address="0x1" mask="0x0000ffff" permission="r"
+            description="BC0 unlock count"
+            fw_signal="ttc_status.bc0_status.unlocked_cnt"
+            sw_monitor_error_min_threshold="1"/>
+      <node id="OVERFLOW_CNT" address="0x2" mask="0x0000ffff" permission="r"
+            description="BX counter overflow count (late or no BC0 received)"
+            fw_signal="ttc_status.bc0_status.ovf_cnt"
+            sw_monitor_error_min_threshold="1"/>
+      <node id="UNDERFLOW_CNT" address="0x2" mask="0xffff0000" permission="r"
+            description="BX counter underflow count (early BC0 received, one is normal after the
+                         TTC module reset, but this should be reset by control software before each run)"
+            fw_signal="ttc_status.bc0_status.udf_cnt"
+            sw_monitor_error_min_threshold="1"/>
+    </node>        
+  </node>
+
+  <node id="CMD_COUNTERS" address="0x50"
+        description="TTC command counters">
+    <node id="L1A" address="0x0" permission="r"
+          description="L1A count"
+          fw_signal="ttc_cmds_cnt_arr(0)"/>
+    <node id="BC0" address="0x1" permission="r"
+          description="BC0 count"
+          fw_signal="ttc_cmds_cnt_arr(1)"/>
+    <node id="EC0" address="0x2" permission="r"
+          description="EC0 count"
+          fw_signal="ttc_cmds_cnt_arr(2)"/>
+    <node id="RESYNC" address="0x3" permission="r"
+          description="Resync count"
+          fw_signal="ttc_cmds_cnt_arr(3)"/>
+    <node id="OC0" address="0x4" permission="r"
+          description="OC0 count"
+          fw_signal="ttc_cmds_cnt_arr(4)"/>
+    <node id="HARD_RESET" address="0x5" permission="r"
+          description="Hard-reset count"
+          fw_signal="ttc_cmds_cnt_arr(5)"/>
+    <node id="CALPULSE" address="0x6" permission="r"
+          description="Calibration pulse count"
+          fw_signal="ttc_cmds_cnt_arr(6)"/>
+    <node id="START" address="0x7" permission="r"
+          description="START count"
+          fw_signal="ttc_cmds_cnt_arr(7)"/>
+    <node id="STOP" address="0x8" permission="r"
+          description="STOP count"
+          fw_signal="ttc_cmds_cnt_arr(8)"/>
+    <node id="TEST_SYNC" address="0x9" permission="r"
+          description="Test-sync count"
+          fw_signal="ttc_cmds_cnt_arr(9)"/>
+  </node>
+
+  <node id="L1A_ID" address="0x60" mask="0x00ffffff" permission="r"
+        description="L1A ID (increments with every L1A and resets with EC0), used by DAQ to tag event numbers"
+        fw_signal="l1id_cnt"/>
+
+  <node id="L1A_RATE" address="0x61" permission="r"
+        description="L1A rate in Hz"
+        fw_signal="l1a_rate"/>
+
+  <node id="TTC_SPY_BUFFER" address="0x62" permission="r"
+        description="TTC Spy buffer -- this is filled with TTC commands (from LSB to MSB)
+                     and freezes until the user reads it out, once read out it resets and
+                     fills up again with new TTC commands received from that point on"
+        fw_signal="ttc_spy_buffer" fw_read_pulse_signal="ttc_spy_reset"/>
+        
+  <node id="GENERATOR" address="0x70"
+        description="TTC generator that can be used to generate fake single and cyclic commands that may be useful for calibration">
+    <node id="RESET" address="0x0" permission="w"
+          description="TTC generator module reset"
+          fw_write_pulse_signal="gen_reset"/>
+    <node id="ENABLE" address="0x1" mask="0x00000001" permission="rw"
+          description="Enable TTC generator module. Note that all real TTC commands are suppressed when the generator module is enabled"
+          fw_signal="gen_enable" fw_default="0b0"
+          sw_ctrl_configure_set="0x0"/>
+    <node id="ENABLE_CALPULSE_ONLY" address="0x1" mask="0x00000004" permission="rw"
+          description="Enable TTC generator calpulse signal only. Having ENABLE = 0 and ENABLE_CALPULSE_ONLY = 1 will result in using all TTC commands from AMC13 except calpulse, which will be taken from the generator. This is a debugging feature used for synthetic tests which can emulate data coming from the VFATs. If the ENABLE is set to 1, then this register is ignored, and all TTC commands will be taken from the generator."
+          fw_signal="gen_enable_cal_only" fw_default="0b0"
+          sw_ctrl_configure_set="0x0"/>
+    <node id="SINGLE_HARD_RESET" address="0x2" permission="w"
+          description="Writing to this register will trigger a single hard-reset command to be sent"
+          fw_write_pulse_signal="gen_single_hard_reset"/>
+    <node id="SINGLE_RESYNC" address="0x3" permission="w"
+          description="Writing to this register will trigger a single resync command to be sent"
+          fw_write_pulse_signal="gen_single_resync"/>
+    <node id="SINGLE_EC0" address="0x4" permission="w"
+          description="Writing to this register will trigger a single EC0 command to be sent"
+          fw_write_pulse_signal="gen_single_ec0"/>
+    <node id="CYCLIC_L1A_GAP" address="0x1" mask="0x000ffff0" permission="rw"
+          description="This register lets you set the number of BXs between cyclic L1A commands"
+          fw_signal="gen_cyclic_l1a_gap" fw_default="0x0190"/>
+    <node id="CYCLIC_CALPULSE_TO_L1A_GAP" address="0x1" mask="0xfff00000" permission="rw"
+          description="This register lets you set the number of BXs between the cyclic CalPulse and the following L1A. Setting this to 0 will disable the cyclic CalPulse"
+          fw_signal="gen_cyclic_cal_l1a_gap" fw_default="0x000"/>
+    <node id="CYCLIC_CALPULSE_PRESCALE" address="0x7" mask="0x00000fff" permission="rw"
+          description="This register lets you prescale the calpulse in relation to L1A. A value of 0 means that there will be a calpulse before every L1A (if the CYCLIC_CALPULSE_TO_L1A_GAP is more than 0) while e.g. a value of 100 means that there will be a calpulse before every 100th L1A."
+          fw_signal="gen_cyclic_cal_prescale" fw_default="0x000"/>
+    <node id="CYCLIC_L1A_COUNT" address="0x5" mask="0x00ffffff" permission="rw"
+          description="This register lets you set the number of cyclic L1As (and calpulses) to be sent uppon cyclic-start command. If this is set to 0 then cyclic L1As will be sent forever uppon cyclic-start command and can only be stopped with a reset or disabling the generator module."
+          fw_signal="gen_cyclic_l1a_cnt" fw_default="0x002710"/>
+    <node id="CYCLIC_RUNNING" address="0x1" mask="0x00000002" permission="r"
+          description="This register indicates if the cyclic generator is running or not"
+          fw_signal="gen_cyclic_l1a_running"/>
+    <node id="CYCLIC_START" address="0x6" permission="w"
+          description="Writing to this register will trigger a start of the cyclic generator"
+          fw_write_pulse_signal="gen_cyclic_l1a_start"/>
+  </node>
+  
+</node>
