@@ -10,7 +10,7 @@ if [ -z "$PROJECT" ]; then
 fi
 
 if [ "$2" ]; then
-	VIVADO_VER=$s
+	VIVADO_VER=$2
 fi
 
 echo "Using Vivado $VIVADO_VER"
