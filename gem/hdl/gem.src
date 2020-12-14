@@ -1,0 +1,61 @@
+# -*- mode: TCL;-*-
+
+# GEM Top
+gem/hdl/gem_amc.vhd
+
+# Pkg
+#gem/hdl/pkg/registers.vhd                  <-- use the generated version specific to the project
+gem/hdl/pkg/ttc_config_pkg.vhd
+gem/hdl/pkg/ipb_addr_decode.vhd
+gem/hdl/pkg/gem_pkg.vhd
+gem/hdl/pkg/sca_config_pkg.vhd
+
+# Optohybrid and VFAT communication
+#gem/hdl/oh/oh_link_regs.vhd                <-- use the generated version specific to the project
+gem/hdl/oh/optohybrid.vhd
+gem/hdl/oh/vfat3/vfat3_rx_link.vhd
+gem/hdl/oh/vfat3/vfat3_sc_tx.vhd
+gem/hdl/oh/vfat3/vfat3_tx_stream.vhd
+gem/hdl/oh/vfat3/vfat3_tx_link.vhd
+gem/hdl/oh/vfat3/vfat3_slow_control.vhd
+gem/hdl/oh/vfat3/vfat3_rx_aligner.vhd
+gem/hdl/oh/vfat3/vfat3_daq_monitor.vhd
+gem/hdl/oh/vfat3/vfat3_sc_rx.vhd
+gem/hdl/oh/link/link_oh_fpga_rx.vhd
+gem/hdl/oh/link/6b8b_pkg.vhd
+gem/hdl/oh/link/6b8b.vhd
+gem/hdl/oh/link/link_oh_fpga.vhd
+gem/hdl/oh/link/8b6b.vhd
+gem/hdl/oh/link/link_oh_fpga_tx.vhd
+gem/hdl/oh/link/link_rx_trigger.vhd
+
+# Slow control
+#gem/hdl/slow_control/slow_control.vhd      <-- use the generated version specific to the project
+
+# Trigger
+#gem/hdl/trigger/trigger.vhd                <-- use the generated version specific to the project
+gem/hdl/trigger/trigger_output.vhd
+gem/hdl/trigger/trigger_me0.vhd
+gem/hdl/trigger/trigger_input_processor.vhd
+gem/hdl/trigger/sbit_monitor.vhd
+
+# DAQ
+#gem/hdl/daq/daq.vhd <-- use the generated version specific to the project
+gem/hdl/daq/data_concatenator_bak.vhd
+gem/hdl/daq/vfat_input_buffer.vhd
+gem/hdl/daq/vfat_input_serializer.vhd
+gem/hdl/daq/track_input_processor.vhd
+gem/hdl/daq/data_concatenator.vhd
+
+# Misc
+#gem/hdl/misc/gem_system_regs.vhd           <-- use the generated version specific to the project
+gem/hdl/misc/gem_loader_bram.vhd
+gem/hdl/misc/gbt_link_mux_ge11.vhd
+gem/hdl/misc/gbt_link_mux_ge21.vhd
+gem/hdl/misc/config_blaster.vhd
+gem/hdl/misc/gbt_link_mux_me0.vhd
+
+# Tests
+#gem/hdl/tests/gem_tests.vhd                <-- use the generated version specific to the project
+gem/hdl/tests/gt_8b10b_loopback_test.vhd
+

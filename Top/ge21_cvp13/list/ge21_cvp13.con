@@ -1,0 +1,5 @@
+# -*- mode: TCL;-*-
+
+boards/cvp13/constraints/gem_cvp13.xdc
+boards/cvp13/constraints/floorplan.xdc
+boards/cvp13/constraints/mgt_ge21.xdc

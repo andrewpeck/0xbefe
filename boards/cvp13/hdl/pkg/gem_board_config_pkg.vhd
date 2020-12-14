@@ -11,6 +11,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 
 use work.mgt_pkg.all;
+use work.project_config.all;
 
 --============================================================================
 --                                                         Package declaration
@@ -26,24 +27,18 @@ package gem_board_config_package is
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
 
     ------------ GEM specific constants ------------
-    constant CFG_GEM_STATION        : integer range 0 to 2 := 0; -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
-    constant CFG_OH_VERSION         : integer := 1; -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs         : integer := 2;   -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+    constant CFG_GEM_STATION        : integer range 0 to 2 := PRJ_CFG_GEM_STATION; -- Controlled by the project_config.vhd:  0 = ME0; 1 = GE1/1; 2 = GE2/1
+    constant CFG_OH_VERSION         : integer := PRJ_CFG_OH_VERSION; -- Controlled by the project_config.vhd:  OH version
+    constant CFG_NUM_OF_OHs         : integer := PRJ_CFG_NUM_OF_OHs; -- Controlled by the project_config.vhd:  total number of OHs to instanciate
     constant CFG_NUM_GBTS_PER_OH    : integer := get_num_gbts_per_oh(CFG_GEM_STATION);
     constant CFG_NUM_VFATS_PER_OH   : integer := get_num_vfats_per_oh(CFG_GEM_STATION);
     constant CFG_GBT_WIDEBUS        : integer := get_gbt_widebus(CFG_GEM_STATION, CFG_OH_VERSION);
     
-    constant CFG_USE_TRIG_TX_LINKS  : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
-    constant CFG_NUM_TRIG_TX        : integer := 8; -- number of trigger transmitters used to connect to EMTF
+    constant CFG_USE_TRIG_TX_LINKS  : boolean := PRJ_CFG_USE_TRIG_TX_LINKS; -- Controlled by the project_config.vhd:  if true, then trigger transmitters will be instantiated (used to connect to EMTF)
+    constant CFG_NUM_TRIG_TX        : integer := PRJ_CFG_NUM_TRIG_TX; -- Controlled by the project_config.vhd:  number of trigger transmitters used to connect to EMTF
 
-    constant CFG_GBT_DEBUG          : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
+    constant CFG_GBT_DEBUG          : boolean := PRJ_CFG_GBT_DEBUG; -- Controlled by the project_config.vhd:  if set to true, an ILA will be instantiated which allows probing any GBT link
     
-    ------------ DEBUG FLAGS ------------
-    constant CFG_LPGBT_2P56G_LOOPBACK_TEST  : boolean := false; -- setting this to true will result in a test firmware with 2.56Gbps transceivers only usable for PRBS loopback tests with LpGBT chip, note that none of the GEM logic will be included (also no LpGBT core will be instantiated)
-    constant CFG_LPGBT_EMTF_LOOP_TEST       : boolean := false;  -- setting this to true will instantiate an LpGBT RX core on the CFG_LPGBT_EMTF_RX_GTH, and an ILA 
-    constant CFG_LPGBT_EMTF_LOOP_RX_GTH     : integer := 66;
-    constant CFG_LPGBT_EMTF_LOOP_TX_LINK    : integer := 7;
-
     --========================--
     --== Link configuration ==--
     --========================--

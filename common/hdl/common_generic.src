@@ -1,0 +1,6 @@
+# -*- mode: TCL;-*-
+
+# Utils
+common/hdl/utils/synchronizer__generic.vhd
+common/hdl/utils/oneshot_cross_domain__generic.vhd
+

@@ -208,7 +208,7 @@ begin
     i_ttc_clks : entity work.ttc_clocks
         generic map(
             g_GEM_STATION               => CFG_GEM_STATION,
-            g_LPGBT_2P56G_LOOPBACK_TEST => CFG_LPGBT_2P56G_LOOPBACK_TEST
+            g_LPGBT_2P56G_LOOPBACK_TEST => false
         )
         port map(
             clk_gbt_mgt_txout_i => mgt_master_txoutclk,
