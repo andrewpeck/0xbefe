@@ -41,7 +41,6 @@ gem/hdl/trigger/sbit_monitor.vhd
 
 # DAQ
 #gem/hdl/daq/daq.vhd <-- use the generated version specific to the project
-gem/hdl/daq/data_concatenator_bak.vhd
 gem/hdl/daq/vfat_input_buffer.vhd
 gem/hdl/daq/vfat_input_serializer.vhd
 gem/hdl/daq/track_input_processor.vhd

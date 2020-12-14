@@ -34,13 +34,12 @@ common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
 common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
 
 # TTC
+#common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project
 common/hdl/ttc/ttc_cmd.vhd
 common/hdl/ttc/ttc_generator.vhd
 common/hdl/ttc/ttc_decoder.vhd
 common/hdl/ttc/ttc_clocks_ultrascale.vhd
-common/hdl/ttc/ttc.vhd
-common/hdl/ttc/generated/ge21_cvp13/ttc.vhd
-common/hdl/ttc/release-1.1/TTC_decoder.vhd
+#common/hdl/ttc/release-1.1/TTC_decoder.vhd
 
 # MGT
 #common/hdl/mgt/mgt_slow_control.vhd            <-- use the generated version specific to the project
@@ -127,13 +126,39 @@ common/hdl/lpgbt/fecCodec/fec_rsEncoderN7K5.vhd
 common/hdl/lpgbt/fecCodec/fec_rsDecoderN15K13.vhd
 common/hdl/lpgbt/gearbox/rxgearbox.vhd
 common/hdl/lpgbt/gearbox/txgearbox.vhd
-common/hdl/lpgbt/lpgbt_asic_emul/lpgbtemul_top.vhd
-common/hdl/lpgbt/lpgbt_asic_emul/mgt_frameAligner_pv.vhd
-common/hdl/lpgbt/lpgbt_asic_emul/gt_pkg.vhd
 common/hdl/lpgbt/mgtFrameAligner/mgt_frameAligner.vhd
 common/hdl/lpgbt/scrDscr/descrambler_53bitOrder49.vhd
 common/hdl/lpgbt/scrDscr/descrambler_58bitOrder58.vhd
 common/hdl/lpgbt/scrDscr/scrambler_36bitOrder36.vhd
 common/hdl/lpgbt/scrDscr/descrambler_60bitOrder58.vhd
 common/hdl/lpgbt/scrDscr/descrambler_51bitOrder49.vhd
+common/hdl/lpgbt/lpgbt_asic_emul/lpgbtemul_top.vhd
+common/hdl/lpgbt/lpgbt_asic_emul/gt_pkg.vhd
+common/hdl/lpgbt/lpgbt_asic_emul/downLinkDeinterleaver.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_mult_3.v
+common/hdl/lpgbt/lpgbt_asic_emul/upLinkFECEncoder.v
+common/hdl/lpgbt/lpgbt_asic_emul/scrambler53bitOrder49.v
+common/hdl/lpgbt/lpgbt_asic_emul/downLinkFECDecoder.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_add_3.v
+common/hdl/lpgbt/lpgbt_asic_emul/upLinkScrambler.v
+common/hdl/lpgbt/lpgbt_asic_emul/downLinkRxDataPath.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_multBy2_5.v
+common/hdl/lpgbt/lpgbt_asic_emul/upLinkInterleaver.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_multBy2_3.v
+common/hdl/lpgbt/lpgbt_asic_emul/rs_decoder_N7K5.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_multBy2_4.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_multBy3_5.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_multBy3_4.v
+common/hdl/lpgbt/lpgbt_asic_emul/descrambler36bitOrder36.v
+common/hdl/lpgbt/lpgbt_asic_emul/scrambler60bitOrder58.v
+common/hdl/lpgbt/lpgbt_asic_emul/rs_encoder_N31K29.v
+common/hdl/lpgbt/lpgbt_asic_emul/upLinkDataSelect.v
+common/hdl/lpgbt/lpgbt_asic_emul/scrambler51bitOrder49.v
+common/hdl/lpgbt/lpgbt_asic_emul/upLinkTxDataPath.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_log_3.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_add_5.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_add_4.v
+common/hdl/lpgbt/lpgbt_asic_emul/rs_encoder_N15K13.v
+common/hdl/lpgbt/lpgbt_asic_emul/gf_inv_3.v
+common/hdl/lpgbt/lpgbt_asic_emul/scrambler58bitOrder58.v
 
