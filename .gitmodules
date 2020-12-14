@@ -1,0 +1,3 @@
+[submodule "regtools"]
+	path = regtools
+	url = https://github.com/andrewpeck/regtools.git
