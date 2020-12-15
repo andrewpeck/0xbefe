@@ -222,7 +222,7 @@ begin
     
     --======== GBTx IC ========--
     
-    i_ic_controller : entity work.gbtx_ic_controller
+    i_ic_controller : entity work.gbt_ic_controller
 --        generic map(
 --            g_GBTX_I2C_ADDRESS => x"1"
 --        )
