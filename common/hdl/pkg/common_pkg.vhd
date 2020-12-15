@@ -14,13 +14,6 @@ package common_pkg is
     function up_to_power_of_2(arg : positive) return natural; -- "rounds" the given number up to the closest power of 2 number (e.g. if you give 6, it will say 8, which is 2^3)
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
 
-    --======================--
-    --== Config Constants ==--
-    --======================-- 
-    
-    -- DAQ
-    constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"0";
-
     --============--
     --== Common ==--
     --============--   

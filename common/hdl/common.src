@@ -13,6 +13,7 @@ common/hdl/utils/latch.vhd
 common/hdl/utils/i2c_slave.vhd
 common/hdl/utils/rate_counter.vhd
 common/hdl/utils/crc16.vhd
+common/hdl/utils/crc_vfat3_daq.v
 common/hdl/utils/counter.vhd
 common/hdl/utils/clk_phase_check_v7.vhd
 common/hdl/utils/axi_ipbus_bridge.vhd

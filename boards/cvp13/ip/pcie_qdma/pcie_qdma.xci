@@ -1896,6 +1896,7 @@
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.dma_intf_sel_qdma" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.en_axi_st_qdma" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.en_transceiver_status_ports" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.enable_gen4" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.enable_jtag_dbg" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.enable_mark_debug" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.enable_pcie_debug" xilinx:valueSource="user"/>

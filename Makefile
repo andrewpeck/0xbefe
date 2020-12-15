@@ -6,6 +6,8 @@ else
 VER_ARG =
 endif
 
+NJOBS = 24
+
 CCZE := $(shell command -v ccze 2> /dev/null)
 ifndef CCZE
 COLORIZE =
@@ -76,41 +78,17 @@ create_me0: create_me0_cvp13 create_me0_ctp7
 create: create_ge11 create_ge21 create_me0
 
 ################################################################################
-# Synth
+# compile (synth + impl)
 ################################################################################
 
-synth_cvp13: synth_ge11_cvp13 synth_ge21_cvp13 synth_me0_cvp13
-synth_ctp7: synth_ge11_ctp7 synth_ge21_ctp7 synth_me0_ctp7
+cvp13: impl_ge11_cvp13 impl_ge21_cvp13 impl_me0_cvp13
+ctp7: impl_ge11_ctp7 impl_ge21_ctp7 impl_me0_ctp7
 
-synth_ge11: synth_ge11_cvp13 synth_ge11_ctp7
-synth_ge21: synth_ge21_cvp13 synth_ge21_ctp7
-synth_me0: synth_me0_cvp13 synth_me0_ctp7
+ge11: impl_ge11_cvp13 impl_ge11_ctp7
+ge21: impl_ge21_cvp13 impl_ge21_ctp7
+me0: impl_me0_cvp13 impl_me0_ctp7
 
-synth: synth_ge11 synth_ge21 synth_me0
-
-################################################################################
-# Impl
-################################################################################
-
-impl_cvp13: impl_ge11_cvp13 impl_ge21_cvp13 impl_me0_cvp13
-impl_ctp7: impl_ge11_ctp7 impl_ge21_ctp7 impl_me0_ctp7
-
-impl_ge11: impl_ge11_cvp13 impl_ge11_ctp7
-impl_ge21: impl_ge21_cvp13 impl_ge21_ctp7
-impl_me0: impl_me0_cvp13 impl_me0_ctp7
-
-impl: impl_ge11 impl_ge21 impl_me0
-
-################################################################################
-# Shortcuts
-################################################################################
-
-ge11: impl_ge11
-ge21: impl_ge21
-me0: impl_me0
-
-cvp13: impl_cvp13
-ctp7: impl_ctp7
+all: impl_ge11 impl_ge21 impl_me0
 
 ################################################################################
 # Generics
@@ -122,14 +100,8 @@ create_%: #update_%
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
 	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
 
-synth_%: create_%
-	@echo -------------------------------------------------------------------------------  $(COLORIZE)
-	@echo Launching Synthesis $(patsubst synth_%,%,$@)                                     $(COLORIZE)
+impl_%: #create_% synth_%
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchSynthesis.sh $(patsubst synth_%,%,$@)                                  $(COLORIZE)
-
-impl_%: create_% synth_%
+	@echo Launching Hog Workflow $(patsubst impl_%,%,$@) with njobs = $(NJOBS)             $(COLORIZE)
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@echo Launching Implementation $(patsubst impl_%,%,$@)                                 $(COLORIZE)
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchImplementation.sh $(patsubst impl_%,%,$@                               $(COLORIZE))
+	@time Hog/LaunchWorkflow.sh $(patsubst impl_%,%,$@) -njobs $(NJOBS)                    $(COLORIZE)
