@@ -18,6 +18,7 @@ use work.user_package.all;
 use work.user_version_package.all;
 
 --! GEM packages
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.gem_board_config_package.all;
 

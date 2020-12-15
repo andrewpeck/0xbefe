@@ -27,6 +27,7 @@ use work.ttc_pkg.all;
 use work.capture_playback_pkg.all;
 use work.system_package.all;
 use work.axi_pkg.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --============================================================================

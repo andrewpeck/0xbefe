@@ -17,6 +17,7 @@ use ieee.std_logic_1164.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.mgt_pkg.all;
 

@@ -20,6 +20,7 @@ use unisim.vcomponents.all;
 use work.gbt_bank_package.all;
 use work.vendor_specific_gbt_bank_package.all;
 use work.gbt_banks_user_setup.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --=================================================================================================--

@@ -13,6 +13,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_misc.all;
 
 use work.ttc_pkg.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 entity vfat3_rx_link is

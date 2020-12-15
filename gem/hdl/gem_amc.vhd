@@ -16,6 +16,7 @@ use ieee.std_logic_misc.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.gem_board_config_package.all;
 use work.ipb_addr_decode.all;

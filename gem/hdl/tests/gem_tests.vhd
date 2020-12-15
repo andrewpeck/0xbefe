@@ -12,6 +12,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;

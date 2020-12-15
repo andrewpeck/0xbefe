@@ -66,7 +66,6 @@ common/hdl/tests/gbt_prbs_loopback_test.vhd
 # GBTX
 common/hdl/gbtx/gbt.vhd
 common/hdl/gbtx/core_sources/gbt_bank_package.vhd
-common/hdl/gbtx/core_sources/gbt_bank.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner_wraddr.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler_16bit.vhd
@@ -103,14 +102,11 @@ common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_rsencode.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_polydiv.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx.vhd
-common/hdl/gbtx/core_sources/mgt/multi_gigabit_transceivers.vhd
-common/hdl/gbtx/core_sources/mgt/mgt_latopt_bitslipctrl.vhd
 
 # LpGBT
 common/hdl/lpgbt/lpgbtfpga_package.vhd
 common/hdl/lpgbt/lpgbt_10g_tx.vhd
 common/hdl/lpgbt/lpgbt.vhd
-common/hdl/lpgbt/lpgbtemul_top.vhd
 common/hdl/lpgbt/lpgbt_10g_bidir.vhd
 common/hdl/lpgbt/dataPath/uplink_deinterleaver.vhd
 common/hdl/lpgbt/dataPath/downlink_fecEncoder.vhd
@@ -132,7 +128,6 @@ common/hdl/lpgbt/scrDscr/descrambler_58bitOrder58.vhd
 common/hdl/lpgbt/scrDscr/scrambler_36bitOrder36.vhd
 common/hdl/lpgbt/scrDscr/descrambler_60bitOrder58.vhd
 common/hdl/lpgbt/scrDscr/descrambler_51bitOrder49.vhd
-common/hdl/lpgbt/lpgbt_asic_emul/lpgbtemul_top.vhd
 common/hdl/lpgbt/lpgbt_asic_emul/gt_pkg.vhd
 common/hdl/lpgbt/lpgbt_asic_emul/downLinkDeinterleaver.v
 common/hdl/lpgbt/lpgbt_asic_emul/gf_mult_3.v

@@ -13,6 +13,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.ttc_pkg.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 entity oh_fpga_loader is

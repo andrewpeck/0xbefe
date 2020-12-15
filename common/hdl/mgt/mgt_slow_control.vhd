@@ -18,6 +18,7 @@ use unisim.vcomponents.all;
 library xpm;
 use xpm.vcomponents.all;
 
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.mgt_pkg.all;
 use work.ipbus.all;
