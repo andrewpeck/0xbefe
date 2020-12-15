@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.all;
 use ieee.numeric_std.all;
 use work.ipbus.all;
 
-use work.sca_pkg;
+use work.sca_pkg.all;
 use work.gem_board_config_package.CFG_GEM_STATION;
 
 package sca_config_pkg is

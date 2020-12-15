@@ -56,5 +56,4 @@ gem/hdl/misc/gbt_link_mux_me0.vhd
 
 # Tests
 #gem/hdl/tests/gem_tests.vhd                <-- use the generated version specific to the project
-gem/hdl/tests/gt_8b10b_loopback_test.vhd
 
