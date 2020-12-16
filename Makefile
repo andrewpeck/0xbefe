@@ -57,10 +57,25 @@ update_me0_ctp7:
 
 update_ctp7: update_ge11_ctp7 update_ge21_ctp7 update_me0_ctp7
 
+#### APEX ####
+update_ge11_apex:
+	@cd address_table/gem && python generate_xml.py
+	@cd regtools && python generate_registers.py -p generated/ge11_apex/ apex
+
+update_ge21_apex:
+	@cd address_table/gem && python generate_xml.py
+	@cd regtools && python generate_registers.py -p generated/ge21_apex/ apex
+
+update_me0_apex:
+	@cd address_table/gem && python generate_xml.py
+	@cd regtools && python generate_registers.py -p generated/me0_apex/ apex
+
+update_apex: update_ge11_apex update_ge21_apex update_me0_apex
+
 #### shortcuts ####
-update_ge11: update_ge11_cvp13 update_ge11_ctp7
-update_ge21: update_ge21_cvp13 update_ge21_ctp7
-update_me0: update_me0_cvp13 update_me0_ctp7
+update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
+update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex
+update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex
 
 update: update_ge11 update_ge21 update_me0
 	
@@ -70,10 +85,11 @@ update: update_ge11 update_ge21 update_me0
 
 create_cvp13: create_ge11_cvp13 create_ge21_cvp13 create_me0_cvp13
 create_ctp7: create_ge11_ctp7 create_ge21_ctp7 create_me0_ctp7
+create_apex: create_ge11_apex create_ge21_apex create_me0_apex
 
-create_ge11: create_ge11_cvp13 create_ge11_ctp7
-create_ge21: create_ge21_cvp13 create_ge21_ctp7
-create_me0: create_me0_cvp13 create_me0_ctp7
+create_ge11: create_ge11_cvp13 create_ge11_ctp7 create_ge11_apex
+create_ge21: create_ge21_cvp13 create_ge21_ctp7 create_ge21_apex
+create_me0: create_me0_cvp13 create_me0_ctp7 create_me0_apex
 
 create: create_ge11 create_ge21 create_me0
 
@@ -83,12 +99,13 @@ create: create_ge11 create_ge21 create_me0
 
 cvp13: impl_ge11_cvp13 impl_ge21_cvp13 impl_me0_cvp13
 ctp7: impl_ge11_ctp7 impl_ge21_ctp7 impl_me0_ctp7
+apex: impl_ge11_apex impl_ge21_apex impl_me0_apex
 
-ge11: impl_ge11_cvp13 impl_ge11_ctp7
-ge21: impl_ge21_cvp13 impl_ge21_ctp7
-me0: impl_me0_cvp13 impl_me0_ctp7
+ge11: impl_ge11_cvp13 impl_ge11_ctp7 impl_ge11_apex
+ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex
+me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex
 
-all: impl_ge11 impl_ge21 impl_me0
+all: ge11 ge21 me0
 
 ################################################################################
 # Generics

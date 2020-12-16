@@ -1,0 +1,6 @@
+# -*- mode: TCL;-*-
+
+# APEX BD
+boards/apex/bd/apex_blk.bd
+boards/apex/hdl/bd/bd_utils.v
+boards/apex/hdl/bd/bram_delay.v

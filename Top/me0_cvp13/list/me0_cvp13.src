@@ -1,0 +1,32 @@
+# -*- mode: TCL;-*-
+
+# Project config
+Top/me0_cvp13/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+
+# GEM source
+gem/hdl/gem.src
+
+# GEM CVP13 source
+boards/cvp13/hdl/gem_cvp13.src
+
+# sources with generated registers
+gem/hdl/pkg/generated/me0_cvp13/registers.vhd
+common/hdl/mgt/generated/me0_cvp13/mgt_slow_control.vhd
+common/hdl/ttc/generated/me0_cvp13/ttc.vhd
+gem/hdl/misc/generated/me0_cvp13/gem_system_regs.vhd
+gem/hdl/tests/generated/me0_cvp13/gem_tests.vhd
+gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd
+gem/hdl/daq/generated/me0_cvp13/daq.vhd
+gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
+gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
+
+# GEM IP
+gem/ip/gem_common_ip.src
+
+# CVP13 IP
+boards/cvp13/ip/gem_cvp13_ip.src
+
