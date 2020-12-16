@@ -278,12 +278,12 @@ begin
             
             gth_refclk0_o      => gth_refclk0,
             gth_refclk1_o      => gth_refclk1,
-            gth_refclk0_div2_o => open,
-            gth_refclk1_div2_o => open,
+            gth_refclk0_div2_o => gth_refclk0_div2,
+            gth_refclk1_div2_o => gth_refclk1_div2,
             gty_refclk0_o      => gty_refclk0,
             gty_refclk1_o      => gty_refclk1,
-            gty_refclk0_div2_o => open,
-            gty_refclk1_div2_o => open
+            gty_refclk0_div2_o => gty_refclk0_div2,
+            gty_refclk1_div2_o => gty_refclk1_div2
         );
     
     -- temporary GTY channel refclk wiring for 4 selected channels

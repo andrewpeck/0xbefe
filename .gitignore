@@ -2,6 +2,7 @@ Projects
 VivadoProject
 site
 vivado*
+bin
 *~
 *.pyc
 .cxl.ip/
@@ -12,6 +13,10 @@ cxl_error.log
 /boards/cvp13/ip/*
 !*.xci
 !*.xcix
+
+/boards/*/bd/*
+!*.bd
+!*.src
 
 generated
 
