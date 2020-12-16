@@ -71,7 +71,7 @@ architecture Behavioral of ipbus_slave is
     signal regs_read_pulse_done     : std_logic := '0'; 
     
     -- Timeout
-    constant ipb_timeout      : unsigned(15 downto 0) := x"1388"; -- 5000 clock cycles
+    constant ipb_timeout      : unsigned(15 downto 0) := x"5dc"; -- 1500 clock cycles
     signal ipb_timer          : unsigned(15 downto 0) := (others => '0');
         
 begin
