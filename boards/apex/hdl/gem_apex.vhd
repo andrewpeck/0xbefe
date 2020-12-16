@@ -220,7 +220,7 @@ begin
             C_NUM_IPB_SLAVES   => C_NUM_IPB_SLAVES,
             C_S_AXI_DATA_WIDTH => 32,
             C_S_AXI_ADDR_WIDTH => 32,
-            C_DEBUG => false
+            C_DEBUG => true
         )
         port map(
             ipb_reset_o    => ipb_reset,

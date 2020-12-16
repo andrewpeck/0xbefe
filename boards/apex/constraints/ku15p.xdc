@@ -39,6 +39,7 @@ set_false_path -from [get_clocks -of_objects [get_pins i_apex_c2c/clk_wiz/inst/m
 
 ############### timing ################
 set_clock_groups -asynchronous -group [get_clocks {dbg_hub/*}]
-set_clock_groups -asynchronous -group [get_clocks {axil_clk}]
+set_clock_groups -asynchronous -group [get_clocks {clk_out2_apex_blk_clk_wiz_0}]
+set_clock_groups -asynchronous -group [get_clocks {clk_out1_apex_blk_clk_wiz_0}]
 set_clock_groups -asynchronous -group [get_clocks {clk_250}]
-set_clock_groups -asynchronous -group [get_clocks {i_apex_c2c/*TXOUTCLK}]
+set_clock_groups -asynchronous -group [get_clocks {get_clocks -of_objects [get_pins -hier -filter {name=~*i_apex_c2c/*TXOUTCLK}]]
