@@ -549,6 +549,9 @@ begin
     --================================--
 
     i_gem_system : entity work.gem_system_regs
+            generic map (
+                g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES
+            )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
             reset_i                     => reset,
@@ -556,6 +559,7 @@ begin
             ipb_reset_i                 => ipb_reset_i,
             ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.system),
             ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.system),
+            ipb_mon_miso_arr_i          => ipb_miso_arr,
             board_id_o                  => open,
             loopback_gbt_test_en_o      => loopback_gbt_test_en,
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
