@@ -117,6 +117,10 @@ begin
                         if (ipb_mosi.ipb_strobe = '1') then
                             ipb_state <= RSPD;
                         end if;
+                        
+                        ipb_miso <= (ipb_ack => '0', ipb_err => '0', ipb_rdata => (others => '0'));
+                        ipb_timer <= (others => '0');
+                        
                     when RSPD =>
                         if (ipb_addr_valid = '1' and ipb_mosi.ipb_write = '1') then
                             --write
@@ -166,7 +170,12 @@ begin
                     when RST =>
                         ipb_miso.ipb_ack <= '0';
                         ipb_miso.ipb_err <= '0';
-                        ipb_state          <= IDLE;
+                        -- wait for the strobe to go down before returning to idle
+                        if (ipb_mosi.ipb_strobe = '0') or (ipb_timer > ipb_timeout) then
+                            ipb_state <= IDLE;
+                        else
+                            ipb_timer <= ipb_timer + 1;
+                        end if;
                     when others =>
                         ipb_miso  <= (ipb_ack => '0', ipb_err => '0', ipb_rdata => (others => '0'));
                         ipb_state   <= IDLE;
