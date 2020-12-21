@@ -76,8 +76,6 @@ architecture Behavioral of ipbus_slave is
         
 begin
     
-    ipb_miso_o <= ipb_miso;
-    
     p_ipb_fsm:
     process(ipb_clk_i)
     begin
@@ -93,6 +91,7 @@ begin
                 ipb_mosi <= (ipb_addr => (others => '0'), ipb_wdata => (others => '0'), ipb_strobe => '0', ipb_write => '0');
             else
                 ipb_mosi <= ipb_mosi_i;
+                ipb_miso_o <= ipb_miso;
                 
                 case ipb_state is
                     when IDLE =>
