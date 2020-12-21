@@ -212,10 +212,10 @@
   </node>
 
   <node id="REG_ACCESS_MONITOR" address="0x500">
-    <node id="TRANSACTION_CNT" address="0x0" mask="0x0000ffff" permission="r"
+    <node id="TRANSACT_CNT" address="0x0" mask="0x0000ffff" permission="r"
           description="Total number of register access transactions (note, the counter is 16bit rolling)"
           fw_signal="ipb_mon_trans_cnt"/>
-    <node id="TRANSACTION_ERR_CNT" address="0x0" mask="0x7fff0000" permission="r"
+    <node id="TRANSACT_ERR_CNT" address="0x0" mask="0x7fff0000" permission="r"
           description="Total number of register access errors (note, the counter is 16bit rolling)"
           fw_signal="ipb_mon_err_cnt"/>
     <node id="LAST_TRANS_ERR" address="0x0" mask="0x80000000" permission="r"
