@@ -549,9 +549,9 @@ begin
     --================================--
 
     i_gem_system : entity work.gem_system_regs
-            generic map (
-                g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES
-            )
+        generic map (
+            g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES
+        )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
             reset_i                     => reset,
