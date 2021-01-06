@@ -6,14 +6,14 @@ set DESIGN    "[file rootname [file tail [info script]]]"
 set PATH_REPO "[file normalize [file dirname [info script]]]/../../"
 
 #https://www.xilinx.com/support/answers/72570.html
-
-set PYTHONPATH $::env(PYTHONPATH)
-set PYTHONHOME $::env(PYTHONHOME)
-unset env(PYTHONPATH)
-unset env(PYTHONHOME)
+# the below trick with PYTHONPATH is only necessary with vivado 2019.1
+#set PYTHONPATH $::env(PYTHONPATH)
+#set PYTHONHOME $::env(PYTHONHOME)
+#unset env(PYTHONPATH)
+#unset env(PYTHONHOME)
 puts [exec bash -c {cd ../.. && make update_me0_apex}]
-set env(PYTHONPATH) $PYTHONPATH
-set env(PYTHONHOME) $PYTHONHOME
+#set env(PYTHONPATH) $PYTHONPATH
+#set env(PYTHONHOME) $PYTHONHOME
 
 source $PATH_REPO/Top/common.tcl
 
