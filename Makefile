@@ -6,7 +6,7 @@ else
 VER_ARG =
 endif
 
-NJOBS = 24
+NJOBS = 12
 
 CCZE := $(shell command -v ccze 2> /dev/null)
 ifndef CCZE
