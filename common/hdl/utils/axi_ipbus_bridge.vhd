@@ -141,15 +141,17 @@ architecture arch_imp of axi_ipbus_bridge is
     signal transaction_cnt  : unsigned(15 downto 0) := (others => '0');
 
 	-- AXI4LITE signals
-	signal axi_awready: std_logic;
-	signal axi_wready	: std_logic;
-	signal axi_wdata	: std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal axi_bresp	: std_logic_vector(1 downto 0);
-	signal axi_bvalid	: std_logic;
-	signal axi_arready: std_logic;
-	signal axi_rdata	: std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal axi_rresp	: std_logic_vector(1 downto 0);
-	signal axi_rvalid	: std_logic;
+    signal axi_awready     : std_logic;
+    signal axi_wready      : std_logic;
+    signal axi_wdata       : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+    signal axi_bresp       : std_logic_vector(1 downto 0);
+    signal axi_bvalid      : std_logic;
+    signal axi_arready     : std_logic;
+    signal axi_rdata       : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+    signal axi_rresp       : std_logic_vector(1 downto 0);
+    signal axi_rvalid      : std_logic;
+    signal axi_word_araddr : std_logic_vector(C_S_AXI_ADDR_WIDTH - 1 downto 0);
+    signal axi_word_awaddr : std_logic_vector(C_S_AXI_ADDR_WIDTH - 1 downto 0);
 
     signal debug_awaddr : std_logic_vector(31 downto 0) := (others => '0');
     signal debug_araddr : std_logic_vector(31 downto 0) := (others => '0');
@@ -180,6 +182,9 @@ begin
 	S_AXI_RDATA	<= axi_rdata;
 	S_AXI_RRESP	<= axi_rresp;
 	S_AXI_RVALID	<= axi_rvalid;
+
+    axi_word_araddr <= "00" & S_AXI_ARADDR(C_S_AXI_ADDR_WIDTH-1 downto 2);
+    axi_word_awaddr <= "00" & S_AXI_AWADDR(C_S_AXI_ADDR_WIDTH-1 downto 2);
 
     read_active_o <= '1' when ipb_state = READ else '0';
     write_active_o <= '1' when ipb_state = WRITE else '0';
@@ -214,7 +219,7 @@ begin
             -- axi read request
             if (S_AXI_ARVALID = '1') then
               axi_arready <= '1';
-              ipb_slv_select <= ipb_addr_sel("00" & S_AXI_ARADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
+              ipb_slv_select <= ipb_addr_sel(axi_word_araddr);
               ipb_state <= READ;
               transaction_cnt <= transaction_cnt + 1;
             
@@ -222,7 +227,7 @@ begin
             elsif (S_AXI_AWVALID = '1' and S_AXI_WVALID = '1') then
               axi_awready <= '1';
               axi_wready <= '1';
-              ipb_slv_select <= ipb_addr_sel("00" & S_AXI_AWADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
+              ipb_slv_select <= ipb_addr_sel(axi_word_awaddr);
               transaction_cnt <= transaction_cnt + 1;
               
               -- Respective byte enables are asserted as per write strobes                   

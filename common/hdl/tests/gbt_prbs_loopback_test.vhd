@@ -24,6 +24,7 @@ entity gbt_prbs_loopback_test is
     port(
         -- reset
         reset_i                 : in  std_logic;
+        enable_i                : in  std_logic;
         
         -- gbt links
         gbt_clk_i               : in  std_logic;
@@ -112,7 +113,7 @@ begin
                 port map(
                     ref_clk_i => gbt_clk_i,
                     reset_i   => reset_i,
-                    en_i      => rx_prbs_ready_arr(gbt * g_RX_ELINKS_PER_GBT + elink) and pulse_40hz,
+                    en_i      => rx_prbs_ready_arr(gbt * g_RX_ELINKS_PER_GBT + elink) and pulse_40hz and enable_i,
                     count_o   => elink_mwords_cnt_arr_o(gbt * g_RX_ELINKS_PER_GBT + elink)
                 );
         
@@ -125,7 +126,7 @@ begin
                 port map(
                     ref_clk_i => gbt_clk_i,
                     reset_i   => reset_i,
-                    en_i      => rx_prbs_err_arr(gbt * g_RX_ELINKS_PER_GBT + elink) and rx_prbs_ready_arr(gbt * g_RX_ELINKS_PER_GBT + elink),
+                    en_i      => rx_prbs_err_arr(gbt * g_RX_ELINKS_PER_GBT + elink) and rx_prbs_ready_arr(gbt * g_RX_ELINKS_PER_GBT + elink) and enable_i,
                     count_o   => rx_err_cnt_arr(gbt * g_RX_ELINKS_PER_GBT + elink)(30 downto 0)
                 );
             

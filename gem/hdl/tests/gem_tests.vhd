@@ -114,6 +114,7 @@ begin
             )
             port map(
                 reset_i                 => reset or gbt_loop_reset,
+                enable_i                => loopback_gbt_test_en_i,
                 gbt_clk_i               => ttc_clk_i.clk_40,
                 gbt_tx_data_arr_o       => gbt_loop_oh_tx_links_arr,
                 gbt_wide_rx_data_arr_i  => gbt_loop_oh_rx_links_arr,

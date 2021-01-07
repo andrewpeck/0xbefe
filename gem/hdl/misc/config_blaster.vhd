@@ -348,7 +348,7 @@ begin
                 -- read handling
                 case rama_addr is
                     when x"0000" =>
-                        rama_dout(C_CTRL_RAMSEL) <= x"000" & "000" & ctrl_blaster_enabled;
+                        rama_dout(C_CTRL_RAMSEL) <= x"0000000" & "000" & ctrl_blaster_enabled;
                     when x"0100" =>
                         rama_dout(C_CTRL_RAMSEL) <= std_logic_vector(to_unsigned(C_GBTX_RAM_SIZE_32, 32));
                     when x"0101" =>
