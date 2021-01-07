@@ -214,7 +214,7 @@ begin
             -- axi read request
             if (S_AXI_ARVALID = '1') then
               axi_arready <= '1';
-              ipb_slv_select <= ipb_addr_sel(S_AXI_ARADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
+              ipb_slv_select <= ipb_addr_sel("00" & S_AXI_ARADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
               ipb_state <= READ;
               transaction_cnt <= transaction_cnt + 1;
             
@@ -222,7 +222,7 @@ begin
             elsif (S_AXI_AWVALID = '1' and S_AXI_WVALID = '1') then
               axi_awready <= '1';
               axi_wready <= '1';
-              ipb_slv_select <= ipb_addr_sel(S_AXI_AWADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
+              ipb_slv_select <= ipb_addr_sel("00" & S_AXI_AWADDR(C_S_AXI_ADDR_WIDTH-1 downto 2));
               transaction_cnt <= transaction_cnt + 1;
               
               -- Respective byte enables are asserted as per write strobes                   
