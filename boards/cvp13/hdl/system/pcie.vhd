@@ -269,14 +269,10 @@ architecture pcie_arch of pcie is
             axi_aclk               : OUT STD_LOGIC;
             axi_aresetn            : OUT STD_LOGIC;
             usr_irq_in_vld         : IN  STD_LOGIC;
-            usr_irq_in_vec         : IN  STD_LOGIC_VECTOR(4 DOWNTO 0);
+            usr_irq_in_vec         : IN  STD_LOGIC_VECTOR(10 DOWNTO 0);
             usr_irq_in_fnc         : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
             usr_irq_out_ack        : OUT STD_LOGIC;
             usr_irq_out_fail       : OUT STD_LOGIC;
-            st_rx_msg_rdy          : IN  STD_LOGIC;
-            st_rx_msg_valid        : OUT STD_LOGIC;
-            st_rx_msg_last         : OUT STD_LOGIC;
-            st_rx_msg_data         : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
             tm_dsc_sts_vld         : OUT STD_LOGIC;
             tm_dsc_sts_port_id     : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             tm_dsc_sts_qen         : OUT STD_LOGIC;
@@ -289,6 +285,7 @@ architecture pcie_arch of pcie is
             tm_dsc_sts_qinv        : OUT STD_LOGIC;
             tm_dsc_sts_irq_arm     : OUT STD_LOGIC;
             tm_dsc_sts_rdy         : IN  STD_LOGIC;
+            tm_dsc_sts_pidx        : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             dsc_crdt_in_crdt       : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
             dsc_crdt_in_qid        : IN  STD_LOGIC_VECTOR(10 DOWNTO 0);
             dsc_crdt_in_dir        : IN  STD_LOGIC;
@@ -308,7 +305,7 @@ architecture pcie_arch of pcie is
             m_axi_rvalid           : IN  STD_LOGIC;
             m_axi_awid             : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
             m_axi_awaddr           : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
-            m_axi_awuser           : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            m_axi_awuser           : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
             m_axi_awlen            : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
             m_axi_awsize           : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             m_axi_awburst          : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -324,7 +321,7 @@ architecture pcie_arch of pcie is
             m_axi_bready           : OUT STD_LOGIC;
             m_axi_arid             : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
             m_axi_araddr           : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
-            m_axi_aruser           : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            m_axi_aruser           : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
             m_axi_arlen            : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
             m_axi_arsize           : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             m_axi_arburst          : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -334,7 +331,7 @@ architecture pcie_arch of pcie is
             m_axi_arcache          : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
             m_axi_rready           : OUT STD_LOGIC;
             m_axil_awaddr          : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-            m_axil_awuser          : OUT STD_LOGIC_VECTOR(28 DOWNTO 0);
+            m_axil_awuser          : OUT STD_LOGIC_VECTOR(54 DOWNTO 0);
             m_axil_awprot          : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             m_axil_awvalid         : OUT STD_LOGIC;
             m_axil_awready         : IN  STD_LOGIC;
@@ -346,7 +343,7 @@ architecture pcie_arch of pcie is
             m_axil_bresp           : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);
             m_axil_bready          : OUT STD_LOGIC;
             m_axil_araddr          : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-            m_axil_aruser          : OUT STD_LOGIC_VECTOR(28 DOWNTO 0);
+            m_axil_aruser          : OUT STD_LOGIC_VECTOR(54 DOWNTO 0);
             m_axil_arprot          : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             m_axil_arvalid         : OUT STD_LOGIC;
             m_axil_arready         : IN  STD_LOGIC;
@@ -357,13 +354,14 @@ architecture pcie_arch of pcie is
             cfg_negotiated_width_o : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
             cfg_current_speed_o    : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             cfg_ltssm_state_o      : OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
-            cfg_function_status    : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            cfg_max_read_req       : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
-            cfg_max_payload        : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-            cfg_flr_in_process     : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-            cfg_vf_flr_in_process  : OUT STD_LOGIC_VECTOR(251 DOWNTO 0);
             soft_reset_n           : IN  STD_LOGIC;
-            phy_ready              : OUT STD_LOGIC
+            phy_ready              : OUT STD_LOGIC;
+            qsts_out_op            : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            qsts_out_data          : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
+            qsts_out_port_id       : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+            qsts_out_qid           : OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
+            qsts_out_vld           : OUT STD_LOGIC;
+            qsts_out_rdy           : IN STD_LOGIC
         );
     END COMPONENT;
 
@@ -469,10 +467,6 @@ begin
             usr_irq_in_fnc                       => (others => '0'),
             usr_irq_out_ack                      => open,
             usr_irq_out_fail                     => open,
-            st_rx_msg_rdy                        => '1',
-            st_rx_msg_valid                      => open,
-            st_rx_msg_last                       => open,
-            st_rx_msg_data                       => open,
             tm_dsc_sts_vld                       => open,
             tm_dsc_sts_port_id                   => open,
             tm_dsc_sts_qen                       => open,
@@ -485,6 +479,7 @@ begin
             tm_dsc_sts_qinv                      => open,
             tm_dsc_sts_irq_arm                   => open,
             tm_dsc_sts_rdy                       => '1',
+            tm_dsc_sts_pidx                      => open,
             dsc_crdt_in_crdt                     => (others => '0'),
             dsc_crdt_in_qid                      => (others => '0'),
             dsc_crdt_in_dir                      => '0',
@@ -553,13 +548,14 @@ begin
             cfg_negotiated_width_o               => pcie_width,
             cfg_current_speed_o                  => pcie_speed,
             cfg_ltssm_state_o                    => pcie_train_state,
-            cfg_function_status                  => open,
-            cfg_max_read_req                     => open,
-            cfg_max_payload                      => open,
-            cfg_flr_in_process                   => open,
-            cfg_vf_flr_in_process                => open,
             soft_reset_n                         => '1', --qdma_soft_reset,
-            phy_ready                            => pcie_phy_ready
+            phy_ready                            => pcie_phy_ready,
+            qsts_out_op                          => open,
+            qsts_out_data                        => open,
+            qsts_out_port_id                     => open,
+            qsts_out_qid                         => open,
+            qsts_out_vld                         => open,
+            qsts_out_rdy                         => '1'
         );
 
     i_axi_full_load : axi_bram_ctrl_test
@@ -615,7 +611,7 @@ begin
             C_NUM_IPB_SLAVES   => g_NUM_IPB_SLAVES,
             C_S_AXI_DATA_WIDTH => 32,
             C_S_AXI_ADDR_WIDTH => 32,
-            C_DEBUG => false
+            C_DEBUG => true
         )
         port map(
             ipb_reset_o    => ipb_reset_o,
