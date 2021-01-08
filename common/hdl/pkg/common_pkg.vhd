@@ -217,7 +217,11 @@ package common_pkg is
         gap_detect_cnt      : std_logic_vector(15 downto 0);
         loader_ovf_unf_cnt  : std_logic_vector(15 downto 0);
     end record;
-        	
+
+    type t_gem_loader_cfg is record
+        firmware_size       : std_logic_vector(31 downto 0);
+    end record;
+
 end common_pkg;
    
 package body common_pkg is

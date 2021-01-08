@@ -66,6 +66,7 @@ package gth_pkg is
 
   type t_gth_cpll_init is record
     cpllreset : std_logic;
+    cpllpd    : std_logic;
   end record;
 
   type t_gth_cpll_status is record

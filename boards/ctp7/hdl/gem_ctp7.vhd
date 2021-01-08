@@ -24,7 +24,6 @@ use work.gth_pkg.all;
 use work.ctp7_utils_pkg.all;
 use work.ttc_pkg.all;
 use work.system_package.all;
-use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ipbus.all;
 use work.axi_pkg.all;

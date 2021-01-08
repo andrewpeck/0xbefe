@@ -16,7 +16,7 @@ use work.ttc_pkg.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 
-entity oh_fpga_loader is
+entity promless_fpga_loader is
     generic(
         g_LOADER_CLK_80_MHZ : boolean := true -- if this is set to false then 40MHz operation is assumed and loader_clk_i must be supplied with 40MHz clock instead of 80MHz
     );    
@@ -32,11 +32,12 @@ entity oh_fpga_loader is
         elink_data_o        : out std_logic_vector(15 downto 0);
         hard_reset_i        : in std_logic;
         
-        gem_loader_stats_o  : out t_gem_loader_stats
+        gem_loader_stats_o  : out t_gem_loader_stats;
+        gem_loader_cfg_i    : in  t_gem_loader_cfg
     );
-end oh_fpga_loader;
+end promless_fpga_loader;
 
-architecture Behavioral of oh_fpga_loader is
+architecture Behavioral of promless_fpga_loader is
     
     ------------- components -------------
     
@@ -93,7 +94,7 @@ architecture Behavioral of oh_fpga_loader is
     signal wait_init_timer  : unsigned(19 downto 0) := (others => '0');
     signal wait_data_timer  : unsigned(31 downto 0) := (others => '0');
     signal byte_cnt         : unsigned(31 downto 0) := (others => '0');
-    signal last_byte_idx    : unsigned(31 downto 0) := (others => '0');
+    signal firmware_size    : unsigned(31 downto 0) := (others => '0');
     signal loading_started  : std_logic := '0';
     signal gap_detected     : std_logic := '0';
     
@@ -136,8 +137,9 @@ begin
                 fifo_reset <= '1';
                 load_req_cnt <= (others => '0');
                 gap_det_cnt <= (others => '0');
-                last_byte_idx <= (others => '0');
+                firmware_size <= unsigned(gem_loader_cfg_i.firmware_size);
             else
+                firmware_size <= unsigned(gem_loader_cfg_i.firmware_size);
                 case state is
                     when IDLE =>
                         elink_data_o <= (others => '1');
@@ -151,11 +153,6 @@ begin
                         wait_init_timer <= (others => '0');
                         if (gap_detected = '1') then
                             gap_det_cnt <= gap_det_cnt + 1;
-                        end if;
-                        if (g_LOADER_CLK_80_MHZ) then
-                            last_byte_idx <= unsigned(from_gem_loader_i.size and x"fffffffe") - 2;
-                        else
-                            last_byte_idx <= unsigned(from_gem_loader_i.size) - 1;
                         end if;
                         
                         hard_reset_prev <= hard_reset;
@@ -228,7 +225,7 @@ begin
                             state <= IDLE;
                         end if;
                         
-                        if (byte_cnt = last_byte_idx) then
+                        if (byte_cnt >= firmware_size) then
                             state <= IDLE;
                             success_cnt <= success_cnt + 1;
                         end if;

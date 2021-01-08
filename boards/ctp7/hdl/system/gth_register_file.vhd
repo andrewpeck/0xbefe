@@ -49,7 +49,8 @@ entity gth_register_file is
 
     gth_gt_txreset_o    : out std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
     gth_gt_rxreset_o    : out std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
-    gth_gt_cpllreset_o  : out std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
+    
+    gth_cpll_init_arr_o : out t_gth_cpll_init_arr(g_NUM_OF_GTH_GTs-1 downto 0);
 
     gth_gt_txreset_done_i : in std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
     gth_gt_rxreset_done_i : in std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
@@ -93,6 +94,7 @@ architecture gth_register_file_arch of gth_register_file is
   signal s_tx_polarity  : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_tx_inhibit   : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_rx_lpmen     : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
+  signal s_cpll_pd      : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
 
   signal s_reg_cplllock       : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_reg_cpllrefclklost : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
@@ -180,18 +182,20 @@ begin
   gen_gth_rx_usrclk_cnt : for i in 0 to g_NUM_OF_GTH_GTs-1 generate
 
     -- PRBS error counters
-    process(clk_gth_rx_usrclk_arr_i(i))is
-    begin
-      if (rising_edge(clk_gth_rx_usrclk_arr_i(i))) then
-        s_prbs_err(i) <= gth_rx_status_arr_i(i).rxprbserr;
+    g_linu_not_null : if c_gth_config_arr(i).gth_link_type /= gth_null generate
+      process(clk_gth_rx_usrclk_arr_i(i))is
+      begin
+        if (rising_edge(clk_gth_rx_usrclk_arr_i(i))) then
+          s_prbs_err(i) <= gth_rx_status_arr_i(i).rxprbserr;
       
-        if (s_gth_prbs_cnt_rst_reg(i)(0) = '1') then
-          s_gth_prbs_cnt_reg(i) <= (others => '0');
-        elsif (s_prbs_err(i) = '1' and s_gth_prbs_cnt_reg(i) /= x"FFFFFFFF") then
-          s_gth_prbs_cnt_reg(i) <= std_logic_vector(unsigned(s_gth_prbs_cnt_reg(i)) + 1);
+          if (s_gth_prbs_cnt_rst_reg(i)(0) = '1') then
+            s_gth_prbs_cnt_reg(i) <= (others => '0');
+          elsif (s_prbs_err(i) = '1' and s_gth_prbs_cnt_reg(i) /= x"FFFFFFFF") then
+            s_gth_prbs_cnt_reg(i) <= std_logic_vector(unsigned(s_gth_prbs_cnt_reg(i)) + 1);
+          end if;
         end if;
-      end if;
-    end process;
+      end process;
+    end generate;
   
     -- 8b10b error counters
     g_8b10b_gth : if (c_gth_config_arr(i).gth_link_type = gth_3p2g) or (c_gth_config_arr(i).gth_link_type = gth_tx_10p24g_rx_3p2g) or (c_gth_config_arr(i).gth_link_type = gth_9p6g) generate
@@ -1120,7 +1124,8 @@ begin
     gth_rx_ctrl_arr_o(i).rxlpmen    <= s_rx_lpmen(i);
     gth_misc_ctrl_arr_o(i).loopback <= "000" when s_gth_loopback(i) = '0' else "010";
 
-    gth_gt_cpllreset_o(i)           <= s_cpll_reset(i);
+    gth_cpll_init_arr_o(i).cpllreset <= s_cpll_reset(i);
+    gth_cpll_init_arr_o(i).cpllpd    <= s_cpll_pd(i);
 
     gth_tx_ctrl_arr_o(i).txpd <= "00" when s_tx_pd(i) = '0' else "11";
     gth_rx_ctrl_arr_o(i).rxpd <= "00" when s_rx_pd(i) = '0' else "11";
@@ -1153,14 +1158,13 @@ begin
     s_gth_loopback(i) <= s_gth_ctrl_reg(i)(4);
     s_tx_inhibit(i)   <= s_gth_ctrl_reg(i)(5);
     s_rx_lpmen(i)     <= s_gth_ctrl_reg(i)(6);
+    s_cpll_pd(i)      <= s_gth_ctrl_reg(i)(7);
 
   end generate;
 
   gen_gth_common_qpll : for i in 0 to g_NUM_OF_GTH_COMMONs-1 generate
 
-    gth_common_reset_o(i) <= s_qpll_rst_reg(i)(0);
-    s_qpll_stat_reg(i)(0) <= gth_common_status_arr_i(i).QPLLLOCK;
-    s_qpll_stat_reg(i)(1) <= gth_common_status_arr_i(i).QPLLREFCLKLOST;
+    gth_common_reset_o(i) <= s_gth_rst_reg(i*4+0)(3) or s_gth_rst_reg(i*4+1)(3) or s_gth_rst_reg(i*4+2)(3) or s_gth_rst_reg(i*4+3)(3);
     
     gen_gth_common_channel : for j in 0 to 3 generate
     

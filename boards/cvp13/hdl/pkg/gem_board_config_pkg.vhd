@@ -39,6 +39,12 @@ package gem_board_config_package is
 
     constant CFG_GBT_DEBUG          : boolean := PRJ_CFG_GBT_DEBUG; -- Controlled by the project_config.vhd:  if set to true, an ILA will be instantiated which allows probing any GBT link
     
+    ------------ DEBUG FLAGS ------------
+    constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
+    constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
+    constant CFG_DEBUG_DAQ                  : boolean := true;
+    constant CFG_DEBUG_TRIGGER              : boolean := true;
+        
     --========================--
     --== Link configuration ==--
     --========================--

@@ -116,7 +116,7 @@ architecture ttc_clocks_arch of ttc_clocks is
     signal mmcm_locked_clk40        : std_logic;
     signal mmcm_unlock_p_clk40      : std_logic;
     signal mmcm_reset_psclk_tmp     : std_logic;
-
+    
     signal mmcm_unlock_cnt          : std_logic_vector(15 downto 0) := (others => '0');
     
     -- control signals moved to mmcm_ps_clk domain

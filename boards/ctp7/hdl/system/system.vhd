@@ -27,7 +27,6 @@ use work.ttc_pkg.all;
 use work.capture_playback_pkg.all;
 use work.system_package.all;
 use work.axi_pkg.all;
-use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --============================================================================
@@ -231,7 +230,8 @@ architecture system_arch of system is
   signal s_gth_gt_rxreset_regf    : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_gth_gt_txreset         : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_gth_gt_rxreset         : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
-  signal s_gth_gt_cpllreset       : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
+
+  signal s_gth_cpll_init_arr      : t_gth_cpll_init_arr(g_NUM_OF_GTH_GTs-1 downto 0);
 
   signal s_gth_common_status_arr  : t_gth_common_status_arr(g_NUM_OF_GTH_COMMONs-1 downto 0);
   signal s_gth_common_drp_in_arr  : t_gth_common_drp_in_arr(g_NUM_OF_GTH_COMMONs-1 downto 0);
@@ -441,10 +441,10 @@ begin
 
       gth_common_reset_o      => s_gth_common_reset,
       gth_common_status_arr_i => s_gth_common_status_arr,
+      gth_cpll_init_arr_o     => s_gth_cpll_init_arr,
       gth_cpll_status_arr_i   => s_gth_cpll_status_arr,
       gth_gt_txreset_o        => s_gth_gt_txreset_regf,
       gth_gt_rxreset_o        => s_gth_gt_rxreset_regf,
-      gth_gt_cpllreset_o      => s_gth_gt_cpllreset,
       gth_gt_txreset_done_i   => s_gth_gt_txreset_done,
       gth_gt_rxreset_done_i   => s_gth_gt_rxreset_done,
       gth_tx_ctrl_arr_o       => s_gth_tx_ctrl_arr,
@@ -494,7 +494,8 @@ begin
 
       clk_gth_tx_usrclk_arr_o => s_clk_gth_tx_usrclk_arr,
       clk_gth_rx_usrclk_arr_o => s_clk_gth_rx_usrclk_arr,
-      gth_cpll_reset_arr_i    => s_gth_gt_cpllreset,
+
+      gth_cpll_init_arr_i     => s_gth_cpll_init_arr,
       gth_cpll_status_arr_o   => s_gth_cpll_status_arr,
 
       ttc_clks_i              => ttc_clks,

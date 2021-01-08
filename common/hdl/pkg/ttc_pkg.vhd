@@ -77,8 +77,9 @@ package ttc_pkg is
         reset_local      : std_logic;
         cnt_reset        : std_logic;        
         l1a_enable       : std_logic;
+        cmd_enable       : std_logic;
         calib_mode       : std_logic;
-        calib_l1a_delay  : std_logic_vector(11 downto 0);
+        l1a_delay        : std_logic_vector(9 downto 0);
     end record;
 
     type t_phase_monitor_status is record

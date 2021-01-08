@@ -11,9 +11,9 @@ package gem_pkg is
     --==  Firmware version  ==--
     --========================-- 
 
-    constant C_FIRMWARE_DATE    : std_logic_vector(31 downto 0) := x"20200505";
-    constant C_FIRMWARE_MAJOR   : integer range 0 to 255        := 3;
-    constant C_FIRMWARE_MINOR   : integer range 0 to 255        := 11;
+    constant C_FIRMWARE_DATE    : std_logic_vector(31 downto 0) := x"20210108";
+    constant C_FIRMWARE_MAJOR   : integer range 0 to 255        := 4;
+    constant C_FIRMWARE_MINOR   : integer range 0 to 255        := 0;
     constant C_FIRMWARE_BUILD   : integer range 0 to 255        := 0;
     
     ------ Change log ------
@@ -123,7 +123,17 @@ package gem_pkg is
     -- 3.10.0 Reworked TTC clocking, added manual shifting possibility and phase monitoring (DMTD method used in TCDS), also bypassing the delay aligner in the GBT MGTs
     -- 3.10.1 Reworked the phase alignment FSM to use the DMTD phase measurement instead of the PLL lock signal, this also allows for a configurable lock target phase and tollerance
     -- 3.10.2 Trigger output links to EMTF added, using LpGBT ASIC TX encoding at 10.24Gb/s, and the protocol agreed with EMTF (note the RX side of these MGTs is still running at 3.2Gb/s to receive trigger data from OHs)
-    -- 3.11.0 Restructured MGTs to allow for easier configuration between different bus widths and usrclks. Now all MGT interfaces at the top level use 64 bit bus, and are remapped to appropriate bus sizes before connecting to gem_amc. The trigger TX MGT now uses 64 bit bus and 160MHz txusrclk2 to ease the timing  
+    -- 3.11.0 Restructured MGTs to allow for easier configuration between different bus widths and usrclks. Now all MGT interfaces at the top level use 64 bit bus, and are remapped to appropriate bus sizes before connecting to gem_amc. The trigger TX MGT now uses 64 bit bus and 160MHz txusrclk2 to ease the timing
+    -- 3.11.1 Added an option to use HDLC VFAT addressing  
+    -- 3.11.2 Added a GEM global reset register (recycled the unused GEM_SYSTEM.CNT_RESET address)
+    -- 3.11.3 Fixed a lockup problem when resetting the MMCM
+    -- 3.11.4 Introduced a CPLL reset control: bit 2 in the MGT reset reg
+    -- 3.12.0 Changed the order of VFATs in GE2/1 to correspond to the silkscreen of the newest GEBs instead of the J number
+    -- 3.12.1 Sector ID register added that is used in the trigger TX to EMTF, also OH mask is now used in trigger TX; ipbus reset has been fixed and separated from the global reset register; legacy GLIB registers removed
+    -- 3.12.2 L1A delay setting added. TTC module calibration mode is simplified - enabling calibration mode simply triggers the calpulse on L1A, and then the L1A can be delayed using the new delay setting
+    -- 3.12.3 CPLL power-down control added to the GTH control register (bit 7) - this should be used before resetting the CPLL
+    -- 3.12.4 Fixed EMTF overlap link mapping, QPLL reset register added, TTC command enable register added, GEMLoader firmware size register added (it is now disconnected from the UW GEMloader IP firmware size reg)
+    -- 3.12.5 Changed AXI Chip2Chip signal pins as per UW recommendation, and removed the requirement the RX startup FSM for CPLL lock to go down, because now the QPLL/CPLL reset outputs are driven by the user software instead
 
     --======================--
     --==      General     ==--
@@ -153,6 +163,8 @@ package gem_pkg is
         size        : std_logic_vector(2 downto 0);
         address     : std_logic_vector(10 downto 0);
     end record;
+
+    constant NULL_SBIT_CLUSTER : t_sbit_cluster := (size => (others => '1'), address => (others => '1')); 
 
     type t_oh_sbits is array(7 downto 0) of t_sbit_cluster;
     type t_oh_sbits_arr is array(integer range <>) of t_oh_sbits;

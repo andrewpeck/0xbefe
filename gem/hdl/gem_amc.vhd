@@ -158,6 +158,7 @@ architecture gem_amc_arch of gem_amc is
     signal link_reset           : std_logic;
     signal manual_link_reset    : std_logic;
     signal manual_global_reset  : std_logic;
+    signal manual_ipbus_reset   : std_logic;
 
     --== TTC signals ==--
     signal ttc_cmd              : t_ttc_cmds;
@@ -237,6 +238,7 @@ architecture gem_amc_arch of gem_amc is
     
     --== Other ==--
     signal gemloader_stats              : t_gem_loader_stats;
+    signal gemloader_cfg                : t_gem_loader_cfg;
     signal ipb_miso_arr                 : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
     
     --== Debug ==--
@@ -265,7 +267,7 @@ begin
     
     reset_pwrup_o <= reset_pwrup;
     reset <= reset_i or reset_pwrup or manual_global_reset;
-    ipb_reset <= ipb_reset_i or reset;
+    ipb_reset <= ipb_reset_i or reset_pwrup or manual_ipbus_reset;
     ipb_miso_arr_o <= ipb_miso_arr;
     link_reset <= manual_link_reset or ttc_cmd.hard_reset;
 
@@ -377,7 +379,7 @@ begin
             generic map(
                 g_GEM_STATION   => g_GEM_STATION,
                 g_OH_IDX        => std_logic_vector(to_unsigned(i, 4)),
-                g_DEBUG         => i = 0
+                g_DEBUG         => CFG_DEBUG_OH and (i = 0)
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -434,7 +436,8 @@ begin
         generic map(
             g_NUM_OF_OHs => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
-            g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS
+            g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
+            g_DEBUG => CFG_DEBUG_TRIGGER
         )
         port map(
             reset_i            => reset or link_reset,
@@ -518,7 +521,7 @@ begin
             g_NUM_OF_OHs => g_NUM_OF_OHs,
             g_DAQ_CLK_FREQ => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO => false,
-            g_DEBUG => true
+            g_DEBUG => CFG_DEBUG_DAQ
         )
         port map(
             reset_i                 => reset,
@@ -532,7 +535,7 @@ begin
             ttc_status_i            => ttc_status,
             vfat3_daq_clk_i         => ttc_clocks_i.clk_40,
             vfat3_daq_links_arr_i   => vfat3_daq_link_arr,
-            ipb_reset_i             => ipb_reset_i,
+            ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
             ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.daq),
             ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.daq),
@@ -556,7 +559,7 @@ begin
             ttc_clks_i                  => ttc_clocks_i,            
             reset_i                     => reset,
             ipb_clk_i                   => ipb_clk_i,
-            ipb_reset_i                 => ipb_reset_i,
+            ipb_reset_i                 => ipb_reset,
             ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.system),
             ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.system),
             ipb_mon_miso_arr_i          => ipb_miso_arr,
@@ -567,7 +570,9 @@ begin
             use_vfat_addressing_o       => use_vfat_addressing,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
-            gemloader_stats_i           => gemloader_stats
+            manual_ipbus_reset_o        => manual_ipbus_reset,
+            gemloader_stats_i           => gemloader_stats,
+            gemloader_cfg_o             => gemloader_cfg
         );
 
     --===============================--
@@ -588,7 +593,7 @@ begin
 
             vfat_mask_arr_o         => vfat_mask_arr,
 
-            ipb_reset_i             => ipb_reset_i,
+            ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
             ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.oh_links),
             ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.oh_links)
@@ -614,7 +619,7 @@ begin
             gbt_rx_ic_elinks_i  => gbt_ic_rx_data_arr,
             gbt_tx_ic_elinks_o  => gbt_ic_tx_data_arr,
             vfat3_sc_status_i   => vfat3_sc_status,
-            ipb_reset_i         => ipb_reset_i,
+            ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk_i,
             ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.slow_control),
             ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.slow_control)
@@ -822,7 +827,7 @@ begin
     --===========================--
 
     g_use_oh_fpga_loader : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
-        i_oh_fpga_loader : entity work.oh_fpga_loader
+        i_oh_fpga_loader : entity work.promless_fpga_loader
                 generic map (
                     g_LOADER_CLK_80_MHZ => true
                 )
@@ -834,7 +839,8 @@ begin
                 from_gem_loader_i  => from_gem_loader_i,
                 elink_data_o       => promless_tx_data,
                 hard_reset_i       => ttc_cmd.hard_reset,
-                gem_loader_stats_o => gemloader_stats
+                gem_loader_stats_o => gemloader_stats,
+                gem_loader_cfg_i   => gemloader_cfg
             );
     end generate;
         
@@ -870,7 +876,7 @@ begin
             probe_out3 => lpgbt_reset_rx
         );
 
-    g_gbt_debug : if CFG_GBT_DEBUG generate
+    g_gbt_debug : if CFG_DEBUG_GBT generate
         g_gbtx_ila : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
             i_ila_gbt : component ila_gbt
                 port map(

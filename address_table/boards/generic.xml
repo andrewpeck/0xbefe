@@ -19,7 +19,7 @@
           description="Writing anything to this register will trigger a TX and RX reset for this MGT"
           fw_write_pulse_signal="reset_arr(${MGT})"/>
 
-    <node id="CTRL" address="0x1"
+    <node id="CTRL" address="0x10"
           description="This register exposes multiple MGT controls: bit 0 -- TX powerdown, bit 1 -- RX powerdown, bit 2 -- TX polarity, bit 3 -- RX polarity, bit 4 -- loopback, bit 5 -- TX inhibit, bit 6 -- RX low power mode enable">
       <node id="TX_POWERDOWN" address="0x0" mask="0x00000001" permission="rw"
             description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"

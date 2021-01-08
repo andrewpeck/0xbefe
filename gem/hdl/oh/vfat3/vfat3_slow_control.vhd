@@ -249,7 +249,8 @@ begin
                                 tx_vfat_idx <= ipb_mosi_i.ipb_addr(15 downto 11);
                                 
                                 if (use_addressing_i = '1') then
-                                    hdlc_address <= "000" & std_logic_vector(unsigned(ipb_mosi_i.ipb_addr(15 downto 11)) + 1);
+                                    --hdlc_address <= "000" & std_logic_vector(unsigned(ipb_mosi_i.ipb_addr(15 downto 11)) + 1);
+                                    hdlc_address <= "000" & ipb_mosi_i.ipb_addr(15 downto 11);
                                 else
                                     hdlc_address <= DEFAULT_HDLC_ADDRESS;
                                 end if;

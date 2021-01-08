@@ -30,6 +30,7 @@ common/hdl/utils/seconds_counter.vhd
 common/hdl/utils/prbs7_4b_generator.vhd
 common/hdl/utils/running_mean.vhd
 common/hdl/utils/oneshot.vhd
+common/hdl/utils/shift_reg.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
 common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
@@ -58,7 +59,7 @@ common/hdl/slow_control/sca_rx.vhd
 common/hdl/slow_control/gbt_ic_controller.vhd
 
 # Misc
-common/hdl/misc/promless_loader.vhd
+common/hdl/misc/promless_fpga_loader.vhd
 
 # Tests
 common/hdl/tests/gbt_loopback_test.vhd

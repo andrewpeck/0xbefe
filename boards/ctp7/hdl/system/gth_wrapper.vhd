@@ -21,7 +21,6 @@ use UNISIM.VCOMPONENTS.all;
 
 library work;
 use work.gth_pkg.all;
-use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ttc_pkg.all;
 
@@ -63,7 +62,7 @@ entity gth_wrapper is
     
     ------------------------
 
-    gth_cpll_reset_arr_i  : in  std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
+    gth_cpll_init_arr_i   : in t_gth_cpll_init_arr(g_NUM_OF_GTH_GTs-1 downto 0);
     gth_cpll_status_arr_o : out t_gth_cpll_status_arr(g_NUM_OF_GTH_GTs-1 downto 0);
 
     ------------------------
@@ -808,7 +807,7 @@ begin
       s_gth_rx_init_arr(i*4+j).RXDFELFOVRDEN   <= '0';
       s_gth_rx_init_arr(i*4+j).RXLPMHFOVRDEN   <= '0';
 
-      s_gth_cpll_init_arr(i*4+j).cpllreset <= gth_cpll_reset_arr_i(i*4+j);
+      s_gth_cpll_init_arr(i*4+j) <= gth_cpll_init_arr_i(i*4+j);
 
       --------------------------------------------------------------------------
       gt_cdrlock_timeout : process(clk_stable_i)

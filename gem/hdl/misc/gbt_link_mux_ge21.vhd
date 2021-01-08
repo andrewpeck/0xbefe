@@ -112,18 +112,18 @@ begin
         vfat3_rx_data_arr_o(i)(14)  <= (others => '0');
         vfat3_rx_data_arr_o(i)(13) <= (others => '0');
         vfat3_rx_data_arr_o(i)(12) <= (others => '0');
-        vfat3_rx_data_arr_o(i)(11) <= real_gbt_rx_data(i * 2 + 1)(47 downto 40);
-        vfat3_rx_data_arr_o(i)(10) <= real_gbt_rx_data(i * 2 + 1)(39 downto 32);
-        vfat3_rx_data_arr_o(i)(9) <= real_gbt_rx_data(i * 2 + 1)(31 downto 24);
-        vfat3_rx_data_arr_o(i)(8) <= real_gbt_rx_data(i * 2 + 1)(23 downto 16);
-        vfat3_rx_data_arr_o(i)(7) <= real_gbt_rx_data(i * 2 + 1)(15 downto 8);
-        vfat3_rx_data_arr_o(i)(6) <= real_gbt_rx_data(i * 2 + 1)(7 downto 0);
-        vfat3_rx_data_arr_o(i)(5) <= real_gbt_rx_data(i * 2 + 0)(47 downto 40);
-        vfat3_rx_data_arr_o(i)(4) <= real_gbt_rx_data(i * 2 + 0)(39 downto 32);
-        vfat3_rx_data_arr_o(i)(3) <= real_gbt_rx_data(i * 2 + 0)(31 downto 24);
-        vfat3_rx_data_arr_o(i)(2) <= real_gbt_rx_data(i * 2 + 0)(23 downto 16);
-        vfat3_rx_data_arr_o(i)(1) <= real_gbt_rx_data(i * 2 + 0)(15 downto 8);
-        vfat3_rx_data_arr_o(i)(0) <= real_gbt_rx_data(i * 2 + 0)(7 downto 0);
+        vfat3_rx_data_arr_o(i)(11) <= real_gbt_rx_data(i * 2 + 1)(15 downto 8);
+        vfat3_rx_data_arr_o(i)(10) <= real_gbt_rx_data(i * 2 + 0)(31 downto 24);
+        vfat3_rx_data_arr_o(i)(9) <= real_gbt_rx_data(i * 2 + 1)(7 downto 0);
+        vfat3_rx_data_arr_o(i)(8) <= real_gbt_rx_data(i * 2 + 0)(47 downto 40);
+        vfat3_rx_data_arr_o(i)(7) <= real_gbt_rx_data(i * 2 + 1)(23 downto 16);
+        vfat3_rx_data_arr_o(i)(6) <= real_gbt_rx_data(i * 2 + 0)(39 downto 32);
+        vfat3_rx_data_arr_o(i)(5) <= real_gbt_rx_data(i * 2 + 1)(39 downto 32);
+        vfat3_rx_data_arr_o(i)(4) <= real_gbt_rx_data(i * 2 + 0)(23 downto 16);
+        vfat3_rx_data_arr_o(i)(3) <= real_gbt_rx_data(i * 2 + 1)(47 downto 40);
+        vfat3_rx_data_arr_o(i)(2) <= real_gbt_rx_data(i * 2 + 0)(7 downto 0);
+        vfat3_rx_data_arr_o(i)(1) <= real_gbt_rx_data(i * 2 + 1)(31 downto 24);
+        vfat3_rx_data_arr_o(i)(0) <= real_gbt_rx_data(i * 2 + 0)(15 downto 8);
 
         --------- TX ---------
         real_gbt_tx_data(i * 2 + 0)(81 downto 80) <= sca_tx_data_arr_i(i);
@@ -178,18 +178,19 @@ begin
             real_gbt_tx_data(i * 2 + 1)(31 downto 0) <= (others => '0');
             real_gbt_tx_data(i * 2 + 0)(71 downto 64) <= (others => '0');
             
-            real_gbt_tx_data(i * 2 + 1)(79 downto 72) <= vfat3_tx_data_arr_i(i)(9);
-            real_gbt_tx_data(i * 2 + 1)(71 downto 64) <= vfat3_tx_data_arr_i(i)(8);
-            real_gbt_tx_data(i * 2 + 1)(63 downto 56) <= vfat3_tx_data_arr_i(i)(7);
-            real_gbt_tx_data(i * 2 + 1)(55 downto 48) <= vfat3_tx_data_arr_i(i)(6);
-            real_gbt_tx_data(i * 2 + 1)(47 downto 40) <= vfat3_tx_data_arr_i(i)(11);
-            real_gbt_tx_data(i * 2 + 1)(39 downto 32) <= vfat3_tx_data_arr_i(i)(10);
-            real_gbt_tx_data(i * 2 + 0)(47 downto 40) <= vfat3_tx_data_arr_i(i)(5);
-            real_gbt_tx_data(i * 2 + 0)(39 downto 32) <= vfat3_tx_data_arr_i(i)(4);
-            real_gbt_tx_data(i * 2 + 0)(31 downto 24) <= vfat3_tx_data_arr_i(i)(3);
-            real_gbt_tx_data(i * 2 + 0)(23 downto 16) <= vfat3_tx_data_arr_i(i)(2);
-            real_gbt_tx_data(i * 2 + 0)(15 downto 8) <= vfat3_tx_data_arr_i(i)(1);
-            real_gbt_tx_data(i * 2 + 0)(7 downto 0) <= vfat3_tx_data_arr_i(i)(0);
+            real_gbt_tx_data(i * 2 + 1)(63 downto 56) <= vfat3_tx_data_arr_i(i)(11);
+            real_gbt_tx_data(i * 2 + 0)(31 downto 24) <= vfat3_tx_data_arr_i(i)(10);
+            real_gbt_tx_data(i * 2 + 1)(55 downto 48) <= vfat3_tx_data_arr_i(i)(9);
+            real_gbt_tx_data(i * 2 + 0)(47 downto 40) <= vfat3_tx_data_arr_i(i)(8);
+            real_gbt_tx_data(i * 2 + 1)(71 downto 64) <= vfat3_tx_data_arr_i(i)(7);
+            real_gbt_tx_data(i * 2 + 0)(39 downto 32) <= vfat3_tx_data_arr_i(i)(6);
+            real_gbt_tx_data(i * 2 + 1)(39 downto 32) <= vfat3_tx_data_arr_i(i)(5);
+            real_gbt_tx_data(i * 2 + 0)(23 downto 16) <= vfat3_tx_data_arr_i(i)(4);
+            real_gbt_tx_data(i * 2 + 1)(47 downto 40) <= vfat3_tx_data_arr_i(i)(3);
+            real_gbt_tx_data(i * 2 + 0)(7 downto 0) <= vfat3_tx_data_arr_i(i)(2);
+            real_gbt_tx_data(i * 2 + 1)(79 downto 72) <= vfat3_tx_data_arr_i(i)(1);
+            real_gbt_tx_data(i * 2 + 0)(15 downto 8) <= vfat3_tx_data_arr_i(i)(0);
+	    
         end generate;
 
     end generate;

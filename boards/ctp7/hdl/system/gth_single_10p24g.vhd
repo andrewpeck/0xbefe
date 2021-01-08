@@ -23,7 +23,6 @@ use UNISIM.VCOMPONENTS.all;
 
 library work;
 use work.gth_pkg.all;
-use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --============================================================================
@@ -899,7 +898,8 @@ begin
 
 --  s_cpll_reset <= s_cpllreset_sync or s_cpllreset_ovrd;
 
-  s_cpll_reset <= gth_cpll_init_i.CPLLRESET;
+  s_cpll_reset <= gth_cpll_init_i.cpllreset;
+  s_cpll_pd <= gth_cpll_init_i.cpllpd;
 
 end gth_single_10p24g_arch;
 --============================================================================

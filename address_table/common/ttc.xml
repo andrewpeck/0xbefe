@@ -35,18 +35,18 @@
           description="Enable L1As (L1As are blocked if this is 0)"
           fw_signal="ttc_ctrl.l1a_enable" fw_default="0b1"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"/>
+    <node id="CMD_ENABLE" address="0x4" mask="0x00000004" permission="rw"
+          description="Enable TTC commands (all backplane TTC commands are blocked if this is set to 0)"
+          fw_signal="ttc_ctrl.cmd_enable" fw_default="0b0"
+          sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"/>
     <node id="CALIBRATION_MODE" address="0x4" mask="0x00000002" permission="rw"
-          description="Enables calibration mode when set to 1. In calibration mode the incoming L1A commands will actually trigger a calpulse signal to the frontend,
-                       followed by an L1A after a fixed delay, which is controlled by the CALPULSE_L1A_DELAY register below."
+          description="Enables calibration mode when set to 1. In calibration mode the incoming L1A commands will trigger a calpulse signal to the frontend in addition to the L1A.
+                       Note: the L1A delay below does not affect the calpulse timing, but it does shift the L1A that is sent to the frontend (typically the delay will be needed when using calibration mode)."
           fw_signal="ttc_ctrl.calib_mode" fw_default="0b0"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x0" sw_ctrl_stop_set="0x0"/>
-    <node id="CALPULSE_L1A_DELAY" address="0x4" mask="0xfff00000" permission="rw"
-          description="When calibration mode is enabled, this register controls the delay between the calpulse and the L1A to the frontend
-                       e.g. a setting of 1 will have the calpulse and L1A sent in consecutive clock cycles, a setting of 2 will have one empty BX between the calpulse and L1a, etc..
-                       Note that 0 is not a valid setting and will result in no L1As being sent to frontend.
-                       Also note that if another L1A comes in while this delay is still being processed, it will restart the delay and result in the previous L1A to the frontend being cancelled,
-                       so don't set this delay longer than the delay between consecutive L1As in AMC13."
-          fw_signal="ttc_ctrl.calib_l1a_delay" fw_default="0x064"/>
+    <node id="L1A_DELAY" address="0x4" mask="0x3ff00000" permission="rw"
+          description="Setting this to non-zero value will delay the L1A delivery to the frontend (this is useful in calibration mode to separate the L1A from the calpulse in time)"
+          fw_signal="ttc_ctrl.l1a_delay" fw_default="0b0000000000"/>
     <node id="DISABLE_PHASE_ALIGNMENT" address="0x4" mask="0x00000010" permission="rw"
           description="Setting this to 1 will disable the phase alignment to backplane ref clock.
                        This is intended to be used only in setups that don't have an AMC13 and thus no backplane TTC clock, but generate the TTC clock internally in CTP7."

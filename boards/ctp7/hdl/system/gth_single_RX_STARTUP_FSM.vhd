@@ -605,14 +605,15 @@ begin
             adapt_count_reset       <= '1';
 
 
-            if (RX_QPLL_USED and not TX_QPLL_USED and (qplllock_sync = '0') and pll_reset_asserted = '1') or
-              (not RX_QPLL_USED and TX_QPLL_USED and (cplllock_sync = '0') and pll_reset_asserted = '1') or
-              (not RX_QPLL_USED and not TX_QPLL_USED) or
-              (RX_QPLL_USED and TX_QPLL_USED) then
-              rx_state       <= WAIT_FOR_PLL_LOCK;
-              reset_time_out <= '1';
-            end if;
-
+--            if (RX_QPLL_USED and not TX_QPLL_USED and (qplllock_sync = '0') and pll_reset_asserted = '1') or
+--              (not RX_QPLL_USED and TX_QPLL_USED and (cplllock_sync = '0') and pll_reset_asserted = '1') or
+--              (not RX_QPLL_USED and not TX_QPLL_USED) or
+--              (RX_QPLL_USED and TX_QPLL_USED) then
+--              rx_state       <= WAIT_FOR_PLL_LOCK;
+--              reset_time_out <= '1';
+--            end if;
+            rx_state       <= WAIT_FOR_PLL_LOCK;
+            reset_time_out <= '1';
 
           when WAIT_FOR_PLL_LOCK =>
             if(wait_time_done = '1') then

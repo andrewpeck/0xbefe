@@ -25,6 +25,10 @@
           description="OH trigger kill mask (kills all sbits from the corresponding OHs)"
           fw_signal="oh_mask"
           fw_default="0x000000"/>
+    <node id="SECTOR_ID" address="0x2" mask="0x0f000000" permission="rw"
+          description="Sector ID that gets embedded in the TX links to EMTF"
+          fw_signal="sector_id"
+          fw_default="0x0"/>
   </node>
 
   <node id="STATUS" address="0x10"
@@ -133,12 +137,16 @@
 
   <node id="CTRL" address="0x100">
     <node id="GLOBAL_RESET" address="0x0" permission="w"
-          description="Global reset of the GEM logic, including the reset of all registers to the default value"
+          description="Global reset of the GEM logic (resets all modules)"
           fw_write_pulse_signal="global_reset_trig"
           sw_ctrl_configure_set="0x1"/>
     <node id="LINK_RESET" address="0x1" permission="w"
           description="Reset the links to and from OHs and redo VFAT3 sync procedure"
           fw_write_pulse_signal="manual_link_reset_o"
+          sw_ctrl_configure_set="0x1"/>
+    <node id="IPBUS_RESET" address="0x2" permission="w"
+          description="Reset of all registers to their default value"
+          fw_write_pulse_signal="ipbus_reset_trig"
           sw_ctrl_configure_set="0x1"/>
   </node>
 
@@ -194,6 +202,9 @@
   </node>
 
   <node id="GEM_LOADER" address="0x400">
+    <node id="FIRMWARE_SIZE" address="0x10" mask="0xffffffff" permission="rw"
+          description="Number of bytes in the OH firmware"
+          fw_signal="gemloader_fw_size" fw_default="0x005363f2"/>
     <node id="LOAD_REQUEST_CNT" address="0x0" mask="0x0000ffff" permission="r"
           description="Number of OH programming requests (note, the counter is 16bit rolling)"
           fw_signal="gemloader_stats_i.load_request_cnt"/>
@@ -221,21 +232,6 @@
     <node id="LAST_TRANS_ERR" address="0x0" mask="0x80000000" permission="r"
           description="This flag indicates whether or not the last transaction was a success (0) or if it ended in error (1)"
           fw_signal="ipb_mon_last_trans_err"/>
-  </node>
-
-  <node id="LEGACY_SYSTEM" address="0x10000"
-        description="Legacy system registers (taken from GLIB system core). These should be removed once the software is
-                     made compatible with the new system registers.">
-
-    <node id="BOARD_ID" address="0x0" permission="r"
-          description="GLIB Board ID code"
-          fw_signal="legacy_board_id"/>
-    <node id="SYSTEM_ID" address="0x1" permission="r"
-          description="GLIB System ID code"
-          fw_signal="legacy_sys_id"/>
-    <node id="FIRMWARE_VERSION" address="0x2" permission="r"
-          description="GLIB firmware version + firmware date"
-          fw_signal="legacy_fw_version"/>
   </node>
 </node>
 

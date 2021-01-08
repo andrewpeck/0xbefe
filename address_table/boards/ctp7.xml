@@ -16,6 +16,8 @@
             description="Writing 1 to this reg will trigger MGT RX channel reset"/>
       <node id="CPLL_RESET" address="0x0" mask="0x00000004" permission="rw"
             description="Writing 1 to this reg will trigger MGT CPLL reset"/>
+      <node id="QPLL_RESET" address="0x0" mask="0x00000008" permission="rw"
+            description="Writing 1 to this reg will trigger the QPLL reset of the whole quad"/>
     </node>
 
     <node id="CTRL" address="0x2" permission="rw"

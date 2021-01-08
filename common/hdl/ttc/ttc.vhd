@@ -129,9 +129,6 @@ architecture ttc_arch of ttc is
     signal ttc_status               : t_ttc_status;
     signal ttc_conf                 : t_ttc_conf; 
     
-    -- calibration signals
-    signal calib_l1a_countdown      : unsigned(11 downto 0) := (others => '0');
-
     -- stats
     constant C_NUM_OF_DECODED_TTC_CMDS : integer := 10;
     signal ttc_cmds_arr             : std_logic_vector(C_NUM_OF_DECODED_TTC_CMDS - 1 downto 0);
@@ -215,7 +212,7 @@ begin
     process(ttc_clks_i.clk_40) is
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset = '1') then
+            if (reset = '1') or (ttc_ctrl.cmd_enable = '0') then
                 bc0_cmd_real        <= '0';
                 ec0_cmd_real        <= '0';
                 resync_cmd_real     <= '0';
@@ -226,7 +223,6 @@ begin
                 hard_reset_cmd_real <= '0';
                 calpulse_cmd_real   <= '0';
                 l1a_cmd_real        <= '0';
-                calib_l1a_countdown <= (others => '0');
             else
                 if (ttc_cmd = ttc_conf.cmd_bc0) then
                     bc0_cmd_real <= '1';
@@ -270,40 +266,37 @@ begin
                 end if;
 
                 if (ttc_ctrl.calib_mode = '0') then
-                    l1a_cmd_real <= ttc_l1a and ttc_ctrl.l1a_enable;
                     if (ttc_cmd = ttc_conf.cmd_calpulse) then
                         calpulse_cmd_real <= '1';
                     else
                         calpulse_cmd_real <= '0';
                     end if;
-                    calib_l1a_countdown <= x"000";
                 else
-                    if (calib_l1a_countdown = x"001") then
-                        l1a_cmd_real <= '1';
-                    else
-                        l1a_cmd_real <= '0';
-                    end if;
-                    
                     if (ttc_l1a = '1' and ttc_ctrl.l1a_enable = '1') then  
                         calpulse_cmd_real <= '1';
-                        calib_l1a_countdown <= unsigned(ttc_ctrl.calib_l1a_delay);
                     else
                         calpulse_cmd_real <= '0';
-                        
-                        if (calib_l1a_countdown /= x"000") then
-                            calib_l1a_countdown <= calib_l1a_countdown - 1;
-                        else
-                            calib_l1a_countdown <= x"000";
+                    end if;                    
                         end if;
                         
                     end if;
                     
                 end if;
-
-            end if;
-
-        end if;
     end process p_cmd;
+
+    i_l1a_delay : entity work.shift_reg
+        generic map(
+            DEPTH           => 1024,
+            TAP_DELAY_WIDTH => 10,
+            OUTPUT_REG      => false,
+            SUPPORT_RESET   => false
+        )
+        port map(
+            clk_i       => ttc_clks_i.clk_40,
+            tap_delay_i => ttc_ctrl.l1a_delay,
+            data_i      => ttc_l1a and ttc_ctrl.l1a_enable,
+            data_o      => l1a_cmd_real
+        );
 
     ------------- TTC generator -------------
 
