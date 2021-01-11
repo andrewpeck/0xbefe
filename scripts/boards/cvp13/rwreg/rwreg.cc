@@ -33,16 +33,16 @@ static void* last_trans_err_addr; // workaround for propper error reporting
 
 extern "C" void rwreg_init(char* sysfile) {
   if((fd = open(sysfile, O_RDWR | O_SYNC)) == -1) {
-    printf("could not open %s", sysfile);
+    printf("ERROR: could not open %s\n", sysfile);
     exit(1);
   }
-  printf("%s opened.\n", sysfile);
+  printf("RWREG: %s opened.\n", sysfile);
   map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if(map_base == (void *) -1) {
-    printf("mmap failed");
+    printf("ERROR: mmap failed\n");
     exit(1);
   }
-  printf("PCI Memory mapped to address 0x%08lx.\n", (unsigned long) map_base);
+  printf("RWREG: PCI Memory mapped to address 0x%08lx.\n", (unsigned long) map_base);
   last_trans_err_addr = map_base + LAST_TRANS_ERR_ADDR; // workaround for propper error reporting
 }
 

@@ -4,7 +4,7 @@ from ctypes import *
 from config import *
 
 print 'Loading shared library: librwreg.so'
-lib = CDLL("./librwreg.so")
+lib = CDLL("librwreg.so")
 rReg = lib.getReg
 rReg.restype = c_uint
 rReg.argtypes=[c_uint]
@@ -15,7 +15,7 @@ regInit = lib.rwreg_init
 regInit.argtypes=[c_char_p]
 
 DEBUG = True
-ADDRESS_TABLE_TOP = './address_table.xml'
+ADDRESS_TABLE_DEFAULT = './address_table.xml'
 nodes = []
 
 DEVICE = CONFIG_RWREG['DEVICE']
@@ -66,9 +66,13 @@ def main():
 
 def parseXML():
     regInit(DEVICE)
-    print 'Parsing',ADDRESS_TABLE_TOP,'...'
-    tree = xml.parse(ADDRESS_TABLE_TOP)
-    root = tree.getroot()[0]
+    addressTable = os.environ.get('ADDRESS_TABLE')
+    if addressTable is None:
+        print 'Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT
+        addressTable = ADDRESS_TABLE_DEFAULT
+    print 'Parsing',addressTable,'...'
+    tree = xml.parse(addressTable)
+    root = tree.getroot()
     vars = {}
     makeTree(root,'',0x0,nodes,None,vars,False)
 

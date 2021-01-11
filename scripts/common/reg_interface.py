@@ -1,7 +1,7 @@
 from cmd import Cmd
 import sys, os, subprocess
 from rw_reg import *
-from vfat_config import *
+#from vfat_config import *
 
 MAX_OH_NUM = 3
 
