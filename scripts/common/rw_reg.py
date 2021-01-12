@@ -2,6 +2,7 @@ import xml.etree.ElementTree as xml
 import sys, os, subprocess
 from ctypes import *
 from config import *
+import imp
 
 print 'Loading shared library: librwreg.so'
 lib = CDLL("librwreg.so")
@@ -71,13 +72,24 @@ def parseXML():
         print 'Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT
         addressTable = ADDRESS_TABLE_DEFAULT
     print 'Parsing',addressTable,'...'
-    tree = xml.parse(addressTable)
+    tree = None
+    try:
+        imp.find_module('lxml')
+        import lxml.etree
+        tree = lxml.etree.parse(addressTable)
+        tree.xinclude()
+    except:
+        print("WARNING: lxml python module was not found, so xinclude won't work")
+        tree = xml.parse(addressTable)
     root = tree.getroot()
     vars = {}
     makeTree(root,'',0x0,nodes,None,vars,False)
 
 def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
-    
+   
+    if node.get('id') is None:
+        return
+
     if (isGenerated == None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':
         generateSize = parseInt(node.get('generate_size'))
         generateAddressStep = parseInt(node.get('generate_address_step'))
