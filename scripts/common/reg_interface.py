@@ -375,8 +375,8 @@ if __name__ == '__main__':
         try:
             parseXML()
             prompt = Prompt()
-            prompt.prompt = 'CTP7 > '
-            prompt.cmdloop('Starting CTP7 Register Command Line Interface.')
+            prompt.prompt = '0xBEFE > '
+            prompt.cmdloop('Starting 0xBEFE Register Command Line Interface.\n')
         except TypeError:
             print '[TypeError] Incorrect usage. See help'
         except KeyboardInterrupt:

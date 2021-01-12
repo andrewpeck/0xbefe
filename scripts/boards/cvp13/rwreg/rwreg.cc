@@ -5,21 +5,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <string.h>
-
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <termios.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-*/
+#include <sys/stat.h>
+#include <dirent.h>
 
 using namespace std;
 
@@ -32,11 +19,59 @@ static void* map_base;
 static void* last_trans_err_addr; // workaround for propper error reporting
 
 extern "C" void rwreg_init(char* sysfile) {
-  if((fd = open(sysfile, O_RDWR | O_SYNC)) == -1) {
-    printf("ERROR: could not open %s\n", sysfile);
+  char* realSysfile = sysfile;
+  if (strcmp("auto", sysfile) == 0) {
+    DIR *dp;
+    struct dirent *de;
+    struct stat statbuf;
+    bool found = false;
+    dp = opendir("/sys/bus/pci/devices");
+
+    if (dp != NULL) {
+      while (de = readdir (dp)) {
+        lstat(de->d_name,&statbuf);
+        if(S_ISDIR(statbuf.st_mode)) {
+          if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
+            continue;
+          
+          char devFilename[40];
+          strcpy(devFilename, "/sys/bus/pci/devices/");
+          strcat(devFilename, de->d_name);
+          strcat(devFilename, "/device");
+
+          char devId[6];
+          FILE *f = fopen(devFilename, "r");
+          fscanf(f, "%s", devId);
+          fclose(f);
+          if (strcmp("0xbefe", devId) == 0) {
+            printf("Auto detected CVP13 on PCI bus %s\n", de->d_name);
+            char devBar2Res[80];
+            strcpy(devBar2Res, "/sys/bus/pci/devices/");
+            strcat(devBar2Res, de->d_name);
+            strcat(devBar2Res, "/resource2");
+            realSysfile = devBar2Res;
+            found = true;
+            break;
+          }
+        }
+      }
+
+      closedir(dp);
+      if (!found) {
+        printf("Could not find a CVP13 device. Please use lspci to find the device with device id = 0xbefe, and use that devices resource2 file instead of auto");
+        exit(0);
+      }
+    }
+    else {
+      perror ("ERROR: Couldn't open /sys/bus/pci/devices directory");
+    }
+  }
+
+  if((fd = open(realSysfile, O_RDWR | O_SYNC)) == -1) {
+    printf("ERROR: could not open %s\n", realSysfile);
     exit(1);
   }
-  printf("RWREG: %s opened.\n", sysfile);
+  printf("RWREG: %s opened.\n", realSysfile);
   map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if(map_base == (void *) -1) {
     printf("ERROR: mmap failed\n");
