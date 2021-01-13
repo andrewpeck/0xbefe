@@ -36,7 +36,13 @@ entity gem_amc is
         
         g_NUM_IPB_SLAVES     : integer;
         g_DAQ_CLK_FREQ       : integer;
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        
+        -- Firmware version, date, time, git sha
+        g_FW_DATE            : std_logic_vector (31 downto 0);
+        g_FW_TIME            : std_logic_vector (31 downto 0);
+        g_FW_VER             : std_logic_vector (31 downto 0);
+        g_FW_SHA             : std_logic_vector (31 downto 0)        
     );
     port(
         reset_i                 : in   std_logic;
@@ -553,7 +559,11 @@ begin
 
     i_gem_system : entity work.gem_system_regs
         generic map (
-            g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES
+            g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
+            g_FW_DATE => g_FW_DATE,
+            g_FW_TIME => g_FW_TIME,
+            g_FW_VER => g_FW_VER,
+            g_FW_SHA => g_FW_SHA
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            

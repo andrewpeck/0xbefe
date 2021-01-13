@@ -23,7 +23,7 @@ package gem_board_config_package is
     function get_gbt_widebus(gem_station, oh_version : integer) return integer;
     
     ------------ Board specific constants ------------
-    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"2"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13
+    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"3"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
 
     ------------ GEM specific constants ------------
