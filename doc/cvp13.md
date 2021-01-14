@@ -1,4 +1,4 @@
-﻿# Setting up CVP13
+# Setting up CVP13
 The setup process consists of these steps:
 1. Install the card in the computer, connect cooling, and the micro USB cable
 1. Install Bittworks Toolkit LITE software (requires access), we'll refer to it as BWTK
@@ -8,7 +8,28 @@ The setup process consists of these steps:
 1. Figure out the PCIe bus that the card is sitting in, and start using the card
 
 ## Installing the hardware
-TODO (but just follow the instructions provided with the CVP13 and the Koolance box)
+
+This involves both installing the CVP13 card in the computer and setting up the liquid cooling system (following instructions forr the Koolance system):
+1. Connect tubes of appropriate length to the CVP13 card
+1. Pass the tubes through the slots in the slot adapter (provided with the Koolance cooling box)
+1. Install the CVPF13 card in a vacant PCIe slot and simultaneosuly place the slot adpater in an appropriate slot at the back of the computer, such that sufficient lengths of both tubes come out of the computer
+1. Place the Koolance cooling box at a higher level than the PCIe card, possibly on top of the chassis
+1. Connect the 12V power cable from the slot adapter to the 4-pin molex plug inside the computer (need a SATA to molex adapter for the Dell 5820 tower)
+1. Connect the power cable from the cooling box to the slot adapter
+1. Connect the ATX pass through cable from the slot adapter to motherboard and chassis (only to the PWR_REMOTE pin on the motherboard for the Dell 5820 tower)
+1. Connect the two 8-pin power cables inside the chassis to the CVP13
+1. Connect the microUSB cable between CVP13 and the motherboard
+1. Place the 3 temperature sensors from the slot adapter at appropriate places on the CVP13: near the power supply, FPGA cooling block, transceivers
+1. Close the chassis
+1. Connect the male and female disconnect couplings on the cooling box
+1. Connect the tubes from the CVP13 to the disconnect couplings on the cooling box (remember to place the hose clamps on the tubes)
+1. Fill liquid coolant into the reservoir of the cooling box (till around 0.25 inch from the top)
+1. Turn on the computer which also turns on the cooling box
+1. Select high settings for the fan and pump speed initially and run for some time to get rid of air bubbles (might need to add some more coolant as the air bubbles are removed)
+1. When all air bubbles are gone, you can use lower settings: 1 for the pump speed and Auto for the fan speed
+
+Everything is now set up. Keep an eye on the temperatures to make sure that they are stable.
+
 ## Download and install the software and firmware
 TODO
 
