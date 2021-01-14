@@ -17,7 +17,6 @@ This involves both installing the CVP13 card in the computer and setting up the 
 1. Connect the 12V power cable from the slot adapter to the 4-pin molex plug inside the computer (need a SATA to molex adapter for the Dell 5820 tower)
 1. Connect the power cable from the cooling box to the slot adapter
 1. Connect the ATX pass through cable from the slot adapter to motherboard and chassis (only to the PWR_REMOTE pin on the motherboard for the Dell 5820 tower)
-1. Connect the two 8-pin power cables inside the chassis to the CVP13
 1. Connect the microUSB cable between CVP13 and the motherboard
 1. Place the 3 temperature sensors from the slot adapter at appropriate places on the CVP13: near the power supply, FPGA cooling block, transceivers
 1. Close the chassis
@@ -27,8 +26,9 @@ This involves both installing the CVP13 card in the computer and setting up the 
 1. Turn on the computer which also turns on the cooling box
 1. Select high settings for the fan and pump speed initially and run for some time to get rid of air bubbles (might need to add some more coolant as the air bubbles are removed)
 1. When all air bubbles are gone, you can use lower settings: 1 for the pump speed and Auto for the fan speed
+1. Turn OFF the computer and open the chassis. Connect the two 8-pin power cables inside the chassis to the CVP13. Close the chassis when done
 
-Everything is now set up. Keep an eye on the temperatures to make sure that they are stable.
+Everything is now set up. You can now turn ON the computer to use the CVP13 and the cooling system. Keep an eye on the temperatures to make sure that they are stable.
 
 ## Download and install the software and firmware
 TODO
