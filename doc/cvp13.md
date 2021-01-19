@@ -30,12 +30,37 @@ This involves both installing the CVP13 card in the computer and setting up the 
 
 Everything is now set up. You can now turn ON the computer to use the CVP13 and the cooling system. Keep an eye on the temperatures to make sure that they are stable.
 
-## Program the card
+## Setup the Bittware software
 To program the clocks and FPGA you will need the Bittworks Toolkit LITE software from Bittware. Please contact your Bittware representative or the retailer from which you bought the card and ask for the RHEL7 RPM package of Bittworks Toolkit LITE.
+
+Ensure that you have connected the microUSB port (found on the back of the CVP13) to your computer, and check if the Bittware software detects the card:
+```
+bwconfig --scan=usb
+```
+This should print something like this:
+```
+[result]: Board Type (Name),   Serial, VendorID, DeviceID, USB-Address
+[0]:      0x63 (XUPVVP)        205973  0x2528    0x0004    0xc
+```
+If the card is detected, you should add it to the list of known cards like this:
+```
+bwconfig --add=usb
+```
+If the card is not detected, please check if you see a blinking green LED labeled D6 on the back of the card, close to the transceivers. If it's not blinking green, then look for a red blinking or lit LED (D2 or D4), if you see one of those, that indicates a power problem -- in this case check if both 8pin power cables are plugged in.
+<br/>
+The ```lsusb``` output should show 4 devices:
+```
+Bus 001 Device 013: ID 0403:6001 Future Technology Devices International, Ltd FT232 Serial (UART) IC
+Bus 001 Device 012: ID 2528:0004
+Bus 001 Device 011: ID 0403:6014 Future Technology Devices International, Ltd FT232H Single HS USB-UART/FIFO IC
+Bus 001 Device 010: ID 04b4:6570 Cypress Semiconductor Corp. Unprogrammed CY7C65632/34 hub HX2VL
+```
+And /dev should contain a device called similar to bwusb1-3.2 (numbers can be different)
+
+## Program the card
 
 Download the latest firmware bitstream from the 0xBEFE repository releases page: https://gitlab.cern.ch/emu/0xbefe/-/releases
 
-Ensure that you have connected the microUSB port (found on the back of the CVP13) to your computer.
 Start the BWTK monitor GUI:
 ```
 /opt/bwtk/2019.3L/bin/bwmonitor-gui
@@ -63,7 +88,7 @@ You can also use the GUI version:
 
 If you don't want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
 
-## Set up the software
+## Set up the GEM/CSC software
 This repository contains low level hardware access software as well as python scripts, which provide an interactive register access, and various communication testing procedures, and also makes it easy to write your own scripts for interacting the the hardware. Python tools are useful for debugging use, but high level routines like scurve scans, etc, are implemented in the official GEM software, which lives elsewhere (https://gitlab.cern.ch/cmsgemonline), and is not covered by this document.
 
 You can use the scripts directly from this repo, all you have to do is:
@@ -75,6 +100,8 @@ You can use the scripts directly from this repo, all you have to do is:
 	1. start the interactive register access tool: ```python common/reg_interface.py```, once the tool is running e.g. to read the GBT link status registers of OH0 type ```readKW OH_LINKS.OH0.GBT``` (readKW means read all registers matching the substring), or check the CVP13 firmware version and configuration: ```readKW GEM_SYSTEM```. You can also write to registers using the write command. You can get some help by typing help. Refer to the address table XML file to find what registers exist and what they do (there's documentation for each register). At some point PDF document should also get generated from the XML when running make update_me0_cvp13, but that's not yet working..
 	1. use gem/gbt.py to program your GBT or run a phase scan
 	1.  write your own: a simple example of reading and writing registers from python can be found here: common/example_reg_access.py
+
+NOTE: at the moment these python scripts require root privileges to access the hardware, so you should login as root before executing them: ```sudo su -```
 
 ## Hot reloading the FPGA
 It's possible to reload the FPGA and continue using the card without a reboot if the PCIe configuration hasn't changed in the new firmware.
