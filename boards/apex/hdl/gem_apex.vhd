@@ -29,6 +29,13 @@ use work.ipb_addr_decode.all;
 use work.gem_board_config_package.all;
 
 entity gem_apex is
+    generic(
+        -- Firmware version, date, time, git sha (passed in by Hog)
+        GLOBAL_DATE            : std_logic_vector (31 downto 0);
+        GLOBAL_TIME            : std_logic_vector (31 downto 0);
+        GLOBAL_VER             : std_logic_vector (31 downto 0);
+        GLOBAL_SHA             : std_logic_vector (31 downto 0)        
+    );
     port(
         -- GTH clocks
         gth_refclk0_p_i     : in  std_logic_vector(2 downto 0);
@@ -351,6 +358,10 @@ begin
 
     i_gem : entity work.gem_amc
         generic map(
+            g_FW_DATE           => GLOBAL_DATE,
+            g_FW_TIME           => GLOBAL_TIME,
+            g_FW_VER            => GLOBAL_VER,
+            g_FW_SHA            => GLOBAL_SHA,
             g_GEM_STATION       => CFG_GEM_STATION,
             g_NUM_OF_OHs        => CFG_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => CFG_NUM_GBTS_PER_OH,

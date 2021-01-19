@@ -9,10 +9,10 @@ The setup process consists of these steps:
 
 ## Installing the hardware
 
-This involves both installing the CVP13 card in the computer and setting up the liquid cooling system (following instructions forr the Koolance system):
+This involves both installing the CVP13 card in the computer and setting up the liquid cooling system (following instructions for the Koolance system):
 1. Connect tubes of appropriate length to the CVP13 card
 1. Pass the tubes through the slots in the slot adapter (provided with the Koolance cooling box)
-1. Install the CVPF13 card in a vacant PCIe slot and simultaneosuly place the slot adpater in an appropriate slot at the back of the computer, such that sufficient lengths of both tubes come out of the computer
+1. Install the CVPF13 card in a vacant PCIe slot and simultaneously place the slot adapter in an appropriate slot at the back of the computer, such that sufficient lengths of both tubes come out of the computer
 1. Place the Koolance cooling box at a higher level than the PCIe card, possibly on top of the chassis
 1. Connect the 12V power cable from the slot adapter to the 4-pin molex plug inside the computer (need a SATA to molex adapter for the Dell 5820 tower)
 1. Connect the power cable from the cooling box to the slot adapter
@@ -30,11 +30,12 @@ This involves both installing the CVP13 card in the computer and setting up the 
 
 Everything is now set up. You can now turn ON the computer to use the CVP13 and the cooling system. Keep an eye on the temperatures to make sure that they are stable.
 
-## Download and install the software and firmware
-TODO
-
 ## Program the card
-First of all, ensure that you have connected the microUSB port (found on the back of the CVP13) to your computer.
+To program the clocks and FPGA you will need the Bittworks Toolkit LITE software from Bittware. Please contact your Bittware representative or the retailer from which you bought the card and ask for the RHEL7 RPM package of Bittworks Toolkit LITE.
+
+Download the latest firmware bitstream from the 0xBEFE repository releases page: https://gitlab.cern.ch/emu/0xbefe/-/releases
+
+Ensure that you have connected the microUSB port (found on the back of the CVP13) to your computer.
 Start the BWTK monitor GUI:
 ```
 /opt/bwtk/2019.3L/bin/bwmonitor-gui
@@ -62,6 +63,19 @@ You can also use the GUI version:
 
 If you don't want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
 
+## Set up the software
+This repository contains low level hardware access software as well as python scripts, which provide an interactive register access, and various communication testing procedures, and also makes it easy to write your own scripts for interacting the the hardware. Python tools are useful for debugging use, but high level routines like scurve scans, etc, are implemented in the official GEM software, which lives elsewhere (https://gitlab.cern.ch/cmsgemonline), and is not covered by this document.
+
+You can use the scripts directly from this repo, all you have to do is:
+1. Generate the XML address table file by running this command at the root of the repository: ```make update_me0_cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is only needed after cloning or updating the repository.
+1. Compile the rwreg library that is used for hardware access: ```scripts/boards/cvp13/rwreg && make```. This step is only needed after cloning or updating the repository.
+1. Initialize and configure the CVP13 firmware for the given station: ```cd scripts && python boards/cvp13/cvp13_init_me0.py```. This step is only needed after a CVP13 power cycle or CVP13 FPGA programming.
+1. Set up the environment for your station and card combination: ```cd scripts && source env_gem.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
+1. Use the scripts e.g.:
+	1. start the interactive register access tool: ```python common/reg_interface.py```, once the tool is running e.g. to read the GBT link status registers of OH0 type ```readKW OH_LINKS.OH0.GBT``` (readKW means read all registers matching the substring), or check the CVP13 firmware version and configuration: ```readKW GEM_SYSTEM```. You can also write to registers using the write command. You can get some help by typing help. Refer to the address table XML file to find what registers exist and what they do (there's documentation for each register). At some point PDF document should also get generated from the XML when running make update_me0_cvp13, but that's not yet working..
+	1. use gem/gbt.py to program your GBT or run a phase scan
+	1.  write your own: a simple example of reading and writing registers from python can be found here: common/example_reg_access.py
+
 ## Hot reloading the FPGA
 It's possible to reload the FPGA and continue using the card without a reboot if the PCIe configuration hasn't changed in the new firmware.
 You do it like this:
@@ -72,4 +86,27 @@ You do it like this:
 
 Replace the XX with the bus number of where you installed the card. It shows up in lspci as a Xilinx 0xBEFE device (sorry, EMU doesn't have a PCI vendor ID yet, so using Xilinx here): ```sudo lspci | grep -i befe```, you should see something like: ```05:00.0 Memory controller: Xilinx Corporation Device befe``` (XX=05 in this case)
 
+## Optics
+The QSFP transceivers are counted starting from the one closest to the PCIe connector: QSFP0, QSFP1, QSFP2, QSFP3
 
+QSFP transceivers are using a standard MTP12 interface (male on the transceiver side, female on the cable side). Each QSFP has 4 RX and 4 TX channels, where the RX are on fibers 1 to 4 and TX are going backwards from fiber 12 to 9, so matching TX/RX pairs are on fibers: 1&12, 2&11, 3&10, 4&9
+
+Mapping to GE2/1 OHs is the following:
+|          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|----------|-------|-------|-------|-------|
+| OH0 GBT0 | 1&12  |       |       |       |
+| OH0 GBT1 | 2&11  |       |       |       |
+| OH1 GBT0 | 3&10  |       |       |       |
+| OH1 GBT1 | 4&9   |       |       |       |
+| OH2 GBT0 |       | 1&12  |       |       |
+| OH2 GBT1 |       | 2&11  |       |       |
+| OH3 GBT0 |       | 3&10  |       |       |
+| OH3 GBT1 |       | 4&9   |       |       |
+| OH4 GBT0 |       |       | 1&12  |       |
+| OH4 GBT1 |       |       | 2&11  |       |
+| OH5 GBT0 |       |       | 3&10  |       |
+| OH5 GBT1 |       |       | 4&9   |       |
+| OH6 GBT0 |       |       |       | 1&12  |
+| OH6 GBT1 |       |       |       | 2&11  |
+| OH7 GBT0 |       |       |       | 3&10  |
+| OH7 GBT1 |       |       |       | 4&9   |

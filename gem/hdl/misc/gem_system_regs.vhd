@@ -21,7 +21,13 @@ use work.gem_board_config_package.all;
 
 entity gem_system_regs is
 generic(
-    g_NUM_IPB_MON_SLAVES     : integer
+    g_NUM_IPB_MON_SLAVES     : integer;
+    
+    -- Firmware version, date, time, git sha
+    g_FW_DATE            : std_logic_vector (31 downto 0);
+    g_FW_TIME            : std_logic_vector (31 downto 0);
+    g_FW_VER             : std_logic_vector (31 downto 0);
+    g_FW_SHA             : std_logic_vector (31 downto 0)            
 );
 port(
     
@@ -58,10 +64,6 @@ architecture gem_system_regs_arch of gem_system_regs is
     
     signal board_id                 : std_logic_vector(15 downto 0) := (others => '0');
     signal gem_station              : integer range 0 to 2;
-    signal version_major            : integer range 0 to 255; 
-    signal version_minor            : integer range 0 to 255; 
-    signal version_build            : integer range 0 to 255;
-    signal firmware_date            : std_logic_vector(31 downto 0);
     signal num_of_oh                : std_logic_vector(4 downto 0);
     signal board_type               : std_logic_vector(3 downto 0);
     
@@ -93,17 +95,10 @@ architecture gem_system_regs_arch of gem_system_regs is
     
 begin
 
-    --=== version and date === --
-    
-    firmware_date <= C_FIRMWARE_DATE;
-    version_major <= C_FIRMWARE_MAJOR;
-    version_minor <= C_FIRMWARE_MINOR;
-    version_build <= C_FIRMWARE_BUILD;
-    gem_station <= CFG_GEM_STATION;
-
     --=== board type and configuration parameters ===--
     board_type     <= CFG_BOARD_TYPE;
     num_of_oh      <= std_logic_vector(to_unsigned(CFG_NUM_OF_OHs, 5));
+    gem_station    <= CFG_GEM_STATION;
             
     --=== Tests === --
     loopback_gbt_test_en_o <= loopback_gbt_test_en; 

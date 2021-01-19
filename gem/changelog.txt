@@ -1,0 +1,121 @@
+v1.8.6 no gbt sync procedure with oh
+v1.8.7 advanced ILA trigger for gbt link
+v1.8.8 tied unused 8b10b or gbt links to 0
+v1.8.9 disable automatic phase shifting, just use unknown phase from 160MHz ref clock, also use bufg for the MMCM feedback clock
+v1.8.9 special version with 8b10b main link moved to OH2 and longer IPBusBridge timeout (comms with OH are perfect, but can't read VFATs at all)
+v1.9.0 fixed TX phase alignment, removed MMCM reset (was driven by the GTH startup FSM and messing things up).
+       if 0 shifts are applied it's known to result in bad phase, so for now just made that if this happens, 
+       then lock is never asserted, which will prevent GTH startup from completing and will be clearly visible during FPGA programming.
+v1.9.1 using TTC 120MHz as the GBT common RX clock instead of recovered clock from the main link (so all links should work even if link 1 is not connected)
+v1.9.2 separate SCA controlers for each channel implemented. There's also inbuilt ability to broadcast JTAG and custom SCA commands to any set of selected channels
+v1.9.3 Added SCA not ready counters (since last SCA reset). This will show if the SCA communication is stable (once established). 
+       If yes, we could add an automatic SCA reset + configure after each time the SCA ready goes high after being low.
+v1.9.4 Swapped calpulse and bc0 bits in the GBT link because the OH was reading them backwards. Also re-enabled forwarding of resync and calpulse to OH.
+    
+=== v3 branch ===--
+v3.0.0  First version for v3 electronics  
+v3.0.1  Sketched all main VFAT3 TX and RX blocks, but no slow control yet. Implemented TX and RX SYNC and SYNC verify procedures, sync error counts and RX bitslipping
+v3.0.2  First implementation of VFAT3 slow control 
+v3.0.3  Added a selector (controled through VIO) for debug GBT link and debug VFAT link (on OH #0 only)
+v3.0.4  Changed RX bitslipping proceduce -- now looking for low bits (instead of high bits) in the top (instead of bottom) of the previous word
+v3.0.5  Revert back to the original bitshifting procedure.. duh.. but update the rx VFAT3 words to the correct ones, not the ones listed in the JINST paper...
+v3.0.6  Added missing assignment to prev_word in vfat3_rx_aligner... :)
+v3.0.7  Removed double assignment to sync_ok signal, plus added some extra probes to debug the rx_aligner
+v3.0.8  Fixed a mistake in VFAT register addressing
+v3.0.9  Fixed read and write frame lengths in the slow control TX FSM
+v3.0.10 Fix CRC word count issue in vfat3_sc_tx 
+v3.0.11 Fixed tx CRC - it has to be sent MSB and INVERTED!!
+v3.0.12 Added more debugging in VFAT3 slow control, and updated VFAT3 SC RX with a more robust start-of-frame detection
+v3.0.13 Fixed slow_ctrl_data_en_o flag bug in vfat3_rx_link.vhd - this was getting stuck high after the first SC character.. duh..
+v3.0.14 Delay tx_command_en and transfer from ipb_clk to ttc40 domain
+v3.0.15 Delay and sync the rx_valid and rx_error signals
+v3.0.16 Reset the ipb_ack when in IDLE state
+v3.0.17 Added a timeout in the slow_control state machine
+v3.0.18 Make SC_RX FSM robust against double frame start markers or any garbage before the real packet
+v3.0.19 Switched to Vivado 2017.2, also added a debug probe for SC RX CRC
+v3.0.20 Fixed VFAT3_SC_RX and SCA_RX CRC checking -- it was latching in the CRC 1 bit too early
+v3.1.0  Hopefully the first stable release for public use. All monitoring flags and counters are accessible through AXI registers. VFAT3 slow control CRC error is now a hard error.
+v3.1.1  Added VFAT3 DAQ data detection and handling (including CRC check, event counting, and error counting). Not yet wired up to DAQ module for event building.
+v3.1.2  Added VFAT3 channel activity monitoring (either a global OR of all channels or an individual channel can be selected), not yet routed out to axi registers
+v3.1.3  Added a TTC generator module which can be used to either issue single commands or setup cyclic generators for L1A and CalPulse
+v3.1.4  Routed the VFAT3 DAQ signals out to the top, and moved the VFAT3 DAQ channel monitoring to GEM_TESTS module and hooked up to AXI registers (24 such VFAT DAQMON modules are implemented with OH selection)
+v3.1.5  Changed VFAT order to be compatible with v2 ordering.. Fixed channel word order in VFAT DAQMON (VFAT3 sends the high channels first).
+v3.1.6  Added link select for GBT IC control
+v3.1.7  Include trigger links
+v3.2.0  OH FPGA slow control protocol implemented
+v3.2.1  Fix in OH FPGA link TX FSM
+v3.2.2  Increased delay of FPGA RX link valid signal w.r.t. data
+v3.2.3  Fixed a problem with rx_valid in the OH FPGA RX FSM
+v3.2.4  Implemented sbit monitor which latches on first valid sbit after reset on a selected link
+v3.2.5  ILA core in trigger RX link for debugging
+v3.2.6  ILA core removed
+v3.2.7  Added an sbit to L1A delay counter in sbit monitor
+v3.2.8  Changed the VFAT3_RUN_MODE register to SC_ONLY_MODE, the default is 0. Also explicitly send the comm port mode command during link reset corresponding to this value.
+v3.3.0  Preliminary quick-and-dirty DAQ module for VFAT3. It implements fake small fifos for all VFATs and a serializer which then feed to existing logic from v2.
+        This was done as a quick measure to test the data throughput, and it should work mostly fine, but small possibilities exist for data to be mixed from different events.
+        Should be redone such that each VFAT3 has it's own normal packet FIFO and then input processor would simply read all of them once they all have data (with a timeout also) -- this would eliminate the need for the current "input fifo" and make things much simpler and more robust against event mixing
+v3.3.1  Added DAQ input fanout for rate testing. Added TTC generator calpulse prescale. Added possibility to use only the calpulse from the TTC generator while using all other commands from the backplane.
+        All of these features are meant for fake data rate testing.
+        Also added a VFAT mask in OH_LINKS, which when set will completely shut off the DAQ and slow control RX of the given VFAT.
+v3.3.2  Added a control register to ignore daqlink signals (the daqlink_ready and daqlink_almost_full) -- useful for datarate tests without AMC13
+        Changed the DAQLink data clock from 50MHz to 62.5MHz in order to reach the full AMC13 input capability of 4Gb/s
+v3.3.3  Fixed a bug in vfat_input_buffer, which caused it to miss all events.. Returned back to 50MHz clock for the DAQ due to timing errors with faster clocks
+v3.3.4  Fixed a bug in clocking the daq ILA (not really important for normal operation). Switched to 12 chambers.
+        Fixed a bug in event size error checking in input processor (it was setting it right away whenever there was a zero suppressed event actually)
+        Discovered a bug, not yet fixed. Global TTS state actually only takes the state of the last input, has to be done with a variable instead of a signal in the for loop there..
+v3.3.5  Using 62.5MHz clock again
+v3.3.6  Found out that the global event builder max throughput is ~2.8Gb/s because there were several places where a clock cycle was wasted for waiting for data from the FIFOs.
+        So this version switched all FIFOs to First-Word-Fall-Through mode and removed most dead cycles
+v3.4.0  Added compatibility with OH v3b (only affects the GBT-OH_FPGA communication)
+v3.4.1  Changed the SCA GPIO direction and output defaults to only drive the PROG_B and those channels that go to the FPGA (also set that we do not drive INIT_B)
+v3.4.2  Added a possibility to bitslip the OH FPGA elinks 0 and 1 independently when in v3b mapping mode
+v3.4.3  Increased the PH FPGA TX elinks bitslip setting from 3 to 4 bits to allow 8 bit shift (whole clock cycle)
+v3.4.4  Set the default parameters for OH v3b FPGA elink bitslips that are working. Also ILA debugging OH index was changed from 0 to 1
+v3.4.5  Fix VFAT7 when using v3b (changed elink in v3b OH)
+v3.5.0  Merged with promless project. NOTE: this version needs updated Zynq firmware with AXI-full and AXI interrupt support!
+v3.5.1  Added flipflops for ipb_mosi inputs in the ipbus_slave.vhd to ease the timing on the ipbus path
+v3.5.2  Fixed OH GBT-FPGA communication bitslip settings defaults (the defaults were reset to 0 in 3.5.1 somehow, probably due to some merge activities)
+v3.5.3  Added an SCA reset enable mask register which defines which SCAs will get reset uppon a receipt of a module reset command
+        Also updated the default GPIO direction and output value to drive the VFAT3 resets in OHv3c. The reset is lifted by default after SCA reset, but it is pulsed high when a hard reset command is received
+v3.6.0  Added a config blaster interface. RAMs for GBTs, VFATs, and OHs are implemented and writable/readable from IPbus, but the actual config blaster is not yet implemented
+v3.6.1  Trying to fix RAM size registers (were always reading 0 in 3.6.0)
+v3.7.0  Introduced MiniPOD links, and moved trigger inputs there, allowing to expand the number of OHs to 12
+v3.7.1  Made VFAT3 ADC0 and ADC1 reading async by returning a value from a local cache, and using a separate register to actually trigger the real read and update of the cache
+v3.7.2  Fixed a bug related to miniPOD links -- some config registers were missing, preventing the links from starting up correctly. Dummy trigger (EMTF) outputs added on miniPOD TX for easy loopback testing of the miniPOD trigger inputs
+v3.8.0  Switched to the new OH FPGA communication protocol from Andrew, which uses 6b8b encoding and only one elink. Also added some GE2/1 support.
+v3.8.1  Bugfix in the OH FPGA communication FSM 
+v3.8.2  Added BC0 and RESYNC markers to the trigger receivers (backwards compatible with older OH fw versions). For now it's not doing anything with those, but just doesn't count them as errors.
+v3.8.3  Fixed the trigger link missed comma counter so that it starts counting errors after 128 clock cycles after reset (previously it would only start counting after the first occurance of good frame marker, which sometimes made a link look good even if it was completely bad)
+v3.8.4  Added a possibility to switch to 40MHz promless programming mode; added VFAT-VFAT mixed BC and mixed EC flags in the data format; removed ADC monitoring from the SCA controller; SCA TTC_HARD_RESET_EN is now an OH mask instead of just one bit; BC now starts at 1 instead of 0 to match VFAT BC counting
+v3.8.5  Small fix in the TX FSM for the OH FPGA -- during link reset the send_idle and send_header signals were undefined, so could possibly send some false data for OH slow control during reset
+v3.8.6  Small fix in DAQ input processor: previously a condition existed for event word count to be lower by one VFAT if a new event came exactly at the clock cycle when the old one timed out. Hopefully this will solve the EC/BC mismatch problem seen at GE1/1 QC8 cosmic stand
+v3.9.0  Calibration mode data format added - it's a very aggressive bandwidth saving mode designed for calibration runs, which drops most of the VFAT data, except for the VFAT position, 2 bits of EC, and just one channel bit for the selected channel number, so each VFAT only takes up 8 bits. Note: addresses of existing DAQ registers have been changed in order to accomodate the new registers, so it's necessary to update the address table for this version
+v3.9.1  LpGBT and ME0 support added (no trigger data yet, but all other features should work)! The firmware has been restructured to better support different GEM stations.
+v3.9.2  Fixed a bug in LpGBT MGTs -- the data buses weren't actually connected before
+v3.9.3  Increased the I2C address range from 4 bits to 7 bits to support the LpGBT default address of 0x70
+v3.9.4  Fixed LpGBT downlink and uplink by setting the MULTICYCLE_DELAY to 0
+v3.9.5  Fixed VFAT elink inversions for ME0 (though note that positions 5 and 1 on the classic slot, and 1 and 2 on the spicy slot won't work since they are inverted in the asiago pizza differently than the VFATs that they share the connection to)
+v3.9.6  Fixed LpGBT header flag latency going into the rxGearbox; also updated the LpGBT ILA to split off the IC and EC
+v3.9.7  Reversed the IC and EC bits for LpGBT (possible cause for IC not working before). Also for ME0 VFATs 0 and 4 fixed for PIZZA classic slot, and VFAT 3 fixed for PIZZA spicy slot (were on the wrong LpGBT before)
+v3.9.8  GE2/1 OHv2 support added, and FPGA loader max firmware size increased to support 200T
+v3.9.9  Reworked loopback tester, now tests all elinks of a single selected OH with PRBS7 sequence    
+v3.9.10 Added a switch to choose the backplane TTC clock as the source for the main MMCM (the switch is called CFG_USE_BACKPLANE_CLK). Also made the OH loader use the bitstream size from the gemloader IP, and also added some registers reporting the loader statistics.
+v3.9.11 Came back to using the MGT refclk as the source for all fabric clocks
+v3.10.0 Reworked TTC clocking, added manual shifting possibility and phase monitoring (DMTD method used in TCDS), also bypassing the delay aligner in the GBT MGTs
+v3.10.1 Reworked the phase alignment FSM to use the DMTD phase measurement instead of the PLL lock signal, this also allows for a configurable lock target phase and tollerance
+v3.10.2 Trigger output links to EMTF added, using LpGBT ASIC TX encoding at 10.24Gb/s, and the protocol agreed with EMTF (note the RX side of these MGTs is still running at 3.2Gb/s to receive trigger data from OHs)
+v3.11.0 Restructured MGTs to allow for easier configuration between different bus widths and usrclks. Now all MGT interfaces at the top level use 64 bit bus, and are remapped to appropriate bus sizes before connecting to gem_amc. The trigger TX MGT now uses 64 bit bus and 160MHz txusrclk2 to ease the timing
+v3.11.1 Added an option to use HDLC VFAT addressing  
+v3.11.2 Added a GEM global reset register (recycled the unused GEM_SYSTEM.CNT_RESET address)
+v3.11.3 Fixed a lockup problem when resetting the MMCM
+v3.11.4 Introduced a CPLL reset control: bit 2 in the MGT reset reg
+v3.12.0 Changed the order of VFATs in GE2/1 to correspond to the silkscreen of the newest GEBs instead of the J number
+v3.12.1 Sector ID register added that is used in the trigger TX to EMTF, also OH mask is now used in trigger TX; ipbus reset has been fixed and separated from the global reset register; legacy GLIB registers removed
+v3.12.2 L1A delay setting added. TTC module calibration mode is simplified - enabling calibration mode simply triggers the calpulse on L1A, and then the L1A can be delayed using the new delay setting
+v3.12.3 CPLL power-down control added to the GTH control register (bit 7) - this should be used before resetting the CPLL
+v3.12.4 Fixed EMTF overlap link mapping, QPLL reset register added, TTC command enable register added, GEMLoader firmware size register added (it is now disconnected from the UW GEMloader IP firmware size reg)
+v3.12.5 Changed AXI Chip2Chip signal pins as per UW recommendation, and removed the requirement the RX startup FSM for CPLL lock to go down, because now the QPLL/CPLL reset outputs are driven by the user software instead
+
+========================= 0xBEFE and Hog =========================
+v4.0.0  Switched to the 0xBEFE repository and using Hog
+

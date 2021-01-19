@@ -2,7 +2,7 @@
 
 PROJECT=$1
 BASE_DIR=".."
-VIVADO_VER="2019.1"
+VIVADO_VER="2020.2"
 
 if [ -z "$PROJECT" ]; then
         echo Please provide a project name e.g. ge21_cvp13

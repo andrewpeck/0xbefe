@@ -9,10 +9,12 @@ bin
 cxl_error.log
 *.DS_Store
 
-/gem/ip/*
-/boards/cvp13/ip/*
+/gem/ip/*/*
+/boards/cvp13/ip/*/*
 !*.xci
 !*.xcix
+
+*.so
 
 /boards/*/bd/*
 !*.bd
