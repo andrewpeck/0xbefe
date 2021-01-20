@@ -1,80 +1,22 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                        
--- Company:               CERN (PH-ESE-BE)                                                        
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder chien search
---                                                                                                
--- Language:              VHDL'93                                                              
---                                                                                                  
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                  
--- Version:               3.1                                                                      
---
--- Description:          
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.  
---    
---                        06/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.          
---
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.  
---                                                                     - Remove "pri_encoderR" and "pri_encoderL" modules.
---                                                                     - "gf16inverse" is function instead of modules.
---
---                        02/04/2015   3.1       S.D. Goadhouse        - Made comparison constants the same bit size as
---                                                                       zero_from_errLocPolyEval. Libero/Synopsis says
---                                                                       that if they are different sizes, the
---                                                                       comparison is always FALSE.
---
---                        02/04/2015   4.1       J. Mendez             - Correction of a major bug in generation of the
---                                                                       out_from_primEncRight and out_from_primEncLeft
---                                                                       values.
---                        
---
--- Additional Comments:
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !!
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !!
--- !!                                                                                           !!
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                  
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx Reed solomon chien search
+-------------------------------------------------------
  
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
  
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
  
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
- 
+--! @brief GBT_rx_decoder_gbtframe_chnsrch - Rx Reed solomon chien search
+--! @details 
+--! The gbt_rx_decoder_gbtframe_chnsrch provide the error position extracted
+--! from the error location polynomial.
 entity gbt_rx_decoder_gbtframe_chnsrch is
    port (
      
@@ -96,14 +38,15 @@ entity gbt_rx_decoder_gbtframe_chnsrch is
    );
 end gbt_rx_decoder_gbtframe_chnsrch;
  
---=================================================================================================--
---####################################   Architecture   ###########################################--
---=================================================================================================--
- 
+--! @brief GBT_rx_decoder_gbtframe_chnsrch - Rx Reed solomon chien search
+--! @details The gbt_rx_decoder_gbtframe_chnsrch computes the error location polynomials zeros and uses them
+--! to find the error position using a lookup table.
 architecture behavioral of gbt_rx_decoder_gbtframe_chnsrch is
  
    --================================ Signal Declarations ================================--
    
+	constant ALPHAS                              : std_logic_vector(59 downto 0)  :=  x"fedcba987654321";
+	
    --===========================--
    -- Error location polynomial --
    --===========================--

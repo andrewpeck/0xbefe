@@ -9,6 +9,7 @@ common/hdl/pkg/sca_pkg.vhd
 common/hdl/pkg/ttc_pkg.vhd
 
 # Utils
+common/hdl/utils/bitslip.vhd
 common/hdl/utils/latch.vhd
 common/hdl/utils/i2c_slave.vhd
 common/hdl/utils/rate_counter.vhd
@@ -68,42 +69,38 @@ common/hdl/tests/gbt_prbs_loopback_test.vhd
 # GBTX
 common/hdl/gbtx/gbt.vhd
 common/hdl/gbtx/core_sources/gbt_bank_package.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner_wraddr.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler_16bit.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner_bscounter.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_chnsrch.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner_rightshift.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_deintlver.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox_std_rdctrl.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_rsdec.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_errlcpoly.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_lmbddet.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_framealigner_pattsearch.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_status.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_rs2errcor.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox_latopt.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox_std.vhd
-common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_syndrom.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox_std_rdctrl.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_gearbox_latopt.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler_21bit.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_descrambler_16bit.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_syndrom.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_rsdec.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_rs2errcor.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_lmbddet.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_errlcpoly.vhd
 common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_elpeval.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_std_rdwrctrl.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_scrambler_16bit.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_std.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_scrambler_21bit.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_deintlver.vhd
+common/hdl/gbtx/core_sources/gbt_rx/gbt_rx_decoder_gbtframe_chnsrch.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_scrambler.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_latopt.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_intlver.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_phasemon.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_scrambler_21bit.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_scrambler_16bit.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_std.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_std_rdwrctrl.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_phasemon.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_gearbox_latopt.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_rsencode.vhd
 common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_polydiv.vhd
-common/hdl/gbtx/core_sources/gbt_tx/gbt_tx.vhd
+common/hdl/gbtx/core_sources/gbt_tx/gbt_tx_encoder_gbtframe_intlver.vhd
+common/hdl/gbtx/core_sources/mgt/mgt_framealigner_pattsearch.vhd
+common/hdl/gbtx/core_sources/mgt/mgt_bitslipctrl.vhd
 
 # LpGBT
 common/hdl/lpgbt/lpgbtfpga_package.vhd

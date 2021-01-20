@@ -1,71 +1,22 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX gearbox standard
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                      
--- Tool version:                                                                             
---                                                                                                   
--- Version:               3.2                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR            DESCRIPTION
---                                                                  
---                        10/05/2009   0.1       F. Marin (CPPM)   First .BDF entity definition           
---
---                        08/07/2009   0.2       S. Baron (CERN)   Translate from .bdf to .vhd
---
---                        04/07/2013   3.0       M. Barros Marin   - Cosmetic and minor modifications
---                                                                 - Support for 20bit and 40bit words
---
---                        03/08/2014   3.2       M. Barros Marin   Removed port "RX_WORDCLK_I" from "readControl"
---
--- Additional Comments:                                                     
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx Gearbox (Standard)
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.vendor_specific_gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_gearbox_std - Rx Gearbox (Standard)
+--! @details 
+--! The GBT_rx_gearbox_std ensure the clock domain crossing to pass from the
+--! transceiver frequency to the Frameclk frequency.
 entity gbt_rx_gearbox_std is
    port (  
       
@@ -83,15 +34,15 @@ entity gbt_rx_gearbox_std is
       
       RX_WORDCLK_I                              : in  std_logic;
       RX_FRAMECLK_I                             : in  std_logic;
-      
+      RX_CLKEN_i                                : in  std_logic;
+		RX_CLKEN_o                                : out std_logic;
+		
       --=========--
       -- Control --
       --=========--
-      
-      RX_HEADER_LOCKED_I                        : in  std_logic;
-      RX_WRITE_ADDRESS_I                        : in  std_logic_vector(WORD_ADDR_MSB downto 0);
       READY_O                                   : out std_logic;
-      
+      Rx_HEADERFLAG_i                           : in  std_logic;
+		
       --==============--
       -- Word & Frame --
       --==============--
@@ -102,10 +53,9 @@ entity gbt_rx_gearbox_std is
    );
 end gbt_rx_gearbox_std;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_gearbox_std architecture - Rx Gearbox (Standard)
+--! @details The GBT_rx_gearbox_std module implement the read and write address controller as well as a 
+--! Dual Port RAM to perform the clock domain crossing.
 architecture structural of gbt_rx_gearbox_std is   
    
    --================================ Signal Declarations ================================--   
@@ -117,6 +67,10 @@ architecture structural of gbt_rx_gearbox_std is
    signal readAddress_from_readControl          : std_logic_vector(  2 downto 0);
    signal ready_from_readControl                : std_logic;   
    
+   --===============--
+   -- Write control --
+   --===============--
+   signal RX_WRITE_ADDRESS_s                        : std_logic_vector(GBT_GEARBOXWORDADDR_SIZE-1 downto 0);
    --=======--
    -- DPRAM --
    --=======--
@@ -129,6 +83,13 @@ architecture structural of gbt_rx_gearbox_std is
    
    signal rxFrame_from_frameInverter            : std_logic_vector(119 downto 0);
    
+   
+   
+   signal rdAddress_from_readWriteControl       : std_logic_vector(2 downto 0);
+   signal wrAddress_from_readWriteControl       : std_logic_vector(GBT_GEARBOXWORDADDR_SIZE-1 downto 0);
+	
+	constant RX_GEARBOXSYNCSHIFT_COUNT        : integer range 0 to GBT_WORD_RATIO-1 := GBT_WORD_RATIO-1;
+	signal clken_s                            : std_logic_vector(RX_GEARBOXSYNCSHIFT_COUNT downto 0);
    --=====================================================================================--         
 
 --=================================================================================================--
@@ -136,34 +97,41 @@ begin                 --========####   Architecture Body   ####========--
 --=================================================================================================--  
    
    --==================================== User Logic =====================================-- 
-   
+
    --==============--
    -- Read control --
    --==============--
-   
    readControl: entity work.gbt_rx_gearbox_std_rdctrl
-      port map (
-         RX_RESET_I                             => RX_RESET_I,
-         RX_FRAMECLK_I                          => RX_FRAMECLK_I,
-         ---------------------------------------
-         RX_HEADER_LOCKED_I                     => RX_HEADER_LOCKED_I,
-         READ_ADDRESS_O                         => readAddress_from_readControl,
-         READY_O                                => ready_from_readControl
+      port map (   
+			RX_RESET_I                               => RX_RESET_I, 
+			
+			RX_FRAMECLK_I                            => RX_FRAMECLK_I,
+			RX_CLKEN_i                               => RX_CLKEN_i,
+			
+			RX_WORDCLK_i                             => RX_WORDCLK_I,
+			
+			Rx_HEADERFLAG_i                          => Rx_HEADERFLAG_i, 
+			
+			READ_ADDRESS_O                           => rdAddress_from_readWriteControl,
+			WRITE_ADDRESS_O                          => wrAddress_from_readWriteControl, 
+			
+			READY_O                                  => ready_from_readControl
       );
-   
+		   
    --=======--
    -- DPRAM --
    --=======--
    
    dpram: entity work.gbt_rx_gearbox_std_dpram
       port map   (
-         WR_EN_I                                => RX_HEADER_LOCKED_I,        
+         WR_EN_I                                => '1',
          WR_CLK_I                               => RX_WORDCLK_I,
-         WR_ADDRESS_I                           => RX_WRITE_ADDRESS_I,   
+         WR_ADDRESS_I                           => wrAddress_from_readWriteControl,   
          WR_DATA_I                              => RX_WORD_I,
          ---------------------------------------
          RD_CLK_I                               => RX_FRAMECLK_I,
-         RD_ADDRESS_I                           => readAddress_from_readControl,
+			RX_CLKEN_i                             => RX_CLKEN_i,
+         RD_ADDRESS_I                           => rdAddress_from_readWriteControl,
          RD_DATA_O                              => rxFrame_from_dpram
       );
    
@@ -172,21 +140,42 @@ begin                 --========####   Architecture Body   ####========--
    --================--
    
    frameInverter: for i in 119 downto 0 generate
-      rxFrame_from_frameInverter(i)             <= rxFrame_from_dpram(119-i);
+      RX_FRAME_O(i)             <= rxFrame_from_dpram(119-i);
    end generate;   
    
+	
    --==================--
    -- Output registers --
    --==================--
-   
+	clken_s(0)   <= RX_CLKEN_i;
+	
+   syncShiftReg_gen: for j in 1 to RX_GEARBOXSYNCSHIFT_COUNT generate
+	  
+		flipflop_proc: process(RX_RESET_I, RX_FRAMECLK_I)
+		begin
+			 if RX_RESET_I = '1' then
+				  clken_s(j) <= '0';
+
+			 elsif rising_edge(RX_FRAMECLK_I) then
+				  clken_s(j) <= clken_s(j-1);
+
+			 end if;
+		end process;
+		
+	end generate;
+			
+	RX_CLKEN_o                             <= clken_s(RX_GEARBOXSYNCSHIFT_COUNT);
+			
+		
    regs: process(RX_RESET_I, RX_FRAMECLK_I)
    begin
       if RX_RESET_I = '1' then
          READY_O                                <= '0';
-         RX_FRAME_O                             <= (others => '0');
+			
       elsif rising_edge(RX_FRAMECLK_I) then
-         READY_O                                <= ready_from_readControl;      
-         RX_FRAME_O                             <= rxFrame_from_frameInverter;
+		   if RX_CLKEN_i = '1' then
+				READY_O                                <= ready_from_readControl;
+			end if;			
       end if;
    end process;    
 

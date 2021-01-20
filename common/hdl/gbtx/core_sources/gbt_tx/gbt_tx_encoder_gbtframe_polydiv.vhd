@@ -1,72 +1,23 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT TX encoder GBT-Frame poly divider          
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                      
--- Tool version:                                                                             
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---                                                                   
---                        10/05/2006   0.1       A. Marchioro (CERN)   First .v module definition.           
---                                                                   
---                        03/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.
---                                                                   
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.                                                                   
---                                                                     - "gf16mult" and "gf16add" are functions instead of modules. 
---
--- Additional Comments:                                                                               
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Reed Solomon polynomial dividor generator
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_tx_encoder_gbtframe_polydiv - Reed Solomon Encoder
+--! @details 
+--! The GBT_tx_encoder_gbtframe_polydiv generates the polynomial divider used as the FEC.
 entity gbt_tx_encoder_gbtframe_polydiv is
    port (
-   
       DIVIDER_I                                 : in   std_logic_vector(59 downto 0);
       DIVISOR_I                                 : in   std_logic_vector(19 downto 0);
       QUOTIENT_O                                : out   std_logic_vector(43 downto 0);
@@ -75,19 +26,19 @@ entity gbt_tx_encoder_gbtframe_polydiv is
    );
 end gbt_tx_encoder_gbtframe_polydiv;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_tx_encoder_gbtframe_polydiv architecture - Tx datapath
+--! @details The GBT_tx_encoder_gbtframe_polydiv architecture computes the polynomial divider
+--! used by the decoder to correct error using DIVIDER_I, DIVISOR_I, quotient, remainder, gf16mult
+--! and gf16add functions.
 architecture behavioral of gbt_tx_encoder_gbtframe_polydiv is
 
    --================================ Signal Declarations ================================--
    
-   signal divider                               : polyDivider_divider_15x4bit_A;
-   signal divisor                               : polyDivider_divisor_5x4bit_A;
-   signal quotient                              : polyDivider_quotient_11x4bit_A;
-   signal remainder                             : polyDivider_remainder_4x4bit_A;
-   signal net                                   : polyDivider_net_89x4bit_A;
+   signal divider                               : gbt_reg4_A(0 to 14);
+   signal divisor                               : gbt_reg4_A(0 to 4);
+   signal quotient                              : gbt_reg4_A(0 to 10);
+   signal remainder                             : gbt_reg4_A(0 to 3);
+   signal net                                   : gbt_reg4_A(0 to 88);
 
    --=====================================================================================--
    

@@ -1,68 +1,21 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT TX encoder GBT-Frame Reed-Solomon encoder                                        
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                      
--- Tool version:                                                                             
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---                                                                   
---                        10/05/2006   0.1       A. Marchioro (CERN)   First .v module definition.           
---                                                                   
---                        06/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.
---                                                                   
---                        04/07/2013   3.0       M. Barros Marin       Cosmetic and minor modifications.                                                                   
---  
--- Additional Comments:                                                                               
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Reed Solomon encoder
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_tx_encoder_gbtframe_rsencode - Reed Solomon Encoder
+--! @details 
+--! The GBT_tx_encoder_gbtframe_rsencode generates the FEC used to detect and correct errors.
 entity gbt_tx_encoder_gbtframe_rsencode is
    port (
    
@@ -72,10 +25,9 @@ entity gbt_tx_encoder_gbtframe_rsencode is
    );
 end gbt_tx_encoder_gbtframe_rsencode;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_tx_encoder_gbtframe_rsencode architecture - Tx datapath
+--! @details The GBT_tx_encoder_gbtframe_rsencode architecture implements the polynomial calculator
+--! to generate the 16bit FEC of the 60bit word to be encoded.
 architecture structural of gbt_tx_encoder_gbtframe_rsencode is
 
    --================================ Signal Declarations ================================--

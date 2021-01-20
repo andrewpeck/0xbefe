@@ -1,269 +1,98 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)                            
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT TX                                       
---                                                                                                 
--- Language:              VHDL'93                                                                  
---                                                                                                   
--- Target Device:         Device agnostic                                                         
--- Tool version:                                                                       
---                                                                                                   
--- Version:               3.5                                                                    
---
--- Description:             
---
--- Versions history:      DATE         VERSION   AUTHOR            DESCRIPTION
---
---                        04/07/2013   3.0       M. Barros Marin   First .vhd module definition
---
---                        03/09/2014   3.5       M. Barros Marin   Added TX_MGT_READY_I
---
--- Additional Comments:                                                                               
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Tx Datapath
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! Include the IEEE VHDL standard library
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
-use work.vendor_specific_gbt_bank_package.all;
+--! Include the GBT-FPGA specific packages
+use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_tx - Tx Datapath
+--! @details 
+--! The gbt_tx module implements the logic to scramble and encode the data according to the GBTx specifications.
 entity gbt_tx is
-   generic (   
-      GBT_BANK_ID                               : integer := 1;  
-		NUM_LINKS											: integer := 1;
-		TX_OPTIMIZATION									: integer range 0 to 1 := STANDARD;
-		RX_OPTIMIZATION									: integer range 0 to 1 := STANDARD;
-		TX_ENCODING											: integer range 0 to 1 := GBT_FRAME;
-		RX_ENCODING											: integer range 0 to 1 := GBT_FRAME   
-   );
-   port (
-   
-      --================--
-      -- Reset & Clocks --
-      --================--    
-      
-      -- Reset:
-      ---------
-      
-      TX_RESET_I                                : in  std_logic;      
-      
-      -- Clocks:
-      ----------
-      
-      TX_FRAMECLK_I                             : in  std_logic;
-      TX_WORDCLK_I                              : in  std_logic;
+  generic (   
+    TX_ENCODING                        : integer range 0 to 2 := GBT_FRAME     --! TX_ENCODING: Encoding scheme for the Tx datapath (GBT_FRAME or WIDE_BUS)
+  );
+  port (
+    TX_RESET_I                         : in  std_logic;                        --! Reset the Tx Scrambler/Encoder
+    TX_FRAMECLK_I                      : in  std_logic;                        --! Tx datapath's clock (40MHz with GBT_TXCLKEn_i = '1' or MGT_TXWORDCLK_o with GBT_TXCLKEn_i pulsed every 3/6 clock cycles)
+    TX_CLKEN_i                         : in  std_logic;
+	 
+    TX_ENCODING_SEL_i                  : in  std_logic;
+    TX_ISDATA_SEL_I                    : in  std_logic;                        --! Enable dataflag (header)
 
-      --=========--                                
-      -- Control --                                
-      --=========-- 
-      
-      -- MGT TX Ready:
-      ----------------
+    TX_DATA_I                          : in  std_logic_vector(83 downto 0);    --! GBT Data to be encoded
+    TX_EXTRA_DATA_WIDEBUS_I            : in  std_logic_vector(31 downto 0);    --! (tx) Extra data (32bit) to replace the FEC when the WideBus encoding scheme is selected
 
-      TX_MGT_READY_I                            : in  std_logic;
-      
-		-- Phase monitoring:
-		--------------------
-		
-		PHASE_ALIGNED_O									: out std_logic;
-		PHASE_COMPUTING_DONE_O							: out std_logic;
-		
-      -- TX is data selector:
-      -----------------------      
-      
-      TX_ISDATA_SEL_I                           : in  std_logic;     
-      
-      --======--           
-      -- Data --           
-      --======--              
-      
-      -- Common:
-      ----------
-      
-      TX_DATA_I                                 : in  std_logic_vector(83 downto 0);
-      TX_WORD_O                                 : out std_logic_vector(WORD_WIDTH-1 downto 0); 
-      
-      -- Wide-Bus:
-      ------------
-      
-      TX_EXTRA_DATA_WIDEBUS_I                   : in  std_logic_vector(31 downto 0)
-    
-   );  
+    TX_FRAME_o                         : out std_logic_vector(119 downto 0)    --! Encoded data
+  );  
 end gbt_tx;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_tx architecture - Tx datapath
+--! @details The GBT_tx architecture implements all of the modules required to scramble and encode
+--! the data according to the GBTx specifications.
 architecture structural of gbt_tx is
 
    --================================ Signal Declarations ================================--
    
    --===========--
    -- Scrambler --
-   --===========--   
-   
-   signal txHeader_from_scrambler               : std_logic_vector( 3 downto 0);
-   signal txCommonFrame_from_scrambler          : std_logic_vector(83 downto 0);      
-   signal txExtraFrameWidebus_from_scrambler    : std_logic_vector(31 downto 0);   
-   
-   --=========--
-   -- Encoder --
-   --=========--    
-   
-   signal txFrame_from_encoder                  : std_logic_vector(119 downto 0);   
-  
-   --=========--
-   -- Gearbox --
-   --=========--    
-	
-   signal txword_from_gearbox                 : std_logic_vector(WORD_WIDTH-1 downto 0); 
-	signal ready_from_gearbox						 : std_logic;
-	signal phaligned_from_gearbox					 : std_logic;
-	signal phcomputed_from_gearbox				 : std_logic;
-	
+   --===========--
+   signal txHeader_from_scrambler               : std_logic_vector( 3 downto 0);  --! 4bit header generated depending on the IsData flag
+   signal txCommonFrame_from_scrambler          : std_logic_vector(83 downto 0);  --! 84bit frame from the scrambler to the encoder
+   signal txExtraFrameWidebus_from_scrambler    : std_logic_vector(31 downto 0);  --! 32bit extra data frame from the scrambler to the encoder
+       
    --=====================================================================================--   
   
 --=================================================================================================--
 begin                 --========####   Architecture Body   ####========-- 
 --=================================================================================================--
-
   
-   --==================================== User Logic =====================================--
+    --==================================== User Logic =====================================--
    
-   --===========--
-   -- Scrambler --
-   --===========--   
-   
-   scrambler: entity work.gbt_tx_scrambler
+    --! Instantiation of the GBT Tx scrambler
+    scrambler: entity work.gbt_tx_scrambler
       generic map (
-         GBT_BANK_ID                            => GBT_BANK_ID,
-				NUM_LINKS									=> NUM_LINKS,
-				TX_OPTIMIZATION							=> TX_OPTIMIZATION,
-				RX_OPTIMIZATION							=> RX_OPTIMIZATION,
-				TX_ENCODING									=> TX_ENCODING,
-				RX_ENCODING									=> RX_ENCODING
-			)
-      port map (                                
-         TX_RESET_I                             => TX_RESET_I,
-         TX_FRAMECLK_I                          => TX_FRAMECLK_I,
-         ---------------------------------------  
-         TX_ISDATA_SEL_I                        => TX_ISDATA_SEL_I,
-         TX_HEADER_O                            => txHeader_from_scrambler,
-         ---------------------------------------  
-         TX_DATA_I                              => TX_DATA_I,
-         TX_COMMON_FRAME_O                      => txCommonFrame_from_scrambler,
-         ---------------------------------------
-         TX_EXTRA_DATA_WIDEBUS_I                => TX_EXTRA_DATA_WIDEBUS_I,
-         TX_EXTRA_FRAME_WIDEBUS_O               => txExtraFrameWidebus_from_scrambler
-      );    
-
-   --=========--
-   -- Encoder --
-   --=========--  
-   
-   encoder: entity work.gbt_tx_encoder
-      generic map (
-         GBT_BANK_ID                            => GBT_BANK_ID,
-				NUM_LINKS									=> NUM_LINKS,
-				TX_OPTIMIZATION							=> TX_OPTIMIZATION,
-				RX_OPTIMIZATION							=> RX_OPTIMIZATION,
-				TX_ENCODING									=> TX_ENCODING,
-				RX_ENCODING									=> RX_ENCODING
-			)
+        TX_ENCODING                            => TX_ENCODING
+      )
       port map (
-         TX_RESET_I                             => TX_RESET_I,
-         TX_FRAMECLK_I                          => TX_FRAMECLK_I,
+        TX_RESET_I                             => TX_RESET_I,
+        TX_FRAMECLK_I                          => TX_FRAMECLK_I,
+		  TX_CLKEN_i                             => TX_CLKEN_i,
+		   ---------------------------------------  
+        TX_ISDATA_SEL_I                        => TX_ISDATA_SEL_I,
+        TX_HEADER_O                            => txHeader_from_scrambler,
+         ---------------------------------------  
+        TX_DATA_I                              => TX_DATA_I,
+        TX_COMMON_FRAME_O                      => txCommonFrame_from_scrambler,
          ---------------------------------------
-         TX_HEADER_I                            => txHeader_from_scrambler,
-         ---------------------------------------
-         TX_COMMON_FRAME_I                      => txCommonFrame_from_scrambler,
-         TX_EXTRA_FRAME_WIDEBUS_I               => txExtraFrameWidebus_from_scrambler,
-         ---------------------------------------
-         TX_FRAME_O                             => txFrame_from_encoder
-      );    
+        TX_EXTRA_DATA_WIDEBUS_I                => TX_EXTRA_DATA_WIDEBUS_I,
+        TX_EXTRA_FRAME_WIDEBUS_O               => txExtraFrameWidebus_from_scrambler
+    );    
 
-   --=========--
-   -- Gearbox --
-   --=========--
-
-   txGearbox: entity work.gbt_tx_gearbox    
+    --! Instantiation of the GBT Tx encoder  
+    encoder: entity work.gbt_tx_encoder
       generic map (
-         GBT_BANK_ID                            => GBT_BANK_ID,
-				NUM_LINKS									=> NUM_LINKS,
-				TX_OPTIMIZATION							=> TX_OPTIMIZATION,
-				RX_OPTIMIZATION							=> RX_OPTIMIZATION,
-				TX_ENCODING									=> TX_ENCODING,
-				RX_ENCODING									=> RX_ENCODING
-			)
+        TX_ENCODING                            => TX_ENCODING
+      )
       port map (
-         TX_RESET_I                             => TX_RESET_I,         
-         TX_FRAMECLK_I                          => TX_FRAMECLK_I,
-         TX_WORDCLK_I                           => TX_WORDCLK_I,
+        TX_RESET_I                             => TX_RESET_I,
+        TX_ENCODING_SEL_i                      => TX_ENCODING_SEL_i,
          ---------------------------------------
-         TX_MGT_READY_I                         => TX_MGT_READY_I,         
+        TX_HEADER_I                            => txHeader_from_scrambler,
          ---------------------------------------
-         TX_FRAME_I                             => txFrame_from_encoder,
-         TX_WORD_O                              => txword_from_gearbox,
-			---------------------------------------
-			TX_GEARBOX_READY_O							=> ready_from_gearbox,
-			TX_PHALIGNED_O									=> phaligned_from_gearbox,
-			TX_PHCOMPUTED_O								=> phcomputed_from_gearbox
-      );
-
-	TX_WORD_O <= txword_from_gearbox;
-	
-	--=====================--
-	-- TX phase monitoring --
-	--=====================--
-	txPhaseMon: entity work.gbt_tx_gearbox_phasemon
-		port map(
-			-- RESET
-			RESET_I			=> not(ready_from_gearbox),
-			CLK				=> TX_WORDCLK_I,
-			-- MONITORING
-			PHCOMPUTED_I	=> phcomputed_from_gearbox,
-			PHALIGNED_I		=> phaligned_from_gearbox,
-			
-			-- OUTPUT
-			GOOD_O			=> PHASE_ALIGNED_O,
-			DONE_O			=> PHASE_COMPUTING_DONE_O
-		);
-		
+        TX_COMMON_FRAME_I                      => txCommonFrame_from_scrambler,
+        TX_EXTRA_FRAME_WIDEBUS_I               => txExtraFrameWidebus_from_scrambler,
+         ---------------------------------------
+        TX_FRAME_O                             => TX_FRAME_o
+    );    
    --=====================================================================================--  
 end structural;
 --=================================================================================================--

@@ -5,7 +5,6 @@ common/hdl/utils/synchronizer__xpm.vhd
 common/hdl/utils/oneshot_cross_domain__xpm.vhd
 
 # GBTX
-common/hdl/gbtx/core_sources/xlx_k7v7/xlx_k7v7_gbt_bank_package.vhd
-common/hdl/gbtx/core_sources/xlx_k7v7/xlx_k7v7_gbt_banks_user_setup.vhd
-common/hdl/gbtx/core_sources/xlx_k7v7/gbt_rx/xlx_k7v7_gbt_rx_gearbox_std_dpram.vhd
-common/hdl/gbtx/core_sources/xlx_k7v7/gbt_tx/xlx_k7v7_gbt_tx_gearbox_std_dpram.vhd
+common/hdl/gbtx/core_sources/xilinx_k7v7/xlx_k7v7_gbt_bank_package.vhd
+common/hdl/gbtx/core_sources/xilinx_k7v7/gbt_rx/xlx_k7v7_gbt_rx_gearbox_std_dpram.vhd
+common/hdl/gbtx/core_sources/xilinx_k7v7/gbt_tx/xlx_k7v7_gbt_tx_gearbox_std_dpram.vhd

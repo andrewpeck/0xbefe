@@ -1,69 +1,21 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder error location polynomial evaluation
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:          
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.   
---    
---                        06/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.           
---
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.   
---                                                                     - "gf16mult" and "gf16add" are functions instead of modules.
---
--- Additional Comments: 
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
-
--- IEEE VHDL standard library:
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx error location polynomial zero computing
+-------------------------------------------------------
+ 
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_chnsrch - Rx Reed solomon chien search
+--! @details 
+--! The gbt_rx_decoder_gbtframe_elpeval computes the error location polynomial zero.
 entity gbt_rx_decoder_gbtframe_elpeval is
    port (    
       
@@ -83,10 +35,9 @@ entity gbt_rx_decoder_gbtframe_elpeval is
    );
 end gbt_rx_decoder_gbtframe_elpeval;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_elpeval - Rx error location polynomial zero computing
+--! @details The GBT_rx_decoder_gbtframe_elpeval calls the gf16mult, gf16add and ERRLOCPOLY_I functions to compute 
+--! the error location polynomial zero.
 architecture behavioral of gbt_rx_decoder_gbtframe_elpeval is
 
    --================================ Signal Declarations ================================--

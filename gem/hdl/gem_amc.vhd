@@ -114,14 +114,13 @@ architecture gem_amc_arch of gem_amc is
             clk     : in std_logic;
             probe0  : in std_logic_vector(83 downto 0);
             probe1  : in std_logic_vector(83 downto 0);
-            probe2  : in std_logic;
+            probe2  : in std_logic_vector(31 downto 0);
             probe3  : in std_logic;
             probe4  : in std_logic;
             probe5  : in std_logic;
             probe6  : in std_logic;
             probe7  : in std_logic;
-            probe8  : in std_logic_vector(5 downto 0);
-            probe9  : in std_logic_vector(31 downto 0)
+            probe8  : in std_logic_vector(5 downto 0)
         );
     end component;
 
@@ -179,16 +178,13 @@ architecture gem_amc_arch of gem_amc is
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal lpgbt_tx_data_arr            : t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
-    signal gbt_tx_gearbox_aligned_arr   : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-    signal gbt_tx_gearbox_align_done_arr: std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
             
     signal gbt_rx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal gbt_rx_data_widebus_arr      : t_std32_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal lpgbt_rx_data_arr            : t_lpgbt_rx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal gbt_rx_valid_arr             : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-    signal gbt_rx_header                : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-    signal gbt_rx_header_locked         : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-    signal gbt_rx_bitslip_nbr           : rxBitSlipNbr_mxnbit_A(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    
+    signal gbt_tx_bitslip_arr           : t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     
     signal gbt_link_status_arr          : t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     signal gbt_ready_arr                : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -253,13 +249,7 @@ architecture gem_amc_arch of gem_amc is
     signal dbg_gbt_tx_data              : std_logic_vector(83 downto 0);
     signal dbg_gbt_rx_data              : std_logic_vector(83 downto 0);
     signal dbg_gbt_wide_rx_data         : std_logic_vector(31 downto 0);
-    signal dbg_gbt_tx_gearbox_aligned   : std_logic;
-    signal dbg_gbt_tx_gearbox_align_done: std_logic;
-    signal dbg_gbt_rx_ready             : std_logic;
-    signal dbg_gbt_rx_header            : std_logic;
-    signal dbg_gbt_rx_header_locked     : std_logic;
     signal dbg_gbt_rx_valid             : std_logic;
-    signal dbg_gbt_rx_bitslip_nbr       : std_logic_vector(GBTRX_BITSLIP_NBR_MSB downto 0);
     signal dbg_gbt_link_status          : t_gbt_link_status;
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
@@ -283,13 +273,7 @@ begin
     dbg_gbt_wide_rx_data          <= gbt_rx_data_widebus_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_lpgbt_tx_data             <= lpgbt_tx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_lpgbt_rx_data             <= lpgbt_rx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
-    dbg_gbt_tx_gearbox_aligned    <= gbt_tx_gearbox_aligned_arr(to_integer(unsigned(dbg_gbt_link_select)));
-    dbg_gbt_tx_gearbox_align_done <= gbt_tx_gearbox_align_done_arr(to_integer(unsigned(dbg_gbt_link_select)));
-    dbg_gbt_rx_ready              <= gbt_link_status_arr(to_integer(unsigned(dbg_gbt_link_select))).gbt_rx_ready;
-    dbg_gbt_rx_header             <= gbt_rx_header(to_integer(unsigned(dbg_gbt_link_select)));
-    dbg_gbt_rx_header_locked      <= gbt_rx_header_locked(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_rx_valid              <= gbt_rx_valid_arr(to_integer(unsigned(dbg_gbt_link_select)));
-    dbg_gbt_rx_bitslip_nbr        <= gbt_rx_bitslip_nbr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_link_status           <= gbt_link_status_arr(to_integer(unsigned(dbg_gbt_link_select)));
     
     --================================--
@@ -602,6 +586,7 @@ begin
             vfat3_link_status_arr_i => vfat3_link_status_arr,
 
             vfat_mask_arr_o         => vfat_mask_arr,
+            gbt_tx_bitslip_arr_o    => gbt_tx_bitslip_arr,
 
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
@@ -667,7 +652,6 @@ begin
     g_gbtx : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_gbt : entity work.gbt
             generic map(
-                GBT_BANK_ID         => 0,
                 NUM_LINKS           => g_NUM_OF_OHs * g_NUM_GBTS_PER_OH,
                 TX_OPTIMIZATION     => 1,
                 RX_OPTIMIZATION     => 0,
@@ -685,22 +669,16 @@ begin
                 tx_word_clk_arr_i           => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i           => gt_gbt_rx_clk_arr_i,
                 
-                tx_ready_arr_i              => (others => '1'),
                 tx_we_arr_i                 => (others => '1'),
                 tx_data_arr_i               => gbt_tx_data_arr,
-                tx_gearbox_aligned_arr_o    => gbt_tx_gearbox_aligned_arr,
-                tx_gearbox_align_done_arr_o => gbt_tx_gearbox_align_done_arr,
+                tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
                 
-                rx_frame_clk_rdy_arr_i      => (others => '1'),
-                rx_word_clk_rdy_arr_i       => (others => '1'),
-                rx_bitslip_nbr_arr_o        => gbt_rx_bitslip_nbr,
-                rx_header_arr_o             => gbt_rx_header,
-                rx_header_locked_arr_o      => gbt_rx_header_locked,
                 rx_data_valid_arr_o         => gbt_rx_valid_arr,
                 rx_data_arr_o               => gbt_rx_data_arr,
                 rx_data_widebus_arr_o       => gbt_rx_data_widebus_arr,
                 
-                mgt_rx_rdy_arr_i            => (others => '1'),
+                mgt_status_arr_i            => gt_gbt_status_arr_i,
+                mgt_ctrl_arr_o              => gt_gbt_ctrl_arr_o,
                 mgt_tx_data_arr_o           => gt_gbt_tx_data_arr_o,
                 mgt_rx_data_arr_i           => gt_gbt_rx_data_arr_i,
                 
@@ -893,14 +871,13 @@ begin
                     clk     => ttc_clocks_i.clk_40,
                     probe0  => dbg_gbt_tx_data,
                     probe1  => dbg_gbt_rx_data,
-                    probe2  => dbg_gbt_tx_gearbox_aligned,
-                    probe3  => dbg_gbt_tx_gearbox_align_done,
-                    probe4  => dbg_gbt_rx_ready,
-                    probe5  => dbg_gbt_rx_header,
-                    probe6  => dbg_gbt_rx_header_locked,
-                    probe7  => dbg_gbt_rx_valid,
-                    probe8  => dbg_gbt_rx_bitslip_nbr,
-                    probe9  => dbg_gbt_wide_rx_data
+                    probe2  => dbg_gbt_wide_rx_data,
+                    probe3  => dbg_gbt_link_status.gbt_tx_gearbox_ready,
+                    probe4  => dbg_gbt_link_status.gbt_rx_ready,
+                    probe5  => dbg_gbt_link_status.gbt_rx_header_locked,
+                    probe6  => dbg_gbt_link_status.gbt_rx_gearbox_ready,
+                    probe7  => dbg_gbt_link_status.gbt_rx_correction_flag,
+                    probe8  => dbg_gbt_link_status.gbt_rx_num_bitslips(5 downto 0)
                 );
         end generate;
     

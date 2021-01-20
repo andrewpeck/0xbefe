@@ -754,7 +754,17 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_sync_status.had_unf"
           sw_monitor_error_value="0"/>
 
-    <node id="VFAT_MASK" address="0x1" mask="0x00ffffff" permission="rw"
+    <node id="GBT0_TX_PHASE" address="0x1" mask="0x0000007f" permission="rw"
+          description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
+          fw_signal="gbt_tx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + 0)" fw_default="0b0000000"/>
+    <node id="GBT1_TX_PHASE" address="0x1" mask="0x00007f00" permission="rw"
+          description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
+          fw_signal="gbt_tx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + 1)" fw_default="0b0000000"/>
+    <node id="GBT2_TX_PHASE" address="0x1" mask="0x007f0000" permission="rw" ignore="&STATION;!=1"
+          description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
+          fw_signal="gbt_tx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + 2)" fw_default="0b0000000"/>
+
+    <node id="VFAT_MASK" address="0x2" mask="0x00ffffff" permission="rw"
           description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 

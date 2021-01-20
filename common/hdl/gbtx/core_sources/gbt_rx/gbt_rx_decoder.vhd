@@ -1,215 +1,189 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.2                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR                               DESCRIPTION
---    
---                        10/05/2009   0.1       S. Muschter (Stockholm University)   First .bdf entity definition.           
---                                                                   
---                        08/07/2009   0.2       S. Baron (CERN)                      Translate from .bdf to .vhd.
---
---                        04/07/2013   3.0       M. Barros Marin                      - Cosmetic and minor modifications.   
---                                                                                    - Add Wide-Bus encoding. 
---
---                        01/09/2014   3.2       M. Barros Marin                      Fixed generic issue (TX_ENCODING -> RX_ENCODING).  
---
--- Additional Comments:  
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx decoder 
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! Include the IEEE VHDL standard library
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Include the GBT-FPGA specific packages
 use work.gbt_bank_package.all;
 use work.vendor_specific_gbt_bank_package.all;
-use work.gbt_banks_user_setup.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder - Rx decoder
+--! @details 
+--! The GBT_rx_decoder module decode the data and correct errors when the GBT_FRAME encoding scheme
+--! is used.
 entity gbt_rx_decoder is
-   generic (   
-      GBT_BANK_ID                               : integer := 1;
-		NUM_LINKS											: integer := 1;
-		TX_OPTIMIZATION									: integer range 0 to 1 := STANDARD;
-		RX_OPTIMIZATION									: integer range 0 to 1 := STANDARD;
-		TX_ENCODING											: integer range 0 to 1 := GBT_FRAME;
-		RX_ENCODING											: integer range 0 to 1 := GBT_FRAME 
-   );
-   port (
-      
-      --===============--
-      -- Reset & Clock --
-      --===============--    
-      
-      -- Reset:
-      ---------
-      
-      RX_RESET_I                                : in  std_logic;
-      
-      -- Clock:
-      ---------
-      
-      RX_FRAMECLK_I                             : in  std_logic;
-      
-      --=========--
-      -- Control --
-      --=========--
-      
-      -- Ready flags:
-      ---------------
-      
-      RX_GEARBOX_READY_I                        : in  std_logic;
-      READY_O                                   : out std_logic;
-      
-      -- RX is data flag:
-      -------------------
-      
-      RX_ISDATA_FLAG_ENABLE_I                   : in  std_logic;  
-      RX_ISDATA_FLAG_O                          : out std_logic;  
-      
-      --=======--
-      -- Frame --
-      --=======--
-      
-      -- Frame:
-      ---------      
-      
-      RX_FRAME_I                                : in  std_logic_vector(119 downto 0);      
-      
-      -- Common:
-      ----------
-      
-      RX_COMMON_FRAME_O                         : out std_logic_vector( 83 downto 0);
-      
-      -- Wide-Bus:
-      ------------
-      
-      RX_EXTRA_FRAME_WIDEBUS_O                  : out std_logic_vector( 31 downto 0)
-      
-   );
+  generic (   
+    RX_ENCODING                               : integer range 0 to 2 := GBT_FRAME    --! RX_ENCODING: Encoding scheme for the Rx datapath (GBT_FRAME or WIDE_BUS)
+  );
+  port (
+
+    --===============--
+    -- Reset & Clock --
+    --===============--
+    RX_RESET_I                                : in  std_logic;                       --! Reset the Rx decoder (Asynchronous)
+    RX_FRAMECLK_I                             : in  std_logic;                       --! Rx frame clock used to clock the decoder logic
+	 RX_CLKEN_i                                : in  std_logic;
+	 
+    --=========--
+    -- Control --
+    --=========--
+    RX_ENCODING_SEL_i                         : in  std_logic;                       --! Select the Rx encoding in dynamic mode ('1': GBT / '0': WideBus)
+    READY_O                                   : out std_logic;                       --! Ready flag of the decoder
+    RX_ISDATA_FLAG_ENABLE_I                   : in  std_logic;                       --! Enable the header flag detection
+    RX_ISDATA_FLAG_O                          : out std_logic;                       --! Is data flag recovered from the header
+    RX_ERROR_DETECTED                         : out std_logic;                       --! Error detected by the decoder
+    RX_BIT_MODIFIED_FLAG                      : out std_logic_vector(83 downto 0);   --! Position of high level bits indicate the position of the bits flipped by the decoder
+
+    --=======--
+    -- Frame --
+    --=======--
+    RX_FRAME_I                                : in  std_logic_vector(119 downto 0);  --! GBT frame to be decoded
+    RX_COMMON_FRAME_O                         : out std_logic_vector( 83 downto 0);  --! GBT frame decoded
+    RX_EXTRA_FRAME_WIDEBUS_O                  : out std_logic_vector( 31 downto 0)   --! Extra data of the Widebus frame
+  );
 end gbt_rx_decoder;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder architecture - Rx decoder
+--! @details The GBT_rx_decoder architecture implements the modules to reorder the frame and decode/correct 
+--! the frame when the GBT_FRAME encoding is selected or to push the GBT and Widebus extra words in output
+--! when the Wide_bus mode is selected.
 architecture structural of gbt_rx_decoder is 
 
-   --================================ Signal Declarations ================================--
+    --================================ Signal Declarations ================================--
+    signal rxFrame_from_deinterleaver            : std_logic_vector(119 downto 0);   --! Reordered frame from the deinterleaver
+    signal rxCommonFrame_from_reedSolomonDecoder : std_logic_vector( 87 downto 0);   --! Decoded frame from the reed Solomon decoders
+    
+    signal error_detected_lsb                    : std_logic;                        --! Error detected/corrected flag for the least significant bits of the frame
+    signal error_detected_msb                    : std_logic;                        --! Error detected/corrected flag for the most significant bits of the frame
+    
+    
+    signal RX_COMMON_FRAME_gbt_s                     : std_logic_vector( 83 downto 0);  --! GBT frame decoded (signal for gbt frame)
+    signal RX_EXTRA_FRAME_WIDEBUS_gbt_s              : std_logic_vector( 31 downto 0);  --! Extra data of the Widebus frame (signal for gbt frame)
+    signal RX_ERROR_DETECTED_gbt_s                   : std_logic;                       --! Error detected by the decoder (signal for gbt frame)
+    signal RX_BIT_MODIFIED_FLAG_gbt_s                : std_logic_vector(83 downto 0);   --! Position of high level bits indicate the position of the bits flipped by the decoder (signal for gbt frame)
+    
+    signal RX_COMMON_FRAME_wb_s                      : std_logic_vector( 83 downto 0);  --! GBT frame decoded (signal for wb frame)
+    signal RX_EXTRA_FRAME_WIDEBUS_wb_s               : std_logic_vector( 31 downto 0);  --! Extra data of the Widebus frame (signal for wb frame)
+    signal RX_ERROR_DETECTED_wb_s                    : std_logic;                       --! Error detected by the decoder (signal for wb frame)
+    signal RX_BIT_MODIFIED_FLAG_wb_s                 : std_logic_vector(83 downto 0);   --! Position of high level bits indicate the position of the bits flipped by the decoder (signal for wb frame)
+    --=====================================================================================--
 
-   signal rxFrame_from_deinterleaver            : std_logic_vector(119 downto 0);
-   signal rxCommonFrame_from_reedSolomonDecoder : std_logic_vector( 87 downto 0); 
+begin
 
-   --=====================================================================================--
-
---=================================================================================================--
-begin                 --========####   Architecture Body   ####========-- 
---=================================================================================================--  
-
-   --==================================== User Logic =====================================--   
-
-   --==============--
-   -- Frame header --
-   --==============--
+    --==================================== User Logic =====================================--   
+    
+	--! Extract Is data flag from header information
+    RX_ISDATA_FLAG_O  <= '1' when (RX_FRAME_I(119 downto 116) = DATA_HEADER_PATTERN) and (RX_ISDATA_FLAG_ENABLE_I = '1') else '0'; 
    
-   RX_ISDATA_FLAG_O  <= '1' when (RX_FRAME_I(119 downto 116) = DATA_HEADER_PATTERN) and (RX_ISDATA_FLAG_ENABLE_I = '1') else '0'; 
+    --=========--
+    -- Decoder --
+    --=========--  
    
-   --=========--
-   -- Decoder --
-   --=========--   
+    -- GBT-Frame:
+    -------------   
+    gbtFrame_gen: if RX_ENCODING = GBT_FRAME or RX_ENCODING = GBT_DYNAMIC generate
    
-   -- GBT-Frame:
-   -------------  
-   
-   gbtFrame_gen: if RX_ENCODING = GBT_FRAME generate
-   
-      deinterleaver: entity work.gbt_rx_decoder_gbtframe_deintlver
-         port map (        
+		--! The deinterleaver realigned the frame to get 2 encoded words of 60 bits (44bit data + 16bit FEC)
+        deinterleaver: entity work.gbt_rx_decoder_gbtframe_deintlver
+          port map (        
             RX_FRAME_I                          => RX_FRAME_I,
             RX_FRAME_O                          => rxFrame_from_deinterleaver
-         );   
-      
-      reedSolomonDecoder60to119: entity work.gbt_rx_decoder_gbtframe_rsdec
-         port map (
+          );   
+
+		--! Reed solomon decoder for the first 44bit data word
+        reedSolomonDecoder60to119: entity work.gbt_rx_decoder_gbtframe_rsdec
+          port map (
+            RX_FRAMECLK_I                       => RX_FRAMECLK_I,
+				RX_CLKEN_i                          => RX_CLKEN_i,
             RX_COMMON_FRAME_ENCODED_I           => rxFrame_from_deinterleaver(119 downto 60),
             RX_COMMON_FRAME_O                   => rxCommonFrame_from_reedSolomonDecoder(87 downto 44),
-            ERROR_DETECT_O                      => open   -- Comment: Port added for debugging.
-         );   
+            ERROR_DETECT_O                      => error_detected_msb   -- Comment: Port added for debugging.
+          );   
 
-      reedSolomonDecoder0to50: entity work.gbt_rx_decoder_gbtframe_rsdec
-         port map(
+		--! Reed solomon decoder for the second 44bit data word
+        reedSolomonDecoder0to50: entity work.gbt_rx_decoder_gbtframe_rsdec
+          port map(
+            RX_FRAMECLK_I                       => RX_FRAMECLK_I,
+			RX_CLKEN_i                          => RX_CLKEN_i,
             RX_COMMON_FRAME_ENCODED_I           => rxFrame_from_deinterleaver(59 downto 0),
             RX_COMMON_FRAME_O                   => rxCommonFrame_from_reedSolomonDecoder(43 downto 0),
-            ERROR_DETECT_O                      => open   -- Comment: Port added for debugging.
-         );    
+            ERROR_DETECT_O                      => error_detected_lsb   -- Comment: Port added for debugging.
+          );    
       
-      RX_COMMON_FRAME_O                         <= rxCommonFrame_from_reedSolomonDecoder(83 downto 0);
-      
-   end generate;
+        RX_COMMON_FRAME_gbt_s                       <= rxCommonFrame_from_reedSolomonDecoder(83 downto 0);        
+        RX_ERROR_DETECTED_gbt_s                     <= error_detected_lsb or error_detected_msb;        
+        RX_EXTRA_FRAME_WIDEBUS_gbt_s                <= (others => '0');
+        
+		  errflag_proc: process(RX_FRAMECLK_I)
+		  begin
+			
+			    if RX_RESET_I = '1' then
+			        RX_BIT_MODIFIED_FLAG_gbt_s   <= (others => '0');
+			        
+				elsif rising_edge(RX_FRAMECLK_I) then
+				
+					if RX_CLKEN_i = '1' then
+						RX_BIT_MODIFIED_FLAG_gbt_s(83 downto 44)      <= rxCommonFrame_from_reedSolomonDecoder(83 downto 44) xor rxFrame_from_deinterleaver(115 downto 76);
+						RX_BIT_MODIFIED_FLAG_gbt_s(43 downto 0)       <= rxCommonFrame_from_reedSolomonDecoder(43 downto 0) xor rxFrame_from_deinterleaver(59 downto 16);
+					
+					end if;
+					
+				end if;
+			
+		  end process;
+        
+    end generate;
    
-   -- Wide-Bus: 
-   ------------
-   
-   wideBus_gen: if RX_ENCODING = WIDE_BUS generate
+    -- Wide-Bus:
+    ------------
+    wideBus_gen: if RX_ENCODING = WIDE_BUS or RX_ENCODING = GBT_DYNAMIC generate
       
-      RX_COMMON_FRAME_O                         <= RX_FRAME_I(115 downto 32);
-      RX_EXTRA_FRAME_WIDEBUS_O                  <= RX_FRAME_I( 31 downto  0);                                
+        RX_COMMON_FRAME_wb_s                      <= RX_FRAME_I(115 downto 32);   -- No decoding in WideBus mode
+        RX_EXTRA_FRAME_WIDEBUS_wb_s               <= RX_FRAME_I( 31 downto  0);   -- No decoding in WideBus mode
+        RX_ERROR_DETECTED_wb_s                    <= '0';                         -- Not supported in widebus mode (no error correction)
+        RX_BIT_MODIFIED_FLAG_wb_s                 <= (others => '0');             -- Not supported in widebus mode (no error correction)
 
-   end generate;
+    end generate;
+    
+    -- Encoding select.    
+    wbsel_gen: if RX_ENCODING = WIDE_BUS generate
+      
+        RX_COMMON_FRAME_o                      <= RX_COMMON_FRAME_wb_s;
+        RX_EXTRA_FRAME_WIDEBUS_o               <= RX_EXTRA_FRAME_WIDEBUS_wb_s;
+        RX_ERROR_DETECTED                      <= RX_ERROR_DETECTED_wb_s;
+        RX_BIT_MODIFIED_FLAG                   <= RX_BIT_MODIFIED_FLAG_wb_s;
 
-   widebus_no_gen: if RX_ENCODING /= WIDE_BUS generate
+    end generate; 
+    
+    gbtsel_gen: if RX_ENCODING = GBT_FRAME generate
+      
+        RX_COMMON_FRAME_o                      <= RX_COMMON_FRAME_gbt_s;
+        RX_EXTRA_FRAME_WIDEBUS_o               <= RX_EXTRA_FRAME_WIDEBUS_gbt_s;
+        RX_ERROR_DETECTED                      <= RX_ERROR_DETECTED_gbt_s;
+        RX_BIT_MODIFIED_FLAG                   <= RX_BIT_MODIFIED_FLAG_gbt_s;
+
+    end generate;
+
+    dynsel_gen: if RX_ENCODING = GBT_DYNAMIC generate
+      
+        RX_COMMON_FRAME_o                      <= RX_COMMON_FRAME_gbt_s when RX_ENCODING_SEL_i = '1' else RX_COMMON_FRAME_wb_s;
+        RX_EXTRA_FRAME_WIDEBUS_o               <= RX_EXTRA_FRAME_WIDEBUS_gbt_s when RX_ENCODING_SEL_i = '1' else RX_EXTRA_FRAME_WIDEBUS_wb_s;
+        RX_ERROR_DETECTED                      <= RX_ERROR_DETECTED_gbt_s when RX_ENCODING_SEL_i = '1' else RX_ERROR_DETECTED_wb_s;
+        RX_BIT_MODIFIED_FLAG                   <= RX_BIT_MODIFIED_FLAG_gbt_s when RX_ENCODING_SEL_i = '1' else RX_BIT_MODIFIED_FLAG_wb_s;
+
+    end generate;    
    
-      RX_EXTRA_FRAME_WIDEBUS_O                  <= (others => '0');
-   
-   end generate;
-   
-   --============--
-   -- Ready flag --
-   --============--
-   
-   READY_O                                      <= RX_GEARBOX_READY_I;             
+    --============--
+    -- Ready flag --
+    --============--   
+    READY_O                                      <= not(RX_RESET_I);             
 
    --=====================================================================================--
 end structural;

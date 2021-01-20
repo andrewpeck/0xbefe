@@ -26,6 +26,8 @@ package common_pkg is
 
     type t_std256_array is array(integer range <>) of std_logic_vector(255 downto 0);
   
+    type t_std120_array is array(integer range <>) of std_logic_vector(119 downto 0);
+
     type t_std64_array is array(integer range <>) of std_logic_vector(63 downto 0);
 
     type t_std32_array is array(integer range <>) of std_logic_vector(31 downto 0);
@@ -41,6 +43,8 @@ package common_pkg is
     type t_std10_array is array(integer range <>) of std_logic_vector(9 downto 0);
 
     type t_std8_array is array(integer range <>) of std_logic_vector(7 downto 0);
+
+    type t_std7_array is array(integer range <>) of std_logic_vector(6 downto 0);
 
     type t_std6_array is array(integer range <>) of std_logic_vector(5 downto 0);
 

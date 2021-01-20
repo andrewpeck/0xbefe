@@ -1,73 +1,30 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.   
---    
---                        07/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.           
---                                                                   
---                        08/07/2009   0.3       S. Baron (CERN)       Cosmetic and minor modifications.
---
---                        04/07/2013   3.0       M. Barros Marin       Cosmetic and minor modifications.   
---
--- Additional Comments: 
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx Reed solomon decoder
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_rsdec - Reed Solomon decoder
+--! @details 
+--! The gbt_rx_decoder_gbtframe_rsdec detects and corrects the errors.
 entity gbt_rx_decoder_gbtframe_rsdec is
    port (
    
+      --========--
+      -- Clock  --
+      --========--
+      RX_FRAMECLK_I                             : in std_logic;
+      RX_CLKEN_i                                : in std_logic;
+		
       --========--
       -- Inputs --
       --========--
@@ -80,14 +37,12 @@ entity gbt_rx_decoder_gbtframe_rsdec is
       --========--
 
       ERROR_DETECT_O                            : out std_logic
-      
+		
    );
 end gbt_rx_decoder_gbtframe_rsdec;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_rsdec - Reed Solomon decoder
+--! @details The gbt_rx_decoder_gbtframe_rsdec call the all of the modules required to find and correct the errors.
 architecture structural of gbt_rx_decoder_gbtframe_rsdec is
 
    --================================ Signal Declarations ================================--
@@ -107,6 +62,9 @@ architecture structural of gbt_rx_decoder_gbtframe_rsdec is
    
    signal corCoeffs_from_rsTwoErrorsCorrect     : std_logic_vector(59 downto 0);
 
+	signal bit_diff										: std_logic_vector(43 downto 0);
+	signal error_detected								: std_logic;
+	
    --=====================================================================================--
    
 --=================================================================================================--
@@ -169,14 +127,24 @@ begin                 --========####   Architecture Body   ####========--
                                                                      and s4_from_syndromes = x"0") else
                         -------------------------------------------------------------------------------                                             
                         corCoeffs_from_rsTwoErrorsCorrect(59 downto 16);
-                       
-   ERROR_DETECT_O    <= '0' when     (s1_from_syndromes = X"0"
-                                  and s2_from_syndromes = X"0"
-                                  and s3_from_syndromes = X"0"
-                                  and s4_from_syndromes = X"0") else
-                        --------------------------------------------  
-                        '1';
-                        
+    
+	
+	errdet_proc: process(RX_FRAMECLK_I)
+	begin
+	
+	   if rising_edge(RX_FRAMECLK_I) then
+	   
+			if RX_CLKEN_i = '1' then
+				 ERROR_DETECT_O  <= s1_from_syndromes(0) or s1_from_syndromes(1) or s1_from_syndromes(2) or s1_from_syndromes(3) or
+										  s2_from_syndromes(0) or s2_from_syndromes(1) or s2_from_syndromes(2) or s2_from_syndromes(3) or
+										  s3_from_syndromes(0) or s3_from_syndromes(1) or s3_from_syndromes(2) or s3_from_syndromes(3) or
+										  s4_from_syndromes(0) or s4_from_syndromes(1) or s4_from_syndromes(2) or s4_from_syndromes(3);
+	      end if;
+			
+	   end if;
+	
+	end process;
+	
    --=====================================================================================--  
 end structural;
 --=================================================================================================--

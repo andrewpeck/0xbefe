@@ -1,69 +1,21 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT TX gearbox standard         
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                      
--- Tool version:                                                                             
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR            DESCRIPTION
---                                                                  
---                        10/05/2009   0.1       F. Marin (CPPM)   First .bdf entity definition.           
---                                                                   
---                        08/07/2009   0.2       S. Baron (CERN)   Translate from .bdf to .vhd.
---                                                                   
---                        09/08/2013   3.0       M. Barros Marin   - Cosmetic and minor modifications.                                                                   
---                                                                 - Support for 20bit and 40bit words. 
---
--- Additional Comments:  
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Tx gearbox (Standard)
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.vendor_specific_gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_tx_gearbox_std - Tx gearbox (Standard)
+--! @details 
+--! The GBT_tx_gearbox_std ensures a stable clock domain crossing between Tx Frameclock and Tx Wordclock.
 entity gbt_tx_gearbox_std is 
    port (
       
@@ -80,6 +32,7 @@ entity gbt_tx_gearbox_std is
       ----------
       
       TX_FRAMECLK_I                             : in  std_logic;
+		TX_CLKEN_i                                : in  std_logic;
       TX_WORDCLK_I                              : in  std_logic;
       
       --==============--
@@ -87,15 +40,15 @@ entity gbt_tx_gearbox_std is
       --==============--
       
       TX_FRAME_I                                : in  std_logic_vector(119 downto 0);
-      TX_WORD_O                                 : out std_logic_vector(WORD_WIDTH-1 downto 0)
+      TX_WORD_O                                 : out std_logic_vector(WORD_WIDTH-1 downto 0);
+		
+      TX_GEARBOX_READY_O                        : out std_logic
       
    );
 end gbt_tx_gearbox_std;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_tx_gearbox_std - Tx gearbox (Standard)
+--! @details The GBT_tx_gearbox_std implements the DPRAM controller and the memory.
 architecture structural of gbt_tx_gearbox_std is 
 
    --================================ Signal Declarations ================================--
@@ -105,7 +58,7 @@ architecture structural of gbt_tx_gearbox_std is
    --=========--
    
    signal writeAddress_from_readWriteControl    : std_logic_vector(2 downto 0);
-   signal readAddress_from_readWriteControl     : std_logic_vector(WORD_ADDR_MSB downto 0);
+   signal readAddress_from_readWriteControl     : std_logic_vector(GBT_GEARBOXWORDADDR_SIZE-1 downto 0);
    
    --==========--
    -- Inverter --
@@ -127,8 +80,9 @@ begin                 --========####   Architecture Body   ####========--
    
    readWriteControl: entity work.gbt_tx_gearbox_std_rdwrctrl
       port map (
-         TX_RESET_I                             => TX_RESET_I,          
+         TX_RESET_I                             => TX_RESET_I,   
          TX_FRAMECLK_I                          => TX_FRAMECLK_I,
+			TX_CLKEN_i                             => TX_CLKEN_i,
          TX_WORDCLK_I                           => TX_WORDCLK_I,          
          WRITE_ADDRESS_O                        => writeAddress_from_readWriteControl,
          READ_ADDRESS_O                         => readAddress_from_readWriteControl
@@ -151,6 +105,7 @@ begin                 --========####   Architecture Body   ####========--
    dpram: entity work.gbt_tx_gearbox_std_dpram
       port map (
          WR_CLK_I                               => TX_FRAMECLK_I,
+			TX_CLKEN_i                             => TX_CLKEN_i,
          WR_ADDRESS_I                           => writeAddress_from_readWriteControl,   
          WR_DATA_I                              => txFrame_from_frameInverter,
          RD_CLK_I                               => TX_WORDCLK_I,
@@ -158,6 +113,7 @@ begin                 --========####   Architecture Body   ####========--
          RD_DATA_O                              => TX_WORD_O
       );   
    
+	TX_GEARBOX_READY_O <= not(TX_RESET_I);
    --=====================================================================================--
 end structural;
 --=================================================================================================--

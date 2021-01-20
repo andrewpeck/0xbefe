@@ -19,7 +19,6 @@ use unisim.vcomponents.all;
 -- Custom libraries and packages:
 use work.gbt_bank_package.all;
 use work.vendor_specific_gbt_bank_package.all;
-use work.gbt_banks_user_setup.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 
@@ -29,7 +28,6 @@ use work.gem_pkg.all;
 
 entity gbt is
     generic(
-        GBT_BANK_ID     : integer              := 0;
         NUM_LINKS       : integer              := 1;
         TX_OPTIMIZATION : integer range 0 to 1 := STANDARD;
         RX_OPTIMIZATION : integer range 0 to 1 := STANDARD;
@@ -55,22 +53,14 @@ entity gbt is
         -- GBT TX --
         --========--
 
-        tx_ready_arr_i              : in  std_logic_vector(NUM_LINKS - 1 downto 0);
         tx_we_arr_i                 : in  std_logic_vector(NUM_LINKS - 1 downto 0);
         tx_data_arr_i               : in  t_gbt_frame_array(NUM_LINKS - 1 downto 0);
-        tx_gearbox_aligned_arr_o    : out std_logic_vector(NUM_LINKS - 1 downto 0);
-        tx_gearbox_align_done_arr_o : out std_logic_vector(NUM_LINKS - 1 downto 0);
+        tx_bitslip_cnt_i            : in  t_std7_array(NUM_LINKS - 1 downto 0);
 
         --========--              
         -- GBT RX --              
         --========-- 
 
-        rx_frame_clk_rdy_arr_i      : in  std_logic_vector(NUM_LINKS - 1 downto 0);
-        rx_word_clk_rdy_arr_i       : in  std_logic_vector(NUM_LINKS - 1 downto 0);
-        
-        rx_bitslip_nbr_arr_o        : out rxBitSlipNbr_mxnbit_A(NUM_LINKS - 1 downto 0);
-        rx_header_arr_o             : out std_logic_vector(NUM_LINKS - 1 downto 0);
-        rx_header_locked_arr_o      : out std_logic_vector(NUM_LINKS - 1 downto 0);
         rx_data_valid_arr_o         : out std_logic_vector(NUM_LINKS - 1 downto 0);
         rx_data_arr_o               : out t_gbt_frame_array(NUM_LINKS - 1 downto 0);
         rx_data_widebus_arr_o       : out t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
@@ -79,7 +69,8 @@ entity gbt is
         --   MGT  --              
         --========-- 
         
-        mgt_rx_rdy_arr_i            : in  std_logic_vector(NUM_LINKS - 1 downto 0);
+        mgt_status_arr_i            : in  t_mgt_status_arr(NUM_LINKS - 1 downto 0);
+        mgt_ctrl_arr_o              : out t_mgt_ctrl_arr(NUM_LINKS - 1 downto 0);        
         mgt_tx_data_arr_o           : out t_std40_array(NUM_LINKS - 1 downto 0);
         mgt_rx_data_arr_i           : in  t_std40_array(NUM_LINKS - 1 downto 0);
 
@@ -128,46 +119,50 @@ architecture gbt_arch of gbt is
 
     -- Comment: TX word width is device dependent.
 
-    signal tx_wordNbit_from_gbtTx : word_mxnbit_A(NUM_LINKS - 1 downto 0);
-    signal phaligned_from_gbtTx   : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal phcomputing_from_gbtTx : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal tx_word_data_arr             : t_std40_array(NUM_LINKS - 1 downto 0);
+    signal tx_phaligned                 : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal tx_phalign_done              : std_logic_vector(NUM_LINKS - 1 downto 0);
 
-    signal tx_data_arr            : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
+    signal tx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
+    signal tx_data_encoded_arr          : t_std120_array(NUM_LINKS - 1 downto 0);
+    signal tx_data_encoded_slipped_arr  : t_std120_array(NUM_LINKS - 1 downto 0);
 
-    --==================================--              
-    -- Multi Gigabit Transceivers (MGT) --          
-    --==================================--                 
-
-    -- Comment: RX word width is device dependent.
-
-    signal rxReady_from_mgt        : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_wordNbit_from_mgt    : word_mxnbit_A(NUM_LINKS - 1 downto 0);
+    signal tx_gearbox_aligned           : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal tx_gearbox_align_done        : std_logic_vector(NUM_LINKS - 1 downto 0);
 
     --========--              
     -- GBT RX --              
     --========--     
 
-    -- Comment: GBT RX bitslip width is device dependent.   
+    signal rx_gearbox_clk_en            : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_gearbox_ready             : std_logic_vector(NUM_LINKS - 1 downto 0);
+    
+    signal rx_data_encoded_arr          : t_std120_array(NUM_LINKS - 1 downto 0);
+    
+    signal rx_word_data_arr             : t_std40_array(NUM_LINKS - 1 downto 0);
 
-    signal rxBitSlipNbr_from_gbtRx   : rxBitSlipNbr_mxnbit_A(NUM_LINKS - 1 downto 0);
-    signal rxHeaderLocked_from_gbtRx : std_logic_vector(NUM_LINKS - 1 downto 0);
-
-    signal rx_common_word_clk        : std_logic;
-    signal mgt_sync_rx_data_arr      : t_std40_array(NUM_LINKS - 1 downto 0);
-    signal mgt_sync_rx_valid_arr     : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_common_word_clk           : std_logic;
+    signal mgt_sync_rx_data_arr         : t_std40_array(NUM_LINKS - 1 downto 0);
+    signal mgt_sync_rx_valid_arr        : std_logic_vector(NUM_LINKS - 1 downto 0);
    
-    signal rx_data_arr               : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
-    signal rx_data_widebus_arr       : t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
+    signal mgt_rx_bitslip_cnt_arr       : t_std8_array(NUM_LINKS - 1 downto 0);
+    signal mgt_rx_data_bitslipped_arr   : t_std40_array(NUM_LINKS - 1 downto 0);
+   
+    signal rx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
+    signal rx_data_widebus_arr          : t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
     
-    signal rx_ready_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_ovf_arr                : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_ovf_sync_arr           : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_unf_arr                : std_logic_vector(NUM_LINKS - 1 downto 0);
-    
-    --== constant signals ==--
-    
-    signal tied_to_ground   : std_logic;
-    signal tied_to_vcc      : std_logic;    
+    signal rx_ready_arr                 : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_ovf_arr                   : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_ovf_sync_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_unf_arr                   : std_logic_vector(NUM_LINKS - 1 downto 0);
+
+    signal rx_error_detect_flag         : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_error_cnt                 : t_std8_array(NUM_LINKS - 1 downto 0);
+
+    signal rx_header_flag               : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_header_locked             : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_header_locked_sync        : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_bitslip_en                : std_logic_vector(NUM_LINKS - 1 downto 0);
         
 --=====================================================================================--
 
@@ -175,13 +170,8 @@ architecture gbt_arch of gbt is
 begin                                   --========####   Architecture Body   ####========-- 
 --=================================================================================================--
 
-    rx_data_arr_o <= rx_data_arr;
-    rx_data_widebus_arr_o <= rx_data_widebus_arr;
-
-    -- constant signals
-    tied_to_ground <= '0';
-    tied_to_vcc <= '1';
-
+    mgt_ctrl_arr_o <= (others => (txreset => '0', rxreset => '0', rxslide => '0'));
+    
    --===============--
    -- RX Sync FIFOs --
    --===============--
@@ -195,12 +185,12 @@ begin                                   --========####   Architecture Body   ###
         
         i_rx_sync_fifo : component sync_fifo_gth_40
             port map(
-                rst       => reset_i or not mgt_rx_rdy_arr_i(i),
+                rst       => reset_i or not mgt_status_arr_i(i).rx_reset_done,
                 wr_clk    => rx_word_clk_arr_i(i),
                 rd_clk    => rx_common_word_clk,
-                din       => rx_wordNbit_from_mgt(i),
-                wr_en     => tied_to_vcc,
-                rd_en     => tied_to_vcc,
+                din       => rx_word_data_arr(i),
+                wr_en     => '1',
+                rd_en     => '1',
                 dout      => mgt_sync_rx_data_arr(i),
                 full      => open,
                 overflow  => rx_ovf_arr(i),
@@ -209,7 +199,7 @@ begin                                   --========####   Architecture Body   ###
                 underflow => rx_unf_arr(i)
             );
             
-        rx_wordNbit_from_mgt(i) <= mgt_rx_data_arr_i(i);
+        rx_word_data_arr(i) <= mgt_rx_data_arr_i(i);
         
         i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_common_word_clk, sync_o  => rx_ovf_sync_arr(i));
         i_gbt_rx_sync_ovf_latch : entity work.latch
@@ -233,113 +223,224 @@ begin                                   --========####   Architecture Body   ###
    --========--
    -- GBT TX --
    --========--
-	gbtTx_param_generic_src_gen: if GBT_BANK_ID = 0 generate		
-		gbtTx_gen: for i in 0 to NUM_LINKS -1 generate 
-			gbtTx: entity work.gbt_tx        
-				generic map (			
-						GBT_BANK_ID       => GBT_BANK_ID,
-						NUM_LINKS         => NUM_LINKS,
-						TX_OPTIMIZATION   => TX_OPTIMIZATION,
-						RX_OPTIMIZATION   => RX_OPTIMIZATION,
-						TX_ENCODING       => TX_ENCODING,
-						RX_ENCODING       => RX_ENCODING_EVEN_ODD(i mod 2)
-				)
-				port map (            
-					-- Reset & Clocks:
-					TX_RESET_I                          => reset_i,
-					TX_FRAMECLK_I                       => tx_frame_clk_i,
-					TX_WORDCLK_I                        => tx_word_clk_arr_i(i),
-					-- Control:              
-					TX_MGT_READY_I                      => tx_ready_arr_i(i),
-				    PHASE_ALIGNED_O					    => phaligned_from_gbtTx(i),
-					PHASE_COMPUTING_DONE_O				=> phcomputing_from_gbtTx(i),
-					TX_ISDATA_SEL_I                     => tx_we_arr_i(i), 
-					-- Data & Word:        
-					TX_DATA_I                           => tx_data_arr(i),
-					TX_WORD_O                           => tx_wordNbit_from_gbtTx(i),
-					------------------------------------
-					TX_EXTRA_DATA_WIDEBUS_I             => (others => '0')
-				); 
-				
-				i_sync_gearbox_aligned : entity work.synch
-				    generic map(
-				        N_STAGES => 2
-				    )
-				    port map(
-				        async_i => phaligned_from_gbtTx(i),
-				        clk_i   => tx_frame_clk_i,
-				        sync_o  => tx_gearbox_aligned_arr_o(i)
-				    );
-				
-				i_sync_gearbox_align_done : entity work.synch
-				    generic map(
-				        N_STAGES => 2
-				    )
-				    port map(
-				        async_i => phcomputing_from_gbtTx(i),
-				        clk_i   => tx_frame_clk_i,
-				        sync_o  => tx_gearbox_align_done_arr_o(i)
-				    );
-				
-				mgt_tx_data_arr_o(i)         <= tx_wordNbit_from_gbtTx(i);
-				
-				tx_data_arr(i)              <= tx_data_arr_i(i)(83 downto 0);
-				
-			end generate;
-	end generate;   
+   
+	gbtTx_gen: for i in 0 to NUM_LINKS -1 generate 
+        gbt_txdatapath_inst: entity work.gbt_tx        
+            generic map (            
+                TX_ENCODING                        => TX_ENCODING
+            )
+            port map (                
+                TX_RESET_I                         => reset_i,
+                TX_FRAMECLK_I                      => tx_frame_clk_i,
+                TX_CLKEN_i                         => '1',
+                
+                TX_ENCODING_SEL_i                  => '0', -- only used in dynamic encoding mode, which we don't use                  
+                TX_ISDATA_SEL_I                    => tx_we_arr_i(i), 
+
+                TX_DATA_I                          => tx_data_arr(i),
+                TX_EXTRA_DATA_WIDEBUS_I            => (others => '0'), -- TX wide bus??
+                
+                TX_FRAME_o                         => tx_data_encoded_arr(i)
+            );
+
+        i_tx_bitslip: entity work.bitslip
+            generic map(
+                g_DATA_WIDTH           => 120,
+                g_SLIP_CNT_WIDTH       => 7,
+                g_TRANSMIT_LOW_TO_HIGH => false
+            )
+            port map(
+                clk_i      => tx_frame_clk_i,
+                slip_cnt_i => tx_bitslip_cnt_i(i),
+                data_i     => tx_data_encoded_arr(i),
+                data_o     => tx_data_encoded_slipped_arr(i)
+            );
+            
+        gbt_txgearbox_inst : entity work.gbt_tx_gearbox
+            generic map(
+                TX_OPTIMIZATION => TX_OPTIMIZATION
+            )
+            port map(
+                TX_RESET_I      => reset_i,
+                TX_FRAMECLK_I   => tx_frame_clk_i,
+                TX_CLKEN_i      => '1',
+                TX_WORDCLK_I    => tx_word_clk_arr_i(i),
+                ---------------------------------------
+                TX_PHALIGNED_o  => tx_phaligned(i),
+                TX_PHCOMPUTED_o => tx_phalign_done(i),
+                TX_FRAME_I      => tx_data_encoded_slipped_arr(i),
+                TX_WORD_O       => tx_word_data_arr(i)
+            );
+			
+		i_sync_gearbox_aligned : entity work.synch
+		    generic map(
+		        N_STAGES => 2
+		    )
+		    port map(
+		        async_i => tx_phaligned(i),
+		        clk_i   => tx_frame_clk_i,
+		        sync_o  => tx_gearbox_aligned(i)
+		    );
+		
+		i_sync_gearbox_align_done : entity work.synch
+		    generic map(
+		        N_STAGES => 2
+		    )
+		    port map(
+		        async_i => tx_phalign_done(i),
+		        clk_i   => tx_frame_clk_i,
+		        sync_o  => tx_gearbox_align_done(i)
+		    );
+		
+		mgt_tx_data_arr_o(i) <= tx_word_data_arr(i);
+		tx_data_arr(i)       <= tx_data_arr_i(i);
+		
+		link_status_arr_o(i).gbt_tx_gearbox_ready <= tx_gearbox_aligned(i) and tx_gearbox_align_done(i);
+		link_status_arr_o(i).gbt_tx_ready <= tx_gearbox_aligned(i) and tx_gearbox_align_done(i);
+        
+        i_tx_gearbox_not_ready_latch: entity work.latch
+            port map(
+                reset_i => reset_i or cnt_reset_i,
+                clk_i   => tx_frame_clk_i,
+                input_i => not tx_gearbox_aligned(i) or not tx_gearbox_align_done(i),
+                latch_o => link_status_arr_o(i).gbt_tx_had_not_ready
+            );
+        
+	end generate;
 
    --========--              
    -- GBT RX --              
    --========--
-	gbtRx_param_generic_src_gen: if GBT_BANK_ID = 0 generate
-		gbtRx_gen: for i in 0 to NUM_LINKS -1 generate    
-		
-			gbtRx: entity work.gbt_rx            
-				generic map (
-					GBT_BANK_ID        => GBT_BANK_ID,
-					NUM_LINKS          => NUM_LINKS,
-					TX_OPTIMIZATION    => TX_OPTIMIZATION,
-					RX_OPTIMIZATION    => RX_OPTIMIZATION,
-					TX_ENCODING        => TX_ENCODING,
-					RX_ENCODING        => RX_ENCODING_EVEN_ODD(i mod 2)
-				)         
-				port map (              
-					-- Reset & Clocks:
-					RX_RESET_I                          => reset_i,
-					RX_WORDCLK_I                        => rx_common_word_clk,
-					RX_FRAMECLK_I                       => rx_frame_clk_i,                  
-					-- Control:    
-					RX_MGT_RDY_I                        => rxReady_from_mgt(i) and mgt_sync_rx_valid_arr(i),        
-					RX_WORDCLK_READY_I                  => rx_word_clk_rdy_arr_i(i),
-					RX_FRAMECLK_READY_I                 => rx_frame_clk_rdy_arr_i(i),
-					------------------------------------
-					RX_BITSLIP_NBR_O                    => rxBitSlipNbr_from_gbtRx(i),            
-					RX_HEADER_LOCKED_O                  => rxHeaderLocked_from_gbtRx(i),                 
-					RX_HEADER_FLAG_O                    => rx_header_arr_o(i),
-					RX_ISDATA_FLAG_O                    => rx_data_valid_arr_o(i),            
-					RX_READY_O                          => rx_ready_arr(i),
-					-- Word & Data:                  
-					RX_WORD_I                           => mgt_sync_rx_data_arr(i),                  
-					RX_DATA_O                           => rx_data_arr(i),
-					------------------------------------
-					RX_EXTRA_DATA_WIDEBUS_O             => rx_data_widebus_arr(i)
-				);             
-				
+   
+	gbtRx_gen: for i in 0 to NUM_LINKS -1 generate    
 
-            rxReady_from_mgt(i)                       <= mgt_rx_rdy_arr_i(i);
-			rx_bitslip_nbr_arr_o(i)                   <= rxBitSlipNbr_from_gbtRx(i);                         
-			rx_header_locked_arr_o(i)                 <= rxHeaderLocked_from_gbtRx(i);
-			link_status_arr_o(i).gbt_rx_ready         <= rx_ready_arr(i);
-			
-			i_gbt_rx_not_ready_latch : entity work.latch
-			    port map(
-			        reset_i => reset_i or cnt_reset_i,
-			        clk_i   => rx_frame_clk_i,
-			        input_i => not rx_ready_arr(i),
-			        latch_o => link_status_arr_o(i).gbt_rx_had_not_ready
-			    );
-	 
-		end generate;
+        gbt_rxgearbox_inst : entity work.gbt_rx_gearbox
+            generic map(
+                RX_OPTIMIZATION => RX_OPTIMIZATION
+            )
+            port map(
+                RX_RESET_I      => reset_i,
+                RX_WORDCLK_I    => rx_common_word_clk, --rx_word_clk_arr_i(i), -- TODO: remove the sync fifos
+                RX_FRAMECLK_I   => rx_frame_clk_i,
+                RX_CLKEN_i      => '1',
+                RX_CLKEN_o      => rx_gearbox_clk_en(i),
+                ---------------------------------------
+                RX_HEADERFLAG_i => rx_header_flag(i),
+                READY_O         => rx_gearbox_ready(i),
+                ---------------------------------------
+                RX_WORD_I       => mgt_rx_data_bitslipped_arr(i),
+                RX_FRAME_O      => rx_data_encoded_arr(i)
+            ); 
+
+        gbt_rxdatapath_inst: entity work.gbt_rx            
+            generic map (
+                RX_ENCODING                        => RX_ENCODING_EVEN_ODD(i mod 2)
+            )         
+            port map (    
+                RX_RESET_I                         => not(rx_gearbox_ready(i)),
+                RX_FRAMECLK_I                      => rx_frame_clk_i,
+                RX_CLKEN_i                         => rx_gearbox_clk_en(i),
+                
+                RX_ENCODING_SEL_i                  => '0',   -- only used in dynamic encoding mode, which we don't use             
+                RX_READY_O                         => rx_ready_arr(i),
+                RX_ISDATA_FLAG_O                   => rx_data_valid_arr_o(i),
+                RX_ERROR_DETECTED                  => rx_error_detect_flag(i),
+                RX_BIT_MODIFIED_FLAG               => open,
+                    
+                GBT_RXFRAME_i                      => rx_data_encoded_arr(i),
+                RX_DATA_O                          => rx_data_arr(i),
+                RX_EXTRA_DATA_WIDEBUS_O            => rx_data_widebus_arr(i)
+            );
+            
+        i_err_cnt: entity work.counter
+            generic map(
+                g_COUNTER_WIDTH  => 8,
+                g_ALLOW_ROLLOVER => false
+            )
+            port map(
+                ref_clk_i => rx_frame_clk_i,
+                reset_i   => reset_i or cnt_reset_i,
+                en_i      => rx_error_detect_flag(i),
+                count_o   => rx_error_cnt(i)
+            );
+        
+		link_status_arr_o(i).gbt_rx_ready             <= rx_ready_arr(i);
+        link_status_arr_o(i).gbt_rx_correction_cnt    <= rx_error_cnt(i);
+        link_status_arr_o(i).gbt_rx_correction_flag   <= rx_error_detect_flag(i);
+        link_status_arr_o(i).gbt_rx_gearbox_ready     <= rx_gearbox_ready(i);
+        link_status_arr_o(i).gbt_rx_header_locked     <= rx_header_locked_sync(i);
+        link_status_arr_o(i).gbt_rx_num_bitslips      <= mgt_rx_bitslip_cnt_arr(i);
+		rx_data_arr_o(i)                              <= rx_data_arr(i);
+        rx_data_widebus_arr_o(i)                      <= rx_data_widebus_arr(i);
+		 
+        patternSearch : entity work.mgt_framealigner_pattsearch
+            port map(
+                RX_RESET_I         => not (mgt_status_arr_i(i).rx_reset_done),
+                RX_WORDCLK_I       => rx_common_word_clk, --rx_word_clk_arr_i(i), -- TODO: remove the sync fifos
+                RX_BITSLIP_CMD_O   => rx_bitslip_en(i),
+                MGT_BITSLIPDONE_i  => '1',
+                RX_HEADER_LOCKED_O => rx_header_locked(i),
+                RX_HEADER_FLAG_O   => rx_header_flag(i),
+                RX_BITSLIPISEVEN_o => open,
+                RX_WORD_I          => mgt_rx_data_bitslipped_arr(i)
+            );
+
+        i_sync_header_locked: entity work.synch
+            generic map(
+                N_STAGES => 2
+            )
+            port map(
+                clk_i   => rx_frame_clk_i,
+                async_i => rx_header_locked(i),
+                sync_o  => rx_header_locked_sync(i)
+            );
+
+        process(rx_common_word_clk) -- TODO: remove the sync fifos
+        begin
+            if rising_edge(rx_common_word_clk) then -- TODO: remove the sync fifos
+                if (reset_i = '1') then
+                    mgt_rx_bitslip_cnt_arr(i) <= (others => '0');
+                else
+                    if rx_bitslip_en(i) = '1' then
+                        if mgt_rx_bitslip_cnt_arr(i) = x"27" then -- roll over at 40 bits
+                            mgt_rx_bitslip_cnt_arr(i) <= (others => '0');
+                        else
+                            mgt_rx_bitslip_cnt_arr(i) <= std_logic_vector(unsigned(mgt_rx_bitslip_cnt_arr(i)) + x"01");
+                        end if;
+                    end if;
+                end if;
+            end if;
+        end process;
+        
+        i_bitslip : entity work.bitslip
+            generic map(
+                g_DATA_WIDTH           => 40,
+                g_SLIP_CNT_WIDTH       => 8,
+                g_TRANSMIT_LOW_TO_HIGH => true
+            )
+            port map(
+                clk_i      => rx_common_word_clk, -- TODO: remove the sync fifos
+                slip_cnt_i => mgt_rx_bitslip_cnt_arr(i),
+                data_i     => mgt_sync_rx_data_arr(i), --rx_wordNbit_from_mgt(i) -- TODO: remove the sync fifos
+                data_o     => mgt_rx_data_bitslipped_arr(i)
+            );
+
+        i_gbt_rx_not_ready_latch : entity work.latch
+            port map(
+                reset_i => reset_i or cnt_reset_i,
+                clk_i   => rx_frame_clk_i,
+                input_i => not rx_ready_arr(i),
+                latch_o => link_status_arr_o(i).gbt_rx_had_not_ready
+            );
+
+        i_gbt_rx_header_unlock_latch : entity work.latch
+            port map(
+                reset_i => reset_i or cnt_reset_i,
+                clk_i   => rx_frame_clk_i,
+                input_i => not rx_header_locked_sync(i),
+                latch_o => link_status_arr_o(i).gbt_rx_header_had_unlock
+            );
+
 	end generate;
 
    --=====================================================================================--

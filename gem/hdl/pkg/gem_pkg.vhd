@@ -177,6 +177,7 @@ package gem_pkg is
         gbt_rx_gearbox_ready        : std_logic;
         gbt_rx_correction_cnt       : std_logic_vector(7 downto 0);
         gbt_rx_correction_flag      : std_logic;
+        gbt_rx_num_bitslips         : std_logic_vector(7 downto 0);
     end record;
     
     type t_vfat_link_status is record

@@ -1,61 +1,9 @@
---=================================================================================================--
---##################################   Package Information   ######################################--
---=================================================================================================--
---                                                                                       
--- Company:               CERN (PH-ESE-BE)                                                        
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                        (Original design by P. Vichoudis (CERN) & M. Barros Marin)                                                                                                   
---
--- Project Name:          GBT-FPGA                                                                
--- Package Name:          GBT Bank package                                      
---                                                                                                 
--- Language:              VHDL'93                                                           
---                                                                                                 
--- Target Device:         Vendor agnostic                                                         
--- Tool version:                                                                          
---                                                                                                 
--- Revision:              3.2                                                                     
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR            DESCRIPTION
---
---                        21/06/2013   1.0       M. Barros Marin   First .vhd package definition 
---
---                        04/07/2013   1.1       M. Barros Marin   Merged with Constant_Declaration.vhd
---                                                                 (Authors: F. Marin (CPPM), S. Baron (CERN))            
---
---                        12/02/2014   3.0       M. Barros Marin   Added internal modules of the GBT encoder as functions
---                                                                 (Original Verilog modules by A. Marchioro (CERN), translated to VHDL by F. Marin (CPPM)) 
---
---                        14/08/2014   3.2       M. Barros Marin   - Added constant "RX_GB_READ_DLY"
---                                                                 - Modified "rxReadyFsmStateLatOpt_T"  
---
--- Additional Comments:                                                                               
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Common package
+-------------------------------------------------------
 
 -- IEEE VHDL standard library:
 library ieee;
@@ -64,265 +12,65 @@ use ieee.numeric_std.all;
 
 -- Custom libraries and packages:
 use work.vendor_specific_gbt_bank_package.all;
-use work.gbt_banks_user_setup.all;
 
---=================================================================================================--
---##################################   Package Declaration   ######################################--
---=================================================================================================--
-
+--! @brief GBT_bank_package - Common package
+--! @details 
+--! The GBT_bank_package package defines the common constant for all of the supported devices
+--! as well as functions used by the encoder/decoder.
 package gbt_bank_package is  
   
-   --================================ Record Declarations ================================--
-   
-   --===============--
-   -- Clocks scheme --
-   --===============--
-
-   type gbtBankClks_i_R is
-   record
-      tx_frameClk                               : std_logic_vector(1 to MAX_NUM_GBT_LINK);
-      rx_frameClk                               : std_logic_vector(1 to MAX_NUM_GBT_LINK);
-      ------------------------------------------               
-      mgt_clks                                  : gbtBankMgtClks_i_R;
-   end record;     
-       
-   type gbtBankClks_o_R is  
-   record       
-      mgt_clks                                  : gbtBankMgtClks_o_R;
-   end record; 
-   
-   --========--
-   -- GBT Tx --
-   --========--
-      
-   type gbtTx_i_R is   
-   record   
-      reset                                     : std_logic;
-      ------------------------------------------
-      isDataSel                                 : std_logic;
-      ------------------------------------------         
-      data                                      : std_logic_vector(83 downto 0);
-      extraData_wideBus                         : std_logic_vector(31 downto 0);
-   end record; 
-
-   type gbtTx_o_R is   
-   record 
-      latOptGbtBank_tx                          : std_logic;
-	   txGearboxAligned_o						      : std_logic;
-	   txGearboxAligned_done						   : std_logic;
-   end record; 
-   
-   --========--
-   -- GBT Rx --
-   --========--   
-      
-   type gbtRx_i_R is   
-   record   
-      reset                                     : std_logic;
-      rxFrameClkReady                           : std_logic;
-   end record;                
-   
-   type gbtRx_o_R is             
-   record               
-      latOptGbtBank_rx                          : std_logic;
-      ------------------------------------------
-      ready                                     : std_logic;
-      ------------------------------------------        
-      bitSlipNbr                                : std_logic_vector(GBTRX_BITSLIP_NBR_MSB downto 0);
-      ------------------------------------------        
-      header_flag                               : std_logic;
-      header_lockedFlag                         : std_logic;
-      ------------------------------------------        
-      isDataFlag                                : std_logic;
-      ------------------------------------------
-      data                                      : std_logic_vector(83 downto 0);
-      extraData_wideBus                         : std_logic_vector(31 downto 0);
-   end record;
-   
-   --==================================--
-   -- Multi Gigabit Transceivers (MGT) --
-   --==================================--
-   
-   type mgt_i_R is
-   record
-      mgtCommon                                 : mgtCommon_i_R;
-      mgtLink                                   : mgtLink_i_R_A(1 to MAX_NUM_GBT_LINK);
-   end record;  
-   
-   type mgt_o_R is
-   record
-      mgtCommon                                 : mgtCommon_o_R;
-      mgtLink                                   : mgtLink_o_R_A(1 to MAX_NUM_GBT_LINK);
-   end record;  
-   
-   --=====================================================================================--
-   
-   --================================= Array Declarations ================================--
-   
-   --========--
-   -- Common --
-   --========--     
-   
-   type data_nx84bit_A                          is array (natural range <>) of std_logic_vector(83 downto 0);    
-   type extraDataWidebus_nx32bit_A              is array (natural range <>) of std_logic_vector(31 downto 0);    
-   type extraDataGbt8b10b_nx4bit_A              is array (natural range <>) of std_logic_vector( 3 downto 0);    
-   
-   type word_mxnbit_A                           is array (natural range <>) of std_logic_vector(WORD_WIDTH-1 downto 0); 
-   
-   --========--         
-   -- GBT Tx --         
-   --========--            
-   
-   type gbtTx_i_R_A                             is array (natural range <>) of gbtTx_i_R;                              
-   type gbtTx_o_R_A                             is array (natural range <>) of gbtTx_o_R;                              
-   
-   -- Scrambler:
-   -------------
-   
-   type scramblerResetPatterns_21bit_A          is array (natural range <>) of std_logic_vector(20 downto 0);
-   type scramblerResetPatterns_16bit_A          is array (natural range <>) of std_logic_vector(15 downto 0);
-  
-   -- GBT-Frame encoder:
-   ---------------------
-
-   type polyDivider_divider_15x4bit_A           is array(0 to 14) of std_logic_vector(3 downto 0);
-   type polyDivider_divisor_5x4bit_A            is array(0 to  4) of std_logic_vector(3 downto 0);
-   type polyDivider_quotient_11x4bit_A          is array(0 to 10) of std_logic_vector(3 downto 0);
-   type polyDivider_remainder_4x4bit_A          is array(0 to  3) of std_logic_vector(3 downto 0);
-   type polyDivider_net_89x4bit_A               is array(0 to 88) of std_logic_vector(3 downto 0);   
-  
-   --========--                                                                                       
-   -- GBT Rx --               
-   --========--                  
-   
-   type gbtRx_i_R_A                             is array (natural range <>) of gbtRx_i_R;
-   type gbtRx_o_R_A                             is array (natural range <>) of gbtRx_o_R;
-   
-   -- GBT-Frame decoder:
-   ---------------------
-   
-   type syndromes_alphaPower_4x60bit_A          is array(1 to  4         ) of std_logic_vector(59 downto 0); 
-   type syndromes_net1_4x15x4bit_A              is array(1 to  4, 0 to 14) of std_logic_vector( 3 downto 0);
-   type syndromes_net2_4x7x4bit_A               is array(1 to  4, 0 to  6) of std_logic_vector( 3 downto 0);
-   type syndromes_net3_4x4x4bit_A               is array(1 to  4, 0 to  3) of std_logic_vector( 3 downto 0);
-   type syndromes_net4_4x2x4bit_A               is array(1 to  4, 0 to  1) of std_logic_vector( 3 downto 0);
-   type syndromes_syndrome_4x4bit_A             is array(1 to  4         ) of std_logic_vector( 3 downto 0);
-   ---------------------------------------------
-   type errlcpoly_invertedS_3x4bit_A            is array(1 to  3) of std_logic_vector( 3 downto 0);
-   type errlcpoly_net_18x4bit_A                 is array(1 to 18) of std_logic_vector( 3 downto 0);
-   ---------------------------------------------
-   type rs2errcor_net_11x4bit_A                 is array(1 to 11) of std_logic_vector( 3 downto 0);
-   type rs2errcor_temp_6x60bit_A                is array(1 to  6) of std_logic_vector(59 downto 0);
-   ---------------------------------------------
-   type gf16shift_g_4x15bit_A                   is array(0 to  3) of bit_vector(14 downto 0);  
-   
-   --=====================================================================================--   
-   
-   --========================== Finite State Machine (FSM) states ========================--
-   
-   --========--                                                                                       
-   -- GBT Rx --               
-   --========--
-   
-   -- GBT Rx status:
-   -----------------
-   
-   type rxReadyFsmStateLatOpt_T                 is (s0_idle, s1_rxWordClkCheck, s2_gbtRxReadyMonitoring);
-
-   --=====================================================================================--
-   
+   --=================================== GBT VERSION =====================================--
+	
+	-- Format: Major.MinorH.MinorL
+	constant GBT_VERSION_MAJOR						  : std_logic_vector(7 downto 0) := x"06";		--! Release version: Major (7 downto 0)
+	constant GBT_VERSION_MINOR						  : std_logic_vector(7 downto 0) := x"00";		--! Release version: MinorH (7 downto 4) / MinorL (3 downto 0)
+	   
    --=============================== Constant Declarations ===============================--
+	
    
-   --========--
-   -- Common --
-   --========--
-   
-   -- GBT-Frame header:
-   --------------------
-   
-   constant DATA_HEADER_PATTERN                 : std_logic_vector(3 downto 0) := "0101";                   
-   constant DATA_HEADER_PATTERN_REVERSED        : std_logic_vector(3 downto 0) := DATA_HEADER_PATTERN(0) &
-                                                                                  DATA_HEADER_PATTERN(1) &
-                                                                                  DATA_HEADER_PATTERN(2) &
-                                                                                  DATA_HEADER_PATTERN(3);   
-   
-   constant IDLE_HEADER_PATTERN                 : std_logic_vector(3 downto 0) := "0110";                   
-   constant IDLE_HEADER_PATTERN_REVERSED        : std_logic_vector(3 downto 0) := IDLE_HEADER_PATTERN(0) &
-                                                                                  IDLE_HEADER_PATTERN(1) &
-                                                                                  IDLE_HEADER_PATTERN(2) &
-                                                                                  IDLE_HEADER_PATTERN(3);   
+   constant STANDARD                            : integer := 0;                              --! Standard latency mode (constant definition)
+   constant LATENCY_OPTIMIZED                   : integer := 1;                              --! Latency-optimized mode (constant definition)
 
-   -- Comment: * DESIRED_CONSEC_CORRECT_HEADERS: Number of correct headers found after which we
-   --                                            declared to have found the correct boundary.
-   --
-   --          * NB_ACCEPTED_FALSE_HEADER: Number of false header we accept to find within "Nb_Checked_Header" 
-   --                                      checked headers without declaring to have lost the boundary.
+   constant GBT_FRAME                           : integer := 0;                              --! GBT-FRAME encoding (constant definition)
+   constant WIDE_BUS                            : integer := 1;                              --! WideBus encoding (constant definition)
+   constant GBT_DYNAMIC                         : integer := 2;                              --! GBT-FRAME or WideBus encoding can be changed dynamically (constant definition)
+      
+   constant DATA_HEADER_PATTERN                 : std_logic_vector(3 downto 0) := "0101";    --! Is Data header pattern (constant definition: defined by the GBTx spec.)
+   constant IDLE_HEADER_PATTERN                 : std_logic_vector(3 downto 0) := "0110";    --! Idle header pattern (constant definition: defined by the GBTx spec.)
    
-   constant NBR_CHECKED_HEADER                  : integer := 64;   
-   constant NBR_ACCEPTED_FALSE_HEADER           : integer :=  4;
-   constant DESIRED_CONSEC_CORRECT_HEADERS      : integer := 23;
-   
-   --========--
-   -- GBT Tx -- 
-   --========--
-   
-   -- 84bit scrambler (GBT-Frame & Wide-Bus):
-   ------------------------------------------
-   
-   -- Comment: Value of SCRAMBLER_21BIT_RESET_PATTERNS[1:4] chosen arbitrarily except the
-   --          last byte (=0 because it is OR-ed with i during multiple instantiations).
-   
-   constant SCRAMBLER_21BIT_RESET_PATTERNS      : scramblerResetPatterns_21bit_A := ('1' & x"A23E0",
-                                                                                     '0' & x"F4350",
-                                                                                     '1' & x"3EDC0",
-                                                                                     '0' & x"78E20"); 
-
-   -- 32bit scrambler (Wide-Bus):
-   ------------------------------
-   
-   -- Comment: Value of SCRAMBLER_16BIT_RESET_PATTERNS[1:2] chosen arbitrarily except the 
-   --          last byte (=0 because it is OR-ed with i during multiple instantiations).
-   
-   constant SCRAMBLER_16BIT_RESET_PATTERNS      : scramblerResetPatterns_16bit_A := (x"23E0",
-                                                                                     x"4350");                                                                                
-   
-   --========--
-   -- GBT Rx -- 
-   --========--
-   
-   -- GBT-Frame decoder syndromes:
-   -------------------------------
-   
-   constant ALPHAPOWER_S                        : syndromes_alphaPower_4x60bit_A := (x"9DFE7A5BC638421",
-                                                                                     x"DEAB6829F75C341",
-                                                                                     x"FAC81FAC81FAC81",
-                                                                                     x"EB897C4DA62F531");
-   -- GBT-Frame decider chien search:
-   ----------------------------------
-   
-   constant ALPHAS                              : std_logic_vector(59 downto 0)  :=  x"fedcba987654321";
-   
-   -- GBT Rx Gearbox:
-   ------------------
-   
-   constant RX_GB_READ_DLY                      : integer :=  5;  
-   
-   -- GBT Rx ready:
-   ----------------
-   
-   constant GBT_READY_DLY                       : integer := 100;
-   
-   --=====================================================================================--  
-
+   constant NBR_CHECKED_HEADER                  : integer := 64;                             --! Number of header to cheked before going back in lock state when a false header has been detected
+   constant NBR_ACCEPTED_FALSE_HEADER           : integer :=  4;                             --! Number of accepted false header over the NBR_CHECKED_HEADER checked before being unlocked
+   constant DESIRED_CONSEC_CORRECT_HEADERS      : integer := 23;                             --! Number of true consecutive header before going in locked state
+      
+   --================================= Array Declarations ================================-- 
+	
+	-- 1D arrays
+   type gbt_reg120_A                            is array (natural range <>) of std_logic_vector(119 downto 0);
+   type gbt_reg116_A                            is array (natural range <>) of std_logic_vector(115 downto 0);
+   type gbt_reg84_A                             is array (natural range <>) of std_logic_vector(83 downto 0);
+	type gbt_reg60_A                             is array (natural range <>) of std_logic_vector(59 downto 0);
+   type gbt_reg40_A                             is array (natural range <>) of std_logic_vector(39 downto 0);
+	type gbt_reg32_A                             is array (natural range <>) of std_logic_vector(31 downto 0);
+	type gbt_reg21_A                             is array (natural range <>) of std_logic_vector(20 downto 0);	
+	type gbt_reg16_A                             is array (natural range <>) of std_logic_vector(15 downto 0);
+	type gbt_reg8_A								      is array (natural range <>) of std_logic_vector(7 downto 0);
+	type gbt_reg4_A								      is array (natural range <>) of std_logic_vector(3 downto 0);
+	
+	type gbt_bitVector15_A                       is array (natural range <>) of bit_vector(14 downto 0);
+	
+	-- 2D arrays
+	type gbt_reg4_2dA								      is array (natural range <>, natural range <>) of std_logic_vector(3 downto 0);
+	
+	-- Generic arrays
+	type integer_A                               is array (natural range <>) of integer;
+	  
+	-- Constant based arrays
+   type word_mxnbit_A                           is array (natural range <>) of std_logic_vector(WORD_WIDTH-1 downto 0); 
+	
    --======================== Function and Procedure Declarations ========================--
    
-   --========--
-   -- Common --
-   --========--
-   
-   -- GBT-Frame encoding:
-   ----------------------
-   
+   -- GBT-Frame encoding/decoding:
+   -------------------------------
    function gf16add  (signal   input1, input2   : in std_logic_vector( 3 downto 0)) return std_logic_vector;                                 
    ---------------------------------------------------------------------------------------------------------
    function gf16mult (signal   input1           : in std_logic_vector( 3 downto 0);
@@ -352,7 +100,7 @@ package body gbt_bank_package is
    
    -- GBT-Frame encoding:
    ----------------------
-   
+	
    function gf16add(signal input1, input2 : in std_logic_vector(3 downto 0)) return std_logic_vector is
       variable output                           : std_logic_vector(3 downto 0);
    begin
@@ -426,8 +174,8 @@ package body gbt_bank_package is
    
    function gf16shift(signal input : in std_logic_vector(59 downto 0); 
                       signal shift : in std_logic_vector( 3 downto 0)) return std_logic_vector is    
-      variable ing                              : gf16shift_g_4x15bit_A;
-      variable outg                             : gf16shift_g_4x15bit_A;                      
+      variable ing                              : gbt_bitVector15_A(0 to 3);
+      variable outg                             : gbt_bitVector15_A(0 to 3);                      
       variable output                           : std_logic_vector(59 downto 0);
    begin
       ing_loop1: for i in 0 to 3 loop

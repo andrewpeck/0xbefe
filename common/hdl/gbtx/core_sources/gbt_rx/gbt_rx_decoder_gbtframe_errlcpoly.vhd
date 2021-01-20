@@ -1,70 +1,21 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder error location polynomial
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:           Computation of the error locator polynomials for the GBT-Frame encoding.
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.   
---    
---                        06/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.           
---
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.   
---                                                                     - Remove "error1locpolynomial" and "error1locpolynomial" modules.
---                                                                     - "gf16mult", "gf16add" and "gf16inverse" are functions instead of modules.
---
--- Additional Comments: 
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx Reed solomon error location computing
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_errlcpoly - Rx Error location polynomial computing
+--! @details 
+--! The gbt_rx_decoder_gbtframe_errlcpoly compute the error location polynomial.
 entity gbt_rx_decoder_gbtframe_errlcpoly is
    port (
       
@@ -88,10 +39,8 @@ entity gbt_rx_decoder_gbtframe_errlcpoly is
    );
 end gbt_rx_decoder_gbtframe_errlcpoly;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_errlcpoly - Rx Error location polynomial computing
+--! @details The gbt_rx_decoder_gbtframe_errlcpoly calls the gf16mult and gf16add functions to compute the error amplitude.
 architecture behavioral of gbt_rx_decoder_gbtframe_errlcpoly is
 
    --================================ Signal Declarations ================================--
@@ -100,8 +49,8 @@ architecture behavioral of gbt_rx_decoder_gbtframe_errlcpoly is
    signal location1a                            : std_logic_vector(3 downto 0);
    signal location2a                            : std_logic_vector(3 downto 0);
       
-   signal invertedS                             : errlcpoly_invertedS_3x4bit_A;
-   signal net                                   : errlcpoly_net_18x4bit_A;
+   signal invertedS                             : gbt_reg4_A(1 to  3); --errlcpoly_invertedS_3x4bit_A;
+   signal net                                   : gbt_reg4_A(1 to 18); --errlcpoly_net_18x4bit_A;
    signal invertedNet14                         : std_logic_vector(3 downto 0);
    
    --=====================================================================================--

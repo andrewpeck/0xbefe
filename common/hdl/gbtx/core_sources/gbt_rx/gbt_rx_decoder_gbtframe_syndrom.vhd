@@ -1,83 +1,34 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder syndromes
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:            
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.   
---    
---                        07/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.           
---
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.   
---                                                                     - "gf16mult" and "gf16add" are functions instead of modules.
---                                                                     - Use of process instead of "syndrome_evaluator" .vhd module.
---
--- Additional Comments: 
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx syndrom computing
+-------------------------------------------------------
 
--- IEEE VHDL standard library:
+--! IEEE VHDL standard library:
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Custom libraries and packages:
+--! Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_syndrom - Rx Syndrom computing
+--! @details 
+--! The gbt_rx_decoder_gbtframe_syndrom module computes the reed solomon syndroms used to detect and correct error. 
+--! Since these are the zeros of the generator polynomial, the result should be zero if the scanned message is undamaged.
+--! If not, the syndromes contain all the information necessary to determine the correction that should be made.
 entity gbt_rx_decoder_gbtframe_syndrom is
    port (
    
       --=======--
       -- Input --
-      --=======--
-   
+      --=======--   
       POLY_COEFFS_I                             : in  std_logic_vector(59 downto 0);
    
       --=========--
       -- Outputs --
-      --=========--
-   
+      --=========--   
       S1_O                                      : out std_logic_vector( 3 downto 0);
       S2_O                                      : out std_logic_vector( 3 downto 0);
       S3_O                                      : out std_logic_vector( 3 downto 0);
@@ -86,20 +37,23 @@ entity gbt_rx_decoder_gbtframe_syndrom is
    );
 end gbt_rx_decoder_gbtframe_syndrom;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_syndrom - Rx Syndrom computing
+--! @details The gbt_rx_decoder_gbtframe_syndrom calls the gf16mult and gf16add functions to compute the syndroms.
 architecture behavioral of gbt_rx_decoder_gbtframe_syndrom is
 
    --================================ Signal Declarations ================================--
-   
-   signal net1                                  : syndromes_net1_4x15x4bit_A; 
-   signal net2                                  : syndromes_net2_4x7x4bit_A;
-   signal net3                                  : syndromes_net3_4x4x4bit_A;
-   signal net4                                  : syndromes_net4_4x2x4bit_A; 
+	type syndromes_alphaPower_4x60bit_A          is array(1 to  4         ) of std_logic_vector(59 downto 0); 
+   constant ALPHAPOWER_S                        : syndromes_alphaPower_4x60bit_A := (x"9DFE7A5BC638421",   --! GBT decoder syndromes: from the GBTx spec.
+                                                                                     x"DEAB6829F75C341",
+                                                                                     x"FAC81FAC81FAC81",
+                                                                                     x"EB897C4DA62F531");
+																												 
+   signal net1                                  : gbt_reg4_2dA(1 to  4, 0 to 14); --syndromes_net1_4x15x4bit_A; 
+   signal net2                                  : gbt_reg4_2dA(1 to  4, 0 to  6); --syndromes_net2_4x7x4bit_A;
+   signal net3                                  : gbt_reg4_2dA(1 to  4, 0 to  3); --syndromes_net3_4x4x4bit_A;
+   signal net4                                  : gbt_reg4_2dA(1 to  4, 0 to  1); --syndromes_net4_4x2x4bit_A; 
    ---------------------------------------------
-   signal syndrome_from_syndromeEvaluator       : syndromes_syndrome_4x4bit_A;
+   signal syndrome_from_syndromeEvaluator       : gbt_reg4_A(1 to  4); --syndromes_syndrome_4x4bit_A;
 
    --=====================================================================================--   
    

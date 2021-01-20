@@ -1,56 +1,9 @@
---=================================================================================================--
---##################################   Module Information   #######################################--
---=================================================================================================--
---                                                                                         
--- Company:               CERN (PH-ESE-BE)                                                         
--- Engineer:              Manoel Barros Marin (manoel.barros.marin@cern.ch) (m.barros.marin@ieee.org)
---                                                                                                 
--- Project Name:          GBT-FPGA                                                                
--- Module Name:           GBT RX decoder GBT-Frame Reed-Solomon decoder two error correction syndromes
---                                                                                                 
--- Language:              VHDL'93                                                              
---                                                                                                   
--- Target Device:         Vendor agnostic                                                
--- Tool version:                                                                        
---                                                                                                   
--- Version:               3.0                                                                      
---
--- Description:           Performs the correction of two errors based on the computed syndromes for the GBT-Frame encoding.
---
--- Versions history:      DATE         VERSION   AUTHOR                DESCRIPTION
---
---                        12/10/2006   0.1       A. Marchioro (CERN)   First .v module definition.   
---    
---                        03/10/2008   0.2       F. Marin (CPPM)       Translate from .v to .vhd.           
---
---                        18/11/2013   3.0       M. Barros Marin       - Cosmetic and minor modifications.   
---                                                                     - "gf16mult", "gf16add", "gf16loga" and "gf16shift" are function instead of modules.
---
--- Additional Comments: 
---
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!                                                                                           !!
--- !! * The different parameters of the GBT Bank are set through:                               !!  
--- !!   (Note!! These parameters are vendor specific)                                           !!                    
--- !!                                                                                           !!
--- !!   - The MGT control ports of the GBT Bank module (these ports are listed in the records   !!
--- !!     of the file "<vendor>_<device>_gbt_bank_package.vhd").                                !! 
--- !!     (e.g. xlx_v6_gbt_bank_package.vhd)                                                    !!
--- !!                                                                                           !!  
--- !!   - By modifying the content of the file "<vendor>_<device>_gbt_bank_user_setup.vhd".     !!
--- !!     (e.g. xlx_v6_gbt_bank_user_setup.vhd)                                                 !! 
--- !!                                                                                           !! 
--- !! * The "<vendor>_<device>_gbt_bank_user_setup.vhd" is the only file of the GBT Bank that   !!
--- !!   may be modified by the user. The rest of the files MUST be used as is.                  !!
--- !!                                                                                           !!  
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---                                                                                                   
---=================================================================================================--
---#################################################################################################--
---=================================================================================================--
+-------------------------------------------------------
+--! @file
+--! @author Julian Mendez <julian.mendez@cern.ch> (CERN - EP-ESE-BE)
+--! @version 6.0
+--! @brief GBT-FPGA IP - Rx Reed solomon error correcter
+-------------------------------------------------------
 
 -- IEEE VHDL standard library:
 library ieee;
@@ -60,10 +13,9 @@ use ieee.numeric_std.all;
 -- Custom libraries and packages:
 use work.gbt_bank_package.all;
 
---=================================================================================================--
---#######################################   Entity   ##############################################--
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_rs2errcor - Rx Reed solomon chien search
+--! @details 
+--! The GBT_rx_decoder_gbtframe_rs2errcor can correct up to 2 symbols.
 entity gbt_rx_decoder_gbtframe_rs2errcor is
    port (
       
@@ -87,19 +39,18 @@ entity gbt_rx_decoder_gbtframe_rs2errcor is
    );
 end gbt_rx_decoder_gbtframe_rs2errcor;
 
---=================================================================================================--
---####################################   Architecture   ###########################################-- 
---=================================================================================================--
-
+--! @brief GBT_rx_decoder_gbtframe_rs2errcor - Rx Reed solomon chien search
+--! @details The GBT_rx_decoder_gbtframe_rs2errcor can correct up to 2 symbols using the information
+--! computed by the chien search, the lambda determinant and the syndroms.
 architecture behavioral of gbt_rx_decoder_gbtframe_rs2errcor is
 
    --================================ Signal Declarations ================================--
    
-   signal net                                   : rs2errcor_net_11x4bit_A;
+   signal net                                   : gbt_reg4_A(1 to 11); --rs2errcor_net_11x4bit_A;
    signal net20, net21                          : std_logic_vector( 3 downto 0);
    signal y1, y2, y1b                           : std_logic_vector( 3 downto 0);
    signal ermag1, ermag2, ermag3                : std_logic_vector(59 downto 0);
-   signal temp                                  : rs2errcor_temp_6x60bit_A;
+   signal temp                                  : gbt_reg60_A(1 to  6); --rs2errcor_temp_6x60bit_A;
    
    --=====================================================================================--
    
