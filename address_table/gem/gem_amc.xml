@@ -762,7 +762,7 @@
           description="Number of FEC errors corrected by the GBT decoder"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 1).gbt_rx_correction_cnt"
           sw_monitor_warn_value="0"/>
-    <node id="GBT1_FEC_ERR_CNT" address="0x1" mask="0x00ff0000" permission="r" ignore="&STATION;!=1"
+    <node id="GBT2_FEC_ERR_CNT" address="0x1" mask="0x00ff0000" permission="r" ignore="&STATION;!=1"
           description="Number of FEC errors corrected by the GBT decoder"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + 2).gbt_rx_correction_cnt"
           sw_monitor_warn_value="0"/>
