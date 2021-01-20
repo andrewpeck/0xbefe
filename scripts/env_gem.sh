@@ -28,7 +28,7 @@ else
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/boards/$BOARD/rwreg
         export PYTHONPATH=$PYTHONPATH:$SCRIPT_DIR/common:$SCRIPT_DIR/boards/$BOARD:$SCRIPT_DIR/gem
         export ADDRESS_TABLE=$ADDR_TBL
-        echo "DONE!"
+        echo "0xBEFE GEM environment setup done!"
     fi
 
 fi
