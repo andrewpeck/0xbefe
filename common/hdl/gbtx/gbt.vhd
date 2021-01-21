@@ -151,6 +151,7 @@ architecture gbt_arch of gbt is
     signal rx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
     signal rx_data_widebus_arr          : t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
     
+    signal rx_link_good_arr             : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_ready_arr                 : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_ovf_arr                   : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_ovf_sync_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
@@ -364,7 +365,8 @@ begin                                   --========####   Architecture Body   ###
                 count_o   => rx_error_cnt(i)
             );
         
-		link_status_arr_o(i).gbt_rx_ready             <= rx_ready_arr(i);
+        rx_link_good_arr(i)                           <= rx_ready_arr(i) and rx_gearbox_ready(i) and rx_header_locked_sync(i);
+        link_status_arr_o(i).gbt_rx_ready             <= rx_link_good_arr(i);
         link_status_arr_o(i).gbt_rx_correction_cnt    <= rx_error_cnt(i);
         link_status_arr_o(i).gbt_rx_correction_flag   <= rx_error_detect_flag(i);
         link_status_arr_o(i).gbt_rx_gearbox_ready     <= rx_gearbox_ready(i);
@@ -429,7 +431,7 @@ begin                                   --========####   Architecture Body   ###
             port map(
                 reset_i => reset_i or cnt_reset_i,
                 clk_i   => rx_frame_clk_i,
-                input_i => not rx_ready_arr(i),
+                input_i => not rx_link_good_arr(i),
                 latch_o => link_status_arr_o(i).gbt_rx_had_not_ready
             );
 
