@@ -86,7 +86,7 @@ You can also use the GUI version:
 * Right click on "Flash 0: User" and choose "Erase".. wait..
 * Right click on the "Flash 0: User" again and choose "Load" and select your favorite CVP13 0xBEFE bitstream file (available in releases section).
 
-If you don't want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
+If you want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
 
 ## Set up the GEM/CSC software
 This repository contains low level hardware access software as well as python scripts, which provide an interactive register access, and various communication testing procedures, and also makes it easy to write your own scripts for interacting the the hardware. Python tools are useful for debugging use, but high level routines like scurve scans, etc, are implemented in the official GEM software, which lives elsewhere (https://gitlab.cern.ch/cmsgemonline), and is not covered by this document.
