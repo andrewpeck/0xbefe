@@ -8,7 +8,7 @@
         description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer here for MGT channel to fiber mapping: https://docs.google.com/spreadsheets/d/1-AE7GeeU10GfLB-9FYOMN4k0-Z7bVkiQpLfXC4G2irI"
         generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000040" generate_idx_var="MGT">
 
-    <node id="RESET" address="0x1" permission="rw"
+    <node id="RESET" address="0x1"
           description="Writing 1 to bit 0 will trigger MGT TX channel reset, and writing 1 to bit 1 will trigger the MGT RX channel reset (write 3 to trigger both)">
       <node id="TX_RESET" address="0x0" mask="0x00000001" permission="rw"
             description="Writing 1 to this reg will trigger MGT TX channel reset"/>
@@ -20,7 +20,7 @@
             description="Writing 1 to this reg will trigger the QPLL reset of the whole quad"/>
     </node>
 
-    <node id="CTRL" address="0x2" permission="rw"
+    <node id="CTRL" address="0x2"
           description="This register exposes multiple MGT controls: bit 0 -- TX powerdown, bit 1 -- RX powerdown, bit 2 -- TX polarity, bit 3 -- RX polarity, bit 4 -- loopback, bit 5 -- TX inhibit, bit 6 -- RX low power mode enable">
       <node id="TX_POWERDOWN" address="0x0" mask="0x00000001" permission="rw"
             description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"/>
@@ -46,7 +46,7 @@
             description="Writing 1 here resets the RX error counters for this channel (not in table and disperr)"/>
     </node>
 
-    <node id="STATUS" address="0x0" permission="r">
+    <node id="STATUS" address="0x0">
       <node id="TX_RESET_DONE" address="0x0" mask="0x00000001" permission="r"
             description="TX reset done signal"/>
       <node id="RX_RESET_DONE" address="0x0" mask="0x00000002" permission="r"

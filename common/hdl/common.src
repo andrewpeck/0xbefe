@@ -41,7 +41,6 @@ common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
 common/hdl/ttc/ttc_cmd.vhd
 common/hdl/ttc/ttc_generator.vhd
 common/hdl/ttc/ttc_decoder.vhd
-common/hdl/ttc/ttc_clocks_ultrascale.vhd
 #common/hdl/ttc/release-1.1/TTC_decoder.vhd
 
 # MGT
@@ -155,4 +154,3 @@ common/hdl/lpgbt/lpgbt_asic_emul/gf_add_4.v
 common/hdl/lpgbt/lpgbt_asic_emul/rs_encoder_N15K13.v
 common/hdl/lpgbt/lpgbt_asic_emul/gf_inv_3.v
 common/hdl/lpgbt/lpgbt_asic_emul/scrambler58bitOrder58.v
-

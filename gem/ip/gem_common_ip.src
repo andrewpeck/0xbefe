@@ -15,7 +15,6 @@ gem/ip/ila_gbt/ila_gbt.xci
 gem/ip/ila_gem_loader/ila_gem_loader.xci
 gem/ip/ila_lpgbt/ila_lpgbt.xci
 gem/ip/ila_trig_rx_link/ila_trig_rx_link.xci
-gem/ip/ila_vfat3_slow_control/ila_vfat3_slow_control.xci
 gem/ip/ila_vfat3/ila_vfat3.xci
 gem/ip/sbit_cluster_fifo/sbit_cluster_fifo.xci
 gem/ip/sca_des_fifo/sca_des_fifo.xci
@@ -30,3 +29,5 @@ gem/ip/vio_gem_loader/vio_gem_loader.xci
 gem/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
 gem/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 gem/ip/ila_trigger/ila_trigger.xci
+gem/ip/daq_spy_fifo/daq_spy_fifo.xci
+gem/ip/ila_clk_phase_check/ila_clk_phase_check.xci

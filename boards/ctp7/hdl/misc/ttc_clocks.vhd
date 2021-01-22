@@ -217,13 +217,13 @@ begin
     mmcm_ps_clk <= clk_gbt_mgt_txout_i;
 
     -- CDC of the control signals to mmcm_ps_clk domain
-    g_sync_reset_cnt :      entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_cnt, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.reset_cnt);
-    g_sync_reset_sync_fsm : entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_sync_fsm, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.reset_sync_fsm);
-    g_sync_reset_mmcm :     entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_mmcm, clk_i   => mmcm_ps_clk, sync_o  => mmcm_reset_psclk_tmp);
-    g_sync_pa_disable :     entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.phase_align_disable, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.phase_align_disable);
-    g_sync_no_init_shift_o: entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_no_init_shift_out, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_no_init_shift_out);
-    g_sync_man_shift_dir :  entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_manual_shift_dir, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_manual_shift_dir);
-    g_sync_man_shift_ovrd : entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_manual_shift_ovrd, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_manual_shift_ovrd);
+    g_sync_reset_cnt :      entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_cnt, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.reset_cnt);
+    g_sync_reset_sync_fsm : entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_sync_fsm, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.reset_sync_fsm);
+    g_sync_reset_mmcm :     entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.reset_mmcm, clk_i   => mmcm_ps_clk, sync_o  => mmcm_reset_psclk_tmp);
+    g_sync_pa_disable :     entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.phase_align_disable, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.phase_align_disable);
+    g_sync_no_init_shift_o: entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_no_init_shift_out, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_no_init_shift_out);
+    g_sync_man_shift_dir :  entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_manual_shift_dir, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_manual_shift_dir);
+    g_sync_man_shift_ovrd : entity work.synch generic map(N_STAGES => 2) port map(async_i => ctrl_i.pa_manual_shift_ovrd, clk_i   => mmcm_ps_clk, sync_o  => ctrl_psclk.pa_manual_shift_ovrd);
 
     i_mmcm_ps_en_manual_oneshot : entity work.oneshot_cross_domain
         port map(
@@ -536,7 +536,7 @@ begin
         end if;
     end process;
     
-    i_sync_lockmon_reset_clk40 : entity work.synchronizer generic map(N_STAGES => 3) port map(async_i => searching_unlock, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => lockmon_reset_clk40);
+    i_sync_lockmon_reset_clk40 : entity work.synch generic map(N_STAGES => 3) port map(async_i => searching_unlock, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => lockmon_reset_clk40);
 
     ------------ status monitoring ------------
 
@@ -667,8 +667,8 @@ begin
         
     --- transfer status signals from psclk to clk40 domain    
     
-    i_sync_sync_done_clk40 :        entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => sync_done_flag, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => sync_done_flag_clk40);
-    i_sync_mmcm_locked_clk40 :      entity work.synchronizer generic map(N_STAGES => 2) port map(async_i => mmcm_locked, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => mmcm_locked_clk40);
+    i_sync_sync_done_clk40 :        entity work.synch generic map(N_STAGES => 2) port map(async_i => sync_done_flag, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => sync_done_flag_clk40);
+    i_sync_mmcm_locked_clk40 :      entity work.synch generic map(N_STAGES => 2) port map(async_i => mmcm_locked, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => mmcm_locked_clk40);
     
     -- status signal wiring    
     
@@ -763,7 +763,7 @@ begin
     
     -- transfer the lockmon signals to psclk domain
     
-    i_sync_phase_locked_psclk : entity work.synchronizer
+    i_sync_phase_locked_psclk : entity work.synch
         generic map(
             N_STAGES => 2
         )
@@ -773,7 +773,7 @@ begin
             sync_o  => phase_locked_psclk
         );
     
-    i_sync_ttc_clk_present_psclk : entity work.synchronizer
+    i_sync_ttc_clk_present_psclk : entity work.synch
         generic map(
             N_STAGES => 2
         )
@@ -783,7 +783,7 @@ begin
             sync_o  => ttc_clk_present_psclk
         );
 
-    i_sync_zero_cross_psclk : entity work.synchronizer
+    i_sync_zero_cross_psclk : entity work.synch
         generic map(
             N_STAGES => 2
         )

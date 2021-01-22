@@ -1,18 +1,18 @@
--------------------------------------------------------------------------------
---                                                                            
---       Unit Name: gem_board_config_package
---                                                                            
---     Description: Configuration for CTP7 board
---
---                                                                            
--------------------------------------------------------------------------------
---                                                                            
---           Notes:                                                           
---                                                                            
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Company: TAMU
+-- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
+-- 
+-- Create Date:    2020-06-05
+-- Module Name:    GEM_BOARD_CONFIG_PACKAGE 
+-- Description:    Configuration for the CVP13 card 
+------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+
+use work.common_pkg.all;
+use work.mgt_pkg.all;
+use work.project_config.all;
 
 --============================================================================
 --                                                         Package declaration
@@ -22,26 +22,29 @@ package gem_board_config_package is
     function get_num_gbts_per_oh(gem_station : integer) return integer;
     function get_num_vfats_per_oh(gem_station : integer) return integer;
     function get_gbt_widebus(gem_station, oh_version : integer) return integer;
-    
-    ----------------------------------------------------------------------------------------------
-    
-    constant CFG_GEM_STATION        : integer range 0 to 2 := 1; -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
-    constant CFG_OH_VERSION         : integer := 2; -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs         : integer := 12;   -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+
+    ------------ Board specific constants ------------
+    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1
+    constant CFG_BOARD_MAX_LINKS    : integer := 72;
+
+    ------------ GEM specific constants ------------
+    constant CFG_GEM_STATION        : integer range 0 to 2 := PRJ_CFG_GEM_STATION; -- Controlled by the project_config.vhd:  0 = ME0; 1 = GE1/1; 2 = GE2/1
+    constant CFG_OH_VERSION         : integer := PRJ_CFG_OH_VERSION; -- Controlled by the project_config.vhd:  OH version
+    constant CFG_NUM_OF_OHs         : integer := PRJ_CFG_NUM_OF_OHs; -- Controlled by the project_config.vhd:  total number of OHs to instanciate
     constant CFG_NUM_GBTS_PER_OH    : integer := get_num_gbts_per_oh(CFG_GEM_STATION);
     constant CFG_NUM_VFATS_PER_OH   : integer := get_num_vfats_per_oh(CFG_GEM_STATION);
     constant CFG_GBT_WIDEBUS        : integer := get_gbt_widebus(CFG_GEM_STATION, CFG_OH_VERSION);
     
-    constant CFG_USE_TRIG_TX_LINKS  : boolean := true; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
-    constant CFG_NUM_TRIG_TX        : integer := 8; -- number of trigger transmitters used to connect to EMTF
+    constant CFG_USE_TRIG_TX_LINKS  : boolean := PRJ_CFG_USE_TRIG_TX_LINKS; -- Controlled by the project_config.vhd:  if true, then trigger transmitters will be instantiated (used to connect to EMTF)
+    constant CFG_NUM_TRIG_TX        : integer := PRJ_CFG_NUM_TRIG_TX; -- Controlled by the project_config.vhd:  number of trigger transmitters used to connect to EMTF
 
-    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1
-    
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
     constant CFG_DEBUG_DAQ                  : boolean := true;
     constant CFG_DEBUG_TRIGGER              : boolean := true;
+    
+    ----------------------------------------------------------------------------------------------
 
     constant CFG_LPGBT_2P56G_LOOPBACK_TEST  : boolean := false; -- setting this to true will result in a test firmware with 2.56Gbps transceivers only usable for PRBS loopback tests with LpGBT chip, note that none of the GEM logic will be included (also no LpGBT core will be instantiated)
     constant CFG_LPGBT_EMTF_LOOP_TEST       : boolean := false;  -- setting this to true will instantiate an LpGBT RX core on the CFG_LPGBT_EMTF_RX_GTH, and an ILA. !!!!! NOTE: need to increase change the MGT 64-67 type to gth_10p24g and uncomment the constraints
@@ -82,35 +85,35 @@ package gem_board_config_package is
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
-        (0, 1, 72, 40, 41), 
-        (2, 3, 72, 42, 43),
-        (4, 5, 72, 44, 45), 
-        (6, 7, 72, 46, 47),
-        (8, 9, 72, 48, 49), 
-        (10, 11, 72, 50, 51),
+        (0, 1, CFG_BOARD_MAX_LINKS, 40, 41), 
+        (2, 3, CFG_BOARD_MAX_LINKS, 42, 43),
+        (4, 5, CFG_BOARD_MAX_LINKS, 44, 45), 
+        (6, 7, CFG_BOARD_MAX_LINKS, 46, 47),
+        (8, 9, CFG_BOARD_MAX_LINKS, 48, 49), 
+        (10, 11, CFG_BOARD_MAX_LINKS, 50, 51),
          
-        (12, 13, 72, 52, 53), 
-        (14, 15, 72, 54, 55), 
-        (16, 17, 72, 56, 57), 
-        (18, 19, 72, 58, 59), 
-        (20, 21, 72, 68, 69), 
-        (22, 23, 72, 70, 71) 
+        (12, 13, CFG_BOARD_MAX_LINKS, 52, 53), 
+        (14, 15, CFG_BOARD_MAX_LINKS, 54, 55), 
+        (16, 17, CFG_BOARD_MAX_LINKS, 56, 57), 
+        (18, 19, CFG_BOARD_MAX_LINKS, 58, 59), 
+        (20, 21, CFG_BOARD_MAX_LINKS, 68, 69), 
+        (22, 23, CFG_BOARD_MAX_LINKS, 70, 71) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
-        (0, 1, 72, 72, 72), 
-        (2, 3, 72, 72, 72),
-        (4, 5, 72, 72, 72), 
-        (6, 7, 72, 72, 72),
-        (8, 9, 72, 72, 72), 
-        (10, 11, 72, 72, 72),
+        (0, 1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (2, 3, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (4, 5, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (6, 7, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (8, 9, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (10, 11, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
          
-        (12, 13, 72, 72, 72), 
-        (14, 15, 72, 72, 72), 
-        (16, 17, 72, 72, 72), 
-        (18, 19, 72, 72, 72), 
-        (20, 21, 72, 72, 72), 
-        (22, 23, 72, 72, 72) 
+        (12, 13, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (14, 15, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (16, 17, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (18, 19, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (20, 21, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        (22, 23, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS) 
     );
 
     function get_oh_link_config_arr(gem_station: integer; ge11_config, ge21_config, me0_config : t_oh_link_config_arr) return t_oh_link_config_arr;
@@ -129,7 +132,7 @@ package gem_board_config_package is
     end record;
     
     -- this array is meant to hold mapping from CXP fiber index to GTH TX and RX indexes
-    type t_cxp_fiber_to_gth_link_map is array (0 to 72) of t_cxp_fiber_to_gth_link;
+    type t_cxp_fiber_to_gth_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_cxp_fiber_to_gth_link;
 
     -- defines the GTH TX and RX index for each index of the CXP and MP fiber
     -- CXP0: fibers 0-11
@@ -223,6 +226,13 @@ package gem_board_config_package is
         --=== DUMMY channel - use for unconnected channels ===--
         (67, 67) -- fiber 72        
     );
+    
+    -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors
+    type t_mgt_config_arr is array (0 to 1) of t_mgt_config;
+    constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
+        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),   
+        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false)   
+    );    
     
 end gem_board_config_package;
 

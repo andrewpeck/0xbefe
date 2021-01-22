@@ -1,0 +1,3 @@
+# -*- mode: TCL;-*-
+
+boards/ctp7/constraints/top_constraints.xdc

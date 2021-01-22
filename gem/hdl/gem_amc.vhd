@@ -22,7 +22,6 @@ use work.gem_board_config_package.all;
 use work.ipb_addr_decode.all;
 use work.ipbus.all;
 use work.ttc_pkg.all;
-use work.vendor_specific_gbt_bank_package.all;
 use work.lpgbtfpga_package.all;
 
 entity gem_amc is

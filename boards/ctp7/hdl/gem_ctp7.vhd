@@ -24,6 +24,7 @@ use work.gth_pkg.all;
 use work.ctp7_utils_pkg.all;
 use work.ttc_pkg.all;
 use work.system_package.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ipbus.all;
 use work.axi_pkg.all;
@@ -35,9 +36,11 @@ use work.gem_board_config_package.all;
 --============================================================================
 entity gem_ctp7 is
     generic(
-        C_DATE_CODE      : std_logic_vector(31 downto 0) := x"00000000";
-        C_GITHASH_CODE   : std_logic_vector(31 downto 0) := x"00000000";
-        C_GIT_REPO_DIRTY : std_logic                     := '0'
+        -- Firmware version, date, time, git sha (passed in by Hog)
+        GLOBAL_DATE            : std_logic_vector (31 downto 0);
+        GLOBAL_TIME            : std_logic_vector (31 downto 0);
+        GLOBAL_VER             : std_logic_vector (31 downto 0);
+        GLOBAL_SHA             : std_logic_vector (31 downto 0)        
     );
     port(
         clk_200_diff_in_clk_p          : in  std_logic;
@@ -135,8 +138,8 @@ architecture gem_ctp7_arch of gem_ctp7 is
     --AXI
     signal axi_clk      : std_logic;
     signal axi_reset    : std_logic;
-    signal ipb_axi_mosi : t_axi_lite_mosi;
-    signal ipb_axi_miso : t_axi_lite_miso;
+    signal ipb_axi_mosi : t_axi_lite_m2s;
+    signal ipb_axi_miso : t_axi_lite_s2m;
     --IPbus
     signal ipb_reset    : std_logic;
     signal ipb_clk      : std_logic;
@@ -310,7 +313,7 @@ begin
         generic map(
             C_NUM_IPB_SLAVES   => C_NUM_IPB_SLAVES,
             C_S_AXI_DATA_WIDTH => 32,
-            C_S_AXI_ADDR_WIDTH => C_IPB_AXI_ADDR_WIDTH
+            C_S_AXI_ADDR_WIDTH => 32
         )
         port map(
             ipb_reset_o   => ipb_reset,
@@ -319,7 +322,7 @@ begin
             ipb_mosi_o    => ipb_mosi_arr,
             S_AXI_ACLK    => axi_clk,
             S_AXI_ARESETN => axi_reset,
-            S_AXI_AWADDR  => ipb_axi_mosi.awaddr(C_IPB_AXI_ADDR_WIDTH - 1 downto 0),
+            S_AXI_AWADDR  => ipb_axi_mosi.awaddr,
             S_AXI_AWPROT  => ipb_axi_mosi.awprot,
             S_AXI_AWVALID => ipb_axi_mosi.awvalid,
             S_AXI_AWREADY => ipb_axi_miso.awready,
@@ -330,7 +333,7 @@ begin
             S_AXI_BRESP   => ipb_axi_miso.bresp,
             S_AXI_BVALID  => ipb_axi_miso.bvalid,
             S_AXI_BREADY  => ipb_axi_mosi.bready,
-            S_AXI_ARADDR  => ipb_axi_mosi.araddr(C_IPB_AXI_ADDR_WIDTH - 1 downto 0),
+            S_AXI_ARADDR  => ipb_axi_mosi.araddr,
             S_AXI_ARPROT  => ipb_axi_mosi.arprot,
             S_AXI_ARVALID => ipb_axi_mosi.arvalid,
             S_AXI_ARREADY => ipb_axi_miso.arready,
@@ -345,6 +348,10 @@ begin
     g_gem_logic : if not CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         i_gem : entity work.gem_amc
             generic map(
+                g_FW_DATE           => GLOBAL_DATE,
+                g_FW_TIME           => GLOBAL_TIME,
+                g_FW_VER            => GLOBAL_VER,
+                g_FW_SHA            => GLOBAL_SHA,
                 g_GEM_STATION        => CFG_GEM_STATION,
                 g_NUM_OF_OHs         => CFG_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH    => CFG_NUM_GBTS_PER_OH,

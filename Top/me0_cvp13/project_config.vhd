@@ -11,7 +11,5 @@ package project_config is
     constant PRJ_CFG_USE_TRIG_TX_LINKS  : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant PRJ_CFG_NUM_TRIG_TX        : integer := 8; -- number of trigger transmitters used to connect to EMTF
 
-    constant PRJ_CFG_GBT_DEBUG          : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
-    
 end package project_config;
 

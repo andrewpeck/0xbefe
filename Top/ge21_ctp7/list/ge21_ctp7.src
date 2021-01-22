@@ -1,0 +1,32 @@
+# -*- mode: TCL;-*-
+
+# Project config
+Top/ge21_ctp7/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_7.src
+
+# GEM source
+gem/hdl/gem.src
+
+# GEM CTP7 source
+boards/ctp7/hdl/gem_ctp7.src
+
+# sources with generated registers
+gem/hdl/pkg/generated/ge21_ctp7/registers.vhd
+common/hdl/mgt/generated/ge21_ctp7/mgt_slow_control.vhd
+common/hdl/ttc/generated/ge21_ctp7/ttc.vhd
+gem/hdl/misc/generated/ge21_ctp7/gem_system_regs.vhd
+gem/hdl/tests/generated/ge21_ctp7/gem_tests.vhd
+gem/hdl/oh/generated/ge21_ctp7/oh_link_regs.vhd
+gem/hdl/daq/generated/ge21_ctp7/daq.vhd
+gem/hdl/slow_control/generated/ge21_ctp7/slow_control.vhd
+gem/hdl/trigger/generated/ge21_ctp7/trigger.vhd
+
+# GEM IP
+gem/ip/gem_common_ip.src
+
+# CTP7 IP & BD
+boards/ctp7/ip/gem_ctp7_ip.src
+boards/ctp7/bd/gem_apex_bd.src

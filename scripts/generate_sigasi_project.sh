@@ -33,6 +33,7 @@ python2 $HOME/programs/dev/sigasi/SigasiProjectCreator/convertCsvFileToTree.py $
 sed -i "/\/ip\//d" .library_mapping.xml
 
 #add unisim libs
+sed -i -e "/xmlns:com.sigasi/a"$'\\\n'"  <Mappings Location=\"Common Libraries/unisim\" Library=\"unisim\"/>"$'\n' .library_mapping.xml
 sed -i -e "/xmlns:com.sigasi/a"$'\\\n'"  <Mappings Location=\"Common Libraries/unisim/unisim_VCOMP.vhd\" Library=\"unisim\"/>"$'\n' .library_mapping.xml
 sed -i -e "/xmlns:com.sigasi/a"$'\\\n'"  <Mappings Location=\"Common Libraries/unisim/secureip\" Library=\"not mapped\"/>"$'\n' .library_mapping.xml
 sed -i -e "/xmlns:com.sigasi/a"$'\\\n'"  <Mappings Location=\"Common Libraries/unisim/primitive\" Library=\"not mapped\"/>"$'\n' .library_mapping.xml

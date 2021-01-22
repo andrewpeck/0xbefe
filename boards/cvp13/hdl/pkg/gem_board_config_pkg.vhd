@@ -37,8 +37,6 @@ package gem_board_config_package is
     constant CFG_USE_TRIG_TX_LINKS  : boolean := PRJ_CFG_USE_TRIG_TX_LINKS; -- Controlled by the project_config.vhd:  if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant CFG_NUM_TRIG_TX        : integer := PRJ_CFG_NUM_TRIG_TX; -- Controlled by the project_config.vhd:  number of trigger transmitters used to connect to EMTF
 
-    constant CFG_GBT_DEBUG          : boolean := PRJ_CFG_GBT_DEBUG; -- Controlled by the project_config.vhd:  if set to true, an ILA will be instantiated which allows probing any GBT link
-    
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
