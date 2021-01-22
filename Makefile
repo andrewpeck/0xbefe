@@ -23,50 +23,55 @@ clean_projects:
 
 all:  update create synth impl
 
+config: gitconfig
+
+gitconfig:
+	git config --local include.path ../.gitconfig
+
 ################################################################################
 # Update from XML
 ################################################################################
 
 #### CVP13 ####
-update_ge11_cvp13:
+update_ge11_cvp13: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge11_cvp13/ cvp13
 
-update_ge21_cvp13:
+update_ge21_cvp13: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge21_cvp13/ cvp13
 
-update_me0_cvp13:
+update_me0_cvp13: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/me0_cvp13/ cvp13
 
 update_cvp13_all: update_ge11_cvp13 update_ge21_cvp13 update_me0_cvp13
 
 #### CTP7 ####
-update_ge11_ctp7:
+update_ge11_ctp7: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge11_ctp7/ ctp7
 
-update_ge21_ctp7:
+update_ge21_ctp7: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge21_ctp7/ ctp7
 
-update_me0_ctp7:
+update_me0_ctp7: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/me0_ctp7/ ctp7
 
 update_ctp7: update_ge11_ctp7 update_ge21_ctp7 update_me0_ctp7
 
 #### APEX ####
-update_ge11_apex:
+update_ge11_apex: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge11_apex/ apex
 
-update_ge21_apex:
+update_ge21_apex: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/ge21_apex/ apex
 
-update_me0_apex:
+update_me0_apex: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/me0_apex/ apex
 
