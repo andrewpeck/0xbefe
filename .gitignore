@@ -11,6 +11,8 @@ cxl_error.log
 
 /gem/ip/*/*
 /boards/cvp13/ip/*/*
+/boards/apex/ip/*/*
+/boards/ctp7/ip/*/*
 !*.xci
 !*.xcix
 
