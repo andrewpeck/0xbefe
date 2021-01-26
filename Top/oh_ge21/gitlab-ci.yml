@@ -4,3 +4,4 @@ generate_project:oh_ge21:
       extends: .vars
       PROJECT_NAME: oh_ge21
       HOG_ONLY_SYNTH: 0 # if 1 runs only the synthesis
+      INTERMEDIATE_BUILD: "1"
