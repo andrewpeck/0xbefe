@@ -1,0 +1,1384 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- START: GLOBALS DO NOT EDIT -->
+<!DOCTYPE node [
+<!ENTITY NUM_VFATS_PER_OH "12">
+<!ENTITY VFAT_BITMASK  "0xfff">
+]>
+<!-- END: GLOBALS DO NOT EDIT -->
+
+<!--  The tags attribute is a free test attribute which meaning is defined by the uHAL user -->
+<node id="FPGA">
+    <!--Control module -->
+    <node id="CONTROL"  address="0x0000"
+          description="Implements various control and monitoring functions of the Optohybrid"
+          fw_is_module="true"
+          fw_module_file="../gem/hdl/oh_fe/control/control.vhd"
+          fw_user_clock_signal="clocks.clk40"
+          fw_bus_clock_signal="clocks.clk40"
+          fw_bus_reset_signal="reset"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="5"
+          fw_reg_addr_lsb="0">
+
+        <node id="LOOPBACK" address="0x0" description="Loopback data register for testing read/write communication with the Optohybrid FPGA">
+            description="Loopback Test Register" fw_signal="loopback">
+            <node id="DATA" address="0x0" permission="rw"
+                  description="Write/Read Data Port"
+                  fw_signal="loopback"
+                  fw_default="0x01234567"/>
+        </node> <!--Loopback-->
+
+        <node id="SEM" address="0x3" description = "Connects to Outputs of the FPGA's built-in single event upset monitoring system">
+            <node id="CNT_SEM_CRITICAL" address="0x0" permission="r"
+                  mask="0x0000ffff"
+                  description="Counts of critical single event upsets"
+                  fw_cnt_en_signal="sem_critical"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_critical"/>
+            <node id="CNT_SEM_CORRECTION" address="0x1" permission="r"
+                  mask="0xffff0000"
+                  description="Counts of corrected single event upsets"
+                  fw_cnt_en_signal="sem_correction"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_correction"/>
+        </node> <!--SEM-->
+
+        <node id="VFAT" address="0x5" description = "Controls the 12 VFAT reset outputs from the FPGA">
+            <node id="RESET" address="0x0" permission="rw"
+                  mask="0x00000fff"
+                  description="Mask of VFAT Reset Outputs; 1=reset 0=enable"
+                  fw_signal="vfat_reset(11 downto 0)"
+                  fw_default="0x0"/>
+        </node> <!--VFAT-->
+
+        <node id="TTC" address="0x8" description = "TTC Status and Control">
+            <node id="BX0_CNT_LOCAL" address="0x0" permission="r"
+                  mask="0x00ffffff"
+                  description="TTC BX0 Local Counter"
+                  fw_cnt_en_signal="bx0_local"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_bx0_lcl"/>
+            <node id="BX0_CNT_TTC" address="0x1" permission="r"
+                  mask="0x00ffffff"
+                  description="TTC BX0 Received Counter"
+                  fw_cnt_en_signal="ttc_i.bc0"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_bx0_rxd"/>
+            <node id="BXN_CNT_LOCAL" address="0x2" permission="r"
+                  description="TTC BXN Counter"
+                  mask="0xfff"
+                  fw_signal="ttc_bxn_counter"/>
+            <node id="BXN_SYNC_ERR" address="0x3" permission="r"
+                  mask="0x1000"
+                  description="BXN Synchronization Error; Local BXN and received BXN do not match"
+                  fw_signal="ttc_bxn_sync_err"/>
+            <node id="BX0_SYNC_ERR" address="0x4" permission="r"
+                  mask="0x2000"
+                  description="BX0 Synchronization Error"
+                  fw_signal="ttc_bx0_sync_err"/>
+            <node id="BXN_OFFSET" address="0x5" permission="rw"
+                  mask="0xfff0000"
+                  description="Local BXN counter offset (starting value at resync)"
+                  fw_signal="ttc_bxn_offset"
+                  fw_default="0x0"/>
+            <node id="L1A_CNT" address="0x6" permission="r"
+                  mask="0xffffff"
+                  description="L1A Received Counter"
+                  fw_cnt_en_signal="ttc_i.l1a"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_l1a"/>
+            <node id="BXN_SYNC_ERR_CNT" address="0x7" permission="r"
+                  mask="0x0000ffff"
+                  description="BXN Sync Error Counter"
+                  fw_cnt_en_signal="ttc_bxn_sync_err"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_bxn_sync_err"/>
+            <node id="BX0_SYNC_ERR_CNT" address="0x8" permission="r"
+                  mask="0xffff0000"
+                  description="BX0 Sync Error Counter"
+                  fw_cnt_en_signal="ttc_bx0_sync_err"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_bx0_sync_err"/>
+        </node> <!--TTC-->
+
+
+        <node id="SBITS" address="0x11" description = "S-bit and Cluster Packing Rate">
+            <node id="CLUSTER_RATE" address="0x0" permission="r"
+                  description="Trigger cluster rate measured in Hz"
+                  fw_signal="cluster_rate"/>
+        </node> <!--SBITS-->
+
+        <node id="HDMI" address="0x12" description = "HDMI Connector Control:
+                                                      \\ Mode=0: Each signal is a single VFAT. The VFAT of interest is chosen by SBIT_SEL
+                                                      \\ Mode=1: Each signal is the OR of three VFATs in an ieta row. The row of interest is configured by SBIT_SEL
+                                                      \\ Mode=2: Each signal is the OR of four VFATs in an iphi half column (e.g. 0-3, 4-7, 8-11, 12-15, 16-19, 20-23)">
+            <node id="SBIT_SEL0" address="0x0" permission="rw"
+                  description="HDMI Output 0 S-bit select"
+                  mask="0x1f"
+                  fw_signal="sbit_sel0"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL1" address="0x0" permission="rw"
+                  description="HDMI Output 1 S-bit select"
+                  mask="0x3e0"
+                  fw_signal="sbit_sel1"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL2" address="0x0" permission="rw"
+                  description="HDMI Output 2 S-bit select"
+                  mask="0x7c00"
+                  fw_signal="sbit_sel2"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL3" address="0x0" permission="rw"
+                  description="HDMI Output 3 S-bit select"
+                  mask="0xf8000"
+                  fw_signal="sbit_sel3"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL4" address="0x0" permission="rw"
+                  description="HDMI Output 4 S-bit select"
+                  mask="0x1f00000"
+                  fw_signal="sbit_sel4"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL5" address="0x0" permission="rw"
+                  description="HDMI Output 5 S-bit select"
+                  mask="0x3e000000"
+                  fw_signal="sbit_sel5"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL6" address="0x1" permission="rw"
+                  description="HDMI Output 6 S-bit select"
+                  mask="0x1f"
+                  fw_signal="sbit_sel6"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_SEL7" address="0x1" permission="rw"
+                  description="HDMI Output 7 S-bit select"
+                  mask="0x3e0"
+                  fw_signal="sbit_sel7"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE0" address="0x1" permission="rw"
+                  description="HDMI Output 0 S-bit mode"
+                  mask="0xc00"
+                  fw_signal="sbit_mode0"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE1" address="0x1" permission="rw"
+                  description="HDMI Output 1 S-bit mode"
+                  mask="0x3000"
+                  fw_signal="sbit_mode1"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE2" address="0x1" permission="rw"
+                  description="HDMI Output 2 S-bit mode"
+                  mask="0xc000"
+                  fw_signal="sbit_mode2"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE3" address="0x1" permission="rw"
+                  description="HDMI Output 3 S-bit mode"
+                  mask="0x30000"
+                  fw_signal="sbit_mode3"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE4" address="0x1" permission="rw"
+                  description="HDMI Output 4 S-bit mode"
+                  mask="0xc0000"
+                  fw_signal="sbit_mode4"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE5" address="0x1" permission="rw"
+                  description="HDMI Output 5 S-bit mode"
+                  mask="0x300000"
+                  fw_signal="sbit_mode5"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE6" address="0x1" permission="rw"
+                  description="HDMI Output 6 S-bit mode"
+                  mask="0xc00000"
+                  fw_signal="sbit_mode6"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_MODE7" address="0x1" permission="rw"
+                  description="HDMI Output 7 S-bit mode"
+                  mask="0x3000000"
+                  fw_signal="sbit_mode7"
+                  fw_default="0x0"/>
+        </node> <!--HDMI-->
+
+        <node id="CNT_SNAP" address="0x14" description = "Control the global counter snapshot">
+            <node id="PULSE" address="0x0" permission="w"
+                  description="Pulse to take a counter snapshot"
+                  mask="0x1"
+                  fw_write_pulse_signal="cnt_snap_pulse"/>
+            <node id="DISABLE" address="0x1" permission="rw"
+                  description="0=enable snapshots (counters freeze synchronously and need a snapshot to update)"
+                  mask="0x2"
+                  fw_default="1"
+                  fw_signal="cnt_snap_disable"/>
+        </node> <!--CNT_SNAP-->
+
+        <node id="DNA" address="0x17" description = "57 Bit FPGA-specific device identifier">
+            <node id="DNA_LSBS" address="0x0" permission="r"
+                  description = "Device DNA bits 31 downto 0"
+                  mask="0xffffffff"
+                  fw_signal="dna(31 downto 0)"/>
+            <node id="DNA_MSBS" address="0x1" permission="r"
+                  description = "Device DNA bits 56 downto 32"
+                  mask="0x01ffffff"
+                  fw_signal="dna(56 downto 32)"/>
+        </node> <!--DNA-->
+
+        <node id="UPTIME" address="0x19" description="Uptime in seconds" permission="r"
+              mask="0xfffff"
+              fw_signal="std_logic_vector(uptime)"/>
+
+        <node id="USR_ACCESS" address="0x20" description="Git hash read from USR_ACCESS field" permission="r"
+              mask="0xffffffff"
+              fw_signal="usr_access"/>
+
+        <node id="HOG" address="0x21" description = "">
+            <node id="GLOBAL_DATE" permission="r" address="0x0" description="HOG Global Date"    fw_signal="GLOBAL_DATE"/>
+            <node id="GLOBAL_TIME" permission="r" address="0x1" description="HOG Global Time"    fw_signal="GLOBAL_TIME"/>
+            <node id="GLOBAL_VER"  permission="r" address="0x2" description="HOG Global Version" fw_signal="GLOBAL_VER"/>
+            <node id="GLOBAL_SHA"  permission="r" address="0x3" description="HOG Global SHA"     fw_signal="GLOBAL_SHA"/>
+            <node id="TOP_SHA"     permission="r" address="0x4" description="HOG Top SHA"        fw_signal="TOP_SHA"/>
+            <node id="TOP_VER"     permission="r" address="0x5" description="HOG Top Version"    fw_signal="TOP_VER"/>
+            <node id="HOG_SHA"     permission="r" address="0x6" description="HOG SHA"            fw_signal="HOG_SHA"/>
+            <node id="HOG_VER"     permission="r" address="0x7" description="HOG Version"        fw_signal="HOG_VER"/>
+            <node id="OH_SHA"      permission="r" address="0x8" description="OH SHA"             fw_signal="OPTOHYBRID_SHA"/>
+            <node id="OH_VER"      permission="r" address="0x9" description="OH Version"         fw_signal="OPTOHYBRID_VER"/>
+            <node id="FLAVOUR"     permission="r" address="0xa" description="Flavor"             fw_signal="std_logic_vector(to_unsigned(FLAVOUR,32))"/>
+        </node> <!--HOG-->
+
+    </node> <!--CTRL-->
+
+    <!--ADC module -->
+    <node id="ADC"  address="0x1000"
+          description="Connects to the Virtex-6 XADC and allows for reading of temperature, VCCINT, and VCCAUX voltages"
+          fw_is_module="true"
+          fw_module_file="../gem/hdl/oh_fe/control/adc.vhd"
+          fw_user_clock_signal="clock_i"
+          fw_bus_clock_signal="ipb_clk_i"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="3"
+          fw_reg_addr_lsb="0">
+
+        <node id="CTRL" address="0x0">
+
+            <node id="OVERTEMP" address="0x0" permission="r"
+                  mask="0x00000001"
+                  description="FPGA over temperature"
+                  fw_signal="overtemp"/>
+            <node id="VCCAUX_ALARM" address="0x0" permission="r"
+                  mask="0x00000002"
+                  description="FPGA VCCAUX Alarm"
+                  fw_signal="vccaux_alarm"/>
+            <node id="VCCINT_ALARM" address="0x0" permission="r"
+                  mask="0x00000004"
+                  description="FPGA VCCINT Alarm"
+                  fw_signal="vccint_alarm"/>
+
+            <node id="ADR_IN" address="0x0" permission="rw"
+                  description="XADC Addr In"
+                  fw_default="0x0"
+                  mask="0x3f8"
+                  fw_signal="daddr"/>
+
+            <node id="ENABLE" address="0x0" permission="rw"
+                  description="XADC Data In"
+                  mask="0x400"
+                  fw_default="0x1"
+                  fw_signal="den"/>
+
+            <node id="DATA_IN" address="0x1" permission="rw"
+                  description="XADC Data In"
+                  mask="0x0000ffff"
+                  fw_default="0x0"
+                  fw_signal="data_in"/>
+
+            <node id="DATA_OUT" address="0x1" permission="r"
+                  description="XADC Data Out"
+                  mask="0xffff0000"
+                  fw_read_ready_signal="data_ready"
+                  fw_signal="data_out"/>
+
+            <node id="RESET" address="0x2" permission="w"
+                  mask="0x00000001"
+                  description="XADC Reset"
+                  fw_write_pulse_signal="reset_local"/>
+
+            <node id="WR_EN" address="0x3" permission="w"
+                  mask="0x00000001"
+                  description="XADC Write Enable"
+                  fw_write_pulse_signal="write_en"/>
+
+            <node id="CNT_OVERTEMP" address="0x0" permission="r"
+                  mask="0x3f800"
+                  description="Overtemperature counter"
+                  fw_cnt_en_signal="overtemp"
+                  fw_cnt_reset_signal="reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_overtemp"/>
+
+            <node id="CNT_VCCAUX_ALARM" address="0x0" permission="r"
+                  description="VCCAUX Alarm Counter"
+                  mask="0x1fc0000"
+                  fw_cnt_en_signal="vccaux_alarm"
+                  fw_cnt_reset_signal="reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_vccaux_alarm"/>
+
+            <node id="CNT_VCCINT_ALARM" address="0x0" permission="r"
+                  mask="0xfe000000"
+                  description="VCCINT Alarm Counter"
+                  fw_cnt_en_signal="vccint_alarm"
+                  fw_cnt_reset_signal="reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_vccint_alarm"/>
+        </node> <!--CTRL-->
+    </node> <!--ADC-->
+
+    <!--Trigger Module -->
+    <node id="TRIG"  address="0x2000"
+          description="Connects to the trigger control module"
+          fw_is_module="true"
+          fw_module_file="../gem/hdl/oh_fe/trigger/trigger.vhd"
+          fw_user_clock_signal="clocks.clk40"
+          fw_bus_clock_signal="clocks.clk40"
+          fw_bus_reset_signal="ipb_reset"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="7"
+          fw_reg_addr_lsb="0">
+
+        <node id="CTRL" address="0x0" description = "Controls and monitors various parameters of the S-bit deserialization and cluster building.">
+
+            <node id="VFAT_MASK" address="0x0" permission="rw"
+                  description="&NUM_VFATS_PER_OH; bit mask of VFATs (1=off)"
+                  mask="&VFAT_BITMASK;"
+                  fw_signal="vfat_mask"
+                  fw_default="0x0"/>
+
+            <node id="SBIT_DEADTIME" address="0x0" permission="rw"
+                  description="Set programmable oneshot deadtime which applies to retriggers on individual VFAT channels"
+                  fw_signal="trig_deadtime"
+                  mask="0x0f000000"
+                  fw_default="0x7"/>
+
+            <node id="ACTIVE_VFATS" address="0x1" permission="r"
+                  description="&NUM_VFATS_PER_OH; bit list of VFATs with hits in this BX"
+                  mask="&VFAT_BITMASK;"
+                  fw_signal="active_vfats"/>
+
+            <node id="CNT_OVERFLOW" address="0x2" permission="r"
+                  mask="0xffff"
+                  description="Overflow Counter (more than 8 clusters in a bx)"
+                  fw_cnt_en_signal="sbit_overflow"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sbit_overflow"/>
+
+            <node id="ALIGNED_COUNT_TO_READY" address="0x2" permission="rw"
+                  description="Number of link consecutive good frames required before the transmission unit is marked as good and S-bits can be produced"
+                  fw_signal="aligned_count_to_ready"
+                  mask="0xfff0000"
+                  fw_default="0x1ff"/>
+
+            <node id="SBIT_SOT_READY" address="0x3" permission="r"
+                  description="&NUM_VFATS_PER_OH; bit list of VFATs with stable Start-of-frame pulses (in sync for a number of clock cycles)"
+                  mask="&VFAT_BITMASK;"
+                  fw_signal="sot_is_aligned"/>
+            <node id="SBIT_SOT_UNSTABLE" address="0x4" permission="r"
+                  description="&NUM_VFATS_PER_OH; bit list of VFATs with unstable Start-of-frame pulses (became misaligned after already achieving lock)"
+                  mask="&VFAT_BITMASK;"
+                  fw_signal="sot_unstable" />
+            <node id="SBIT_SOT_INVALID_BITSKIP" address="0xe2" permission="r"
+                  description="&NUM_VFATS_PER_OH; bit list of VFATs with a invalid bitskip counter for Start-of-frame pulses"
+                  mask="&VFAT_BITMASK;"
+                  fw_signal="sot_invalid_bitskip" />
+
+            <node id="INVERT" address="0x5" description="Controls the polarity of S-bit signals to account for polarity swaps on the GEB or OH">
+                <!-- START: INVERT_REGS DO NOT EDIT -->
+                <node id="SOT_INVERT" address="0x0" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="sot_invert"
+                    mask="0x00000fff"
+                    fw_default="0x000802"/>
+                <node id="VFAT0_TU_INVERT" address="0x1" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (7 downto 0)"
+                    mask="0x000000FF"
+                    fw_default="0xFF"/>
+                <node id="VFAT1_TU_INVERT" address="0x1" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (15 downto 8)"
+                    mask="0x0000FF00"
+                    fw_default="0x01"/>
+                <node id="VFAT2_TU_INVERT" address="0x1" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (23 downto 16)"
+                    mask="0x00FF0000"
+                    fw_default="0x00"/>
+                <node id="VFAT3_TU_INVERT" address="0x1" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (31 downto 24)"
+                    mask="0xFF000000"
+                    fw_default="0x00"/>
+                <node id="VFAT4_TU_INVERT" address="0x2" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (39 downto 32)"
+                    mask="0x000000FF"
+                    fw_default="0x00"/>
+                <node id="VFAT5_TU_INVERT" address="0x2" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (47 downto 40)"
+                    mask="0x0000FF00"
+                    fw_default="0x00"/>
+                <node id="VFAT6_TU_INVERT" address="0x2" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (55 downto 48)"
+                    mask="0x00FF0000"
+                    fw_default="0x00"/>
+                <node id="VFAT7_TU_INVERT" address="0x2" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (63 downto 56)"
+                    mask="0xFF000000"
+                    fw_default="0xEC"/>
+                <node id="VFAT8_TU_INVERT" address="0x3" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (71 downto 64)"
+                    mask="0x000000FF"
+                    fw_default="0x20"/>
+                <node id="VFAT9_TU_INVERT" address="0x3" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (79 downto 72)"
+                    mask="0x0000FF00"
+                    fw_default="0xDE"/>
+                <node id="VFAT10_TU_INVERT" address="0x3" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (87 downto 80)"
+                    mask="0x00FF0000"
+                    fw_default="0x7F"/>
+                <node id="VFAT11_TU_INVERT" address="0x3" permission="rw"
+                    description="1=invert pair"
+                    fw_signal="TU_INVERT (95 downto 88)"
+                    mask="0xFF000000"
+                    fw_default="0xDD"/>
+                <!-- END: INVERT_REGS DO NOT EDIT -->
+            </node> <!--INVERT-->
+
+            <node id="SBITS_MUX" address="0xe" description="Multiplexed copy of Sbits from a selected VFAT">
+
+                <node id="SBIT_MUX_SEL" address="0x0" permission="rw"
+                      description="Select a VFAT which will connect to the S-bit multiplexer"
+                      fw_signal="sbits_mux_sel"
+                      mask="0x1f0"
+                      fw_default="0x10"/>
+
+                <node id="SBITS_MUX_LSB" address="0x1" permission="r"
+                      description="Multiplexed S-bits 31 to 0"
+                      fw_signal="sbits_mux(31 downto 0)"
+                      mask="0xffffffff"/>
+
+                <node id="SBITS_MUX_MSB" address="0x2" permission="r"
+                      description="Multiplexed S-bits 63 to 32"
+                      fw_signal="sbits_mux(63 downto 32)"
+                      mask="0xffffffff"/>
+
+            </node> <!--SBITS_MUX-->
+
+            <node id="TU_MASK" address="0x11" description = "VFAT Trigger Unit Mask \\ Set a pair to 1 to invert it">
+
+                <!-- START: TU_MASK DO NOT EDIT -->
+                <node id="VFAT0_TU_MASK" address="0x0" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (7 downto 0)"
+                    mask="0x000000FF"
+                    fw_default="0x0"/>
+                <node id="VFAT1_TU_MASK" address="0x0" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (15 downto 8)"
+                    mask="0x0000FF00"
+                    fw_default="0x0"/>
+                <node id="VFAT2_TU_MASK" address="0x0" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (23 downto 16)"
+                    mask="0x00FF0000"
+                    fw_default="0x0"/>
+                <node id="VFAT3_TU_MASK" address="0x0" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (31 downto 24)"
+                    mask="0xFF000000"
+                    fw_default="0x0"/>
+                <node id="VFAT4_TU_MASK" address="0x1" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (39 downto 32)"
+                    mask="0x000000FF"
+                    fw_default="0x0"/>
+                <node id="VFAT5_TU_MASK" address="0x1" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (47 downto 40)"
+                    mask="0x0000FF00"
+                    fw_default="0x0"/>
+                <node id="VFAT6_TU_MASK" address="0x1" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (55 downto 48)"
+                    mask="0x00FF0000"
+                    fw_default="0x0"/>
+                <node id="VFAT7_TU_MASK" address="0x1" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (63 downto 56)"
+                    mask="0xFF000000"
+                    fw_default="0x0"/>
+                <node id="VFAT8_TU_MASK" address="0x2" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (71 downto 64)"
+                    mask="0x000000FF"
+                    fw_default="0x0"/>
+                <node id="VFAT9_TU_MASK" address="0x2" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (79 downto 72)"
+                    mask="0x0000FF00"
+                    fw_default="0x0"/>
+                <node id="VFAT10_TU_MASK" address="0x2" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (87 downto 80)"
+                    mask="0x00FF0000"
+                    fw_default="0x0"/>
+                <node id="VFAT11_TU_MASK" address="0x2" permission="rw"
+                    description="1 = mask the differential pair"
+                    fw_signal="TU_MASK (95 downto 88)"
+                    mask="0xFF000000"
+                    fw_default="0x0"/>
+                <!-- END: TU_MASK DO NOT EDIT -->
+            </node> <!--TU_MASK-->
+        </node> <!--CTRL-->
+
+        <node id="CNT" address="0x17" description = "S-BIT Counters \\  Set CNT_PERSIST to 1 to accumulate. Otherwise the counters will automatically reset after a programmable time (default is 1 second). By default this time is 1 second, making these counters a rate counter in Hertz">
+
+            <node id="VFAT${VFAT_CNT_IDX}_SBITS" address="0x0" permission="r"
+                  mask="0xffffffff"
+                  description="VFAT ${VFAT_CNT_IDX} Counter"
+                  fw_cnt_en_signal="active_vfats(${VFAT_CNT_IDX})"
+                  fw_cnt_snap_signal="sbit_cnt_snap"
+                  fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_cnt_clk_signal="clk_40_sbit"
+                  fw_signal="cnt_vfat${VFAT_CNT_IDX}"
+                  generate="true"
+                  generate_size="&NUM_VFATS_PER_OH;"
+                  generate_address_step="0x1"
+                  generate_idx_var="VFAT_CNT_IDX"/>
+
+            <node id="RESET" address="0x18" permission="w"
+                  mask="0x1"
+                  description="Reset S-bit counters"
+                  fw_write_pulse_signal="reset_counters"/>
+
+            <node id="SBIT_CNT_PERSIST" address="0x19" permission="rw"
+                  mask="0x1"
+                  description="1=counters will persist until manually reset; \n
+                               0=counters will automatically reset at CNT_TIME"
+                  fw_signal="sbit_cnt_persist"
+                  fw_default="0"/>
+
+            <node id="SBIT_CNT_TIME_MAX" address="0x1a" permission="rw"
+                  mask="0xffffffff"
+                  description="Number of BX that the VFAT S-bit counters will count to before automatically resetting to zero"
+                  fw_signal="sbit_cnt_time_max"
+                  fw_default="0x2638e98"/>
+
+            <node id="CLUSTER_COUNT" address="0x1b" permission="r"
+                  mask="0xffffffff"
+                  description="VFAT Cluster Counter (chamber)"
+                  fw_cnt_en_signal="valid_clusters_or"
+                  fw_cnt_snap_signal="sbit_cnt_snap"
+                  fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_signal="cnt_clusters"/>
+
+            <node id="SBITS_OVER_64x${OVERFLOW_IDX}" address="0x1f" permission="r"
+                  mask="0x0000ffff"
+                  description="More than 64 * ${OVERFLOW_IDX} Sbits in a bx Counter"
+                  fw_cnt_en_signal="sbits_comparator_over_threshold(${OVERFLOW_IDX})"
+                  fw_cnt_snap_signal="sbit_cnt_snap"
+                  fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_cnt_clk_signal="clk_40_sbit"
+                  fw_signal="cnt_over_threshold${OVERFLOW_IDX}"
+                  generate="true"
+                  generate_size="&NUM_VFATS_PER_OH;"
+                  generate_address_step="0x1"
+                  generate_idx_var="OVERFLOW_IDX"/>
+
+        </node> <!--CNT-->
+
+        <node id="TIMING" address="0x53"
+              description = "Controls the tap delay settings of the S-bit trigger unit inputs.
+                             Phase shifts the inputs in 78 ps increments
+                             \\ The delay of each S-bit in a VFAT should be increased to match the longest delay incurred by the GEB + Optohybrid routing on that VFAT">
+
+            <!-- START: TIMING_DELAYS DO NOT EDIT -->
+                    <node id="TAP_DELAY_VFAT0_BIT0" address="0x0" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 0 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(0)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT1" address="0x0" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 0 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(1)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT2" address="0x0" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 0 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(2)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT3" address="0x0" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 0 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(3)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT4" address="0x0" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 0 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(4)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT5" address="0x0" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 0 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(5)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT6" address="0x1" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 0 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(6)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT0_BIT7" address="0x1" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 0 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(7)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT0" address="0x1" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 1 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(8)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT1" address="0x1" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 1 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(9)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT2" address="0x1" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 1 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(10)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT3" address="0x1" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 1 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(11)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT4" address="0x2" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 1 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(12)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT5" address="0x2" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 1 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(13)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT6" address="0x2" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 1 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(14)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT1_BIT7" address="0x2" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 1 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(15)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT0" address="0x2" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 2 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(16)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT1" address="0x2" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 2 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(17)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT2" address="0x3" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 2 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(18)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT3" address="0x3" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 2 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(19)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT4" address="0x3" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 2 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(20)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT5" address="0x3" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 2 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(21)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT6" address="0x3" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 2 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(22)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT2_BIT7" address="0x3" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 2 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(23)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT0" address="0x4" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 3 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(24)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT1" address="0x4" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 3 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(25)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT2" address="0x4" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 3 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(26)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT3" address="0x4" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 3 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(27)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT4" address="0x4" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 3 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(28)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT5" address="0x4" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 3 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(29)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT6" address="0x5" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 3 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(30)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT3_BIT7" address="0x5" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 3 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(31)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT0" address="0x5" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 4 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(32)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT1" address="0x5" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 4 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(33)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT2" address="0x5" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 4 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(34)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT3" address="0x5" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 4 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(35)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT4" address="0x6" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 4 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(36)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT5" address="0x6" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 4 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(37)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT6" address="0x6" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 4 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(38)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT4_BIT7" address="0x6" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 4 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(39)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT0" address="0x6" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 5 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(40)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT1" address="0x6" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 5 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(41)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT2" address="0x7" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 5 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(42)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT3" address="0x7" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 5 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(43)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT4" address="0x7" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 5 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(44)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT5" address="0x7" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 5 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(45)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT6" address="0x7" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 5 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(46)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT5_BIT7" address="0x7" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 5 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(47)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT0" address="0x8" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 6 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(48)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT1" address="0x8" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 6 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(49)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT2" address="0x8" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 6 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(50)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT3" address="0x8" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 6 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(51)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT4" address="0x8" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 6 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(52)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT5" address="0x8" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 6 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(53)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT6" address="0x9" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 6 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(54)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT6_BIT7" address="0x9" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 6 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(55)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT0" address="0x9" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 7 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(56)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT1" address="0x9" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 7 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(57)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT2" address="0x9" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 7 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(58)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT3" address="0x9" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 7 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(59)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT4" address="0xA" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 7 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(60)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT5" address="0xA" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 7 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(61)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT6" address="0xA" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 7 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(62)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT7_BIT7" address="0xA" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 7 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(63)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT0" address="0xA" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 8 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(64)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT1" address="0xA" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 8 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(65)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT2" address="0xB" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 8 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(66)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT3" address="0xB" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 8 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(67)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT4" address="0xB" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 8 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(68)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT5" address="0xB" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 8 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(69)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT6" address="0xB" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 8 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(70)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT8_BIT7" address="0xB" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 8 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(71)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT0" address="0xC" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 9 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(72)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT1" address="0xC" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 9 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(73)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT2" address="0xC" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 9 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(74)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT3" address="0xC" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 9 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(75)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT4" address="0xC" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 9 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(76)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT5" address="0xC" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 9 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(77)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT6" address="0xD" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 9 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(78)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT9_BIT7" address="0xD" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 9 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(79)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT0" address="0xD" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 10 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(80)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT1" address="0xD" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 10 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(81)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT2" address="0xD" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 10 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(82)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT3" address="0xD" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 10 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(83)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT4" address="0xE" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 10 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(84)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT5" address="0xE" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 10 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(85)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT6" address="0xE" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 10 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(86)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT10_BIT7" address="0xE" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 10 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(87)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT0" address="0xE" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 11 S-bit 0 tap delay"
+                        fw_signal="trig_tap_delay(88)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT1" address="0xE" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 11 S-bit 1 tap delay"
+                        fw_signal="trig_tap_delay(89)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT2" address="0xF" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 11 S-bit 2 tap delay"
+                        fw_signal="trig_tap_delay(90)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT3" address="0xF" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 11 S-bit 3 tap delay"
+                        fw_signal="trig_tap_delay(91)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT4" address="0xF" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 11 S-bit 4 tap delay"
+                        fw_signal="trig_tap_delay(92)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT5" address="0xF" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 11 S-bit 5 tap delay"
+                        fw_signal="trig_tap_delay(93)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT6" address="0xF" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 11 S-bit 6 tap delay"
+                        fw_signal="trig_tap_delay(94)"
+                        fw_default="0"/>
+                    <node id="TAP_DELAY_VFAT11_BIT7" address="0xF" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 11 S-bit 7 tap delay"
+                        fw_signal="trig_tap_delay(95)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT0" address="0x10" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 0 SOT tap delay"
+                        fw_signal="sot_tap_delay(0)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT1" address="0x10" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 1 SOT tap delay"
+                        fw_signal="sot_tap_delay(1)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT2" address="0x10" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 2 SOT tap delay"
+                        fw_signal="sot_tap_delay(2)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT3" address="0x10" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 3 SOT tap delay"
+                        fw_signal="sot_tap_delay(3)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT4" address="0x10" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 4 SOT tap delay"
+                        fw_signal="sot_tap_delay(4)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT5" address="0x10" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 5 SOT tap delay"
+                        fw_signal="sot_tap_delay(5)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT6" address="0x11" permission="rw"
+                        mask="0x0000001F"
+                        description="VFAT 6 SOT tap delay"
+                        fw_signal="sot_tap_delay(6)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT7" address="0x11" permission="rw"
+                        mask="0x000003E0"
+                        description="VFAT 7 SOT tap delay"
+                        fw_signal="sot_tap_delay(7)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT8" address="0x11" permission="rw"
+                        mask="0x00007C00"
+                        description="VFAT 8 SOT tap delay"
+                        fw_signal="sot_tap_delay(8)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT9" address="0x11" permission="rw"
+                        mask="0x000F8000"
+                        description="VFAT 9 SOT tap delay"
+                        fw_signal="sot_tap_delay(9)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT10" address="0x11" permission="rw"
+                        mask="0x01F00000"
+                        description="VFAT 10 SOT tap delay"
+                        fw_signal="sot_tap_delay(10)"
+                        fw_default="0"/>
+                    <node id="SOT_TAP_DELAY_VFAT11" address="0x11" permission="rw"
+                        mask="0x3E000000"
+                        description="VFAT 11 SOT tap delay"
+                        fw_signal="sot_tap_delay(11)"
+                        fw_default="0"/>
+            <!-- END: TIMING_DELAYS DO NOT EDIT -->
+        </node> <!--Timing Delays-->
+
+
+        <node id="SBIT_MONITOR" address="0x90"
+              description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
+            <node id="RESET" address="0x0" permission="w"
+                  description="Reset the sbit monitor module and re-arm for triggering"
+                  fw_write_pulse_signal="reset_monitor"/>
+            <node id="CLUSTER${CLUSTER_IDX}" address="0x1" mask="0x0000ffff" permission="r"
+                  description="Last cluster ${CLUSTER_IDX}"
+                  fw_signal="cluster_to_vector(frozen_clusters(${CLUSTER_IDX}),16)"
+                  generate="true" generate_size="8" generate_address_step="0x1" generate_idx_var="CLUSTER_IDX"/>
+            <node id="L1A_DELAY" address="0x10" mask="0xffffffff" permission="r"
+                  description="Number of BX between this sbit and the subsequent L1A"
+                  fw_signal="sbitmon_l1a_delay"/>
+        </node>
+
+        <node id="SBIT_HITMAP" address="0xb0"
+              description="The Sbit hitmap module accumulates all incoming Sbits during a period of time">
+            <node id="RESET" address="0x0" permission="w"
+                  description="Reset the accumulation registers"
+                  fw_write_pulse_signal="hitmap_reset"/>
+            <node id="ACQUIRE" address="0x1" mask="0x1" permission="rw"
+                  description="Sbits are accumulated as long as this flag is set"
+                  fw_signal="hitmap_acquire"
+                  fw_default="0x0"/>
+            <node id="VFAT${VFAT_HITMAP_IDX}_MSB" address="0x2" mask="0xffffffff" permission="r"
+                  description="Accumulator for Sbit 63 to 32 of VFAT${VFAT_HITMAP_IDX}"
+                  fw_signal="hitmap_sbits(${VFAT_HITMAP_IDX})(63 downto 32)"
+                  generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_HITMAP_IDX"/>
+            <node id="VFAT${VFAT_HITMAP_IDX}_LSB" address="0x3" mask="0xffffffff" permission="r"
+                  description="Accumulator for Sbit 31 to 0 of VFAT${VFAT_HITMAP_IDX}"
+                  fw_signal="hitmap_sbits(${VFAT_HITMAP_IDX})(31 downto 0)"
+                  generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_HITMAP_IDX"/>
+        </node>
+
+    </node> <!--TRIG-->
+
+    <!--GBT module -->
+    <node id="GBT"  address="0x4000"
+          description="Contains functionality for controlling and monitoring the bidirectional GBTx to FPGA link"
+          fw_is_module="true"
+          fw_module_file="../gem/hdl/oh_fe/gbt/gbt.vhd"
+          fw_user_clock_signal="clocks.clk40"
+          fw_bus_clock_signal="clocks.clk40"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="3"
+          fw_reg_addr_lsb="0">
+
+        <node id="TX" address="0x0" description = "Controls and monitors the transmit link from the FPGA to the GBTx">
+            <node id="CNT_RESPONSE_SENT" address="0x0" permission="r"
+                  mask="0xffffff00"
+                  description="Number of wishbone responses sent back"
+                  fw_cnt_en_signal="ipb_miso.ipb_ack"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_ipb_response"/>
+            <node id="TX_READY" address="0x1" permission="r"
+                  mask="0x00000001"
+                  description="GBT TX READY from GBTx Chip"
+                  fw_signal="gbt_txready_i"/>
+        </node> <!--TX-->
+
+        <node id="RX" address="0x4" description = "Controls and monitors the transmit link from the GBTx to the FPGA">
+            <node id="RX_READY" address="0x0" permission="r"
+                  mask="0x00000001"
+                  description="GBT RX READY from GBTx Chip"
+                  fw_signal="gbt_rxready_i"/>
+            <node id="RX_VALID" address="0x0" permission="r"
+                  mask="0x00000002"
+                  description="GBT RX VALID from GBTx Chip"
+                  fw_signal="gbt_rxvalid_i"/>
+            <node id="CNT_REQUEST_RECEIVED" address="0x0" permission="r"
+                  mask="0xffffff00"
+                  description="Number of wishbone requests received"
+                  fw_cnt_en_signal="ipb_mosi.ipb_strobe"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_ipb_request"/>
+            <node id="CNT_LINK_ERR" address="0x1" permission="r"
+                  mask="0x00ffffff"
+                  description="Number of GBT link errrors detected"
+                  fw_cnt_en_signal="gbt_link_err_ready"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_link_err"/>
+        </node> <!--RX-->
+
+        <node id="TTC" address="0x5" description = "Emulates the TTC commands from GBTx through Wishbone">
+            <node id="FORCE_L1A" address="0x0" permission="w"
+                  description="GBT Force L1A"
+                  fw_write_pulse_signal="l1a_force"/>
+            <node id="FORCE_BC0" address="0x1" permission="w"
+                  description="GBT Force BC0"
+                  fw_write_pulse_signal="bc0_force"/>
+            <node id="FORCE_RESYNC" address="0x2" permission="w"
+                  description="GBT Force Resync"
+                  fw_write_pulse_signal="resync_force"/>
+        </node> <!--TTC-->
+    </node> <!--GBT-->
+
+    <!--MGT module -->
+    <node id="MGT"  address="0x5000"
+          description="Controls and monitors the multi-gigabit links that drive the trigger fiber tranceivers"
+          fw_is_module="true"
+          fw_module_file="../gem/hdl/oh_fe/trigger/trigger_data_phy.vhd"
+          fw_user_clock_signal="clocks.clk40"
+          fw_bus_clock_signal="clocks.clk40"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="4"
+          fw_reg_addr_lsb="0">
+
+        <node id="PLL_LOCK" address="0x0" permission="r"
+              mask = "0x1"
+              description=""
+              fw_signal="pll_lock"/>
+
+        <node id="CONTROL${GT}" address="0x1"
+              description="MGT ${GT} Control"
+              generate="true"
+              generate_size="4"
+              generate_address_step="0x5"
+              generate_idx_var="GT">
+
+            <node id="TX_PRBS_MODE${GT}" address="0x0" permission="rw"
+                  mask="0x00000007"
+                  description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
+                  fw_default="0x0"
+                  fw_signal="control(${GT}).txprbssel"/>
+
+            <node id="RX_PRBS_MODE${GT}" address="0x0" permission="rw"
+                  mask="0x00000038"
+                  description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
+                  fw_default="0x0"
+                  fw_signal="control(${GT}).rxprbssel"/>
+
+            <node id="LOOPBACK_MODE${GT}" address="0x0" permission="rw"
+                  mask="0x000001c0"
+                  description="GT Loopback Mode \n 0 = normal \n 1 = near end pcs \n 2 = near end pma \n4 = far end pma \n 6 = far end pcs"
+                  fw_default="0x0"
+                  fw_signal="control(${GT}).txloopback"/>
+
+            <node id="TX_DIFFCTRL${GT}" address="0x0" permission="rw"
+                  mask="0x0000f000"
+                  description="TX Differential Swing Control"
+                  fw_default="0xC"
+                  fw_signal="control(${GT}).txdiffctrl"/>
+
+            <node id="GTTXRESET${GT}" address="0x1" permission="w"
+                  description="GT TX Reset"
+                  fw_write_pulse_signal="control(${GT}).gttxreset"/>
+
+            <node id="TXPRBS_FORCE_ERR${GT}" address="0x2" permission="w"
+                  description="TX PRBS Force Error"
+                  fw_write_pulse_signal="control(${GT}).txprbsforceerr"/>
+
+            <node id="TXPCSRESET${GT}" address="0x3" permission="w"
+                  description="TX PCS Reset"
+                  fw_write_pulse_signal="control(${GT}).txpcsreset"/>
+
+            <node id="TXPMARESET${GT}" address="0x4" permission="w"
+                  description="TX PMA Reset"
+                  fw_write_pulse_signal="control(${GT}).txpmareset"/>
+        </node> <!--Control-->
+
+        <node id="STATUS${GT}" address="0x15"
+              description="MGT ${GT} Status"
+              generate="true"
+              generate_size="4"
+              generate_address_step="0x1"
+              generate_idx_var="GT">
+
+            <node id="TXFSM_RESET_DONE${GT}" address="0x0" permission="r"
+                  mask="0x00000001"
+                  description=""
+                  fw_signal="status(${GT}).txfsm_reset_done"/>
+
+            <node id="TXRESET_DONE${GT}" address="0x0" permission="r"
+                  mask="0x00000002"
+                  description=""
+                  fw_signal="status(${GT}).txreset_done"/>
+
+            <node id="TX_PMA_RESET_DONE${GT}" address="0x0" permission="r"
+                  mask="0x00000004"
+                  description=""
+                  fw_signal="status(${GT}).txpmaresetdone"/>
+
+            <node id="TX_PHALIGN_DONE${GT}" address="0x0" permission="r"
+                  mask="0x00000008"
+                  description=""
+                  fw_signal="status(${GT}).txphaligndone"/>
+        </node> <!--Status-->
+
+        <!--<node id="RX{GT}_PRBS_ERR_CNT" address="0xf" permission="r"
+            mask="0xff"
+            description="VFAT ${GT} Counter"
+            fw_cnt_en_signal="active_vfats(${GT})"
+            fw_cnt_snap_signal="sbit_cnt_snap"
+            fw_cnt_reset_signal="reset_prbs_err_cnt"
+            fw_cnt_clk_signal="clocks.sysclk"
+            fw_signal="cnt_rxprbserr{GT}"
+            generate="true"
+            generate_size="4"
+            generate_address_step="0x1"
+            generate_idx_var="GT"/>
+        -->
+
+    </node> <!--MGT-->
+</node> <!--FPGA-->

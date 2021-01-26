@@ -1,0 +1,77 @@
+# -*- mode: TCL;-*-
+gem/hdl/oh_fe/optohybrid.vhd 93 top=optohybrid
+
+# Control
+gem/hdl/oh_fe/control/device_dna.v
+gem/hdl/oh_fe/control/external.v
+gem/hdl/oh_fe/control/led_control.v
+gem/hdl/oh_fe/control/startup_reset.vhd 93
+gem/hdl/oh_fe/control/startup.vhd 93
+gem/hdl/oh_fe/control/ttc.v
+gem/hdl/oh_fe/control/ttc_tmr.vhd 93
+
+# GBT
+gem/hdl/oh_fe/gbt/gbt_link.vhd 93
+gem/hdl/oh_fe/gbt/gbt_link_tmr.vhd 93
+gem/hdl/oh_fe/gbt/gbt_rx.vhd 93
+gem/hdl/oh_fe/gbt/gbt_serdes.vhd 93
+gem/hdl/oh_fe/gbt/gbt_tx.vhd 93
+gem/hdl/oh_fe/gbt/link_request.vhd 93
+gem/hdl/oh_fe/gbt/to_gbt_ser.vhd 93
+
+# Pkg
+gem/hdl/oh_fe/pkg/ipbus_pkg.vhd 93
+gem/hdl/oh_fe/pkg/types_pkg.vhd 93
+
+# Cluster packer
+gem/hdl/cluster_finding/consecutive_count.v
+gem/hdl/cluster_finding/find_cluster_primaries.v
+gem/hdl/cluster_finding/find_clusters.vhd 93
+gem/hdl/cluster_finding/sorter16.v
+gem/hdl/cluster_finding/top_cluster_packer.vhd 93
+gem/hdl/cluster_finding/truncate_clusters.v
+gem/hdl/cluster_finding/x_oneshot.v
+
+# Trigger
+gem/hdl/oh_fe/trigger/active_vfats.vhd 93
+gem/hdl/oh_fe/trigger/channel_to_strip.vhd 93
+gem/hdl/oh_fe/trigger/trigger_data_formatter.vhd 93
+gem/hdl/oh_fe/trigger/sbit_monitor.vhd 93
+gem/hdl/oh_fe/trigger/sbits.vhd 93
+gem/hdl/oh_fe/trigger/sbits_hitmap.vhd 93
+gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner.v
+gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner_tmr.vhd 93
+gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
+
+# Utils
+#gem/hdl/utils/yahamm/yahamm_dec.vhd 93
+common/hdl/utils/yahamm/matrix_pkg.vhd 93
+common/hdl/utils/yahamm/yahamm_enc.vhd 93
+common/hdl/utils/yahamm/yahamm_pkg.vhd 93
+
+gem/hdl/oh_fe/utils/6b8b.vhd 93
+gem/hdl/oh_fe/utils/6b8b_pkg.vhd 93
+gem/hdl/oh_fe/utils/8b6b.vhd 93
+gem/hdl/oh_fe/utils/dru.vhd 93
+gem/hdl/oh_fe/utils/dru_tmr.vhd 93
+gem/hdl/oh_fe/utils/oversample.vhd 93
+gem/hdl/oh_fe/utils/bitslip.vhd 93
+gem/hdl/oh_fe/utils/clock_strobe.vhd 93
+gem/hdl/oh_fe/utils/clocking.vhd 93
+gem/hdl/oh_fe/utils/counter_snap.vhd 93
+gem/hdl/oh_fe/utils/cylon.v
+gem/hdl/oh_fe/utils/err_indicator.v
+gem/hdl/oh_fe/utils/fader.v
+gem/hdl/oh_fe/utils/iodelay.vhd 93
+gem/hdl/oh_fe/utils/iserdes.vhd 93
+gem/hdl/oh_fe/utils/progress_bar.vhd 93
+gem/hdl/oh_fe/utils/sem_mon.vhd 93
+gem/hdl/oh_fe/utils/synchronizer.vhd 93
+gem/hdl/oh_fe/utils/x_flashsm.v
+
+# Wishbone
+gem/hdl/oh_fe/wb/ipb_switch_tmr.vhd 93
+gem/hdl/oh_fe/wb/ipbus_slave_tmr.vhd 93
+gem/hdl/oh_fe/wb/ipb_switch.vhd 93
+gem/hdl/oh_fe/wb/ipbus_slave.vhd 93
+gem/hdl/oh_fe/wb/wb_switch.vhd 93

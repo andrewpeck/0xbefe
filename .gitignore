@@ -10,7 +10,7 @@ cxl_error.log
 *.DS_Store
 
 /gem/ip/*/*
-/boards/cvp13/ip/*/*
+/boards/*/ip/*/*
 !*.xci
 !*.xcix
 

@@ -15,6 +15,19 @@ else
 COLORIZE = | ccze -A
 endif
 
+IFTIME := $(shell command -v time 2> /dev/null)
+ifndef IFTIME
+TIMECMD =
+else
+TIMECMD = time -p
+endif
+
+list:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+init:
+	git submodule update --init --recursive
+
 clean:
 	@find . -name "*.jou" -exec rm {} \;
 
@@ -71,6 +84,13 @@ update_me0_apex:
 	@cd regtools && python generate_registers.py -p generated/me0_apex/ apex
 
 update_apex: update_ge11_apex update_ge21_apex update_me0_apex
+
+#### Optohybrid ####
+
+update_oh_ge21:
+	@mkdir -p address_table/gem/generated/oh_ge21/
+	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge21/optohybrid_registers.xml
+	@cd regtools && python generate_registers.py -p generated/oh_ge21/ oh
 
 #### shortcuts ####
 update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
