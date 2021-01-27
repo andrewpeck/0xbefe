@@ -222,7 +222,6 @@ begin
                 test_sync_cmd_real  <= '0';
                 hard_reset_cmd_real <= '0';
                 calpulse_cmd_real   <= '0';
-                l1a_cmd_real        <= '0';
             else
                 if (ttc_cmd = ttc_conf.cmd_bc0) then
                     bc0_cmd_real <= '1';
