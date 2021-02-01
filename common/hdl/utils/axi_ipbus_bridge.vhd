@@ -243,14 +243,14 @@ begin
                         if (ipb_sys_slv_select /= C_IPB_SYS_SLV.none) then
                             axil_s2m <= AXI_LITE_S2M_NULL;
                             ipb_sys_transact <= '1';
-                            ipb_sys_mosi(ipb_sys_slv_select) <= (ipb_addr => axi_word_awaddr, ipb_wdata => axil_m2s.wdata, ipb_strobe => '1', ipb_write => '0');
+                            ipb_sys_mosi(ipb_sys_slv_select) <= (ipb_addr => axi_word_awaddr, ipb_wdata => axil_m2s.wdata, ipb_strobe => '1', ipb_write => '1');
                             ipb_state <= WAIT_FOR_WRITE_ACK;
 
                         -- user address
                         elsif (ipb_usr_slv_select /= C_IPB_SLV.none) then
                             axil_s2m <= AXI_LITE_S2M_NULL;
                             ipb_sys_transact <= '0';
-                            ipb_usr_mosi(ipb_usr_slv_select) <= (ipb_addr => axi_word_awaddr, ipb_wdata => axil_m2s.wdata, ipb_strobe => '1', ipb_write => '0');
+                            ipb_usr_mosi(ipb_usr_slv_select) <= (ipb_addr => axi_word_awaddr, ipb_wdata => axil_m2s.wdata, ipb_strobe => '1', ipb_write => '1');
                             ipb_state <= WAIT_FOR_WRITE_ACK;
     
                         -- addressing error - no IPBus slave at this address              
