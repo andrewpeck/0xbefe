@@ -17,6 +17,7 @@ boards/cvp13/hdl/gem_cvp13.src
 gem/hdl/pkg/generated/me0_cvp13/registers.vhd
 common/hdl/mgt/generated/me0_cvp13/mgt_slow_control.vhd
 common/hdl/ttc/generated/me0_cvp13/ttc.vhd
+common/hdl/misc/generated/ge21_cvp13/promless_bram.vhd
 gem/hdl/misc/generated/me0_cvp13/gem_system_regs.vhd
 gem/hdl/tests/generated/me0_cvp13/gem_tests.vhd
 gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd

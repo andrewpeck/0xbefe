@@ -60,6 +60,7 @@ common/hdl/slow_control/gbt_ic_controller.vhd
 
 # Misc
 common/hdl/misc/promless_fpga_loader.vhd
+#common/hdl/misc/promless_bram.vhd            <-- use the generated version specific to the project
 
 # Tests
 common/hdl/tests/gbt_loopback_test.vhd

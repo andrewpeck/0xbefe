@@ -18,13 +18,11 @@ use unisim.vcomponents.all;
 use work.axi_pkg.all;
 use work.ipbus.all;
 use work.ipb_addr_decode.all;
+use work.ipb_sys_addr_decode.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 
 entity pcie is
-    generic(
-        g_NUM_IPB_SLAVES     : integer
-    );
     port (
         reset_i             : in  std_logic;
         
@@ -42,9 +40,10 @@ entity pcie is
         -- IPbus
         ipb_reset_o         : out std_logic;
         ipb_clk_o           : out std_logic;
-        ipb_miso_arr_i      : in  ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0);
-        ipb_mosi_arr_o      : out ipb_wbus_array(g_NUM_IPB_SLAVES - 1 downto 0)
-        
+        ipb_usr_miso_arr_i  : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+        ipb_usr_mosi_arr_o  : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+        ipb_sys_miso_arr_i  : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+        ipb_sys_mosi_arr_o  : out ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0)
     );
 end pcie;
 
@@ -608,37 +607,19 @@ begin
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
-            C_NUM_IPB_SLAVES   => g_NUM_IPB_SLAVES,
-            C_S_AXI_DATA_WIDTH => 32,
-            C_S_AXI_ADDR_WIDTH => 32,
             C_DEBUG => true
         )
         port map(
+            axi_aclk_i     => axi_clk,
+            axi_aresetn_i  => axi_reset_b,
+            axil_m2s_i     => axil_m2s,
+            axil_s2m_o     => axil_s2m,
             ipb_reset_o    => ipb_reset_o,
             ipb_clk_o      => ipb_clk_o,
-            ipb_miso_i     => ipb_miso_arr_i,
-            ipb_mosi_o     => ipb_mosi_arr_o,
-            S_AXI_ACLK     => axi_clk,
-            S_AXI_ARESETN  => axi_reset_b,
-            S_AXI_AWADDR   => axil_m2s.awaddr,
-            S_AXI_AWPROT   => axil_m2s.awprot,
-            S_AXI_AWVALID  => axil_m2s.awvalid,
-            S_AXI_AWREADY  => axil_s2m.awready,
-            S_AXI_WDATA    => axil_m2s.wdata,
-            S_AXI_WSTRB    => axil_m2s.wstrb,
-            S_AXI_WVALID   => axil_m2s.wvalid,
-            S_AXI_WREADY   => axil_s2m.wready,
-            S_AXI_BRESP    => axil_s2m.bresp,
-            S_AXI_BVALID   => axil_s2m.bvalid,
-            S_AXI_BREADY   => axil_m2s.bready,
-            S_AXI_ARADDR   => axil_m2s.araddr,
-            S_AXI_ARPROT   => axil_m2s.arprot,
-            S_AXI_ARVALID  => axil_m2s.arvalid,
-            S_AXI_ARREADY  => axil_s2m.arready,
-            S_AXI_RDATA    => axil_s2m.rdata,
-            S_AXI_RRESP    => axil_s2m.rresp,
-            S_AXI_RVALID   => axil_s2m.rvalid,
-            S_AXI_RREADY   => axil_m2s.rready,
+            ipb_sys_miso_i => ipb_sys_miso_arr_i,
+            ipb_sys_mosi_o => ipb_sys_mosi_arr_o,
+            ipb_usr_miso_i => ipb_usr_miso_arr_i,
+            ipb_usr_mosi_o => ipb_usr_mosi_arr_o,
             read_active_o  => ipb_read_active,
             write_active_o => ipb_write_active
         );

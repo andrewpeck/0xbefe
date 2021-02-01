@@ -211,7 +211,6 @@ package common_pkg is
         first   : std_logic;
         last    : std_logic;
         error   : std_logic;
-        size    : std_logic_vector(31 downto 0);  
     end record;
    
     type t_gem_loader_stats is record
