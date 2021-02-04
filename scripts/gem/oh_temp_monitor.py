@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from rw_reg import *
-from mcs import *
 from time import *
 import array
 import struct
@@ -45,8 +44,8 @@ def main():
             out_file.flush()
         sleep(1.0)
         iter += 1
-        
-        
+
+
 
 def check_bit(byteval,idx):
     return ((byteval&(1<<idx))!=0);
@@ -71,22 +70,22 @@ def debugCyan(string):
     if DEBUG:
         printCyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def printCyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def printRed(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:
