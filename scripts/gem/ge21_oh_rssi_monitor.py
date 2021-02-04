@@ -60,7 +60,6 @@ def main():
                 writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), 1 << oh)
                 for ch in range(6, 8): # ADC channels 6 and 8 are connected to the RSSI of the two VTRXs
                     sendScaCommand(ohList, 0x14, 0x50, 0x4, ch << 24, False)
-                    sleep(0.001)
                     results = sendScaCommand([oh], 0x14, 0x02, 0x4, 1 << 24, True)
                     res = (results[0] >> 24) + ((results[0] >> 8) & 0xff00)
                     res_v = (1.0 / 0xfff) * float(res)
