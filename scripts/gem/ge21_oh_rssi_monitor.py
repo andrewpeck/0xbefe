@@ -5,7 +5,21 @@ from time import *
 import array
 import struct
 
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
+
 DEBUG=False
+
+RSSI_R1 = 2000.0
+RSSI_R2 = 1000.0
+RSSI_VCC = 2.5
 
 def main():
 
@@ -29,7 +43,7 @@ def main():
             for i in range(12):
                 if i != 0:
                     header += "\t"
-                header += "OH%d_VTRX1\tOH%d_VTRX2" % (i, i)
+                header += "OH%d_VTRX1_RSSI_uA\tOH%d_VTRX2_RSSI_uA" % (i, i)
             out_file.write("%s\n" % header)
             out_file.flush()
 
@@ -49,8 +63,11 @@ def main():
                     sleep(0.001)
                     results = sendScaCommand([oh], 0x14, 0x02, 0x4, 1 << 24, True)
                     res = (results[0] >> 24) + ((results[0] >> 8) & 0xff00)
-                    res_mv = ((1.0 / 0xfff) * float(res)) * 1000
-                    rssi += "%f\t" % res_mv
+                    res_v = (1.0 / 0xfff) * float(res)
+                    res_mv = res_v * 1000
+                    res_a = (((res_v / (RSSI_R2/(RSSI_R1+RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
+                    res_ua = res_a * 1000000
+                    rssi += "%f\t" % res_ua
                     sleep(0.001)
             else:
                 rssi += "0.0\t0.0\t"
