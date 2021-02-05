@@ -1,5 +1,5 @@
 # -*- mode: TCL;-*-
-gem/hdl/oh_fe/optohybrid_fw.vhd 93 top=optohybrid
+gem/hdl/oh_fe/optohybrid_fw.vhd 93 top=optohybrid_fw
 
 # Control
 gem/hdl/oh_fe/control/device_dna.v

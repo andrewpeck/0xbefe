@@ -2,3 +2,4 @@
 gem/hdl/oh_fe/optohybrid.src lib=optohybrid
 boards/ge21_oh/optohybrid.src lib=optohybrid
 gem/hdl/oh_fe/pkg/hardware_pkg_ge21.vhd
+gem/hdl/oh_fe/pkg/tmr_en_pkg.vhd

@@ -14,6 +14,7 @@ library work;
 use work.types_pkg.all;
 use work.ipbus_pkg.all;
 use work.hardware_pkg.all;
+use work.tmr_pkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -46,13 +47,15 @@ entity optohybrid_fw is
     );
   port(
 
+    --------------------------------------------------------------------------------
     -- Clocking
-
+    --------------------------------------------------------------------------------
     clock_p : in std_logic;
     clock_n : in std_logic;
 
-    -- Elinks
-
+    --------------------------------------------------------------------------------
+    -- GBT
+    --------------------------------------------------------------------------------
     elink_i_p : in std_logic;
     elink_i_n : in std_logic;
 
@@ -262,7 +265,7 @@ begin
   ipb_miso_gbt        <= ipb_miso_masters(0);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
-    generic map (g_ENABLE_TMR => (FLAVOR /= 75) and EN_TMR_IPB_SWITCH)
+    generic map (EN_TMR_IPB_SWITCH)
     port map(
       clock_i => clocks.clk40,
       reset_i => system_reset,
@@ -442,7 +445,7 @@ begin
 
       end generate;
 
-      notmr_gen : if (EN_TMR /= 1) generate
+      notmr_gen : if (EN_TMR = 0) generate
         fiber_packets <= fiber_packets_tmr(0);
         elink_packets <= elink_packets_tmr(0);
         fiber_kchars  <= fiber_kchars_tmr(0);

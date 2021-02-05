@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library work;
+use work.tmr_pkg.all;
+
 package hardware_pkg is
 
   -- Configuration
@@ -52,8 +55,6 @@ package hardware_pkg is
   constant USE_LEGACY_OPTICS : boolean := true;
 
   -- TMR Enables
-  constant EN_TMR : integer := 1;
-
   constant EN_TMR_TRIG_FORMATTER     : integer := 0*EN_TMR;
   constant EN_TMR_GBT_DRU            : integer := 0*EN_TMR;
   constant EN_TMR_SBIT_DRU           : integer := 0*EN_TMR;
