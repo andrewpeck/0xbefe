@@ -4,9 +4,6 @@
 -- Optohybrid Firmware -- Top Logic
 -- E. Juska, T. Lenzi, A. Peck, L. Petre
 ----------------------------------------------------------------------------------
--- TODO: STARTUP_WAIT ?
--- TODO: connect transceivers
--- TODO:
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -17,11 +14,11 @@ library work;
 use work.types_pkg.all;
 use work.ipbus_pkg.all;
 use work.hardware_pkg.all;
+
 library unisim;
 use unisim.vcomponents.all;
 
-
-entity optohybrid is
+entity optohybrid_fw is
   generic (
 
     -- turn off to disable the MGTs (for simulation and such)
@@ -45,15 +42,6 @@ entity optohybrid is
     CON_VER : std_logic_vector (31 downto 0) := x"00000000";
     CON_SHA : std_logic_vector (31 downto 0) := x"00000000";
 
-    --GLOBAL_FWHASH       : std_logic_vector (31 downto 0) := x"00000000";
-    --TOP_FWHASH          : std_logic_vector (31 downto 0) := x"00000000";
-    --XML_HASH            : std_logic_vector (31 downto 0) := x"00000000";
-    --GLOBAL_FWVERSION    : std_logic_vector (31 downto 0) := x"00000000";
-    --TOP_FWVERSION       : std_logic_vector (31 downto 0) := x"00000000";
-    --XML_VERSION         : std_logic_vector (31 downto 0) := x"00000000";
-    --HOG_FWHASH          : std_logic_vector (31 downto 0) := x"00000000";
-    --FRAMEWORK_FWVERSION : std_logic_vector (31 downto 0) := x"00000000";
-    --FRAMEWORK_FWHASH    : std_logic_vector (31 downto 0) := x"00000000";
     FLAVOUR : integer := 0
     );
   port(
@@ -74,40 +62,46 @@ entity optohybrid is
     gbt_trig_o_p : out std_logic_vector (MXELINKS-1 downto 0);
     gbt_trig_o_n : out std_logic_vector (MXELINKS-1 downto 0);
 
-    -- GBT
-
     -- only 1 connected in GE11, 2 in GE21
     gbt_txready_i : in std_logic_vector (MXREADY-1 downto 0);
     gbt_rxvalid_i : in std_logic_vector (MXREADY-1 downto 0);
     gbt_rxready_i : in std_logic_vector (MXREADY-1 downto 0);
 
-    -- GE11
+    --------------------------------------------------------------------------------
+    -- GE11 Signals
+    --------------------------------------------------------------------------------
     ext_sbits_o : out std_logic_vector (MXEXT-1 downto 0);
     ext_reset_o : out std_logic_vector (MXRESET-1 downto 0);
     adc_vp      : in  std_logic_vector (MXADC-1 downto 0);
     adc_vn      : in  std_logic_vector (MXADC-1 downto 0);
 
-    -- GE21
+    --------------------------------------------------------------------------------
+    -- GE21 Signals
+    --------------------------------------------------------------------------------
+
     --gbt_txvalid_o  : out   std_logic_vector (MXREADY*GE21-1 downto 0);
     master_slave   : in    std_logic_vector (1*GE21-1 downto 0);
     master_slave_p : inout std_logic_vector (5*GE21-1 downto 0);
     master_slave_n : inout std_logic_vector (5*GE21-1 downto 0);
     vtrx_mabs_i    : in    std_logic_vector (1*GE21 downto 0);
 
+    --------------------------------------------------------------------------------
     -- LEDs
-
+    --------------------------------------------------------------------------------
     led_o : out std_logic_vector (MXLED-1 downto 0);
 
-    -- GTX
-
+    --------------------------------------------------------------------------------
+    -- MGTS
+    --------------------------------------------------------------------------------
     mgt_clk_p_i : in std_logic_vector (1 downto 0);
     mgt_clk_n_i : in std_logic_vector (1 downto 0);
 
     mgt_tx_p_o : out std_logic_vector(3 downto 0);
     mgt_tx_n_o : out std_logic_vector(3 downto 0);
 
+    --------------------------------------------------------------------------------
     -- VFAT Trigger Data
-
+    --------------------------------------------------------------------------------
     vfat_sot_p : in std_logic_vector (NUM_VFATS-1 downto 0);
     vfat_sot_n : in std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -115,9 +109,9 @@ entity optohybrid is
     vfat_sbits_n : in std_logic_vector ((NUM_VFATS*8)-1 downto 0)
 
     );
-end optohybrid;
+end optohybrid_fw;
 
-architecture Behavioral of optohybrid is
+architecture Behavioral of optohybrid_fw is
 
   -- Trigger Data Packets
   signal fiber_packets : t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
@@ -268,7 +262,7 @@ begin
   ipb_miso_gbt        <= ipb_miso_masters(0);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
-    generic map (g_ENABLE_TMR => EN_TMR_IPB_SWITCH)
+    generic map (g_ENABLE_TMR => (FLAVOR /= 75) and EN_TMR_IPB_SWITCH)
     port map(
       clock_i => clocks.clk40,
       reset_i => system_reset,

@@ -5,4 +5,4 @@ include:
     - local: '/Top/me0_cvp13/gitlab-ci.yml'
     - local: '/Top/ge21_apex/gitlab-ci.yml'
     - local: '/Top/me0_apex/gitlab-ci.yml'
-    - local: '/Top/oh_ge21/gitlab-ci.yml'
+    - local: '/Top/oh_ge21.75/gitlab-ci.yml'
