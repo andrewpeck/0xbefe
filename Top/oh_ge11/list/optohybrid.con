@@ -1,0 +1,3 @@
+# -*- mode: TCL;-*-
+src/ucf/ge11/clocking.ucf
+src/ucf/ge11/pinout.ucf

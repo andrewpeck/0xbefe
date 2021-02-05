@@ -19,8 +19,8 @@ entity mgt_wrapper is
     (
       NUM_GTS                     : integer := 4;
       WRAPPER_SIM_GTRESET_SPEEDUP : string  := "TRUE";  -- simulation setting for GT SecureIP model
-      WRAPPER_SIMULATION          : integer := 1;       -- Set to 1 for simulation
-      STABLE_CLOCK_PERIOD         : integer := 6        -- 160MHz reference clock
+      WRAPPER_SIMULATION          : integer := 1;  -- Set to 1 for simulation
+      STABLE_CLOCK_PERIOD         : integer := 6   -- 160MHz reference clock
       );
   port
     (
@@ -84,9 +84,9 @@ begin
       STABLE_CLOCK_PERIOD => STABLE_CLOCK_PERIOD  -- Period of the stable clock driving this state-machine, unit is [ns]
       )
     port map (
-      STABLE_CLOCK => txoutclk_buf,               -- IN:  Stable Clock, either a stable clock from the PCB
-      SOFT_RESET   => soft_reset_tx_in,           -- IN:  User Reset, can be pulled any time
-      COMMON_RESET => common_reset                -- OUT: Reset QPLL
+      STABLE_CLOCK => txoutclk_buf,  -- IN:  Stable Clock, either a stable clock from the PCB
+      SOFT_RESET   => soft_reset_tx_in,  -- IN:  User Reset, can be pulled any time
+      COMMON_RESET => common_reset      -- OUT: Reset QPLL
       );
 
   a7gen : if (FPGA_TYPE = "A7") generate
@@ -180,6 +180,92 @@ begin
     signal txphdlyreset        : std_logic_vector(3 downto 0) := (others => '0');
     signal txphinit            : std_logic_vector(3 downto 0);
     signal txphinitdone        : std_logic_vector(3 downto 0);
+
+    component gtp_tx_manual_phase_align is
+      generic (
+        number_of_lanes : integer range 1 to 32;
+        master_lane_id  : integer range 0 to 31);
+      port (
+        stable_clock         : in  std_logic;
+        reset_phalignment    : in  std_logic;
+        run_phalignment      : in  std_logic;
+        phase_alignment_done : out std_logic                                    := '0';
+        txdlysreset          : out std_logic_vector(number_of_lanes-1 downto 0) := (others => '0');
+        txdlysresetdone      : in  std_logic_vector(number_of_lanes-1 downto 0);
+        txphinit             : out std_logic_vector(number_of_lanes-1 downto 0) := (others => '0');
+        txphinitdone         : in  std_logic_vector(number_of_lanes-1 downto 0);
+        txphalign            : out std_logic_vector(number_of_lanes-1 downto 0) := (others => '0');
+        txphaligndone        : in  std_logic_vector(number_of_lanes-1 downto 0);
+        txdlyen              : out std_logic_vector(number_of_lanes-1 downto 0) := (others => '0'));
+    end component gtp_tx_manual_phase_align;
+
+    component gtp_tx_startup_fsm is
+      generic (
+        example_simulation     : integer;
+        stable_clock_period    : integer range 4 to 250;
+        retry_counter_bitwidth : integer range 2 to 8;
+        tx_pll0_used           : boolean;
+        rx_pll0_used           : boolean;
+        phase_alignment_manual : boolean);
+      port (
+        stable_clock      : in  std_logic;
+        txuserclk         : in  std_logic;
+        soft_reset        : in  std_logic;
+        pll0refclklost    : in  std_logic;
+        pll1refclklost    : in  std_logic;
+        pll0lock          : in  std_logic;
+        pll1lock          : in  std_logic;
+        txresetdone       : in  std_logic;
+        mmcm_lock         : in  std_logic;
+        gttxreset         : out std_logic;
+        mmcm_reset        : out std_logic                                            := '1';
+        pll0_reset        : out std_logic                                            := '0';
+        pll1_reset        : out std_logic                                            := '0';
+        tx_fsm_reset_done : out std_logic;
+        txuserrdy         : out std_logic                                            := '0';
+        run_phalignment   : out std_logic                                            := '0';
+        reset_phalignment : out std_logic                                            := '0';
+        phalignment_done  : in  std_logic;
+        retry_counter     : out std_logic_vector (retry_counter_bitwidth-1 downto 0) := (others => '0'));
+    end component gtp_tx_startup_fsm;
+
+    component gtp_common is
+      generic (
+        wrapper_sim_gtreset_speedup : string;
+        sim_pll0refclk_sel          : bit_vector;
+        sim_pll1refclk_sel          : bit_vector);
+      port (
+        drpaddr_common_in  : in  std_logic_vector(7 downto 0);
+        drpclk_common_in   : in  std_logic;
+        drpdi_common_in    : in  std_logic_vector(15 downto 0);
+        drpdo_common_out   : out std_logic_vector(15 downto 0);
+        drpen_common_in    : in  std_logic;
+        drprdy_common_out  : out std_logic;
+        drpwe_common_in    : in  std_logic;
+        pll0outclk_out     : out std_logic;
+        pll0outrefclk_out  : out std_logic;
+        pll0lock_out       : out std_logic;
+        pll0lockdetclk_in  : in  std_logic;
+        pll0refclklost_out : out std_logic;
+        pll0reset_in       : in  std_logic;
+        pll0refclksel_in   : in  std_logic_vector(2 downto 0);
+        pll0pd_in          : in  std_logic;
+        pll1outclk_out     : out std_logic;
+        pll1outrefclk_out  : out std_logic;
+        gtrefclk1_in       : in  std_logic;
+        gtrefclk0_in       : in  std_logic);
+    end component gtp_common;
+
+    component gtp_cpll_railing is
+      generic (
+        use_bufg : integer);
+      port (
+        cpll_reset_out : out std_logic;
+        cpll_pd_out    : out std_logic;
+        refclk_out     : out std_logic;
+        refclk_in      : in  std_logic);
+    end component gtp_cpll_railing;
+
   begin
 
     gtp_gt_gen : for I in 0 to 3 generate
@@ -275,7 +361,7 @@ begin
         IB    => refclk_in_n(0)
         );
 
-    cpll_reset_inst : entity work.gtp_cpll_railing
+    cpll_reset_inst : gtp_cpll_railing
       generic map(USE_BUFG => 0)
       port map (
         cpll_reset_out => cpll_reset,
@@ -284,7 +370,7 @@ begin
         refclk_in      => refclk
         );
 
-    gtp_common_inst : entity work.gtp_common
+    gtp_common_inst : gtp_common
       generic map
       (
         wrapper_sim_gtreset_speedup => WRAPPER_SIM_GTRESET_SPEEDUP,
@@ -326,23 +412,23 @@ begin
     run_tx_phalignment <= and_reduce(run_tx_phalignment_array);
     rst_tx_phalignment <= and_reduce(rst_tx_phalignment_array);
 
-    tx_manual_phase_inst : entity work.gtp_tx_manual_phase_align
+    tx_manual_phase_inst : gtp_tx_manual_phase_align
       generic map (
         number_of_lanes => 4,
         master_lane_id  => 0
         )
       port map (
-        stable_clock         => txoutclk_buf,         -- stable clock, either a stable clock from the pcb
+        stable_clock         => txoutclk_buf,  -- stable clock, either a stable clock from the pcb
         reset_phalignment    => rst_tx_phalignment,   -- in
         run_phalignment      => run_tx_phalignment,   -- in
         txdlysresetdone      => txdlysresetdone,      -- in
-        txphinitdone         => txphinitdone,         -- in
+        txphinitdone         => txphinitdone,  -- in
         txphaligndone        => txphaligndone,        -- in
         phase_alignment_done => tx_phalignment_done,  --out
-        txdlysreset          => txdlysreset,          -- out
-        txphinit             => txphinit,             -- out
-        txphalign            => txphalign,            -- out
-        txdlyen              => txdlyen               -- out
+        txdlysreset          => txdlysreset,   -- out
+        txphinit             => txphinit,      -- out
+        txphalign            => txphalign,     -- out
+        txdlyen              => txdlyen        -- out
         );
 
     pll_lock_out <= pll0_lock;
@@ -350,17 +436,17 @@ begin
 
     startup_fsm_gen : for I in 0 to 3 generate
     begin
-      txresetfsm_i : entity work.gtp_tx_startup_fsm
+      txresetfsm_i : gtp_tx_startup_fsm
 
         generic map (
           EXAMPLE_SIMULATION     => WRAPPER_SIMULATION,
           STABLE_CLOCK_PERIOD    => STABLE_CLOCK_PERIOD,  -- period of the stable clock driving this state-machine, unit is [ns]
           retry_counter_bitwidth => 8,
-          tx_pll0_used           => true,                 -- the tx and rx reset fsms must
-          rx_pll0_used           => false,                -- share these two generic values
-          phase_alignment_manual => true                  -- decision if a manual phase-alignment is necessary or the automatic
-                                                          -- is enough. for single-lane applications the automatic alignment is
-                                                          -- sufficient
+          tx_pll0_used           => true,   -- the tx and rx reset fsms must
+          rx_pll0_used           => false,  -- share these two generic values
+          phase_alignment_manual => true  -- decision if a manual phase-alignment is necessary or the automatic
+                                          -- is enough. for single-lane applications the automatic alignment is
+                                          -- sufficient
           )
         port map (
 
@@ -416,8 +502,8 @@ begin
       signal resetdone, resetdone_r, resetdone_r2 : std_logic;
       signal sync_done                            : std_logic;
 
-      constant GTX_SIM_GTXRESET_SPEEDUP : integer                        := 1;             -- Set to 1 to speed up sim reset
-      constant GTX_TX_CLK_SOURCE        : string                         := "TXPLL";       -- Share RX PLL parameter
+      constant GTX_SIM_GTXRESET_SPEEDUP : integer                        := 1;  -- Set to 1 to speed up sim reset
+      constant GTX_TX_CLK_SOURCE        : string                         := "TXPLL";  -- Share RX PLL parameter
       constant GTX_POWER_SAVE           : bit_vector                     := "0000110000";  -- Save power parameter
       constant GTXTEST_IN               : std_logic_vector (12 downto 0) := (others => '0');
 
@@ -502,19 +588,19 @@ begin
           example_simulation     => wrapper_simulation,
           STABLE_CLOCK_PERIOD    => STABLE_CLOCK_PERIOD,  -- period of the stable clock driving this state-machine, unit is [ns]
           retry_counter_bitwidth => 8,
-          tx_pll0_used           => true,                 -- the tx and rx reset fsms must
-          rx_pll0_used           => false,                -- share these two generic values
-          phase_alignment_manual => true                  -- decision if a manual phase-alignment is necessary or the automatic
-                                                          -- is enough. for single-lane applications the automatic alignment is
-                                                          -- sufficient
+          tx_pll0_used           => true,   -- the tx and rx reset fsms must
+          rx_pll0_used           => false,  -- share these two generic values
+          phase_alignment_manual => true  -- decision if a manual phase-alignment is necessary or the automatic
+                                          -- is enough. for single-lane applications the automatic alignment is
+                                          -- sufficient
           )
         port map (
 
-          stable_clock => txoutclk_buf,      --stable clock, either a stable clock from the pcb or reference-clock present at startup.
-          txuserclk    => txusrclk_in,       --TXUSERCLK as used in the design
+          stable_clock => txoutclk_buf,  --stable clock, either a stable clock from the pcb or reference-clock present at startup.
+          txuserclk    => txusrclk_in,  --TXUSERCLK as used in the design
           soft_reset   => soft_reset_tx_in,  --User Reset, can be pulled any time
 
-          pll0refclklost => '0',          --PLL0 Reference-clock for the GT is lost
+          pll0refclklost => '0',  --PLL0 Reference-clock for the GT is lost
           pll0lock       => pll_lock(i),  --Lock Detect from the PLL0 of the GT
 
           pll0_reset        => pll_txreset(I),                --Reset PLL0
@@ -528,7 +614,7 @@ begin
           reset_phalignment => open,
           phalignment_done  => sync_done,
 
-          pll1refclklost => zero,       --PLL1 Reference-clock for the GT is lost,
+          pll1refclklost => zero,  --PLL1 Reference-clock for the GT is lost,
           pll1lock       => one,        --Lock Detect from the PLL0 of the GT
           pll1_reset     => open,       --Reset PLL0
           retry_counter  => open

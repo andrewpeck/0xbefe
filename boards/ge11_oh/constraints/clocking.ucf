@@ -1,0 +1,121 @@
+#######################################################################################################################
+# Clock Periods
+#######################################################################################################################
+
+# Main E-link clock
+NET "clock_p" TNM_NET = "TN_CLOCK";
+TIMESPEC TS_clock = PERIOD "TN_CLOCK" 3.09 ns HIGH 50 %;
+
+## MGT reference clocks
+#NET "mgt_clk_p_i<0>" TNM_NET = "TN_MGT_CLK_0";
+#TIMESPEC TS_mgt_clk_0 = PERIOD "TN_MGT_CLK_0" 12.36 ns HIGH 50 %;
+
+NET "mgt_clk_p_i<1>" TNM_NET = "TN_MGT_CLK_1";
+TIMESPEC TS_mgt_clk_1 = PERIOD "TN_MGT_CLK_1" 12.36 ns HIGH 50 %;
+
+#######################################################################################################################
+# CFGMCLK
+#######################################################################################################################
+
+NET "control*/led_control_inst/startup_clock_o" TNM_NET = "cfgmclk";
+TIMESPEC TS_cfgmclk = PERIOD "cfgmclk" 12.5 ns HIGH 50 %;
+
+TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO  FFS TIG ;
+
+########################################################################################################################
+# E-link clock
+########################################################################################################################
+
+NET "clock_p" IOSTANDARD = LVDS_25;
+NET "clock_p" DIFF_TERM = "FALSE";
+NET "clock_n" IOSTANDARD = LVDS_25;
+NET "clock_n" DIFF_TERM = "FALSE";
+
+## GBTx data clock
+## It is a 320MHz data clock
+## fdck36_from_gbt_p
+NET "clock_p" LOC = J9; #elink clock
+NET "clock_n" LOC = H9; #elink clock
+
+# ClockDes1
+#NET "clock_p"   LOC = A10; #dskw clock
+#NET "clock_n"   LOC = B10; #dskw clock
+# DSKW clock is not used, jitter is higher and causes communications problems
+
+########################################################################################################################
+# E-link clock
+########################################################################################################################
+
+# create a closed group around the mgts to keep out extra trigger logic
+INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
+AREA_GROUP "MGT_GROUP" RANGE=SLICE_X98Y120:SLICE_X105Y179;
+AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
+AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
+
+
+INST "*/s_resync_1" TNM = "resync_grp";
+TIMESPEC TS_SYNC = FROM  FFS TO "resync_grp" TIG ;
+
+TIMEGRP "led_o"       OFFSET = OUT 12.5 ns VALID 25 ns AFTER "clock_p" RISING;
+TIMEGRP "ext_sbits_o" OFFSET = OUT 12.5 ns VALID 25 ns AFTER "clock_p" RISING;
+
+# S-bit TIG
+NET "vfat_sot_*"   TNM=sbit_i_grp;
+NET "vfat_sbits_*" TNM=sbit_i_grp;
+
+INST "trigger*/sbits/trig_alignment/*oversample*/*ise1*/*" TNM = sbit_serdes_grp;
+
+TIMESPEC TS_SBIT_IOTIG = FROM sbit_i_grp TO sbit_serdes_grp TIG;
+
+
+TIMEGRP "sbit_i_grp" OFFSET = IN 4 ns VALID 3.125 ns BEFORE "clock_p" RISING;
+
+########################################################################################################################
+# GBT Status
+########################################################################################################################
+# v_diff_k_13_p
+# R_side_2_n
+# R_side_2_p
+NET "gbt_txready_i[0]" TNM = "gbt_status_grp";
+NET "gbt_rxvalid_i[0]" TNM = "gbt_status_grp";
+NET "gbt_rxready_i[0]" TNM = "gbt_status_grp";
+
+TIMEGRP "gbt_status_grp" OFFSET = IN 12.5 ns VALID 25 ns BEFORE "clock_p" RISING;
+
+########################################################################################################################
+# E-links
+########################################################################################################################
+
+# inputs
+# 320 MHz e-link
+# GBTx DIN 36
+NET "elink_i_p" IOSTANDARD = LVDS_25;
+NET "elink_i_p" DIFF_TERM = "FALSE";
+
+NET "elink_i_n" IOSTANDARD = LVDS_25;
+NET "elink_i_n" DIFF_TERM = "FALSE";
+
+NET "elink_o_p" LOC = L19;
+NET "elink_o_n" LOC = L18;
+
+NET "elink_i_p" LOC = AD24;
+NET "elink_i_n" LOC = AE24;
+
+
+########################################################################################################################
+# GBT TIG
+########################################################################################################################
+
+# Output
+INST "elink_o_p" TNM = "elink_o_grp";
+INST "elink_o_n" TNM = "elink_o_grp";
+INST "gbt*/gbt_serdes*/to_gbt_ser*/*" TNM = "elink_o_serdes_grp";
+
+TIMESPEC TS_ELINK_O_TIG = FROM "elink_o_serdes_grp" TO "elink_o_grp" TIG ;
+
+# Input
+INST "elink_i_p" TNM = "elink_i_grp";
+INST "elink_i_n" TNM = "elink_i_grp";
+INST "gbt*/gbt_serdes*/*oversample/ise1*/*" TNM = "elink_i_serdes_grp";
+
+TIMESPEC TS_GBT_IOTIG = FROM "elink_i_grp" TO "elink_i_serdes_grp" TIG ;

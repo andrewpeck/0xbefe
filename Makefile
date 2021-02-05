@@ -90,7 +90,14 @@ update_apex: update_ge11_apex update_ge21_apex update_me0_apex
 update_oh_ge21:
 	@mkdir -p address_table/gem/generated/oh_ge21/
 	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge21/optohybrid_registers.xml
+	@python scripts/boards/optohybrid/update_xml.py -s ge21 -x address_table/gem/generated/oh_ge21/optohybrid_registers.xml
 	@cd regtools && python generate_registers.py -p generated/oh_ge21/ oh
+
+update_oh_ge11:
+	@mkdir -p address_table/gem/generated/oh_ge11/
+	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge11/optohybrid_registers.xml
+	@python scripts/boards/optohybrid/update_xml.py -s ge11 -l long -x address_table/gem/generated/oh_ge11/optohybrid_registers.xml
+	@cd regtools && python generate_registers.py -p generated/oh_ge11/ oh
 
 #### shortcuts ####
 update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
@@ -98,7 +105,7 @@ update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex
 update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex
 
 update: update_ge11 update_ge21 update_me0
-	
+
 ################################################################################
 # Create
 ################################################################################
