@@ -11,25 +11,29 @@ class Colors:
 def check_bit(byteval,idx):
     return ((byteval&(1<<idx))!=0);
 
-def heading(string):
-    print Colors.BLUE
-    print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC
+def printColor(msg, color):
+    print color, msg, Colors.ENDC
 
-def subheading(string):
-    print Colors.YELLOW + '---- '+str(string)+' ----' + Colors.ENDC
+def heading(msg):
+    printColor('\n>>>>>>> ' + str(msg).upper() + ' <<<<<<<', Colors.BLUE)
 
-def printCyan(string):
-    print Colors.CYAN + string + Colors.ENDC
+def subheading(msg):
+    printColor('---- ' + str(msg) + ' ----', Colors.YELLOW)
 
-def printRed(string):
-    print Colors.RED + string + Colors.ENDC
+def printCyan(msg):
+    printColor(msg, Colors.CYAN)
 
-def printGreenRed(string, controlValue, expectedValue):
+def printRed(msg):
+    printColor(msg, Colors.RED)
+
+def printGreen(msg):
+    printColor(msg, Colors.GREEN)
+
+def printGreenRed(msg, controlValue, expectedValue):
     col = Colors.GREEN
     if controlValue != expectedValue:
         col = Colors.RED
-    print col + string + Colors.ENDC
+    printColor(msg, col)
 
 def hex(number):
     if number is None:

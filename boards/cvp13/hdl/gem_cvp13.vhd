@@ -293,9 +293,9 @@ begin
     --================================--
 
     g_promless : if CFG_GEM_STATION /= 0 generate
-        i_gemloader : entity work.promless
+        i_promless : entity work.promless
             generic map(
-                g_MAX_SIZE_BYTES   => 9_600_000,
+                g_MAX_SIZE_BYTES   => 8_388_608, --9_437_184, -- 9_600_000,
                 g_MEMORY_PRIMITIVE => "ultra"
             )
             port map(
