@@ -133,8 +133,13 @@ begin
     -- create a 10 MHz strobe
     process (ttc_clk_40_i) begin
     if (rising_edge(ttc_clk_40_i)) then
+        if (reset = '1') then
+            strobe_sr <= "0001";
+            strobe <= '0';
+        else
             strobe_sr <= strobe_sr(strobe_sr'length-2 downto 0) & strobe_sr(strobe_sr'length-1);
             strobe <= strobe_sr(0);
+        end if;
     end if;
     end process;
 
