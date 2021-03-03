@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from rw_reg import *
-from mcs import *
 from time import *
 import array
 import struct
