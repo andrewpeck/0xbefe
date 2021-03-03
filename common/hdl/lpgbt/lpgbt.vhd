@@ -77,23 +77,6 @@ end lpgbt;
 
 architecture lpgbt_arch of lpgbt is
     
-    component sync_fifo_gbt_mgt_33
-        port (
-            rst       : in  std_logic;
-            wr_clk    : in  std_logic;
-            rd_clk    : in  std_logic;
-            din       : in  std_logic_vector(32 downto 0);
-            wr_en     : in  std_logic;
-            rd_en     : in  std_logic;
-            dout      : out std_logic_vector(32 downto 0);
-            full      : out std_logic;
-            overflow  : out std_logic;
-            empty     : out std_logic;
-            valid     : out std_logic;
-            underflow : out std_logic
-        );
-    end component;    
-    
     --------- TX datapath ---------
     signal tx_dp_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal tx_dp_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
@@ -228,22 +211,24 @@ begin
             rx_sync_reset(i) <= reset_i or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_cpll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
             rx_mgt_clk_sync(i) <= rx_word_common_clk_i;
         
-            i_rx_sync_fifo : component sync_fifo_gbt_mgt_33
+            i_rx_sync_fifo : entity work.gearbox
+                generic map(
+                    g_IMPL_TYPE         => "FIFO",
+                    g_INPUT_DATA_WIDTH  => 33,
+                    g_OUTPUT_DATA_WIDTH => 33
+                )
                 port map(
-                    rst       => rx_sync_reset(i),
-                    wr_clk    => rx_word_clk_arr_i(i),
-                    rd_clk    => rx_word_common_clk_i,
-                    din       => rx_header_flag(i) & rx_mgt_data(i),
-                    wr_en     => '1',
-                    rd_en     => '1',
-                    dout      => rx_mgt_data_sync(i),
-                    full      => open,
-                    overflow  => rx_sync_ovf(i),
-                    empty     => open,
-                    valid     => rx_sync_valid(i),
-                    underflow => rx_sync_unf(i)
+                    reset_i     => rx_sync_reset(i),
+                    wr_clk_i    => rx_word_clk_arr_i(i),
+                    rd_clk_i    => rx_word_common_clk_i,
+                    din_i       => rx_header_flag(i) & rx_mgt_data(i),
+                    valid_i     => '1',
+                    dout_o      => rx_mgt_data_sync(i),
+                    valid_o     => rx_sync_valid(i),
+                    overflow_o  => rx_sync_ovf(i),
+                    underflow_o => rx_sync_unf(i)
                 );
-                
+            
             i_gbt_rx_sync_ovf_latch : entity work.latch
                 port map(
                     reset_i => reset_i or cnt_reset_i,

@@ -111,12 +111,6 @@
           description="Count of underflow occurances in the sync FIFO for link 1"
           fw_signal="link_underflow_cnt(${OH_IDX})(31 downto 16)"
           sw_monitor_error_min_threshold="1"/>
-    <node id="LINK0_SYNC_WORD_CNT" address="0xa5" mask="0x0000ffff" permission="r"
-          description="Count of sync words seen on link 0"
-          fw_signal="sync_word_cnt(${OH_IDX})(15 downto 0)"/>
-    <node id="LINK1_SYNC_WORD_CNT" address="0xa5" mask="0xffff0000" permission="r"
-          description="Count of sync words seen on link 1"
-          fw_signal="sync_word_cnt(${OH_IDX})(31 downto 16)"/>
   </node>
 
 </node>

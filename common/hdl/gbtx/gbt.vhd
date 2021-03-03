@@ -91,25 +91,6 @@ architecture gbt_arch of gbt is
 
     type t_int_array is array (integer range <>) of integer;
     constant RX_ENCODING_EVEN_ODD   : t_int_array(0 to 1) := (RX_ENCODING_EVEN, RX_ENCODING_ODD);
-
-    --================================ Component Declarations ================================--
-    
-    component sync_fifo_gth_40
-        port (
-            rst       : IN  STD_LOGIC;
-            wr_clk    : IN  STD_LOGIC;
-            rd_clk    : IN  STD_LOGIC;
-            din       : IN  STD_LOGIC_VECTOR(39 DOWNTO 0);
-            wr_en     : IN  STD_LOGIC;
-            rd_en     : IN  STD_LOGIC;
-            dout      : OUT STD_LOGIC_VECTOR(39 DOWNTO 0);
-            full      : OUT STD_LOGIC;
-            overflow  : OUT STD_LOGIC;
-            empty     : OUT STD_LOGIC;
-            valid     : OUT STD_LOGIC;
-            underflow : OUT STD_LOGIC
-        );
-    end component;
     
     --================================ Signal Declarations ================================--
 
@@ -184,22 +165,24 @@ begin                                   --========####   Architecture Body   ###
     
     g_rx_sync_fifos : for i in 0 to NUM_LINKS - 1 generate
         
-        i_rx_sync_fifo : component sync_fifo_gth_40
+        i_rx_sync_fifo : entity work.gearbox
+            generic map(
+                g_IMPL_TYPE         => "FIFO",
+                g_INPUT_DATA_WIDTH  => 40,
+                g_OUTPUT_DATA_WIDTH => 40
+            )
             port map(
-                rst       => reset_i or not mgt_status_arr_i(i).rx_reset_done,
-                wr_clk    => rx_word_clk_arr_i(i),
-                rd_clk    => rx_common_word_clk,
-                din       => rx_word_data_arr(i),
-                wr_en     => '1',
-                rd_en     => '1',
-                dout      => mgt_sync_rx_data_arr(i),
-                full      => open,
-                overflow  => rx_ovf_arr(i),
-                empty     => open,
-                valid     => mgt_sync_rx_valid_arr(i),
-                underflow => rx_unf_arr(i)
+                reset_i     => reset_i or not mgt_status_arr_i(i).rx_reset_done,
+                wr_clk_i    => rx_word_clk_arr_i(i),
+                rd_clk_i    => rx_common_word_clk,
+                din_i       => rx_word_data_arr(i),
+                valid_i     => '1',
+                dout_o      => mgt_sync_rx_data_arr(i),
+                valid_o     => mgt_sync_rx_valid_arr(i),
+                overflow_o  => rx_ovf_arr(i),
+                underflow_o => rx_unf_arr(i)
             );
-            
+        
         rx_word_data_arr(i) <= mgt_rx_data_arr_i(i);
         
         i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_common_word_clk, sync_o  => rx_ovf_sync_arr(i));

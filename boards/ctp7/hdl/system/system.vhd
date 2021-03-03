@@ -421,7 +421,7 @@ begin
       gem_loader_first  => from_gem_loader_o.first,
       gem_loader_last   => from_gem_loader_o.last,
       gem_loader_error  => from_gem_loader_o.error,
-      gem_loader_size   => from_gem_loader_o.size
+      gem_loader_size   => open
       
     );
 

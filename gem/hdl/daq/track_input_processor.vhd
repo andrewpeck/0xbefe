@@ -15,9 +15,13 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ipbus.all;
+use work.gem_board_config_package.all;
 
 entity track_input_processor is
 port(
@@ -34,13 +38,13 @@ port(
     infifo_empty_o              : out std_logic;
     infifo_valid_o              : out std_logic;
     infifo_underflow_o          : out std_logic;
-    infifo_data_cnt_o           : out std_logic_vector(11 downto 0);
+    infifo_data_cnt_o           : out std_logic_vector(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0);
     evtfifo_dout_o              : out std_logic_vector(59 downto 0);
     evtfifo_rd_en_i             : in std_logic;
     evtfifo_empty_o             : out std_logic;
     evtfifo_valid_o             : out std_logic;
     evtfifo_underflow_o         : out std_logic;
-    evtfifo_data_cnt_o          : out std_logic_vector(11 downto 0);
+    evtfifo_data_cnt_o          : out std_logic_vector(CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH - 1 downto 0);
 
     -- VFAT data links
     data_clk_i                  : in std_logic;
@@ -56,47 +60,6 @@ end track_input_processor;
 
 architecture Behavioral of track_input_processor is
 
-    --================== COMPONENTS ==================--
-
-    component daq_input_fifo is
-        port(
-            rst           : in  std_logic;
-            wr_clk        : in  std_logic;
-            rd_clk        : in  std_logic;
-            din           : in  std_logic_vector(191 downto 0);
-            wr_en         : in  std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(191 downto 0);
-            full          : out std_logic;
-            almost_full   : out std_logic;
-            empty         : out std_logic;
-            almost_empty  : out std_logic;
-            valid         : out std_logic;
-            underflow     : out std_logic;
-            prog_full     : out std_logic;
-            rd_data_count : out std_logic_vector(11 downto 0)
-        );
-    end component daq_input_fifo;
-    
-    component daq_event_fifo is
-        port(
-            rst           : in  std_logic;
-            wr_clk        : in  std_logic;
-            rd_clk        : in  std_logic;
-            din           : in  std_logic_vector(59 downto 0);
-            wr_en         : in  std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(59 downto 0);
-            full          : out std_logic;
-            almost_full   : out std_logic;
-            empty         : out std_logic;
-            valid         : out std_logic;
-            underflow     : out std_logic;
-            prog_full     : out std_logic;
-            rd_data_count : out std_logic_vector(11 downto 0)
-        );
-    end component daq_event_fifo;
-        
     --================== SIGNALS ==================--
 
     -- Constants (TODO: should be moved to package)
@@ -141,6 +104,9 @@ architecture Behavioral of track_input_processor is
     signal infifo_din               : std_logic_vector(191 downto 0) := (others => '0');
     signal infifo_wr_en             : std_logic := '0';
     signal infifo_full              : std_logic := '0';
+    signal infifo_prog_full         : std_logic := '0';
+    signal infifo_prog_empty        : std_logic := '0';
+    signal infifo_prog_empty_wrclk  : std_logic := '0';
     signal infifo_almost_full       : std_logic := '0';
     signal infifo_empty             : std_logic := '0';
     signal infifo_underflow         : std_logic := '0';
@@ -149,6 +115,9 @@ architecture Behavioral of track_input_processor is
     signal evtfifo_din              : std_logic_vector(59 downto 0) := (others => '0');
     signal evtfifo_wr_en            : std_logic := '0';
     signal evtfifo_full             : std_logic := '0';
+    signal evtfifo_prog_full        : std_logic := '0';
+    signal evtfifo_prog_empty       : std_logic := '0';
+    signal evtfifo_prog_empty_wrclk : std_logic := '0';
     signal evtfifo_almost_full      : std_logic := '0';
     signal evtfifo_empty            : std_logic := '0';
     signal evtfifo_underflow        : std_logic := '0';
@@ -305,46 +274,119 @@ begin
         );
   
     -- Input FIFO
-    i_input_fifo : component daq_input_fifo
-    port map(
-        rst           => reset_i,
-        wr_clk        => data_processor_clk_i,
-        rd_clk        => fifo_rd_clk_i,
-        din           => infifo_din,
-        wr_en         => infifo_wr_en,
-        rd_en         => infifo_rd_en_i,
-        dout          => infifo_dout_o,
-        full          => infifo_full,
-        almost_full   => infifo_almost_full,
-        empty         => infifo_empty,
-        almost_empty  => open,
-        valid         => infifo_valid_o,
-        underflow     => infifo_underflow,
-        prog_full     => err_infifo_near_full,
-        rd_data_count => infifo_data_cnt_o
-    );
-
+    i_input_fifo : xpm_fifo_async
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_INFIFO_DEPTH,
+            RELATED_CLOCKS      => 0,
+            WRITE_DATA_WIDTH    => 192,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "1F0A", -- VALID(12) = 1 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 0
+            READ_DATA_WIDTH     => 192,
+            CDC_SYNC_STAGES     => 2,
+            PROG_FULL_THRESH    => CFG_DAQ_INFIFO_PROG_FULL_SET,
+            RD_DATA_COUNT_WIDTH => CFG_DAQ_INFIFO_DATA_CNT_WIDTH,
+            PROG_EMPTY_THRESH   => CFG_DAQ_INFIFO_PROG_FULL_RESET,
+            DOUT_RESET_VALUE    => "BAAD",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_i,
+            wr_clk        => data_processor_clk_i,
+            wr_en         => infifo_wr_en,
+            din           => infifo_din,
+            full          => infifo_full,
+            prog_full     => infifo_prog_full,
+            wr_data_count => open,
+            overflow      => open,
+            wr_rst_busy   => open,
+            almost_full   => infifo_almost_full,
+            wr_ack        => open,
+            rd_clk        => fifo_rd_clk_i,
+            rd_en         => infifo_rd_en_i,
+            dout          => infifo_dout_o,
+            empty         => infifo_empty,
+            prog_empty    => infifo_prog_empty,
+            rd_data_count => infifo_data_cnt_o,
+            underflow     => infifo_underflow,
+            rd_rst_busy   => open,
+            almost_empty  => open,
+            data_valid    => infifo_valid_o,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );
+        
+    i_sync_infifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => infifo_prog_empty, clk_i => data_processor_clk_i, sync_o => infifo_prog_empty_wrclk);
+    i_latch_infifo_near_full : entity work.latch port map(
+            reset_i => infifo_prog_empty_wrclk,
+            clk_i   => data_processor_clk_i,
+            input_i => infifo_prog_full,
+            latch_o => err_infifo_near_full
+        );
+    
     infifo_empty_o <= infifo_empty;
     infifo_underflow_o <= infifo_underflow;
 
     -- Event FIFO
-    i_event_fifo : component daq_event_fifo
-    port map(
-        rst           => reset_i,
-        wr_clk        => data_processor_clk_i,
-        rd_clk        => fifo_rd_clk_i,
-        din           => evtfifo_din,
-        wr_en         => evtfifo_wr_en,
-        rd_en         => evtfifo_rd_en_i,
-        dout          => evtfifo_dout_o,
-        full          => evtfifo_full,
-        almost_full   => evtfifo_almost_full,
-        empty         => evtfifo_empty,
-        valid         => evtfifo_valid_o,
-        underflow     => evtfifo_underflow,
-        prog_full     => err_evtfifo_near_full,
-        rd_data_count => evtfifo_data_cnt_o
-    );
+    i_event_fifo : xpm_fifo_async
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_EVTFIFO_DEPTH,
+            RELATED_CLOCKS      => 0,
+            WRITE_DATA_WIDTH    => 60,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "170A", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 0
+            READ_DATA_WIDTH     => 60,
+            CDC_SYNC_STAGES     => 2,
+            PROG_FULL_THRESH    => CFG_DAQ_EVTFIFO_PROG_FULL_SET,
+            RD_DATA_COUNT_WIDTH => CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH,
+            PROG_EMPTY_THRESH   => CFG_DAQ_EVTFIFO_PROG_FULL_RESET,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_i,
+            wr_clk        => data_processor_clk_i,
+            wr_en         => evtfifo_wr_en,
+            din           => evtfifo_din,
+            full          => evtfifo_full,
+            prog_full     => evtfifo_prog_full,
+            wr_data_count => open,
+            overflow      => open,
+            wr_rst_busy   => open,
+            almost_full   => evtfifo_almost_full,
+            wr_ack        => open,
+            rd_clk        => fifo_rd_clk_i,
+            rd_en         => evtfifo_rd_en_i,
+            dout          => evtfifo_dout_o,
+            empty         => evtfifo_empty,
+            prog_empty    => evtfifo_prog_empty,
+            rd_data_count => evtfifo_data_cnt_o,
+            underflow     => evtfifo_underflow,
+            rd_rst_busy   => open,
+            almost_empty  => open,
+            data_valid    => evtfifo_valid_o,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );
+
+    i_sync_evtfifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => evtfifo_prog_empty, clk_i => data_processor_clk_i, sync_o => evtfifo_prog_empty_wrclk);
+    i_latch_evtfifo_near_full : entity work.latch port map(
+            reset_i => evtfifo_prog_empty_wrclk,
+            clk_i   => data_processor_clk_i,
+            input_i => evtfifo_prog_full,
+            latch_o => err_evtfifo_near_full
+        );
 
     evtfifo_empty_o <= evtfifo_empty;
     evtfifo_underflow_o <= evtfifo_underflow;

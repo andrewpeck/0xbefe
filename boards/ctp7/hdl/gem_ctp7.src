@@ -4,6 +4,7 @@ boards/ctp7/hdl/gem_ctp7.vhd
 boards/ctp7/hdl/misc/ttc_clocks.vhd
 
 boards/ctp7/hdl/pkg/gem_board_config_pkg.vhd
+boards/ctp7/hdl/pkg/ipb_sys_addr_decode.vhd
 
 boards/ctp7/hdl/system/system.vhd
 boards/ctp7/hdl/system/gth_wrapper.vhd

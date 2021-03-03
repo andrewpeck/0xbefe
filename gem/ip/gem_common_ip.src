@@ -1,11 +1,6 @@
 # -*- mode: TCL;-*-
 
 gem/ip/bram_vfat3_sc_adc/bram_vfat3_sc_adc.xci
-gem/ip/daq_event_fifo/daq_event_fifo.xci
-gem/ip/daq_input_fifo/daq_input_fifo.xci
-gem/ip/daq_l1a_fifo/daq_l1a_fifo.xci
-gem/ip/daq_output_fifo/daq_output_fifo.xci
-gem/ip/fifo_gemloader_gbt/fifo_gemloader_gbt.xci
 gem/ip/gt_rx_link_ila/gt_rx_link_ila.xci
 gem/ip/gt_tx_link_ila/gt_tx_link_ila.xci
 gem/ip/ila_axi_ipbus_bridge/ila_axi_ipbus_bridge.xci
@@ -16,18 +11,9 @@ gem/ip/ila_gem_loader/ila_gem_loader.xci
 gem/ip/ila_lpgbt/ila_lpgbt.xci
 gem/ip/ila_trig_rx_link/ila_trig_rx_link.xci
 gem/ip/ila_vfat3/ila_vfat3.xci
-gem/ip/sbit_cluster_fifo/sbit_cluster_fifo.xci
-gem/ip/sca_des_fifo/sca_des_fifo.xci
-gem/ip/sca_ser_fifo/sca_ser_fifo.xci
-gem/ip/sync_fifo_8b10b_16/sync_fifo_8b10b_16.xci
-gem/ip/sync_fifo_gbt_mgt_33/sync_fifo_gbt_mgt_33.xci
-gem/ip/sync_fifo_gth_32/sync_fifo_gth_32.xci
-gem/ip/sync_fifo_gth_40/sync_fifo_gth_40.xci
-gem/ip/vfat3_sc_tx_fifo/vfat3_sc_tx_fifo.xci
 gem/ip/vio_debug_link_selector/vio_debug_link_selector.xci
 gem/ip/vio_gem_loader/vio_gem_loader.xci
 gem/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
 gem/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 gem/ip/ila_trigger/ila_trigger.xci
-gem/ip/daq_spy_fifo/daq_spy_fifo.xci
 gem/ip/ila_clk_phase_check/ila_clk_phase_check.xci

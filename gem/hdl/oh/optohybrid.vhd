@@ -103,23 +103,6 @@ architecture optohybrid_arch of optohybrid is
             probe15 : in std_logic_vector(7 DOWNTO 0)
         );
     end component;
-    
-    component sync_fifo_8b10b_16
-        port(
-            rst       : IN  std_logic;
-            wr_clk    : IN  std_logic;
-            rd_clk    : IN  std_logic;
-            din       : IN  std_logic_vector(23 DOWNTO 0);
-            wr_en     : IN  std_logic;
-            rd_en     : IN  std_logic;
-            dout      : OUT std_logic_vector(23 DOWNTO 0);
-            full      : OUT std_logic;
-            overflow  : OUT std_logic;
-            empty     : OUT std_logic;
-            valid     : OUT std_logic;
-            underflow : OUT std_logic
-        );
-    end component;
         
     --== VFAT3 signals ==--
     signal vfat3_rx_ready           : std_logic_vector(23 downto 0);
@@ -289,20 +272,22 @@ begin
         gen_trig_links: for i in 0 to 1 generate
     
             -- Sync FIFO
-            i_sync_rx_trig : component sync_fifo_8b10b_16
+            i_sync_rx_trig : entity work.gearbox
+                generic map(
+                    g_IMPL_TYPE         => "FIFO",
+                    g_INPUT_DATA_WIDTH  => 24,
+                    g_OUTPUT_DATA_WIDTH => 24
+                )
                 port map(
-                    rst       => reset_i,
-                    wr_clk    => gth_rx_trig_usrclk_i(i),
-                    rd_clk    => ttc_clk_i.clk_160,
-                    din       => sync_trig_rx_din_arr(i),
-                    wr_en     => '1',
-                    rd_en     => '1',
-                    dout      => sync_trig_rx_dout_arr(i),
-                    full      => open,
-                    overflow  => sync_trig_rx_ovf_arr(i),
-                    empty     => open,
-                    valid     => open,
-                    underflow => sync_trig_rx_unf_arr(i)
+                    reset_i     => reset_i,
+                    wr_clk_i    => gth_rx_trig_usrclk_i(i),
+                    rd_clk_i    => ttc_clk_i.clk_160,
+                    din_i       => sync_trig_rx_din_arr(i),
+                    valid_i     => '1',
+                    dout_o      => sync_trig_rx_dout_arr(i),
+                    valid_o     => open,
+                    overflow_o  => sync_trig_rx_ovf_arr(i),
+                    underflow_o => sync_trig_rx_unf_arr(i)
                 );
                 
             sync_trig_rx_din_arr(i) <= gth_rx_trig_data_i(i).rxdisperr(1 downto 0) & 
@@ -317,30 +302,33 @@ begin
             sync_trig_rx_gth_data_arr(i).rxnotintable(1 downto 0) <= sync_trig_rx_dout_arr(i)(21 downto 20);
             sync_trig_rx_gth_data_arr(i).rxdisperr(1 downto 0) <= sync_trig_rx_dout_arr(i)(23 downto 22);
             
-            -- TODO: report rxnotintable and also the overflow/underflow of this fifo
+            i_sync_link_ovf : entity work.synch generic map(N_STAGES => 3) port map(async_i => sync_trig_rx_ovf_arr(i), clk_i => ttc_clk_i.clk_160, sync_o => sbit_links_status_o(i).overflow);
+            sbit_links_status_o(i).underflow <= sync_trig_rx_unf_arr(i);
+            
+            -- TODO: report rxnotintable
             
             i_link_rx_trigger : entity work.link_rx_trigger
                 generic map (
                     g_DEBUG => false
                 )
                 port map(
-                    ttc_clk_i           => ttc_clk_i.clk_40,
                     reset_i             => reset_i,
-                    gt_rx_trig_usrclk_i => ttc_clk_i.clk_160,
-                    rx_kchar_i          => sync_trig_rx_gth_data_arr(i).rxcharisk(1 downto 0),
-                    rx_data_i           => sync_trig_rx_gth_data_arr(i).rxdata(15 downto 0),
+                    ttc_clk_40_i        => ttc_clk_i.clk_40,
+                    ttc_clk_160_i       => ttc_clk_i.clk_160,
+                    rx_data_i           => sync_trig_rx_gth_data_arr(i),
                     sbit_cluster0_o     => sbit_clusters_o(i * 4 + 0),
                     sbit_cluster1_o     => sbit_clusters_o(i * 4 + 1),
                     sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
                     sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
-                    link_status_o       => sbit_links_status_o(i)
+                    sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
+                    missed_comma_err_o  => sbit_links_status_o(i).missed_comma
                 );        
         
         end generate;
     end generate;
         
     g_no_trig_links : if g_GEM_STATION = 0 generate
-        sbit_links_status_o <= (others => (sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '0', sync_word => '0'));
+        sbit_links_status_o <= (others => (sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '0'));
         sbit_clusters_o <= (others => (address => "111" & x"FA", size => "000"));
     end generate;
             

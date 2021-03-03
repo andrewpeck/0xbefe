@@ -11,3 +11,9 @@ common/hdl/gbtx/core_sources/xilinx_k7v7/gbt_tx/xlx_k7v7_gbt_tx_gearbox_std_dpra
 
 # TTC
 common/hdl/ttc/ttc_clocks_ultrascale.vhd
+
+# MGT
+common/hdl/mgt/mgt_links_gty.vhd
+common/hdl/mgt/gty_channel_lpgbt.vhd
+common/hdl/mgt/gty_channel_reset.vhd
+common/hdl/mgt/gty_channel_gbtx.vhd

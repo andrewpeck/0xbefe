@@ -10,7 +10,7 @@ set PYTHONPATH $::env(PYTHONPATH)
 set PYTHONHOME $::env(PYTHONHOME)
 unset env(PYTHONPATH)
 unset env(PYTHONHOME)
-puts [exec bash -c {cd ../.. && make update_ge21_ctp7}]
+puts [exec bash -c {cd ../.. && make update_ge11_ctp7}]
 set env(PYTHONPATH) $PYTHONPATH
 set env(PYTHONHOME) $PYTHONHOME
 

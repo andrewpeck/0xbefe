@@ -63,21 +63,6 @@ architecture Behavioral of promless_fpga_loader is
             probe_out0 : OUT STD_LOGIC
         );
     END COMPONENT;
-    
-    COMPONENT fifo_gemloader_gbt
-        PORT(
-            rst    : IN  STD_LOGIC;
-            wr_clk : IN  STD_LOGIC;
-            rd_clk : IN  STD_LOGIC;
-            din    : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-            wr_en  : IN  STD_LOGIC;
-            rd_en  : IN  STD_LOGIC;
-            dout   : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            full   : OUT STD_LOGIC;
-            empty  : OUT STD_LOGIC;
-            valid  : OUT STD_LOGIC
-        );
-    END COMPONENT;
 
     ------------- signals -------------
 
@@ -104,10 +89,7 @@ architecture Behavioral of promless_fpga_loader is
     signal hard_reset_prev  : std_logic := '0';
     
     signal loader_data      : std_logic_vector(15 downto 0);
-    signal loader_empty     : std_logic;
     signal loader_valid     : std_logic;
-    signal loader_rden      : std_logic;
-    signal fifo_reset       : std_logic;
     signal loader_err_os    : std_logic;
 
     signal load_req_cnt     : unsigned(15 downto 0) := (others => '0');
@@ -132,9 +114,7 @@ begin
                 wait_init_timer <= (others => '0');
                 fail_cnt <= (others => '0');
                 success_cnt <= (others => '0');
-                loader_rden <= '0';
                 loading_started <= '0';
-                fifo_reset <= '1';
                 load_req_cnt <= (others => '0');
                 gap_det_cnt <= (others => '0');
                 firmware_size <= unsigned(gem_loader_cfg_i.firmware_size);
@@ -144,10 +124,8 @@ begin
                     when IDLE =>
                         elink_data_o <= (others => '1');
                         loader_en <= '0';
-                        loader_rden <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
-                        fifo_reset <= '1';
                         byte_cnt <= (others => '0');
                         wait_data_timer <= (others => '0');
                         wait_init_timer <= (others => '0');
@@ -165,10 +143,8 @@ begin
                     when RESET_OH =>
                         elink_data_o <= (others => '1');
                         loader_en <= '0';
-                        loader_rden <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
-                        fifo_reset <= '0';
                         byte_cnt <= (others => '0');
                         wait_data_timer <= (others => '0');
                         wait_init_timer <= (others => '0');
@@ -180,10 +156,8 @@ begin
                     when WAIT_FOR_INIT =>
                         elink_data_o <= (others => '1');
                         byte_cnt <= (others => '0');
-                        loader_rden <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
-                        fifo_reset <= '0';
                         wait_data_timer <= (others => '0');
                         wait_init_timer <= wait_init_timer + 1;
                         
@@ -198,10 +172,6 @@ begin
                         
                     -- send the bitstream once the data becomes available from DDR3
                     when PROGRAM =>
-                        if (loader_empty = '0') then
-                            loader_rden <= '1';
-                        end if;
-                    
                         if (loader_valid = '0') then
                             wait_data_timer <= wait_data_timer + 1;
                             elink_data_o <= (others => '1');
@@ -232,15 +202,12 @@ begin
                         
                         loader_en <= '0';
                         wait_init_timer <= (others => '0');
-                        fifo_reset <= '0';
                         
                     when others =>
                         state <= IDLE;
                         loader_en <= '0';
-                        loader_rden <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
-                        fifo_reset <= '0';                        
                         elink_data_o <= (others => '1');
                         byte_cnt <= (others => '0');
                         wait_data_timer <= (others => '0');
@@ -254,24 +221,27 @@ begin
     to_gem_loader_o.clk <= loader_clk_i;
 
     g_loader_fifo_80mhz: if g_LOADER_CLK_80_MHZ generate    
-        i_fifo_gemloader : fifo_gemloader_gbt
+
+        i_gearbox : entity work.gearbox
+            generic map(
+                g_IMPL_TYPE         => "FIFO",
+                g_INPUT_DATA_WIDTH  => 8,
+                g_OUTPUT_DATA_WIDTH => 16
+            )
             port map(
-                rst    => fifo_reset,
-                wr_clk => loader_clk_i,
-                rd_clk => gbt_clk_i,
-                din    => from_gem_loader_i.data,
-                wr_en  => from_gem_loader_i.valid,
-                rd_en  => loader_rden,
-                dout   => loader_data,
-                full   => open,
-                empty  => loader_empty,
-                valid  => loader_valid
+                reset_i  => reset_i,
+                wr_clk_i => loader_clk_i,
+                rd_clk_i => gbt_clk_i,
+                din_i    => from_gem_loader_i.data,
+                valid_i  => from_gem_loader_i.valid,
+                dout_o   => loader_data,
+                valid_o  => loader_valid
             );
+
     end generate;
     
     g_loader_fifo_40mhz: if not g_LOADER_CLK_80_MHZ generate    
         loader_data <= from_gem_loader_i.data & from_gem_loader_i.data;
-        loader_empty <= '0';
         loader_valid <= from_gem_loader_i.valid;
     end generate;
 

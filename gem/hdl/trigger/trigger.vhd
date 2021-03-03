@@ -83,7 +83,6 @@ architecture trigger_arch of trigger is
     signal missed_comma_cnt     : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_overflow_cnt    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_underflow_cnt   : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
-    signal sync_word_cnt        : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal trigger_rate         : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal trigger_cnt          : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal cluster_cnt_rate     : t_std32_array((g_NUM_OF_OHs * 9) - 1 downto 0);
@@ -174,7 +173,6 @@ begin
                 missed_comma_cnt_o   => missed_comma_cnt(i),
                 link_overflow_cnt_o  => link_overflow_cnt(i),
                 link_underflow_cnt_o => link_underflow_cnt(i),
-                sync_word_cnt_o      => sync_word_cnt(i),
                 cluster_cnt_rate_o   => cluster_cnt_rate(((i + 1) * 9) - 1 downto i * 9),
                 trigger_rate_o       => trigger_rate(i),
                 cluster_cnt_o        => cluster_cnt(((i + 1) * 9) - 1 downto i * 9),

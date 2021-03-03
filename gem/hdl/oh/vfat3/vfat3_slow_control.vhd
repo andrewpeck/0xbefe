@@ -12,6 +12,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 use ieee.std_logic_misc.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.ttc_pkg.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
@@ -53,19 +56,6 @@ entity vfat3_slow_control is
 end vfat3_slow_control;
 
 architecture vfat3_slow_control_arch of vfat3_slow_control is
-
-    component vfat3_sc_tx_fifo
-        port(
-            clk   : in  std_logic;
-            srst  : in  std_logic;
-            din   : in  std_logic;
-            wr_en : in  std_logic;
-            rd_en : in  std_logic;
-            dout  : out std_logic;
-            full  : out std_logic;
-            empty : out std_logic
-        );
-    end component;
 
     component bram_vfat3_sc_adc
         port(
@@ -432,16 +422,30 @@ begin
             raw_last_packet_o => tx_raw_last_packet
         );
 
-    i_vfat3_sc_tx_fifo : vfat3_sc_tx_fifo
+    i_vfat3_sc_tx_fifo : xpm_fifo_sync
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => 256,
+            WRITE_DATA_WIDTH    => 1,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "0000", -- VALID(12) = 0 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 0
+            READ_DATA_WIDTH     => 1,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
         port map(
-            clk   => ttc_clk_i.clk_40,
-            srst  => reset_i or tx_reset,
-            din   => tx_din,
-            wr_en => tx_en,
-            rd_en => tx_rd_en_i,
-            dout  => tx_data_o,
-            full  => open,
-            empty => tx_empty_o
+            sleep         => '0',
+            rst           => reset_i or tx_reset,
+            wr_clk        => ttc_clk_i.clk_40,
+            wr_en         => tx_en,
+            din(0)        => tx_din,
+            rd_en         => tx_rd_en_i,
+            dout(0)       => tx_data_o,
+            empty         => tx_empty_o,
+            injectsbiterr => '0',
+            injectdbiterr => '0'
         );
 
     i_vfat3_sc_rx : entity work.vfat3_sc_rx

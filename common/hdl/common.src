@@ -31,6 +31,7 @@ common/hdl/utils/seconds_counter.vhd
 common/hdl/utils/prbs7_4b_generator.vhd
 common/hdl/utils/running_mean.vhd
 common/hdl/utils/oneshot.vhd
+common/hdl/utils/gearbox.vhd
 common/hdl/utils/shift_reg.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
@@ -45,12 +46,8 @@ common/hdl/ttc/ttc_decoder.vhd
 
 # MGT
 #common/hdl/mgt/mgt_slow_control.vhd            <-- use the generated version specific to the project
-common/hdl/mgt/mgt_links_gty.vhd
 common/hdl/mgt/mgt_phalign_single_auto.vhd
 common/hdl/mgt/mgt_phalign_multi_auto.vhd
-common/hdl/mgt/gty_channel_lpgbt.vhd
-common/hdl/mgt/gty_channel_reset.vhd
-common/hdl/mgt/gty_channel_gbtx.vhd
 
 # SCA and GBT slow control
 common/hdl/slow_control/sca_controller.vhd

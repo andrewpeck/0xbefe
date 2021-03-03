@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.common_pkg.all;
-use work.gem_board_config_package.CFG_NUM_OF_OHs;
+use work.gem_board_config_package.all;
 
 package gem_pkg is
 
@@ -43,7 +43,6 @@ package gem_pkg is
 
     type t_sbit_link_status is record
         sbit_overflow   : std_logic;
-        sync_word       : std_logic;
         missed_comma    : std_logic;
         underflow       : std_logic;
         overflow        : std_logic;
@@ -128,7 +127,7 @@ package gem_pkg is
         empty         : std_logic;
         valid         : std_logic;
         underflow     : std_logic;
-        data_cnt      : std_logic_vector(11 downto 0);
+        data_cnt      : std_logic_vector(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0);
     end record;
 
     type t_chamber_infifo_rd_array is array(integer range <>) of t_chamber_infifo_rd;
@@ -139,7 +138,7 @@ package gem_pkg is
         empty         : std_logic;
         valid         : std_logic;
         underflow     : std_logic;
-        data_cnt      : std_logic_vector(11 downto 0);
+        data_cnt      : std_logic_vector(CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH - 1 downto 0);
     end record;
 
     type t_chamber_evtfifo_rd_array is array(integer range <>) of t_chamber_evtfifo_rd;

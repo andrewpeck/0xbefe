@@ -83,38 +83,6 @@ end sca_controller;
 
 architecture sca_controller_arch of sca_controller is
 
-    -------------- serdes fifos -------------- 
-
-    COMPONENT sca_des_fifo
-        PORT(
-            rst    : IN  STD_LOGIC;
-            wr_clk : IN  STD_LOGIC;
-            rd_clk : IN  STD_LOGIC;
-            din    : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);
-            wr_en  : IN  STD_LOGIC;
-            rd_en  : IN  STD_LOGIC;
-            dout   : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-            full   : OUT STD_LOGIC;
-            empty  : OUT STD_LOGIC;
-            valid  : OUT STD_LOGIC
-        );
-    END COMPONENT;
-    
-    COMPONENT sca_ser_fifo
-        PORT(
-            rst    : IN  STD_LOGIC;
-            wr_clk : IN  STD_LOGIC;
-            rd_clk : IN  STD_LOGIC;
-            din    : IN  STD_LOGIC_VECTOR(0 DOWNTO 0);
-            wr_en  : IN  STD_LOGIC;
-            rd_en  : IN  STD_LOGIC;
-            dout   : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-            full   : OUT STD_LOGIC;
-            empty  : OUT STD_LOGIC;
-            valid  : OUT STD_LOGIC
-        );
-    END COMPONENT;
-
     -------------- types and constants -------------- 
 
     type top_state_t is (SCA_RESET, SCA_CONFIGURE, IDLE, SET_HARD_RESET, UNSET_HARD_RESET, USER_COMMAND, JTAG_SHIFT, JTAG_SET_LENGTH, JTAG_GO, ERROR);
@@ -668,32 +636,36 @@ begin
 
     --========= SERDES FIFOS =========--
     
-    i_des_fifo : component sca_des_fifo
+    i_des_gearbox : entity work.gearbox
+        generic map(
+            g_IMPL_TYPE         => "FIFO",
+            g_INPUT_DATA_WIDTH  => 2,
+            g_OUTPUT_DATA_WIDTH => 1
+        )
         port map(
-            rst     => reset_i,
-            wr_clk  => gbt_clk_40_i,
-            rd_clk  => clk_80_i,
-            din     => gbt_rx_sca_elink_i,
-            wr_en   => '1',
-            rd_en   => '1',
-            dout(0) => sd_rx,
-            full    => open,
-            empty   => open,
-            valid   => sd_rx_valid
+            reset_i   => reset_i,
+            wr_clk_i  => gbt_clk_40_i,
+            rd_clk_i  => clk_80_i,
+            din_i     => gbt_rx_sca_elink_i,
+            valid_i   => '1',
+            dout_o(0) => sd_rx,
+            valid_o   => sd_rx_valid
         );
-
-    i_ser_fifo : component sca_ser_fifo
+    
+    i_ser_gearbox : entity work.gearbox
+        generic map(
+            g_IMPL_TYPE         => "FIFO",
+            g_INPUT_DATA_WIDTH  => 1,
+            g_OUTPUT_DATA_WIDTH => 2
+        )
         port map(
-            rst    => reset_i,
-            wr_clk => clk_80_i,
-            rd_clk => gbt_clk_40_i,
-            din(0) => sd_tx,
-            wr_en  => '1',
-            rd_en  => '1',
-            dout   => gbt_tx_sca_elink_o,
-            full   => open,
-            empty  => open,
-            valid  => open
+            reset_i  => reset_i,
+            wr_clk_i => clk_80_i,
+            rd_clk_i => gbt_clk_40_i,
+            din_i(0) => sd_tx,
+            valid_i  => '1',
+            dout_o   => gbt_tx_sca_elink_o,
+            valid_o  => open
         );
 
     --========= Error counters =========--
