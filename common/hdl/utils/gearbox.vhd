@@ -16,9 +16,10 @@ use ieee.numeric_std.all;
 
 entity gearbox is
     generic(
-        g_IMPL_TYPE         : string := "FIFO"; -- for now only a FIFO implementation is available, a more latency optimized version will be implemented later if needed
+        g_IMPL_TYPE         : string  := "FIFO"; -- for now only a FIFO implementation is available, a more latency optimized version will be implemented later if needed
         g_INPUT_DATA_WIDTH  : integer := 8;
-        g_OUTPUT_DATA_WIDTH : integer := 16
+        g_OUTPUT_DATA_WIDTH : integer := 16;
+        g_HIGH_WORD_FIRST   : boolean := true -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior) 
     );
     port(
         reset_i     : in  std_logic;
@@ -35,7 +36,36 @@ end gearbox;
 
 architecture gearbox_arch of gearbox is
 
+    constant GEAR_DOWN_RATIO    : integer := g_OUTPUT_DATA_WIDTH / g_INPUT_DATA_WIDTH;
+    constant GEAR_UP_RATIO      : integer := g_INPUT_DATA_WIDTH / g_OUTPUT_DATA_WIDTH;
+
+    signal din      : std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
+    signal dout     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+
 begin
+
+    -- do not change the word order
+    g_low_word_first_wiring : if not g_HIGH_WORD_FIRST generate
+        din <= din_i;
+        dout_o <= dout;
+    end generate;
+    
+    -- swap the word order (note: we have to take care whether it's gear down or gear up)
+    g_high_word_first_wiring : if g_HIGH_WORD_FIRST generate
+        g_gear_down : if g_OUTPUT_DATA_WIDTH >= g_INPUT_DATA_WIDTH generate
+            din <= din_i;
+            g_gear_down_words : for i in 0 to GEAR_DOWN_RATIO - 1 generate
+                dout_o((i+1) * g_INPUT_DATA_WIDTH - 1 downto i * g_INPUT_DATA_WIDTH) <= dout((GEAR_DOWN_RATIO - i) * g_INPUT_DATA_WIDTH - 1 downto (GEAR_DOWN_RATIO - i - 1) * g_INPUT_DATA_WIDTH);
+            end generate;
+        end generate;
+
+        g_gear_up : if g_INPUT_DATA_WIDTH > g_OUTPUT_DATA_WIDTH generate
+            dout_o <= dout;
+            g_gear_up_words : for i in 0 to GEAR_UP_RATIO - 1 generate
+                din((i+1) * g_OUTPUT_DATA_WIDTH - 1 downto i * g_OUTPUT_DATA_WIDTH) <= din_i((GEAR_UP_RATIO - i) * g_OUTPUT_DATA_WIDTH - 1 downto (GEAR_UP_RATIO - i - 1) * g_OUTPUT_DATA_WIDTH);
+            end generate;
+        end generate;
+    end generate;
 
     g_fifo_impl: if g_IMPL_TYPE = "FIFO" generate
         i_serdes_fifo : xpm_fifo_async
@@ -56,7 +86,7 @@ begin
                 rst           => reset_i,
                 wr_clk        => wr_clk_i,
                 wr_en         => valid_i,
-                din           => din_i,
+                din           => din,
                 full          => open,
                 prog_full     => open,
                 wr_data_count => open,
@@ -66,7 +96,7 @@ begin
                 wr_ack        => open,
                 rd_clk        => rd_clk_i,
                 rd_en         => '1',
-                dout          => dout_o,
+                dout          => dout,
                 empty         => open,
                 prog_empty    => open,
                 rd_data_count => open,
