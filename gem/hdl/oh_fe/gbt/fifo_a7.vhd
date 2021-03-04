@@ -47,7 +47,7 @@ begin
       PROG_EMPTY_THRESH   => 3,         -- DECIMAL
       PROG_FULL_THRESH    => 3,         -- DECIMAL
       read_mode           => "std",     -- String
-      USE_ADV_FEATURES    => "0707",    -- String
+      USE_ADV_FEATURES    => "1707",    -- String
       WAKEUP_TIME         => 0,         -- DECIMAL
       FIFO_WRITE_DEPTH    => DEPTH,     -- DECIMAL
       READ_DATA_WIDTH     => RD_WIDTH,  -- DECIMAL
