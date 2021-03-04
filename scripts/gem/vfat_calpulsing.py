@@ -143,8 +143,12 @@ def main():
 
     # configure all vfats
     for i in range(12):
-        print("Configuring VFAT %d with default configuration" % i)
-        configureVfatForPulsing(i, ohN, -1)
+        syncErrCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (ohN, i))))
+        if syncErrCnt > 0:
+            print("Skipping VFAT%d because it seems dead (sync err cnt = %d)" % (i, syncErrCnt))
+        else:
+            print("Configuring VFAT %d with default configuration" % i)
+            configureVfatForPulsing(i, ohN, -1)
 
     # configure the pulsing VFATs
     for i in range(len(vfats)):
