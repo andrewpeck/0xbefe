@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from rw_reg import *
-from mcs import *
 from time import *
 import array
 import struct
@@ -10,15 +9,15 @@ SLEEP_BETWEEN_COMMANDS=0.1
 DEBUG=False
 CTP7HOSTNAME = "eagle34"
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 class Virtex6Instructions:
     FPGA_ID     = 0x3C9
@@ -277,8 +276,8 @@ def main():
             #jtagCommand(False, None, 0, (bytes[i*4 + 2] << 24) + (bytes[i*4 + 3] << 16) + (bytes[i*4] << 8) + (bytes[i*4 + 1]), 32, False)
             cnt += 1
             if cnt >= 10000:
-               print("word " + str(i) + " out of " + str(numWords))
-               cnt = 0
+                print("word " + str(i) + " out of " + str(numWords))
+                cnt = 0
 
         # exit the optimized mode and send the last word (also exit the FSM to IDLE)
         sleep(0.01)
@@ -367,8 +366,8 @@ def main():
             results = sendScaCommand(ohList, 0x14, 0x02, 0x4, 1 << 24, True)
             for oh in range(len(results)):
                 #print results[oh], results[oh] >> 24, results[oh] >> 8
-		#print results[oh] >> 24 + results[oh] >> 8 & 0xff00
-		res = (results[oh] >> 24) + ((results[oh] >> 8) & 0xff00)
+                #print results[oh] >> 24 + results[oh] >> 8 & 0xff00
+                res = (results[oh] >> 24) + ((results[oh] >> 8) & 0xff00)
                 if (res > 0xfff):
                     printRed("ERROR: ADC returned a reading above 0xfff!!")
                 res_mv = ((1.0 / 0xfff) * float(res)) * 1000
@@ -376,20 +375,20 @@ def main():
                 #print "curr = %s" % hex(curr[oh])
             sleep(0.001)
 
-    elif instructions == 'adc-read-v1':  
-        sleep(0.1)     
-                       
+    elif instructions == 'adc-read-v1':
+        sleep(0.1)
+
         for ch in range(32):
             sendScaCommand(ohList, 0x14, 0x30, 0x4, ch << 24, False)
             results = sendScaCommand(ohList, 0x14, 0xb2, 0x4, 0, True)
             for oh in range(len(results)):
                 res = ((results[oh] >> 24) + ((results[oh] >> 8) & 0xff00)) & 0xfff
-                if (res > 0xfff):                                                                                                
-                    printRed("ERROR: ADC returned a reading above 0xfff!!")                                                      
+                if (res > 0xfff):
+                    printRed("ERROR: ADC returned a reading above 0xfff!!")
                 res_mv = ((1.0 / 0xfff) * float(res)) * 1000
                 print "Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv)
-            sleep(0.001) 
-                       
+            sleep(0.001)
+
     elif instructions == 'compare-mcs-bit':
         if len(sys.argv) < 5:
             print("Usage: sca.py compare-mcs-bit <mcs_filename> <bit_filename>")
@@ -443,10 +442,10 @@ def main():
         print("comparing bytes")
         errors = 0
         for i in range(0, FIRMWARE_SIZE / 4):
-           if (mcsBytes[i*4 + 2] << 24) + (mcsBytes[i*4 + 3] << 16) + (mcsBytes[i*4] << 8) + (mcsBytes[i*4 + 1]) != bitWordsReversed[i]:
-               errors += 1
-               print("Ooops, bytes #%d are not equal : "%i + hex(mcsBytes[i]) + ", " + hex(bitBytes[i]))
-               sleep(0.5)
+            if (mcsBytes[i*4 + 2] << 24) + (mcsBytes[i*4 + 3] << 16) + (mcsBytes[i*4] << 8) + (mcsBytes[i*4 + 1]) != bitWordsReversed[i]:
+                errors += 1
+                print("Ooops, bytes #%d are not equal : "%i + hex(mcsBytes[i]) + ", " + hex(bitBytes[i]))
+                sleep(0.5)
 
         print("Num errors: " + str(errors))
     elif instructions == 'gpio-set-direction':
@@ -491,7 +490,7 @@ def initJtagRegAddrs():
 
 # freqDiv -- JTAG frequency expressed as a divider of 20MHz, so e.g. a value of 2 would give 10MHz, value of 10 would give 2MHz
 def enableJtag(ohMask, freqDiv=None):
-    sleep(0.01)                                                                                                                         
+    sleep(0.01)
     subheading('Enable JTAG module with mask ' + hex(ohMask))
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), ohMask)
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
@@ -509,10 +508,10 @@ def enableJtag(ohMask, freqDiv=None):
 
 
 def disableJtag():
-    subheading('Disabling JTAG module')                                                                                                 
+    subheading('Disabling JTAG module')
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), 0x0)
-#    subheading('Enabling SCA ADC monitoring')                                                                                           
-#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)                                                    
+#    subheading('Enabling SCA ADC monitoring')
+#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)
 
 
 # restoreIdle  -- if True then will restore to IDLE state before doing anything else
@@ -536,7 +535,7 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
     tdo = 0
     len = 0
     readIdx = 0
-    
+
     if restoreIdle:
         tms = 0b011111
         len = 6
@@ -559,20 +558,20 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
         len += drLen
         tms |= 0b01 << len     # update DR and go to IDLE
         len += 2
-        
+
 
     debug('Length = ' + str(len))
     debug('TMS = ' + binary(tms, len))
     debug('TDO = ' + binary(tdo, len))
     debug('Read start index = ' + str(readIdx))
-    
+
     debugCyan('Setting command length = ' + str(len))
     fw_len = len if len < 128 else 0 # in firmware 0 means 128 bits
     #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS'), fw_len)
     wReg(ADDR_JTAG_LENGTH, fw_len)
 
     # ================= SENDING LENGTH COMMAND JUST FOR TEST!! ===================
-    #debugCyan('Setting config registers: bit number = ' + hex(fw_len))                                               
+    #debugCyan('Setting config registers: bit number = ' + hex(fw_len))
     #sendScaCommand(0x13, 0x80, 0x4, 0xc00 | (fw_len << 24), False) # TX falling edge, shift LSB first, and set length
     # ============================================================================
 
@@ -599,32 +598,32 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo1)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    if len > 64:                                                               
-        tms = tms >> 32                                                                                                                 
+    if len > 64:
+        tms = tms >> 32
         debugCyan('Setting TMS 2 = ' + binary(tms & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms2)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
-        tdo = tdo >> 32                                                                                           
+        tdo = tdo >> 32
         debugCyan('Setting TDO 2 = ' + binary(tdo & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo2)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    if len > 96:                                                                                                                                                          
-        tms = tms >> 32                                                                                                                                                   
+    if len > 96:
+        tms = tms >> 32
         debugCyan('Setting TMS 3 = ' + binary(tms & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms3)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
-                                                                                                                                                                          
-        tdo = tdo >> 32                                                                                                                                                   
+
+        tdo = tdo >> 32
         debugCyan('Setting TDO 3 = ' + binary(tdo & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo3)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    # ================= SENDING JTAG GO COMMAND JUST FOR TEST!! ===================                                
-    #debugCyan('JTAG GO!')                                                                                                         
-    #sendScaCommand(0x13, 0xa2, 0x1, 0x0, False) 
-    # ============================================================================                                                        
+    # ================= SENDING JTAG GO COMMAND JUST FOR TEST!! ===================
+    #debugCyan('JTAG GO!')
+    #sendScaCommand(0x13, 0xa2, 0x1, 0x0, False)
+    # ============================================================================
 
     #raw_input("Press any key to read TDI...")
 
@@ -667,10 +666,10 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
         debug('Read = ' + hex(readValue))
     return readValues
 
-    
+
 def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
     #print('fake send: channel ' + hex(sca_channel) + ', command ' + hex(sca_command) + ', length ' + hex(data_length) + ', data ' + hex(data) + ', doRead ' + str(doRead))
-    #return    
+    #return
 
     d = data
 
@@ -708,22 +707,22 @@ def debugCyan(string):
     if DEBUG:
         printCyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def printCyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def printRed(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:

@@ -48,7 +48,6 @@ gem/hdl/daq/data_concatenator.vhd
 
 # Misc
 #gem/hdl/misc/gem_system_regs.vhd           <-- use the generated version specific to the project
-gem/hdl/misc/gem_loader_bram.vhd
 gem/hdl/misc/gbt_link_mux_ge11.vhd
 gem/hdl/misc/gbt_link_mux_ge21.vhd
 gem/hdl/misc/config_blaster.vhd

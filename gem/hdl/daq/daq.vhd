@@ -16,11 +16,16 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
+
+use work.gem_board_config_package.all;
 
 entity daq is
 generic(
@@ -69,60 +74,6 @@ end daq;
 architecture Behavioral of daq is
 
     --================== COMPONENTS ==================--
-
-    component daq_l1a_fifo is
-        port(
-            rst           : in  std_logic;
-            wr_clk        : in  std_logic;
-            rd_clk        : in  std_logic;
-            din           : in  std_logic_vector(51 downto 0);
-            wr_en         : in  std_logic;
-            wr_ack        : out std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(51 downto 0);
-            full          : out std_logic;
-            overflow      : out std_logic;
-            almost_full   : out std_logic;
-            empty         : out std_logic;
-            valid         : out std_logic;
-            underflow     : out std_logic;
-            prog_full     : out std_logic;
-            rd_data_count : out std_logic_vector(12 downto 0)
-        );
-    end component daq_l1a_fifo;  
-
-    component daq_output_fifo
-        port(
-            clk           : in  std_logic;
-            rst           : in  std_logic;
-            din           : in  std_logic_vector(65 downto 0);
-            wr_en         : in  std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(65 downto 0);
-            full          : out std_logic;
-            empty         : out std_logic;
-            valid         : out std_logic;
-            prog_full     : out std_logic;
-            data_count    : out std_logic_vector(12 downto 0)
-        );
-    end component;
-
-    component daq_spy_fifo
-        port(
-            rst       : in  std_logic;
-            wr_clk    : in  std_logic;
-            rd_clk    : in  std_logic;
-            din       : in  std_logic_vector(63 downto 0);
-            wr_en     : in  std_logic;
-            rd_en     : in  std_logic;
-            dout      : out std_logic_vector(31 downto 0);
-            full      : out std_logic;
-            overflow  : out std_logic;
-            empty     : out std_logic;
-            valid     : out std_logic;
-            underflow : out std_logic
-        );
-    end component;
 
     component ila_daq
         port(
@@ -226,50 +177,43 @@ architecture Behavioral of daq is
     signal ipb_write_reg_data       : t_std32_array(0 to (16 * (g_NUM_OF_OHs + 10)) + 15); -- 16 regs for AMC evt builder and 16 regs for each chamber evt builder
     
     -- L1A FIFO
-    signal l1afifo_din          : std_logic_vector(51 downto 0) := (others => '0');
-    signal l1afifo_wr_en        : std_logic := '0';
-    signal l1afifo_rd_en        : std_logic := '0';
-    signal l1afifo_dout         : std_logic_vector(51 downto 0);
-    signal l1afifo_full         : std_logic;
-    signal l1afifo_overflow     : std_logic;
-    signal l1afifo_empty        : std_logic;
-    signal l1afifo_valid        : std_logic;
-    signal l1afifo_underflow    : std_logic;
-    signal l1afifo_near_full    : std_logic;
-    signal l1afifo_data_cnt     : std_logic_vector(12 downto 0);
-    signal l1afifo_near_full_cnt: std_logic_vector(15 downto 0);
+    signal l1afifo_din              : std_logic_vector(51 downto 0) := (others => '0');
+    signal l1afifo_wr_en            : std_logic := '0';
+    signal l1afifo_rd_en            : std_logic := '0';
+    signal l1afifo_dout             : std_logic_vector(51 downto 0);
+    signal l1afifo_full             : std_logic;
+    signal l1afifo_overflow         : std_logic;
+    signal l1afifo_empty            : std_logic;
+    signal l1afifo_valid            : std_logic;
+    signal l1afifo_underflow        : std_logic;
+    signal l1afifo_prog_full        : std_logic;
+    signal l1afifo_prog_empty       : std_logic;
+    signal l1afifo_prog_empty_wrclk : std_logic;
+    signal l1afifo_near_full        : std_logic;
+    signal l1afifo_near_full_daqclk : std_logic;
+    signal l1afifo_data_cnt         : std_logic_vector(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH - 1 downto 0);
+    signal l1afifo_near_full_cnt    : std_logic_vector(15 downto 0);
     
     -- DAQ output FIFO
-    signal daqfifo_din          : std_logic_vector(65 downto 0) := (others => '0');
-    signal daqfifo_wr_en        : std_logic := '0';
-    signal daqfifo_rd_en        : std_logic := '0';
-    signal daqfifo_dout         : std_logic_vector(65 downto 0);
-    signal daqfifo_full         : std_logic;
-    signal daqfifo_empty        : std_logic;
-    signal daqfifo_valid        : std_logic;
-    signal daqfifo_near_full    : std_logic;
-    signal daqfifo_data_cnt     : std_logic_vector(12 downto 0);
-    signal daqfifo_near_full_cnt: std_logic_vector(15 downto 0);
-            
-    -- DAQ spy FIFO
-    signal spyfifo_din          : std_logic_vector(63 downto 0) := (others => '0');
-    signal spyfifo_wr_en        : std_logic := '0';
-    signal spyfifo_rd_en        : std_logic := '0';
-    signal spyfifo_dout         : std_logic_vector(31 downto 0);
-    signal spyfifo_full         : std_logic;
-    signal spyfifo_empty        : std_logic;
-    signal spyfifo_valid        : std_logic;
-    signal spyfifo_ovf          : std_logic;
-    signal spyfifo_unf          : std_logic;
-    signal spyfifo_had_ovf      : std_logic;
-    signal spyfifo_had_unf      : std_logic;
-                
+    signal daqfifo_din              : std_logic_vector(65 downto 0) := (others => '0');
+    signal daqfifo_wr_en            : std_logic := '0';
+    signal daqfifo_rd_en            : std_logic := '0';
+    signal daqfifo_dout             : std_logic_vector(65 downto 0);
+    signal daqfifo_full             : std_logic;
+    signal daqfifo_empty            : std_logic;
+    signal daqfifo_valid            : std_logic;
+    signal daqfifo_prog_full        : std_logic;
+    signal daqfifo_prog_empty       : std_logic;
+    signal daqfifo_near_full        : std_logic;
+    signal daqfifo_data_cnt         : std_logic_vector(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0);
+    signal daqfifo_near_full_cnt    : std_logic_vector(15 downto 0);
+                            
     -- Timeouts
-    signal dav_timer            : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
-    signal max_dav_timer        : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
-    signal last_dav_timer       : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
-    signal dav_timeout          : std_logic_vector(23 downto 0) := x"03d090"; -- 10ms (very large)
-    signal dav_timeout_flags    : std_logic_vector(23 downto 0) := (others => '0'); -- inputs which have timed out
+    signal dav_timer                : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
+    signal max_dav_timer            : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
+    signal last_dav_timer           : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
+    signal dav_timeout              : std_logic_vector(23 downto 0) := x"03d090"; -- 10ms (very large)
+    signal dav_timeout_flags        : std_logic_vector(23 downto 0) := (others => '0'); -- inputs which have timed out
     
     ---=== AMC Event Builder signals ===---
     
@@ -468,20 +412,57 @@ begin
     -- DAQ output FIFO
     --================================--
     
-    i_daq_fifo : component daq_output_fifo
-    port map(
-        clk           => daq_clk_i,
-        rst           => reset_daq,
-        din           => daqfifo_din,
-        wr_en         => daqfifo_wr_en,
-        rd_en         => daqfifo_rd_en,
-        dout          => daqfifo_dout,
-        full          => daqfifo_full,
-        empty         => daqfifo_empty,
-        valid         => daqfifo_valid,
-        prog_full     => daqfifo_near_full,
-        data_count    => daqfifo_data_cnt
-    );
+    i_daq_output_fifo : xpm_fifo_sync
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_OUTPUT_DEPTH,
+            WRITE_DATA_WIDTH    => 66,
+            READ_MODE           => "std",
+            FIFO_READ_LATENCY   => 1,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "1307", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+            READ_DATA_WIDTH     => 66,
+            WR_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+            PROG_FULL_THRESH    => CFG_DAQ_OUTPUT_PROG_FULL_SET,
+            RD_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+            PROG_EMPTY_THRESH   => CFG_DAQ_OUTPUT_PROG_FULL_RESET,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_daq,
+            wr_clk        => daq_clk_i,
+            wr_en         => daqfifo_wr_en,
+            din           => daqfifo_din,
+            full          => daqfifo_full,
+            prog_full     => daqfifo_prog_full,
+            wr_data_count => daqfifo_data_cnt,
+            overflow      => open, -- TODO: have to monitor this!
+            wr_rst_busy   => open,
+            almost_full   => open,
+            wr_ack        => open,
+            rd_en         => daqfifo_rd_en,
+            dout          => daqfifo_dout,
+            empty         => daqfifo_empty,
+            prog_empty    => daqfifo_prog_empty,
+            rd_data_count => open,
+            underflow     => open, -- TODO: have to monitor this!
+            rd_rst_busy   => open,
+            almost_empty  => open,
+            data_valid    => daqfifo_valid,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );
+
+    i_latch_evtfifo_near_full : entity work.latch port map(
+            reset_i => daqfifo_prog_empty,
+            clk_i   => daq_clk_i,
+            input_i => daqfifo_prog_full,
+            latch_o => daqfifo_near_full
+        );
 
     daqfifo_din <= daq_event_header & daq_event_trailer & daq_event_data;
     daqfifo_wr_en <= daq_event_write_en;
@@ -544,25 +525,61 @@ begin
     -- L1A FIFO
     --================================--
     
-    i_l1a_fifo : component daq_l1a_fifo
-    port map (
-        rst           => reset_daq,
-        wr_clk        => ttc_clks_i.clk_40,
-        rd_clk        => daq_clk_i,
-        din           => l1afifo_din,
-        wr_en         => l1afifo_wr_en,
-        wr_ack        => open,
-        rd_en         => l1afifo_rd_en,
-        dout          => l1afifo_dout,
-        full          => l1afifo_full,
-        overflow      => l1afifo_overflow,
-        almost_full   => open,
-        empty         => l1afifo_empty,
-        valid         => l1afifo_valid,
-        underflow     => l1afifo_underflow,
-        prog_full     => l1afifo_near_full,
-        rd_data_count => l1afifo_data_cnt
-    );
+    i_l1a_fifo : xpm_fifo_async
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_L1AFIFO_DEPTH,
+            RELATED_CLOCKS      => 0,
+            WRITE_DATA_WIDTH    => 52,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "170B", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+            READ_DATA_WIDTH     => 52,
+            CDC_SYNC_STAGES     => 2,
+            PROG_FULL_THRESH    => CFG_DAQ_L1AFIFO_PROG_FULL_SET,
+            RD_DATA_COUNT_WIDTH => CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH,
+            PROG_EMPTY_THRESH   => CFG_DAQ_L1AFIFO_PROG_FULL_RESET,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_daq,
+            wr_clk        => ttc_clks_i.clk_40,
+            wr_en         => l1afifo_wr_en,
+            din           => l1afifo_din,
+            full          => l1afifo_full,
+            prog_full     => l1afifo_prog_full,
+            wr_data_count => open,
+            overflow      => l1afifo_overflow,
+            wr_rst_busy   => open,
+            almost_full   => open,
+            wr_ack        => open,
+            rd_clk        => daq_clk_i,
+            rd_en         => l1afifo_rd_en,
+            dout          => l1afifo_dout,
+            empty         => l1afifo_empty,
+            prog_empty    => l1afifo_prog_empty,
+            rd_data_count => l1afifo_data_cnt,
+            underflow     => l1afifo_underflow,
+            rd_rst_busy   => open,
+            almost_empty  => open,
+            data_valid    => l1afifo_valid,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );    
+
+    i_sync_l1afifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => l1afifo_prog_empty, clk_i => ttc_clks_i.clk_40, sync_o => l1afifo_prog_empty_wrclk);
+    i_latch_l1afifo_near_full : entity work.latch port map(
+            reset_i => l1afifo_prog_empty_wrclk,
+            clk_i   => ttc_clks_i.clk_40,
+            input_i => l1afifo_prog_full,
+            latch_o => l1afifo_near_full
+        );    
+    i_sync_l1afifo_near_full_daq_clk : entity work.synch generic map(N_STAGES => 3) port map(async_i => l1afifo_near_full, clk_i => daq_clk_i, sync_o => l1afifo_near_full_daqclk);
     
     -- fill the L1A FIFO
     process(ttc_clks_i.clk_40)
@@ -978,7 +995,7 @@ begin
                                           e_chmb_evt_too_big &
                                           e_chmb_evtfifo_near_full &
                                           e_chmb_infifo_near_full &
-                                          l1afifo_near_full &
+                                          l1afifo_near_full_daqclk &
                                           e_chmb_evt_bigger_24 &
                                           e_chmb_invalid_vfat_block &
                                           "0" & -- OOS AMC-VFAT
@@ -1137,27 +1154,6 @@ begin
             end if;
         end if;        
     end process;
-
-    ------------------------- SPY FIFO -----------------------
-
-    gen_spy_fifo:
-    if g_INCLUDE_SPY_FIFO generate
-        i_spy_fifo : daq_spy_fifo
-            port map(
-                rst       => reset_daq,
-                wr_clk    => daq_clk_i,
-                rd_clk    => ipb_clk_i,
-                din       => daqfifo_din(63 downto 0),
-                wr_en     => spyfifo_wr_en,
-                rd_en     => spyfifo_rd_en,
-                dout      => spyfifo_dout,
-                full      => open,
-                overflow  => spyfifo_ovf,
-                empty     => spyfifo_empty,
-                valid     => spyfifo_valid,
-                underflow => spyfifo_unf
-            );
-    end generate;
 
     ------------------------- DEBUG -----------------------
     gen_debug:

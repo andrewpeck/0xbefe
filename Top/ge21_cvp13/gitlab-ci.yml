@@ -4,3 +4,4 @@ generate_project:ge21_cvp13:
       extends: .vars
       PROJECT_NAME: ge21_cvp13
       INTERMEDIATE_BUILD: "1"
+

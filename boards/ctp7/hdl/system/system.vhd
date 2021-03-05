@@ -27,6 +27,7 @@ use work.ttc_pkg.all;
 use work.capture_playback_pkg.all;
 use work.system_package.all;
 use work.axi_pkg.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --============================================================================
@@ -66,8 +67,8 @@ entity system is
     ----------------- for GEM ------------------------
     axi_clk_o         : out std_logic;
     axi_reset_o       : out std_logic;
-    ipb_axi_mosi_o    : out t_axi_lite_mosi;
-    ipb_axi_miso_i    : in t_axi_lite_miso;
+    ipb_axi_mosi_o    : out t_axi_lite_m2s;
+    ipb_axi_miso_i    : in t_axi_lite_s2m;
 
     ----------------- TTC ------------------------
     clk_40_ttc_p_i        : in std_logic;
@@ -420,7 +421,7 @@ begin
       gem_loader_first  => from_gem_loader_o.first,
       gem_loader_last   => from_gem_loader_o.last,
       gem_loader_error  => from_gem_loader_o.error,
-      gem_loader_size   => from_gem_loader_o.size
+      gem_loader_size   => open
       
     );
 

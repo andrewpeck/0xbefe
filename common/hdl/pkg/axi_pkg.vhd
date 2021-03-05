@@ -38,6 +38,8 @@ package axi_pkg is
         rvalid      : std_logic;
     end record;
 
+    constant AXI_LITE_S2M_NULL : t_axi_lite_s2m := (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0');
+
     type t_axi_full_512_m2s is record
         awaddr      : std_logic_vector(63 downto 0);
         awprot      : std_logic_vector(2 downto 0);

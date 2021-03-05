@@ -26,6 +26,7 @@ use work.ttc_pkg.all;
 use work.mgt_pkg.all;
 use work.ipbus.all;
 use work.ipb_addr_decode.all;
+use work.ipb_sys_addr_decode.all;
 use work.gem_board_config_package.all;
 
 entity gem_apex is
@@ -140,8 +141,10 @@ architecture gem_apex_arch of gem_apex is
     signal axil_s2m             : t_axi_lite_s2m;
     signal ipb_reset            : std_logic;
     signal ipb_clk              : std_logic;
-    signal ipb_miso_arr         : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_RBUS_NULL);
-    signal ipb_mosi_arr         : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_miso_arr     : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_usr_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_sys_miso_arr     : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
       
     -------------------- MGTs mapped to GEM links ---------------------------------
     
@@ -172,7 +175,7 @@ architecture gem_apex_arch of gem_apex is
 
     -------------------- GEM loader ---------------------------------
     signal to_gem_loader            : t_to_gem_loader := (clk => '0', en => '0');
-    signal from_gem_loader          : t_from_gem_loader := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0', size => (others => '0'));
+    signal from_gem_loader          : t_from_gem_loader := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
    
 begin
     
@@ -224,37 +227,19 @@ begin
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
-            C_NUM_IPB_SLAVES   => C_NUM_IPB_SLAVES,
-            C_S_AXI_DATA_WIDTH => 32,
-            C_S_AXI_ADDR_WIDTH => 32,
             C_DEBUG => true
         )
         port map(
+            axi_aclk_i     => axil_clk,
+            axi_aresetn_i  => axi_reset_b,
+            axil_m2s_i     => axil_m2s,
+            axil_s2m_o     => axil_s2m,
             ipb_reset_o    => ipb_reset,
             ipb_clk_o      => ipb_clk,
-            ipb_miso_i     => ipb_miso_arr,
-            ipb_mosi_o     => ipb_mosi_arr,
-            S_AXI_ACLK     => axil_clk,
-            S_AXI_ARESETN  => axi_reset_b,
-            S_AXI_AWADDR   => axil_m2s.awaddr,
-            S_AXI_AWPROT   => axil_m2s.awprot,
-            S_AXI_AWVALID  => axil_m2s.awvalid,
-            S_AXI_AWREADY  => axil_s2m.awready,
-            S_AXI_WDATA    => axil_m2s.wdata,
-            S_AXI_WSTRB    => axil_m2s.wstrb,
-            S_AXI_WVALID   => axil_m2s.wvalid,
-            S_AXI_WREADY   => axil_s2m.wready,
-            S_AXI_BRESP    => axil_s2m.bresp,
-            S_AXI_BVALID   => axil_s2m.bvalid,
-            S_AXI_BREADY   => axil_m2s.bready,
-            S_AXI_ARADDR   => axil_m2s.araddr,
-            S_AXI_ARPROT   => axil_m2s.arprot,
-            S_AXI_ARVALID  => axil_m2s.arvalid,
-            S_AXI_ARREADY  => axil_s2m.arready,
-            S_AXI_RDATA    => axil_s2m.rdata,
-            S_AXI_RRESP    => axil_s2m.rresp,
-            S_AXI_RVALID   => axil_s2m.rvalid,
-            S_AXI_RREADY   => axil_m2s.rready,
+            ipb_sys_miso_i => ipb_sys_miso_arr,
+            ipb_sys_mosi_o => ipb_sys_mosi_arr,
+            ipb_usr_miso_i => ipb_usr_miso_arr,
+            ipb_usr_mosi_o => ipb_usr_mosi_arr,
             read_active_o  => open,
             write_active_o => open
         );
@@ -348,8 +333,8 @@ begin
             master_txusrclk_o    => mgt_gbt_common_rxusrclk,
             ipb_reset_i          => ipb_reset,
             ipb_clk_i            => ipb_clk,
-            ipb_mosi_i           => ipb_mosi_arr(C_IPB_SLV.mgt),
-            ipb_miso_o           => ipb_miso_arr(C_IPB_SLV.mgt)
+            ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
+            ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
         );
 
     --================================--
@@ -368,7 +353,7 @@ begin
             g_NUM_VFATS_PER_OH  => CFG_NUM_VFATS_PER_OH,
             g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS,
             g_NUM_TRIG_TX_LINKS => CFG_NUM_TRIG_TX,
-            g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES - 2, -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
+            g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_DAQ_CLK_FREQ      => 50_000_000,
             g_DISABLE_TTC_DATA  => true
         )
@@ -403,8 +388,8 @@ begin
             
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk,
-            ipb_miso_arr_o          => ipb_miso_arr(C_NUM_IPB_SLAVES - 3 downto 0), -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
-            ipb_mosi_arr_i          => ipb_mosi_arr(C_NUM_IPB_SLAVES - 3 downto 0), -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
+            ipb_miso_arr_o          => ipb_usr_miso_arr,
+            ipb_mosi_arr_i          => ipb_usr_mosi_arr,
             
             led_l1a_o               => open,
             led_trigger_o           => open,

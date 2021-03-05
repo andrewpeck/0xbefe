@@ -21,6 +21,7 @@ use work.ttc_pkg.all;
 use work.mgt_pkg.all;
 use work.ipbus.all;
 use work.ipb_addr_decode.all;
+use work.ipb_sys_addr_decode.all;
 use work.gem_board_config_package.all;
 
 entity gem_cvp13 is
@@ -134,8 +135,10 @@ architecture gem_cvp13_arch of gem_cvp13 is
     -- slow control
     signal ipb_reset            : std_logic;
     signal ipb_clk              : std_logic;
-    signal ipb_miso_arr         : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_RBUS_NULL);
-    signal ipb_mosi_arr         : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_miso_arr     : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_usr_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_sys_miso_arr     : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     
     -- other
     signal clk100               : std_logic;
@@ -174,7 +177,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
 
     -------------------- GEM loader ---------------------------------
     signal to_gem_loader            : t_to_gem_loader := (clk => '0', en => '0');
-    signal from_gem_loader          : t_from_gem_loader := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0', size => (others => '0'));
+    signal from_gem_loader          : t_from_gem_loader := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
 
 begin
     
@@ -231,25 +234,24 @@ begin
     --================================--
 
     i_pcie : entity work.pcie
-        generic map(
-            g_NUM_IPB_SLAVES => C_NUM_IPB_SLAVES
-        )
         port map(
-            reset_i          => '0', -- TODO: connect it to the FPGA reset
+            reset_i             => '0', -- TODO: connect it to the FPGA reset
             
-            pcie_reset_b_i   => pcie_reset_b_i,
-            pcie_refclk_i    => pcie_refclk0,
-            pcie_sysclk_i    => pcie_refclk0_div2,
+            pcie_reset_b_i      => pcie_reset_b_i,
+            pcie_refclk_i       => pcie_refclk0,
+            pcie_sysclk_i       => pcie_refclk0_div2,
             
-            pcie_phy_ready_o => pcie_phy_ready,
-            pcie_link_up_o   => pcie_link_up,
+            pcie_phy_ready_o    => pcie_phy_ready,
+            pcie_link_up_o      => pcie_link_up,
             
-            status_leds_o    => leds_o,
+            status_leds_o       => leds_o,
 
-            ipb_reset_o      => ipb_reset,
-            ipb_clk_o        => ipb_clk,
-            ipb_miso_arr_i   => ipb_miso_arr,
-            ipb_mosi_arr_o   => ipb_mosi_arr            
+            ipb_reset_o         => ipb_reset,
+            ipb_clk_o           => ipb_clk,
+            ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
+            ipb_usr_mosi_arr_o  => ipb_usr_mosi_arr,
+            ipb_sys_miso_arr_i  => ipb_sys_miso_arr,
+            ipb_sys_mosi_arr_o  => ipb_sys_mosi_arr            
         );
 
     --================================--
@@ -282,28 +284,30 @@ begin
             master_txusrclk_o    => mgt_gbt_common_rxusrclk,
             ipb_reset_i          => ipb_reset,
             ipb_clk_i            => ipb_clk,
-            ipb_mosi_i           => ipb_mosi_arr(C_IPB_SLV.mgt),
-            ipb_miso_o           => ipb_miso_arr(C_IPB_SLV.mgt)
+            ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
+            ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
         );
 
     --================================--
     -- GEM Loader
     --================================--
 
---    i_gemloader : entity work.gem_loader
---        generic map(
---            g_MAX_SIZE_BYTES   => 9_600_000,
---            g_MEMORY_PRIMITIVE => "ultra"
---        )
---        port map(
---            reset_i           => '0',
---            to_gem_loader_i   => to_gem_loader,
---            from_gem_loader_o => from_gem_loader,
---            ipb_reset_i       => ipb_reset,
---            ipb_clk_i         => ipb_clk,
---            ipb_miso_o        => ipb_miso_o,
---            ipb_mosi_i        => ipb_mosi_i
---        );
+    g_promless : if CFG_GEM_STATION /= 0 generate
+        i_promless : entity work.promless
+            generic map(
+                g_MAX_SIZE_BYTES   => 8_388_608, --9_437_184, -- 9_600_000,
+                g_MEMORY_PRIMITIVE => "ultra"
+            )
+            port map(
+                reset_i           => '0',
+                to_gem_loader_i   => to_gem_loader,
+                from_gem_loader_o => from_gem_loader,
+                ipb_reset_i       => ipb_reset,
+                ipb_clk_i         => ipb_clk,
+                ipb_miso_o        => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
+                ipb_mosi_i        => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
+            );
+    end generate;
 
     --================================--
     -- GEM Logic
@@ -321,7 +325,7 @@ begin
             g_NUM_VFATS_PER_OH  => CFG_NUM_VFATS_PER_OH,
             g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS,
             g_NUM_TRIG_TX_LINKS => CFG_NUM_TRIG_TX,
-            g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES - 2, -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
+            g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_DAQ_CLK_FREQ      => 100_000_000,
             g_DISABLE_TTC_DATA  => true
         )
@@ -356,8 +360,8 @@ begin
             
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk,
-            ipb_miso_arr_o          => ipb_miso_arr(C_NUM_IPB_SLAVES - 3 downto 0), -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
-            ipb_mosi_arr_i          => ipb_mosi_arr(C_NUM_IPB_SLAVES - 3 downto 0), -- NOTE: cheating here, leaving out the last bus, which is connected to the MGTs at the system level (BE CAREFUL WITH THIS WHEN ADDING NEW BUSSES IN THE FUTURE, BEST WOULD BE TO REWORK THIS)
+            ipb_miso_arr_o          => ipb_usr_miso_arr,
+            ipb_mosi_arr_i          => ipb_usr_mosi_arr,
             
             led_l1a_o               => open,
             led_trigger_o           => open,

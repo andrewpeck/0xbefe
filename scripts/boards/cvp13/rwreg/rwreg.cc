@@ -19,7 +19,8 @@ static void* map_base;
 static void* last_trans_err_addr; // workaround for propper error reporting
 
 extern "C" void rwreg_init(char* sysfile) {
-  char* realSysfile = sysfile;
+  char* realSysfile = sysfile;  
+  
   if (strcmp("auto", sysfile) == 0) {
     DIR *dp;
     struct dirent *de;
@@ -67,6 +68,22 @@ extern "C" void rwreg_init(char* sysfile) {
     }
   }
 
+  // write 1 to the enable file (needed on some systems)
+  char* enableSysfile = (char*) malloc(strlen(realSysfile) * sizeof(char));
+  memset(enableSysfile, 0, strlen(realSysfile));
+  char *lastSepPtr = strrchr(realSysfile, '/');
+  strncpy(enableSysfile, realSysfile, lastSepPtr - realSysfile);
+  strcat(enableSysfile, "/enable");
+
+  if((fd = open(enableSysfile, O_RDWR | O_SYNC)) != -1) {
+//    printf("Writing 1 to %s\n", enableSysfile);
+    write(fd, "1", strlen("1"));
+    close(fd);
+  } else {
+    printf("WARN: could not open %s\n", enableSysfile);
+  }
+
+  // mmap the BAR2
   if((fd = open(realSysfile, O_RDWR | O_SYNC)) == -1) {
     printf("ERROR: could not open %s\n", realSysfile);
     exit(1);

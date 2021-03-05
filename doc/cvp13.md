@@ -12,7 +12,7 @@ The setup process consists of these steps:
 This involves both installing the CVP13 card in the computer and setting up the liquid cooling system (following instructions for the Koolance system):
 1. Connect tubes of appropriate length to the CVP13 card
 1. Pass the tubes through the slots in the slot adapter (provided with the Koolance cooling box)
-1. Install the CVPF13 card in a vacant PCIe slot and simultaneously place the slot adapter in an appropriate slot at the back of the computer, such that sufficient lengths of both tubes come out of the computer
+1. Install the CVP13 card in a vacant PCIe slot and simultaneously place the slot adapter in an appropriate slot at the back of the computer, such that sufficient lengths of both tubes come out of the computer. Note: you should install this card in a 16x capable slot, preferrably connected directly to the CPU for best performance (lowest latency), if you are installing this card on Dell Precision 5820 workstation, you should install it in either slot 2 or slot 4.
 1. Place the Koolance cooling box at a higher level than the PCIe card, possibly on top of the chassis
 1. Connect the 12V power cable from the slot adapter to the 4-pin molex plug inside the computer (need a SATA to molex adapter for the Dell 5820 tower)
 1. Connect the power cable from the cooling box to the slot adapter
@@ -86,7 +86,7 @@ You can also use the GUI version:
 * Right click on "Flash 0: User" and choose "Erase".. wait..
 * Right click on the "Flash 0: User" again and choose "Load" and select your favorite CVP13 0xBEFE bitstream file (available in releases section).
 
-If you don't want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
+If you want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
 
 ## Set up the GEM/CSC software
 This repository contains low level hardware access software as well as python scripts, which provide an interactive register access, and various communication testing procedures, and also makes it easy to write your own scripts for interacting the the hardware. Python tools are useful for debugging use, but high level routines like scurve scans, etc, are implemented in the official GEM software, which lives elsewhere (https://gitlab.cern.ch/cmsgemonline), and is not covered by this document.

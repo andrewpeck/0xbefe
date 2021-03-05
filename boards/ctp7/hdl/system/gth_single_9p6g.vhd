@@ -21,6 +21,7 @@ use UNISIM.VCOMPONENTS.all;
 
 library work;
 use work.gth_pkg.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 
 --============================================================================

@@ -164,7 +164,11 @@ begin
     process(ttc_clk_i.clk_40)
     begin
         if (rising_edge(ttc_clk_i.clk_40)) then
-            idle_word <= not idle_word;
+            if (reset_i = '1') then
+                idle_word <= x"00";
+            else
+                idle_word <= not idle_word;
+            end if;
         end if;
     end process;
 

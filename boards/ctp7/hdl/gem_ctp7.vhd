@@ -24,10 +24,12 @@ use work.gth_pkg.all;
 use work.ctp7_utils_pkg.all;
 use work.ttc_pkg.all;
 use work.system_package.all;
+use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ipbus.all;
 use work.axi_pkg.all;
 use work.ipb_addr_decode.all;
+use work.ipb_sys_addr_decode.all;
 use work.gem_board_config_package.all;
 
 --============================================================================
@@ -35,9 +37,11 @@ use work.gem_board_config_package.all;
 --============================================================================
 entity gem_ctp7 is
     generic(
-        C_DATE_CODE      : std_logic_vector(31 downto 0) := x"00000000";
-        C_GITHASH_CODE   : std_logic_vector(31 downto 0) := x"00000000";
-        C_GIT_REPO_DIRTY : std_logic                     := '0'
+        -- Firmware version, date, time, git sha (passed in by Hog)
+        GLOBAL_DATE            : std_logic_vector (31 downto 0);
+        GLOBAL_TIME            : std_logic_vector (31 downto 0);
+        GLOBAL_VER             : std_logic_vector (31 downto 0);
+        GLOBAL_SHA             : std_logic_vector (31 downto 0)        
     );
     port(
         clk_200_diff_in_clk_p          : in  std_logic;
@@ -127,21 +131,22 @@ architecture gem_ctp7_arch of gem_ctp7 is
     --============================================================================
 
     -------------------------- System clocks ---------------------------------
-    signal clk_50       : std_logic;
-    signal clk_62p5     : std_logic;
-    signal clk_200      : std_logic;
+    signal clk_50           : std_logic;
+    signal clk_62p5         : std_logic;
+    signal clk_200          : std_logic;
 
     -------------------------- AXI-IPbus bridge ---------------------------------
     --AXI
-    signal axi_clk      : std_logic;
-    signal axi_reset    : std_logic;
-    signal ipb_axi_mosi : t_axi_lite_mosi;
-    signal ipb_axi_miso : t_axi_lite_miso;
+    signal axi_clk          : std_logic;
+    signal axi_reset        : std_logic;
+    signal ipb_axi_mosi     : t_axi_lite_m2s;
+    signal ipb_axi_miso     : t_axi_lite_s2m;
     --IPbus
-    signal ipb_reset    : std_logic;
-    signal ipb_clk      : std_logic;
-    signal ipb_miso_arr : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
-    signal ipb_mosi_arr : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_reset        : std_logic;
+    signal ipb_clk          : std_logic;
+    signal ipb_usr_miso_arr : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_usr_mosi_arr : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_sys_miso_arr : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
 
     -------------------------- TTC ---------------------------------
     signal ttc_clocks           : t_ttc_clks;
@@ -308,36 +313,21 @@ begin
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
-            C_NUM_IPB_SLAVES   => C_NUM_IPB_SLAVES,
-            C_S_AXI_DATA_WIDTH => 32,
-            C_S_AXI_ADDR_WIDTH => C_IPB_AXI_ADDR_WIDTH
+            C_DEBUG => true
         )
         port map(
-            ipb_reset_o   => ipb_reset,
-            ipb_clk_o     => ipb_clk,
-            ipb_miso_i    => ipb_miso_arr,
-            ipb_mosi_o    => ipb_mosi_arr,
-            S_AXI_ACLK    => axi_clk,
-            S_AXI_ARESETN => axi_reset,
-            S_AXI_AWADDR  => ipb_axi_mosi.awaddr(C_IPB_AXI_ADDR_WIDTH - 1 downto 0),
-            S_AXI_AWPROT  => ipb_axi_mosi.awprot,
-            S_AXI_AWVALID => ipb_axi_mosi.awvalid,
-            S_AXI_AWREADY => ipb_axi_miso.awready,
-            S_AXI_WDATA   => ipb_axi_mosi.wdata,
-            S_AXI_WSTRB   => ipb_axi_mosi.wstrb,
-            S_AXI_WVALID  => ipb_axi_mosi.wvalid,
-            S_AXI_WREADY  => ipb_axi_miso.wready,
-            S_AXI_BRESP   => ipb_axi_miso.bresp,
-            S_AXI_BVALID  => ipb_axi_miso.bvalid,
-            S_AXI_BREADY  => ipb_axi_mosi.bready,
-            S_AXI_ARADDR  => ipb_axi_mosi.araddr(C_IPB_AXI_ADDR_WIDTH - 1 downto 0),
-            S_AXI_ARPROT  => ipb_axi_mosi.arprot,
-            S_AXI_ARVALID => ipb_axi_mosi.arvalid,
-            S_AXI_ARREADY => ipb_axi_miso.arready,
-            S_AXI_RDATA   => ipb_axi_miso.rdata,
-            S_AXI_RRESP   => ipb_axi_miso.rresp,
-            S_AXI_RVALID  => ipb_axi_miso.rvalid,
-            S_AXI_RREADY  => ipb_axi_mosi.rready
+            axi_aclk_i     => axi_clk,
+            axi_aresetn_i  => axi_reset,
+            axil_m2s_i     => ipb_axi_mosi,
+            axil_s2m_o     => ipb_axi_miso,
+            ipb_reset_o    => ipb_reset,
+            ipb_clk_o      => ipb_clk,
+            ipb_sys_miso_i => ipb_sys_miso_arr,
+            ipb_sys_mosi_o => open,
+            ipb_usr_miso_i => ipb_usr_miso_arr,
+            ipb_usr_mosi_o => ipb_usr_mosi_arr,
+            read_active_o  => open,
+            write_active_o => open
         );
 
     -------------------------- GEM logic ---------------------------------
@@ -345,6 +335,10 @@ begin
     g_gem_logic : if not CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         i_gem : entity work.gem_amc
             generic map(
+                g_FW_DATE           => GLOBAL_DATE,
+                g_FW_TIME           => GLOBAL_TIME,
+                g_FW_VER            => GLOBAL_VER,
+                g_FW_SHA            => GLOBAL_SHA,
                 g_GEM_STATION        => CFG_GEM_STATION,
                 g_NUM_OF_OHs         => CFG_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH    => CFG_NUM_GBTS_PER_OH,
@@ -386,8 +380,8 @@ begin
                 
                 ipb_reset_i             => ipb_reset,
                 ipb_clk_i               => ipb_clk,
-                ipb_miso_arr_o          => ipb_miso_arr,
-                ipb_mosi_arr_i          => ipb_mosi_arr,
+                ipb_miso_arr_o          => ipb_usr_miso_arr,
+                ipb_mosi_arr_i          => ipb_usr_mosi_arr,
     
                 led_l1a_o               => LEDs(0),
                 led_trigger_o           => LEDs(1),

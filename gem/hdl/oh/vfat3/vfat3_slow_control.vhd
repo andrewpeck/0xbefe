@@ -12,6 +12,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 use ieee.std_logic_misc.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.ttc_pkg.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
@@ -54,57 +57,6 @@ end vfat3_slow_control;
 
 architecture vfat3_slow_control_arch of vfat3_slow_control is
 
-    component vfat3_sc_tx_fifo
-        port(
-            clk   : in  std_logic;
-            srst  : in  std_logic;
-            din   : in  std_logic;
-            wr_en : in  std_logic;
-            rd_en : in  std_logic;
-            dout  : out std_logic;
-            full  : out std_logic;
-            empty : out std_logic
-        );
-    end component;
-
-    component vio_vfat3_sc
-        port(
-            clk       : IN STD_LOGIC;
-            probe_in0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe_in1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe_in2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe_in3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe_in4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe_in5 : IN STD_LOGIC_VECTOR(111 DOWNTO 0);
-            probe_in6 : IN STD_LOGIC_VECTOR(95 DOWNTO 0)
-        );
-    end component;
-
-	component ila_vfat3_slow_control
-		port(
-			clk    : in std_logic;
-			probe0 : in std_logic;
-			probe1 : in std_logic;
-			probe2 : in std_logic;
-			probe3 : in std_logic;
-			probe4 : in std_logic;
-			probe5 : in std_logic;
-			probe6 : in std_logic;
-			probe7 : in std_logic_vector(7 DOWNTO 0);
-			probe8 : in std_logic_vector(3 DOWNTO 0);
-			probe9 : in std_logic_vector(4 DOWNTO 0);
-			probe10 : in std_logic;
-			probe11 : in std_logic;
-			probe12 : in std_logic_vector(1 DOWNTO 0);
-			probe13 : in std_logic;
-			probe14 : in std_logic;
-			probe15 : in std_logic;
-            probe16 : in std_logic_vector(11 downto 0); 
-            probe17 : in std_logic_vector(31 downto 0); 
-            probe18 : in std_logic_vector(15 downto 0) 
-		);
-	end component;
-	
     component bram_vfat3_sc_adc
         port(
             clka  : in  std_logic;
@@ -470,16 +422,30 @@ begin
             raw_last_packet_o => tx_raw_last_packet
         );
 
-    i_vfat3_sc_tx_fifo : vfat3_sc_tx_fifo
+    i_vfat3_sc_tx_fifo : xpm_fifo_sync
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => 256,
+            WRITE_DATA_WIDTH    => 1,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "0000", -- VALID(12) = 0 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 0
+            READ_DATA_WIDTH     => 1,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
         port map(
-            clk   => ttc_clk_i.clk_40,
-            srst  => reset_i or tx_reset,
-            din   => tx_din,
-            wr_en => tx_en,
-            rd_en => tx_rd_en_i,
-            dout  => tx_data_o,
-            full  => open,
-            empty => tx_empty_o
+            sleep         => '0',
+            rst           => reset_i or tx_reset,
+            wr_clk        => ttc_clk_i.clk_40,
+            wr_en         => tx_en,
+            din(0)        => tx_din,
+            rd_en         => tx_rd_en_i,
+            dout(0)       => tx_data_o,
+            empty         => tx_empty_o,
+            injectsbiterr => '0',
+            injectdbiterr => '0'
         );
 
     i_vfat3_sc_rx : entity work.vfat3_sc_rx
@@ -515,41 +481,4 @@ begin
             douta => adc_cache_dout
         );
 
---    -- DEBUG
---    i_vfat3_sc_vio : vio_vfat3_sc
---        port map(
---            clk       => ttc_clk_i.clk_40,
---            probe_in0 => rx_packet_err_cnt,
---            probe_in1 => rx_bitstuff_err_cnt,
---            probe_in2 => rx_crc_err_cnt,
---            probe_in3 => tx_calc_crc_last,
---            probe_in4 => rx_calc_crc_last,
---            probe_in5 => tx_raw_last_packet_last,
---            probe_in6 => rx_raw_last_reply_last
---        );
---    
---    i_vfat3_sc_ila : ila_vfat3_slow_control
---    	port map(
---    		clk    => ttc_clk_i.clk_40,
---    		probe0 => tx_reset,
---    		probe1 => rx_reset,
---    		probe2 => tx_din,
---    		probe3 => tx_en,
---    		probe4 => rx_data,
---    		probe5 => rx_data_en,
---    		probe6 => tx_is_write,
---    		probe7 => std_logic_vector(transaction_id(7 downto 0)),
---    		probe8 => tx_oh_idx,
---    		probe9 => tx_vfat_idx,
---    		probe10 => rx_valid,
---    		probe11 => rx_error,
---    		probe12 => std_logic_vector(to_unsigned(state_t'pos(state), 2)),
---    		probe13 => ipb_mosi_i.ipb_strobe,
---    		probe14 => tx_command_en,
---    		probe15 => tx_command_en_sync,
---    		probe16 => std_logic_vector(transaction_timer),
---    		probe17 => rx_reg_value,
---    		probe18 => rx_calc_crc
---    	);
-    
 end vfat3_slow_control_arch;

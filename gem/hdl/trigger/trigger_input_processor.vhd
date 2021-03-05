@@ -34,7 +34,6 @@ port(
     missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
     link_overflow_cnt_o : out std_logic_vector(31 downto 0);
     link_underflow_cnt_o: out std_logic_vector(31 downto 0);
-    sync_word_cnt_o     : out std_logic_vector(31 downto 0);
     cluster_cnt_rate_o  : out t_std32_array(8 downto 0);
     cluster_cnt_o       : out t_std32_array(8 downto 0);
     trigger_rate_o      : out std_logic_vector(31 downto 0);
@@ -180,17 +179,6 @@ begin
             reset_i   => reset_i or reset_cnt_i,
             en_i      => link_status_i(i).underflow,
             count_o    => link_underflow_cnt_o(((i + 1) * 16) - 1 downto i * 16)
-        );
-            
-        i_sync_word_cnt: entity work.counter
-        generic map(
-            g_COUNTER_WIDTH => 16            
-        )
-        port map(
-            ref_clk_i => clk_i,
-            reset_i   => reset_i or reset_cnt_i,
-            en_i      => link_status_i(i).sync_word,
-            count_o    => sync_word_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
             
     end generate;
