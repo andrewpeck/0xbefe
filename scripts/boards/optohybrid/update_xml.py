@@ -208,6 +208,25 @@ def write_timing_delays (file_handle):
         f.write('%s    fw_signal="sot_tap_delay(%d)"\n'                                                         %  (padding, vfat))
         f.write('%s    fw_default="%d"/>\n'                                                                     %  (padding, sot_tap_delays[geb_slot]))
 
+def ge21_old_to_new(old):
+    if   (old == 2 ): new = 0
+    elif (old == 0 ): new = 1
+    elif (old == 4 ): new = 2
+    elif (old == 10): new = 3
+    elif (old == 6 ): new = 4
+    elif (old == 8 ): new = 5
+    elif (old == 9 ): new = 6
+    elif (old == 11): new = 7
+    elif (old == 7 ): new = 8
+    elif (old == 1 ): new = 9
+    elif (old == 5 ): new = 10
+    elif (old == 3 ): new = 11
+
+    if (station=="ge21"):
+        return new
+    else:
+        return old
+
 def write_globals (file_handle):
 
     f = file_handle
@@ -242,7 +261,7 @@ def write_xml_invert_map (file_handle):
         else:
             vfat = j
 
-        if (sot_polarity_swap(vfat, station)):
+        if (sot_polarity_swap(ge21_old_to_new(vfat), station)):
             swap = 1
         else:
             swap = 0
@@ -278,6 +297,9 @@ def write_xml_invert_map (file_handle):
             geb_slot = (num_vfats-vfat-1)
         else:
             geb_slot = vfat
+
+        # remap for new numbering
+        geb_slot = ge21_old_to_new(geb_slot)
 
         for pair in range (0,8):
 
