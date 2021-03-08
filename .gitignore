@@ -10,11 +10,14 @@ cxl_error.log
 *.DS_Store
 
 /gem/ip/*/*
-/boards/cvp13/ip/*/*
-/boards/apex/ip/*/*
-/boards/ctp7/ip/*/*
+/boards/*/ip/*/*
 !*.xci
 !*.xcix
+
+**/ip_custom/*/drivers
+**/ip_custom/*/example_designs
+**/ip_custom/*/src/*/*
+!**/ip_custom/*/src/*/*.xci
 
 *.so
 

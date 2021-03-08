@@ -17,7 +17,7 @@ set env(PYTHONHOME) $PYTHONHOME
 source $PATH_REPO/Top/common.tcl
 source $PATH_REPO/Hog/Tcl/create_project.tcl
 
-set_property  ip_repo_paths $PATH_REPO/boards/ctp7/ip  [current_project]
+set_property  ip_repo_paths $PATH_REPO/boards/ctp7/ip_custom  [current_project]
 update_ip_catalog
 set_property default_lib work [current_project]
 set_property top gem_ctp7 [current_fileset]
