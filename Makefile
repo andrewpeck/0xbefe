@@ -18,7 +18,14 @@ endif
 clean:
 	@find . -name "*.jou" -exec rm {} \;
 
-clean_projects:
+clean_bd:
+	git clean -fdX boards/*/bd
+
+clean_ip:
+	git clean -dfX boards/*/ip
+	git clean -dfX */ip
+
+clean_projects: clean_bd clean_ip
 	rm -rf Projects/
 
 all:  update create synth impl
