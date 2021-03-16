@@ -36,6 +36,8 @@
             description="Setting this to 1 will inhibit the TX channel (forces MGTHTXP to 0 and MGTHTXN to 1). This is an expert debug feature."/>
       <node id="RX_LOW_POWER_MODE" address="0x0" mask="0x00000040" permission="rw"
             description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."/>
+          <node id="CPLL_POWERDOWN" address="0x0" mask="0x00000080" permission="rw"
+                description="Setting this to 1 will power down the CPLL. Note that the CPLL should be powered down and up before resetting it."/>
       <node id="RX_PRBS_SEL" address="0x1" mask="0x00000007" permission="rw"
             description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"/>
       <node id="TX_PRBS_SEL" address="0x1" mask="0x00000070" permission="rw"
@@ -55,6 +57,10 @@
             description="CPLL locked signal"/>
       <node id="CPLL_REF_CLK_LOST" address="0x0" mask="0x00000008" permission="r"
             description="CPLL reference clock is lost if this is 1"/>
+      <node id="QPLL_LOCKED" address="0x0" mask="0x00000010" permission="r"
+            description="QPLL locked signal"/>
+      <node id="QPLL_REF_CLK_LOST" address="0x0" mask="0x00000020" permission="r"
+            description="QPLL reference clock is lost if this is 1"/>
       <node id="PRBS_ERROR_CNT" address="0x4" permission="r"
             description="PRBS error counter"/>
       <node id="PRBS_ERROR_CNT" address="0x4" permission="r"
