@@ -21,7 +21,7 @@ port(
     reset_i             : in std_logic;
     reset_cnt_i         : in std_logic;
     clk_i               : in std_logic;
-    sbit_clusters_i     : in t_oh_sbits;
+    sbit_clusters_i     : in t_oh_clusters;
     link_status_i       : in t_oh_sbit_links;
     masked_i            : in std_logic;
     

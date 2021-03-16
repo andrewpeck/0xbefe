@@ -17,3 +17,4 @@ gem/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
 gem/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 gem/ip/ila_trigger/ila_trigger.xci
 gem/ip/ila_clk_phase_check/ila_clk_phase_check.xci
+gem/ip/ila_ge21_trigger_link/ila_ge21_trigger_link.xci

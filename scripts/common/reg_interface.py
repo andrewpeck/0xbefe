@@ -8,8 +8,8 @@ MAX_OH_NUM = 3
 
 class Prompt(Cmd):
 
-    def do_outputnode(self, args):
-        """Output properies of node matching name. USAGE: outputnode <NAME>"""
+    def do_doc(self, args):
+        """Show properies of the node matching the name. USAGE: doc <NAME>"""
         arglist = args.split()
         if len(arglist)==1:
             node = getNode(args)

@@ -48,6 +48,8 @@ entity gbt_link_mux_ge21 is
 
         vfat3_tx_data_arr_i         : in  t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
         vfat3_rx_data_arr_o         : out t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
+        
+        trig_rx_data_arr_o          : out t_std88_array(g_NUM_OF_OHs - 1 downto 0);
 
         gbt_ready_arr_o             : out std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         vfat3_gbt_ready_arr_o       : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
@@ -124,6 +126,8 @@ begin
         vfat3_rx_data_arr_o(i)(2) <= real_gbt_rx_data(i * 2 + 0)(7 downto 0);
         vfat3_rx_data_arr_o(i)(1) <= real_gbt_rx_data(i * 2 + 1)(31 downto 24);
         vfat3_rx_data_arr_o(i)(0) <= real_gbt_rx_data(i * 2 + 0)(15 downto 8);
+
+        trig_rx_data_arr_o(i) <= gbt_rx_data_widebus_arr_i(i * 2 + 1) & real_gbt_rx_data(i * 2 + 1)(71 downto 48) & real_gbt_rx_data(i * 2 + 0)(71 downto 48) & real_gbt_rx_data(i * 2 + 1)(79 downto 72);
 
         --------- TX ---------
         real_gbt_tx_data(i * 2 + 0)(81 downto 80) <= sca_tx_data_arr_i(i);

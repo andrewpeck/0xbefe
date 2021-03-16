@@ -161,6 +161,7 @@ architecture gem_amc_arch of gem_amc is
     signal ipb_reset            : std_logic;
     signal link_reset           : std_logic;
     signal manual_link_reset    : std_logic;
+    signal manual_gbt_reset     : std_logic;
     signal manual_global_reset  : std_logic;
     signal manual_ipbus_reset   : std_logic;
 
@@ -170,7 +171,7 @@ architecture gem_amc_arch of gem_amc is
     signal ttc_status           : t_ttc_status;
 
     --== Trigger signals ==--    
-    signal sbit_clusters_arr        : t_oh_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_clusters_arr        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     
@@ -202,6 +203,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat3_tx_data_arr            : t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat3_rx_data_arr            : t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_vfat3_sbits_arr          : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal ge21_gbt_trig_data_arr       : t_std88_array(g_NUM_OF_OHs - 1 downto 0);
     
     --== VFAT3 ==--
     signal vfat3_sc_only_mode           : std_logic;
@@ -367,6 +369,7 @@ begin
         i_optohybrid_single : entity work.optohybrid
             generic map(
                 g_GEM_STATION   => g_GEM_STATION,
+                g_OH_VERSION    => CFG_OH_VERSION,
                 g_OH_IDX        => std_logic_vector(to_unsigned(i, 4)),
                 g_DEBUG         => CFG_DEBUG_OH and (i = 0)
             )
@@ -402,6 +405,7 @@ begin
                                 
                 sbit_clusters_o         => sbit_clusters_arr(i), 
                 sbit_links_status_o     => sbit_links_status_arr(i), 
+                ge21_gbt_trig_data_i    => ge21_gbt_trig_data_arr(i),
                 gth_rx_trig_data_i      => (gt_trig0_rx_data_arr_i(i), gt_trig1_rx_data_arr_i(i)),
                 gth_rx_trig_usrclk_i    => (gt_trig0_rx_clk_arr_i(i), gt_trig1_rx_clk_arr_i(i)),
 
@@ -564,6 +568,7 @@ begin
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
+            gbt_reset_o                 => manual_gbt_reset,
             gemloader_stats_i           => gemloader_stats,
             gemloader_cfg_o             => gemloader_cfg
         );
@@ -659,7 +664,7 @@ begin
                 RX_ENCODING_ODD     => CFG_GBT_WIDEBUS
             )
             port map(
-                reset_i                     => reset,
+                reset_i                     => reset or manual_gbt_reset,
                 cnt_reset_i                 => link_reset,
                 
                 tx_frame_clk_i              => ttc_clocks_i.clk_40,
@@ -697,9 +702,9 @@ begin
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
-                reset_i              => reset_i,
-                reset_tx_i           => lpgbt_reset_tx,
-                reset_rx_i           => lpgbt_reset_rx,
+                reset_i              => reset_i or manual_gbt_reset,
+                reset_tx_i           => lpgbt_reset_tx or manual_gbt_reset,
+                reset_rx_i           => lpgbt_reset_rx or manual_gbt_reset,
                 cnt_reset_i          => link_reset,
                 tx_frame_clk_i       => ttc_clocks_i.clk_40,
                 rx_frame_clk_i       => ttc_clocks_i.clk_40,
@@ -776,6 +781,7 @@ begin
                 oh_fpga_rx_data_arr_o       => oh_fpga_rx_data_arr,
                 vfat3_tx_data_arr_i         => vfat3_tx_data_arr,
                 vfat3_rx_data_arr_o         => vfat3_rx_data_arr,
+                trig_rx_data_arr_o          => ge21_gbt_trig_data_arr,
                 gbt_ready_arr_o             => gbt_ready_arr,
                 vfat3_gbt_ready_arr_o       => vfat3_gbt_ready_arr,
                 

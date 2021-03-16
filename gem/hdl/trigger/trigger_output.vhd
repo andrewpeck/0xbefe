@@ -30,7 +30,7 @@ entity trigger_output is
         ttc_cmds_i              : in  t_ttc_cmds;
 
         -- Sbit cluster inputs
-        sbit_clusters_i         : in  t_oh_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+        sbit_clusters_i         : in  t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
         sbit_num_valid_i        : in  t_std4_array(g_NUM_OF_OHs - 1 downto 0);
         oh_triggers_i           : in  std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
         oh_mask_i               : in  std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
@@ -49,7 +49,7 @@ architecture trigger_output_arch of trigger_output is
 
     signal oh_triggers          : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_num_valid       : t_std4_array(g_NUM_OF_OHs - 1 downto 0);
-    signal sbit_clusters        : t_oh_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_clusters        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
 begin
 

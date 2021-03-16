@@ -30,11 +30,11 @@ entity sbit_monitor is
 
         -- Sbit cluster inputs
         link_select_i       : in std_logic_vector(3 downto 0);
-        sbit_clusters_i     : in t_oh_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+        sbit_clusters_i     : in t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
         sbit_trigger_i      : in std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
 
         -- output
-        frozen_sbits_o      : out t_oh_sbits;
+        frozen_sbits_o      : out t_oh_clusters;
         l1a_dealy_o         : out std_logic_vector(31 downto 0)
 
     );
@@ -42,11 +42,11 @@ end sbit_monitor;
 
 architecture sbit_monitor_arch of sbit_monitor is
     
-    constant ZERO_SBITS     : t_oh_sbits := (others => (address => "111" & x"FA", size => "000"));
+    constant ZERO_SBITS     : t_oh_clusters := (others => (address => "111" & x"FA", size => "000"));
     
     signal armed            : std_logic := '1';
     signal link_trigger     : std_logic;
-    signal link_sbits       : t_oh_sbits;
+    signal link_sbits       : t_oh_clusters;
     
     signal l1a_delay_run    : std_logic := '0';
     signal l1a_delay        : unsigned(31 downto 0);
