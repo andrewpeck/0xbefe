@@ -49,6 +49,8 @@ set PROPERTIES [dict create \
 
 ############################################################
 
+set user_ip_repo ""
+
 set DESIGN    "[file rootname [file tail [info script]]]"
 set PATH_REPO "[file normalize [file dirname [info script]]]/../../"
 
