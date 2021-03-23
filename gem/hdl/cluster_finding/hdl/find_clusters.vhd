@@ -46,6 +46,16 @@ architecture behavioral of find_clusters is
     return to_integer(unsigned(vec));
   end int;
 
+  function to_cnt (cnt : std_logic_vector; vpf : std_logic)
+    return std_logic_vector is
+  begin
+    if (vpf = '1') then
+      return cnt;
+    else
+      return "111";
+    end if;
+  end to_cnt;
+
   function to_address (station : integer; encoder : integer; adr : std_logic_vector; vpf : std_logic)
     return std_logic_vector is
   begin
@@ -251,9 +261,9 @@ begin
       -- if (adr>191) prt = prt + 1
       if (rising_edge(clock)) then
         clusters_buf(int(encoder_cycle)).adr <= to_address(station, I, adr_enc, vpf_enc);
-        clusters_buf(int(encoder_cycle)).cnt <= cnt_enc;
-        clusters_buf(int(encoder_cycle)).vpf <= vpf_enc;
+        clusters_buf(int(encoder_cycle)).cnt <= to_cnt (cnt_enc, vpf_enc);
         clusters_buf(int(encoder_cycle)).prt <= to_partition (station, I, adr_enc, vpf_enc);
+        clusters_buf(int(encoder_cycle)).vpf <= vpf_enc;
       end if;
 
       -- latch outputs of priority encoder when it produces its results, stable for sorter
