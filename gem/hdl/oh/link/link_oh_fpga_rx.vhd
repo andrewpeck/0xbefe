@@ -11,9 +11,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
 entity link_oh_fpga_rx is
 generic(
     g_ELINK_WIDTH     : integer := 8;

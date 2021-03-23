@@ -15,6 +15,7 @@ use work.types_pkg.all;
 use work.ipbus_pkg.all;
 use work.hardware_pkg.all;
 use work.tmr_pkg.all;
+use work.cluster_pkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -397,7 +398,6 @@ begin
 
 
   trigger_data_formatter_tmr : if (true) generate
-    signal clusters      : sbit_cluster_array_array_t (2 downto 0);
     signal cluster_count : t_std11_array (2 downto 0);
     signal overflow      : std_logic_vector (2 downto 0);
 

@@ -4,10 +4,6 @@ gem/hdl/oh_fe/*/generated/oh_ge11/*.vhd
 # ip
 boards/ge11_oh/ip/*/*.xco
 
-# cluster finding
-gem/hdl/cluster_finding/count1536.v
-gem/hdl/cluster_finding/priority384.v
-
 # GT
 boards/ge11_oh/ip/mgt/mgt_gtx.vhd 93
 gem/hdl/oh_fe/mgt/gtx/gtx_tx_sync.vhd 93

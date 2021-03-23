@@ -1,7 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
-library unisim;
-use unisim.vcomponents.all;
 library work;
 use work.sixbit_eightbit_pkg.all;
 

@@ -16,13 +16,16 @@ package cluster_pkg is
   constant MXPRTB : integer := 3;       -- bits for # of partitions
 
   subtype sbits_t is std_logic_vector(63 downto 0);
+
   type sbits_array_t is array(integer range <>) of sbits_t;
+
   type sbit_cluster_t is record
     adr : std_logic_vector (MXADRB-1 downto 0);
     cnt : std_logic_vector (MXCNTB-1 downto 0);
     prt : std_logic_vector (MXPRTB-1 downto 0);
     vpf : std_logic;                    -- high for full 25ns
   end record;
+
   type sbit_cluster_array_t is array(integer range<>) of sbit_cluster_t;
 
   constant NULL_CLUSTER : sbit_cluster_t := (

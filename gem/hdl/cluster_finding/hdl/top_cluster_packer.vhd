@@ -282,11 +282,11 @@ begin
       )
     port map (
       clock      => clk_fast,
-      vpfs_in    => vpfs,
-      cnts_in    => cnts,
+      vpfs_i     => vpfs,
+      cnts_i     => cnts,
       clusters_o => clusters,
-      latch_in   => latch_pulse_s1,
-      latch_out  => cluster_latch
+      latch_i    => latch_pulse_s1,
+      latch_o    => cluster_latch
       );
 
   ------------------------------------------------------------------------------------------------------------------------

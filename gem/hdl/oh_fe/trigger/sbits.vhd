@@ -23,6 +23,7 @@ library work;
 use work.types_pkg.all;
 use work.tmr_pkg.all;
 use work.hardware_pkg.all;
+use work.cluster_pkg.all;
 
 entity sbits is
   port(
@@ -212,7 +213,12 @@ begin
   -- Cluster Packer
   --------------------------------------------------------------------------------------------------------------------
 
+
   cluster_packer_tmr : if (true) generate
+
+    type sbit_cluster_array_array_t is array(integer range<>)
+      of sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+
     signal clusters      : sbit_cluster_array_array_t (2 downto 0);
     signal cluster_count : t_std11_array (2 downto 0);
     signal overflow      : std_logic_vector (2 downto 0);
@@ -232,9 +238,11 @@ begin
           ONESHOT  => false
           )
         port map (
-          clocks      => clocks,
-          reset       => reset_i,
-          sbits_i     => vfat_sbits_strip_mapped,
+          clk_40          => clocks.clk40,
+          clk_fast        => clocks.clk160_0,
+          reset           => reset_i,
+
+          sbits_i         => vfat_sbits_strip_mapped,
 
           cluster_count_o => cluster_count(I),
           clusters_o      => clusters(I),

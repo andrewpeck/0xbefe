@@ -19,6 +19,7 @@ use ieee.numeric_std.all;
 library work;
 use work.types_pkg.all;
 use work.hardware_pkg.all;
+use work.cluster_pkg.all;
 
 entity sbits_hitmap is
 

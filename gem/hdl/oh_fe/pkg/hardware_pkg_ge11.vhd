@@ -25,7 +25,6 @@ package hardware_pkg is
 
   -- Chamber Parameters
   constant MXSBITS         : integer := 64;
-  constant ENCODER_SIZE    : integer := 384;
   constant PARTITION_SIZE  : integer := 3;
   constant NUM_PARTITIONS  : integer := 8;
   constant NUM_VFATS       : integer := PARTITION_SIZE * NUM_PARTITIONS;
@@ -41,11 +40,6 @@ package hardware_pkg is
   constant MXADRB : integer := 8;       -- bits for addr in partition
   constant MXCNTB : integer := 3;       -- bits for size of cluster
   constant MXPRTB : integer := 3;       -- bits for # of partitions
-
-  constant NUM_ENCODERS        : integer := 4;
-  constant NUM_CYCLES          : integer := 4;                          -- number of clocks (4 for 160MHz, 5 for 200MHz)
-  constant NUM_FOUND_CLUSTERS  : integer := NUM_ENCODERS * NUM_CYCLES;  -- 16
-  constant NUM_OUTPUT_CLUSTERS : integer := 10;
 
   constant NUM_OPTICAL_PACKETS : integer := 2;  -- # of different optical link packets
   constant NUM_ELINK_PACKETS   : integer := 0;  -- # of different copper link packets

@@ -24,13 +24,7 @@ gem/hdl/oh_fe/pkg/ipbus_pkg.vhd 93
 gem/hdl/oh_fe/pkg/types_pkg.vhd 93
 
 # Cluster packer
-gem/hdl/cluster_finding/consecutive_count.v
-gem/hdl/cluster_finding/find_cluster_primaries.v
-gem/hdl/cluster_finding/find_clusters.vhd 93
-gem/hdl/cluster_finding/sorter16.v
-gem/hdl/cluster_finding/top_cluster_packer.vhd 93
-gem/hdl/cluster_finding/truncate_clusters.v
-gem/hdl/cluster_finding/x_oneshot.v
+gem/hdl/cluster_finding/cluster_finding.src
 
 # Trigger
 gem/hdl/oh_fe/trigger/active_vfats.vhd 93
