@@ -13,10 +13,8 @@ entity cluster_packer is
     SPLIT_CLUSTERS    : integer := 0;
     INVERT_PARTITIONS : boolean := false;
 
-    NUM_VFATS           : integer := 24;
-    NUM_PARTITIONS      : integer := 8;
-    NUM_FOUND_CLUSTERS  : integer := 0;
-    NUM_OUTPUT_CLUSTERS : integer := 0;
+    NUM_VFATS           : integer := 0;
+    NUM_PARTITIONS      : integer := 0;
     STATION             : integer := 0
     );
   port(
@@ -66,7 +64,8 @@ architecture behavioral of cluster_packer is
 
   component count_clusters
     generic (
-      overflow_thresh : integer
+      SIZE            : integer;
+      OVERFLOW_THRESH : integer
       );
     port (
       clock      : in  std_logic;
@@ -78,11 +77,11 @@ architecture behavioral of cluster_packer is
 
   component find_cluster_primaries
     generic (
-      MXPADS         : integer := 1536;
-      MXROWS         : integer := 8;
-      MXKEYS         : integer := 192;
-      MXCNTBITS      : integer := 3;
-      SPLIT_CLUSTERS : integer := 0
+      MXPADS         : integer;
+      MXROWS         : integer;
+      MXKEYS         : integer;
+      MXCNTBITS      : integer;
+      SPLIT_CLUSTERS : integer
       );
     port (
       clock : in  std_logic;
@@ -210,6 +209,7 @@ begin
 
   find_cluster_primaries_inst : find_cluster_primaries
     generic map (
+      MXCNTBITS      => 3,
       MXPADS         => NUM_VFATS*MXSBITS,
       MXROWS         => NUM_PARTITIONS,
       MXKEYS         => PARTITION_WIDTH*MXSBITS,
@@ -240,7 +240,9 @@ begin
   -- Timed in for on 2020/06/26
   count_clusters_inst : count_clusters
     generic map (
-      overflow_thresh => NUM_OUTPUT_CLUSTERS
+      overflow_thresh => NUM_OUTPUT_CLUSTERS,
+      size            => NUM_VFATS*MXSBITS
+
       )
     port map (
       clock      => clk_fast,

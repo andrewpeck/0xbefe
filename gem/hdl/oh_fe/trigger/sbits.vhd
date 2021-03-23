@@ -234,15 +234,18 @@ begin
 
       cluster_packer_inst : entity work.cluster_packer
         generic map (
-          DEADTIME => 0,
-          ONESHOT  => false
+          DEADTIME       => 0,
+          ONESHOT        => false,
+          NUM_VFATS      => NUM_VFATS,
+          NUM_PARTITIONS => NUM_PARTITIONS,
+          STATION        => STATION
           )
         port map (
-          clk_40          => clocks.clk40,
-          clk_fast        => clocks.clk160_0,
-          reset           => reset_i,
+          clk_40   => clocks.clk40,
+          clk_fast => clocks.clk160_0,
+          reset    => reset_i,
 
-          sbits_i         => vfat_sbits_strip_mapped,
+          sbits_i => vfat_sbits_strip_mapped,
 
           cluster_count_o => cluster_count(I),
           clusters_o      => clusters(I),

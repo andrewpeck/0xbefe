@@ -8,6 +8,7 @@ use work.tmr_pkg.all;
 package hardware_pkg is
 
   -- Configuration
+  constant STATION   : integer := 2;
   constant GE21      : integer := 1;
   constant GE11      : integer := 0;
   constant FPGA_TYPE : string  := "A7";
