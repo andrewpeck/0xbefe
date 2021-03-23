@@ -11,11 +11,13 @@ cxl_error.log
 
 /gem/ip/*/*
 /boards/*/ip/*/*
-/boards/cvp13/ip/*/*
-/boards/apex/ip/*/*
-/boards/ctp7/ip/*/*
 !*.xci
 !*.xcix
+
+**/ip_custom/*/drivers
+**/ip_custom/*/example_designs
+**/ip_custom/*/src/*/*
+!**/ip_custom/*/src/*/*.xci
 
 *.so
 

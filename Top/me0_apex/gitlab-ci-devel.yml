@@ -3,4 +3,5 @@ generate_project:me0_apex:
     variables:
       extends: .vars
       PROJECT_NAME: me0_apex
+      INTERMEDIATE_BUILD: "1"
 

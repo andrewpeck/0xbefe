@@ -80,14 +80,23 @@ def parseXML():
         addressTable = ADDRESS_TABLE_DEFAULT
     print 'Parsing',addressTable,'...'
     tree = None
+    lxmlExists = False
     try:
         imp.find_module('lxml')
         import lxml.etree
-        tree = lxml.etree.parse(addressTable)
-        tree.xinclude()
+        lxmlExists = True
     except:
         print("WARNING: lxml python module was not found, so xinclude won't work")
+
+    if lxmlExists:
+        tree = lxml.etree.parse(addressTable)
+        try:
+            tree.xinclude()
+        except Exception as e:
+            print(e)
+    else:
         tree = xml.parse(addressTable)
+
     root = tree.getroot()
     vars = {}
     makeTree(root,'',0x0,nodes,None,vars,False)

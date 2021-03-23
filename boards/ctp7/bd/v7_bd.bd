@@ -45,6 +45,9 @@
           "MASTER_TYPE": {
             "value": "BRAM_CTRL"
           },
+          "READ_WRITE_MODE": {
+            "value": "READ_WRITE"
+          },
           "MEM_ECC": {
             "value": "NONE",
             "value_src": "default"
@@ -69,6 +72,9 @@
         "parameters": {
           "MASTER_TYPE": {
             "value": "BRAM_CTRL"
+          },
+          "READ_WRITE_MODE": {
+            "value": "READ_WRITE"
           },
           "MEM_ECC": {
             "value": "NONE",

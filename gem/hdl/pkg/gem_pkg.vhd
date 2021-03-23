@@ -38,8 +38,8 @@ package gem_pkg is
 
     constant NULL_SBIT_CLUSTER : t_sbit_cluster := (size => (others => '1'), address => (others => '1')); 
 
-    type t_oh_sbits is array(7 downto 0) of t_sbit_cluster;
-    type t_oh_sbits_arr is array(integer range <>) of t_oh_sbits;
+    type t_oh_clusters is array(7 downto 0) of t_sbit_cluster;
+    type t_oh_clusters_arr is array(integer range <>) of t_oh_clusters;
 
     type t_sbit_link_status is record
         sbit_overflow   : std_logic;

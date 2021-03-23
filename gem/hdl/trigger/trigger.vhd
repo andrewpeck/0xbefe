@@ -34,7 +34,7 @@ entity trigger is
         ttc_cmds_i          : in  t_ttc_cmds;
 
         -- Sbit cluster inputs
-        sbit_clusters_i     : in t_oh_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+        sbit_clusters_i     : in t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
         sbit_link_status_i  : in t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- Outputs
@@ -70,7 +70,7 @@ architecture trigger_arch of trigger is
     signal or_trigger           : std_logic;
         
     signal sbitmon_reset        : std_logic;
-    signal sbitmon_sbits        : t_oh_sbits;
+    signal sbitmon_sbits        : t_oh_clusters;
     signal sbitmon_l1a_delay    : std_logic_vector(31 downto 0);
     signal sbitmon_link_select  : std_logic_vector(3 downto 0);
     

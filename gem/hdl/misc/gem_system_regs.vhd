@@ -51,6 +51,7 @@ port(
     vfat3_sc_only_mode_o        : out std_logic;
     manual_link_reset_o         : out std_logic;
     global_reset_o              : out std_logic;
+    gbt_reset_o                 : out std_logic;
     manual_ipbus_reset_o        : out std_logic;
     
     gemloader_stats_i           : in  t_gem_loader_stats;

@@ -71,11 +71,11 @@
           description="Trigger count -- this trigger fires whenever there's at least one valid sbit cluster"
           fw_signal="trigger_cnt(${OH_IDX})"
           sw_monitor_warn_min_threshold="1000000"/>
-    <node id="CLUSTER_SIZE_${CS_IDX}_RATE" address="0x10" permission="r"
+    <node id="CLUSTER_COUNT_${CS_IDX}_RATE" address="0x10" permission="r"
           description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
           fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
           generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
-    <node id="CLUSTER_SIZE_${CS_IDX}_CNT" address="0x20" permission="r"
+    <node id="CLUSTER_COUNT_${CS_IDX}_CNT" address="0x20" permission="r"
           description="Count of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
           fw_signal="cluster_cnt(${OH_IDX} * 9 + ${CS_IDX})"
           generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
@@ -141,6 +141,10 @@
     <node id="IPBUS_RESET" address="0x2" permission="w"
           description="Reset of all registers to their default value"
           fw_write_pulse_signal="ipbus_reset_trig"
+          sw_ctrl_configure_set="0x1"/>
+    <node id="GBT_RESET" address="0x3" permission="w"
+          description="Reset all the GBT cores"
+          fw_write_pulse_signal="gbt_reset_o"
           sw_ctrl_configure_set="0x1"/>
   </node>
 
@@ -286,7 +290,7 @@
   </node>
 
   <node id="VFAT_DAQ_MONITOR" address="0x2000"
-          description="This module listens to the DAQ data of 24 VFATs from a selected OH 
+          description="This module listens to the DAQ data of 24 VFATs from a selected OH
                        and counts the number of good events received and the number of times a selected channel (or any channel) has fired.
                        This is useful for various scan routines.">
     <node id="CTRL" address="0x0">
@@ -796,7 +800,7 @@
             sw_monitor_warn_value="100"/>
 
     </node>
-    
+
   </node>
 </node>
 
@@ -836,7 +840,7 @@
       <node id="CRITICAL_ERROR" address="0x1" mask="0xffffffff" permission="r"
             description="Bits in this register indicate that the SCA controller for the corresponding link has encountered a critical error (needs reset)"
             fw_signal="sca_critical_error_arr"/>
-      <node id="NOT_READY_CNT_OH${OH_IDX}" address="0x2" mask="0x0000ffff" permission="r" 
+      <node id="NOT_READY_CNT_OH${OH_IDX}" address="0x2" mask="0x0000ffff" permission="r"
             description="Counts the number of times that the SCA controller READY signal went to 0 since last SCA reset"
             generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00000001" generate_idx_var="OH_IDX"
             fw_signal="sca_not_ready_cnt_arr(${OH_IDX})"/>
@@ -867,7 +871,7 @@
     <node id="MANUAL_CONTROL" address="0x1000">
       <node id="LINK_ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
             description="This is a bitmask of enabled links for the SCA manual command.
-                         Multiple channels can be enabled at the same time, which will 
+                         Multiple channels can be enabled at the same time, which will
                          result in a broadcast command to these channels when writing to the command registers"
             fw_signal="sca_user_command_en_mask" fw_default="0x00000000"/>
 
@@ -912,7 +916,7 @@
       <node id="CTRL" address="0x0">
         <node id="ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
               description="This is a bitmask of enabled links for the SCA JTAG commands.
-                           Multiple channels can be enabled at the same time, which will 
+                           Multiple channels can be enabled at the same time, which will
                            result in a broadcast command to these channels when writing to the TDO and TMS registers"
               fw_signal="jtag_enabled_mask" fw_default="0x00000000"/>
         <node id="SHIFT_MSB" address="0x1" mask="0x00000002" permission="rw"
@@ -1079,7 +1083,7 @@
               <node id="ARM_TRIM_AMPLITUDE"  address="0x0" mask="0x0000003f"  permission="rw"
                     description="Arming Comparator threshold trimming: correction amplitude (steps of 0.5mV)">
               </node>
-              
+
             </node>
           </node> <!-- end of VFATChannels -->
 
@@ -1257,7 +1261,7 @@
           <node id="HW_CHIP_ID"  address="0x103"  permission="r"
                 description="Chip ID from eFuses.">
           </node>
-          
+
           <!-- probably better to leave these out as they should only be used during fusing
           <node id="HW_PROG_TIME"  address="0x104" mask="0x0007ff00" permission="w"
                 description="eFuse: program time in 25ns units. Range: 0-0x7ff">
@@ -1298,13 +1302,13 @@
     <node id="BLASTER_ENABLE" address="0x0" mask="0x00000001" permission="rw"
           description="Set this to 1 to enable the configuration blasting after the hard reset. By default this is disabled, because config RAM is empty on startup, so only enable this after the config RAM has been written with valid config data.">
     </node>
-  </node>        
+  </node>
 
   <node id="STATUS" address="0x100">
     <node id="GBT_RAM_SIZE" address="0x0" permission="r" description="Size of the GBT config RAM (in 32bit words, or number of available addresses)"/>
     <node id="VFAT_RAM_SIZE" address="0x1" permission="r" description="Size of the VFAT config RAM (in 32bit words, or number of available addresses)"/>
     <node id="OH_RAM_SIZE" address="0x2" permission="r" description="Size of the OH config RAM (in 32bit words, or number of available addresses)"/>
-  </node>        
+  </node>
 
   <node id="RAM" address="0x10000">
     <node id="GBT" address="0x00000" mode="block" size="3312" permission="rw"
@@ -1335,4 +1339,3 @@
   </node>
 
 </node> <!-- end Config Blaster block -->
-

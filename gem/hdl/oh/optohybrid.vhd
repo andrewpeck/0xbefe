@@ -21,6 +21,7 @@ use work.ipbus.all;
 entity optohybrid is
     generic(
         g_GEM_STATION   : integer;
+        g_OH_VERSION    : integer;
         g_OH_IDX        : std_logic_vector(3 downto 0);
         g_DEBUG         : boolean := false -- if this is set to true, some chipscope cores will be inserted
     );
@@ -65,7 +66,8 @@ entity optohybrid is
         -- Trigger links
         gth_rx_trig_usrclk_i    : in std_logic_vector(1 downto 0);
         gth_rx_trig_data_i      : in t_mgt_16b_rx_data_arr(1 downto 0);
-        sbit_clusters_o         : out t_oh_sbits;
+        ge21_gbt_trig_data_i    : in std_logic_vector(87 downto 0);
+        sbit_clusters_o         : out t_oh_clusters;
         sbit_links_status_o     : out t_oh_sbit_links;
         
         -- OH reg forwarding IPbus
@@ -267,7 +269,7 @@ begin
     --==   RX Trigger Link   ==--
     --=========================--
 
-    g_use_trig_links : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
+    g_8b10b_trig_links : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
     
         gen_trig_links: for i in 0 to 1 generate
     
@@ -307,7 +309,7 @@ begin
             
             -- TODO: report rxnotintable
             
-            i_link_rx_trigger : entity work.link_rx_trigger
+            i_link_rx_trigger_ge11 : entity work.link_rx_trigger_ge11
                 generic map (
                     g_DEBUG => false
                 )
@@ -326,6 +328,33 @@ begin
         
         end generate;
     end generate;
+        
+    g_gbt_trig_links : if g_GEM_STATION = 2 and g_OH_VERSION >= 2 generate
+    
+        i_link_rx_trigger_ge21 : entity work.link_rx_trigger_ge21
+            generic map(
+                g_DEBUG        => g_DEBUG,
+                g_REGISTER_IN  => true,
+                g_REGISTER_OUT => false
+            )
+            port map(
+                reset_i         => reset_i,
+                ttc_clk_40_i    => ttc_clk_i.clk_40,
+                rx_data_i       => ge21_gbt_trig_data_i,
+                sbit_clusters_o => sbit_clusters_o,
+                bc0_o           => open,
+                resync_o        => open,
+                sbit_overflow_o => sbit_links_status_o(0).sbit_overflow,
+                ecc_err_o       => open,
+                oh_err_o        => open,
+                protocol_err_o  => sbit_links_status_o(0).missed_comma
+            );
+    
+        sbit_links_status_o(0).underflow <= '0';
+        sbit_links_status_o(0).overflow <= '0';
+        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0');
+
+    end generate;        
         
     g_no_trig_links : if g_GEM_STATION = 0 generate
         sbit_links_status_o <= (others => (sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '0'));
@@ -372,16 +401,18 @@ begin
                 probe14 => dbg_vfat3_cnt_events,
                 probe15 => dbg_vfat3_cnt_crc_errors
             );
-
-        i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
-            port map(
-                clk_i          => gth_rx_trig_usrclk_i(0),
-                kchar_i        => gth_rx_trig_data_i(0).rxcharisk(1 downto 0),
-                comma_i        => gth_rx_trig_data_i(0).rxchariscomma(1 downto 0),
-                not_in_table_i => gth_rx_trig_data_i(0).rxnotintable(1 downto 0),
-                disperr_i      => gth_rx_trig_data_i(0).rxdisperr(1 downto 0),
-                data_i         => gth_rx_trig_data_i(0).rxdata(15 downto 0)
-            );
+        
+        g_debug_ge11_trig_link : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
+            i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
+                port map(
+                    clk_i          => gth_rx_trig_usrclk_i(0),
+                    kchar_i        => gth_rx_trig_data_i(0).rxcharisk(1 downto 0),
+                    comma_i        => gth_rx_trig_data_i(0).rxchariscomma(1 downto 0),
+                    not_in_table_i => gth_rx_trig_data_i(0).rxnotintable(1 downto 0),
+                    disperr_i      => gth_rx_trig_data_i(0).rxdisperr(1 downto 0),
+                    data_i         => gth_rx_trig_data_i(0).rxdata(15 downto 0)
+                );
+       end generate;
 
     end generate;     
      
