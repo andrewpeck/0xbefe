@@ -5,6 +5,22 @@
 --       in all cases there are 5 clusters max on the copper links
 --       this is so annoying and stupid :( just ignore it for now...
 
+-- |------------------+----+-----------+---------+-------------+----------|
+-- | Firmware Link    |  # | Data Bits |   GBT # | E-link Pair | GBT Bits |
+-- |------------------+----+-----------+---------+-------------+----------|
+-- | CL_WORD0 [7:0]   |  0 | 7:0       |       1 |          36 |    79:72 |
+-- | CL_WORD0 [15:8]  |  1 | 15:8      |       0 |          24 |    55:48 |
+-- | CL_WORD1 [23:16] |  2 | 23:16     |       0 |          28 |    63:56 |
+-- | CL_WORD1 [31:24] |  3 | 31:24     |       0 |          32 |    71:64 |
+-- | CL_WORD2 [39:32] |  4 | 39:32     |       1 |          24 |    55:48 |
+-- | CL_WORD2 [47:40] |  5 | 47:40     |       1 |          28 |    63:56 |
+-- | CL_WORD3 [48:55] |  6 | 55:48     |       1 |          32 |    71:64 |
+-- | CL_WORD3 [63:56] |  7 | 63:56     | Widebus |           1 |      0:7 |
+-- | CL_WORD4 [71:64] |  8 | 71:64     | Widebus |           5 |     8:15 |
+-- | CL_WORD4 [79:72] |  9 | 79:72     | Widebus |           9 |    16:23 |
+-- | ECC8             | 10 | 87:80     | Widebus |          13 |    24:31 |
+-- |------------------+----+-----------+---------+-------------+----------|
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -255,12 +271,12 @@ begin
     -- create cluster words for ge1/1 or ge2/1
     ge21_gen : if (GE21 = 1) generate
       cluster_words (I) <= late_cluster_flag(I) & special_bits(I) & '0'
-                           & clusters(I).cnt & clusters(I).prt & clusters(I).adr;
+                           & clusters(I).cnt & clusters(I).prt(0) & clusters(I).adr(8 downto 0);
     end generate;
 
     ge11_gen : if (GE21 = 0) generate
       cluster_words (I) <= late_cluster_flag(I) & special_bits(I)
-                           & clusters(I).cnt & clusters(I).prt & clusters(I).adr;
+                           & clusters(I).cnt & clusters(I).prt(2 downto 0) & clusters(I).adr(7 downto 0);
     end generate;
   end generate;
 
