@@ -170,20 +170,41 @@ package gem_board_config_package is
         (1, 2),   -- fiber 2
         (3, 3),   -- fiber 3
         --=== Quad 131 ===--
-        (10, 8),  -- fiber 4  ! RX inverted ! TX inverted
-        (9, 9),   -- fiber 5  ! RX inverted ! TX inverted
-        (8, 10),  -- fiber 6  ! RX inverted ! TX inverted
-        (11, 11), -- fiber 7  ! RX inverted ! TX inverted
-        --=== Quad 130 ===--
-        (5, 4),   -- fiber 8
-        (7, 5),   -- fiber 9  ! RX inverted
-        (4, 6),   -- fiber 10 ! RX inverted
-        (6, 7),   -- fiber 11 ! RX inverted
-        --=== Quad 132 ===--
-        (12, 12), -- fiber 12 ! RX inverted
-        (13, 13), -- fiber 13               ! TX inverted
-        (15, 14), -- fiber 14               ! TX inverted
-        (14, 15), -- fiber 15
+        (6, 4),  -- fiber 4  ! RX inverted ! TX inverted
+        (5, 5),  -- fiber 5  ! RX inverted ! TX inverted
+        (4, 6),  -- fiber 6  ! RX inverted ! TX inverted
+        (7, 7),  -- fiber 7  ! RX inverted ! TX inverted
+
+        --=== dummy ===--
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        
+--        --=== Quad 129 ===--
+--        (0, 0),   -- fiber 0  ! RX inverted
+--        (2, 1),   -- fiber 1  ! RX inverted
+--        (1, 2),   -- fiber 2
+--        (3, 3),   -- fiber 3
+--        --=== Quad 131 ===--
+--        (10, 8),  -- fiber 4  ! RX inverted ! TX inverted
+--        (9, 9),   -- fiber 5  ! RX inverted ! TX inverted
+--        (8, 10),  -- fiber 6  ! RX inverted ! TX inverted
+--        (11, 11), -- fiber 7  ! RX inverted ! TX inverted
+--        --=== Quad 130 ===--
+--        (5, 4),   -- fiber 8
+--        (7, 5),   -- fiber 9  ! RX inverted
+--        (4, 6),   -- fiber 10 ! RX inverted
+--        (6, 7),   -- fiber 11 ! RX inverted
+--        --=== Quad 132 ===--
+--        (12, 12), -- fiber 12 ! RX inverted
+--        (13, 13), -- fiber 13               ! TX inverted
+--        (15, 14), -- fiber 14               ! TX inverted
+--        (14, 15), -- fiber 15
         --=== DUMMY channel - use for unconnected channels ===--
         (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)  -- dummy fiber
     );
@@ -192,7 +213,7 @@ package gem_board_config_package is
     -- MGT configuration
     --================================--    
     
-    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+    constant CFG_MGT_NUM_CHANNELS : integer := 8;--CFG_BOARD_MAX_LINKS;
     constant CFG_MGT_MASTER_CHANNEL : integer := 4;
     
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
@@ -207,17 +228,17 @@ package gem_board_config_package is
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),
+        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)
 
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)        
     );
 
     constant CFG_MGT_LINK_CONFIG_GE21 : t_mgt_config_arr := (
@@ -229,17 +250,17 @@ package gem_board_config_package is
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),
+        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)
 
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true, rx_use_buf => false)        
     );
 
     constant CFG_MGT_LINK_CONFIG_ME0 : t_mgt_config_arr := (
@@ -251,17 +272,17 @@ package gem_board_config_package is
         (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
         (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),
+        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false)
 
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
-        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false)        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),        
+--        (link_type => MGT_LPGBT, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false)        
     );
 
     function get_mgt_config(gem_station: integer; ge11_config, ge21_config, me0_config : t_mgt_config_arr) return t_mgt_config_arr;

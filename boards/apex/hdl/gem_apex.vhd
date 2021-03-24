@@ -95,7 +95,8 @@ architecture gem_apex_arch of gem_apex is
             user_axil_rdata     : in  STD_LOGIC_VECTOR(31 downto 0);
             user_axil_rresp     : in  STD_LOGIC_VECTOR(1 downto 0);
             user_axil_rvalid    : in  STD_LOGIC;
-            user_axil_rready    : out STD_LOGIC
+            user_axil_rready    : out STD_LOGIC;
+            clk_100_o           : out STD_LOGIC
         );
     end component apex_blk;
 
@@ -145,6 +146,10 @@ architecture gem_apex_arch of gem_apex is
     signal ipb_usr_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
     signal ipb_sys_miso_arr     : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
     signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+      
+    -- DAQ and other
+    signal clk_100              : std_logic;
+    signal slink_mgt_ref_clk    : std_logic;
       
     -------------------- MGTs mapped to GEM links ---------------------------------
     
@@ -218,7 +223,8 @@ begin
             user_axil_rdata     => axil_s2m.rdata,
             user_axil_rresp     => axil_s2m.rresp,
             user_axil_rvalid    => axil_s2m.rvalid,
-            user_axil_rready    => axil_m2s.rready
+            user_axil_rready    => axil_m2s.rready,
+            clk_100_o           => clk_100
         );
 
     --================================--
@@ -278,12 +284,12 @@ begin
             gty_refclk1_div2_o => gty_refclk1_div2
         );
     
-    -- temporary GTY channel refclk wiring for 4 selected channels
+    -- temporary GTY channel refclk wiring for some selected channels
     g_mgt_quad_129_ref_clks: for i in 0 to 3 generate
         mgt_refclks(i).gtrefclk0 <= gty_refclk0(0);
         mgt_refclks(i).gtrefclk1 <= gty_refclk1(0);
     end generate;
-    g_mgt_quad_130_131_132_ref_clks: for i in 4 to 15 generate
+    g_mgt_quad_131_ref_clks: for i in 4 to 7 generate
         mgt_refclks(i).gtrefclk0 <= gty_refclk0(1);
         mgt_refclks(i).gtrefclk1 <= gty_refclk1(1);
     end generate;
@@ -338,6 +344,29 @@ begin
         );
 
     --================================--
+    -- SLink Rocket
+    --================================--
+
+    i_slink_rocket : entity work.slink_rocket
+        generic map(
+            g_NUM_CHANNELS => 1,
+            g_LINE_RATE    => "25.78125",
+            q_REF_CLK_FREQ => "322.265625",
+            g_MGT_TYPE     => "GTY"
+        )
+        port map(
+            reset_i          => gem_powerup_reset,
+            clk_stable_100_i => clk_100,
+            mgt_ref_clk_i    => slink_mgt_ref_clk,
+            ipb_reset_i      => ipb_reset,
+            ipb_clk_i        => ipb_clk,
+            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
+            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
+        );
+
+    slink_mgt_ref_clk <= gty_refclk1(1);
+
+    --================================--
     -- GEM Logic
     --================================--
 
@@ -359,7 +388,7 @@ begin
         )
         port map(
             reset_i                 => '0',
-            reset_pwrup_o           => open,
+            reset_pwrup_o           => gem_powerup_reset,
             
             ttc_clocks_i            => ttc_clks,
             ttc_clk_status_i        => ttc_clk_status,

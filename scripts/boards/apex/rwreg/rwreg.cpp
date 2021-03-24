@@ -35,9 +35,9 @@ static void sigbushdl (int sig, siginfo_t *siginfo, void *ptr)
 }
 
 extern "C" void rwreg_init(char* device) {
-    if (device == "FPGA0") {
+    if (strcmp(device, "FPGA0") == 0) {
         fpgaId = 0;
-    } else if (device == "FPGA1") {
+    } else if (strcmp(device, "FPGA1") == 0) {
         fpgaId = 1;
     } else {
         printf("ERROR: unknown device %s", device);
@@ -52,7 +52,7 @@ uint8_t* getFpgaPtr() {
             printf("ERROR: cannot open /dev/mem");
             return NULL;
         }
-        
+
         if (fpgaId == 0) {
             fpga = (uint8_t *)mmap(NULL, FPGA0_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, FPGA0_BASE);
         } else if (fpgaId == 1) {
@@ -67,8 +67,8 @@ uint8_t* getFpgaPtr() {
     return fpga;
 }
 
-extern "C" uint32_t rReg(uint32_t addr) {
-    if (fpga == NULL) 
+extern "C" uint32_t getReg(uint32_t addr) {
+    if (fpga == NULL)
         fpga = getFpgaPtr();
 
     /* Attempting to catch Bus Errors  */
@@ -80,7 +80,7 @@ extern "C" uint32_t rReg(uint32_t addr) {
         printf("sigaction");
         return 0xdeaddead;
     }
-  
+
     /* Jump to here to avoid Bus Error */
     if (sigsetjmp(sj_env, 1)) {
         /* printf("completed jump. returning\n"); */
@@ -91,7 +91,7 @@ extern "C" uint32_t rReg(uint32_t addr) {
     }
 }
 
-extern "C" uint32_t wReg(uint32_t addr, uint32_t val) {
+extern "C" uint32_t putReg(uint32_t addr, uint32_t val) {
    if (fpga == NULL)
         fpga = getFpgaPtr();
 
@@ -116,4 +116,3 @@ extern "C" uint32_t wReg(uint32_t addr, uint32_t val) {
 
     return 0;
 }
-

@@ -24,6 +24,10 @@ gem/hdl/daq/generated/me0_apex/daq.vhd
 gem/hdl/slow_control/generated/me0_apex/slow_control.vhd
 gem/hdl/trigger/generated/me0_apex/trigger.vhd
 
+common/hdl/slink_rocket/generated/me0_apex/slink_rocket.vhd
+#common/hdl/slink_rocket/slink_rocket.vhd
+common/hdl/slink_rocket.src
+
 # GEM IP
 gem/ip/gem_common_ip.src
 
