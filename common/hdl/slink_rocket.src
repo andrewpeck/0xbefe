@@ -1,0 +1,24 @@
+# -*- mode: TCL;-*-
+
+common/hdl/slink_rocket/qpll/QPLL_wrapper_selection.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTH_KU_ref1566.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTH_ref15625.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTH_ref322265625.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTY_ref15625.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTY_ref322265625.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR25_GTY_ref15625.vhd
+common/hdl/slink_rocket/qpll/QPLL_wrapper_SR25_GTY_ref322265625.vhd
+common/hdl/slink_rocket/qpll/SR15_qpll_wrapper_gthe3_KU_REF1566.v
+common/hdl/slink_rocket/qpll/SR15_qpll_wrapper_gthe4_REF15625.v
+common/hdl/slink_rocket/qpll/SR15_qpll_wrapper_gthe4_REF322265625.v
+common/hdl/slink_rocket/qpll/SR15_qpll_wrapper_gtye4_REF15625.v
+common/hdl/slink_rocket/qpll/SR15_qpll_wrapper_gtye4_REF322265625.v
+common/hdl/slink_rocket/qpll/SR25_qpll_wrapper_gtye4_REF15625.v
+common/hdl/slink_rocket/qpll/SR25_qpll_wrapper_gtye4_REF322265625.v
+common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gthe3_common.v
+common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gthe4_common.v
+common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gtye4_common.v
+
+common/hdl/slink_rocket/FED_Fragment_CRC16_D128b.vhd
+
+#common/hdl/slink_rocket/slink_rocket.vhd <-- add the generated version of this file to your src
