@@ -38,22 +38,15 @@ def main():
         writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
 
     sleep(0.1)
-    # Only reset master lpGBTs first (to be able to bring slave lpGBTs to READY state after their reset)
+    # Only reset master lpGBTs (automatically resets slave lpGBTs)
     for chan in range(16):
         if chan%2==0:
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12C)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x130)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0xA3)
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
-
-    # Sleep before resetting slave lpGBTs
-    sleep(2)
-    # Only reset slave lpGBTs
-    for chan in range(16):
-    for chan in range(16):
-        if chan%2!=0:
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12C)
+	    sleep(0.1)
+	    writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12F)
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
 
