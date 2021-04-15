@@ -4,6 +4,7 @@ from rw_reg import *
 from time import *
 import array
 import struct
+from config_me0 import *
 
 def main():
 
@@ -11,16 +12,17 @@ def main():
 
     writeReg(getNode("GEM_AMC.TTC.CTRL.DISABLE_PHASE_ALIGNMENT"), 1)
 
-    ### To prevent 0's getting written to slave lpGBT over EC link and prevent slave lpGBT locking to some internal clock
-    # Disabling watchdog for master and slave lpGBTs
-    writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR"), 0x70)
-    writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
-    for chan in range(16):
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0xED)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x63)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
-    sleep(0.1)
+    if config_param["watchdog_control"]:
+        ### To prevent 0's getting written to slave lpGBT over EC link and prevent slave lpGBT locking to some internal clock
+        # Disabling watchdog for master and slave lpGBTs
+        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR"), 0x70)
+        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
+        for chan in range(16):
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0xED)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x63)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
+        sleep(0.1)
 
     # Reset MGT channels
     for chan in range(16):
@@ -31,32 +33,36 @@ def main():
         if chan%2==0:
             writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET" % chan), 1)
 
-    # Sleep and thhen reset MGT channel for slave lpGBTs (so that master lpGBTs are already ready)
+    # Sleep and then reset MGT channel for slave lpGBTs (so that master lpGBTs are already ready)
     sleep(2)
     for chan in range(16):
         if chan%2!=0:
             writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET" % chan), 1)
 
-    sleep(0.1)
-    # Enabling watchdog for master and slave lpGBTs
-    for chan in range(16):
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0xED)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x03)
-        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
-
-    sleep(0.1)
-    # Only reset master lpGBTs (automatically resets slave lpGBTs)
-    for chan in range(16):
-        if chan%2==0:
+    if config_param["watchdog_control"]:
+        sleep(0.1)
+        # Enabling watchdog for master and slave lpGBTs
+        for chan in range(16):
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x130)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0xA3)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0xED)
+            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x03)
             writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
-	    sleep(0.1)
-	    writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12F)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
-            writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
+
+    if config_param["lpgbt_reset"]:
+        sleep(0.1)
+        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR"), 0x70)
+        writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
+        # Only reset master lpGBTs (automatically resets slave lpGBTs)
+        for chan in range(16):
+            if chan%2==0:
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT"), chan)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x130)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0xA3)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
+                sleep(0.1)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12F)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
+                writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
 
     sleep(0.1)
     writeReg(getNode("GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1)
