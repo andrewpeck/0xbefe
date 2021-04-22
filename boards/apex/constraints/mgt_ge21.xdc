@@ -3,13 +3,13 @@
 ################  Ref clocks  ################
 ##############################################
 
-create_clock -name gty_0_refclk0 -period 6.250 [get_ports {gty_refclk0_p_i[0]}]
-create_clock -name gty_1_refclk0 -period 6.250 [get_ports {gty_refclk0_p_i[1]}]
-create_clock -name gty_2_refclk0 -period 6.250 [get_ports {gty_refclk0_p_i[2]}]
+create_clock -period 6.250 -name gty_0_refclk0 [get_ports {gty_refclk0_p_i[0]}]
+create_clock -period 6.250 -name gty_1_refclk0 [get_ports {gty_refclk0_p_i[1]}]
+create_clock -period 6.250 -name gty_2_refclk0 [get_ports {gty_refclk0_p_i[2]}]
 
-create_clock -name gty_0_refclk1 -period 3.125 [get_ports {gty_refclk1_p_i[0]}]
-create_clock -name gty_1_refclk1 -period 3.125 [get_ports {gty_refclk1_p_i[1]}]
-create_clock -name gty_2_refclk1 -period 3.125 [get_ports {gty_refclk1_p_i[2]}]
+create_clock -period 3.103 -name gty_0_refclk1 [get_ports {gty_refclk1_p_i[0]}]
+create_clock -period 3.103 -name gty_1_refclk1 [get_ports {gty_refclk1_p_i[1]}]
+create_clock -period 3.103 -name gty_2_refclk1 [get_ports {gty_refclk1_p_i[2]}]
 
 ##############################################
 ################  Location  ##################

@@ -276,7 +276,7 @@ begin
 
                             gen_data( 127 downto 120 ) <= x"AA";
                             gen_data( 119 downto 096 ) <= x"000000";
-                            gen_data( 095 downto 076 ) <= "00000000000000001010";
+                            gen_data( 095 downto 076 ) <= "00000000000000000011";
                             gen_data( 075 downto 064 ) <= x"123";      -- 12b BX ID
                             gen_data( 063 downto 032 ) <= x"00000000"; -- orbit ID
                             gen_data( 031 downto 000 ) <= x"00000000"; -- 16b crc and 16b status
