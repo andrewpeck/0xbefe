@@ -11,6 +11,7 @@ cxl_error.log
 
 /gem/ip/*/*
 /boards/*/ip/*/*
+/common/ip/*/*
 !*.xci
 !*.xcix
 
