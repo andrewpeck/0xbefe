@@ -122,7 +122,7 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal tx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal rx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     
-    signal ibert_ctrl_arr       : t_mgt_ibert_ctrl_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_IBERT_CTRL_NULL);
+    signal ibert_scanreset_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
     -- multi-lane tx phase alignment signals
     signal txph_syncallin_arr   : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
@@ -397,12 +397,12 @@ begin
                     gt0_drpdi_o    => chan_drp_in_arr(chan).di,
                     gt0_drprdy_i   => chan_drp_out_arr(chan).rdy,
                     gt0_drpdo_i    => chan_drp_out_arr(chan).do,
-                    eyescanreset_o => ibert_ctrl_arr(chan).eyescanreset,
-                    rxrate_o       => ibert_ctrl_arr(chan).rxrate,
-                    txdiffctrl_o   => ibert_ctrl_arr(chan).txdiffctrl,
-                    txprecursor_o  => ibert_ctrl_arr(chan).txprecursor,
-                    txpostcursor_o => ibert_ctrl_arr(chan).txpostcursor,
-                    rxlpmen_o      => ibert_ctrl_arr(chan).rxlpmen,
+                    eyescanreset_o => ibert_scanreset_arr(chan),
+                    rxrate_o       => open,
+                    txdiffctrl_o   => open,
+                    txprecursor_o  => open,
+                    txpostcursor_o => open,
+                    rxlpmen_o      => open,
                     rxoutclk_i     => chan_clks_in_arr(chan).rxusrclk2,
                     clk            => clk_stable_i
                 );
@@ -452,7 +452,7 @@ begin
             tx_status_arr_i       => tx_status_arr,
             rx_status_arr_i       => rx_status_arr,
             misc_status_arr_i     => misc_status_arr,
-            ibert_ctrl_arr_i      => ibert_ctrl_arr,
+            ibert_eyescanreset_i  => ibert_scanreset_arr,
             tx_reset_done_arr_i   => tx_reset_done_arr,
             rx_reset_done_arr_i   => rx_reset_done_arr,
             tx_phalign_done_arr_i => tx_phalign_done_arr,

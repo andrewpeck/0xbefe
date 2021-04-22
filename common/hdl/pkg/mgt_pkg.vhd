@@ -184,15 +184,6 @@ package mgt_pkg is
         powergood        : std_logic;
     end record;
 
-    type t_mgt_ibert_ctrl is record
-        eyescanreset    : std_logic;
-        rxrate          : std_logic_vector(2 downto 0);
-        txdiffctrl      : std_logic_vector(4 downto 0);
-        txprecursor     : std_logic_vector(4 downto 0);
-        txpostcursor    : std_logic_vector(4 downto 0);        
-        rxlpmen         : std_logic;
-    end record;
-
     type t_drp_in_arr is array (integer range <>) of t_drp_in;
     type t_drp_out_arr is array (integer range <>) of t_drp_out;
 
@@ -214,8 +205,5 @@ package mgt_pkg is
     type t_mgt_misc_status_arr is array (integer range <>) of t_mgt_misc_status;
     type t_mgt_tx_init_arr is array (integer range <>) of t_mgt_tx_init;
     type t_mgt_rx_init_arr is array (integer range <>) of t_mgt_rx_init;
-    type t_mgt_ibert_ctrl_arr is array (integer range <>) of t_mgt_ibert_ctrl;
-
-    constant MGT_IBERT_CTRL_NULL : t_mgt_ibert_ctrl := (eyescanreset => '0', rxrate => (others => '0'), txdiffctrl => "11000", txprecursor => (others => '0'), txpostcursor => (others => '0'), rxlpmen => '0');
 
 end mgt_pkg;
