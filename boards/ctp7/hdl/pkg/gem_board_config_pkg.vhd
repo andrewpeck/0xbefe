@@ -252,8 +252,8 @@ package gem_board_config_package is
     -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors
     type t_mgt_config_arr is array (0 to 1) of t_mgt_config;
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false),   
-        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false)   
+        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false, ibert_inst => true),   
+        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false, ibert_inst => true)   
     );    
     
 end gem_board_config_package;

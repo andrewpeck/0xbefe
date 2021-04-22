@@ -70,6 +70,26 @@ end mgt_links_gty;
 
 architecture mgt_links_gty_arch of mgt_links_gty is
 
+    component ibert_insys_gty
+        port(
+            drpclk_o       : out std_logic;
+            gt0_drpen_o    : out std_logic;
+            gt0_drpwe_o    : out std_logic;
+            gt0_drpaddr_o  : out std_logic_vector(9 downto 0);
+            gt0_drpdi_o    : out std_logic_vector(15 downto 0);
+            gt0_drprdy_i   : in  std_logic;
+            gt0_drpdo_i    : in  std_logic_vector(15 downto 0);
+            eyescanreset_o : out std_logic;
+            rxrate_o       : out std_logic_vector(2 downto 0);
+            txdiffctrl_o   : out std_logic_vector(4 downto 0);
+            txprecursor_o  : out std_logic_vector(4 downto 0);
+            txpostcursor_o : out std_logic_vector(4 downto 0);
+            rxlpmen_o      : out std_logic;
+            rxoutclk_i     : in  std_logic;
+            clk            : in  std_logic
+        );
+    end component;
+
     signal chan_clks_in_arr     : t_mgt_clk_in_arr(g_NUM_CHANNELS-1 downto 0);
     signal chan_clks_out_arr    : t_mgt_clk_out_arr(g_NUM_CHANNELS-1 downto 0);
 
@@ -101,6 +121,8 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal rx_reset_done_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal tx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal rx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    
+    signal ibert_ctrl_arr       : t_mgt_ibert_ctrl_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_IBERT_CTRL_NULL);
     
     -- multi-lane tx phase alignment signals
     signal txph_syncallin_arr   : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
@@ -361,6 +383,31 @@ begin
                 phase_align_done_o   => rx_phalign_done_arr(chan)
             );
            
+        --=========================================--
+        -- In-system IBERT
+        --=========================================--
+        
+        g_insys_ibert : if g_LINK_CONFIG(chan).ibert_inst generate
+            i_ibert : ibert_insys_gty
+                port map(
+                    drpclk_o       => chan_drp_in_arr(chan).clk,
+                    gt0_drpen_o    => chan_drp_in_arr(chan).en,
+                    gt0_drpwe_o    => chan_drp_in_arr(chan).we,
+                    gt0_drpaddr_o  => chan_drp_in_arr(chan).addr,
+                    gt0_drpdi_o    => chan_drp_in_arr(chan).di,
+                    gt0_drprdy_i   => chan_drp_out_arr(chan).rdy,
+                    gt0_drpdo_i    => chan_drp_out_arr(chan).do,
+                    eyescanreset_o => ibert_ctrl_arr(chan).eyescanreset,
+                    rxrate_o       => ibert_ctrl_arr(chan).rxrate,
+                    txdiffctrl_o   => ibert_ctrl_arr(chan).txdiffctrl,
+                    txprecursor_o  => ibert_ctrl_arr(chan).txprecursor,
+                    txpostcursor_o => ibert_ctrl_arr(chan).txpostcursor,
+                    rxlpmen_o      => ibert_ctrl_arr(chan).rxlpmen,
+                    rxoutclk_i     => chan_clks_in_arr(chan).rxusrclk2,
+                    clk            => clk_stable_i
+                );
+        end generate;
+        
     end generate;
 
     --=========================================--
@@ -405,6 +452,7 @@ begin
             tx_status_arr_i       => tx_status_arr,
             rx_status_arr_i       => rx_status_arr,
             misc_status_arr_i     => misc_status_arr,
+            ibert_ctrl_arr_i      => ibert_ctrl_arr,
             tx_reset_done_arr_i   => tx_reset_done_arr,
             rx_reset_done_arr_i   => rx_reset_done_arr,
             tx_phalign_done_arr_i => tx_phalign_done_arr,

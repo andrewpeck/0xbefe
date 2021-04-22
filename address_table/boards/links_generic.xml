@@ -41,16 +41,19 @@
             fw_signal="tx_slow_ctrl_arr(${MGT}).txinhibit" fw_default="0b0"/>
       <node id="RX_LOW_POWER_MODE" address="0x0" mask="0x00000040" permission="rw"
             description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxlpmen" fw_default="0b0"/>
+            fw_signal="rxlpmen_arr(${MGT})" fw_default="0b1"/>
+      <node id="IBERT_EN" address="0x0" mask="0x00000080" permission="rw"
+            description="Setting this to 1 enables the in-system IBERT IP to control the MGT channel"
+            fw_signal="ibert_ctrl_en_arr(${MGT})" fw_default="0b0"/>
       <node id="TX_DIFF_CTRL" address="0x1" mask="0x0000001f" permission="rw"
             description="Conrtols the differential swing amplitude, is directly wired to the TXDIFFCTRL port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txdiffctrl" fw_default="0b11000"/>
+            fw_signal="txdiffctrl_arr(${MGT})" fw_default="0b11000"/>
       <node id="TX_PRE_CURSOR" address="0x1" mask="0x00001f00" permission="rw"
             description="Directly wired to the TXPRECURSOR port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txprecursor" fw_default="0b00000"/>
+            fw_signal="txprecursor_arr(${MGT})" fw_default="0b00000"/>
       <node id="TX_POST_CURSOR" address="0x1" mask="0x001f0000" permission="rw"
             description="Directly wired to the TXPOSTCURSOR port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txpostcursor" fw_default="0b00000"/>
+            fw_signal="txpostcursor_arr(${MGT})" fw_default="0b00000"/>
       <node id="TX_MAIN_CURSOR" address="0x1" mask="0x7f000000" permission="rw"
             description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
             fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>

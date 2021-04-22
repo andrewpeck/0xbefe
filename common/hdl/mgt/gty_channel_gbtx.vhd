@@ -910,7 +910,7 @@ begin
             RXPRBSCNTRESET       => '0',
             RXPRBSSEL            => '0' & rx_slow_ctrl_i.rxprbssel,
             RXPROGDIVRESET       => '0',
-            RXRATE               => "000",
+            RXRATE               => rx_slow_ctrl_i.rxrate,
             RXRATEMODE           => '0',
             RXSLIDE              => rx_fast_ctrl_i.rxslide,
             RXSLIPOUTCLK         => '0',
