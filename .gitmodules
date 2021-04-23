@@ -3,4 +3,4 @@
 	url = https://github.com/andrewpeck/regtools.git
 [submodule "Hog"]
 	path = Hog
-	url = ssh://git@gitlab.cern.ch:7999/hog/Hog.git
+	url = https://gitlab.cern.ch/hog/Hog.git

@@ -1,0 +1,547 @@
+########################################################################################################################
+# Resync
+########################################################################################################################
+
+# This file constraints miscellaneous signals
+## HDMI
+
+#NET "TMDS_CLK_p" = H17; # v_diff_m_4_p
+#NET "TMDS_CLK_n" = G17; # v_diff_m_4_n
+#NET "TMDS_D2_p"  = J16; # v_diff_m_15_n
+#NET "TMDS_D2_n"  = J17; # v_diff_m_15_p
+#NET "TMDS_D1_p"  = L14; # v_diff_m_11_n
+#NET "TMDS_D1_n"  = L15; # v_diff_m_11_p
+#NET "TMDS_D0_p"  = M17; # v_diff_m_8_n
+#NET "TMDS_D0_n"  = M18; # v_diff_m_8_p
+
+NET "ext_sbits_o[0]" LOC = H17; # tmds clk p
+NET "ext_sbits_o[1]" LOC = G17; # tmds clk n
+NET "ext_sbits_o[2]" LOC = J16; # tmds d2 p
+NET "ext_sbits_o[3]" LOC = J17; # tmds d2 n
+NET "ext_sbits_o[4]" LOC = L14; # tmds d1 p
+NET "ext_sbits_o[5]" LOC = L15; # tmds d1 n
+NET "ext_sbits_o[6]" LOC = M17; # tmds d0 p
+NET "ext_sbits_o[7]" LOC = M18; # tmds d0 n
+
+## Header
+# INST "led_o" IOB=TRUE;
+
+NET "led_o<0>"  LOC = H27  ; # vdiff_e_13_p
+NET "led_o<1>"  LOC = G28  ; # vdiff_e_13_n
+NET "led_o<2>"  LOC = B25  ; # vdiff_e_4_p
+NET "led_o<3>"  LOC = A25  ; # vdiff_e_4_n
+NET "led_o<4>"  LOC = B26  ; # vdiff_e_6_p
+NET "led_o<5>"  LOC = A26  ; # vdiff_e_6_n
+NET "led_o<6>"  LOC = C27  ; # vdiff_e_8_n
+NET "led_o<7>"  LOC = B27  ; # vdiff_e_8_p
+NET "led_o<8>"  LOC = C14  ; # vdiff_l_2_n
+NET "led_o<9>"  LOC = D14  ; # vdiff_l_2_p
+NET "led_o<10>" LOC = C13  ; # vdiff_l_12_p
+NET "led_o<11>" LOC = C12  ; # vdiff_l_12_n
+NET "led_o<12>" LOC = B15  ; # vdiff_m_16_n
+NET "led_o<13>" LOC = A15  ; # vdiff_m_16_p
+NET "led_o<14>" LOC = G26  ; # vdiff_e_7_p
+NET "led_o<15>" LOC = G27  ; # vdiff_e_7_n
+
+INST "led_o<0>" TNM = led_o;
+INST "led_o<1>" TNM = led_o;
+INST "led_o<2>" TNM = led_o;
+INST "led_o<3>" TNM = led_o;
+INST "led_o<4>" TNM = led_o;
+INST "led_o<5>" TNM = led_o;
+INST "led_o<6>" TNM = led_o;
+INST "led_o<7>" TNM = led_o;
+INST "led_o<8>" TNM = led_o;
+INST "led_o<9>" TNM = led_o;
+INST "led_o<10>" TNM = led_o;
+INST "led_o<11>" TNM = led_o;
+INST "led_o<12>" TNM = led_o;
+INST "led_o<13>" TNM = led_o;
+INST "led_o<14>" TNM = led_o;
+INST "led_o<15>" TNM = led_o;
+
+INST "ext_sbits_o<0>" TNM = ext_sbits_o;
+INST "ext_sbits_o<1>" TNM = ext_sbits_o;
+INST "ext_sbits_o<2>" TNM = ext_sbits_o;
+INST "ext_sbits_o<3>" TNM = ext_sbits_o;
+INST "ext_sbits_o<4>" TNM = ext_sbits_o;
+INST "ext_sbits_o<5>" TNM = ext_sbits_o;
+
+# GBT
+# NET "gbt_txvalid_o" LOC =      ; # hardwired, apparently
+NET "gbt_txready_i<0>" LOC = AF13 ; # v_diff_k_13_p
+NET "gbt_rxvalid_i<0>" LOC = AJ9  ; # R_side_2_n
+NET "gbt_rxready_i<0>" LOC = AH9  ; # R_side_2_p
+
+################################################################################
+# VFAT resets
+################################################################################
+#### START: AUTO GENERATED RESETS UCF -- DO NOT EDIT ####
+NET "ext_reset_o<5>" LOC="Y27";
+NET "ext_reset_o<11>" LOC="AP24";
+NET "ext_reset_o<10>" LOC="AL23";
+NET "ext_reset_o<3>" LOC="W26";
+NET "ext_reset_o<8>" LOC="AL30";
+NET "ext_reset_o<7>" LOC="AL31";
+NET "ext_reset_o<6>" LOC="AK31";
+NET "ext_reset_o<4>" LOC="W27";
+NET "ext_reset_o<2>" LOC="C15";
+NET "ext_reset_o<0>" LOC="A16";
+NET "ext_reset_o<1>" LOC="D15";
+NET "ext_reset_o<9>" LOC="AM23";
+#### END: AUTO GENERATED RESETS UCF -- DO NOT EDIT ####
+
+NET "mgt_clk_p_i<0>" LOC = H6; #
+NET "mgt_clk_n_i<0>" LOC = H5; #
+NET "mgt_clk_p_i<1>" LOC = F6; #
+NET "mgt_clk_n_i<1>" LOC = F5; #
+
+NET "mgt_tx_p_o<0>" LOC = M1; #
+NET "mgt_tx_n_o<0>" LOC = M2; #
+NET "mgt_tx_p_o<1>" LOC = K1; #
+NET "mgt_tx_n_o<1>" LOC = K2; #
+NET "mgt_tx_p_o<2>" LOC = H1; #
+NET "mgt_tx_n_o<2>" LOC = H2; #
+NET "mgt_tx_p_o<3>" LOC = F1; #
+NET "mgt_tx_n_o<3>" LOC = F2; #
+
+NET "adc_vp" LOC=U18;
+NET "adc_vn" LOC=V17;
+
+################################################################################
+# VFAT Trigger Data
+################################################################################
+
+NET vfat_sot_p<23>     IOSTANDARD=LVDS_25 | LOC = "AN19"; # polarity swap
+NET vfat_sot_n<23>     IOSTANDARD=LVDS_25 | LOC = "AN20"; # polarity swap
+NET vfat_sbits_n<184>  IOSTANDARD=LVDS_25 | LOC = "AH20";
+NET vfat_sbits_p<184>  IOSTANDARD=LVDS_25 | LOC = "AJ20";
+NET vfat_sbits_n<185>  IOSTANDARD=LVDS_25 | LOC = "AJ21";
+NET vfat_sbits_p<185>  IOSTANDARD=LVDS_25 | LOC = "AK21";
+NET vfat_sbits_p<186>  IOSTANDARD=LVDS_25 | LOC = "AG22"; # polarity swap
+NET vfat_sbits_n<186>  IOSTANDARD=LVDS_25 | LOC = "AH22"; # polarity swap
+NET vfat_sbits_n<187>  IOSTANDARD=LVDS_25 | LOC = "AK24";
+NET vfat_sbits_p<187>  IOSTANDARD=LVDS_25 | LOC = "AJ24";
+NET vfat_sbits_p<188>  IOSTANDARD=LVDS_25 | LOC = "AM25"; # polarity swap
+NET vfat_sbits_n<188>  IOSTANDARD=LVDS_25 | LOC = "AL25"; # polarity swap
+NET vfat_sbits_n<189>  IOSTANDARD=LVDS_25 | LOC = "AG26";
+NET vfat_sbits_p<189>  IOSTANDARD=LVDS_25 | LOC = "AG25";
+NET vfat_sbits_n<190>  IOSTANDARD=LVDS_25 | LOC = "AE26";
+NET vfat_sbits_p<190>  IOSTANDARD=LVDS_25 | LOC = "AF26";
+NET vfat_sbits_n<191>  IOSTANDARD=LVDS_25 | LOC = "AH28";
+NET vfat_sbits_p<191>  IOSTANDARD=LVDS_25 | LOC = "AH27";
+NET vfat_sot_p<22>     IOSTANDARD=LVDS_25 | LOC = "AE14"; # polarity swap
+NET vfat_sot_n<22>     IOSTANDARD=LVDS_25 | LOC = "AF14"; # polarity swap
+NET vfat_sbits_n<176>  IOSTANDARD=LVDS_25 | LOC = "AD15";
+NET vfat_sbits_p<176>  IOSTANDARD=LVDS_25 | LOC = "AC15";
+NET vfat_sbits_p<177>  IOSTANDARD=LVDS_25 | LOC = "AE16"; # polarity swap
+NET vfat_sbits_n<177>  IOSTANDARD=LVDS_25 | LOC = "AD16"; # polarity swap
+NET vfat_sbits_n<178>  IOSTANDARD=LVDS_25 | LOC = "AE17";
+NET vfat_sbits_p<178>  IOSTANDARD=LVDS_25 | LOC = "AD17";
+NET vfat_sbits_p<179>  IOSTANDARD=LVDS_25 | LOC = "AC18"; # polarity swap
+NET vfat_sbits_n<179>  IOSTANDARD=LVDS_25 | LOC = "AC17"; # polarity swap
+NET vfat_sbits_n<180>  IOSTANDARD=LVDS_25 | LOC = "AD19";
+NET vfat_sbits_p<180>  IOSTANDARD=LVDS_25 | LOC = "AC19";
+NET vfat_sbits_n<181>  IOSTANDARD=LVDS_25 | LOC = "AD20";
+NET vfat_sbits_p<181>  IOSTANDARD=LVDS_25 | LOC = "AC20";
+NET vfat_sbits_n<182>  IOSTANDARD=LVDS_25 | LOC = "AG21";
+NET vfat_sbits_p<182>  IOSTANDARD=LVDS_25 | LOC = "AG20";
+NET vfat_sbits_n<183>  IOSTANDARD=LVDS_25 | LOC = "AH24";
+NET vfat_sbits_p<183>  IOSTANDARD=LVDS_25 | LOC = "AH23";
+NET vfat_sot_p<21>     IOSTANDARD=LVDS_25 | LOC = "AM22"; # polarity swap
+NET vfat_sot_n<21>     IOSTANDARD=LVDS_25 | LOC = "AN22"; # polarity swap
+NET vfat_sbits_p<168>  IOSTANDARD=LVDS_25 | LOC = "AK13"; # polarity swap
+NET vfat_sbits_n<168>  IOSTANDARD=LVDS_25 | LOC = "AL13"; # polarity swap
+NET vfat_sbits_p<169>  IOSTANDARD=LVDS_25 | LOC = "AL15"; # polarity swap
+NET vfat_sbits_n<169>  IOSTANDARD=LVDS_25 | LOC = "AL14"; # polarity swap
+NET vfat_sbits_n<170>  IOSTANDARD=LVDS_25 | LOC = "AM15";
+NET vfat_sbits_p<170>  IOSTANDARD=LVDS_25 | LOC = "AN15";
+NET vfat_sbits_n<171>  IOSTANDARD=LVDS_25 | LOC = "AK16";
+NET vfat_sbits_p<171>  IOSTANDARD=LVDS_25 | LOC = "AL16";
+NET vfat_sbits_p<172>  IOSTANDARD=LVDS_25 | LOC = "AK18"; # polarity swap
+NET vfat_sbits_n<172>  IOSTANDARD=LVDS_25 | LOC = "AK17"; # polarity swap
+NET vfat_sbits_p<173>  IOSTANDARD=LVDS_25 | LOC = "AJ19"; # polarity swap
+NET vfat_sbits_n<173>  IOSTANDARD=LVDS_25 | LOC = "AH19"; # polarity swap
+NET vfat_sbits_p<174>  IOSTANDARD=LVDS_25 | LOC = "AK19"; # polarity swap
+NET vfat_sbits_n<174>  IOSTANDARD=LVDS_25 | LOC = "AL19"; # polarity swap
+NET vfat_sbits_n<175>  IOSTANDARD=LVDS_25 | LOC = "AL20";
+NET vfat_sbits_p<175>  IOSTANDARD=LVDS_25 | LOC = "AM20";
+NET vfat_sot_p<20>     IOSTANDARD=LVDS_25 | LOC = "AP22"; # polarity swap
+NET vfat_sot_n<20>     IOSTANDARD=LVDS_25 | LOC = "AN23"; # polarity swap
+NET vfat_sbits_n<160>  IOSTANDARD=LVDS_25 | LOC = "AG17";
+NET vfat_sbits_p<160>  IOSTANDARD=LVDS_25 | LOC = "AH17";
+NET vfat_sbits_n<161>  IOSTANDARD=LVDS_25 | LOC = "AF18";
+NET vfat_sbits_p<161>  IOSTANDARD=LVDS_25 | LOC = "AE18";
+NET vfat_sbits_n<162>  IOSTANDARD=LVDS_25 | LOC = "AG18";
+NET vfat_sbits_p<162>  IOSTANDARD=LVDS_25 | LOC = "AH18";
+NET vfat_sbits_n<163>  IOSTANDARD=LVDS_25 | LOC = "AE19";
+NET vfat_sbits_p<163>  IOSTANDARD=LVDS_25 | LOC = "AF19";
+NET vfat_sbits_n<164>  IOSTANDARD=LVDS_25 | LOC = "AD11";
+NET vfat_sbits_p<164>  IOSTANDARD=LVDS_25 | LOC = "AD12";
+NET vfat_sbits_p<165>  IOSTANDARD=LVDS_25 | LOC = "AE13"; # polarity swap
+NET vfat_sbits_n<165>  IOSTANDARD=LVDS_25 | LOC = "AE12"; # polarity swap
+NET vfat_sbits_p<166>  IOSTANDARD=LVDS_25 | LOC = "AL11"; # polarity swap
+NET vfat_sbits_n<166>  IOSTANDARD=LVDS_25 | LOC = "AM11"; # polarity swap
+NET vfat_sbits_n<167>  IOSTANDARD=LVDS_25 | LOC = "AJ12";
+NET vfat_sbits_p<167>  IOSTANDARD=LVDS_25 | LOC = "AK12";
+NET vfat_sot_p<19>     IOSTANDARD=LVDS_25 | LOC = "T33" ; # polarity swap
+NET vfat_sot_n<19>     IOSTANDARD=LVDS_25 | LOC = "T34" ; # polarity swap
+NET vfat_sbits_p<152>  IOSTANDARD=LVDS_25 | LOC = "AA34"; # polarity swap
+NET vfat_sbits_n<152>  IOSTANDARD=LVDS_25 | LOC = "AA33"; # polarity swap
+NET vfat_sbits_n<153>  IOSTANDARD=LVDS_25 | LOC = "Y34" ;
+NET vfat_sbits_p<153>  IOSTANDARD=LVDS_25 | LOC = "Y33" ;
+NET vfat_sbits_p<154>  IOSTANDARD=LVDS_25 | LOC = "V34" ; # polarity swap
+NET vfat_sbits_n<154>  IOSTANDARD=LVDS_25 | LOC = "W34" ; # polarity swap
+NET vfat_sbits_p<155>  IOSTANDARD=LVDS_25 | LOC = "V32" ; # polarity swap
+NET vfat_sbits_n<155>  IOSTANDARD=LVDS_25 | LOC = "V33" ; # polarity swap
+NET vfat_sbits_p<156>  IOSTANDARD=LVDS_25 | LOC = "AH29"; # polarity swap
+NET vfat_sbits_n<156>  IOSTANDARD=LVDS_25 | LOC = "AH30"; # polarity swap
+NET vfat_sbits_n<157>  IOSTANDARD=LVDS_25 | LOC = "AF31";
+NET vfat_sbits_p<157>  IOSTANDARD=LVDS_25 | LOC = "AG31";
+NET vfat_sbits_p<158>  IOSTANDARD=LVDS_25 | LOC = "AE33"; # polarity swap
+NET vfat_sbits_n<158>  IOSTANDARD=LVDS_25 | LOC = "AF33"; # polarity swap
+NET vfat_sbits_n<159>  IOSTANDARD=LVDS_25 | LOC = "AD31";
+NET vfat_sbits_p<159>  IOSTANDARD=LVDS_25 | LOC = "AE31";
+NET vfat_sot_n<18>     IOSTANDARD=LVDS_25 | LOC = "U32" ;
+NET vfat_sot_p<18>     IOSTANDARD=LVDS_25 | LOC = "U33" ;
+NET vfat_sbits_n<144>  IOSTANDARD=LVDS_25 | LOC = "AK32";
+NET vfat_sbits_p<144>  IOSTANDARD=LVDS_25 | LOC = "AK33";
+NET vfat_sbits_n<145>  IOSTANDARD=LVDS_25 | LOC = "AH34";
+NET vfat_sbits_p<145>  IOSTANDARD=LVDS_25 | LOC = "AJ34";
+NET vfat_sbits_n<146>  IOSTANDARD=LVDS_25 | LOC = "AH32";
+NET vfat_sbits_p<146>  IOSTANDARD=LVDS_25 | LOC = "AH33";
+NET vfat_sbits_n<147>  IOSTANDARD=LVDS_25 | LOC = "AG32";
+NET vfat_sbits_p<147>  IOSTANDARD=LVDS_25 | LOC = "AG33";
+NET vfat_sbits_p<148>  IOSTANDARD=LVDS_25 | LOC = "AE34"; # polarity swap
+NET vfat_sbits_n<148>  IOSTANDARD=LVDS_25 | LOC = "AF34"; # polarity swap
+NET vfat_sbits_p<149>  IOSTANDARD=LVDS_25 | LOC = "AD32"; # polarity swap
+NET vfat_sbits_n<149>  IOSTANDARD=LVDS_25 | LOC = "AE32"; # polarity swap
+NET vfat_sbits_n<150>  IOSTANDARD=LVDS_25 | LOC = "AC34";
+NET vfat_sbits_p<150>  IOSTANDARD=LVDS_25 | LOC = "AD34";
+NET vfat_sbits_n<151>  IOSTANDARD=LVDS_25 | LOC = "AB33";
+NET vfat_sbits_p<151>  IOSTANDARD=LVDS_25 | LOC = "AC33";
+NET vfat_sot_n<17>     IOSTANDARD=LVDS_25 | LOC = "AJ32";
+NET vfat_sot_p<17>     IOSTANDARD=LVDS_25 | LOC = "AJ31";
+NET vfat_sbits_n<136>  IOSTANDARD=LVDS_25 | LOC = "AM26";
+NET vfat_sbits_p<136>  IOSTANDARD=LVDS_25 | LOC = "AL26";
+NET vfat_sbits_p<137>  IOSTANDARD=LVDS_25 | LOC = "AP27"; # polarity swap
+NET vfat_sbits_n<137>  IOSTANDARD=LVDS_25 | LOC = "AP26"; # polarity swap
+NET vfat_sbits_p<138>  IOSTANDARD=LVDS_25 | LOC = "AN28"; # polarity swap
+NET vfat_sbits_n<138>  IOSTANDARD=LVDS_25 | LOC = "AM28"; # polarity swap
+NET vfat_sbits_n<139>  IOSTANDARD=LVDS_25 | LOC = "AP29";
+NET vfat_sbits_p<139>  IOSTANDARD=LVDS_25 | LOC = "AN29";
+NET vfat_sbits_n<140>  IOSTANDARD=LVDS_25 | LOC = "AN34";
+NET vfat_sbits_p<140>  IOSTANDARD=LVDS_25 | LOC = "AN33";
+NET vfat_sbits_n<141>  IOSTANDARD=LVDS_25 | LOC = "AM32";
+NET vfat_sbits_p<141>  IOSTANDARD=LVDS_25 | LOC = "AN32";
+NET vfat_sbits_n<142>  IOSTANDARD=LVDS_25 | LOC = "AL33";
+NET vfat_sbits_p<142>  IOSTANDARD=LVDS_25 | LOC = "AM33";
+NET vfat_sbits_n<143>  IOSTANDARD=LVDS_25 | LOC = "AK34";
+NET vfat_sbits_p<143>  IOSTANDARD=LVDS_25 | LOC = "AL34";
+NET vfat_sot_p<16>     IOSTANDARD=LVDS_25 | LOC = "N33" ; # polarity swap
+NET vfat_sot_n<16>     IOSTANDARD=LVDS_25 | LOC = "M33" ; # polarity swap
+NET vfat_sbits_n<128>  IOSTANDARD=LVDS_25 | LOC = "F29" ;
+NET vfat_sbits_p<128>  IOSTANDARD=LVDS_25 | LOC = "E29" ;
+NET vfat_sbits_p<129>  IOSTANDARD=LVDS_25 | LOC = "F31" ; # polarity swap
+NET vfat_sbits_n<129>  IOSTANDARD=LVDS_25 | LOC = "E31" ; # polarity swap
+NET vfat_sbits_n<130>  IOSTANDARD=LVDS_25 | LOC = "G30" ;
+NET vfat_sbits_p<130>  IOSTANDARD=LVDS_25 | LOC = "F30" ;
+NET vfat_sbits_n<131>  IOSTANDARD=LVDS_25 | LOC = "H32" ;
+NET vfat_sbits_p<131>  IOSTANDARD=LVDS_25 | LOC = "G32" ;
+NET vfat_sbits_n<132>  IOSTANDARD=LVDS_25 | LOC = "H30" ;
+NET vfat_sbits_p<132>  IOSTANDARD=LVDS_25 | LOC = "G31" ;
+NET vfat_sbits_p<133>  IOSTANDARD=LVDS_25 | LOC = "AF28"; # polarity swap
+NET vfat_sbits_n<133>  IOSTANDARD=LVDS_25 | LOC = "AF29"; # polarity swap
+NET vfat_sbits_p<134>  IOSTANDARD=LVDS_25 | LOC = "AG27"; # polarity swap
+NET vfat_sbits_n<134>  IOSTANDARD=LVDS_25 | LOC = "AG28"; # polarity swap
+NET vfat_sbits_p<135>  IOSTANDARD=LVDS_25 | LOC = "AL29"; # polarity swap
+NET vfat_sbits_n<135>  IOSTANDARD=LVDS_25 | LOC = "AK29"; # polarity swap
+NET vfat_sot_p<15>     IOSTANDARD=LVDS_25 | LOC = "AG11"; # polarity swap
+NET vfat_sot_n<15>     IOSTANDARD=LVDS_25 | LOC = "AG10"; # polarity swap
+NET vfat_sbits_p<120>  IOSTANDARD=LVDS_25 | LOC = "AM18"; # polarity swap
+NET vfat_sbits_n<120>  IOSTANDARD=LVDS_25 | LOC = "AL18"; # polarity swap
+NET vfat_sbits_p<121>  IOSTANDARD=LVDS_25 | LOC = "AP19"; # polarity swap
+NET vfat_sbits_n<121>  IOSTANDARD=LVDS_25 | LOC = "AN18"; # polarity swap
+NET vfat_sbits_p<122>  IOSTANDARD=LVDS_25 | LOC = "AJ11"; # polarity swap
+NET vfat_sbits_n<122>  IOSTANDARD=LVDS_25 | LOC = "AK11"; # polarity swap
+NET vfat_sbits_p<123>  IOSTANDARD=LVDS_25 | LOC = "AG12"; # polarity swap
+NET vfat_sbits_n<123>  IOSTANDARD=LVDS_25 | LOC = "AH12"; # polarity swap
+NET vfat_sbits_n<124>  IOSTANDARD=LVDS_25 | LOC = "AH14";
+NET vfat_sbits_p<124>  IOSTANDARD=LVDS_25 | LOC = "AH13";
+NET vfat_sbits_n<125>  IOSTANDARD=LVDS_25 | LOC = "AJ14";
+NET vfat_sbits_p<125>  IOSTANDARD=LVDS_25 | LOC = "AK14";
+NET vfat_sbits_n<126>  IOSTANDARD=LVDS_25 | LOC = "AH15";
+NET vfat_sbits_p<126>  IOSTANDARD=LVDS_25 | LOC = "AJ15";
+NET vfat_sbits_p<127>  IOSTANDARD=LVDS_25 | LOC = "AJ17"; # polarity swap
+NET vfat_sbits_n<127>  IOSTANDARD=LVDS_25 | LOC = "AJ16"; # polarity swap
+NET vfat_sot_n<14>     IOSTANDARD=LVDS_25 | LOC = "AH10";
+NET vfat_sot_p<14>     IOSTANDARD=LVDS_25 | LOC = "AJ10";
+NET vfat_sbits_p<112>  IOSTANDARD=LVDS_25 | LOC = "AM10"; # polarity swap
+NET vfat_sbits_n<112>  IOSTANDARD=LVDS_25 | LOC = "AL10"; # polarity swap
+NET vfat_sbits_n<113>  IOSTANDARD=LVDS_25 | LOC = "AP12";
+NET vfat_sbits_p<113>  IOSTANDARD=LVDS_25 | LOC = "AP11";
+NET vfat_sbits_p<114>  IOSTANDARD=LVDS_25 | LOC = "AM12"; # polarity swap
+NET vfat_sbits_n<114>  IOSTANDARD=LVDS_25 | LOC = "AN12"; # polarity swap
+NET vfat_sbits_n<115>  IOSTANDARD=LVDS_25 | LOC = "AM13";
+NET vfat_sbits_p<115>  IOSTANDARD=LVDS_25 | LOC = "AN13";
+NET vfat_sbits_n<116>  IOSTANDARD=LVDS_25 | LOC = "AN14";
+NET vfat_sbits_p<116>  IOSTANDARD=LVDS_25 | LOC = "AP14";
+NET vfat_sbits_p<117>  IOSTANDARD=LVDS_25 | LOC = "AP16"; # polarity swap
+NET vfat_sbits_n<117>  IOSTANDARD=LVDS_25 | LOC = "AP15"; # polarity swap
+NET vfat_sbits_p<118>  IOSTANDARD=LVDS_25 | LOC = "AM17"; # polarity swap
+NET vfat_sbits_n<118>  IOSTANDARD=LVDS_25 | LOC = "AM16"; # polarity swap
+NET vfat_sbits_p<119>  IOSTANDARD=LVDS_25 | LOC = "AN17"; # polarity swap
+NET vfat_sbits_n<119>  IOSTANDARD=LVDS_25 | LOC = "AP17"; # polarity swap
+NET vfat_sot_n<13>     IOSTANDARD=LVDS_25 | LOC = "J15" ;
+NET vfat_sot_p<13>     IOSTANDARD=LVDS_25 | LOC = "H15" ;
+NET vfat_sbits_p<104>  IOSTANDARD=LVDS_25 | LOC = "J20" ; # polarity swap
+NET vfat_sbits_n<104>  IOSTANDARD=LVDS_25 | LOC = "J21" ; # polarity swap
+NET vfat_sbits_p<105>  IOSTANDARD=LVDS_25 | LOC = "H19" ; # polarity swap
+NET vfat_sbits_n<105>  IOSTANDARD=LVDS_25 | LOC = "H20" ; # polarity swap
+NET vfat_sbits_p<106>  IOSTANDARD=LVDS_25 | LOC = "K19" ; # polarity swap
+NET vfat_sbits_n<106>  IOSTANDARD=LVDS_25 | LOC = "J19" ; # polarity swap
+NET vfat_sbits_n<107>  IOSTANDARD=LVDS_25 | LOC = "K17" ;
+NET vfat_sbits_p<107>  IOSTANDARD=LVDS_25 | LOC = "K18" ;
+NET vfat_sbits_p<108>  IOSTANDARD=LVDS_25 | LOC = "K16" ; # polarity swap
+NET vfat_sbits_n<108>  IOSTANDARD=LVDS_25 | LOC = "L16" ; # polarity swap
+NET vfat_sbits_n<109>  IOSTANDARD=LVDS_25 | LOC = "M15" ;
+NET vfat_sbits_p<109>  IOSTANDARD=LVDS_25 | LOC = "M16" ;
+NET vfat_sbits_n<110>  IOSTANDARD=LVDS_25 | LOC = "K12" ;
+NET vfat_sbits_p<110>  IOSTANDARD=LVDS_25 | LOC = "K13" ;
+NET vfat_sbits_n<111>  IOSTANDARD=LVDS_25 | LOC = "M13" ;
+NET vfat_sbits_p<111>  IOSTANDARD=LVDS_25 | LOC = "L13" ;
+NET vfat_sot_p<12>     IOSTANDARD=LVDS_25 | LOC = "K14" ; # polarity swap
+NET vfat_sot_n<12>     IOSTANDARD=LVDS_25 | LOC = "J14" ; # polarity swap
+NET vfat_sbits_p<96>   IOSTANDARD=LVDS_25 | LOC = "G21" ; # polarity swap
+NET vfat_sbits_n<96>   IOSTANDARD=LVDS_25 | LOC = "G22" ; # polarity swap
+NET vfat_sbits_n<97>   IOSTANDARD=LVDS_25 | LOC = "G20" ;
+NET vfat_sbits_p<97>   IOSTANDARD=LVDS_25 | LOC = "F21" ;
+NET vfat_sbits_p<98>   IOSTANDARD=LVDS_25 | LOC = "F19" ; # polarity swap
+NET vfat_sbits_n<98>   IOSTANDARD=LVDS_25 | LOC = "F20" ; # polarity swap
+NET vfat_sbits_p<99>   IOSTANDARD=LVDS_25 | LOC = "G18" ; # polarity swap
+NET vfat_sbits_n<99>   IOSTANDARD=LVDS_25 | LOC = "H18" ; # polarity swap
+NET vfat_sbits_n<100>  IOSTANDARD=LVDS_25 | LOC = "E17" ;
+NET vfat_sbits_p<100>  IOSTANDARD=LVDS_25 | LOC = "F18" ;
+NET vfat_sbits_p<101>  IOSTANDARD=LVDS_25 | LOC = "F16" ; # polarity swap
+NET vfat_sbits_n<101>  IOSTANDARD=LVDS_25 | LOC = "G16" ; # polarity swap
+NET vfat_sbits_n<102>  IOSTANDARD=LVDS_25 | LOC = "K23" ;
+NET vfat_sbits_p<102>  IOSTANDARD=LVDS_25 | LOC = "K24" ;
+NET vfat_sbits_p<103>  IOSTANDARD=LVDS_25 | LOC = "K21" ; # polarity swap
+NET vfat_sbits_n<103>  IOSTANDARD=LVDS_25 | LOC = "K22" ; # polarity swap
+NET vfat_sot_n<11>     IOSTANDARD=LVDS_25 | LOC = "R34" ;
+NET vfat_sot_p<11>     IOSTANDARD=LVDS_25 | LOC = "R33" ;
+NET vfat_sbits_n<88>   IOSTANDARD=LVDS_25 | LOC = "AC30";
+NET vfat_sbits_p<88>   IOSTANDARD=LVDS_25 | LOC = "AD30";
+NET vfat_sbits_p<89>   IOSTANDARD=LVDS_25 | LOC = "AB32"; # polarity swap
+NET vfat_sbits_n<89>   IOSTANDARD=LVDS_25 | LOC = "AC32"; # polarity swap
+NET vfat_sbits_p<90>   IOSTANDARD=LVDS_25 | LOC = "AB30"; # polarity swap
+NET vfat_sbits_n<90>   IOSTANDARD=LVDS_25 | LOC = "AB31"; # polarity swap
+NET vfat_sbits_p<91>   IOSTANDARD=LVDS_25 | LOC = "Y32" ; # polarity swap
+NET vfat_sbits_n<91>   IOSTANDARD=LVDS_25 | LOC = "Y31" ; # polarity swap
+NET vfat_sbits_n<92>   IOSTANDARD=LVDS_25 | LOC = "W32" ;
+NET vfat_sbits_p<92>   IOSTANDARD=LVDS_25 | LOC = "W31" ;
+NET vfat_sbits_p<93>   IOSTANDARD=LVDS_25 | LOC = "V30" ; # polarity swap
+NET vfat_sbits_n<93>   IOSTANDARD=LVDS_25 | LOC = "W30" ; # polarity swap
+NET vfat_sbits_p<94>   IOSTANDARD=LVDS_25 | LOC = "U28" ; # polarity swap
+NET vfat_sbits_n<94>   IOSTANDARD=LVDS_25 | LOC = "V29" ; # polarity swap
+NET vfat_sbits_p<95>   IOSTANDARD=LVDS_25 | LOC = "U31" ; # polarity swap
+NET vfat_sbits_n<95>   IOSTANDARD=LVDS_25 | LOC = "U30" ; # polarity swap
+NET vfat_sot_n<10>     IOSTANDARD=LVDS_25 | LOC = "P34" ;
+NET vfat_sot_p<10>     IOSTANDARD=LVDS_25 | LOC = "N34" ;
+NET vfat_sbits_n<80>   IOSTANDARD=LVDS_25 | LOC = "T31" ;
+NET vfat_sbits_p<80>   IOSTANDARD=LVDS_25 | LOC = "T30" ;
+NET vfat_sbits_n<81>   IOSTANDARD=LVDS_25 | LOC = "R32" ;
+NET vfat_sbits_p<81>   IOSTANDARD=LVDS_25 | LOC = "R31" ;
+NET vfat_sbits_p<82>   IOSTANDARD=LVDS_25 | LOC = "P31" ; # polarity swap
+NET vfat_sbits_n<82>   IOSTANDARD=LVDS_25 | LOC = "P30" ; # polarity swap
+NET vfat_sbits_p<83>   IOSTANDARD=LVDS_25 | LOC = "N32" ; # polarity swap
+NET vfat_sbits_n<83>   IOSTANDARD=LVDS_25 | LOC = "P32" ; # polarity swap
+NET vfat_sbits_p<84>   IOSTANDARD=LVDS_25 | LOC = "M30" ; # polarity swap
+NET vfat_sbits_n<84>   IOSTANDARD=LVDS_25 | LOC = "N30" ; # polarity swap
+NET vfat_sbits_n<85>   IOSTANDARD=LVDS_25 | LOC = "L31" ;
+NET vfat_sbits_p<85>   IOSTANDARD=LVDS_25 | LOC = "M31" ;
+NET vfat_sbits_p<86>   IOSTANDARD=LVDS_25 | LOC = "K32" ; # polarity swap
+NET vfat_sbits_n<86>   IOSTANDARD=LVDS_25 | LOC = "K31" ; # polarity swap
+NET vfat_sbits_p<87>   IOSTANDARD=LVDS_25 | LOC = "J30" ; # polarity swap
+NET vfat_sbits_n<87>   IOSTANDARD=LVDS_25 | LOC = "K29" ; # polarity swap
+NET vfat_sot_p<9>      IOSTANDARD=LVDS_25 | LOC = "AJ29"; # polarity swap
+NET vfat_sot_n<9>      IOSTANDARD=LVDS_25 | LOC = "AJ30"; # polarity swap
+NET vfat_sbits_p<72>   IOSTANDARD=LVDS_25 | LOC = "AN25"; # polarity swap
+NET vfat_sbits_n<72>   IOSTANDARD=LVDS_25 | LOC = "AN24"; # polarity swap
+NET vfat_sbits_p<73>   IOSTANDARD=LVDS_25 | LOC = "AK26"; # polarity swap
+NET vfat_sbits_n<73>   IOSTANDARD=LVDS_25 | LOC = "AJ26"; # polarity swap
+NET vfat_sbits_p<74>   IOSTANDARD=LVDS_25 | LOC = "AN27"; # polarity swap
+NET vfat_sbits_n<74>   IOSTANDARD=LVDS_25 | LOC = "AM27"; # polarity swap
+NET vfat_sbits_n<75>   IOSTANDARD=LVDS_25 | LOC = "AJ27";
+NET vfat_sbits_p<75>   IOSTANDARD=LVDS_25 | LOC = "AK27";
+NET vfat_sbits_n<76>   IOSTANDARD=LVDS_25 | LOC = "AK28";
+NET vfat_sbits_p<76>   IOSTANDARD=LVDS_25 | LOC = "AL28";
+NET vfat_sbits_n<77>   IOSTANDARD=LVDS_25 | LOC = "AP31";
+NET vfat_sbits_p<77>   IOSTANDARD=LVDS_25 | LOC = "AP30";
+NET vfat_sbits_n<78>   IOSTANDARD=LVDS_25 | LOC = "AP33";
+NET vfat_sbits_p<78>   IOSTANDARD=LVDS_25 | LOC = "AP32";
+NET vfat_sbits_n<79>   IOSTANDARD=LVDS_25 | LOC = "AM30";
+NET vfat_sbits_p<79>   IOSTANDARD=LVDS_25 | LOC = "AN30";
+NET vfat_sot_n<8>      IOSTANDARD=LVDS_25 | LOC = "M32" ;
+NET vfat_sot_p<8>      IOSTANDARD=LVDS_25 | LOC = "L33" ;
+NET vfat_sbits_p<64>   IOSTANDARD=LVDS_25 | LOC = "AH25"; # polarity swap
+NET vfat_sbits_n<64>   IOSTANDARD=LVDS_25 | LOC = "AJ25"; # polarity swap
+NET vfat_sbits_n<65>   IOSTANDARD=LVDS_25 | LOC = "AF21";
+NET vfat_sbits_p<65>   IOSTANDARD=LVDS_25 | LOC = "AF20";
+NET vfat_sbits_n<66>   IOSTANDARD=LVDS_25 | LOC = "AD21";
+NET vfat_sbits_p<66>   IOSTANDARD=LVDS_25 | LOC = "AE21";
+NET vfat_sbits_n<67>   IOSTANDARD=LVDS_25 | LOC = "AD26";
+NET vfat_sbits_p<67>   IOSTANDARD=LVDS_25 | LOC = "AD25";
+NET vfat_sbits_p<68>   IOSTANDARD=LVDS_25 | LOC = "AB25"; # polarity swap
+NET vfat_sbits_n<68>   IOSTANDARD=LVDS_25 | LOC = "AC25"; # polarity swap
+NET vfat_sbits_p<69>   IOSTANDARD=LVDS_25 | LOC = "AB27"; # polarity swap
+NET vfat_sbits_n<69>   IOSTANDARD=LVDS_25 | LOC = "AC27"; # polarity swap
+NET vfat_sbits_p<70>   IOSTANDARD=LVDS_25 | LOC = "AA26"; # polarity swap
+NET vfat_sbits_n<70>   IOSTANDARD=LVDS_25 | LOC = "AB26"; # polarity swap
+NET vfat_sbits_n<71>   IOSTANDARD=LVDS_25 | LOC = "Y26" ;
+NET vfat_sbits_p<71>   IOSTANDARD=LVDS_25 | LOC = "AA25";
+NET vfat_sot_p<7>      IOSTANDARD=LVDS_25 | LOC = "J25" ; # polarity swap
+NET vfat_sot_n<7>      IOSTANDARD=LVDS_25 | LOC = "J24" ; # polarity swap
+NET vfat_sbits_n<56>   IOSTANDARD=LVDS_25 | LOC = "J22" ;
+NET vfat_sbits_p<56>   IOSTANDARD=LVDS_25 | LOC = "H22" ;
+NET vfat_sbits_p<57>   IOSTANDARD=LVDS_25 | LOC = "T24" ; # polarity swap
+NET vfat_sbits_n<57>   IOSTANDARD=LVDS_25 | LOC = "T23" ; # polarity swap
+NET vfat_sbits_n<58>   IOSTANDARD=LVDS_25 | LOC = "M25" ;
+NET vfat_sbits_p<58>   IOSTANDARD=LVDS_25 | LOC = "N25" ;
+NET vfat_sbits_n<59>   IOSTANDARD=LVDS_25 | LOC = "G25" ;
+NET vfat_sbits_p<59>   IOSTANDARD=LVDS_25 | LOC = "F25" ;
+NET vfat_sbits_p<60>   IOSTANDARD=LVDS_25 | LOC = "K11" ; # polarity swap
+NET vfat_sbits_n<60>   IOSTANDARD=LVDS_25 | LOC = "L11" ; # polarity swap
+NET vfat_sbits_p<61>   IOSTANDARD=LVDS_25 | LOC = "G11" ; # polarity swap
+NET vfat_sbits_n<61>   IOSTANDARD=LVDS_25 | LOC = "F11" ; # polarity swap
+NET vfat_sbits_n<62>   IOSTANDARD=LVDS_25 | LOC = "E12" ;
+NET vfat_sbits_p<62>   IOSTANDARD=LVDS_25 | LOC = "D12" ;
+NET vfat_sbits_n<63>   IOSTANDARD=LVDS_25 | LOC = "F13" ;
+NET vfat_sbits_p<63>   IOSTANDARD=LVDS_25 | LOC = "E13" ;
+NET vfat_sot_n<6>      IOSTANDARD=LVDS_25 | LOC = "L26" ;
+NET vfat_sot_p<6>      IOSTANDARD=LVDS_25 | LOC = "L25" ;
+NET vfat_sbits_n<48>   IOSTANDARD=LVDS_25 | LOC = "D22" ;
+NET vfat_sbits_p<48>   IOSTANDARD=LVDS_25 | LOC = "C22" ;
+NET vfat_sbits_n<49>   IOSTANDARD=LVDS_25 | LOC = "E21" ;
+NET vfat_sbits_p<49>   IOSTANDARD=LVDS_25 | LOC = "D21" ;
+NET vfat_sbits_n<50>   IOSTANDARD=LVDS_25 | LOC = "D20" ;
+NET vfat_sbits_p<50>   IOSTANDARD=LVDS_25 | LOC = "C20" ;
+NET vfat_sbits_p<51>   IOSTANDARD=LVDS_25 | LOC = "E19" ; # polarity swap
+NET vfat_sbits_n<51>   IOSTANDARD=LVDS_25 | LOC = "D19" ; # polarity swap
+NET vfat_sbits_n<52>   IOSTANDARD=LVDS_25 | LOC = "D17" ;
+NET vfat_sbits_p<52>   IOSTANDARD=LVDS_25 | LOC = "E18" ;
+NET vfat_sbits_n<53>   IOSTANDARD=LVDS_25 | LOC = "D16" ;
+NET vfat_sbits_p<53>   IOSTANDARD=LVDS_25 | LOC = "E16" ;
+NET vfat_sbits_n<54>   IOSTANDARD=LVDS_25 | LOC = "F15" ;
+NET vfat_sbits_p<54>   IOSTANDARD=LVDS_25 | LOC = "G15" ;
+NET vfat_sbits_n<55>   IOSTANDARD=LVDS_25 | LOC = "E14" ;
+NET vfat_sbits_p<55>   IOSTANDARD=LVDS_25 | LOC = "F14" ;
+NET vfat_sot_p<5>      IOSTANDARD=LVDS_25 | LOC = "J11" ; # polarity swap
+NET vfat_sot_n<5>      IOSTANDARD=LVDS_25 | LOC = "J10" ; # polarity swap
+NET vfat_sbits_p<40>   IOSTANDARD=LVDS_25 | LOC = "C29" ; # polarity swap
+NET vfat_sbits_n<40>   IOSTANDARD=LVDS_25 | LOC = "D29" ; # polarity swap
+NET vfat_sbits_n<41>   IOSTANDARD=LVDS_25 | LOC = "E28" ;
+NET vfat_sbits_p<41>   IOSTANDARD=LVDS_25 | LOC = "F28" ;
+NET vfat_sbits_p<42>   IOSTANDARD=LVDS_25 | LOC = "D27" ; # polarity swap
+NET vfat_sbits_n<42>   IOSTANDARD=LVDS_25 | LOC = "E27" ; # polarity swap
+NET vfat_sbits_p<43>   IOSTANDARD=LVDS_25 | LOC = "E26" ; # polarity swap
+NET vfat_sbits_n<43>   IOSTANDARD=LVDS_25 | LOC = "F26" ; # polarity swap
+NET vfat_sbits_p<44>   IOSTANDARD=LVDS_25 | LOC = "D25" ; # polarity swap
+NET vfat_sbits_n<44>   IOSTANDARD=LVDS_25 | LOC = "D26" ; # polarity swap
+NET vfat_sbits_p<45>   IOSTANDARD=LVDS_25 | LOC = "C24" ; # polarity swap
+NET vfat_sbits_n<45>   IOSTANDARD=LVDS_25 | LOC = "C25" ; # polarity swap
+NET vfat_sbits_n<46>   IOSTANDARD=LVDS_25 | LOC = "E24" ;
+NET vfat_sbits_p<46>   IOSTANDARD=LVDS_25 | LOC = "D24" ;
+NET vfat_sbits_p<47>   IOSTANDARD=LVDS_25 | LOC = "E22" ; # polarity swap
+NET vfat_sbits_n<47>   IOSTANDARD=LVDS_25 | LOC = "E23" ; # polarity swap
+NET vfat_sot_n<4>      IOSTANDARD=LVDS_25 | LOC = "E11" ;
+NET vfat_sot_p<4>      IOSTANDARD=LVDS_25 | LOC = "D11" ;
+NET vfat_sbits_p<32>   IOSTANDARD=LVDS_25 | LOC = "A23" ; # polarity swap
+NET vfat_sbits_n<32>   IOSTANDARD=LVDS_25 | LOC = "A24" ; # polarity swap
+NET vfat_sbits_n<33>   IOSTANDARD=LVDS_25 | LOC = "C23" ;
+NET vfat_sbits_p<33>   IOSTANDARD=LVDS_25 | LOC = "B23" ;
+NET vfat_sbits_p<34>   IOSTANDARD=LVDS_25 | LOC = "B21" ; # polarity swap
+NET vfat_sbits_n<34>   IOSTANDARD=LVDS_25 | LOC = "B22" ; # polarity swap
+NET vfat_sbits_p<35>   IOSTANDARD=LVDS_25 | LOC = "A20" ; # polarity swap
+NET vfat_sbits_n<35>   IOSTANDARD=LVDS_25 | LOC = "A21" ; # polarity swap
+NET vfat_sbits_n<36>   IOSTANDARD=LVDS_25 | LOC = "C19" ;
+NET vfat_sbits_p<36>   IOSTANDARD=LVDS_25 | LOC = "B20" ;
+NET vfat_sbits_p<37>   IOSTANDARD=LVDS_25 | LOC = "A18" ; # polarity swap
+NET vfat_sbits_n<37>   IOSTANDARD=LVDS_25 | LOC = "A19" ; # polarity swap
+NET vfat_sbits_n<38>   IOSTANDARD=LVDS_25 | LOC = "C18" ;
+NET vfat_sbits_p<38>   IOSTANDARD=LVDS_25 | LOC = "B18" ;
+NET vfat_sbits_n<39>   IOSTANDARD=LVDS_25 | LOC = "B17" ;
+NET vfat_sbits_p<39>   IOSTANDARD=LVDS_25 | LOC = "C17" ;
+NET vfat_sot_n<3>      IOSTANDARD=LVDS_25 | LOC = "H29" ;
+NET vfat_sot_p<3>      IOSTANDARD=LVDS_25 | LOC = "H28" ;
+NET vfat_sbits_p<24>   IOSTANDARD=LVDS_25 | LOC = "F33" ; # polarity swap
+NET vfat_sbits_n<24>   IOSTANDARD=LVDS_25 | LOC = "G33" ; # polarity swap
+NET vfat_sbits_p<25>   IOSTANDARD=LVDS_25 | LOC = "E34" ; # polarity swap
+NET vfat_sbits_n<25>   IOSTANDARD=LVDS_25 | LOC = "F34" ; # polarity swap
+NET vfat_sbits_p<26>   IOSTANDARD=LVDS_25 | LOC = "E32" ; # polarity swap
+NET vfat_sbits_n<26>   IOSTANDARD=LVDS_25 | LOC = "E33" ; # polarity swap
+NET vfat_sbits_n<27>   IOSTANDARD=LVDS_25 | LOC = "C34" ;
+NET vfat_sbits_p<27>   IOSTANDARD=LVDS_25 | LOC = "D34" ;
+NET vfat_sbits_n<28>   IOSTANDARD=LVDS_25 | LOC = "B34" ;
+NET vfat_sbits_p<28>   IOSTANDARD=LVDS_25 | LOC = "C33" ;
+NET vfat_sbits_p<29>   IOSTANDARD=LVDS_25 | LOC = "A33" ; # polarity swap
+NET vfat_sbits_n<29>   IOSTANDARD=LVDS_25 | LOC = "B33" ; # polarity swap
+NET vfat_sbits_p<30>   IOSTANDARD=LVDS_25 | LOC = "A28" ; # polarity swap
+NET vfat_sbits_n<30>   IOSTANDARD=LVDS_25 | LOC = "A29" ; # polarity swap
+NET vfat_sbits_p<31>   IOSTANDARD=LVDS_25 | LOC = "C28" ; # polarity swap
+NET vfat_sbits_n<31>   IOSTANDARD=LVDS_25 | LOC = "B28" ; # polarity swap
+NET vfat_sot_p<2>      IOSTANDARD=LVDS_25 | LOC = "A30" ; # polarity swap
+NET vfat_sot_n<2>      IOSTANDARD=LVDS_25 | LOC = "B30" ; # polarity swap
+NET vfat_sbits_n<16>   IOSTANDARD=LVDS_25 | LOC = "M27" ;
+NET vfat_sbits_p<16>   IOSTANDARD=LVDS_25 | LOC = "M26" ;
+NET vfat_sbits_p<17>   IOSTANDARD=LVDS_25 | LOC = "L28" ; # polarity swap
+NET vfat_sbits_n<17>   IOSTANDARD=LVDS_25 | LOC = "M28" ; # polarity swap
+NET vfat_sbits_p<18>   IOSTANDARD=LVDS_25 | LOC = "L29" ; # polarity swap
+NET vfat_sbits_n<18>   IOSTANDARD=LVDS_25 | LOC = "L30" ; # polarity swap
+NET vfat_sbits_n<19>   IOSTANDARD=LVDS_25 | LOC = "J29" ;
+NET vfat_sbits_p<19>   IOSTANDARD=LVDS_25 | LOC = "K28" ;
+NET vfat_sbits_n<20>   IOSTANDARD=LVDS_25 | LOC = "D32" ;
+NET vfat_sbits_p<20>   IOSTANDARD=LVDS_25 | LOC = "D31" ;
+NET vfat_sbits_n<21>   IOSTANDARD=LVDS_25 | LOC = "A31" ;
+NET vfat_sbits_p<21>   IOSTANDARD=LVDS_25 | LOC = "B31" ;
+NET vfat_sbits_p<22>   IOSTANDARD=LVDS_25 | LOC = "J31" ; # polarity swap
+NET vfat_sbits_n<22>   IOSTANDARD=LVDS_25 | LOC = "J32" ; # polarity swap
+NET vfat_sbits_n<23>   IOSTANDARD=LVDS_25 | LOC = "H33" ;
+NET vfat_sbits_p<23>   IOSTANDARD=LVDS_25 | LOC = "H34" ;
+NET vfat_sot_p<1>      IOSTANDARD=LVDS_25 | LOC = "K33" ; # polarity swap
+NET vfat_sot_n<1>      IOSTANDARD=LVDS_25 | LOC = "J34" ; # polarity swap
+NET vfat_sbits_p<8>    IOSTANDARD=LVDS_25 | LOC = "AA28"; # polarity swap
+NET vfat_sbits_n<8>    IOSTANDARD=LVDS_25 | LOC = "AA29"; # polarity swap
+NET vfat_sbits_p<9>    IOSTANDARD=LVDS_25 | LOC = "W29" ; # polarity swap
+NET vfat_sbits_n<9>    IOSTANDARD=LVDS_25 | LOC = "Y29" ; # polarity swap
+NET vfat_sbits_p<10>   IOSTANDARD=LVDS_25 | LOC = "V28" ; # polarity swap
+NET vfat_sbits_n<10>   IOSTANDARD=LVDS_25 | LOC = "V27" ; # polarity swap
+NET vfat_sbits_n<11>   IOSTANDARD=LVDS_25 | LOC = "U27" ;
+NET vfat_sbits_p<11>   IOSTANDARD=LVDS_25 | LOC = "U26" ;
+NET vfat_sbits_n<12>   IOSTANDARD=LVDS_25 | LOC = "T29" ;
+NET vfat_sbits_p<12>   IOSTANDARD=LVDS_25 | LOC = "T28" ;
+NET vfat_sbits_p<13>   IOSTANDARD=LVDS_25 | LOC = "R28" ; # polarity swap
+NET vfat_sbits_n<13>   IOSTANDARD=LVDS_25 | LOC = "R27" ; # polarity swap
+NET vfat_sbits_p<14>   IOSTANDARD=LVDS_25 | LOC = "P29" ; # polarity swap
+NET vfat_sbits_n<14>   IOSTANDARD=LVDS_25 | LOC = "R29" ; # polarity swap
+NET vfat_sbits_n<15>   IOSTANDARD=LVDS_25 | LOC = "N29" ;
+NET vfat_sbits_p<15>   IOSTANDARD=LVDS_25 | LOC = "N28" ;
+NET vfat_sot_n<0>      IOSTANDARD=LVDS_25 | LOC = "L34" ;
+NET vfat_sot_p<0>      IOSTANDARD=LVDS_25 | LOC = "K34" ;
+NET vfat_sbits_p<0>    IOSTANDARD=LVDS_25 | LOC = "C30" ; # polarity swap
+NET vfat_sbits_n<0>    IOSTANDARD=LVDS_25 | LOC = "D30" ; # polarity swap
+NET vfat_sbits_n<1>    IOSTANDARD=LVDS_25 | LOC = "B32" ;
+NET vfat_sbits_p<1>    IOSTANDARD=LVDS_25 | LOC = "C32" ;
+NET vfat_sbits_p<2>    IOSTANDARD=LVDS_25 | LOC = "AF30"; # polarity swap
+NET vfat_sbits_n<2>    IOSTANDARD=LVDS_25 | LOC = "AG30"; # polarity swap
+NET vfat_sbits_n<3>    IOSTANDARD=LVDS_25 | LOC = "AE29";
+NET vfat_sbits_p<3>    IOSTANDARD=LVDS_25 | LOC = "AE28";
+NET vfat_sbits_n<4>    IOSTANDARD=LVDS_25 | LOC = "AD27";
+NET vfat_sbits_p<4>    IOSTANDARD=LVDS_25 | LOC = "AE27";
+NET vfat_sbits_n<5>    IOSTANDARD=LVDS_25 | LOC = "AC29";
+NET vfat_sbits_p<5>    IOSTANDARD=LVDS_25 | LOC = "AD29";
+NET vfat_sbits_p<6>    IOSTANDARD=LVDS_25 | LOC = "AB28"; # polarity swap
+NET vfat_sbits_n<6>    IOSTANDARD=LVDS_25 | LOC = "AC28"; # polarity swap
+NET vfat_sbits_n<7>    IOSTANDARD=LVDS_25 | LOC = "AA31";
+NET vfat_sbits_p<7>    IOSTANDARD=LVDS_25 | LOC = "AA30";
+

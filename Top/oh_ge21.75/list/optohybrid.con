@@ -1,0 +1,4 @@
+# -*- mode: TCL;-*-
+boards/ge21_oh/constraints/clocking.xdc
+boards/ge21_oh/constraints/pinout.xdc
+boards/ge21_oh/constraints/impl.xdc nosynth

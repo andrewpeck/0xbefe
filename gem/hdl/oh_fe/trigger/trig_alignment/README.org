@@ -1,0 +1,43 @@
+* S-bit Deserialization
+
+Deserialization of S-bits is accomplished with the Oversampling technique (documented in Xilinx XAPP 881, "Virtex-6 FPGA LVDS 4X Asynchronous Oversampling at 1.25 Gb/s”).
+
+Each VFAT transmission unit is asynchronous to the other, since lengths are not matched (in GE1/1). Thus, the data must be reliably sampled in the center of the eye, given an unknown phase relationship between each of the 216 transmission unit pairs that come into the Optohybrid FPGA.
+
+We will not reiterate on the basics of the oversampling technique, which is already well documented, but there are some specific features of the Optohybrid implementation which should be noted.
+
+** Shared Sampling State Machines
+
+By tuning the tap delays of differential pairs within a single VFAT (which are already nearly phase-aligned) we can make the reasonable assumption that they are all aligned well enough that they can be considered in-phase.
+
+Additionally, we should note that because the S-bits are nearly always idle (set to 0 or 1 depending on polarity inversions), there are very infrequent transitions. Because of this, the phase alignment state machine, as described in aforementioned XAPP note, will take a long time to be able to lock onto the data in the correct phase.
+
+Instead, we have a single state machine for each VFAT which finds the optimal sample selection for each VFAT based only on the transitions in the Start-of-Transmission pulse, which is guaranteed every 40MHz. The optical sample selection for the 8 S-bit pairs from that same VFAT are assumed to be the same because of the tap-delay based phase alignment. This has the added benefit of significantly reducing the resource usage required for this step, by reducing the number of state machines required.
+
+** Interleaving and Frame Alignment
+
+The oversampling technique introduces an additional step of interleaving “odd” and “even” (or rising and falling) samples in separate 160 MHz data streams.
+
+A Verilog firmware module, frame_aligner.v, is responsible for interleaving these odd and even bitstreams into a 64 bit long trigger word.
+
+The alignment of this 64 bit long trigger word is uncertain on its own, which the uncertainty represented as a barrel shift of the S-bit position within the VFAT.
+
+To align this data to the 40MHz sampling clock in the Optohybrid, a state machine applies a programmable delay to the Start-of-Transmission pulse. The Xilinx SRL16E primitive is used to produce a resource-efficient, 0-15 clock cycle delay on the Start-of-Transmission pulse. The delay is incremented until the Start-of-Transmission pulse for that particular VFAT is aligned to the 40MHz clock.
+
+The value of this SRL16E address is also applied to the odd and even data streams, which aligns the data automatically to the 40MHz frame clock.
+
+Depending on the clock phase of the 40MHz frame clock, synchronous pulses in the chamber may arrive in different bunch crossings. This should be corrected by adjusting the phase of the 40MHz clock from the GBTx so center the OH inside of a bunch crossing window.
+
+Alternatively, there is the capability to introduce bunch-crossing (integer) delays for a VFAT, but it is not anticipated that this would be necessary.
+
+** S-bit Timing
+
+Timing of S-bits is described in the presentation on Indico at: [[https://indico.cern.ch/event/524671/contributions/2173475/attachments/1276978/1898262/Full_Chip_High_LeveL_Simulations__additional_sides.pdf]]
+
+For convenience, these are copied here:
+
+#+ATTR_ORG: :width 800
+[[file:../../../doc/images/vfat_timing0.png]]
+
+#+ATTR_ORG: :width 800
+[[file:../../../doc/images/vfat_timing1.png]]
