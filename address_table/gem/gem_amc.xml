@@ -148,6 +148,10 @@
           sw_ctrl_configure_set="0x1"/>
   </node>
 
+  <node id="TEST_SBIT_ME0" address="0x1" mask="0xffffffff" permission="rw"
+        description="Test register to be built into me0 sbit scan"
+        fw_signal="test_sbit_me0" fw_default="0x01234567"/>
+
   <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
         description="Board ID that gets embedded in the AMC13 header"
         fw_signal="board_id" fw_default="0xbefe"/>
@@ -193,6 +197,10 @@
           description="If set high, then HDLC address will be set to the same number as the slot number when sending slow control packets to VFATs -- note this requires that the HDLC address is set accordingly on the GEB. If this is 0, then an HDLC address of 0 is always used for all slots (default VFAT address when HDLC address pins are left unconnected)"
           fw_signal="use_vfat_addressing" fw_default="0b0"/>
   </node>
+
+  <node id="TEST_SBIT_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit_count_me0"/>
 
   <node id="TESTS" address="0x200">
     <node id="GBT_LOOPBACK_EN" address="0x0" mask="0x00000001" permission="rw"
