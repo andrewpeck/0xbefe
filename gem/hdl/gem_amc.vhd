@@ -532,7 +532,8 @@ begin
             ipb_clk_i               => ipb_clk_i,
             ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.daq),
             ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.daq),
-            board_sn_i              => board_id_i
+            board_sn_i              => board_id_i,
+            
         );    
 
     ------------ DEBUG - fanout DAQ data from OH1 to all DAQ inputs --------------
@@ -550,7 +551,8 @@ begin
             g_FW_DATE => g_FW_DATE,
             g_FW_TIME => g_FW_TIME,
             g_FW_VER => g_FW_VER,
-            g_FW_SHA => g_FW_SHA
+            g_FW_SHA => g_FW_SHA,
+            g_NUM_OF_OHs      => g_NUM_OF_OHs
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
@@ -570,7 +572,8 @@ begin
             manual_ipbus_reset_o        => manual_ipbus_reset,
             gbt_reset_o                 => manual_gbt_reset,
             gemloader_stats_i           => gemloader_stats,
-            gemloader_cfg_o             => gemloader_cfg
+            gemloader_cfg_o             => gemloader_cfg,
+            vfat3_sbits_arr_i           => me0_vfat3_sbits_arr
         );
 
     --===============================--
