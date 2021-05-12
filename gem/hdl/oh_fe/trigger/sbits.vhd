@@ -67,7 +67,10 @@ entity sbits is
 
     hitmap_reset_i   : in  std_logic;
     hitmap_acquire_i : in  std_logic;
-    hitmap_sbits_o   : out sbits_array_t(NUM_VFATS-1 downto 0)
+    hitmap_sbits_o   : out sbits_array_t(NUM_VFATS-1 downto 0);
+
+    cluster_tmr_err_o        : out std_logic := '0';
+    trig_alignment_tmr_err_o : out std_logic := '0'
 
     );
 end sbits;
@@ -150,7 +153,9 @@ begin
       sot_tap_delay  => sot_tap_delay,
       trig_tap_delay => trig_tap_delay,
 
-      sbits => sbits
+      sbits => sbits,
+
+      tmr_err_o => trig_alignment_tmr_err_o
       );
 
   --------------------------------------------------------------------------------------------------------------------
@@ -227,6 +232,9 @@ begin
     attribute DONT_TOUCH of clusters      : signal is "true";
     attribute DONT_TOUCH of cluster_count : signal is "true";
     attribute DONT_TOUCH of overflow      : signal is "true";
+
+    signal cluster_tmr_err : std_logic_vector (2+NUM_FOUND_CLUSTERS-1 downto 0);
+
   begin
 
     cluster_packer_loop : for I in 0 to 2*EN_TMR_CLUSTER_PACKER generate
@@ -256,14 +264,20 @@ begin
 
     tmr_gen : if (EN_TMR = 1) generate
     begin
+
+      majority_err (overflow_o, cluster_tmr_err(0), overflow(0), overflow(1), overflow(2));
+      majority_err (cluster_count_o, cluster_tmr_err(1), cluster_count(0), cluster_count(1), cluster_count(2));
+
       cluster_assign_loop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
-        clusters_o(I).adr <= majority (clusters(0)(I).adr, clusters(1)(I).adr, clusters(2)(I).adr);
-        clusters_o(I).cnt <= majority (clusters(0)(I).cnt, clusters(1)(I).cnt, clusters(2)(I).cnt);
-        clusters_o(I).prt <= majority (clusters(0)(I).prt, clusters(1)(I).prt, clusters(2)(I).prt);
-        clusters_o(I).vpf <= majority (clusters(0)(I).vpf, clusters(1)(I).vpf, clusters(2)(I).vpf);
+        signal err : std_logic_vector (3 downto 0) := (others => '0');
+      begin
+        majority_err (clusters_o(I).adr, err(0), clusters(0)(I).adr, clusters(1)(I).adr, clusters(2)(I).adr);
+        majority_err (clusters_o(I).cnt, err(1), clusters(0)(I).cnt, clusters(1)(I).cnt, clusters(2)(I).cnt);
+        majority_err (clusters_o(I).prt, err(2), clusters(0)(I).prt, clusters(1)(I).prt, clusters(2)(I).prt);
+        majority_err (clusters_o(I).vpf, err(3), clusters(0)(I).vpf, clusters(1)(I).vpf, clusters(2)(I).vpf);
+
+        cluster_tmr_err(2+I) <= or_reduce(err);
       end generate;
-      overflow_o      <= majority (overflow(0), overflow(1), overflow(2));
-      cluster_count_o <= majority (cluster_count(0), cluster_count(1), cluster_count(2));
     end generate;
 
     notmr_gen : if (EN_TMR /= 1) generate
@@ -271,6 +285,13 @@ begin
       overflow_o      <= overflow(0);
       cluster_count_o <= cluster_count(0);
     end generate;
+
+    process (clocks.clk40) is
+    begin
+      if (rising_edge(clocks.clk40)) then
+        cluster_tmr_err_o <= or_reduce(cluster_tmr_err);
+      end if;
+    end process;
 
   end generate;
 

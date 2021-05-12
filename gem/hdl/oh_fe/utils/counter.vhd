@@ -1,15 +1,11 @@
 ----------------------------------------------------------------------------------
--- Company:        IIHE - ULB
--- Engineer:       Thomas Lenzi (thomas.lenzi@cern.ch)
---
--- Create Date:    15:17:59 07/09/2015
--- Design Name:    OptoHybrid v2
--- Module Name:    counter - Behavioral
--- Project Name:   OptoHybrid v2
--- Target Devices: xc6vlx130t-1ff1156
--- Tool versions:  ISE  P.20131013
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- Optohybrid v3 Firmware -- Counter
+-- T. Lenzi, A. Peck
+----------------------------------------------------------------------------------
 -- Description:
---
+--   This module implements base level functionality for a single counter
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -35,8 +31,12 @@ architecture counter_arch of counter is
 
   constant max_count : unsigned(g_COUNTER_WIDTH - 1 downto 0) := (others => '1');
 
-  type count_array_t is array(integer range 2*g_EN_TMR downto 0) of unsigned (g_COUNTER_WIDTH - 1 downto 0);
+  type count_array_t is array(integer range 2*g_EN_TMR downto 0)
+    of unsigned (g_COUNTER_WIDTH - 1 downto 0);
   signal count : count_array_t;
+
+  attribute DONT_TOUCH          : string;
+  attribute DONT_TOUCH of count : signal is "true";
 
   function majority (a : unsigned; b : unsigned; c : unsigned)
     return unsigned is
@@ -64,6 +64,6 @@ begin
     end process;
   end generate;
 
-  count_o <= std_logic_vector(majority(count(0),count(1),count(2)));
+  count_o <= std_logic_vector(majority(count(0), count(1), count(2)));
 
 end counter_arch;

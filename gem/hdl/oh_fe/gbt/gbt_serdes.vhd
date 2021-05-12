@@ -56,11 +56,15 @@ entity gbt_serdes is
     data_i : in  std_logic_vector (MXBITS-1 downto 0);
     data_o : out std_logic_vector (MXBITS-1 downto 0);
 
-    sump : out std_logic
+    sump : out std_logic;
+
+    tmr_err_o : out std_logic := '0'
     );
 end gbt_serdes;
 
 architecture Behavioral of gbt_serdes is
+
+  signal oversample_tmr_err : std_logic;
 
   signal from_gbt_raw : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
 
@@ -101,6 +105,7 @@ begin
   begin
     if (rising_edge(clk_1x)) then
       rst <= rst_i;
+      tmr_err_o <= oversample_tmr_err;
     end if;
   end process;
 
@@ -135,7 +140,8 @@ begin
       e4_out            => sump_vector (3 downto 0),
       phase_sel_in      => (others => '0'),
       phase_sel_out     => sump_vector (5 downto 4),
-      invalid_bitskip_o => open
+      invalid_bitskip_o => open,
+      tmr_err_o         => oversample_tmr_err
       );
 
   --------------------------------------------------------------------------------------------------------------------

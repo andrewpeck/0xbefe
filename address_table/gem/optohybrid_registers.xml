@@ -58,7 +58,7 @@
                   fw_default="0x0"/>
         </node> <!--SEM-->
 
-        <node id="VFAT" address="0x5" description = "Controls the 12 VFAT reset outputs from the FPGA">
+        <node id="VFAT" address="0x8" description = "Controls the 12 VFAT reset outputs from the FPGA">
             <node id="RESET" address="0x0" permission="rw"
                   mask="0x00000fff"
                   description="Mask of VFAT Reset Outputs; 1=reset 0=enable"
@@ -66,7 +66,7 @@
                   fw_default="0x0"/>
         </node> <!--VFAT-->
 
-        <node id="TTC" address="0x8" description = "TTC Status and Control">
+        <node id="TTC" address="0x9" description = "TTC Status and Control">
             <node id="BX0_CNT_LOCAL" address="0x0" permission="r"
                   mask="0x00ffffff"
                   description="TTC BX0 Local Counter"
@@ -273,6 +273,30 @@
             <node id="OH_VER"      permission="r" address="0x9" description="OH Version"         fw_signal="OPTOHYBRID_VER"/>
             <node id="FLAVOUR"     permission="r" address="0xa" description="Flavor"             fw_signal="std_logic_vector(to_unsigned(FLAVOUR,32))"/>
         </node> <!--HOG-->
+
+        <node id="TMR">
+            <node id="TTC_TMR_ERR_CNT" address="0x22" permission="r"
+                  mask="0x0000ffff"
+                  description="TTC TMR Error Count"
+                  fw_cnt_en_signal="ttc_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset"
+                  fw_signal="ttc_tmr_err_cnt"/>
+            <node id="IPB_SWITCH_TMR_ERR_CNT" address="0x22" permission="r"
+                  mask="0xffff0000"
+                  description="IPBus Switch TMR Error Count"
+                  fw_cnt_en_signal="ipb_switch_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset"
+                  fw_signal="ipb_switch_tmr_err_cnt"/>
+            <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x23" permission="r"
+                  mask="0x0000ffff"
+                  description="IPBus Slave TMR Error Count"
+                  fw_cnt_en_signal="ipb_slave_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset"
+                  fw_signal="ipb_slave_tmr_err_cnt"/>
+        </node>
 
     </node> <!--CTRL-->
 
@@ -1219,6 +1243,37 @@
                   generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_HITMAP_IDX"/>
         </node>
 
+        <node id="TMR">
+            <node id="CLUSTER_TMR_ERR_CNT" address="0xd0" permission="r"
+                  mask="0x0000ffff"
+                  description="Cluster building TMR Error Count"
+                  fw_cnt_en_signal="cluster_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="cluster_tmr_err_cnt"/>
+            <node id="SBIT_RX_TMR_ERR_CNT" address="0xd0" permission="r"
+                  mask="0xffff0000"
+                  description="Sbit Rx TMR Error Count"
+                  fw_cnt_en_signal="trig_alignment_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="trig_alignment_tmr_err_cnt"/>
+            <node id="TRIG_FORMATTER_TMR_ERR_CNT" address="0xd1" permission="r"
+                  mask="0xffff0000"
+                  description="Trigger Link Formatter TMR Error Count"
+                  fw_cnt_en_signal="trig_formatter_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="trig_formatter_tmr_err_cnt"/>
+            <node id="IPB_SLAVE_TMR_ERR_CNT" address="0xd1" permission="r"
+                  mask="0x0000ffff"
+                  description="IPBus Slave TMR Error Count"
+                  fw_cnt_en_signal="ipb_slave_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="ipb_slave_tmr_err_cnt"/>
+        </node>
+
     </node> <!--TRIG-->
 
     <!--GBT module -->
@@ -1231,7 +1286,7 @@
           fw_bus_reset_signal="ipb_reset_i"
           fw_master_bus_signal="ipb_mosi_i"
           fw_slave_bus_signal="ipb_miso_o"
-          fw_reg_addr_msb="3"
+          fw_reg_addr_msb="4"
           fw_reg_addr_lsb="0">
 
         <node id="TX" address="0x0" description = "Controls and monitors the transmit link from the FPGA to the GBTx">
@@ -1284,6 +1339,31 @@
                   description="GBT Force Resync"
                   fw_write_pulse_signal="resync_force"/>
         </node> <!--TTC-->
+
+        <node id="TMR">
+            <node id="GBT_LINK_TMR_ERR_CNT" address="0x10" permission="r"
+                  mask="0x0000ffff"
+                  description="GBT Link TMR Error Count"
+                  fw_cnt_en_signal="gbt_link_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="gbt_link_tmr_err_cnt"/>
+            <node id="GBT_SERDES_TMR_ERR_CNT" address="0x10" permission="r"
+                  mask="0xffff0000"
+                  description="GBT Serdes TMR Error Count"
+                  fw_cnt_en_signal="gbt_serdes_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="gbt_serdes_tmr_err_cnt"/>
+            <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x11" permission="r"
+                  mask="0x0000ffff"
+                  description="IPBus Slave TMR Error Count"
+                  fw_cnt_en_signal="ipb_slave_tmr_err"
+                  fw_cnt_snap_signal="'1'"
+                  fw_cnt_reset_signal="reset_i"
+                  fw_signal="ipb_slave_tmr_err_cnt"/>
+        </node>
+
     </node> <!--GBT-->
 
     <!--MGT module -->

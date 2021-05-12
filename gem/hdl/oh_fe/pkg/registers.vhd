@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 
------> !! This package is auto-generated from an address table file using <repo_root>/scripts/generate_registers.py !! <-----
+-----> !! This package is auto-generated from an address table file using generate_registers.py !! <-----
 package registers is
 
     --============================================================================
@@ -18,26 +18,6 @@ package registers is
     constant REG_CONTROL_LOOPBACK_DATA_LSB     : integer := 0;
     constant REG_CONTROL_LOOPBACK_DATA_DEFAULT : std_logic_vector(31 downto 0) := x"01234567";
 
-    constant REG_CONTROL_RELEASE_DATE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
-    constant REG_CONTROL_RELEASE_DATE_MSB    : integer := 31;
-    constant REG_CONTROL_RELEASE_DATE_LSB     : integer := 0;
-
-    constant REG_CONTROL_RELEASE_VERSION_MAJOR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
-    constant REG_CONTROL_RELEASE_VERSION_MAJOR_MSB    : integer := 7;
-    constant REG_CONTROL_RELEASE_VERSION_MAJOR_LSB     : integer := 0;
-
-    constant REG_CONTROL_RELEASE_VERSION_MINOR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
-    constant REG_CONTROL_RELEASE_VERSION_MINOR_MSB    : integer := 15;
-    constant REG_CONTROL_RELEASE_VERSION_MINOR_LSB     : integer := 8;
-
-    constant REG_CONTROL_RELEASE_VERSION_BUILD_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
-    constant REG_CONTROL_RELEASE_VERSION_BUILD_MSB    : integer := 23;
-    constant REG_CONTROL_RELEASE_VERSION_BUILD_LSB     : integer := 16;
-
-    constant REG_CONTROL_RELEASE_VERSION_GENERATION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
-    constant REG_CONTROL_RELEASE_VERSION_GENERATION_MSB    : integer := 31;
-    constant REG_CONTROL_RELEASE_VERSION_GENERATION_LSB     : integer := 24;
-
     constant REG_CONTROL_SEM_CNT_SEM_CRITICAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"3";
     constant REG_CONTROL_SEM_CNT_SEM_CRITICAL_MSB    : integer := 15;
     constant REG_CONTROL_SEM_CNT_SEM_CRITICAL_LSB     : integer := 0;
@@ -46,43 +26,56 @@ package registers is
     constant REG_CONTROL_SEM_CNT_SEM_CORRECTION_MSB    : integer := 31;
     constant REG_CONTROL_SEM_CNT_SEM_CORRECTION_LSB     : integer := 16;
 
-    constant REG_CONTROL_VFAT_RESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"5";
+    constant REG_CONTROL_SEM_INJ_PULSE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"5";
+    constant REG_CONTROL_SEM_INJ_PULSE_BIT    : integer := 0;
+
+    constant REG_CONTROL_SEM_INJ_ADDR_LSBS_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
+    constant REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB    : integer := 31;
+    constant REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB     : integer := 0;
+    constant REG_CONTROL_SEM_INJ_ADDR_LSBS_DEFAULT : std_logic_vector(31 downto 0) := x"00000000";
+
+    constant REG_CONTROL_SEM_INJ_ADDR_MSBS_ADDR    : std_logic_vector(5 downto 0) := "00" & x"7";
+    constant REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB    : integer := 7;
+    constant REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB     : integer := 0;
+    constant REG_CONTROL_SEM_INJ_ADDR_MSBS_DEFAULT : std_logic_vector(7 downto 0) := x"00";
+
+    constant REG_CONTROL_VFAT_RESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
     constant REG_CONTROL_VFAT_RESET_MSB    : integer := 11;
     constant REG_CONTROL_VFAT_RESET_LSB     : integer := 0;
     constant REG_CONTROL_VFAT_RESET_DEFAULT : std_logic_vector(11 downto 0) := x"000";
 
-    constant REG_CONTROL_TTC_BX0_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_TTC_BX0_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
     constant REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB    : integer := 23;
     constant REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BX0_CNT_TTC_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
+    constant REG_CONTROL_TTC_BX0_CNT_TTC_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
     constant REG_CONTROL_TTC_BX0_CNT_TTC_MSB    : integer := 23;
     constant REG_CONTROL_TTC_BX0_CNT_TTC_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
+    constant REG_CONTROL_TTC_BXN_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
     constant REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB    : integer := 11;
     constant REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_CONTROL_TTC_BXN_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_BIT    : integer := 12;
 
-    constant REG_CONTROL_TTC_BX0_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
+    constant REG_CONTROL_TTC_BX0_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_BIT    : integer := 13;
 
-    constant REG_CONTROL_TTC_BXN_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
+    constant REG_CONTROL_TTC_BXN_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
     constant REG_CONTROL_TTC_BXN_OFFSET_MSB    : integer := 27;
     constant REG_CONTROL_TTC_BXN_OFFSET_LSB     : integer := 16;
     constant REG_CONTROL_TTC_BXN_OFFSET_DEFAULT : std_logic_vector(27 downto 16) := x"000";
 
-    constant REG_CONTROL_TTC_L1A_CNT_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
+    constant REG_CONTROL_TTC_L1A_CNT_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
     constant REG_CONTROL_TTC_L1A_CNT_MSB    : integer := 23;
     constant REG_CONTROL_TTC_L1A_CNT_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
+    constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB    : integer := 15;
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB    : integer := 31;
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB     : integer := 16;
 
@@ -197,9 +190,21 @@ package registers is
     constant REG_CONTROL_HOG_GLOBAL_DATE_MSB    : integer := 31;
     constant REG_CONTROL_HOG_GLOBAL_DATE_LSB     : integer := 0;
 
+    constant REG_CONTROL_TMR_TTC_TMR_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "10" & x"2";
+    constant REG_CONTROL_TMR_TTC_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_CONTROL_TMR_TTC_TMR_ERR_CNT_LSB     : integer := 0;
+
     constant REG_CONTROL_HOG_GLOBAL_TIME_ADDR    : std_logic_vector(5 downto 0) := "10" & x"2";
     constant REG_CONTROL_HOG_GLOBAL_TIME_MSB    : integer := 31;
     constant REG_CONTROL_HOG_GLOBAL_TIME_LSB     : integer := 0;
+
+    constant REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "10" & x"2";
+    constant REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_MSB    : integer := 31;
+    constant REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_LSB     : integer := 16;
+
+    constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "10" & x"3";
+    constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
 
     constant REG_CONTROL_HOG_GLOBAL_VER_ADDR    : std_logic_vector(5 downto 0) := "10" & x"3";
     constant REG_CONTROL_HOG_GLOBAL_VER_MSB    : integer := 31;
@@ -300,7 +305,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 98;
+    constant REG_TRIG_NUM_REGS : integer := 100;
     constant REG_TRIG_ADDRESS_MSB : integer := 7;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"00";
@@ -1268,6 +1273,22 @@ package registers is
     constant REG_TRIG_SBIT_HITMAP_VFAT11_LSB_MSB    : integer := 31;
     constant REG_TRIG_SBIT_HITMAP_VFAT11_LSB_LSB     : integer := 0;
 
+    constant REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_ADDR    : std_logic_vector(7 downto 0) := x"d0";
+    constant REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB     : integer := 0;
+
+    constant REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_ADDR    : std_logic_vector(7 downto 0) := x"d0";
+    constant REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB    : integer := 31;
+    constant REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB     : integer := 16;
+
+    constant REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_ADDR    : std_logic_vector(7 downto 0) := x"d1";
+    constant REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
+
+    constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_ADDR    : std_logic_vector(7 downto 0) := x"d1";
+    constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB    : integer := 31;
+    constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB     : integer := 16;
+
     constant REG_TRIG_CTRL_SBIT_SOT_INVALID_BITSKIP_ADDR    : std_logic_vector(7 downto 0) := x"e2";
     constant REG_TRIG_CTRL_SBIT_SOT_INVALID_BITSKIP_MSB    : integer := 11;
     constant REG_TRIG_CTRL_SBIT_SOT_INVALID_BITSKIP_LSB     : integer := 0;
@@ -1280,41 +1301,53 @@ package registers is
     -- GBTx to FPGA link
     --============================================================================
 
-    constant REG_GBT_NUM_REGS : integer := 6;
-    constant REG_GBT_ADDRESS_MSB : integer := 3;
+    constant REG_GBT_NUM_REGS : integer := 8;
+    constant REG_GBT_ADDRESS_MSB : integer := 4;
     constant REG_GBT_ADDRESS_LSB : integer := 0;
-    constant REG_GBT_TX_CNT_RESPONSE_SENT_ADDR    : std_logic_vector(3 downto 0) := x"0";
+    constant REG_GBT_TX_CNT_RESPONSE_SENT_ADDR    : std_logic_vector(4 downto 0) := '0' & x"0";
     constant REG_GBT_TX_CNT_RESPONSE_SENT_MSB    : integer := 31;
     constant REG_GBT_TX_CNT_RESPONSE_SENT_LSB     : integer := 8;
 
-    constant REG_GBT_TX_TX_READY_ADDR    : std_logic_vector(3 downto 0) := x"1";
+    constant REG_GBT_TX_TX_READY_ADDR    : std_logic_vector(4 downto 0) := '0' & x"1";
     constant REG_GBT_TX_TX_READY_BIT    : integer := 0;
 
-    constant REG_GBT_RX_RX_READY_ADDR    : std_logic_vector(3 downto 0) := x"4";
+    constant REG_GBT_RX_RX_READY_ADDR    : std_logic_vector(4 downto 0) := '0' & x"4";
     constant REG_GBT_RX_RX_READY_BIT    : integer := 0;
 
-    constant REG_GBT_RX_RX_VALID_ADDR    : std_logic_vector(3 downto 0) := x"4";
+    constant REG_GBT_RX_RX_VALID_ADDR    : std_logic_vector(4 downto 0) := '0' & x"4";
     constant REG_GBT_RX_RX_VALID_BIT    : integer := 1;
 
-    constant REG_GBT_RX_CNT_REQUEST_RECEIVED_ADDR    : std_logic_vector(3 downto 0) := x"4";
+    constant REG_GBT_RX_CNT_REQUEST_RECEIVED_ADDR    : std_logic_vector(4 downto 0) := '0' & x"4";
     constant REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB    : integer := 31;
     constant REG_GBT_RX_CNT_REQUEST_RECEIVED_LSB     : integer := 8;
 
-    constant REG_GBT_RX_CNT_LINK_ERR_ADDR    : std_logic_vector(3 downto 0) := x"5";
+    constant REG_GBT_RX_CNT_LINK_ERR_ADDR    : std_logic_vector(4 downto 0) := '0' & x"5";
     constant REG_GBT_RX_CNT_LINK_ERR_MSB    : integer := 23;
     constant REG_GBT_RX_CNT_LINK_ERR_LSB     : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_L1A_ADDR    : std_logic_vector(3 downto 0) := x"5";
+    constant REG_GBT_TTC_FORCE_L1A_ADDR    : std_logic_vector(4 downto 0) := '0' & x"5";
     constant REG_GBT_TTC_FORCE_L1A_MSB    : integer := 31;
     constant REG_GBT_TTC_FORCE_L1A_LSB     : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_BC0_ADDR    : std_logic_vector(3 downto 0) := x"6";
+    constant REG_GBT_TTC_FORCE_BC0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"6";
     constant REG_GBT_TTC_FORCE_BC0_MSB    : integer := 31;
     constant REG_GBT_TTC_FORCE_BC0_LSB     : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(3 downto 0) := x"7";
+    constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(4 downto 0) := '0' & x"7";
     constant REG_GBT_TTC_FORCE_RESYNC_MSB    : integer := 31;
     constant REG_GBT_TTC_FORCE_RESYNC_LSB     : integer := 0;
+
+    constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"0";
+    constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB     : integer := 0;
+
+    constant REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"0";
+    constant REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB    : integer := 31;
+    constant REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB     : integer := 16;
+
+    constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"1";
+    constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB    : integer := 15;
+    constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
 
 
     --============================================================================

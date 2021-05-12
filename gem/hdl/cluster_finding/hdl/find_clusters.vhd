@@ -88,7 +88,10 @@ architecture behavioral of find_clusters is
           return adr;
         end if;
       end if;
+    else
+      return (others => '1');
     end if;
+
   end to_address;
 
   function to_partition (station : integer; encoder : integer; adr : std_logic_vector; vpf : std_logic) return std_logic_vector is
