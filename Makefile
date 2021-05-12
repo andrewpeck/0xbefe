@@ -99,6 +99,9 @@ update_apex: update_ge11_apex update_ge21_apex update_me0_apex
 
 #### Optohybrid ####
 
+update_oh_base:
+	@cd regtools && python generate_registers.py oh && cd -
+
 update_oh_ge21:
 	@mkdir -p address_table/gem/generated/oh_ge21/
 	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge21/optohybrid_registers.xml
