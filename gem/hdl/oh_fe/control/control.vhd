@@ -520,6 +520,7 @@ begin
            ipb_mosi_i             => ipb_mosi_i,
            ipb_miso_o             => ipb_miso_o,
            usr_clk_i              => clocks.clk40,
+           tmr_err_o              => ipb_slave_tmr_err
            regs_read_arr_i        => regs_read_arr,
            regs_write_arr_o       => regs_write_arr,
            read_pulse_arr_o       => regs_read_pulse_arr,
@@ -528,8 +529,7 @@ begin
            regs_write_done_arr_i  => regs_write_done_arr,
            individual_addrs_arr_i => regs_addresses,
            regs_defaults_arr_i    => regs_defaults,
-           writable_regs_i        => regs_writable_arr,
-           tmr_err_o              => ipb_slave_tmr_err
+           writable_regs_i        => regs_writable_arr
       );
 
     -- Addresses
