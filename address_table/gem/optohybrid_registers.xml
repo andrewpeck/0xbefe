@@ -42,6 +42,20 @@
                   fw_cnt_en_signal="sem_correction"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_correction"/>
+            <node id="INJ_PULSE" address="0x2" permission="w"
+                  description="Pulse the sem error injection register"
+                  mask="0x1"
+                  fw_write_pulse_signal="sem_inject_strobe"/>
+            <node id="INJ_ADDR_LSBS" address="0x3" permission="rw"
+                  description="SEM Injection Address [31:0]"
+                  mask="0xffffffff"
+                  fw_signal="sem_inject_address(31 downto 0)"
+                  fw_default="0x0"/>
+            <node id="INJ_ADDR_MSBS" address="0x4" permission="rw"
+                  description="SEM Injection Address [39:32]"
+                  mask="0xff"
+                  fw_signal="sem_inject_address(39 downto 32)"
+                  fw_default="0x0"/>
         </node> <!--SEM-->
 
         <node id="VFAT" address="0x5" description = "Controls the 12 VFAT reset outputs from the FPGA">
