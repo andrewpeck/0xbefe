@@ -218,7 +218,7 @@ begin
            ipb_mosi_i             => ipb_mosi_i,
            ipb_miso_o             => ipb_miso_o,
            usr_clk_i              => clock_i,
-           tmr_err_o              => ipb_slave_tmr_err
+           tmr_err_o              => ipb_slave_tmr_err,
            regs_read_arr_i        => regs_read_arr,
            regs_write_arr_o       => regs_write_arr,
            read_pulse_arr_o       => regs_read_pulse_arr,
