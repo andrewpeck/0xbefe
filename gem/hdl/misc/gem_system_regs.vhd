@@ -221,7 +221,7 @@ begin
         port map(
             ref_clk_i => ttc_clks_i.clk_40,
             reset_i   => reset_i,
-            en_i      => vfat3_sbit_test,
+            en_i      => not vfat3_sbit_test,
             count_o   => test_sbit_count_me0
         );   
      
