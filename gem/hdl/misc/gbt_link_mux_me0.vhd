@@ -62,10 +62,7 @@ end gbt_link_mux_me0;
 architecture gbt_link_mux_me0_arch of gbt_link_mux_me0 is
 
     type t_gbt_idx_array is array(integer range 0 to 23) of integer range 0 to g_NUM_GBTS_PER_OH - 1;
---    constant VFAT_TO_GBT_MAP           : t_gbt_idx_array := (1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    constant VFAT_TO_GBT_MAP_PIZZA_POS1            : t_gbt_idx_array := (1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); 
-    constant VFAT_TO_GBT_MAP_PIZZA_POS2            : t_gbt_idx_array := (0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); 
-
+    constant VFAT_TO_GBT_MAP           : t_gbt_idx_array := (1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     signal gbt_rx_ready_arr             : std_logic_vector((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
 
 begin
@@ -87,13 +84,7 @@ begin
         gbt_rx_ready_arr(i * 2 + 1) <= gbt_link_status_arr_i(i * 2 + 1).gbt_rx_ready;
 
         g_vfat_gbt_ready: for vfat in 0 to 23 generate
-            g_ready_pizza_pos1 : if i mod 2 = 0 generate
---            g_ready_me0 : if i mod 1 = 0 generate
-                vfat3_gbt_ready_arr_o(i)(vfat) <= gbt_rx_ready_arr(i * 2 + VFAT_TO_GBT_MAP_PIZZA_POS1(vfat));
-            end generate;
-            g_ready_pizza_pos2 : if i mod 2 /= 0 generate
-                vfat3_gbt_ready_arr_o(i)(vfat) <= gbt_rx_ready_arr(i * 2 + VFAT_TO_GBT_MAP_PIZZA_POS2(vfat));
-            end generate;
+            vfat3_gbt_ready_arr_o(i)(vfat) <= gbt_rx_ready_arr(i * 2 + VFAT_TO_GBT_MAP(vfat));
         end generate;
 
         vfat3_rx_data_arr_o(i)(23)  <= (others => '0');
