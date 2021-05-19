@@ -9,7 +9,13 @@
 
 -- ========================== VFAT mapping on ME0 GEB (Wide) ==========================--
 -- OH0 (ASIAGO #1 on GEB):
-
+-- HW_VFAT#    GEB_VFAT#    J#    
+--
+--
+--
+--
+--
+--
 
 
 
