@@ -7,22 +7,18 @@
 -- Description:    This module is used to direct the LpGBT links either to the VFATs (standard operation) or to the GEM_TESTS module 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
---========================== OH0 GBT0 (fiber 1) master on the classic slot ==========================--
--- TX to VFATs 0-5 goes to GEB VFATs slots 1-6 in the same order
--- VFATs 1 and 5 (GEB pos 2 and 6) won't work due to different inversion w.r.t. their "neighbor" VFATs 3 and 4 that share the same elink 
--- slow control to VFAT 0 (GEB pos 1) won't work till we have addressing
--- RX from VFATs 3 and 5 (GEB pos 4 and 6)
---========================== OH0 GBT1 (fiber 2) slave on the classic slot ==========================--
+-- ========================== VFAT mapping on ME0 GEB (Wide) ==========================--
+-- OH0 (ASIAGO #1 on GEB):
+
+
+
+
+--========================== OH0/OH1 GBT0 (fiber 1) master ==========================--
+-- slow control to VFATs 0, 1 and 5 won't work till we have addressing since they share the same elink as VFATs 2, 3 and 4
+-- RX from VFATs 3 and 5
+--========================== OH0/OH1 GBT1 (fiber 2) slave ==========================--
 -- TX normally unused, but can be connected to the master, in which case VFATs 1 and 5 will work, but 3 and 4 will stop working. Also VFAT 0 slow control will work, but VFAT 2 won't until we have addressing
--- RX from VFATs 0, 1, 2, 4 (GEB pos 1, 2, 3, 5)
---========================== OH1 GBT0 (fiber 3) master on the spicy slot ==========================--
--- TX to VFATs 0-5 goes to GEB positions 7-12 in the same order
--- VFATs 1 and 2 (GEB pos 8 and 9) won't work due to different inversion w.r.t. their "neighbor" VFATs 3 and 0 that share the same elink 
--- slow control to VFAT 4 (GEB pos 11) won't work till we have addressing
--- RX from VFATs 0 and 1 (GEB pos 7 and 8)
---========================== OH1 GBT1 (fiber 4) slave on the spicy slot ==========================--
--- TX normally unused, but can be connected to the master, in which case VFATs 1 and 2 will work, but 3 and 0 will stop working. Also VFAT 4 slow control will work, but VFAT 5 won't until we have addressing
--- RX from VFATs 2, 3, 4, 5 (GEB pos 9, 10, 11, 12)
+-- RX from VFATs 0, 1, 2, 4 
 
 library ieee;
 use ieee.std_logic_1164.all;
