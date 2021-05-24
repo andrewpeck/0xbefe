@@ -35,6 +35,7 @@ puts [exec bash -c {cd ../.. && make update_oh_ge11}]
 set PROPERTIES [dict create \
     synth_1 [dict create \
         steps.xst.args.opt_level 2 \
+        steps.xst.args.register_balancing yes \
         steps.xst.args.equivalent_register_removal no \
     ] \
     impl_1 [dict create \
