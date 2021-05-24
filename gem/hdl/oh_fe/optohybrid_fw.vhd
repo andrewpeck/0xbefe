@@ -153,7 +153,7 @@ architecture Behavioral of optohybrid_fw is
   signal cnt_snap      : std_logic;
 
   attribute MAX_FANOUT                 : string;
-  attribute MAX_FANOUT of system_reset : signal is "300";
+  attribute MAX_FANOUT of system_reset : signal is "50";
 
   -- TTC
   signal bxn_counter : std_logic_vector(11 downto 0);

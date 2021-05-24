@@ -58,6 +58,8 @@ end trigger_data_formatter;
 
 architecture Behavioral of trigger_data_formatter is
 
+  signal reset : std_logic := '0';
+
   -- NUM_FOUND_CLUSTERS = # clusters found per bx
   -- NUM_OUTPUT_CLUSTERS = # clusters we can send on the output link
 
@@ -192,6 +194,13 @@ architecture Behavioral of trigger_data_formatter is
   signal force_comma          : std_logic := '0';
 
 begin
+
+  process (clocks.clk40) is
+  begin
+    if (rising_edge(clocks.clk40)) then
+      reset <= reset_i;
+    end if;
+  end process;
 
   -- Only empty clusters are sent for 4 orbits following a resync signal, thus guaranteeing that the comma/bc0
   -- symbols will not be replaced by CL WORD4 during this time
@@ -396,8 +405,8 @@ begin
           )
         port map (
           clk_i        => clocks.clk160_0,
-          rst_i        => reset_i,
-          en_i         => not reset_i,
+          rst_i        => reset,
+          en_i         => not reset,
           data_i       => packet_i,
           data_o       => packet_o,
           data_valid_o => open,
@@ -439,8 +448,8 @@ begin
           )
         port map (
           clk_i        => clocks.clk160_0,
-          rst_i        => reset_i,
-          en_i         => not reset_i,
+          rst_i        => reset,
+          en_i         => not reset,
           data_i       => packet_i,
           data_o       => packet_o,
           data_valid_o => open,
