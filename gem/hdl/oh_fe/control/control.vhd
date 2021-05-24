@@ -4,10 +4,6 @@
 -- Optohybrid v3 Firmware -- Control
 -- A. Peck
 ----------------------------------------------------------------------------------
--- 2017/07/25 -- Initial. Wrapper around OH control modules
--- 2017/07/25 -- Clear many synthesis warnings from module
--- 2017/11/14 -- Overhaul with XML derived controls
-----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -30,6 +26,9 @@ entity control is
     GLOBAL_TIME : std_logic_vector (31 downto 0) := x"00000000";
     GLOBAL_VER  : std_logic_vector (31 downto 0) := x"00000000";
     GLOBAL_SHA  : std_logic_vector (31 downto 0) := x"00000000";
+
+    XML_VER : std_logic_vector (31 downto 0) := x"00000000";
+    XML_SHA : std_logic_vector (31 downto 0) := x"00000000";
 
     TOP_SHA : std_logic_vector (31 downto 0) := x"00000000";
     TOP_VER : std_logic_vector (31 downto 0) := x"00000000";

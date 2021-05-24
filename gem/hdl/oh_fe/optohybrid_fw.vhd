@@ -35,6 +35,9 @@ entity optohybrid_fw is
     TOP_SHA : std_logic_vector (31 downto 0) := x"00000000";
     TOP_VER : std_logic_vector (31 downto 0) := x"00000000";
 
+    XML_VER : std_logic_vector (31 downto 0) := x"00000000";
+    XML_SHA : std_logic_vector (31 downto 0) := x"00000000";
+
     HOG_SHA : std_logic_vector (31 downto 0) := x"00000000";
     HOG_VER : std_logic_vector (31 downto 0) := x"00000000";
 
@@ -320,6 +323,8 @@ begin
       TOP_SHA        => TOP_SHA,
       TOP_VER        => TOP_VER,
       HOG_SHA        => HOG_SHA,
+      XML_VER        => XML_VER,
+      XML_SHA        => XML_SHA,
       HOG_VER        => HOG_VER,
       OPTOHYBRID_VER => OPTOHYBRID_VER,
       OPTOHYBRID_SHA => OPTOHYBRID_SHA,
