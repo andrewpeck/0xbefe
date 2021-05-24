@@ -60,6 +60,11 @@ begin
     end process;
   end generate;
 
-  reset_o <= majority(reset(0), reset(1), reset(2));
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      reset_o <= majority(reset(0), reset(1), reset(2));
+    end if;
+  end process;
 
 end behavioral;
