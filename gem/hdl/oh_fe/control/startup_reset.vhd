@@ -60,9 +60,9 @@ begin
     end process;
   end generate;
 
-  process (clock) is
+  process (clock_i) is
   begin
-    if (rising_edge(clock)) then
+    if (rising_edge(clock_i)) then
       reset_o <= majority(reset(0), reset(1), reset(2));
     end if;
   end process;
