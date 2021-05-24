@@ -1,1 +1,2 @@
-optohybrid_registers_ge21.xml
+# -*- mode: TCL;-*-
+address_table/gem/generated/oh_ge21/optohybrid_registers.xml
