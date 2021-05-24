@@ -330,7 +330,7 @@ begin
         DATA_BITS            => 1 + MXADRB + MXCNTB + MXPRTB,
         META_BITS            => 1,
         PIPELINE_STAGE_AFTER => 2,
-        ADD_INPUT_REGISTERS  => false,
+        ADD_INPUT_REGISTERS  => true,
         ADD_OUTPUT_REGISTERS => true
         )
       port map (
