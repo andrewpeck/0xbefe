@@ -218,7 +218,7 @@ begin
             count_o   => ipb_mon_err_cnt
         );
      
-     vfat3_sbit_0xx_test <= vfat3_sbits_arr_i(0)(int(test_sel_vfat_sbit_me0))(int(test_sel_sbit_me0));
+     vfat3_sbit0xx_test <= vfat3_sbits_arr_i(0)(int(test_sel_vfat_sbit_me0))(int(test_sel_sbit_me0));
      
      me0_sbit0xx_count : entity work.counter
         generic map(
