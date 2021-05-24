@@ -70,6 +70,8 @@ architecture Behavioral of trigger_data_phy is
 
   constant NUM_GTS : integer := 4;
 
+  signal clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+
   signal ipb_slave_tmr_err : std_logic;
 
   signal strobe    : std_logic;         -- 200MHz strobe
@@ -296,13 +298,15 @@ begin
 
   begin
 
-
     cluster_loop : for I in 0 to 7 generate
       process (clocks.clk40)
       begin
         if (rising_edge(clocks.clk40)) then
-          if (clusters_i(I).vpf = '1') then
-            legacy_clusters(I) <= clusters_i(I).cnt & get_adr(clusters_i(I).adr, clusters_i(I).prt);
+
+          clusters <= clusters_i;
+
+          if (clusters(I).vpf = '1') then
+            legacy_clusters(I) <= clusters(I).cnt & get_adr(clusters(I).adr, clusters(I).prt);
           else
             legacy_clusters(I) <= (others => '1');
           end if;
