@@ -207,9 +207,9 @@
   <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
         description="Test register to display count of sbit from particular OH vfat sbit"
         fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000002"/>
-  <node id="TEST_SEL_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
+  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
         description="Test register to display count of sbit from particular OH vfat sbit"
-        fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
+        fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
 
   <node id="TESTS" address="0x200">
     <node id="GBT_LOOPBACK_EN" address="0x0" mask="0x00000001" permission="rw"
