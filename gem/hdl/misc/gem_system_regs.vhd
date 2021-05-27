@@ -99,10 +99,13 @@ architecture gem_system_regs_arch of gem_system_regs is
     
     signal test_sbit_me0            : std_logic_vector(31 downto 0);
     
-    signal test_sbit0xx_count_me0 : std_logic_vector(31 downto 0);
-    signal vfat3_sbit0xx_test : std_logic_vector(7 downto 0);
+    signal test_sbit0xe_count_me0 : std_logic_vector(31 downto 0);
+    signal vfat3_sbit0xe_test : std_logic_vector(7 downto 0);
+    signal test_sbit0xs_count_me0 : std_logic_vector(31 downto 0);
+    signal vfat3_sbit0xs_test : std_logic;
     signal test_sel_vfat_sbit_me0 : std_logic_vector(31 downto 0);
     signal test_sel_elink_sbit_me0 : std_logic_vector(31 downto 0);
+    signal test_sel_sbit_me0 : std_logic_vector(31 downto 0);
     
     signal test_sbit030_count_me0 : std_logic_vector(31 downto 0);
     signal vfat3_sbit030_test : std_logic;
@@ -218,9 +221,9 @@ begin
             count_o   => ipb_mon_err_cnt
         );
      
-     vfat3_sbit0xx_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
      
-     me0_sbit0xx_count : entity work.counter
+     me0_sbit0xe_count : entity work.counter
         generic map(
             g_COUNTER_WIDTH  => 32,
             g_ALLOW_ROLLOVER => false
@@ -228,16 +231,30 @@ begin
         port map(
             ref_clk_i => ttc_clks_i.clk_40,
             reset_i   => reset_i,
-            en_i      => vfat3_sbit0xx_test(7) or
-                         vfat3_sbit0xx_test(6) or
-                         vfat3_sbit0xx_test(5) or
-                         vfat3_sbit0xx_test(4) or
-                         vfat3_sbit0xx_test(3) or
-                         vfat3_sbit0xx_test(2) or
-                         vfat3_sbit0xx_test(1) or
-                         vfat3_sbit0xx_test(0),
+            en_i      => vfat3_sbit0xe_test(7) or
+                         vfat3_sbit0xe_test(6) or
+                         vfat3_sbit0xe_test(5) or
+                         vfat3_sbit0xe_test(4) or
+                         vfat3_sbit0xe_test(3) or
+                         vfat3_sbit0xe_test(2) or
+                         vfat3_sbit0xe_test(1) or
+                         vfat3_sbit0xe_test(0),
             count_o   => test_sbit0xx_count_me0
         );   
+        
+     vfat3_sbit0xx_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(0);
+     
+     me0_sbit0xs_count : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH  => 32,
+            g_ALLOW_ROLLOVER => false
+        )
+        port map(
+            ref_clk_i => ttc_clks_i.clk_40,
+            reset_i   => reset_i,
+            en_i      => vfat3_sbit0xs_test,
+            count_o   => test_sbit0xx_count_me0
+        );    
      
      vfat3_sbit030_test <= vfat3_sbits_arr_i(0)(3)(0);
      
