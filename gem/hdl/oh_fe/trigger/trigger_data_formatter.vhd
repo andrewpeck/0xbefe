@@ -41,6 +41,8 @@ entity trigger_data_formatter is
     clusters_i : in sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     --clusters_strobe_i : in std_logic;
 
+    prbs_en_i : in std_logic;
+
     ttc_i : in ttc_t;
 
     overflow_i : in std_logic;          -- 1 bit gem has more than 8 clusters
@@ -372,8 +374,8 @@ begin
 
     -- word 4 is a special case since it holds the comma / ecc... the others are simple
     -- put the when else in a separate assignment since it is not allowed in a process until VHDL2008... uhg..
-    word4  <= cluster4_r2  when (vpf_r2 = '1' or force_comma='1') else (comma & ecc8);
-    kchars <= "0000000000" when (vpf_r2 = '1' or force_comma='1') else "1000000000";
+    word4  <= cluster4_r2  when (vpf_r2 = '1' or force_comma = '1') else (comma & ecc8);
+    kchars <= "0000000000" when (vpf_r2 = '1' or force_comma = '1') else "1000000000";
 
     -- copy onto 40MHz clock so it can be copied onto the 200MHz clock easily
     -- (160 --> 200 MHz transfer requires proper CDC)
@@ -423,9 +425,43 @@ begin
   ge21_elink_gen : if (GE21 = 1) and HAS_ELINK_OUTPUTS generate
     signal ecc8               : std_logic_vector (7 downto 0);
     signal packet_i, packet_o : std_logic_vector (5*16-1 downto 0);
+
+    signal prbs_gen  : std_logic_vector (7 downto 0) := (others => '0');
+    signal prbs_data : std_logic_vector (7 downto 0) := (others => '0');
+
   begin
 
-    elink_packets_o(0) <= ecc8 & packet_o;
+    prbs_data <= reverse_vector(prbs_gen);
+
+    prbs_any_gen : entity work.prbs_any
+      generic map (
+        chk_mode    => false,
+        inv_pattern => false,
+        poly_lenght => 7,
+        poly_tap    => 6,
+        nbits       => 8
+        )
+      port map (
+        rst      => reset,
+        clk      => clocks.clk40,
+        data_in  => (others => '0'),
+        en       => '1',
+        data_out => prbs_gen
+        );
+
+    process (clocks.clk40) is
+    begin
+      if (rising_edge(clocks.clk40)) then
+        if (prbs_en_i = '1') then
+          elink_packets_o(0) <= prbs_data & prbs_data & prbs_data & prbs_data & prbs_data &
+                                prbs_data & prbs_data & prbs_data & prbs_data & prbs_data &
+                                prbs_data;
+        else
+          elink_packets_o(0) <= ecc8 & packet_o;
+        end if;
+      end if;
+    end process;
+
 
     process (clocks.clk160_0)
     begin

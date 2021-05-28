@@ -60,6 +60,8 @@ entity trigger is
     master_slave_p : inout std_logic_vector (11 downto 0);
     master_slave_n : inout std_logic_vector (11 downto 0);
 
+    trigger_prbs_en_o  : out std_logic;
+
     trig_formatter_tmr_err : in std_logic;
 
     cnt_snap : in std_logic
@@ -68,6 +70,8 @@ entity trigger is
 end trigger;
 
 architecture Behavioral of trigger is
+
+  signal trigger_prbs_en  : std_logic;
 
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
@@ -197,9 +201,10 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------------------------------------------
 
-  overflow_o      <= sbit_overflow;
-  active_vfats_o  <= active_vfats;
-  cluster_count_o <= cluster_count;
+  trigger_prbs_en_o <= trigger_prbs_en;
+  overflow_o        <= sbit_overflow;
+  active_vfats_o    <= active_vfats;
+  cluster_count_o   <= cluster_count;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Counter Snap
@@ -468,8 +473,9 @@ begin
     regs_addresses(95)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"c7";
     regs_addresses(96)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"c8";
     regs_addresses(97)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"c9";
-    regs_addresses(98)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f0";
-    regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f1";
+    regs_addresses(98)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"e9";
+    regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f0";
+    regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f1";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -677,10 +683,11 @@ begin
     regs_read_arr(95)(REG_TRIG_SBIT_HITMAP_VFAT10_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT10_LSB_LSB) <= hitmap_sbits(10)(31 downto 0);
     regs_read_arr(96)(REG_TRIG_SBIT_HITMAP_VFAT11_MSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_MSB_LSB) <= hitmap_sbits(11)(63 downto 32);
     regs_read_arr(97)(REG_TRIG_SBIT_HITMAP_VFAT11_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_LSB_LSB) <= hitmap_sbits(11)(31 downto 0);
-    regs_read_arr(98)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
-    regs_read_arr(98)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
-    regs_read_arr(99)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
-    regs_read_arr(99)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
+    regs_read_arr(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= trigger_prbs_en;
+    regs_read_arr(99)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
+    regs_read_arr(99)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
+    regs_read_arr(100)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(100)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);

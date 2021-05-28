@@ -1243,6 +1243,12 @@
                   generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_HITMAP_IDX"/>
         </node>
 
+        <node id="TRIGGER_PRBS_EN" address="0xe9" permission="rw"
+              mask="0x00000001"
+              description="1 to enable PRBS-7 on the trigger e-links"
+              fw_default="1"
+              fw_signal="trigger_prbs_en"/>
+
         <node id="TMR" address="0xf0">
             <node id="CLUSTER_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0x0000ffff"

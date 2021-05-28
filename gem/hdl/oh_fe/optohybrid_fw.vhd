@@ -152,6 +152,8 @@ architecture Behavioral of optohybrid_fw is
   signal system_reset  : std_logic;
   signal cnt_snap      : std_logic;
 
+  signal trigger_prbs_en  : std_logic;
+
   attribute MAX_FANOUT                 : string;
   attribute MAX_FANOUT of system_reset : signal is "50";
 
@@ -377,6 +379,7 @@ begin
 
   trigger_inst : entity work.trigger
     port map (
+
       -- wishbone
       ipb_mosi_i => ipb_mosi_slaves(IPB_SLAVE.TRIG),
       ipb_miso_o => ipb_miso_slaves(IPB_SLAVE.TRIG),
@@ -402,7 +405,10 @@ begin
       sbit_clusters_o => sbit_clusters,
       cluster_count_o => cluster_count,
       overflow_o      => sbit_overflow,
-      active_vfats_o  => active_vfats
+      active_vfats_o  => active_vfats,
+
+      --
+      trigger_prbs_en_o => trigger_prbs_en
       );
 
   --------------------------------------------------------------------------------
@@ -437,6 +443,7 @@ begin
           clocks          => clocks,
           reset_i         => system_reset,
           ttc_i           => ttc,
+          prbs_en_i       => trigger_prbs_en,
           clusters_i      => sbit_clusters,
           overflow_i      => sbit_overflow,
           bxn_counter_i   => bxn_counter,
