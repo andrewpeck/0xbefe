@@ -68,7 +68,7 @@ def main():
         print('  config <config_filename_txt>:   Configures the GBT with the given config file (must use the txt version of the config file, can be generated with the GBT programmer software)')
         print('  v3b-phase-scan <base_config_filename_txt>:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase')
         print('  ge21-phase-scan <base_config_filename_txt>:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase')
-        print('  ge21-fpga-phase-scan <base_config_filename_txt>:   Configures the GBT with the given config file, and performs a phase scan on elinks connected to the FPGA while checking the PRBS error count for each phase. NOTE: This requires the FPGA to be loaded with a loopback firmware (future OH fw versions will probably have the PRBS sender built in)')
+        print('  ge21-fpga-phase-scan <base_config_filename_txt> [time_per_phase_sec]:   Configures the GBT with the given config file, and performs a phase scan on elinks connected to the FPGA while checking the PRBS error count for each phase. NOTE: This requires the FPGA to be loaded with a loopback firmware (future OH fw versions will probably have the PRBS sender built in). Optionally a number of seconds to spend on each phase can be supplied as the last argument.')
         print('  ge21-program-phases <elink_0_phase> <elink_1_phase> <elink_2_phase> <elink_3_phase> etc... :   Programs the provided GBTX sampling phases to as many elinks as the numbers provided (can also include wide-bus elinks)')
         print('  me0-phase-scan-pizza:   Performs an elink phase scan while checking the VFAT communication for each phase -- used with ME0 OH on PIZZA (OH0 corresponds to the classic slot, OH1 corresponds to the spicy slot)')
         print('  charge-pump-current-scan:   Scans the CDR phase detector charge pump current from highest to the lowest that still works')
@@ -88,7 +88,7 @@ def main():
     parseXML()
 
     initGbtRegAddrs()
-    
+
     signal.signal(signal.SIGINT, signal_handler)
 
     heading("Hello, I'm your GBT controller :)")
@@ -202,6 +202,11 @@ def main():
                     print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
 
         if (command == 'ge21-fpga-phase-scan'):
+            # if there's an additional argument -- take it as the number of seconds to spend on each phase
+            timePerPhase = 5
+            if len(sys.argv) > 5:
+                timePerPhase = int(sys.argv[5])
+
             # prep
             writeReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
 
@@ -231,7 +236,7 @@ def main():
                 sleep(0.001)
                 writeReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
                 writeReg(getNode('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
-                sleep(5)
+                sleep(timePerPhase)
 
                 # check all elinks for errors
                 result = ("%d" % phase).ljust(tableColWidth)

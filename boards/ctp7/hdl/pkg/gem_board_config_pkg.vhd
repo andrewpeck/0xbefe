@@ -17,7 +17,7 @@ use work.project_config.all;
 --============================================================================
 --                                                         Package declaration
 --============================================================================
-package gem_board_config_package is
+package board_config_package is
 
     function get_num_gbts_per_oh(gem_station : integer) return integer;
     function get_num_vfats_per_oh(gem_station : integer) return integer;
@@ -256,9 +256,9 @@ package gem_board_config_package is
         (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false, ibert_inst => true)   
     );    
     
-end gem_board_config_package;
+end board_config_package;
 
-package body gem_board_config_package is
+package body board_config_package is
 
     function get_num_gbts_per_oh(gem_station : integer) return integer is
     begin
@@ -308,7 +308,7 @@ package body gem_board_config_package is
         end if;
     end function get_gbt_widebus;
     
-end gem_board_config_package;
+end board_config_package;
 --============================================================================
 --                                                                 Package end 
 --============================================================================

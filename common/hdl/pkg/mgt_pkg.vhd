@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 package mgt_pkg is
 
-    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B);
+    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_GBE);
 
     type t_mgt_config is record
         link_type               : t_mgt_link_type;
@@ -23,11 +23,18 @@ package mgt_pkg is
         tx_bus_width            : integer range 16 to 64;
         tx_multilane_phalign    : boolean; -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
         rx_use_buf              : boolean;
+        is_master               : boolean; -- if true, the TXOUTCLK from this MGT is used to drive the TXUSRCLK of all the other MGTs of the same type (this can only be set to true on one channel of any given type)
         ibert_inst              : boolean; -- if true, an in-system ibert will be instantiated for this channel
     --mgt_rx_bus_width     : integer range 16 to 64;
     end record;
 
     -- NOTE t_mgt_config_arr type should be defined in the board package with the correct length
+
+    type t_mgt_master_clks is record
+        gbt : std_logic;
+        dmb : std_logic;
+        gbe : std_logic;
+    end record;
 
     type t_drp_in is record
         addr : std_logic_vector(9 downto 0);

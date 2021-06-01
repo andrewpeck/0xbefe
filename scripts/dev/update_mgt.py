@@ -57,7 +57,14 @@ def main():
             else:
                 valVhdl = '"%s"' % val[val.index("'b")+2:]
         elif type.lower() == "hex":
-            valVhdl = 'x"%s"' % val[val.index("'h")+2:]
+            numBits = int(val[:val.index("'h")])
+            # if the number of bits is a multiple of 4 then use the x"123" notation, otherwise just convert to binary
+            if numBits % 4 != 0:
+                valHex = int(val[val.index("'h")+2:], base=16)
+                binStr = bin(valHex)[2:].zfill(numBits)
+                valVhdl = '"%s"' % binStr
+            else:
+                valVhdl = 'x"%s"' % val[val.index("'h")+2:]
         elif type.lower() == "bool":
             if val == "1":
                 valVhdl = "true"

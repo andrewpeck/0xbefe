@@ -7,6 +7,8 @@ package common_pkg is
     --======================--
     --==      General     ==--
     --======================-- 
+
+    constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
         
     function count_ones(s : std_logic_vector) return integer;
     function bool_to_std_logic(L : BOOLEAN) return std_logic;
@@ -283,6 +285,28 @@ package common_pkg is
     type t_gbt_frame_array is array(integer range <>) of std_logic_vector(83 downto 0);
     type t_gbt_wide_frame_array is array(integer range <>) of std_logic_vector(115 downto 0);
 
+    type t_sync_fifo_status is record
+        had_ovf         : std_logic;
+        had_unf         : std_logic;
+    end record;
+
+    type t_gbt_link_status is record
+        gbt_tx_ready                : std_logic;
+        gbt_tx_had_not_ready        : std_logic;
+        gbt_tx_gearbox_ready        : std_logic;
+        gbt_rx_sync_status          : t_sync_fifo_status;
+        gbt_rx_ready                : std_logic;
+        gbt_rx_had_not_ready        : std_logic;
+        gbt_rx_header_locked        : std_logic;
+        gbt_rx_header_had_unlock    : std_logic;
+        gbt_rx_gearbox_ready        : std_logic;
+        gbt_rx_correction_cnt       : std_logic_vector(7 downto 0);
+        gbt_rx_correction_flag      : std_logic;
+        gbt_rx_num_bitslips         : std_logic_vector(7 downto 0);
+    end record;
+
+    type t_gbt_link_status_arr is array(integer range <>) of t_gbt_link_status;    
+
     --============--
     --==   LpGBT  ==--
     --============--   
@@ -357,6 +381,8 @@ package common_pkg is
         txchardispval  : std_logic_vector(1 downto 0);
     end record;
 
+    constant MGT_16B_TX_DATA_NULL : t_mgt_16b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'));
+
     type t_mgt_16b_rx_data is record
         rxdata          : std_logic_vector(15 downto 0);
         rxbyteisaligned : std_logic;
@@ -367,6 +393,8 @@ package common_pkg is
         rxchariscomma   : std_logic_vector(1 downto 0);
         rxcharisk       : std_logic_vector(1 downto 0);
     end record;
+
+    constant MGT_16B_RX_DATA_NULL : t_mgt_16b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
 
     type t_mgt_16b_tx_data_arr is array(integer range <>) of t_mgt_16b_tx_data;
     type t_mgt_16b_rx_data_arr is array(integer range <>) of t_mgt_16b_rx_data;
@@ -385,7 +413,11 @@ package common_pkg is
         tx_cpll_locked  : std_logic;
         rx_cpll_locked  : std_logic;
         qpll_locked     : std_logic;
+        rxbufstatus     : std_logic_vector(2 downto 0);
+        rxclkcorcnt     : std_logic_vector(1 downto 0);
     end record;
+
+    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_cpll_locked => '0', rx_cpll_locked => '0', qpll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
 
@@ -419,12 +451,12 @@ package common_pkg is
     --== PROMless firmware loader ==--
     --===============================--
     
-    type t_to_gem_loader is record
+    type t_to_promless is record
         clk     : std_logic;
         en      : std_logic;
     end record;
 
-    type t_from_gem_loader is record
+    type t_from_promless is record
         ready   : std_logic;
         valid   : std_logic;
         data    : std_logic_vector(7 downto 0);
@@ -433,7 +465,7 @@ package common_pkg is
         error   : std_logic;
     end record;
    
-    type t_gem_loader_stats is record
+    type t_promless_stats is record
         load_request_cnt    : std_logic_vector(15 downto 0);
         success_cnt         : std_logic_vector(15 downto 0);
         fail_cnt            : std_logic_vector(15 downto 0);
@@ -441,7 +473,7 @@ package common_pkg is
         loader_ovf_unf_cnt  : std_logic_vector(15 downto 0);
     end record;
 
-    type t_gem_loader_cfg is record
+    type t_promless_cfg is record
         firmware_size       : std_logic_vector(31 downto 0);
     end record;
 

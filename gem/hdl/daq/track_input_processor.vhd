@@ -21,7 +21,7 @@ use xpm.vcomponents.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ipbus.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 entity track_input_processor is
 port(

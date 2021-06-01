@@ -12,7 +12,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity gt_rx_link_ila_wrapper is
   port (

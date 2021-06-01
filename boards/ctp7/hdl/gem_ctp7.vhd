@@ -30,7 +30,7 @@ use work.ipbus.all;
 use work.axi_pkg.all;
 use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 --============================================================================
 --                                                          Entity declaration
@@ -190,9 +190,9 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal daq_to_daqlink       : t_daq_to_daqlink;
     signal daqlink_to_daq       : t_daqlink_to_daq;
 
-    -------------------- GEM loader ---------------------------------
-    signal to_gem_loader        : t_to_gem_loader := (clk => '0', en => '0');
-    signal from_gem_loader      : t_from_gem_loader;
+    -------------------- PROMless ---------------------------------
+    signal to_promless          : t_to_promless := (clk => '0', en => '0');
+    signal from_promless        : t_from_promless;
 
     -------------------- Other ---------------------------------
 
@@ -305,8 +305,8 @@ begin
             daq_to_daqlink_i               => daq_to_daqlink,
             daqlink_to_daq_o               => daqlink_to_daq,
 
-            from_gem_loader_o              => from_gem_loader,
-            to_gem_loader_i                => to_gem_loader
+            from_promless_o                => from_promless,
+            to_promless_i                  => to_promless
         );
 
     -------------------------- IPBus ---------------------------------
@@ -393,8 +393,8 @@ begin
                 
                 board_id_i              => x"beef",
     
-                to_gem_loader_o         => to_gem_loader,
-                from_gem_loader_i       => from_gem_loader
+                to_promless_o           => to_promless,
+                from_promless_i         => from_promless
             );
     
         -- GTH mapping to GEM links for GE1/1

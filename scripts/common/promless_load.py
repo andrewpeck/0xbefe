@@ -53,7 +53,7 @@ def main():
         wReg(wDataAddr, word)
 
     writeReg(getNode("GEM_AMC.PROMLESS.FIRMWARE_SIZE"), len(bytes))
-    writeReg(getNode("GEM_AMC.GEM_SYSTEM.GEM_LOADER.FIRMWARE_SIZE"), len(bytes))
+    writeReg(getNode("GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
 
     print("Verifying...")
     rDataAddr = getNode("GEM_AMC.PROMLESS.READ_DATA").real_address

@@ -1,0 +1,551 @@
+    <!-- System module -->
+    <node id="SYSTEM"  address="0x00100000"
+          description="This module is controlling CSC FED system wide settings"
+          fw_is_module="true"
+          fw_module_file="../csc/hdl/system/system_regs.vhd"
+          fw_user_clock_signal="ttc_clks_i.clk_40"
+          fw_bus_clock_signal="ipb_clk_i"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="16"
+          fw_reg_addr_lsb="0">
+
+        <node id="CTRL" address="0x100">
+          <node id="GLOBAL_RESET" address="0x0" permission="w"
+                description="Global reset of the GEM logic (resets all modules)"
+                fw_write_pulse_signal="global_reset_trig"
+                sw_ctrl_configure_set="0x1"/>
+          <node id="LINK_RESET" address="0x1" permission="w"
+                description="Reset the links to and from OHs and redo VFAT3 sync procedure"
+                fw_write_pulse_signal="manual_link_reset_o"
+                sw_ctrl_configure_set="0x1"/>
+          <node id="IPBUS_RESET" address="0x2" permission="w"
+                description="Reset of all registers to their default value"
+                fw_write_pulse_signal="ipbus_reset_trig"
+                sw_ctrl_configure_set="0x1"/>
+          <node id="GBT_RESET" address="0x3" permission="w"
+                description="Reset all the GBT cores"
+                fw_write_pulse_signal="gbt_reset_o"
+                sw_ctrl_configure_set="0x1"/>
+        </node>
+
+        <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
+              description="Board ID that gets embedded in the AMC13 header"
+              fw_signal="board_id" fw_default="0x347"/>
+
+        <node id="RELEASE" address="0x3">
+          <node id="MAJOR" address="0x0" mask="0xff000000" permission="r"
+                description="Firmware release major version"
+                fw_signal="g_FW_VER(31 downto 24)"/>
+          <node id="MINOR" address="0x0" mask="0x00ff0000" permission="r"
+                description="Firmware release minor version"
+                fw_signal="g_FW_VER(23 downto 16)"/>
+          <node id="BUILD" address="0x0" mask="0x0000ffff" permission="r"
+                description="Firmware release build version"
+                fw_signal="g_FW_VER(15 downto 0)"/>
+          <node id="DATE" address="0x1" permission="r"
+                description="Firmware release date (read as hex, format: ddmmyyyy)"
+                fw_signal="g_FW_DATE"/>
+          <node id="TIME" address="0x2" permission="r"
+                description="Firmware release time (read as hex, format: 00HHMMSS)"
+                fw_signal="g_FW_TIME"/>
+          <node id="GIT_SHA" address="0x3" permission="r"
+                description="Firmware release git commit hash"
+                fw_signal="g_FW_SHA"/>
+          <node id="BOARD_TYPE" address="0x4" mask="0x0000000f" permission="r"
+                description="Board type: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
+                fw_signal="board_type"/>
+          <node id="NUM_OF_DMBS" address="0x4" mask="0x00000ff0" permission="r"
+                description="Number of DMB inputs supported in this build"
+                fw_signal="num_of_dmbs"/>
+        </node>
+
+        <node id="PROMLESS" address="0x400">
+          <node id="FIRMWARE_SIZE" address="0x10" mask="0xffffffff" permission="rw"
+                description="Number of bytes in the OH firmware"
+                fw_signal="promless_fw_size" fw_default="0x005363f2"/>
+          <node id="LOAD_REQUEST_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                description="Number of OH programming requests (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_i.load_request_cnt"/>
+          <node id="LOAD_SUCCESS_CNT" address="0x0" mask="0xffff0000" permission="r"
+                description="Number of successful OH programming attempts (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_i.success_cnt"/>
+          <node id="LOAD_FAIL_CNT" address="0x1" mask="0x0000ffff" permission="r"
+                description="Number of failed OH programming attempts (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_i.fail_cnt"/>
+          <node id="STREAM_GAP_CNT" address="0x1" mask="0xffff0000" permission="r"
+                description="Number of times that a gap has been detected in the bitfile stream before reaching the end (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_i.gap_detect_cnt"/>
+          <node id="LOADER_OVF_UNF_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                description="Number of times that the promless loader has reported a FIFO overflow or underflow (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_i.loader_ovf_unf_cnt"/>
+        </node>
+
+        <node id="REG_ACCESS_MONITOR" address="0x500">
+          <node id="TRANSACT_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                description="Total number of register access transactions (note, the counter is 16bit rolling)"
+                fw_signal="ipb_mon_trans_cnt"/>
+          <node id="TRANSACT_ERR_CNT" address="0x0" mask="0x7fff0000" permission="r"
+                description="Total number of register access errors (note, the counter is 16bit rolling)"
+                fw_signal="ipb_mon_err_cnt"/>
+          <node id="LAST_TRANS_ERR" address="0x0" mask="0x80000000" permission="r"
+                description="This flag indicates whether or not the last transaction was a success (0) or if it ended in error (1)"
+                fw_signal="ipb_mon_last_trans_err"/>
+        </node>
+
+    </node>
+    <!--end System module -->
+
+    <!-- Link monitor module -->
+    <node id="LINKS"  address="0x00200000"
+          description="Link monitoring registers"
+          fw_is_module="true"
+          fw_module_file="../csc/hdl/system/link_monitor.vhd"
+          fw_user_clock_signal="clk_i"
+          fw_bus_clock_signal="ipb_clk_i"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="12"
+          fw_reg_addr_lsb="0">
+
+        <node id="CTRL" address="0x0" description="Link monitor control">
+            <node id="CNT_RESET" address="0x0" mask="0x80000000" permission="w" description="Counter reset"
+                  fw_write_pulse_signal="reset_local"/>
+        </node>
+
+        <node id="DMB${DMB_IDX}" address="0x10" description="Link(s) of DMB ${DMB_IDX}"
+              generate="true" generate_size="&NUM_DMBS;" generate_address_step="0x10" generate_idx_var="DMB_IDX">
+            <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                  description="Number of times that MGT elastic buffer has been in overflow"
+                  fw_signal="dmb_mgt_buf_ovf_arr(${DMB_IDX})"
+                  sw_monitor_warn_min_threshold="1"/>
+            <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
+                  description="Number of times that MGT elastic buffer has been in underflow"
+                  fw_signal="dmb_mgt_buf_unf_arr(${DMB_IDX})"
+                  sw_monitor_warn_min_threshold="1"/>
+            <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
+                  description="Number of times that MGT has added a fake idle word to correct for clock drift"
+                  fw_signal="dmb_clk_corr_add_arr(${DMB_IDX})"/>
+            <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
+                  description="Number of times that MGT has dropped an idle word to correct for clock drift"
+                  fw_signal="dmb_clk_corr_drop_arr(${DMB_IDX})"/>
+            <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                  description="Number of not-in-table errors"
+                  fw_signal="dmb_not_in_table_arr(${DMB_IDX})"
+                  sw_monitor_warn_min_threshold="1000"/>
+            <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
+                  description="Number of disparity errors"
+                  fw_signal="dmb_disperr_arr(${DMB_IDX})"
+                  sw_monitor_warn_min_threshold="1000"/>
+        </node>
+
+        <node id="SPY" address="0xa00" description="Spy readout link">
+            <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                  description="Number of times that MGT elastic buffer has been in overflow"
+                  fw_signal="spy_mgt_buf_ovf"
+                  sw_monitor_warn_min_threshold="1"/>
+            <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
+                  description="Number of times that MGT elastic buffer has been in underflow"
+                  fw_signal="spy_mgt_buf_unf"
+                  sw_monitor_warn_min_threshold="1"/>
+            <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
+                  description="Number of times that MGT has added a fake idle word to correct for clock drift"
+                  fw_signal="spy_clk_corr_add"/>
+            <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
+                  description="Number of times that MGT has dropped an idle word to correct for clock drift"
+                  fw_signal="spy_clk_corr_drop"/>
+            <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                  description="Number of not-in-table errors"
+                  fw_signal="spy_not_in_table"
+                  sw_monitor_warn_min_threshold="1000"/>
+            <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
+                  description="Number of disparity errors"
+                  fw_signal="spy_disperr"
+                  sw_monitor_warn_min_threshold="1000"/>
+        </node>
+
+    </node>
+    <!--end link monitor module -->
+
+    <!--DAQ module -->
+    <node id="DAQ"  address="0x00400000"
+          description="DAQ module buffers track data, builds events, analyses the data for consistency and ships off the events with all the needed headers and trailers to AMC13 over DAQLink"
+          fw_is_module="true"
+          fw_module_file="../csc/hdl/daq/daq.vhd"
+          fw_user_clock_signal="ipb_clk_i"
+          fw_bus_clock_signal="ipb_clk_i"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="8"
+          fw_reg_addr_lsb="0">
+
+        <node id="CONTROL"  address="0x0" description="DAQ Control">
+            <node id="DAQ_ENABLE"         address="0x0" mask="0x00000001" permission="rw"
+                  description="If this is set to 0, there will be no data sent to AMC13 and TTS state will always be READY (0x8)"
+                  fw_signal="daq_enable" fw_default="0b0"/>
+            <node id="IGNORE_AMC13"         address="0x0" mask="0x00000002" permission="rw"
+                  description="If this is set to 1 then there will be no data sent to AMC13, but events will still be built and sent to spy path ignoring AMC13 DAQLink state"
+                  fw_signal="ignore_amc13" fw_default="0b0"/>
+            <node id="DAQ_LINK_RESET"     address="0x0" mask="0x00000004" permission="rw"
+                  description="Directly connected to DAQLink module reset port. BU is
+                               advising against ever using it except for powerup, but it
+                               may clear some error conditions (like daqlink_almost_ful
+                               stuck at 1). AMC13 reset is probably required after this."
+                  fw_signal="reset_daqlink_ipb" fw_default="0b0"/>
+            <node id="RESET"              address="0x0" mask="0x00000008" permission="rw"
+                  description="Clears all FIFOs, state flags and counters. It also stops and
+                               resets all state machines (no events will be built, recorded
+                               or sent during reset)
+                               When set to 1, it will be held in reset state until 0 is
+                               explicitly written (this can be changed in the future if
+                               necessary)"
+                  fw_signal="reset_local" fw_default="0b0"/>
+            <node id="TTS_OVERRIDE"       address="0x0" mask="0x000000f0" permission="rw"
+                  description="When not 0, it will override the GLIB TTS state with the
+                               provided value (e.g. writing 0x8 will force GLIB to always be
+                               in TTS READY state)"
+                  fw_signal="tts_override" fw_default="0x0"/>
+            <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
+                  description="This is a bitmask telling GLIB to enable certain inputs (least
+                               significant bit is input 0). Only first is enabled by default"
+                  fw_signal="input_mask" fw_default="0x1"/>
+            <node id="DAV_TIMEOUT"        address="0x1"  mask="0x00ffffff" permission="rw"
+                  description="This setting controls how long DAQ will wait for individual
+                               inputs to report data before calling it timed-out  (if timeout
+                               occurs a header and trailer for that chamber will still be
+                               inserted and timeout flag will be set there, though no VFAT
+                               payload will be present). Units = clock cycles @ 25MHz
+                               (current DAQLink clk frequency)"
+                  fw_signal="dav_timeout" fw_default="0x3d090"/>
+            <node id="FREEZE_ON_ERROR"        address="0x1"  mask="0x01000000" permission="rw"
+                  description="This is a debug feature which when turned on will start sending only IDLE words to all input processors and block L1As as soon as TTS error is detected. This gets reset with a DAQ module reset or a TTC resync."
+                  fw_signal="freeze_on_error" fw_default="0x0"/>
+            <node id="RESET_TILL_RESYNC"        address="0x1"  mask="0x02000000" permission="rw"
+                  description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
+                  fw_signal="reset_till_resync" fw_default="0x0"/>
+            <node id="RUN_TYPE"       address="0x2"  mask="0x0f000000" permission="rw"
+                  description="User settable run type that gets embedded into the AMC header"
+                  fw_signal="run_type" fw_default="0x0"/>
+            <node id="RUN_PARAMS"     address="0x2"  mask="0x00ffffff" permission="rw"
+                  description="User settable run params that gets embedded into the AMC header"
+                  fw_signal="run_params" fw_default="0x000000"/>
+            <node id="SPY"  address="0xf" description="Spy path control registers">
+                <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
+                      description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."
+                      fw_signal="spy_gbe_skip_headers" fw_default="0b0"/>
+                <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
+                      description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
+                      fw_signal="spy_prescale" fw_default="0x0001"/>
+                <node id="SPY_SKIP_EMPTY_EVENTS"        address="0x0"  mask="0x00000002" permission="rw"
+                      description="If this is set to 1, the spy path will not send empty events."
+                      fw_signal="spy_skip_empty_evts" fw_default="0b0"/>
+            </node>
+        </node> <!-- end CONTROL -->
+
+        <node id="STATUS"  address="0x10" description="DAQ global status registers">
+            <node id="DAQ_LINK_RDY"    address="0x0"  mask="0x00000001" permission="r"
+                  description="When this is 1, it means that GLIB is in good communication
+                               with AMC13. It must be 1 for GLIB to be able to send data."
+                  fw_signal="daq_ready"/>
+            <node id="DAQ_CLK_LOCKED"  address="0x0"  mask="0x00000002" permission="r"
+                  description="This flag is 1 if DAQ clock is locked at this moment"
+                  fw_signal="daq_clk_locked_i"
+                  sw_monitor_error_value="0"/>
+            <node id="DAQ_LINK_AFULL"       address="0x0"  mask="0x00000008" permission="r"
+                  description="This bit comes directly from DAQLink module, indicating
+                               that its internal buffers are almost full. No events will be sent
+                               when this bit is 1 (though events can still be built and
+                               stored in the Input and Event FIFOs)"
+                  fw_signal="daq_almost_full"
+                  sw_monitor_error_min_threshold="1"/>
+            <node id="DAQ_OUTPUT_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00000010" permission="r"
+                  description="This bit is set if DAQ output FIFO has ever been full (critical -- data loss)"
+                  fw_signal="err_daqfifo_full"
+                  sw_monitor_error_min_threshold="1"/>
+            <node id="TTC_BC0_LOCKED"       address="0x0"  mask="0x00000020" permission="r"
+                  description="This bit is set if BC0 is currently locked (last BC0 arrived at the expected time)"
+                  fw_signal="ttc_status_i.bc0_status.locked"
+                  sw_monitor_error_value="0"/>
+            <node id="L1A_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00800000" permission="r"
+                  description="This bit is latched whenever L1A FIFO overflow is asserted.
+                               This means that one or more L1As were lost, so we are
+                               out-of-sync: resync or reset is needed"
+                  fw_signal="err_l1afifo_full"
+                  sw_monitor_error_value="1"/>
+            <node id="L1A_FIFO_IS_UNDERFLOW"       address="0x0"  mask="0x01000000" permission="r"
+                  description="L1A FIFO is in underflow at this moment (this bit is not latched)"
+                  fw_signal="l1afifo_underflow"
+                  sw_monitor_error_value="1"/>
+            <node id="L1A_FIFO_IS_FULL"       address="0x0"  mask="0x02000000" permission="r"
+                  description="L1A FIFO is full at this moment (this bit is not latched)"
+                  fw_signal="l1afifo_full"
+                  sw_monitor_error_value="1"/>
+            <node id="L1A_FIFO_IS_NEAR_FULL"       address="0x0"  mask="0x04000000" permission="r"
+                  description="This bit gets asserted when L1A FIFO gets 75% full and deasserted when it gets down to 50%"
+                  fw_signal="l1afifo_near_full"
+                  sw_monitor_warn_value="1"/>
+            <node id="L1A_FIFO_IS_EMPTY"       address="0x0"  mask="0x08000000" permission="r"
+                  description="L1A FIFO is empty at this moment (this bit is not latched)"
+                  fw_signal="l1afifo_empty"/>
+            <node id="TTS_STATE"       address="0x0"  mask="0xf0000000" permission="r"
+                  description="Current TTS state (READY, BUSY, ERROR, WARN, OUT-OF-SYNC)"
+                  fw_signal="tts_state"
+                  sw_monitor_error_min_threshold="9" sw_monitor_error_max_threshold="7"/>
+            <node id="NOTINTABLE_ERR"  address="0x1"  mask="0x0000ffff" permission="r"
+                  description="This counter is counting DAQLink GTX/GTH not-in-table errors"
+                  fw_signal="daq_notintable_err_cnt"/>
+            <node id="DISPER_ERR"      address="0x1"  mask="0xffff0000" permission="r"
+                  description="This counter is counting DAQLink GTX/GTH dispersion errors"
+                  fw_signal="daq_disper_err_cnt"/>
+            <node id="L1AID"           address="0x2"  mask="0x00ffffff" permission="r"
+                  description="Current L1A ID (similar to event number, but this may be a bit ahead of that if we're still waiting for data for unprocessed L1As)"
+                  fw_signal="ttc_daq_cntrs_i.l1id"/>
+            <node id="EVT_SENT"        address="0x3"  mask="0xffffffff" permission="r"
+                  description="Number of events shipped out to DAQLink"
+                  fw_signal="std_logic_vector(cnt_sent_events)"/>
+            <node id="MAX_DAV_TIMER"   address="0x4"  mask="0x00ffffff" permission="r"
+                  description="This indicates the maximum amount of time that DAQ had
+                               to wait for all inputs to report data (can be used to optimize
+                               DAV timeout setting). Units = clock cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)
+                               (current DAQLink clk frequency)"
+                  fw_signal="std_logic_vector(max_dav_timer)"
+                  sw_monitor_warn_min_threshold="11800"/>
+            <node id="LAST_DAV_TIMER"  address="0x5"  mask="0x00ffffff" permission="r"
+                  description="This indicates how DAQ had to wait for all inputs to report
+                               data for the last event (mostly for debugging). Units = clock
+                               cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)"
+                  fw_signal="std_logic_vector(last_dav_timer)"/>
+            <node id="L1A_FIFO_DATA_CNT"  address="0x6"  mask="0x00001fff" permission="r"
+                  description="Current number of words in the L1A FIFO (current depth is 8192)"
+                  fw_signal="l1afifo_data_cnt"/>
+            <node id="DAQ_FIFO_DATA_CNT"  address="0x6"  mask="0x1fff0000" permission="r"
+                  description="Current number of words in the DAQ output FIFO (current depth is 8192)"
+                  fw_signal="daqfifo_data_cnt"/>
+            <node id="L1A_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0x0000ffff" permission="r"
+                  description="Number of clocks L1A FIFO was near-full (asserted at 75%, deasserted at 50%)"
+                  fw_signal="l1afifo_near_full_cnt"
+                  sw_monitor_warn_min_threshold="1"/>
+            <node id="DAQ_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0xffff0000" permission="r"
+                  description="Number of clocks DAQ output FIFO was near-full (asserted at 75%, deasserted at 50%)"
+                  fw_signal="daqfifo_near_full_cnt"
+                  sw_monitor_warn_min_threshold="100"/>
+            <node id="DAQ_ALMOST_FULL_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
+                  description="Number of clocks DAQLink has asserted almost-full flag"
+                  fw_signal="daqlink_afull_cnt"/>
+            <node id="TTS_WARN_CNT"  address="0x8"  mask="0xffff0000" permission="r"
+                  description="Number of clocks we reported TTS WARNING state"
+                  fw_signal="tts_warning_cnt"
+                  sw_monitor_warn_min_threshold="100"/>
+            <node id="DAQ_WORD_RATE"  address="0x9"  mask="0xffffffff" permission="r"
+                  description="Rate of 64bit words being sent out to the DAQLink in Hz (multiply by 64 to get bitrate)"
+                  fw_signal="daq_word_rate"
+                  sw_monitor_warn_min_threshold="40000"/> <!-- currently running DAQ at 50MHz, which is 3.2Gbs, so warning at 2.5Gbs (could increase to 80MHz to get 5Gbs) -->
+            <node id="SPY"  address="0x10" description="Spy path control registers">
+                <node id="SPY_WORD_RATE"  address="0x0"  mask="0xffffffff" permission="r"
+                      description="Rate of 16bit words being sent out the spy path (including ethernet frame words). If this gets close to 1Gb/s, expect overflows."
+                      fw_signal="spy_word_rate"/>
+                <node id="SPY_EVENTS_SENT"  address="0x1"  mask="0xffffffff" permission="r"
+                      description="Number of events sent out the spy path."
+                      fw_signal="spy_evt_sent"/>
+                <node id="ERR_BIG_EVENT"  address="0x2"  mask="0x00000001" permission="r"
+                      description="This flag gets latched if the spy received an event bigger than 50000 16bit words (100KBytes). This doesn't cause any data loss by itself, but means that something wrong is going on either at the frontend or the FED (CSC events shouldn't get that big)."
+                      fw_signal="spy_err_evt_too_big"
+                      sw_monitor_warn_value="1"/>
+                <node id="ERR_EOE_NOT_FOUND"  address="0x2"  mask="0x00000002" permission="r"
+                      description="This flag gets latched if the spy doesn't find an end of event before the spy FIFO goes dry."
+                      fw_signal="spy_err_eoe_not_found"
+                      sw_monitor_error_value="1"/>
+                <node id="ERR_SPY_FIFO_HAD_OFLOW"  address="0x2"  mask="0x00000004" permission="r"
+                      description="This flag gets latched if the spy fifo has an overflow."
+                      fw_signal="err_spy_fifo_ovf"
+                      sw_monitor_error_value="1"/>
+                <node id="SPY_FIFO_AFULL_CNT"  address="0x2"  mask="0xffff0000" permission="r"
+                      description="Number of clocks the spy fifo spent being 75% full (full warning is set on 75% and reset at 50%)"
+                      fw_signal="spy_fifo_afull_cnt"
+                      sw_monitor_warn_min_threshold="100"/>
+                <node id="SPY_FIFO_IS_EMPTY"  address="0x2"  mask="0x00000008" permission="r"
+                      description="Spy fifo is currently empty"
+                      fw_signal="spy_fifo_empty"/>
+            </node>
+        </node> <!-- end STATUS -->
+
+        <node id="LAST_EVENT_FIFO"  address="0x30" description="DAQ last event fifo (read 32 bits at a time). This is only filled by DAQ when empty.">
+            <node id="DISABLE"       address="0x0" mask="0x80000000" permission="rw"
+                  description="If set to true, then events are not written to the last event fifo. It's not needed to toggle this for data integrity reasons because this fifo is only written with one full event when it's empty, but setting this to true while reading current event could be useful if you want to know how many events you are reading exactly (because sometimes you may miss empty=true between consecutive events and read two or more events in a row)"
+                  fw_signal="block_last_evt_fifo" fw_default="0b0"/>
+            <node id="EMPTY"       address="0x0"  mask="0x00000001" permission="r"
+                  description="Fifo is empty"
+                  fw_signal="last_evt_fifo_empty"/>
+            <node id="DATA"     address="0x1"  mask="0xffffffff" permission="r"
+                  description="32bits of last event data"
+                  fw_signal="last_evt_fifo_dout" fw_read_pulse_signal="last_evt_fifo_rd_en" fw_read_ready_signal="last_evt_fifo_valid"/>
+        </node>
+
+        <node id="DMB${DMB_IDX}"  address="0x50"
+              description="Link specific registers for DMB${DMB_IDX}"
+              generate="true" generate_size="&NUM_DMBS;" generate_address_step="0x10" generate_idx_var="DMB_IDX">
+
+            <!--node id="CONTROL"  address="0x0">
+            </node-->
+
+            <node id="STATUS"  address="0x0">
+                <node id="INPUT_FIFO_HAD_OFLOW"   mask="0x00000100" permission="r" address="0x0"
+                      description="Critical: Input FIFO overflow occurred.
+                                   This bit is latched if Input FIFO was ever full when receiving
+                                   new data - this means data was lost.
+                                   TTS ERROR is asserted when this bit is 1"
+                      fw_signal="input_status_arr(${DMB_IDX}).err_infifo_full"
+                      sw_monitor_error_value="1"/>
+                <node id="INPUT_FIFO_HAD_UFLOW"   mask="0x00000200" permission="r" address="0x0"
+                      description="Critical: Input FIFO underflow occurred.
+                                   This bit is latched if Input FIFO underflow was ever
+                                   detected. This means that Event FIFO indicated that there
+                                   should be more data than was stored in Input FIFO. This
+                                   might happen due to overflow or some other malfunction.
+                                   TTS ERROR is asserted when this bit is 1"
+                      fw_signal="input_status_arr(${DMB_IDX}).err_infifo_underflow"
+                      sw_monitor_error_value="1"/>
+                <node id="EVENT_FIFO_HAD_OFLOW"   mask="0x00000400" permission="r" address="0x0"
+                      description="Critical: Event FIFO overflow occurred.
+                                   This bit is latched if Event FIFO was ever full when trying to
+                                   build a new event. This means data was lost.
+                                   It's not likely that this will ever be asserted because Input
+                                   FIFO should overflow first.
+                                   TTS ERROR is asserted when this bit is 1"
+                      fw_signal="input_status_arr(${DMB_IDX}).err_evtfifo_full"
+                      sw_monitor_error_value="1"/>
+                <node id="EVT_SIZE_ERR"           mask="0x00000800" permission="r" address="0x0"
+                      description="Critical: Event size overflow occurred.
+                                   This bit is latched if there was an event containing more
+                                   than 4096 words. Input FIFO and Event FIFO will be
+                                   out-of-sync. This might happen if end-of-event is not
+                                   detected properly or for whatever reason AMC is receiving
+                                   a stream of valid data.
+                                   TTS ERROR is asserted when this bit is 1"
+                      fw_signal="input_status_arr(${DMB_IDX}).err_event_too_big"
+                      sw_monitor_warn_value="1"/>
+                <node id="EVT_64BIT_ALIGN_ERR"           mask="0x00000001" permission="r" address="0x0"
+                      description="There was at least one event where the DMB trailer was not aligned to 64bit word boundaries."
+                      fw_signal="input_status_arr(${DMB_IDX}).err_64bit_misaligned"
+                      sw_monitor_warn_value="1"/>
+                <node id="TTS_STATE"           mask="0x0000f000" permission="r" address="0x0"
+                      description="Input TTS state (gets integrated into global TTS state later)"
+                      fw_signal="input_status_arr(${DMB_IDX}).tts_state"
+                      sw_monitor_error_min_threshold="9" sw_monitor_error_max_threshold="7"/>
+                <node id="INPUT_FIFO_IS_UFLOW"    mask="0x01000000" permission="r" address="0x0"
+                      description="Current status: Input FIFO is in underflow"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_underflow"
+                      sw_monitor_error_value="1"/>
+                <node id="INPUT_FIFO_IS_FULL"     mask="0x02000000" permission="r" address="0x0"
+                      description="Current status: Input FIFO is full"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_full"
+                      sw_monitor_error_value="1"/>
+                <node id="INPUT_FIFO_IS_AFULL"    mask="0x04000000" permission="r" address="0x0"
+                      description="Current status: Input FIFO is near-full (asserted at 75% and deasserted at 50%)"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_near_full"
+                      sw_monitor_warn_value="1"/>
+                <node id="INPUT_FIFO_IS_EMPTY"    mask="0x08000000" permission="r" address="0x0"
+                      description="Current status: Input FIFO is empty"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_empty"/>
+                <node id="EVENT_FIFO_IS_UFLOW"    mask="0x10000000" permission="r" address="0x0"
+                      description="Current status: Event FIFO is in underflow"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_underflow"
+                      sw_monitor_error_value="1"/>
+                <node id="EVENT_FIFO_IS_FULL"     mask="0x20000000" permission="r" address="0x0"
+                      description="Current status: Event FIFO is full"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_full"
+                      sw_monitor_error_value="1"/>
+                <node id="EVENT_FIFO_IS_AFULL"    mask="0x40000000" permission="r" address="0x0"
+                      description="Current status: Event FIFO is near-full (asserted at 75% and deasserted at 50%)"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_near_full"
+                      sw_monitor_warn_value="1"/>
+                <node id="EVENT_FIFO_IS_EMPTY"    mask="0x80000000" permission="r" address="0x0"
+                      description="Current status: Event FIFO is empty"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_empty"/>
+            </node>
+
+            <node id="COUNTERS">
+                <node id="EVN"                   address="0x2" mask="0x00ffffff" permission="r"
+                      description="Current event number of the event builder.
+                                   This counter starts at 1 and increments with each
+                                   end-of-event detection. This number should be similar to
+                                   the number of events sent to AMC13 in normal operation,
+                                   but it might not always be exactly the same because there's
+                                   some latency between building an event and sending it. In
+                                   addition, event sending could stop due to DAQ FIFO being
+                                   almost full or DAQLink not being ready."
+                      fw_signal="input_status_arr(${DMB_IDX}).eb_event_num"/>
+                <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00003fff" permission="r"
+                      description="Current number of words in the Input FIFO (current depth is 4096)"
+                      fw_signal="chamber_infifos(${DMB_IDX}).data_cnt"/>
+                <node id="EVT_FIFO_DATA_CNT"  address="0x4"  mask="0x0fff0000" permission="r"
+                      description="Current number of words in the Event FIFO (current depth is 4096)"
+                      fw_signal="chamber_evtfifos(${DMB_IDX}).data_cnt"/>
+                <node id="INPUT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0x0000ffff" permission="r"
+                      description="Number of times Input FIFO was near-full (asserted at 75%, deasserted at 50%)"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_near_full_cnt"
+                      sw_monitor_warn_min_threshold="100"/>
+                <node id="EVT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0xffff0000" permission="r"
+                      description="Number of times Event FIFO was near-full (asserted at 75%, deasserted at 50%)"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_near_full_cnt"
+                      sw_monitor_warn_min_threshold="100"/>
+                <node id="DATA_WORD_RATE"  address="0x6"  mask="0x00007fff" permission="r"
+                      description="Rate of valid 64bit data words being written to Input FIFO in Hz (multiply by 64 to get bitrate)"
+                      fw_signal="input_status_arr(${DMB_IDX}).infifo_wr_rate"
+                      sw_monitor_warn_min_threshold="15625000"/>
+                <node id="EVT_RATE"  address="0x6"  mask="0xffff8000" permission="r"
+                      description="Rate of events being written to Event FIFO in Hz"
+                      fw_signal="input_status_arr(${DMB_IDX}).evtfifo_wr_rate"/>
+            </node>
+
+        </node>
+    </node>
+    <!-- end of DAQ module -->
+
+    <!-- Test module -->
+    <node id="TEST"  address="0x00500000"
+          description="This module is controling various system tests, like loopbacks, user defined eth packet sending, etc"
+          fw_is_module="true"
+          fw_module_file="../csc/hdl/tests/csc_tests.vhd"
+          fw_user_clock_signal="ipb_clk_i"
+          fw_bus_clock_signal="ipb_clk_i"
+          fw_bus_reset_signal="ipb_reset_i"
+          fw_master_bus_signal="ipb_mosi_i"
+          fw_slave_bus_signal="ipb_miso_o"
+          fw_reg_addr_msb="7"
+          fw_reg_addr_lsb="0">
+
+        <node id="CTRL" address="0x0">
+            <node id="MODULE_RESET" address="0x0" permission="w" mask="0x80000000" description="TTC module reset"
+                  fw_write_pulse_signal="reset_local"/>
+        </node>
+
+        <node id="GBE_TEST" address="0x10">
+            <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
+                  description="Enable this module, note that this will cause the GbE link to be disconnected from DAQ and only be connected to the test module where you'll be able to generate your own packets."
+                  fw_signal="gbe_test_enable" fw_default="0b0"/>
+            <node id="PUSH_GBE_DATA" address="0x1" mask="0x0003ffff" permission="w"
+                  description="Writing this register will push this word into a fifo which holds the packet to be transmitted uppon the start command. Note that bits [17:16] denote if the characters in bits [15:0] are K characters or not."
+                  fw_signal="gbe_user_data" fw_write_pulse_signal="gbe_user_data_en" fw_default="0x0"/>
+            <node id="START_TRANSMIT" address="0x2" permission="w" mask="0x80000000"
+                  description="Writing to this register will trigger sending of the packet that's in the fifo."
+                  fw_write_pulse_signal="gbe_send_en"/>
+            <node id="BUSY" address="0x3" mask="0x00000001" permission="r"
+                  description="This is 1 while a packet transmission is ongoing"
+                  fw_signal="gbe_busy"/>
+            <node id="EMPTY" address="0x3" mask="0x00000002" permission="r"
+                  description="This is 1 when the fifo is empty, and ready for a new packet push"
+                  fw_signal="gbe_empty"/>
+            <node id="MANUAL_READ_ENABLE" address="0x4" mask="0x00000001" permission="rw"
+                  description="If this is set high, manual reading of the FIFO is enabled"
+                  fw_signal="gbe_manual_rd_enabled" fw_default="0b0"/>
+            <node id="MANUAL_READ" address="0x5" mask="0x0003ffff" permission="r"
+                  description="If manual reading is enabled, reading this register will read the first word in the fifo (and consume it)"
+                  fw_signal="gbe_manual_rd_data" fw_read_pulse_signal="gbe_manual_rd_en" fw_read_ready_signal="gbe_manual_rd_valid"/>
+        </node>
+
+    </node>
+    <!--end Test module -->

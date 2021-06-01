@@ -27,7 +27,7 @@ use work.mgt_pkg.all;
 use work.ipbus.all;
 use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 entity gem_apex is
     generic(
@@ -119,7 +119,9 @@ architecture gem_apex_arch of gem_apex is
         
     -- qsfp mgts
     signal mgt_refclks          : t_mgt_refclks_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
-    signal mgt_master_txoutclk  : std_logic;
+    signal mgt_master_txoutclk  : t_mgt_master_clks;
+    signal mgt_master_txusrclk  : t_mgt_master_clks;
+    signal mgt_master_rxusrclk  : t_mgt_master_clks;
     
     signal mgt_status_arr       : t_mgt_status_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
     signal mgt_ctrl_arr         : t_mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0) := (others => (txreset => '0', rxreset => '0', rxslide => '0'));
@@ -169,7 +171,6 @@ architecture gem_apex_arch of gem_apex is
     signal gem_gt_gbt_tx_data_arr   : t_std40_array(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     signal gem_gt_gbt_rx_clk_arr    : std_logic_vector(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     signal gem_gt_gbt_tx_clk_arr    : std_logic_vector(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
-    signal mgt_gbt_common_rxusrclk  : std_logic;
 
     signal gem_gt_gbt_ctrl_arr      : t_mgt_ctrl_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
@@ -178,9 +179,9 @@ architecture gem_apex_arch of gem_apex is
     signal daq_to_daqlink           : t_daq_to_daqlink;
     signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', almost_full => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
 
-    -------------------- GEM loader ---------------------------------
-    signal to_gem_loader            : t_to_gem_loader := (clk => '0', en => '0');
-    signal from_gem_loader          : t_from_gem_loader := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
+    -------------------- PROMless ---------------------------------
+    signal to_promless              : t_to_promless := (clk => '0', en => '0');
+    signal from_promless            : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
    
 begin
     
@@ -302,7 +303,7 @@ begin
             g_GEM_STATION               => CFG_GEM_STATION
         )
         port map(
-            clk_gbt_mgt_txout_i => mgt_master_txoutclk,
+            clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
             clk_gbt_mgt_ready_i => '1',
             clocks_o            => ttc_clks,
             ctrl_i              => ttc_clk_ctrl,
@@ -318,7 +319,6 @@ begin
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_MASTER_CHANNEL    => CFG_MGT_MASTER_CHANNEL,
             g_STABLE_CLK_PERIOD => 20
         )
         port map(
@@ -335,8 +335,8 @@ begin
             tx_usrclk_arr_o      => mgt_tx_usrclk_arr,
             rx_usrclk_arr_o      => mgt_rx_usrclk_arr,
             master_txoutclk_o    => mgt_master_txoutclk,
-            master_rxusrclk_o    => open,
-            master_txusrclk_o    => mgt_gbt_common_rxusrclk,
+            master_txusrclk_o    => mgt_master_txusrclk,
+            master_rxusrclk_o    => mgt_master_rxusrclk,
             ipb_reset_i          => ipb_reset,
             ipb_clk_i            => ipb_clk,
             ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
@@ -410,7 +410,7 @@ begin
             gt_gbt_tx_data_arr_o    => gem_gt_gbt_tx_data_arr,
             gt_gbt_rx_clk_arr_i     => gem_gt_gbt_rx_clk_arr,
             gt_gbt_tx_clk_arr_i     => gem_gt_gbt_tx_clk_arr,
-            gt_gbt_rx_common_clk_i  => mgt_gbt_common_rxusrclk,
+            gt_gbt_rx_common_clk_i  => mgt_master_rxusrclk.gbt,
             
             gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
             gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
@@ -430,8 +430,8 @@ begin
             
             board_id_i              => x"bea0",
             
-            to_gem_loader_o         => to_gem_loader,
-            from_gem_loader_i       => from_gem_loader
+            to_promless_o           => to_promless,
+            from_promless_i         => from_promless
         );
 
         -- GEM link mapping

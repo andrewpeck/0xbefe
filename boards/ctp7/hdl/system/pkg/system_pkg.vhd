@@ -13,8 +13,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use work.gem_board_config_package.CFG_GEM_STATION;
-use work.gem_board_config_package.CFG_LPGBT_2P56G_LOOPBACK_TEST;
+use work.board_config_package.CFG_GEM_STATION;
+use work.board_config_package.CFG_LPGBT_2P56G_LOOPBACK_TEST;
 
 --============================================================================
 --                                                         Package declaration

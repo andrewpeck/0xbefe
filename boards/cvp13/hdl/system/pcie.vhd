@@ -20,7 +20,6 @@ use work.ipbus.all;
 use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity pcie is
     port (
