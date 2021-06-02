@@ -82,9 +82,10 @@ architecture Behavioral of gbt is
   signal bc0_gbt    : std_logic;
   signal resync_gbt : std_logic;
 
-  signal cnt_reset : std_logic;
+  signal reset, cnt_reset : std_logic;
 
-  signal tx_delay : std_logic_vector (4 downto 0);
+  attribute MAX_FANOUT          : string;
+  attribute MAX_FANOUT of reset : signal is "50";
 
   -- wishbone master
   signal ipb_mosi : ipb_wbus;
@@ -111,6 +112,13 @@ architecture Behavioral of gbt is
 
 begin
 
+  process (clocks.clk40)
+  begin
+    if (rising_edge(clocks.clk40)) then
+      reset <= reset_i;
+    end if;
+  end process;
+
   -- wishbone master
 
   ipb_mosi_o <= ipb_mosi;
@@ -119,7 +127,7 @@ begin
   process (clocks.clk40)
   begin
     if (rising_edge(clocks.clk40)) then
-      cnt_reset <= (reset_i or resync_gbt or resync_force);
+      cnt_reset <= (reset or resync_gbt or resync_force);
     end if;
   end process;
 
@@ -139,7 +147,7 @@ begin
   gbt_serdes : entity work.gbt_serdes
     port map(
       -- clocks and reset
-      rst_i     => reset_i,
+      rst_i     => reset,
       clk_1x    => clocks.clk40,        -- 40 MHz phase shiftable frame clock from GBT
       clk_4x    => clocks.clk160_0,     --
       clk_4x_90 => clocks.clk160_90,    --
@@ -170,7 +178,7 @@ begin
     port map(
       -- clock and reset
       clock   => clocks.clk40,          -- 40 MHz ttc fabric clock
-      reset_i => reset_i,
+      reset_i => reset,
 
       -- parallel data
       data_i => gbt_rx_data,
@@ -310,7 +318,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset,
         en_i      => gbt_link_tmr_err,
         count_o   => gbt_link_tmr_err_cnt
     );
@@ -322,7 +330,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset,
         en_i      => gbt_serdes_tmr_err,
         count_o   => gbt_serdes_tmr_err_cnt
     );
@@ -334,7 +342,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset,
         en_i      => ipb_slave_tmr_err,
         count_o   => ipb_slave_tmr_err_cnt
     );
