@@ -830,6 +830,7 @@ begin
     sot_tap_delay(10) <= regs_write_arr(61)(REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT10_MSB downto REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT10_LSB);
     sot_tap_delay(11) <= regs_write_arr(61)(REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_MSB downto REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_LSB);
     hitmap_acquire <= regs_write_arr(73)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT);
+    trigger_prbs_en <= regs_write_arr(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT);
 
     -- Connect write pulse signals
     reset_counters <= regs_write_pulse_arr(28);
@@ -1373,6 +1374,7 @@ begin
     regs_defaults(61)(REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT10_MSB downto REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT10_LSB) <= REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT10_DEFAULT;
     regs_defaults(61)(REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_MSB downto REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_LSB) <= REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_DEFAULT;
     regs_defaults(73)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= REG_TRIG_SBIT_HITMAP_ACQUIRE_DEFAULT;
+    regs_defaults(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= REG_TRIG_TRIGGER_PRBS_EN_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
@@ -1406,6 +1408,7 @@ begin
     regs_writable_arr(60) <= '1';
     regs_writable_arr(61) <= '1';
     regs_writable_arr(73) <= '1';
+    regs_writable_arr(98) <= '1';
 
   --==== Registers end ============================================================================
 

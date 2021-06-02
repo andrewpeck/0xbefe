@@ -1279,6 +1279,7 @@ package registers is
 
     constant REG_TRIG_TRIGGER_PRBS_EN_ADDR    : std_logic_vector(7 downto 0) := x"e9";
     constant REG_TRIG_TRIGGER_PRBS_EN_BIT    : integer := 0;
+    constant REG_TRIG_TRIGGER_PRBS_EN_DEFAULT : std_logic := '0';
 
     constant REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_ADDR    : std_logic_vector(7 downto 0) := x"f0";
     constant REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB    : integer := 15;
