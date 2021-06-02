@@ -34,11 +34,14 @@ puts [exec bash -c {cd ../.. && make update_oh_ge11}]
 
 set PROPERTIES [dict create \
     synth_1 [dict create \
+        steps.xst.args.opt_level 2 \
+        steps.xst.args.register_balancing yes \
         steps.xst.args.equivalent_register_removal no \
     ] \
     impl_1 [dict create \
         steps.map.args.pr b \
         steps.map.args.logic_opt on \
+        steps.map.args.mt on \
         steps.par.args.mt 4  \
         steps.map.args.register_duplication true \
         steps.bitgen.args.More\ Options {{-g CRC:enable -g ConfigRate:33 -g StartUpClk:CCLK -g DonePipe:yes}} \

@@ -40,6 +40,8 @@ end adc;
 
 architecture Behavioral of adc is
 
+  signal ipb_slave_tmr_err : std_logic := '0';
+
   signal reset : std_logic;
 
   signal daddr        : std_logic_vector (6 downto 0);
@@ -216,6 +218,7 @@ begin
            ipb_mosi_i             => ipb_mosi_i,
            ipb_miso_o             => ipb_miso_o,
            usr_clk_i              => clock_i,
+           tmr_err_o              => ipb_slave_tmr_err,
            regs_read_arr_i        => regs_read_arr,
            regs_write_arr_o       => regs_write_arr,
            read_pulse_arr_o       => regs_read_pulse_arr,
@@ -260,7 +263,7 @@ begin
 
     -- Connect counter instances
 
-    COUNTER_ADC_CTRL_CNT_OVERTEMP : entity work.counter_snap
+    COUNTER_ADC_CTRL_CNT_OVERTEMP : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 7
     )
@@ -273,7 +276,7 @@ begin
     );
 
 
-    COUNTER_ADC_CTRL_CNT_VCCAUX_ALARM : entity work.counter_snap
+    COUNTER_ADC_CTRL_CNT_VCCAUX_ALARM : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 7
     )
@@ -286,7 +289,7 @@ begin
     );
 
 
-    COUNTER_ADC_CTRL_CNT_VCCINT_ALARM : entity work.counter_snap
+    COUNTER_ADC_CTRL_CNT_VCCINT_ALARM : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 7
     )

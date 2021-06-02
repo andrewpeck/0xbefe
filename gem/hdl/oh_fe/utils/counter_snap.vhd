@@ -2,13 +2,10 @@
 -- CMS Muon Endcap
 -- GEM Collaboration
 -- Optohybrid v3 Firmware -- Counter
--- T. Lenzi
+-- T. Lenzi, A. Peck
 ----------------------------------------------------------------------------------
 -- Description:
 --   This module implements base level functionality for a single counter
-----------------------------------------------------------------------------------
--- 08/10/2017 -- Add reset fanout
--- 10/10/2017 -- Add snap
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -20,6 +17,7 @@ use work.types_pkg.all;
 
 entity counter_snap is
   generic (
+    g_TMR_INST       : integer := 0;
     g_COUNTER_WIDTH  : integer := 32;
     g_ALLOW_ROLLOVER : boolean := false;
     g_INCREMENT_STEP : integer := 1
@@ -44,7 +42,6 @@ architecture Behavioral of counter_snap is
   signal count       : unsigned (g_COUNTER_WIDTH - 1 downto 0);
   signal reset       : std_logic;
   signal count_copy  : std_logic_vector(g_COUNTER_WIDTH-1 downto 0);
-
 
 begin
 

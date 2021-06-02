@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library work;
@@ -25,14 +26,24 @@ entity dru_tmr is
     phase_sel_in  : in  std_logic_vector (1 downto 0);
     phase_sel_out : out std_logic_vector (1 downto 0);
 
-    invalid_bitskip_o : out std_logic
+    invalid_bitskip_o : out std_logic;
+
+    tmr_err_o : out std_logic := '0'
 
     );
 
 end dru_tmr;
 
 architecture behavioral of dru_tmr is
+  signal tmr_err : std_logic_vector (3 downto 0) := (others => '0');
 begin
+
+  process (clk1x) is
+  begin
+    if (rising_edge(clk1x)) then
+      tmr_err_o <= or_reduce(tmr_err);
+    end if;
+  end process;
 
   NO_TMR : if (g_ENABLE_TMR = 0) generate
     dru : entity work.dru
@@ -92,11 +103,11 @@ begin
 
     end generate;
 
-    o                 <= majority (o_tmr(0), o_tmr(1), o_tmr(2));
-    e4_out            <= majority (e4_tmr(0), e4_tmr(1), e4_tmr(2));
-    phase_sel_out     <= majority (phase_sel_tmr(0), phase_sel_tmr(1), phase_sel_tmr(2));
-    invalid_bitskip_o <= majority (invalid_bitskip_tmr(0), invalid_bitskip_tmr(1), invalid_bitskip_tmr(2));
-  end generate TMR;
+    majority_err (o, tmr_err(0), o_tmr(0), o_tmr(1), o_tmr(2));
+    majority_err (e4_out, tmr_err(1), e4_tmr(0), e4_tmr(1), e4_tmr(2));
+    majority_err (phase_sel_out, tmr_err(2), phase_sel_tmr(0), phase_sel_tmr(1), phase_sel_tmr(2));
+    majority_err (invalid_bitskip_o, tmr_err(3), invalid_bitskip_tmr(0), invalid_bitskip_tmr(1), invalid_bitskip_tmr(2));
 
+  end generate TMR;
 
 end behavioral;

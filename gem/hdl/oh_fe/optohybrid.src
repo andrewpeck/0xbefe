@@ -52,7 +52,9 @@ gem/hdl/oh_fe/utils/oversample.vhd 93
 gem/hdl/oh_fe/utils/bitslip.vhd 93
 gem/hdl/oh_fe/utils/clock_strobe.vhd 93
 gem/hdl/oh_fe/utils/clocking.vhd 93
+gem/hdl/oh_fe/utils/counter.vhd 93
 gem/hdl/oh_fe/utils/counter_snap.vhd 93
+gem/hdl/oh_fe/utils/counter_snap_tmr.vhd 93
 gem/hdl/oh_fe/utils/cylon.v
 gem/hdl/oh_fe/utils/err_indicator.v
 gem/hdl/oh_fe/utils/fader.v

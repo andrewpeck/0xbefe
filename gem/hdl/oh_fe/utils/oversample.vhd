@@ -33,7 +33,9 @@ entity oversample is
     phase_sel_in  : in  std_logic_vector (1 downto 0) := "00";
     phase_sel_out : out std_logic_vector (1 downto 0);
 
-    invalid_bitskip_o : out std_logic
+    invalid_bitskip_o : out std_logic;
+
+    tmr_err_o : out std_logic := '0'
     );
 end oversample;
 
@@ -175,7 +177,9 @@ begin
       phase_sel_in  => phase_sel_in,
       phase_sel_out => phase_sel_out,
 
-      invalid_bitskip_o => invalid_bitskip_o
+      invalid_bitskip_o => invalid_bitskip_o,
+
+      tmr_err_o => tmr_err_o
       );
 
   rxdata_inv <= rxdata when invert = '0' else not rxdata;

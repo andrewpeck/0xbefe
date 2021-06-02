@@ -19,6 +19,17 @@ set env(PYTHONHOME) $PYTHONHOME
 
 source $PATH_REPO/Top/common.tcl
 
+set PROPERTIES [dict create \
+synth_1 [dict create \
+    STEPS.SYNTH_DESIGN.ARGS.ASSERT true \
+    STEPS.SYNTH_DESIGN.ARGS.RETIMING true \
+  ] \
+impl_1 [dict create \
+  STEPS.OPT_DESIGN.ARGS.DIRECTIVE Default \
+  STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE AggressiveExplore \
+  ]\
+]
+
 source $PATH_REPO/Hog/Tcl/create_project.tcl
 
 set_property default_lib work [current_project]
