@@ -176,9 +176,14 @@ begin
   -- Oneshot
   --------------------------------------------------------------------------------
 
-  -- without the oneshot we can save 6.25 ns latency and make this transparent
+  -- without the oneshot, just have a ff
   nos_gen : if (not ONESHOT) generate
-    partitions_os <= partitions_i;
+    process (clk_fast) is
+    begin
+      if (rising_edge(clk_fast)) then
+        partitions_os <= partitions_i;
+      end if;
+    end process;
   end generate;
 
   -- Optional oneshot to keep VFATs from re-firing the same channel
@@ -194,9 +199,7 @@ begin
             slowclk  => clk_40
             );
       end generate;
-
     end generate;
-
   end generate;
 
   flatten_partitions : for iprt in 0 to NUM_PARTITIONS-1 generate

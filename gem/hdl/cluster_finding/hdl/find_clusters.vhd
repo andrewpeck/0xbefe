@@ -281,8 +281,13 @@ begin
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
     begin
-      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
-      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+        end if;
+      end process;
     end generate;
 
     unwrap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
@@ -299,10 +304,17 @@ begin
       constant cnt_lo : integer := lo+1+MXPRTB+MXADRB;
       constant cnt_hi : integer := lo+1+MXPRTB+MXADRB+MXCNTB-1;
     begin
-      clusters_o(15-I).cnt <= data_o (cnt_hi downto cnt_lo);
-      clusters_o(15-I).adr <= data_o (adr_hi downto adr_lo);
-      clusters_o(15-I).prt <= data_o (prt_hi downto prt_lo);
-      clusters_o(15-I).vpf <= data_o (vpf_lo);
+
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          clusters_o(15-I).cnt <= data_o (cnt_hi downto cnt_lo);
+          clusters_o(15-I).adr <= data_o (adr_hi downto adr_lo);
+          clusters_o(15-I).prt <= data_o (prt_hi downto prt_lo);
+          clusters_o(15-I).vpf <= data_o (vpf_lo);
+        end if;
+      end process;
+
     end generate;
 
     bitonic_sort_inst : entity work.Bitonic_Sorter
