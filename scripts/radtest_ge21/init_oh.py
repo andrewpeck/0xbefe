@@ -15,7 +15,8 @@ class Colors:
 
 BEFE_ROOT = "../.."
 OH_NUM = 0
-GBT0_CONFIG_FILE = "/home/evka/gbt_config/GBTX_GE21_OHv2_GBT_0_minimal_2020-01-17.txt"
+OH_MASK = 1
+GBT0_CONFIG_FILE = "/home/cscdev/gbt_config/GBTX_GE21_OHv2_GBT_0_minimal_2020-01-17.txt"
 TEST_REG_ITERATIONS = 1000
 
 def main():
@@ -37,13 +38,13 @@ def main():
 
     sleep(0.3)
 
-    # myprint("Reading the OH FPGA DONE output")
-    # fpgaDone = readDone()
-    # if fpgaDone == 0:
-    #     myprint("ERROR: OH FPGA DONE output is low!", True)
-    #     return
-    # else:
-    #     myprint("OH FPGA DONE is high")
+    myprint("Reading the OH FPGA DONE output")
+    fpgaDone = readDone()
+    if fpgaDone == 0:
+        myprint("ERROR: OH FPGA DONE output is low!", True)
+        return
+    else:
+        myprint("OH FPGA DONE is high")
 
     myprint("Testing communication with the OH FPGA (%d write-read random data check)" % TEST_REG_ITERATIONS)
     prevVal = 0
@@ -64,7 +65,7 @@ def main():
     # writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
 
 def readDone():
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_NUM)
+    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
     gpioDir = 0xff0fe0
     sendScaCommand([OH_NUM], 0x2, 0x20, 0x4, gpioDir, False)
     sleep(0.1)

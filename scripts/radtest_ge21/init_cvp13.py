@@ -14,13 +14,12 @@ class Colors:
 
 # the following constants should be edited according to the local environment
 BITTWORKS_SW_DIR = "/opt/bwtk/2019.3L"
-PCIE_CONFIG_FILE = "/home/evka/cvp13/pcie_config"
+PCIE_CONFIG_FILE = "/home/cscdev/cvp13/cvp13_pcie_config"
 PCIE_BUS = "0000:05:00.0"
 BEFE_ROOT = "../.."
-# OH_FW_BITFILE = "/home/evka/cvp13/oh_radtest/oh_ge21.200-v4.1.3-69-g4396e7c-dirty.bit"
-OH_FW_BITFILE = "/home/evka/oh_fw/optohybrid_ge21_200t_reshuffled_vfats_compressed.bit"
+OH_FW_BITFILE = "/home/cscdev/oh_fw/optohybrid_ge21_200t_reshuffled_vfats_compressed.bit"
 # OH_FW_BITFILE = "/home/evka/oh_fw/oh_ge21.200-v4.1.4.bit"
-OH_FW_XML = "/home/evka/cvp13/oh_radtest/optohybrid_registers.xml"
+OH_FW_XML = "/home/cscdev/oh_fw/optohybrid_registers.xml"
 
 def main():
     myprint("Reseting the CVP13 FPGA")
@@ -32,7 +31,7 @@ def main():
     subprocess.call(["cp", PCIE_CONFIG_FILE, "/sys/bus/pci/devices/%s/config" % PCIE_BUS])
     sleep(0.1)
     myprint("Copying the OH XML file to BEFE")
-    subprocess.call(["cp", OH_FW_XML, BEFE_ROOT + "address_table/gem/generated/ge21_cvp13/"])
+    subprocess.call(["cp", OH_FW_XML, BEFE_ROOT + "/address_table/gem/generated/ge21_cvp13/"])
     myprint("Initializing the CVP13 firmware")
     subprocess.call(["python", BEFE_ROOT + "/scripts/boards/cvp13/cvp13_init_ge21.py"])
 
