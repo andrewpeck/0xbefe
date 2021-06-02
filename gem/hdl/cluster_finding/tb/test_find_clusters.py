@@ -171,9 +171,12 @@ def test_find_clusters(station, num_found_clusters):
     vhdl_sources = [
         os.path.join(rtl_dir, f"truncate_lsb.vhd"),
         os.path.join(rtl_dir, f"cluster_pkg.vhd"),
-        os.path.join(rtl_dir, f"poc_bitonic_sort_pkg.vhd"),
-        os.path.join(rtl_dir, f"poc_bitonic_sort.vhd"),
-        os.path.join(rtl_dir, f"bitonic_sort.vhd"),
+        #os.path.join(rtl_dir, f"poc_bitonic_sort_pkg.vhd"),
+        #os.path.join(rtl_dir, f"poc_bitonic_sort.vhd"),
+        #os.path.join(rtl_dir, f"bitonic_sort.vhd"),
+        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
+        os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
+        os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd")
     ]
 

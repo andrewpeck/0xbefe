@@ -322,24 +322,26 @@ begin
       clusters_o(15-I).vpf <= data_o (vpf_lo);
     end generate;
 
-    bitonic_sort_inst : entity work.bitonic_sort
+    bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
-        INPUTS               => NUM_FOUND_CLUSTERS,
-        OUTPUTS              => NUM_FOUND_CLUSTERS,
-        KEY_BITS             => 1 + MXPRTB,
-        DATA_BITS            => 1 + MXADRB + MXCNTB + MXPRTB,
-        META_BITS            => 1,
-        PIPELINE_STAGE_AFTER => 2,
-        ADD_INPUT_REGISTERS  => true,
-        ADD_OUTPUT_REGISTERS => true
+        WORDS     => NUM_FOUND_CLUSTERS,
+        WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
+        COMP_HIGH => 1 + MXPRTB,
+        COMP_LOW  => 0,
+        INFO_BITS => 1
         )
       port map (
-        clock  => clock,
-        reset  => '0',
-        data_i => data_i,
-        data_o => data_o,
-        meta_i(0) => latch_out_s1(0),
-        meta_o(0) => latch_o
+        CLK       => clock,
+        RST       => '0',
+        CLR       => '0',
+        I_SORT    => '1',
+        I_UP      => '1',
+        I_DATA    => data_i,
+        O_DATA    => data_o,
+        O_SORT    => open,
+        O_UP      => open,
+        I_INFO(0) => latch_out_s1(0),
+        O_INFO(0) => latch_o
         );
 
   end generate;
