@@ -1,1 +1,3 @@
-*.xci filter=reset_xci_fpga_type
+/common/ip/*/*.xci filter=reset_common_xci_fpga_type
+/gem/ip/*/*.xci filter=reset_common_xci_fpga_type
+/csc/ip/*/*.xci filter=reset_common_xci_fpga_type
