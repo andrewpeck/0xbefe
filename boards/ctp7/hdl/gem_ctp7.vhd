@@ -161,7 +161,7 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal gth_rxreset_arr      : std_logic_vector(g_NUM_OF_GTH_GTs - 1 downto 0);
     signal gth_txreset_arr      : std_logic_vector(g_NUM_OF_GTH_GTs - 1 downto 0);
     signal gt_ctrl_arr          : t_mgt_ctrl_arr(g_NUM_OF_GTH_GTs - 1 downto 0) := (others => (txreset => '0', rxreset => '0', rxslide => '0'));
-    signal gt_status_arr        : t_mgt_status_arr(g_NUM_OF_GTH_GTs - 1 downto 0) := (others => (tx_reset_done => '0', rx_reset_done => '0', tx_cpll_locked => '0', rx_cpll_locked => '0', qpll_locked => '0'));
+    signal gt_status_arr        : t_mgt_status_arr(g_NUM_OF_GTH_GTs - 1 downto 0) := (others => MGT_STATUS_NULL);
     
     -------------------- GTHs mapped to GEM links ---------------------------------
     

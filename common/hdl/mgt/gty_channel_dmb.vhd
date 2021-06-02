@@ -5,7 +5,7 @@
 -- Create Date:    2021-03-09
 -- Module Name:    GTY_CHANNEL_DMB
 -- Description:    This is a wrapper for a single GTY channel that can be used with DMB and ODMB boards: it's an 8b10b encoded 1.6Gb/s link with elastic buffers.
---                 User data bus width is 16 bits, the refclk has to be 160MHz (only one refclk is used based on g_REFCLK_01 generic), user clocks are 80MHz 
+--                 User data bus width is 16 bits, the refclk has to be 200MHz (only one refclk is used based on g_REFCLK_01 generic), user clocks are 80MHz 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- expected refclk is 160MHz
