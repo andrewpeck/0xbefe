@@ -14,31 +14,26 @@
 // 2018/10/10 -- Rewrite/simplification based on new oversampler / dru module
 //--------------------------------------------------------------------------------
 
-module frame_aligner (
+module frame_aligner
+  #(parameter MXSBITS=64,
+    parameter EN_BITSLIP_TMR = 0,
+    parameter FRAME_SIZE = 8) (
 
-  input  [MXSBITS-1:0] sbits_i,
-  output [MXSBITS-1:0] sbits_o,
+    input [MXSBITS-1:0]    sbits_i,
+    output [MXSBITS-1:0]   sbits_o,
 
-  input [FRAME_SIZE-1:0] start_of_frame_i,
+    input [FRAME_SIZE-1:0] start_of_frame_i,
 
-  input reset_i,
-  input mask_i,
+    input                  reset_i,
+    input                  mask_i,
 
-  input clock,
+    input                  clock,
 
-  input [11:0] aligned_count_to_ready_i,
+    input [11:0]           aligned_count_to_ready_i,
 
-  output reg sot_unstable_o,
-  output reg sot_is_aligned_o
+    output reg             sot_unstable_o,
+    output reg             sot_is_aligned_o
 );
-
-  //--------------------------------------------------------------------------------------------------------------------
-  //  Parameters
-  //--------------------------------------------------------------------------------------------------------------------
-
-  parameter DDR=0;
-  parameter MXSBITS=64*(1+DDR);
-  parameter FRAME_SIZE = 8*(1+DDR);
 
   //--------------------------------------------------------------------------------------------------------------------
   //  Reset
@@ -66,8 +61,6 @@ module frame_aligner (
   wire [7:0] start_of_frame_slipped;
 
   (* KEEP = "TRUE" *) wire sot_mon;
-
-  parameter EN_BITSLIP_TMR = 0;
 
   genvar I;
   generate

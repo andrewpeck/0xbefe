@@ -1,13 +1,13 @@
 module fader #(
   parameter MXFADERCNT  = 27,
-  parameter MXFADERBITS = 5
-)(
+  parameter MXFADERBITS = 5)
+(
   input clock,
   output led
 );
 
   // count to 27 bits , ~3.5 second period
-  parameter INCREMENT   = (2**MXFADERBITS)/4;
+  localparam INCREMENT   = (2**MXFADERBITS)/4;
 
   reg [MXFADERCNT -1:0] fader_cnt = 0;
   reg [MXFADERBITS-1:0] pwm_cnt  = 0;

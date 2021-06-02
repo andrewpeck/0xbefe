@@ -22,7 +22,7 @@ parameter  DNA_LENGTH = 'd57
   wire DOUT, CLK, DIN;
   reg  READ, SHIFT;
 
-  parameter READ_SIZE  = 'd6;
+  localparam READ_SIZE  = 'd6;
 
   reg [DNA_LENGTH-1:0] dna_sr   = {DNA_LENGTH{1'b0}};
   reg [READ_SIZE -1:0] read_cnt = {READ_SIZE{1'b0}};
