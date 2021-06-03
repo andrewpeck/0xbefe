@@ -1,0 +1,31 @@
+# -*- mode: TCL;-*-
+
+# Project config
+Top/csc_cvp13/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+
+# CSC source
+csc/hdl/csc.src
+
+# CSC CVP13 source
+boards/cvp13/hdl/csc_cvp13.src
+
+# sources with generated registers
+csc/hdl/pkg/generated/csc_cvp13/registers.vhd
+common/hdl/mgt/generated/csc_cvp13/mgt_slow_control.vhd
+common/hdl/ttc/generated/csc_cvp13/ttc.vhd
+common/hdl/misc/generated/csc_cvp13/promless_bram.vhd
+csc/hdl/system/generated/csc_cvp13/system_regs.vhd
+csc/hdl/system/generated/csc_cvp13/link_monitor.vhd
+csc/hdl/tests/generated/csc_cvp13/csc_tests.vhd
+csc/hdl/daq/generated/csc_cvp13/daq.vhd
+
+# CSC IP
+csc/ip/csc_common_ip.src
+
+# CVP13 IP
+boards/cvp13/ip/csc_cvp13_ip.src
+

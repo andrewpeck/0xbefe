@@ -17,7 +17,7 @@ use IEEE.STD_LOGIC_1164.all;
 --============================================================================
 --                                                         Package declaration
 --============================================================================
-package gem_board_config_package is
+package board_config_package is
 
     constant g_NUM_OF_GTX       : positive := 4;
 
@@ -59,7 +59,7 @@ package gem_board_config_package is
         
 	);
 
-end package gem_board_config_package;
+end package board_config_package;
 --============================================================================
 --                                                                 Package end 
 --============================================================================

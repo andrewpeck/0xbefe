@@ -104,8 +104,8 @@ entity system is
     daqlink_to_daq_o               : out t_daqlink_to_daq;
         
     ----------------- GEM loader ------------------------
-    to_gem_loader_i         : in t_to_gem_loader;
-    from_gem_loader_o       : out t_from_gem_loader        
+    to_promless_i         : in t_to_promless;
+    from_promless_o       : out t_from_promless        
     );
 end system;
 
@@ -413,14 +413,14 @@ begin
       ipb_axi_wstrb     => ipb_axi_wstrb,
       ipb_axi_wvalid    => ipb_axi_wvalid,
       
-      gem_loader_en     => to_gem_loader_i.en,
-      gem_loader_clk    => to_gem_loader_i.clk,
-      gem_loader_ready  => from_gem_loader_o.ready,
-      gem_loader_valid  => from_gem_loader_o.valid,
-      gem_loader_data   => from_gem_loader_o.data,
-      gem_loader_first  => from_gem_loader_o.first,
-      gem_loader_last   => from_gem_loader_o.last,
-      gem_loader_error  => from_gem_loader_o.error,
+      gem_loader_en     => to_promless_i.en,
+      gem_loader_clk    => to_promless_i.clk,
+      gem_loader_ready  => from_promless_o.ready,
+      gem_loader_valid  => from_promless_o.valid,
+      gem_loader_data   => from_promless_o.data,
+      gem_loader_first  => from_promless_o.first,
+      gem_loader_last   => from_promless_o.last,
+      gem_loader_error  => from_promless_o.error,
       gem_loader_size   => open
       
     );

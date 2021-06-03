@@ -17,6 +17,8 @@ common/hdl/mgt/mgt_links_gty.vhd
 common/hdl/mgt/gty_channel_lpgbt.vhd
 common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd
+common/hdl/mgt/gty_channel_dmb.vhd
+common/hdl/mgt/gty_channel_gbe.vhd
 
 # IP
 common/ip/common_xilinx_ultrascale_ip.src

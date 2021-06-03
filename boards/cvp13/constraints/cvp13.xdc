@@ -47,15 +47,15 @@ set_property PACKAGE_PIN BB20 [get_ports qsfp_reset_b_o[0]]
 # QSFP low power mode (fanned out to all QSFPs)
 set_property PACKAGE_PIN BE21 [get_ports qsfp_lp_o]
 # QSFP interrupt (or'ed from all QSFPs)
-set_property PACKAGE_PIN BD18 [get_ports qsfp_int_b_i] 
+set_property PACKAGE_PIN BD18 [get_ports qsfp_int_b_i]
 
 # QSFP I2C Control Enable. 1 = Connect QSFP I2C/Status to FPGA
 set_property PACKAGE_PIN BF20 [get_ports qsfp_ctrl_en_o]
 
 set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_present_b_i[*]}]
 set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_reset_b_o[*]}]
-set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_lp_o}] 
-set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_int_b_i}] 
+set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_lp_o}]
+set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_int_b_i}]
 set_property IOSTANDARD LVCMOS18 [get_ports {qsfp_ctrl_en_o}]
 
 ##############################################
@@ -167,65 +167,3 @@ create_clock -period 10.000 -name pcie_refclk_100 [get_ports {pcie_refclk0_p_i}]
 # temporary
 set_property -dict {IOSTANDARD DIFF_SSTL12 ODT RTT_48 PACKAGE_PIN AY18} [get_ports dimm0_refclk_p_i]
 set_property -dict {IOSTANDARD DIFF_SSTL12} [get_ports dimm0_refclk_n_i]
-
-##############################################
-#########  False path constraints  ##########
-##############################################
-set_clock_groups -asynchronous -group [get_clocks {dbg_hub/*}]
-set_clock_groups -asynchronous -group [get_clocks {sysclk100}]
-set_clock_groups -asynchronous -group [get_clocks {pcie_refclk_100}]
-set_clock_groups -asynchronous -group [get_clocks {i_pcie/*TXOUTCLK}]
-
-#set_clock_groups -asynchronous -group [get_clocks {clk_40}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_80}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_160}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_320}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_120}] -group [get_clocks {sysclk100}]
-
-#set_clock_groups -asynchronous -group [get_clocks {clk_40}] -group [get_clocks {pcie_refclk_100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_80}] -group [get_clocks {pcie_refclk_100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_160}] -group [get_clocks {pcie_refclk_100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_320}] -group [get_clocks {pcie_refclk_100}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_120}] -group [get_clocks {pcie_refclk_100}]
-
-#set_clock_groups -asynchronous -group [get_clocks {clk_40}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_80}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_120}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_160}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_320}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-
-#set_clock_groups -asynchronous -group [get_clocks {clk_40}] -group [get_clocks {dbg_hub/*}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_80}] -group [get_clocks {dbg_hub/*}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_120}] -group [get_clocks {dbg_hub/*}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_160}] -group [get_clocks {dbg_hub/*}]
-#set_clock_groups -asynchronous -group [get_clocks {clk_320}] -group [get_clocks {dbg_hub/*}]
-
-#set_clock_groups -asynchronous -group [get_clocks {clks_o[rxoutclk]*}] -group [get_clocks {clks_o[txoutclk]}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {pcie_refclk_100}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {clk_40}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {clk_80}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {clk_120}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {clk_160}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {clk_320}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {i_pcie/*TXOUTCLK}]
-#set_clock_groups -asynchronous -group [get_clocks {clks_o*}] -group [get_clocks {dbg_hub/*}]
-
-#set_clock_groups -asynchronous -group [get_clocks {i_pcie/*TXOUTCLK}] -group [get_clocks {dbg_hub/*}]
-#set_clock_groups -asynchronous -group [get_clocks {i_pcie/*TXOUTCLK}] -group [get_clocks {sysclk100}]
-#set_clock_groups -asynchronous -group [get_clocks {dbg_hub/*}] -group [get_clocks {sysclk100}]
-
-
-
-
-
-
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks sysclk100]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks pcie_refclk_100]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks clk_40]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks clk_80]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks clk_160]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks clk_320]
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel/?XOUTCLK}] -group [get_clocks clk_120]
-
-#set_clock_groups -asynchronous -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel*RXOUTCLK}] -group [get_clocks {i_mgts/g_channels[*].g_chan_*/i_gty_channel*TXOUTCLK}]

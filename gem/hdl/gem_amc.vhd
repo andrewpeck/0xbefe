@@ -18,7 +18,7 @@ use unisim.vcomponents.all;
 
 use work.common_pkg.all;
 use work.gem_pkg.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 use work.ipb_addr_decode.all;
 use work.ipbus.all;
 use work.ttc_pkg.all;
@@ -95,9 +95,9 @@ entity gem_amc is
         -- Board serial number
         board_id_i              : in std_logic_vector(15 downto 0);
       
-        -- GEM loader
-        to_gem_loader_o         : out t_to_gem_loader;
-        from_gem_loader_i       : in  t_from_gem_loader
+        -- PROMless
+        to_promless_o           : out t_to_promless;
+        from_promless_i         : in  t_from_promless
         
     );
 end gem_amc;
@@ -240,8 +240,8 @@ architecture gem_amc_arch of gem_amc is
     signal loopback_gbt_test_en         : std_logic; 
     
     --== Other ==--
-    signal gemloader_stats              : t_gem_loader_stats;
-    signal gemloader_cfg                : t_gem_loader_cfg;
+    signal promless_stats               : t_promless_stats;
+    signal promless_cfg                 : t_promless_cfg;
     signal ipb_miso_arr                 : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
     
     --== Debug ==--
@@ -569,8 +569,8 @@ begin
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
             gbt_reset_o                 => manual_gbt_reset,
-            gemloader_stats_i           => gemloader_stats,
-            gemloader_cfg_o             => gemloader_cfg
+            promless_stats_i            => promless_stats,
+            promless_cfg_o              => promless_cfg
         );
 
     --===============================--
@@ -821,19 +821,19 @@ begin
 
     g_use_oh_fpga_loader : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_oh_fpga_loader : entity work.promless_fpga_loader
-                generic map (
-                    g_LOADER_CLK_80_MHZ => true
-                )
+            generic map(
+                g_LOADER_CLK_80_MHZ => true
+            )
             port map(
-                reset_i            => reset_i,
-                gbt_clk_i          => ttc_clocks_i.clk_40,
-                loader_clk_i       => ttc_clocks_i.clk_80,
-                to_gem_loader_o    => to_gem_loader_o,
-                from_gem_loader_i  => from_gem_loader_i,
-                elink_data_o       => promless_tx_data,
-                hard_reset_i       => ttc_cmd.hard_reset,
-                gem_loader_stats_o => gemloader_stats,
-                gem_loader_cfg_i   => gemloader_cfg
+                reset_i          => reset_i,
+                gbt_clk_i        => ttc_clocks_i.clk_40,
+                loader_clk_i     => ttc_clocks_i.clk_80,
+                to_promless_o    => to_promless_o,
+                from_promless_i  => from_promless_i,
+                elink_data_o     => promless_tx_data,
+                hard_reset_i     => ttc_cmd.hard_reset,
+                promless_stats_o => promless_stats,
+                promless_cfg_i   => promless_cfg
             );
     end generate;
         

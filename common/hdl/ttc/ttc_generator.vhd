@@ -18,7 +18,6 @@ use UNISIM.VComponents.all;
 
 use work.ttc_pkg.all;
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity ttc_generator is
     port (

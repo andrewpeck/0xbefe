@@ -36,6 +36,9 @@ common/hdl/utils/shift_reg.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
 common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
+common/hdl/utils/crc16_usb.vhd
+common/hdl/utils/crc32_gbe.vhd
+common/hdl/utils/cross_domain_pulse.vhd
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project

@@ -3,15 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.common_pkg.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 package gem_pkg is
-
-    --======================--
-    --==      General     ==--
-    --======================-- 
-        
-    constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
 
     --======================--
     --== Config Constants ==--
@@ -146,11 +140,6 @@ package gem_pkg is
     --====================--
     --==     OH Link    ==--
     --====================--
-
-    type t_sync_fifo_status is record
-        had_ovf         : std_logic;
-        had_unf         : std_logic;
-    end record;
     
     type t_gt_status is record
         not_in_table    : std_logic;
@@ -163,21 +152,6 @@ package gem_pkg is
         trig0_rx_gt_status      : t_gt_status;     
         trig1_rx_gt_status      : t_gt_status;     
     end record;
-
-    type t_gbt_link_status is record
-        gbt_tx_ready                : std_logic;
-        gbt_tx_had_not_ready        : std_logic;
-        gbt_tx_gearbox_ready        : std_logic;
-        gbt_rx_sync_status          : t_sync_fifo_status;
-        gbt_rx_ready                : std_logic;
-        gbt_rx_had_not_ready        : std_logic;
-        gbt_rx_header_locked        : std_logic;
-        gbt_rx_header_had_unlock    : std_logic;
-        gbt_rx_gearbox_ready        : std_logic;
-        gbt_rx_correction_cnt       : std_logic_vector(7 downto 0);
-        gbt_rx_correction_flag      : std_logic;
-        gbt_rx_num_bitslips         : std_logic_vector(7 downto 0);
-    end record;
     
     type t_vfat_link_status is record
         sync_good               : std_logic;
@@ -187,7 +161,6 @@ package gem_pkg is
     end record;
     
     type t_trig_link_status_arr is array(integer range <>) of t_trig_link_status;    
-    type t_gbt_link_status_arr is array(integer range <>) of t_gbt_link_status;    
     type t_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status;    
     type t_oh_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status_arr(23 downto 0);    
 

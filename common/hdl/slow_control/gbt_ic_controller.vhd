@@ -13,7 +13,6 @@ use ieee.numeric_std.all;
 use ieee.std_logic_misc.all;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity gbt_ic_controller is
 --    generic(
