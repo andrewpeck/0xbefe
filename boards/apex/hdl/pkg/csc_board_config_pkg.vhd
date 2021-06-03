@@ -94,33 +94,54 @@ package board_config_package is
     type t_fiber_to_mgt_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_fiber_to_mgt_link;
 
     -- defines the MGT TX and RX index for each fiber index
-    -- QSFP-0 (quad 233): fibers 0-3
-    -- QSFP-1 (quad 232): fibers 4-7
-    -- QSFP-2 (quad 229): fibers 8-11
-    -- QSFP-3 (quad 228): fibers 12-15
+    -- for now considering this fake map of only 16 fibers:
+    -- quad 129 = fibers 0-3   | channels 0-3
+    -- quad 131 = fibers 4-7   | channels 8-11
+    -- quad 130 = fibers 8-11  | channels 4-7 
+    -- quad 132 = fibers 12-15 | channels 12-15
     -- DUMMY: fiber 16 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
     -- note that GTH channel #16 is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
-        --=== QSFP-3 ===--
-        (0, 0),   -- fiber 12
-        (1, 1),   -- fiber 13
-        (2, 2),   -- fiber 14
-        (3, 3),   -- fiber 15
-        --=== QSFP-2 ===--
-        (4, 4),   -- fiber 8
-        (5, 5),   -- fiber 9
-        (6, 6),   -- fiber 10
-        (7, 7),   -- fiber 11
-        --=== QSFP-1 ===--
-        (8, 8),   -- fiber 4
-        (9, 9),   -- fiber 5
-        (10, 10), -- fiber 6
-        (11, 11), -- fiber 7
-        --=== QSFP-0 ===--
-        (12, 12), -- fiber 0
-        (13, 13), -- fiber 1
-        (14, 14), -- fiber 2
-        (15, 15), -- fiber 3
+        --=== Quad 128 ===--
+        (2, 1),   -- fiber 0
+        (1, 3),   -- fiber 1  ! RX inverted
+        (0, 0),   -- fiber 2  ! RX inverted
+        (3, 2),   -- fiber 3  ! RX inverted
+
+        --=== dummy ===--
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        
+--        --=== Quad 129 ===--
+--        (0, 0),   -- fiber 0  ! RX inverted
+--        (2, 1),   -- fiber 1  ! RX inverted
+--        (1, 2),   -- fiber 2
+--        (3, 3),   -- fiber 3
+--        --=== Quad 131 ===--
+--        (10, 8),  -- fiber 4  ! RX inverted ! TX inverted
+--        (9, 9),   -- fiber 5  ! RX inverted ! TX inverted
+--        (8, 10),  -- fiber 6  ! RX inverted ! TX inverted
+--        (11, 11), -- fiber 7  ! RX inverted ! TX inverted
+--        --=== Quad 130 ===--
+--        (5, 4),   -- fiber 8
+--        (7, 5),   -- fiber 9  ! RX inverted
+--        (4, 6),   -- fiber 10 ! RX inverted
+--        (6, 7),   -- fiber 11 ! RX inverted
+--        --=== Quad 132 ===--
+--        (12, 12), -- fiber 12 ! RX inverted
+--        (13, 13), -- fiber 13               ! TX inverted
+--        (15, 14), -- fiber 14               ! TX inverted
+--        (14, 15), -- fiber 15
         --=== DUMMY channel - use for unconnected channels ===--
         (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)  -- dummy fiber
     );
@@ -129,7 +150,7 @@ package board_config_package is
     -- MGT configuration
     --================================--    
     
-    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+    constant CFG_MGT_NUM_CHANNELS : integer := 4;
     
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
@@ -137,22 +158,7 @@ package board_config_package is
         (link_type => MGT_DMB,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => true,  ibert_inst => true),        
         (link_type => MGT_DMB,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => false, ibert_inst => true),        
         (link_type => MGT_GBE,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => true,  ibert_inst => true),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => true,  ibert_inst => true),        
-
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),
-
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => false, ibert_inst => false)        
+        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => true,  ibert_inst => true)        
     );
 
 end board_config_package;

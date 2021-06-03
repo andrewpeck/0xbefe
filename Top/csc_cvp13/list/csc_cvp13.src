@@ -6,6 +6,7 @@ Top/csc_cvp13/project_config.vhd
 # Common libs
 common/hdl/common.src
 common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
 
 # CSC source
 csc/hdl/csc.src

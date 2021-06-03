@@ -3,9 +3,13 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date:    2020-05-28
--- Module Name:    GEM_CVP13
--- Description:    This is the top level of the GEM project on Bittware CVP13 card 
+-- Module Name:    GEM_APEX
+-- Description:    This is the top level of the GEM APEX project 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---- general notes about the board
+----   * may be nice to have also a direct LHC clock to the FPGA for monitoring purposes (maybe?)
+----   * parallel programming from the Zynq
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -17,6 +21,7 @@ use unisim.vcomponents.all;
 
 use work.common_pkg.all;
 use work.csc_pkg.all;
+use work.axi_pkg.all;
 use work.ttc_pkg.all;
 use work.mgt_pkg.all;
 use work.ipbus.all;
@@ -24,7 +29,7 @@ use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
 use work.board_config_package.all;
 
-entity csc_cvp13 is
+entity gem_apex is
     generic(
         -- Firmware version, date, time, git sha (passed in by Hog)
         GLOBAL_DATE            : std_logic_vector (31 downto 0);
@@ -33,80 +38,84 @@ entity csc_cvp13 is
         GLOBAL_SHA             : std_logic_vector (31 downto 0)        
     );
     port(
-
-        reset_b_i           : in  std_logic; -- active low reset (pulsed by BMC after FPGA is programmed as signaled by config_done)
+        -- GTH clocks
+        gth_refclk0_p_i     : in  std_logic_vector(2 downto 0);
+        gth_refclk0_n_i     : in  std_logic_vector(2 downto 0);
+        gth_refclk1_p_i     : in  std_logic_vector(2 downto 0);
+        gth_refclk1_n_i     : in  std_logic_vector(2 downto 0);
         
-        -- QSFP control and monitoring
-        qsfp_present_b_i    : in  std_logic_vector(3 downto 0); -- active low QSFP present input
-        qsfp_reset_b_o      : out std_logic_vector(3 downto 0); -- active low QSFP reset output
-        qsfp_lp_o           : out std_logic; -- QSFP low power mode output (to all QSFPs)
-        qsfp_ctrl_en_o      : out std_logic; -- QSFP I2C Control Enable. 1 = Connect QSFP I2C/Status to FPGA
-        qsfp_int_b_i        : in  std_logic; -- QSFP active low interrup (or'ed from all QSFPs) 
-
-        -- MGT clocks
-        qsfp_refclk0_p_i    : in  std_logic_vector(3 downto 0);
-        qsfp_refclk0_n_i    : in  std_logic_vector(3 downto 0);
-        qsfp_refclk1_p_i    : in  std_logic_vector(3 downto 0);
-        qsfp_refclk1_n_i    : in  std_logic_vector(3 downto 0);
-                
-        -- LEDs
-        leds_o              : out std_logic_vector(3 downto 0);
+        -- GTY clocks
+        gty_refclk0_p_i     : in  std_logic_vector(2 downto 0);
+        gty_refclk0_n_i     : in  std_logic_vector(2 downto 0);
+        gty_refclk1_p_i     : in  std_logic_vector(2 downto 0);
+        gty_refclk1_n_i     : in  std_logic_vector(2 downto 0);
         
-        -- PCIe
-        pcie_reset_b_i      : in  std_logic;
-        pcie_refclk0_p_i    : in  std_logic;
-        pcie_refclk0_n_i    : in  std_logic;
-        
-        -- USB-C
-        usbc_cc_i           : in  std_logic;
-        usbc_clk_i          : in  std_logic;
-        usbc_trig_i         : in  std_logic;
-        
-        -- Other
-        progclk_b5_p_i      : in  std_logic;
-        progclk_b5_n_i      : in  std_logic;
-        
-        i2c_master_en_b_o   : out std_logic; -- FPGA is the I2C master when this is set to 0
-        
-        -- DIMM0
-        dimm0_refclk_p_i    : in  std_logic;
-        dimm0_refclk_n_i    : in  std_logic
-
+        -- C2C
+        c2c_rx_rxp          : in  std_logic;
+        c2c_rx_rxn          : in  std_logic;
+        c2c_tx_txp          : out std_logic;
+        c2c_tx_txn          : out std_logic
     );
-end csc_cvp13;
+end gem_apex;
 
-architecture csc_cvp13_arch of csc_cvp13 is
-   
-    COMPONENT vio_qsfp_control
-        PORT(
-            clk        : IN  STD_LOGIC;
-            probe_in0  : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
-            probe_in1  : IN  STD_LOGIC;
-            probe_out0 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-            probe_out1 : OUT STD_LOGIC;
-            probe_out2 : OUT STD_LOGIC
+architecture gem_apex_arch of gem_apex is
+
+    component apex_blk is
+        port(
+            drp_clk             : out STD_LOGIC;
+            c2c_refclk          : in  STD_LOGIC;
+            c2c_refclk_bufg     : in  STD_LOGIC;
+            drp_do              : in  STD_LOGIC_VECTOR(63 downto 0);
+            drp_di              : out STD_LOGIC_VECTOR(63 downto 0);
+            drp_en              : out STD_LOGIC;
+            drp_we              : out STD_LOGIC_VECTOR(7 downto 0);
+            drp_rdy             : in  STD_LOGIC;
+            drp_addr            : out STD_LOGIC_VECTOR(13 downto 0);
+            c2c_tx_txn          : out STD_LOGIC;
+            c2c_tx_txp          : out STD_LOGIC;
+            c2c_rx_rxn          : in  STD_LOGIC;
+            c2c_rx_rxp          : in  STD_LOGIC;
+            axi_reset_b_o       : out STD_LOGIC;            
+            user_axil_clk_o     : out STD_LOGIC;
+            user_axil_awaddr    : out STD_LOGIC_VECTOR(31 downto 0);
+            user_axil_awprot    : out STD_LOGIC_VECTOR(2 downto 0);
+            user_axil_awvalid   : out STD_LOGIC;
+            user_axil_awready   : in  STD_LOGIC;
+            user_axil_wdata     : out STD_LOGIC_VECTOR(31 downto 0);
+            user_axil_wstrb     : out STD_LOGIC_VECTOR(3 downto 0);
+            user_axil_wvalid    : out STD_LOGIC;
+            user_axil_wready    : in  STD_LOGIC;
+            user_axil_bresp     : in  STD_LOGIC_VECTOR(1 downto 0);
+            user_axil_bvalid    : in  STD_LOGIC;
+            user_axil_bready    : out STD_LOGIC;
+            user_axil_araddr    : out STD_LOGIC_VECTOR(31 downto 0);
+            user_axil_arprot    : out STD_LOGIC_VECTOR(2 downto 0);
+            user_axil_arvalid   : out STD_LOGIC;
+            user_axil_arready   : in  STD_LOGIC;
+            user_axil_rdata     : in  STD_LOGIC_VECTOR(31 downto 0);
+            user_axil_rresp     : in  STD_LOGIC_VECTOR(1 downto 0);
+            user_axil_rvalid    : in  STD_LOGIC;
+            user_axil_rready    : out STD_LOGIC;
+            clk_100_o           : out STD_LOGIC
         );
-    END COMPONENT;
-       
-    COMPONENT ila_test
-        PORT(
-            clk    : IN STD_LOGIC;
-            probe0 : IN STD_LOGIC;
-            probe1 : IN STD_LOGIC_VECTOR(11 DOWNTO 0)
-        );
-    END COMPONENT;
-       
-    COMPONENT vio_test
-      PORT (
-        clk : IN STD_LOGIC;
-        probe_in0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe_out0 : OUT STD_LOGIC_VECTOR(11 DOWNTO 0)
-      );
-    END COMPONENT;
-       
+    end component apex_blk;
+
     -- resets 
-    signal reset                : std_logic;
-    signal reset_pwrup          : std_logic;
+    --signal reset                : std_logic;
+    signal gem_powerup_reset    : std_logic;
+   
+    -- refclks
+    signal gth_refclk0          : std_logic_vector(2 downto 0);
+    signal gth_refclk1          : std_logic_vector(2 downto 0);
+    signal gth_refclk0_div2     : std_logic_vector(2 downto 0);
+    signal gth_refclk1_div2     : std_logic_vector(2 downto 0);
+    signal gty_refclk0          : std_logic_vector(2 downto 0);
+    signal gty_refclk1          : std_logic_vector(2 downto 0);
+    signal gty_refclk0_div2     : std_logic_vector(2 downto 0);
+    signal gty_refclk1_div2     : std_logic_vector(2 downto 0);
+
+    signal c2c_refclk           : std_logic;
+    signal c2c_refclk_div2      : std_logic;
         
     -- qsfp mgts
     signal mgt_refclks          : t_mgt_refclks_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
@@ -128,28 +137,22 @@ architecture csc_cvp13_arch of csc_cvp13 is
     signal ttc_clk_status       : t_ttc_clk_status;
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl;
     
-    -- PCIe
-    signal pcie_refclk0         : std_logic;
-    signal pcie_refclk0_div2    : std_logic;
-    signal pcie_phy_ready       : std_logic;
-    signal pcie_link_up         : std_logic;
-    
     -- slow control
+    signal axil_clk             : std_logic;
+    signal axi_reset_b          : std_logic;
+    signal axil_m2s             : t_axi_lite_m2s;
+    signal axil_s2m             : t_axi_lite_s2m;
     signal ipb_reset            : std_logic;
     signal ipb_clk              : std_logic;
     signal ipb_usr_miso_arr     : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
     signal ipb_usr_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
     signal ipb_sys_miso_arr     : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
     signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
-    
-    -- other
-    signal clk100               : std_logic;
-
-    -- debug
-    signal tst_bx_cnt           : unsigned(11 downto 0) := (others => '0');
-    signal tst_bx_cnt_max       : std_logic_vector(11 downto 0) := x"00f";
-    signal tst_trig_cnt         : unsigned(31 downto 0) := (others => '0');
-
+      
+    -- DAQ and other
+    signal clk_100              : std_logic;
+    signal slink_mgt_ref_clk    : std_logic;
+      
     -------------------- MGTs mapped to CSC links ---------------------------------
     
     -- DMB links
@@ -170,15 +173,80 @@ architecture csc_cvp13_arch of csc_cvp13 is
     -------------------- PROMless ---------------------------------
     signal to_promless              : t_to_promless := (clk => '0', en => '0');
     signal from_promless            : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
-
+   
 begin
     
+    --================================--
+    -- APEX C2C
+    --================================--
+
+    i_apex_c2c : apex_blk
+        port map(
+            drp_clk             => open,
+            c2c_refclk          => c2c_refclk,
+            c2c_refclk_bufg     => c2c_refclk_div2,
+            drp_do              => (others => '0'),
+            drp_di              => open,
+            drp_en              => open,
+            drp_we              => open,
+            drp_rdy             => '1',
+            drp_addr            => open,
+            c2c_tx_txn          => c2c_tx_txn,
+            c2c_tx_txp          => c2c_tx_txp,
+            c2c_rx_rxn          => c2c_rx_rxn,
+            c2c_rx_rxp          => c2c_rx_rxp,
+            axi_reset_b_o       => axi_reset_b,
+            user_axil_clk_o     => axil_clk,
+            user_axil_awaddr    => axil_m2s.awaddr,
+            user_axil_awprot    => axil_m2s.awprot,
+            user_axil_awvalid   => axil_m2s.awvalid,
+            user_axil_awready   => axil_s2m.awready,
+            user_axil_wdata     => axil_m2s.wdata,
+            user_axil_wstrb     => axil_m2s.wstrb,
+            user_axil_wvalid    => axil_m2s.wvalid,
+            user_axil_wready    => axil_s2m.wready,
+            user_axil_bresp     => axil_s2m.bresp,
+            user_axil_bvalid    => axil_s2m.bvalid,
+            user_axil_bready    => axil_m2s.bready,
+            user_axil_araddr    => axil_m2s.araddr,
+            user_axil_arprot    => axil_m2s.arprot,
+            user_axil_arvalid   => axil_m2s.arvalid,
+            user_axil_arready   => axil_s2m.arready,
+            user_axil_rdata     => axil_s2m.rdata,
+            user_axil_rresp     => axil_s2m.rresp,
+            user_axil_rvalid    => axil_s2m.rvalid,
+            user_axil_rready    => axil_m2s.rready,
+            clk_100_o           => clk_100
+        );
+
+    --================================--
+    -- IPbus / wishbone
+    --================================--
+
+    i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
+        generic map(
+            C_DEBUG => true
+        )
+        port map(
+            axi_aclk_i     => axil_clk,
+            axi_aresetn_i  => axi_reset_b,
+            axil_m2s_i     => axil_m2s,
+            axil_s2m_o     => axil_s2m,
+            ipb_reset_o    => ipb_reset,
+            ipb_clk_o      => ipb_clk,
+            ipb_sys_miso_i => ipb_sys_miso_arr,
+            ipb_sys_mosi_o => ipb_sys_mosi_arr,
+            ipb_usr_miso_i => ipb_usr_miso_arr,
+            ipb_usr_mosi_o => ipb_usr_mosi_arr,
+            read_active_o  => open,
+            write_active_o => open
+        );
+
     --================================--
     -- Wiring
     --================================--
     
-    reset <= not reset_b_i;
-    i2c_master_en_b_o <= '0';
+--    reset <= not reset_b_i;
     
     --================================--
     -- Clocks
@@ -186,27 +254,36 @@ begin
     
     i_clk_bufs : entity work.clk_bufs
         port map(
-            qsfp_refclk0_p_i         => qsfp_refclk0_p_i,
-            qsfp_refclk0_n_i         => qsfp_refclk0_n_i,
-            qsfp_refclk1_p_i         => qsfp_refclk1_p_i,
-            qsfp_refclk1_n_i         => qsfp_refclk1_n_i,
-            pcie_refclk0_p_i         => pcie_refclk0_p_i,
-            pcie_refclk0_n_i         => pcie_refclk0_n_i,
-            sysclk_100_p_i           => progclk_b5_p_i,
-            sysclk_100_n_i           => progclk_b5_n_i,
+            gth_refclk0_p_i    => gth_refclk0_p_i,
+            gth_refclk0_n_i    => gth_refclk0_n_i,
+            gth_refclk1_p_i    => gth_refclk1_p_i,
+            gth_refclk1_n_i    => gth_refclk1_n_i,
+            gty_refclk0_p_i    => gty_refclk0_p_i,
+            gty_refclk0_n_i    => gty_refclk0_n_i,
+            gty_refclk1_p_i    => gty_refclk1_p_i,
+            gty_refclk1_n_i    => gty_refclk1_n_i,
             
-            qsfp_refclk0_o           => open,
-            qsfp_refclk1_o           => open,
-            qsfp_refclk0_div2_o      => open,
-            qsfp_refclk1_div2_o      => open,
-
-            qsfp_mgt_refclks_o       => mgt_refclks,
+            gth_mgt_refclks_o  => open,
+            gty_mgt_refclks_o  => open,
             
-            pcie_refclk0_o           => pcie_refclk0,
-            pcie_refclk0_div2_o      => pcie_refclk0_div2,
-
-            sysclk_100_o             => clk100
+            gth_refclk0_o      => gth_refclk0,
+            gth_refclk1_o      => gth_refclk1,
+            gth_refclk0_div2_o => gth_refclk0_div2,
+            gth_refclk1_div2_o => gth_refclk1_div2,
+            gty_refclk0_o      => gty_refclk0,
+            gty_refclk1_o      => gty_refclk1,
+            gty_refclk0_div2_o => gty_refclk0_div2,
+            gty_refclk1_div2_o => gty_refclk1_div2
         );
+    
+    -- temporary GTY channel refclk wiring for some selected channels
+    g_mgt_quad_129_ref_clks: for i in 0 to 3 generate
+        mgt_refclks(i).gtrefclk0 <= gty_refclk0(0);
+        mgt_refclks(i).gtrefclk1 <= gty_refclk1(0);
+    end generate;
+
+    c2c_refclk <= gth_refclk1(0);
+    c2c_refclk_div2 <= gth_refclk1_div2(0);
 
     i_ttc_clks : entity work.ttc_clocks
         generic map(
@@ -222,31 +299,6 @@ begin
         );
 
     --================================--
-    -- PCIe
-    --================================--
-
-    i_pcie : entity work.pcie
-        port map(
-            reset_i             => '0', -- TODO: connect it to the FPGA reset
-            
-            pcie_reset_b_i      => pcie_reset_b_i,
-            pcie_refclk_i       => pcie_refclk0,
-            pcie_sysclk_i       => pcie_refclk0_div2,
-            
-            pcie_phy_ready_o    => pcie_phy_ready,
-            pcie_link_up_o      => pcie_link_up,
-            
-            status_leds_o       => leds_o,
-
-            ipb_reset_o         => ipb_reset,
-            ipb_clk_o           => ipb_clk,
-            ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
-            ipb_usr_mosi_arr_o  => ipb_usr_mosi_arr,
-            ipb_sys_miso_arr_i  => ipb_sys_miso_arr,
-            ipb_sys_mosi_arr_o  => ipb_sys_mosi_arr            
-        );
-
-    --================================--
     -- MGTs
     --================================--
 
@@ -255,11 +307,11 @@ begin
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 10
+            g_STABLE_CLK_PERIOD => 20
         )
         port map(
             reset_i              => '0',
-            clk_stable_i         => clk100,
+            clk_stable_i         => axil_clk,
             ttc_clks_i           => ttc_clks,
             ttc_clks_locked_i    => ttc_clk_status.mmcm_locked,
             ttc_clks_reset_o     => open,
@@ -280,23 +332,27 @@ begin
         );
 
     --================================--
-    -- PROMless
+    -- SLink Rocket
     --================================--
 
-    i_promless : entity work.promless
+    i_slink_rocket : entity work.slink_rocket
         generic map(
-            g_MAX_SIZE_BYTES   => 8_388_608, --9_437_184, -- 9_600_000,
-            g_MEMORY_PRIMITIVE => "ultra"
+            g_NUM_CHANNELS => 1,
+            g_LINE_RATE    => "25.78125",
+            q_REF_CLK_FREQ => "322.265625",
+            g_MGT_TYPE     => "GTY"
         )
         port map(
-            reset_i         => '0',
-            to_promless_i   => to_promless,
-            from_promless_o => from_promless,
-            ipb_reset_i     => ipb_reset,
-            ipb_clk_i       => ipb_clk,
-            ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
-            ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
+            reset_i          => gem_powerup_reset,
+            clk_stable_100_i => clk_100,
+            mgt_ref_clk_i    => slink_mgt_ref_clk,
+            ipb_reset_i      => ipb_reset,
+            ipb_clk_i        => ipb_clk,
+            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
+            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
         );
+
+    slink_mgt_ref_clk <= gty_refclk1(1);
 
     --================================--
     -- CSC Logic
@@ -344,7 +400,7 @@ begin
             ipb_mosi_arr_i          => ipb_usr_mosi_arr,
 
             -- DAQLink
-            daqlink_clk_i           => clk100,
+            daqlink_clk_i           => clk_100,
             daqlink_clk_locked_i    => '1',
             daq_to_daqlink_o        => daq_to_daqlink,
             daqlink_to_daq_i        => daqlink_to_daq,
@@ -396,55 +452,5 @@ begin
         csc_spy_rx_data     <= MGT_16B_RX_DATA_NULL;
         csc_spy_rx_status   <= MGT_STATUS_NULL;
     end generate;
-
-    --================================--
-    -- Debug
-    --================================--
     
-    i_vio_qsfp : vio_qsfp_control
-        port map(
-            clk        => clk100,
-            probe_in0  => qsfp_present_b_i,
-            probe_in1  => qsfp_int_b_i,
-            probe_out0 => qsfp_reset_b_o,
-            probe_out1 => qsfp_lp_o,
-            probe_out2 => qsfp_ctrl_en_o
-        );
-        
-    -- copper input test
-    
-    process(ttc_clks.clk_40)
-    begin
-        if rising_edge(ttc_clks.clk_40) then
-            if reset = '1' then
-                tst_trig_cnt <= (others => '0');
-                tst_bx_cnt <= (others => '0');
-            else
-                if std_logic_vector(tst_bx_cnt) = tst_bx_cnt_max then
-                    tst_bx_cnt <= (others => '0');
-                else
-                    tst_bx_cnt <= tst_bx_cnt + 1;
-                end if;
-                
-                if usbc_trig_i = '1' and tst_trig_cnt /= x"ffffffff" then
-                    tst_trig_cnt <= tst_trig_cnt + 1;
-                end if;
-            end if;
-        end if;
-    end process;
-        
-    i_vio_test : vio_test
-        port map(
-            clk        => ttc_clks.clk_40,
-            probe_in0  => std_logic_vector(tst_trig_cnt),
-            probe_out0 => tst_bx_cnt_max
-        );
-        
-    i_ila_test : ila_test
-        port map(
-            clk    => ttc_clks.clk_40,
-            probe0 => usbc_trig_i,
-            probe1 => std_logic_vector(tst_bx_cnt)
-        );
-        
-end csc_cvp13_arch;
+end gem_apex_arch;
