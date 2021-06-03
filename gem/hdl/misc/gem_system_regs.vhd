@@ -99,6 +99,8 @@ architecture gem_system_regs_arch of gem_system_regs is
     
     signal test_sbit_me0            : std_logic_vector(31 downto 0);
     
+    signal sbit_test_reset_o            : std_logic := '0' ;
+    
     signal test_sbit0xe_count_me0 : std_logic_vector(31 downto 0);
     signal vfat3_sbit0xe_test : std_logic_vector(7 downto 0);
     signal test_sbit0xs_count_me0 : std_logic_vector(31 downto 0);
@@ -230,7 +232,7 @@ begin
         )
         port map(
             ref_clk_i => ttc_clks_i.clk_40,
-            reset_i   => reset_i,
+            reset_i   => sbit_test_reset_o,
             en_i      => vfat3_sbit0xe_test(7) or
                          vfat3_sbit0xe_test(6) or
                          vfat3_sbit0xe_test(5) or
@@ -242,7 +244,7 @@ begin
             count_o   => test_sbit0xx_count_me0
         );   
         
-     vfat3_sbit0xx_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(0);
+     vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
      
      me0_sbit0xs_count : entity work.counter
         generic map(
@@ -251,9 +253,9 @@ begin
         )
         port map(
             ref_clk_i => ttc_clks_i.clk_40,
-            reset_i   => reset_i,
+            reset_i   => sbit_test_reset_o,
             en_i      => vfat3_sbit0xs_test,
-            count_o   => test_sbit0xx_count_me0
+            count_o   => test_sbit0xs_count_me0
         );    
      
      vfat3_sbit030_test <= vfat3_sbits_arr_i(0)(3)(0);
@@ -265,7 +267,7 @@ begin
         )
         port map(
             ref_clk_i => ttc_clks_i.clk_40,
-            reset_i   => reset_i,
+            reset_i   => sbit_test_reset_o,
             en_i      => vfat3_sbit030_test,
             count_o   => test_sbit030_count_me0
         ); 
