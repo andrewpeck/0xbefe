@@ -300,7 +300,7 @@ begin
 
       -- sbit outputs
       active_vfats_o       => active_vfats,
-      clusters_o => sbit_clusters,
+      clusters_o           => sbit_clusters,
       cluster_count_o      => cluster_count,
       overflow_o           => sbit_overflow,
 
