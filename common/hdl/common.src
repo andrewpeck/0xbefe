@@ -56,3 +56,5 @@ common/hdl/mgt/mgt_phalign_multi_auto.vhd
 common/hdl/misc/promless_fpga_loader.vhd
 #common/hdl/misc/promless_bram.vhd            <-- use the generated version specific to the project
 
+# IP
+common/ip/common_ip.src
