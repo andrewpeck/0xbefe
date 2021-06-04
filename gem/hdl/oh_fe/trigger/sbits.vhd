@@ -69,6 +69,7 @@ entity sbits is
     hitmap_acquire_i : in  std_logic;
     hitmap_sbits_o   : out sbits_array_t(NUM_VFATS-1 downto 0);
 
+    tmr_err_inj_i            : in  std_logic := '0';
     cluster_tmr_err_o        : out std_logic := '0';
     trig_alignment_tmr_err_o : out std_logic := '0'
 
@@ -235,10 +236,16 @@ begin
 
     signal cluster_tmr_err : std_logic_vector (2+NUM_FOUND_CLUSTERS-1 downto 0);
 
+    signal tmr_err_inj : std_logic := '0';
+
   begin
 
     cluster_packer_loop : for I in 0 to 2*EN_TMR_CLUSTER_PACKER generate
     begin
+
+      errinj : if (I=0) generate
+        tmr_err_inj <= tmr_err_inj_i;
+      end generate;
 
       cluster_packer_inst : entity work.cluster_packer
         generic map (
@@ -251,7 +258,7 @@ begin
         port map (
           clk_40   => clocks.clk40,
           clk_fast => clocks.clk160_0,
-          reset    => reset_i,
+          reset    => reset_i or tmr_err_inj,
 
           sbits_i => vfat_sbits_strip_mapped,
 
@@ -271,6 +278,7 @@ begin
       cluster_assign_loop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
         signal err : std_logic_vector (3 downto 0) := (others => '0');
       begin
+
         majority_err (clusters_o(I).adr, err(0), clusters(0)(I).adr, clusters(1)(I).adr, clusters(2)(I).adr);
         majority_err (clusters_o(I).cnt, err(1), clusters(0)(I).cnt, clusters(1)(I).cnt, clusters(2)(I).cnt);
         majority_err (clusters_o(I).prt, err(2), clusters(0)(I).prt, clusters(1)(I).prt, clusters(2)(I).prt);

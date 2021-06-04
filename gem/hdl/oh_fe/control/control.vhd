@@ -109,6 +109,7 @@ end control;
 architecture Behavioral of control is
 
   signal tmr_cnt_reset     : std_logic;
+  signal tmr_err_inj       : std_logic;
   signal ttc_tmr_err       : std_logic;
   signal ipb_slave_tmr_err : std_logic;
 
@@ -478,7 +479,8 @@ begin
       bx0_sync_err => ttc_bx0_sync_err,
       bxn_sync_err => ttc_bxn_sync_err,
 
-      tmr_err_o => ttc_tmr_err
+      tmr_err_inj_i => tmr_err_inj,
+      tmr_err_o     => ttc_tmr_err
 
       );
 

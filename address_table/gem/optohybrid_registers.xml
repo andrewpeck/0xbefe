@@ -299,6 +299,9 @@
             <node id="TMR_CNT_RESET" address="0x3" permission="w"
                   description="Reset Control TMR Error counters"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
+            <node id="TMR_ERR_INJ" address="0x4" permission="w"
+                  description="Inject a TMR Error"
+                  fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
     </node> <!--CTRL-->
@@ -1284,6 +1287,9 @@
             <node id="TMR_CNT_RESET" address="0x2" permission="w"
                   description="Reset trigger TMR Error counters"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
+            <node id="TMR_ERR_INJ" address="0x3" permission="w"
+                  description="Inject a TMR Error"
+                  fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
     </node> <!--TRIG-->
@@ -1352,31 +1358,34 @@
                   fw_write_pulse_signal="resync_force"/>
         </node> <!--TTC-->
 
-        <node id="TMR">
-            <node id="GBT_LINK_TMR_ERR_CNT" address="0x10" permission="r"
+        <node id="TMR" address="0x10">
+            <node id="GBT_LINK_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0x0000ffff"
                   description="GBT Link TMR Error Count"
                   fw_cnt_en_signal="gbt_link_tmr_err"
                   fw_cnt_snap_signal="'1'"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
                   fw_signal="gbt_link_tmr_err_cnt"/>
-            <node id="GBT_SERDES_TMR_ERR_CNT" address="0x10" permission="r"
+            <node id="GBT_SERDES_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0xffff0000"
                   description="GBT Serdes TMR Error Count"
                   fw_cnt_en_signal="gbt_serdes_tmr_err"
                   fw_cnt_snap_signal="'1'"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
                   fw_signal="gbt_serdes_tmr_err_cnt"/>
-            <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x11" permission="r"
+            <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x1" permission="r"
                   mask="0x0000ffff"
                   description="IPBus Slave TMR Error Count"
                   fw_cnt_en_signal="ipb_slave_tmr_err"
                   fw_cnt_snap_signal="'1'"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
-            <node id="TMR_CNT_RESET" address="0x12" permission="w"
+            <node id="TMR_CNT_RESET" address="0x2" permission="w"
                   description="Reset GBT TMR Error counters"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
+            <node id="TMR_ERR_INJ" address="0x3" permission="w"
+                  description="Inject a TMR Error"
+                  fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
     </node> <!--GBT-->

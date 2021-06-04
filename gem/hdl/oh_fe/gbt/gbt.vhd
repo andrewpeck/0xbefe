@@ -83,7 +83,8 @@ architecture Behavioral of gbt is
   signal resync_gbt : std_logic;
 
   signal reset, cnt_reset : std_logic;
-  signal tmr_cnt_reset : std_logic;
+  signal tmr_cnt_reset    : std_logic;
+  signal tmr_err_inj      : std_logic;
 
   attribute MAX_FANOUT          : string;
   attribute MAX_FANOUT of reset : signal is "50";
@@ -167,7 +168,7 @@ begin
       data_o => gbt_rx_data,            -- Parallel data out
       data_i => gbt_tx_data,            -- Parallel data in
 
-      tmr_err_o => gbt_serdes_tmr_err
+      tmr_err_o     => gbt_serdes_tmr_err
       );
 
   --------------------------------------------------------------------------------------------------------------------
@@ -200,6 +201,7 @@ begin
       ready_o    => gbt_link_ready,
       error_o    => gbt_link_error,
 
+      tmr_err_inj_i => tmr_err_inj,
       tmr_err_o => gbt_link_tmr_err
 
       );
