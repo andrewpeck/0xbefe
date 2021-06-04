@@ -1,3 +1,4 @@
+﻿
 # Setting up CVP13
 The setup process consists of these steps:
 1. Install the card in the computer, connect cooling, and the micro USB cable
@@ -94,7 +95,7 @@ This repository contains low level hardware access software as well as python sc
 You can use the scripts directly from this repo, all you have to do is:
 1. Generate the XML address table file by running this command at the root of the repository: ```make update_me0_cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is only needed after cloning or updating the repository.
 1. Compile the rwreg library that is used for hardware access: ```scripts/boards/cvp13/rwreg && make```. This step is only needed after cloning or updating the repository.
-1. Set up the environment for your station and card combination: ```cd scripts && source env_gem.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
+1. Set up the environment for your station and card combination: ```cd scripts && source env.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
 1. Initialize and configure the CVP13 firmware for the given station: ```cd scripts && python boards/cvp13/cvp13_init_me0.py```. This step is only needed after a CVP13 power cycle or CVP13 FPGA programming.
 1. Use the scripts e.g.:
 	1. start the interactive register access tool: ```python common/reg_interface.py```, once the tool is running e.g. to read the GBT link status registers of OH0 type ```readKW OH_LINKS.OH0.GBT``` (readKW means read all registers matching the substring), or check the CVP13 firmware version and configuration: ```readKW GEM_SYSTEM```. You can also write to registers using the write command. You can get some help by typing help. Refer to the address table XML file to find what registers exist and what they do (there's documentation for each register). At some point PDF document should also get generated from the XML when running make update_me0_cvp13, but that's not yet working..
@@ -137,3 +138,18 @@ Mapping to GE2/1 OHs is the following:
 | OH6 GBT1 |       |       |       | 2&11  |
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
+
+## PROMless
+The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless_load.py``` script e.g.:
+```
+sudo python common/promless_load.py ~/oh_fw/oh_ge21.200-v4.0.2-23-gf349814-dirty.bit
+```
+(this is equivalent to calling the gemloader_configure.sh script on CTP7)
+To trigger the hard-reset manually in order to program the frontend you can use the built-in TTC generator module e.g. by running these commands using the ```common/reg_interface.py```:
+```
+write GEM_AMC.TTC.GENERATOR.ENABLE 1
+write GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET 1
+```
+
+## General operation
+
