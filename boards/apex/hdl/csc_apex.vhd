@@ -29,7 +29,7 @@ use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
 use work.board_config_package.all;
 
-entity gem_apex is
+entity csc_apex is
     generic(
         -- Firmware version, date, time, git sha (passed in by Hog)
         GLOBAL_DATE            : std_logic_vector (31 downto 0);
@@ -56,9 +56,9 @@ entity gem_apex is
         c2c_tx_txp          : out std_logic;
         c2c_tx_txn          : out std_logic
     );
-end gem_apex;
+end csc_apex;
 
-architecture gem_apex_arch of gem_apex is
+architecture csc_apex_arch of csc_apex is
 
     component apex_blk is
         port(
@@ -453,4 +453,4 @@ begin
         csc_spy_rx_status   <= MGT_STATUS_NULL;
     end generate;
     
-end gem_apex_arch;
+end csc_apex_arch;
