@@ -108,6 +108,7 @@ end control;
 
 architecture Behavioral of control is
 
+  signal tmr_cnt_reset     : std_logic;
   signal ttc_tmr_err       : std_logic;
   signal ipb_slave_tmr_err : std_logic;
 
@@ -571,6 +572,7 @@ begin
     regs_addresses(36)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"0";
     regs_addresses(37)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"1";
     regs_addresses(38)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"2";
+    regs_addresses(39)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"3";
 
     -- Connect read signals
     regs_read_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= loopback;
@@ -652,6 +654,7 @@ begin
     -- Connect write pulse signals
     sem_inject_strobe <= regs_write_pulse_arr(3);
     cnt_snap_pulse <= regs_write_pulse_arr(19);
+    tmr_cnt_reset <= regs_write_pulse_arr(39);
 
     -- Connect write done signals
 
@@ -756,7 +759,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ttc_tmr_err,
         count_o   => ttc_tmr_err_cnt
     );
@@ -768,7 +771,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_switch_tmr_err,
         count_o   => ipb_switch_tmr_err_cnt
     );
@@ -780,7 +783,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
         count_o   => ipb_slave_tmr_err_cnt
     );

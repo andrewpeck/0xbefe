@@ -10,7 +10,7 @@ package registers is
     -- Implements various control and monitoring functions of the Optohybrid
     --============================================================================
 
-    constant REG_CONTROL_NUM_REGS : integer := 39;
+    constant REG_CONTROL_NUM_REGS : integer := 40;
     constant REG_CONTROL_ADDRESS_MSB : integer := 5;
     constant REG_CONTROL_ADDRESS_LSB : integer := 0;
     constant REG_CONTROL_LOOPBACK_DATA_ADDR    : std_logic_vector(5 downto 0) := "00" & x"0";
@@ -242,6 +242,10 @@ package registers is
     constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB    : integer := 15;
     constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
 
+    constant REG_CONTROL_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(5 downto 0) := "11" & x"3";
+    constant REG_CONTROL_TMR_TMR_CNT_RESET_MSB    : integer := 31;
+    constant REG_CONTROL_TMR_TMR_CNT_RESET_LSB     : integer := 0;
+
 
     --============================================================================
     --       >>> ADC Module <<<    base address: 0x00001000
@@ -305,7 +309,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 101;
+    constant REG_TRIG_NUM_REGS : integer := 102;
     constant REG_TRIG_ADDRESS_MSB : integer := 7;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"00";
@@ -1297,6 +1301,10 @@ package registers is
     constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB    : integer := 31;
     constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB     : integer := 16;
 
+    constant REG_TRIG_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(7 downto 0) := x"f2";
+    constant REG_TRIG_TMR_TMR_CNT_RESET_MSB    : integer := 31;
+    constant REG_TRIG_TMR_TMR_CNT_RESET_LSB     : integer := 0;
+
 
     --============================================================================
     --       >>> GBT Module <<<    base address: 0x00004000
@@ -1305,7 +1313,7 @@ package registers is
     -- GBTx to FPGA link
     --============================================================================
 
-    constant REG_GBT_NUM_REGS : integer := 8;
+    constant REG_GBT_NUM_REGS : integer := 9;
     constant REG_GBT_ADDRESS_MSB : integer := 4;
     constant REG_GBT_ADDRESS_LSB : integer := 0;
     constant REG_GBT_TX_CNT_RESPONSE_SENT_ADDR    : std_logic_vector(4 downto 0) := '0' & x"0";
@@ -1352,6 +1360,10 @@ package registers is
     constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"1";
     constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB    : integer := 15;
     constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
+
+    constant REG_GBT_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(4 downto 0) := '1' & x"2";
+    constant REG_GBT_TMR_TMR_CNT_RESET_MSB    : integer := 31;
+    constant REG_GBT_TMR_TMR_CNT_RESET_LSB     : integer := 0;
 
 
     --============================================================================

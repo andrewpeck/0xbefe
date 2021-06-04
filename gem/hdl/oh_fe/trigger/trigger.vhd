@@ -134,6 +134,7 @@ architecture Behavioral of trigger is
   signal cnt_reset         : std_logic;
   signal cnt_reset_strobed : std_logic;
 
+  signal tmr_cnt_reset : std_logic;
   signal cluster_tmr_err : std_logic;
   signal trig_alignment_tmr_err : std_logic;
   signal ipb_slave_tmr_err : std_logic;
@@ -476,6 +477,7 @@ begin
     regs_addresses(98)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"e9";
     regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f0";
     regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f1";
+    regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f2";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -836,6 +838,7 @@ begin
     reset_counters <= regs_write_pulse_arr(28);
     reset_monitor <= regs_write_pulse_arr(62);
     hitmap_reset <= regs_write_pulse_arr(72);
+    tmr_cnt_reset <= regs_write_pulse_arr(101);
 
     -- Connect write done signals
 
@@ -1187,7 +1190,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset_i or tmr_cnt_reset,
         en_i      => cluster_tmr_err,
         count_o   => cluster_tmr_err_cnt
     );
@@ -1199,7 +1202,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset_i or tmr_cnt_reset,
         en_i      => trig_alignment_tmr_err,
         count_o   => trig_alignment_tmr_err_cnt
     );
@@ -1211,7 +1214,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset_i or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
         count_o   => ipb_slave_tmr_err_cnt
     );
@@ -1223,7 +1226,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset_i or tmr_cnt_reset,
         en_i      => trig_formatter_tmr_err,
         count_o   => trig_formatter_tmr_err_cnt
     );

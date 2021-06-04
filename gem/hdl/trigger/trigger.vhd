@@ -58,7 +58,7 @@ architecture trigger_arch of trigger is
             probe1 : IN STD_LOGIC_VECTOR(11 DOWNTO 0)
         );
     END COMPONENT;    
-    
+
     signal reset_global         : std_logic;
     signal reset_local          : std_logic;
     signal reset                : std_logic;

@@ -83,6 +83,7 @@ architecture Behavioral of gbt is
   signal resync_gbt : std_logic;
 
   signal reset, cnt_reset : std_logic;
+  signal tmr_cnt_reset : std_logic;
 
   attribute MAX_FANOUT          : string;
   attribute MAX_FANOUT of reset : signal is "50";
@@ -248,6 +249,7 @@ begin
     regs_addresses(5)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"7";
     regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"0";
     regs_addresses(7)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"1";
+    regs_addresses(8)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"2";
 
     -- Connect read signals
     regs_read_arr(0)(REG_GBT_TX_CNT_RESPONSE_SENT_MSB downto REG_GBT_TX_CNT_RESPONSE_SENT_LSB) <= cnt_ipb_response;
@@ -266,6 +268,7 @@ begin
     l1a_force <= regs_write_pulse_arr(3);
     bc0_force <= regs_write_pulse_arr(4);
     resync_force <= regs_write_pulse_arr(5);
+    tmr_cnt_reset <= regs_write_pulse_arr(8);
 
     -- Connect write done signals
 
@@ -318,7 +321,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_link_tmr_err,
         count_o   => gbt_link_tmr_err_cnt
     );
@@ -330,7 +333,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_serdes_tmr_err,
         count_o   => gbt_serdes_tmr_err_cnt
     );
@@ -342,7 +345,7 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
         count_o   => ipb_slave_tmr_err_cnt
     );
