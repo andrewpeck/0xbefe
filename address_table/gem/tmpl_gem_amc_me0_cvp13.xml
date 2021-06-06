@@ -7,10 +7,12 @@
 <!ENTITY NUM_OPTICAL_LINKS "16">
 <!ENTITY ADDRESS_TABLE_TTC SYSTEM "../common/ttc.xml">
 <!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
+<!ENTITY ADDRESS_TABLE_TRIGGER_ME0 SYSTEM "trigger_ME0.xml">
 <!ENTITY ADDRESS_TABLE_LINKS SYSTEM "../boards/links_generic.xml">
 ]>
 <node id="GEM_AMC" xmlns:xi="http://www.w3.org/2001/XInclude">
   &ADDRESS_TABLE_TTC;
   &ADDRESS_TABLE_GEM_AMC;
+  &ADDRESS_TABLE_TRIGGER_ME0;
   &ADDRESS_TABLE_LINKS;
 </node>
