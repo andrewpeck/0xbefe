@@ -56,6 +56,12 @@
                   mask="0xff"
                   fw_signal="sem_inject_address(39 downto 32)"
                   fw_default="0x0"/>
+            <node id="CNT_SEM_INJECTIONS" address="0x4" permission="r"
+                  mask="0xffff0000"
+                  description="Counts of completed injected sem errors"
+                  fw_cnt_en_signal="sem_injection_o"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_injection"/>
         </node> <!--SEM-->
 
         <node id="VFAT" address="0x8" description = "Controls the 12 VFAT reset outputs from the FPGA">

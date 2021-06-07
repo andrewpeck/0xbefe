@@ -171,13 +171,15 @@ architecture Behavioral of control is
 
   signal uptime : unsigned (19 downto 0);
 
-  --== SEM ==--
+  -- SEM
 
-  signal sem_correction : std_logic;
-  signal sem_critical   : std_logic;
-  signal sem_inject_strobe    : std_logic;
-  signal sem_inject_address   : std_logic_vector(39 downto 0);
-  --== Sbits ==--
+  signal sem_correction     : std_logic;
+  signal sem_critical       : std_logic;
+  signal sem_inject_strobe  : std_logic;
+  signal sem_injection_o    : std_logic;
+  signal sem_inject_address : std_logic_vector(39 downto 0);
+
+  -- Sbits
 
   signal sbit_sel0 : std_logic_vector(4 downto 0);
   signal sbit_sel1 : std_logic_vector(4 downto 0);
@@ -264,6 +266,7 @@ architecture Behavioral of control is
     -- Connect counter signal declarations
     signal cnt_sem_critical : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_sem_correction : std_logic_vector (15 downto 0) := (others => '0');
+    signal cnt_sem_injection : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_bx0_lcl : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_bx0_rxd : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_l1a : std_logic_vector (23 downto 0) := (others => '0');
@@ -498,7 +501,7 @@ begin
       inject_strobe    => sem_inject_strobe,
       inject_address   => sem_inject_address,
       classification_o => open,
-      injection_o      => open,
+      injection_o      => sem_injection_o,
       essential_o      => open,
       uncorrectable_o  => sem_critical
       );
@@ -575,6 +578,7 @@ begin
     regs_addresses(37)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"1";
     regs_addresses(38)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"2";
     regs_addresses(39)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"3";
+    regs_addresses(40)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"4";
 
     -- Connect read signals
     regs_read_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= loopback;
@@ -582,6 +586,7 @@ begin
     regs_read_arr(2)(REG_CONTROL_SEM_CNT_SEM_CORRECTION_MSB downto REG_CONTROL_SEM_CNT_SEM_CORRECTION_LSB) <= cnt_sem_correction;
     regs_read_arr(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB) <= sem_inject_address(31 downto 0);
     regs_read_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= sem_inject_address(39 downto 32);
+    regs_read_arr(5)(REG_CONTROL_SEM_CNT_SEM_INJECTIONS_MSB downto REG_CONTROL_SEM_CNT_SEM_INJECTIONS_LSB) <= cnt_sem_injection;
     regs_read_arr(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
     regs_read_arr(7)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
     regs_read_arr(8)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;
@@ -657,6 +662,7 @@ begin
     sem_inject_strobe <= regs_write_pulse_arr(3);
     cnt_snap_pulse <= regs_write_pulse_arr(19);
     tmr_cnt_reset <= regs_write_pulse_arr(39);
+    tmr_err_inj <= regs_write_pulse_arr(40);
 
     -- Connect write done signals
 
@@ -687,6 +693,19 @@ begin
         en_i      => sem_correction,
         snap_i    => cnt_snap,
         count_o   => cnt_sem_correction
+    );
+
+
+    COUNTER_CONTROL_SEM_CNT_SEM_INJECTIONS : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset,
+        en_i      => sem_injection_o,
+        snap_i    => cnt_snap,
+        count_o   => cnt_sem_injection
     );
 
 

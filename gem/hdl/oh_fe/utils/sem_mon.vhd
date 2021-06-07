@@ -206,15 +206,54 @@ begin
 
   sem_gen_a7 : if (FPGA_TYPE = "A7") generate
 
+    signal status_initialization, status_observation, status_correction,
+      status_classification, status_injection : std_logic := '0';
+
+    signal idle : std_logic;
+
+    signal inj_requested, inj : std_logic;
+
+  begin
+
+
+    -- The error injection control is used to indicate an error injection
+    -- request. The inject_strobe signal should be pulsed high for one cycle,
+    -- synchronous to icap_clk, concurrent with the application of a valid
+    -- address to the inject_address input. The error injection control must
+    -- only be used when the controller is idle
+
+    idle <= not (status_initialization or status_observation or
+                 status_correction or status_classification or status_injection);
+
+    initialization_o <= status_initialization;
+    observation_o    <= status_observation;
+    correction_o     <= status_correction;
+    classification_o <= status_classification;
+    injection_o      <= status_injection;
+
+    inj <= '1' when inj_requested = '1' and idle = '1' else '0';
+
+    process (clk_i) is
+    begin
+      if (rising_edge(clk_i)) then
+        if (inject_strobe = '1') then
+          inj_requested <= '1';
+        elsif (inj = '1') then
+          inj_requested <= '0';
+        end if;
+      end if;
+    end process;
+
+
     sem_a7_inst : sem_a7
 
       port map (
         status_heartbeat      => heartbeat_o,
-        status_initialization => initialization_o,
-        status_observation    => observation_o,
-        status_correction     => correction_o,
-        status_classification => classification_o,
-        status_injection      => injection_o,
+        status_initialization => status_initialization,
+        status_observation    => status_observation,
+        status_correction     => status_correction,
+        status_classification => status_classification,
+        status_injection      => status_injection,
         status_essential      => essential_o,
         status_uncorrectable  => uncorrectable_o,
         monitor_txdata        => open,
@@ -223,7 +262,7 @@ begin
         monitor_rxdata        => (others => '0'),
         monitor_rxread        => open,
         monitor_rxempty       => '1',
-        inject_strobe         => inject_strobe,
+        inject_strobe         => inj,
         inject_address        => inject_address,
         icap_o                => icap_o,
         icap_csib             => icap_csb,

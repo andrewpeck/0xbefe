@@ -480,6 +480,7 @@ begin
     regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f0";
     regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f1";
     regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f2";
+    regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= x"f3";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -841,6 +842,7 @@ begin
     reset_monitor <= regs_write_pulse_arr(62);
     hitmap_reset <= regs_write_pulse_arr(72);
     tmr_cnt_reset <= regs_write_pulse_arr(101);
+    tmr_err_inj <= regs_write_pulse_arr(102);
 
     -- Connect write done signals
 
