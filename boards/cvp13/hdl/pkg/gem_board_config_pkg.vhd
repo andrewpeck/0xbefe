@@ -69,56 +69,49 @@ package board_config_package is
     --========================--
 
     -- defines the GT index for each type of OH link
+    type t_link_arr is array(integer range <>) of integer range 0 to CFG_BOARD_MAX_LINKS;
+    
     type t_oh_link_config is record
-        gbt0_link       : integer range 0 to CFG_BOARD_MAX_LINKS; -- main GBT link on OH v2b
-        gbt1_link       : integer range 0 to CFG_BOARD_MAX_LINKS; -- with OH v2b this is just for test, this will be needed with OH v3
-        gbt2_link       : integer range 0 to CFG_BOARD_MAX_LINKS; -- with OH v2b this is just for test, this will be needed with OH v3
-        trig0_rx_link   : integer range 0 to CFG_BOARD_MAX_LINKS; -- trigger RX link for clusters 0, 1, 2, 3
-        trig1_rx_link   : integer range 0 to CFG_BOARD_MAX_LINKS; -- trigger RX link for clusters 4, 5, 6, 7
+        gbt_links       : t_link_arr(0 to 7); -- GBT links
+        trig_rx_links   : t_link_arr(0 to 1); -- GE1/1 trigger RX links
     end record t_oh_link_config;
     
     type t_oh_link_config_arr is array (0 to 7) of t_oh_link_config;
 
+    constant LINK_NULL : integer := CFG_BOARD_MAX_LINKS;
+    
     constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (
-        (0, 1, 2, 8, 9), 
-        (4, 5, 6, 12, 13),
+        ((0, 1, 2, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (8, 9)), 
+        ((4, 5, 6, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (12, 13)),
         
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
          
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS) 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
-        (0, 1, CFG_BOARD_MAX_LINKS, 2, 3), 
-        (4, 5, CFG_BOARD_MAX_LINKS, 6, 7),
+        ((0, 1, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (2, 3)), 
+        ((4, 5, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (6, 7)),
         
-        (8, 9, CFG_BOARD_MAX_LINKS, 10, 11), 
-        (12, 13, CFG_BOARD_MAX_LINKS, 14, 15),
+        ((8, 9, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (10, 11)), 
+        ((12, 13, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (14, 15)),
         
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
          
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS) 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
-        (0, 1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (2, 3, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
+        ((0, 1, 2, 3, 4, 5, 6, 7), (LINK_NULL, LINK_NULL)), 
         
-        (4, 5, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (6, 7, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
-        
-        (8, 9, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (10, 11, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
-         
-        (12, 13, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (14, 15, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)) 
     );
 
     function get_oh_link_config_arr(gem_station: integer; ge11_config, ge21_config, me0_config : t_oh_link_config_arr) return t_oh_link_config_arr;
@@ -126,7 +119,7 @@ package board_config_package is
 
     type t_trig_tx_link_config_arr is array (0 to CFG_NUM_TRIG_TX - 1) of integer range 0 to CFG_BOARD_MAX_LINKS;
     
-    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS);
+    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL);
     
     --================================--
     -- Fiber to MGT mapping
@@ -170,7 +163,7 @@ package board_config_package is
         (14, 14), -- fiber 2
         (15, 15), -- fiber 3
         --=== DUMMY channel - use for unconnected channels ===--
-        (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)  -- dummy fiber
+        (LINK_NULL, LINK_NULL)  -- dummy fiber
     );
     
     --================================--
