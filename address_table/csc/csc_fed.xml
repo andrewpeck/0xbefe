@@ -1,5 +1,5 @@
     <!-- System module -->
-    <node id="SYSTEM"  address="0x00100000"
+    <node id="SYSTEM"  address="0x00900000"
           description="This module is controlling CSC FED system wide settings"
           fw_is_module="true"
           fw_module_file="../csc/hdl/system/system_regs.vhd"
@@ -32,7 +32,7 @@
 
         <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
               description="Board ID that gets embedded in the AMC13 header"
-              fw_signal="board_id" fw_default="0x347"/>
+              fw_signal="board_id" fw_default="0xcece"/>
 
         <node id="RELEASE" address="0x3">
           <node id="MAJOR" address="0x0" mask="0xff000000" permission="r"
