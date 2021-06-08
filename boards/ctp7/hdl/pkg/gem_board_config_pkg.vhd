@@ -79,63 +79,64 @@ package board_config_package is
     --========================--
 
     -- defines the GT index for each type of OH link
+    type t_link_arr is array(integer range <>) of integer range 0 to CFG_BOARD_MAX_LINKS;
+
     type t_oh_link_config is record
-        gbt0_link       : integer range 0 to 79; -- main GBT link on OH v2b
-        gbt1_link       : integer range 0 to 79; -- with OH v2b this is just for test, this will be needed with OH v3
-        gbt2_link       : integer range 0 to 79; -- with OH v2b this is just for test, this will be needed with OH v3
-        trig0_rx_link   : integer range 0 to 79; -- trigger RX link for clusters 0, 1, 2, 3
-        trig1_rx_link   : integer range 0 to 79; -- trigger RX link for clusters 4, 5, 6, 7
+        gbt_links       : t_link_arr(0 to 7); -- GBT links
+        trig_rx_links   : t_link_arr(0 to 1); -- GE1/1 trigger RX links
     end record t_oh_link_config;
     
     type t_oh_link_config_arr is array (0 to 11) of t_oh_link_config;
 
+    constant LINK_NULL : integer := CFG_BOARD_MAX_LINKS;
+
     constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (
-        (0, 1, 2, 40, 41), 
-        (3, 4, 5, 42, 43),
-        (6, 7, 8, 44, 45), 
-        (9, 10, 11, 46, 47),
+        ((0, 1, 2, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (40, 41)), 
+        ((3, 4, 5, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (42, 43)),
+        ((6, 7, 8, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (44, 45)), 
+        ((9, 10, 11, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (46, 47)),
 
-        (12, 13, 14, 48, 49), 
-        (15, 16, 17, 50, 51), 
-        (18, 19, 20, 52, 53), 
-        (21, 22, 23, 54, 55), 
+        ((12, 13, 14, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (48, 49)), 
+        ((15, 16, 17, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (50, 51)), 
+        ((18, 19, 20, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (52, 53)), 
+        ((21, 22, 23, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (54, 55)), 
 
-        (24, 25, 26, 56, 57), 
-        (27, 28, 29, 58, 59), 
-        (30, 31, 32, 68, 69), 
-        (33, 34, 35, 70, 71) 
+        ((24, 25, 26, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (56, 57)), 
+        ((27, 28, 29, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (58, 59)), 
+        ((30, 31, 32, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (68, 69)), 
+        ((33, 34, 35, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (70, 71)) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
-        (0, 1, CFG_BOARD_MAX_LINKS, 40, 41), 
-        (2, 3, CFG_BOARD_MAX_LINKS, 42, 43),
-        (4, 5, CFG_BOARD_MAX_LINKS, 44, 45), 
-        (6, 7, CFG_BOARD_MAX_LINKS, 46, 47),
-        (8, 9, CFG_BOARD_MAX_LINKS, 48, 49), 
-        (10, 11, CFG_BOARD_MAX_LINKS, 50, 51),
+        ((0,  1,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (40, 41)), 
+        ((2,  3,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (42, 43)),
+        ((4,  5,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (44, 45)), 
+        ((6,  7,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (46, 47)),
+        ((8,  9,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (48, 49)), 
+        ((10, 11, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (50, 51)),
          
-        (12, 13, CFG_BOARD_MAX_LINKS, 52, 53), 
-        (14, 15, CFG_BOARD_MAX_LINKS, 54, 55), 
-        (16, 17, CFG_BOARD_MAX_LINKS, 56, 57), 
-        (18, 19, CFG_BOARD_MAX_LINKS, 58, 59), 
-        (20, 21, CFG_BOARD_MAX_LINKS, 68, 69), 
-        (22, 23, CFG_BOARD_MAX_LINKS, 70, 71) 
+        ((12, 13, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (52, 53)), 
+        ((14, 15, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (54, 55)), 
+        ((16, 17, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (56, 57)), 
+        ((18, 19, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (58, 59)), 
+        ((20, 21, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (68, 69)), 
+        ((22, 23, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (70, 71)) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
-        (0, 1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (2, 3, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
-        (4, 5, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (6, 7, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
-        (8, 9, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (10, 11, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS),
-         
-        (12, 13, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (14, 15, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (16, 17, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (18, 19, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (20, 21, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS), 
-        (22, 23, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS) 
+        ((0,  1,  2,  3,  4,  5,  6,  7), (LINK_NULL, LINK_NULL)),
+        ((12, 13, 14, 15, 16, 17, 18, 19), (LINK_NULL, LINK_NULL)),
+        ((24, 25, 26, 27, 28, 29, 30, 31), (LINK_NULL, LINK_NULL)),
+        
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
     );
 
     function get_oh_link_config_arr(gem_station: integer; ge11_config, ge21_config, me0_config : t_oh_link_config_arr) return t_oh_link_config_arr;
