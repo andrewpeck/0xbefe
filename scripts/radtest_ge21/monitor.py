@@ -7,6 +7,7 @@ import struct
 import time
 
 OH_NUM = 0
+OH_MASK = 1
 OUT_DIR = "./data/"
 READ_WAIT_SEC = 1.0
 
@@ -18,6 +19,7 @@ def main():
 
     out_file_name = OUT_DIR + "/" + time.strftime("%Y%m%d-%H%M%S") + ".csv"
     out_file = open(out_file_name, "w")
+    out_file.write("FPGA_temperature\tSEM_critical_err_count\tSEM_single_bit_err_cnt\tADC_1.0V\tADC_1.0V_AVCC\tADC_1.2V_AVTT\tADC_1.8V\tADC_1.5V\tADC_2.5V\tADC_RSSI1\tADC_RSSI2\n")
 
     parseXML()
 
@@ -36,9 +38,10 @@ def main():
         print("SEM double bit (critical) error count: %d" % sem_crit)
 
         # read the SCA ADCs
-        sleep(0.001)
+        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
+        sleep(0.01)
         sendScaCommand([OH_NUM], 0x14, 0x60, 0x4, 0x00e00300, False) # setup current sources
-        sleep(0.0011)
+        sleep(0.01)
         adc_1v0 = readScaAdc(OH_NUM, 0) * 0.004
         adc_1v0avcc = readScaAdc(OH_NUM, 1) * 0.004
         adc_1v2avtt = readScaAdc(OH_NUM, 2) * 0.004
@@ -81,7 +84,7 @@ def readScaAdc(oh, channel):
     if (res > 0xfff):
         return -1.0
     res_mv = ((1.0 / 0xfff) * float(res)) * 1000
-    sleep(0.001)
+    sleep(0.01)
     return res_mv
 
 def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
