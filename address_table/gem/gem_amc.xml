@@ -194,73 +194,73 @@
           fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(0)"/>
     <node id="VFAT1_HDLC_ADDRESS" address="0x2" mask="0x000000f0" permission="rw"
           description="HDLC address for VFAT1: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(1)"/>
+          fw_signal="vfat_hdlc_address_arr(1)" fw_default="VFAT3_HDLC_ADDRESSES(1)"/>
     <node id="VFAT2_HDLC_ADDRESS" address="0x2" mask="0x00000f00" permission="rw"
           description="HDLC address for VFAT2: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(2)"/>
+          fw_signal="vfat_hdlc_address_arr(2)" fw_default="VFAT3_HDLC_ADDRESSES(2)"/>
     <node id="VFAT3_HDLC_ADDRESS" address="0x2" mask="0x0000f000" permission="rw"
           description="HDLC address for VFAT3: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(3)"/>
+          fw_signal="vfat_hdlc_address_arr(3)" fw_default="VFAT3_HDLC_ADDRESSES(3)"/>
     <node id="VFAT4_HDLC_ADDRESS" address="0x2" mask="0x000f0000" permission="rw"
           description="HDLC address for VFAT4: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(4)"/>
+          fw_signal="vfat_hdlc_address_arr(4)" fw_default="VFAT3_HDLC_ADDRESSES(4)"/>
     <node id="VFAT5_HDLC_ADDRESS" address="0x2" mask="0x00f00000" permission="rw"
           description="HDLC address for VFAT5: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(5)"/>
+          fw_signal="vfat_hdlc_address_arr(5)" fw_default="VFAT3_HDLC_ADDRESSES(5)"/>
     <node id="VFAT6_HDLC_ADDRESS" address="0x2" mask="0x0f000000" permission="rw"
           description="HDLC address for VFAT6: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(6)"/>
+          fw_signal="vfat_hdlc_address_arr(6)" fw_default="VFAT3_HDLC_ADDRESSES(6)"/>
     <node id="VFAT7_HDLC_ADDRESS" address="0x2" mask="0xf0000000" permission="rw"
           description="HDLC address for VFAT7: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(7)"/>
+          fw_signal="vfat_hdlc_address_arr(7)" fw_default="VFAT3_HDLC_ADDRESSES(7)"/>
     <node id="VFAT8_HDLC_ADDRESS" address="0x3" mask="0x0000000f" permission="rw"
           description="HDLC address for VFAT8: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(8)"/>
+          fw_signal="vfat_hdlc_address_arr(8)" fw_default="VFAT3_HDLC_ADDRESSES(8)"/>
     <node id="VFAT9_HDLC_ADDRESS" address="0x3" mask="0x000000f0" permission="rw"
           description="HDLC address for VFAT9: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(9)"/>
+          fw_signal="vfat_hdlc_address_arr(9)" fw_default="VFAT3_HDLC_ADDRESSES(9)"/>
     <node id="VFAT10_HDLC_ADDRESS" address="0x3" mask="0x00000f00" permission="rw"
           description="HDLC address for VFAT10: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(10)"/>
+          fw_signal="vfat_hdlc_address_arr(10)" fw_default="VFAT3_HDLC_ADDRESSES(10)"/>
     <node id="VFAT11_HDLC_ADDRESS" address="0x3" mask="0x0000f000" permission="rw"
           description="HDLC address for VFAT11: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(11)"/>
+          fw_signal="vfat_hdlc_address_arr(11)" fw_default="VFAT3_HDLC_ADDRESSES(11)"/>
     <node id="VFAT12_HDLC_ADDRESS" address="0x3" mask="0x000f0000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT12: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(12)"/>
+          fw_signal="vfat_hdlc_address_arr(12)" fw_default="VFAT3_HDLC_ADDRESSES(12)"/>
     <node id="VFAT13_HDLC_ADDRESS" address="0x3" mask="0x00f00000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT13: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(13)"/>
+          fw_signal="vfat_hdlc_address_arr(13)" fw_default="VFAT3_HDLC_ADDRESSES(13)"/>
     <node id="VFAT14_HDLC_ADDRESS" address="0x3" mask="0x0f000000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT14: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(14)"/>
+          fw_signal="vfat_hdlc_address_arr(14)" fw_default="VFAT3_HDLC_ADDRESSES(14)"/>
     <node id="VFAT15_HDLC_ADDRESS" address="0x3" mask="0xf0000000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT15: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(15)"/>
+          fw_signal="vfat_hdlc_address_arr(15)" fw_default="VFAT3_HDLC_ADDRESSES(15)"/>
     <node id="VFAT16_HDLC_ADDRESS" address="0x4" mask="0x0000000f" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT16: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(16)"/>
+          fw_signal="vfat_hdlc_address_arr(16)" fw_default="VFAT3_HDLC_ADDRESSES(16)"/>
     <node id="VFAT17_HDLC_ADDRESS" address="0x4" mask="0x000000f0" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT17: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(17)"/>
+          fw_signal="vfat_hdlc_address_arr(17)" fw_default="VFAT3_HDLC_ADDRESSES(17)"/>
     <node id="VFAT18_HDLC_ADDRESS" address="0x4" mask="0x00000f00" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT18: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(18)"/>
+          fw_signal="vfat_hdlc_address_arr(18)" fw_default="VFAT3_HDLC_ADDRESSES(18)"/>
     <node id="VFAT19_HDLC_ADDRESS" address="0x4" mask="0x0000f000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT19: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(19)"/>
+          fw_signal="vfat_hdlc_address_arr(19)" fw_default="VFAT3_HDLC_ADDRESSES(19)"/>
     <node id="VFAT20_HDLC_ADDRESS" address="0x4" mask="0x000f0000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT20: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(20)"/>
+          fw_signal="vfat_hdlc_address_arr(20)" fw_default="VFAT3_HDLC_ADDRESSES(20)"/>
     <node id="VFAT21_HDLC_ADDRESS" address="0x4" mask="0x00f00000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT21: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(21)"/>
+          fw_signal="vfat_hdlc_address_arr(21)" fw_default="VFAT3_HDLC_ADDRESSES(21)"/>
     <node id="VFAT22_HDLC_ADDRESS" address="0x4" mask="0x0f000000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT22: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(22)"/>
+          fw_signal="vfat_hdlc_address_arr(22)" fw_default="VFAT3_HDLC_ADDRESSES(22)"/>
     <node id="VFAT23_HDLC_ADDRESS" address="0x4" mask="0xf0000000" permission="rw" ignore="&STATION;==2"
           description="HDLC address for VFAT23: use 0 when using GE1/1 VFAT3 hybrids, otherwise depends on the GEB addressing resistors (firmware default should work for production GEBs)"
-          fw_signal="vfat_hdlc_address_arr(0)" fw_default="VFAT3_HDLC_ADDRESSES(23)"/>
+          fw_signal="vfat_hdlc_address_arr(23)" fw_default="VFAT3_HDLC_ADDRESSES(23)"/>
   </node>
 
   <node id="TESTS" address="0x200">
