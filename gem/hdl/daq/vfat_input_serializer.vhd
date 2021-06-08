@@ -40,6 +40,8 @@ end vfat_input_serializer;
 
 architecture vfat_input_serializer_arch of vfat_input_serializer is
 
+    signal reset_rd_clk     : std_logic;
+
     signal buffer_empty_arr : std_logic_vector(23 downto 0);
     signal buffer_ovf_arr   : std_logic_vector(23 downto 0);
     signal buffer_unf_arr   : std_logic_vector(23 downto 0);
@@ -61,6 +63,8 @@ begin
     
     overflow_o <= or_reduce(buffer_ovf_arr);
     underflow_o <= or_reduce(buffer_unf_arr);
+
+    i_sync_reset_rd_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => rd_clk_i, sync_o => reset_rd_clk);
     
     --======== VFAT buffers ========--
     
@@ -85,7 +89,7 @@ begin
     process(rd_clk_i)
     begin
         if (rising_edge(rd_clk_i)) then
-            if (reset_i = '1') then
+            if (reset_rd_clk = '1') then
                 vfat_idx <= 0;
                 buffer_rd_en_arr <= (others => '0');
             else

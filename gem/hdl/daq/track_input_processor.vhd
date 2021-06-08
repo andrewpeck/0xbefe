@@ -66,6 +66,11 @@ architecture Behavioral of track_input_processor is
     constant vfat3_header_i         : std_logic_vector(7 downto 0) := x"1E";
     constant vfat3_header_iw        : std_logic_vector(7 downto 0) := x"5E";
 
+    -- Reset
+    signal reset_proc_clk           : std_logic;
+    signal reset_rd_clk             : std_logic;
+    signal reset_data_clk           : std_logic;
+
     -- TTS
     signal tts_state                : std_logic_vector(3 downto 0) := "1000";
     signal tts_critical_error       : std_logic := '0'; -- critical error detected - RESYNC/RESET NEEDED
@@ -196,6 +201,10 @@ architecture Behavioral of track_input_processor is
 
 begin
 
+    i_sync_reset_proc_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => data_processor_clk_i, sync_o => reset_proc_clk);
+    i_sync_reset_rd_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => fifo_rd_clk_i, sync_o => reset_rd_clk);
+    i_sync_reset_data_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => data_clk_i, sync_o => reset_data_clk);
+
     --================================--
     -- TTS
     --================================--
@@ -231,7 +240,7 @@ begin
     )
     port map(
         ref_clk_i => data_processor_clk_i,
-        reset_i   => reset_i,
+        reset_i   => reset_proc_clk,
         en_i      => err_infifo_near_full,
         count_o   => status_o.infifo_near_full_cnt
     );
@@ -243,7 +252,7 @@ begin
     )
     port map(
         ref_clk_i => data_processor_clk_i,
-        reset_i   => reset_i,
+        reset_i   => reset_proc_clk,
         en_i      => err_evtfifo_near_full,
         count_o   => status_o.evtfifo_near_full_cnt
     );
@@ -260,7 +269,7 @@ begin
             g_FILLER_BIT            => '1'
         )
         port map(
-            reset_i          => reset_i,
+            reset_i          => reset_proc_clk,
             clk_i            => data_processor_clk_i,
             input_data_i     => inconcat_din,
             input_bytes_i    => inconcat_bytes,
@@ -294,7 +303,7 @@ begin
         )
         port map(
             sleep         => '0',
-            rst           => reset_i,
+            rst           => reset_proc_clk,
             wr_clk        => data_processor_clk_i,
             wr_en         => infifo_wr_en,
             din           => infifo_din,
@@ -353,7 +362,7 @@ begin
         )
         port map(
             sleep         => '0',
-            rst           => reset_i,
+            rst           => reset_proc_clk,
             wr_clk        => data_processor_clk_i,
             wr_en         => evtfifo_wr_en,
             din           => evtfifo_din,
@@ -395,7 +404,7 @@ begin
     process(fifo_rd_clk_i)
     begin
         if (rising_edge(fifo_rd_clk_i)) then
-            if (reset_i = '1') then
+            if (reset_rd_clk = '1') then
                 err_infifo_underflow <= '0';
                 err_evtfifo_underflow <= '0';
             else
@@ -417,7 +426,7 @@ begin
     )
     port map(
         clk_i   => data_processor_clk_i,
-        reset_i => reset_i,
+        reset_i => reset_proc_clk,
         en_i    => infifo_wr_en,
         rate_o  => status_o.infifo_wr_rate
     );
@@ -430,7 +439,7 @@ begin
     )
     port map(
         clk_i   => data_processor_clk_i,
-        reset_i => reset_i,
+        reset_i => reset_proc_clk,
         en_i    => evtfifo_wr_en,
         rate_o  => status_o.evtfifo_wr_rate
     );
@@ -465,7 +474,7 @@ begin
     begin
         if (rising_edge(data_processor_clk_i)) then
 
-            if (reset_i = '1') then
+            if (reset_proc_clk = '1') then
                 ep_last_rx_data <= (others => '0');
                 ep_last_rx_data_valid <= '0';
                 err_infifo_full <= '0';
@@ -491,7 +500,7 @@ begin
                     ep_first_ever_block <= '1';
                 end if;
                 
-                if ((ep_vfat_block_en = '1') and (reset_i = '0')) then
+                if ((ep_vfat_block_en = '1') and (reset_proc_clk = '0')) then
                 
                     -- monitor the input FIFO
                     if (infifo_full = '1') then
@@ -553,7 +562,7 @@ begin
     begin
         if (rising_edge(data_processor_clk_i)) then
         
-            if (reset_i = '1') then
+            if (reset_proc_clk = '1') then
                 evtfifo_din <= (others => '0');
                 evtfifo_wr_en <= '0';
                 eb_invalid_vfat_block <= '0';
