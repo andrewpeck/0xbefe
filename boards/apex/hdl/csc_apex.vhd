@@ -225,7 +225,8 @@ begin
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
-            C_DEBUG => true
+            g_DEBUG => true,
+            g_IPB_CLK_ASYNC => false
         )
         port map(
             axi_aclk_i     => axil_clk,
@@ -233,7 +234,7 @@ begin
             axil_m2s_i     => axil_m2s,
             axil_s2m_o     => axil_s2m,
             ipb_reset_o    => ipb_reset,
-            ipb_clk_o      => ipb_clk,
+            ipb_clk_i      => ipb_clk,
             ipb_sys_miso_i => ipb_sys_miso_arr,
             ipb_sys_mosi_o => ipb_sys_mosi_arr,
             ipb_usr_miso_i => ipb_usr_miso_arr,
@@ -241,6 +242,8 @@ begin
             read_active_o  => open,
             write_active_o => open
         );
+
+    ipb_clk <= axil_clk;
 
     --================================--
     -- Wiring

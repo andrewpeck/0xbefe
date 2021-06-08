@@ -188,6 +188,7 @@ begin
     
     reset <= not reset_b_i;
     i2c_master_en_b_o <= '0';
+    ipb_clk <= clk100;
     
     --================================--
     -- Clocks
@@ -246,9 +247,10 @@ begin
             pcie_link_up_o      => pcie_link_up,
             
             status_leds_o       => leds_o,
+            led_i               => ttc_clks.clk_160,
 
             ipb_reset_o         => ipb_reset,
-            ipb_clk_o           => ipb_clk,
+            ipb_clk_i           => ipb_clk,
             ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
             ipb_usr_mosi_arr_o  => ipb_usr_mosi_arr,
             ipb_sys_miso_arr_i  => ipb_sys_miso_arr,

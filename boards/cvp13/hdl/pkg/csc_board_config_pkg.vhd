@@ -18,10 +18,6 @@ use work.project_config.all;
 --============================================================================
 package board_config_package is
 
-    function get_num_gbts_per_oh(gem_station : integer) return integer;
-    function get_num_vfats_per_oh(gem_station : integer) return integer;
-    function get_gbt_widebus(gem_station, oh_version : integer) return integer;
-    
     ------------ Board specific constants ------------
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"2"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1
     constant CFG_BOARD_MAX_LINKS    : integer := 16;

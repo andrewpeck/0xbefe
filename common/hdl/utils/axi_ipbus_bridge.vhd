@@ -3,14 +3,18 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date:    20:10:11 2016-04-20
--- Module Name:    AXI_IPBUS_BRIDGE 
+-- Module Name:    AXI_IPBUS_BRIDGE
 -- Description:    This module is acting as an AXI4-lite slave and translates the read and write requests to an IPBus protocol effectively 
---                 acting as IPbus master which can drive multiple IPbus slaves. It only adds 2 clocks of latency. 
+--                 acting as IPbus master which can drive multiple IPbus slaves. It only adds 2 clocks of latency.
+--                 g_IPB_CLK_ASYNC param should be set to true if ipb_clk_i is not the same as axi_aclk_i (this will add a few clocks more latency)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
+library xpm;
+use xpm.vcomponents.all;
 
 use work.axi_pkg.all;
 use work.ipbus.all;
@@ -19,7 +23,8 @@ use work.ipb_sys_addr_decode.all;
 
 entity axi_ipbus_bridge is
     generic (
-        C_DEBUG : boolean := false
+        g_DEBUG         : boolean := false;
+        g_IPB_CLK_ASYNC : boolean := false
     );
     port (
         -- AXI4-Lite interface
@@ -29,12 +34,12 @@ entity axi_ipbus_bridge is
         axil_s2m_o              : out t_axi_lite_s2m;
         -- Wishbone / IPbus clock and reset (common to both system and user buses)
         ipb_reset_o             : out std_logic;
-        ipb_clk_o               : out std_logic;        
+        ipb_clk_i               : in  std_logic;        
         -- Wishbone / IPbus SYSTEM interface
-        ipb_sys_miso_i          : in ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+        ipb_sys_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
         ipb_sys_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);  
         -- Wishbone / IPbus USER interface
-        ipb_usr_miso_i          : in ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+        ipb_usr_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
         ipb_usr_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);  
         -- Activity signals, can be used e.g. for LEDs to indicate slow control activity on the board
         read_active_o           : out std_logic;
@@ -90,26 +95,22 @@ architecture arch_imp of axi_ipbus_bridge is
     type t_axi_ipb_state is (IDLE, WRITE, READ, WAIT_FOR_WRITE_ACK, WAIT_FOR_READ_ACK, AXI_READ_HANDSHAKE, AXI_WRITE_HANDSHAKE);
     
     constant ipb_timeout        : unsigned(23 downto 0) := x"000bb8"; --x"0000f5"; -- 254 clocks to ~match the 255 cycle limit on the Zynq fw --x"027100"; -- 3000 clock cycles = ~60us
-    signal ipb_clk              : std_logic;
     signal ipb_reset            : std_logic;
     signal ipb_state            : t_axi_ipb_state;
     signal ipb_sys_transact     : std_logic;
     signal ipb_timer            : unsigned(23 downto 0) := (others => '0');
     signal ipb_usr_mosi         : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_miso         : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
     signal ipb_usr_slv_select   : integer range 0 to C_NUM_IPB_SLAVES := 0;
     signal ipb_sys_mosi         : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+    signal ipb_sys_miso         : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_slv_select   : integer range 0 to C_NUM_IPB_SYS_SLAVES := 0;
 
 begin
     -- I/O Connections assignments
-    ipb_clk       <= axi_aclk_i;
-    ipb_clk_o <= ipb_clk;
     
-    i_reset_sync : entity work.synch generic map(N_STAGES => 3, IS_RESET => True) port map(async_i => not axi_aresetn_i, clk_i => ipb_clk, sync_o => ipb_reset);
+    i_reset_sync : entity work.synch generic map(N_STAGES => 3, IS_RESET => True) port map(async_i => not axi_aresetn_i, clk_i => ipb_clk_i, sync_o => ipb_reset);
     ipb_reset_o <= ipb_reset;
-
-    ipb_usr_mosi_o <= ipb_usr_mosi;
-    ipb_sys_mosi_o <= ipb_sys_mosi;
     
     axil_s2m_o <= axil_s2m;
     axil_m2s <= axil_m2s_i;
@@ -195,25 +196,25 @@ begin
                     when WAIT_FOR_READ_ACK =>
 
                         -- got ack from system bus
-                        if (ipb_sys_transact = '1' and ipb_sys_miso_i(ipb_sys_slv_select).ipb_ack = '1') then
+                        if (ipb_sys_transact = '1' and ipb_sys_miso(ipb_sys_slv_select).ipb_ack = '1') then
                             ipb_sys_mosi(ipb_sys_slv_select) <= IPB_M2S_NULL;
                             ipb_state <= AXI_READ_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            if (ipb_sys_miso_i(ipb_sys_slv_select).ipb_err = '0') then
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso_i(ipb_sys_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
+                            if (ipb_sys_miso(ipb_sys_slv_select).ipb_err = '0') then
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso_i(ipb_sys_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
                             end if;
 
                         -- got ack from user bus
-                        elsif (ipb_sys_transact = '0' and ipb_usr_miso_i(ipb_usr_slv_select).ipb_ack = '1') then
+                        elsif (ipb_sys_transact = '0' and ipb_usr_miso(ipb_usr_slv_select).ipb_ack = '1') then
                             ipb_usr_mosi(ipb_usr_slv_select) <= IPB_M2S_NULL;
                             ipb_state <= AXI_READ_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            if (ipb_usr_miso_i(ipb_usr_slv_select).ipb_err = '0') then
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso_i(ipb_usr_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
+                            if (ipb_usr_miso(ipb_usr_slv_select).ipb_err = '0') then
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso_i(ipb_usr_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
                             end if;
     
                         -- IPbus timed out
@@ -266,22 +267,22 @@ begin
                     when WAIT_FOR_WRITE_ACK =>
 
                         -- got ack from system bus
-                        if (ipb_sys_transact = '1' and ipb_sys_miso_i(ipb_sys_slv_select).ipb_ack = '1') then
+                        if (ipb_sys_transact = '1' and ipb_sys_miso(ipb_sys_slv_select).ipb_ack = '1') then
                             ipb_sys_mosi(ipb_sys_slv_select) <= IPB_M2S_NULL;
                             ipb_state <= AXI_WRITE_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            if (ipb_sys_miso_i(ipb_sys_slv_select).ipb_err = '0') then
+                            if (ipb_sys_miso(ipb_sys_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
                             end if;
     
                         -- got ack from user bus
-                        elsif (ipb_sys_transact = '0' and ipb_usr_miso_i(ipb_usr_slv_select).ipb_ack = '1') then
+                        elsif (ipb_sys_transact = '0' and ipb_usr_miso(ipb_usr_slv_select).ipb_ack = '1') then
                             ipb_usr_mosi(ipb_usr_slv_select) <= IPB_M2S_NULL;
                             ipb_state <= AXI_WRITE_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            if (ipb_usr_miso_i(ipb_usr_slv_select).ipb_err = '0') then
+                            if (ipb_usr_miso(ipb_usr_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
@@ -322,9 +323,112 @@ begin
         end if;
     end process;
 
-      -- ================================= DEBUG ====================================
+    -- ================================= Domain crossing between axiclk and ipbclk ====================================
     
-    g_debug : if C_DEBUG generate
+    -- CDC is not used
+    gen_ipbclk_sync : if not g_IPB_CLK_ASYNC generate
+        ipb_usr_mosi_o <= ipb_usr_mosi;
+        ipb_sys_mosi_o <= ipb_sys_mosi;
+        ipb_usr_miso <= ipb_usr_miso_i;
+        ipb_sys_miso <= ipb_sys_miso_i;
+    end generate;
+
+    -- CDC is used
+    gen_ipbclk_async : if g_IPB_CLK_ASYNC generate
+        
+        -- user bus
+        gen_usr_bus : for i in 0 to C_NUM_IPB_SLAVES - 1 generate
+
+            i_cdc_usr_mosi : xpm_cdc_handshake
+                generic map(
+                    DEST_EXT_HSK   => 1,
+                    DEST_SYNC_FF   => 4,
+                    SRC_SYNC_FF    => 4,
+                    WIDTH          => 65
+                )
+                port map(
+                    src_clk  => axi_aclk_i,
+                    src_in   => ipb_usr_mosi(i).ipb_write & ipb_usr_mosi(i).ipb_addr & ipb_usr_mosi(i).ipb_wdata,
+                    src_send => ipb_usr_mosi(i).ipb_strobe,
+                    src_rcv  => open,
+                    dest_clk => ipb_clk_i,
+                    dest_req => ipb_usr_mosi_o(i).ipb_strobe,
+                    dest_ack => ipb_usr_miso_i(i).ipb_ack,
+                    dest_out(64) => ipb_usr_mosi_o(i).ipb_write,
+                    dest_out(63 downto 32) => ipb_usr_mosi_o(i).ipb_addr,
+                    dest_out(31 downto 0) => ipb_usr_mosi_o(i).ipb_wdata
+                );
+            
+            i_cdc_usr_miso : xpm_cdc_handshake
+                generic map(
+                    DEST_EXT_HSK   => 0,
+                    DEST_SYNC_FF   => 4,
+                    SRC_SYNC_FF    => 4,
+                    WIDTH          => 33
+                )
+                port map(
+                    src_clk  => ipb_clk_i,
+                    src_in   => ipb_usr_miso_i(i).ipb_err & ipb_usr_miso_i(i).ipb_rdata,
+                    src_send => ipb_usr_miso_i(i).ipb_ack,
+                    src_rcv  => open,
+                    dest_clk => axi_aclk_i,
+                    dest_req => ipb_usr_miso(i).ipb_ack,
+                    dest_ack => '0',
+                    dest_out(32) => ipb_usr_miso(i).ipb_err,
+                    dest_out(31 downto 0) => ipb_usr_miso(i).ipb_rdata
+                );
+            
+        end generate;
+
+        -- system bus
+        gen_sys_bus : for i in 0 to C_NUM_IPB_SYS_SLAVES - 1 generate
+
+            i_cdc_sys_mosi : xpm_cdc_handshake
+                generic map(
+                    DEST_EXT_HSK   => 1,
+                    DEST_SYNC_FF   => 4,
+                    SRC_SYNC_FF    => 4,
+                    WIDTH          => 65
+                )
+                port map(
+                    src_clk  => axi_aclk_i,
+                    src_in   => ipb_sys_mosi(i).ipb_write & ipb_sys_mosi(i).ipb_addr & ipb_sys_mosi(i).ipb_wdata,
+                    src_send => ipb_sys_mosi(i).ipb_strobe,
+                    src_rcv  => open,
+                    dest_clk => ipb_clk_i,
+                    dest_req => ipb_sys_mosi_o(i).ipb_strobe,
+                    dest_ack => ipb_sys_miso_i(i).ipb_ack,
+                    dest_out(64) => ipb_sys_mosi_o(i).ipb_write,
+                    dest_out(63 downto 32) => ipb_sys_mosi_o(i).ipb_addr,
+                    dest_out(31 downto 0) => ipb_sys_mosi_o(i).ipb_wdata
+                );
+            
+            i_cdc_sys_miso : xpm_cdc_handshake
+                generic map(
+                    DEST_EXT_HSK   => 0,
+                    DEST_SYNC_FF   => 4,
+                    SRC_SYNC_FF    => 4,
+                    WIDTH          => 33
+                )
+                port map(
+                    src_clk  => ipb_clk_i,
+                    src_in   => ipb_sys_miso_i(i).ipb_err & ipb_sys_miso_i(i).ipb_rdata,
+                    src_send => ipb_sys_miso_i(i).ipb_ack,
+                    src_rcv  => open,
+                    dest_clk => axi_aclk_i,
+                    dest_req => ipb_sys_miso(i).ipb_ack,
+                    dest_ack => '0',
+                    dest_out(32) => ipb_sys_miso(i).ipb_err,
+                    dest_out(31 downto 0) => ipb_sys_miso(i).ipb_rdata
+                );
+            
+        end generate;
+        
+    end generate;
+
+    -- ================================= DEBUG ====================================
+    
+    gen_debug : if g_DEBUG generate
     
         ila_axi_ipbus_bridge_inst : ila_axi_ipbus_bridge
             port map(
@@ -355,9 +459,9 @@ begin
                 probe23 => ipb_usr_mosi(C_IPB_SLV.system).ipb_wdata,
                 probe24 => ipb_usr_mosi(C_IPB_SLV.system).ipb_strobe,
                 probe25 => ipb_usr_mosi(C_IPB_SLV.system).ipb_write,
-                probe26 => ipb_usr_miso_i(C_IPB_SLV.system).ipb_rdata,
-                probe27 => ipb_usr_miso_i(C_IPB_SLV.system).ipb_ack,
-                probe28 => ipb_usr_miso_i(C_IPB_SLV.system).ipb_err,
+                probe26 => ipb_usr_miso(C_IPB_SLV.system).ipb_rdata,
+                probe27 => ipb_usr_miso(C_IPB_SLV.system).ipb_ack,
+                probe28 => ipb_usr_miso(C_IPB_SLV.system).ipb_err,
                 probe29 => std_logic_vector(to_unsigned(ipb_usr_slv_select, 8))
             );
     end generate;
