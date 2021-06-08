@@ -229,7 +229,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat_mask_arr                : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
     
     signal use_v3b_elink_mapping        : std_logic;
-    signal use_vfat_addressing          : std_logic;
+    signal vfat_hdlc_address_arr        : t_std4_array(23 downto 0);
 
     -- test module links
     signal test_gbt_wide_rx_data_arr    : t_gbt_wide_frame_array((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
@@ -344,20 +344,20 @@ begin
             g_NUM_OF_OHs => g_NUM_OF_OHs
         )
         port map(
-            reset_i          => reset or link_reset,
-            ttc_clk_i        => ttc_clocks_i,
-            ipb_clk_i        => ipb_clk_i,
-            ipb_mosi_i       => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
-            ipb_miso_o       => ipb_miso_arr(C_IPB_SLV.vfat3),
-            tx_data_o        => vfat3_sc_tx_data,
-            tx_rd_en_i       => vfat3_sc_tx_rd_en,
-            tx_empty_o       => vfat3_sc_tx_empty,
-            tx_oh_idx_o      => vfat3_sc_tx_oh_idx,
-            tx_vfat_idx_o    => vfat3_sc_tx_vfat_idx,
-            rx_data_en_i     => vfat3_sc_rx_data_en,
-            rx_data_i        => vfat3_sc_rx_data,
-            status_o         => vfat3_sc_status,
-            use_addressing_i => use_vfat_addressing
+            reset_i                 => reset or link_reset,
+            ttc_clk_i               => ttc_clocks_i,
+            ipb_clk_i               => ipb_clk_i,
+            ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
+            ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.vfat3),
+            tx_data_o               => vfat3_sc_tx_data,
+            tx_rd_en_i              => vfat3_sc_tx_rd_en,
+            tx_empty_o              => vfat3_sc_tx_empty,
+            tx_oh_idx_o             => vfat3_sc_tx_oh_idx,
+            tx_vfat_idx_o           => vfat3_sc_tx_vfat_idx,
+            rx_data_en_i            => vfat3_sc_rx_data_en,
+            rx_data_i               => vfat3_sc_rx_data,
+            status_o                => vfat3_sc_status,
+            vfat_hdlc_address_arr_i => vfat_hdlc_address_arr
         );
 
     --================================--
@@ -564,7 +564,7 @@ begin
             loopback_gbt_test_en_o      => loopback_gbt_test_en,
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
-            use_vfat_addressing_o       => use_vfat_addressing,
+            vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,

@@ -46,7 +46,7 @@ port(
 
     loopback_gbt_test_en_o      : out std_logic;
     use_v3b_elink_mapping_o     : out std_logic;
-    use_vfat_addressing_o       : out std_logic;
+    vfat_hdlc_address_arr_o     : out t_std4_array(23 downto 0);
 
     vfat3_sc_only_mode_o        : out std_logic;
     manual_link_reset_o         : out std_logic;
@@ -73,7 +73,7 @@ architecture gem_system_regs_arch of gem_system_regs is
     signal vfat3_sc_only_mode       : std_logic;
     
     signal use_v3b_elink_mapping    : std_logic;
-    signal use_vfat_addressing      : std_logic;
+    signal vfat_hdlc_address_arr    : t_std4_array(23 downto 0);
 
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
@@ -108,7 +108,7 @@ begin
     --=== VFAT conf === --
     vfat3_sc_only_mode_o <= vfat3_sc_only_mode;
     use_v3b_elink_mapping_o <= use_v3b_elink_mapping;
-    use_vfat_addressing_o <= use_vfat_addressing;
+    vfat_hdlc_address_arr_o <= vfat_hdlc_address_arr;
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;

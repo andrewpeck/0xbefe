@@ -263,7 +263,7 @@ package body board_config_package is
     function get_num_gbts_per_oh(gem_station : integer) return integer is
     begin
         if gem_station = 0 then
-            return 2;
+            return 8;
         elsif gem_station = 1 then
             return 3;
         elsif gem_station = 2 then
@@ -276,7 +276,7 @@ package body board_config_package is
     function get_num_vfats_per_oh(gem_station : integer) return integer is
     begin
         if gem_station = 0 then
-            return 6;
+            return 24;
         elsif gem_station = 1 then
             return 24;
         elsif gem_station = 2 then

@@ -37,18 +37,6 @@ entity vfat3_tx_stream is
 end vfat3_tx_stream;
 
 architecture vfat3_tx_stream_arch of vfat3_tx_stream is
-
-    constant SYNC_WORD          : std_logic_vector(7 downto 0) := x"17";
-    constant SYNC_VERIFY_WORD   : std_logic_vector(7 downto 0) := x"e8";
-    constant RESYNC_WORD        : std_logic_vector(7 downto 0) := x"55";
-    constant L1A_WORD           : std_logic_vector(7 downto 0) := x"69";
-    constant L1A_EC0_WORD       : std_logic_vector(7 downto 0) := x"aa";
-    constant L1A_BC0_WORD       : std_logic_vector(7 downto 0) := x"c3";
-    constant EC0_WORD           : std_logic_vector(7 downto 0) := x"0f";
-    constant BC0_WORD           : std_logic_vector(7 downto 0) := x"33";
-    constant CALPULSE_WORD      : std_logic_vector(7 downto 0) := x"3c";
-    constant NORMAL_MODE_WORD   : std_logic_vector(7 downto 0) := x"66";
-    constant SC_ONLY_WORD       : std_logic_vector(7 downto 0) := x"5a";
     
     constant SYNC_VERIFY_TIMEOUT: unsigned(11 downto 0) := unsigned(C_TTC_NUM_BXs);
     constant BEFORE_SYNC_TIMEOUT: unsigned(11 downto 0) := x"fff";
@@ -87,7 +75,7 @@ begin
                         state <= SYNC;
                     end if;
                 elsif (state = SYNC) then
-                    data_o <= SYNC_WORD;
+                    data_o <= VFAT3_SYNC_WORD;
                     idle_o <= '0';
                     sync_o <= '1';
                     sync_verify_o <= '0';
@@ -98,10 +86,10 @@ begin
                     end if;
                 elsif (state = SET_COMMPORT_MODE) then
                     if (sc_only_mode_i = '0') then
-                        data_o <= NORMAL_MODE_WORD;
+                        data_o <= VFAT3_NORMAL_MODE_WORD;
                         current_sc_only_mode <= '0';
                     else
-                        data_o <= SC_ONLY_WORD;
+                        data_o <= VFAT3_SC_ONLY_WORD;
                         current_sc_only_mode <= '1';
                     end if;
                     state <= RUNNING;
@@ -116,27 +104,27 @@ begin
                         before_sync_countdown <= BEFORE_SYNC_TIMEOUT;
                         state <= WAIT_BEFORE_SYNC;
                     elsif (ttc_cmds_i.resync = '1') then
-                        data_o <= RESYNC_WORD;
+                        data_o <= VFAT3_RESYNC_WORD;
                     elsif (ttc_cmds_i.l1a = '1' and ttc_cmds_i.ec0 = '1') then
-                        data_o <= L1A_EC0_WORD;
+                        data_o <= VFAT3_L1A_EC0_WORD;
                     elsif (ttc_cmds_i.l1a = '1' and ttc_cmds_i.bc0 = '1') then
-                        data_o <= L1A_BC0_WORD;
+                        data_o <= VFAT3_L1A_BC0_WORD;
                     elsif (ttc_cmds_i.l1a = '1') then
-                        data_o <= L1A_WORD;
+                        data_o <= VFAT3_L1A_WORD;
                     elsif (ttc_cmds_i.ec0 = '1') then
-                        data_o <= EC0_WORD;
+                        data_o <= VFAT3_EC0_WORD;
                     elsif (ttc_cmds_i.bc0 = '1') then
-                        data_o <= BC0_WORD;
+                        data_o <= VFAT3_BC0_WORD;
                     elsif (ttc_cmds_i.calpulse = '1') then
-                        data_o <= CALPULSE_WORD;
+                        data_o <= VFAT3_CALPULSE_WORD;
                     elsif (current_sc_only_mode = '1' and sc_only_mode_i = '0') then
-                        data_o <= NORMAL_MODE_WORD;
+                        data_o <= VFAT3_NORMAL_MODE_WORD;
                         current_sc_only_mode <= '0';
                     elsif (current_sc_only_mode = '0' and sc_only_mode_i = '1') then
-                        data_o <= SC_ONLY_WORD;
+                        data_o <= VFAT3_SC_ONLY_WORD;
                         current_sc_only_mode <= '1';
                     elsif (sync_verify_countdown = x"000") then
-                        data_o <= SYNC_VERIFY_WORD;
+                        data_o <= VFAT3_SYNC_VERIFY_WORD;
                         sync_verify_countdown <= SYNC_VERIFY_TIMEOUT;
                         sync_verify_o <= '1';
                     else

@@ -10,16 +10,37 @@ package gem_pkg is
     --======================--
     --== Config Constants ==--
     --======================-- 
-    
+        
     -- DAQ
     constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"0";
 
     --=============--
     --==  VFAT3  ==--
     --=============--
+
+    constant VFAT3_SC0_WORD         : std_logic_vector(7 downto 0) := x"96";
+    constant VFAT3_SC1_WORD         : std_logic_vector(7 downto 0) := x"99";
+    constant VFAT3_SYNC_WORD        : std_logic_vector(7 downto 0) := x"17";
+    constant VFAT3_SYNC_VERIFY_WORD : std_logic_vector(7 downto 0) := x"e8";
+    constant VFAT3_RESYNC_WORD      : std_logic_vector(7 downto 0) := x"55";
+    constant VFAT3_L1A_WORD         : std_logic_vector(7 downto 0) := x"69";
+    constant VFAT3_L1A_EC0_WORD     : std_logic_vector(7 downto 0) := x"aa";
+    constant VFAT3_L1A_BC0_WORD     : std_logic_vector(7 downto 0) := x"c3";
+    constant VFAT3_EC0_WORD         : std_logic_vector(7 downto 0) := x"0f";
+    constant VFAT3_BC0_WORD         : std_logic_vector(7 downto 0) := x"33";
+    constant VFAT3_CALPULSE_WORD    : std_logic_vector(7 downto 0) := x"3c";
+    constant VFAT3_NORMAL_MODE_WORD : std_logic_vector(7 downto 0) := x"66";
+    constant VFAT3_SC_ONLY_WORD     : std_logic_vector(7 downto 0) := x"5a";
     
     type t_vfat3_elinks_arr is array(integer range<>) of t_std8_array(23 downto 0);   
-    type t_vfat3_sbits_arr is array(integer range<>) of t_std64_array(5 downto 0);
+    type t_vfat3_sbits_arr is array(integer range<>) of t_std64_array(23 downto 0);
+    
+    constant VFAT3_HDLC_ADDRESSES_GE11 : t_std4_array(23 downto 0) := (x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");
+    constant VFAT3_HDLC_ADDRESSES_GE21 : t_std4_array(23 downto 0) := (x"0", x"1", x"2", x"3", x"4", x"5", x"6", x"7", x"8", x"9", x"a", x"b", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");
+    constant VFAT3_HDLC_ADDRESSES_ME0  : t_std4_array(23 downto 0) := (x"4", x"3", x"a", x"9", x"1", x"3", x"7", x"9", x"1", x"5", x"7", x"b", x"4", x"5", x"a", x"b", x"2", x"6", x"8", x"c", x"2", x"6", x"8", x"c");
+
+    function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
+    constant VFAT3_HDLC_ADDRESSES : t_std4_array(23 downto 0) := get_vfat_hdlc_addresses(CFG_GEM_STATION); 
 
     --========================--
     --== SBit cluster data  ==--
@@ -248,5 +269,18 @@ package body gem_pkg is
         end loop;
         return ret;
     end function;  
+        
+    function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array is
+    begin
+        if gem_station = 0 then
+            return VFAT3_HDLC_ADDRESSES_ME0;
+        elsif gem_station = 1 then
+            return VFAT3_HDLC_ADDRESSES_GE11;
+        elsif gem_station = 2 then
+            return VFAT3_HDLC_ADDRESSES_GE21;
+        else -- hmm whatever, lets say GE1/1
+            return VFAT3_HDLC_ADDRESSES_GE11;  
+        end if;
+    end function get_vfat_hdlc_addresses;
         
 end gem_pkg;
