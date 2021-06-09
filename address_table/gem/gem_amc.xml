@@ -820,11 +820,11 @@
             description="This counter counts the total number of times that VFAT3 didn't reply to sync_verify command correctly. This counter doesn't roll over, and is reset on link reset."
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_error_cnt"
             sw_monitor_error_value="0"/>
-      <node id="DAQ_EVENT_CNT" address="0x0" mask="0x0000ff00" permission="r"
+      <node id="DAQ_EVENT_CNT" address="0x0" mask="0x00ffff00" permission="r"
             description="This counter counts the number of DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_event_cnt"/>
-      <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0x00ff0000" permission="r"
-            description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
+      <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0xff000000" permission="r"
+            description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (this counter stops at max value)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
             sw_monitor_warn_value="100"/>
 

@@ -41,7 +41,7 @@ entity vfat3_rx_link is
         slow_ctrl_data_en_o : out std_logic;
 
         -- counters
-        cnt_events_o        : out std_logic_vector(7 downto 0);
+        cnt_events_o        : out std_logic_vector(15 downto 0);
         cnt_crc_errors_o    : out std_logic_vector(7 downto 0)
         
     );
@@ -89,7 +89,7 @@ architecture vfat3_rx_link_arch of vfat3_rx_link is
     signal crc_init             : std_logic := '1';
     signal crc_ok               : std_logic;
     
-    signal cnt_events           : unsigned(7 downto 0) := (others => '0');
+    signal cnt_events           : unsigned(15 downto 0) := (others => '0');
     signal cnt_crc_errors       : unsigned(7 downto 0) := (others => '0');
     
 begin
@@ -171,7 +171,7 @@ begin
                     cnt_events <= cnt_events + 1;
                 end if;
 
-                if (event_done = '1' and crc_ok = '0') then
+                if (event_done = '1' and crc_ok = '0' and cnt_crc_errors /= x"ff") then
                     cnt_crc_errors <= cnt_crc_errors + 1;
                 end if;                
             end if;

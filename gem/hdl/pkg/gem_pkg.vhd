@@ -177,7 +177,7 @@ package gem_pkg is
     type t_vfat_link_status is record
         sync_good               : std_logic;
         sync_error_cnt          : std_logic_vector(3 downto 0);
-        daq_event_cnt           : std_logic_vector(7 downto 0);
+        daq_event_cnt           : std_logic_vector(15 downto 0);
         daq_crc_err_cnt         : std_logic_vector(7 downto 0);
     end record;
     
