@@ -378,7 +378,7 @@ begin
         dbg_vfat3_daq_data_en       <= vfat3_daq_data_en(to_integer(unsigned(debug_vfat_select_i)));
         dbg_vfat3_daq_crc_err       <= vfat3_daq_crc_err(to_integer(unsigned(debug_vfat_select_i)));
         dbg_vfat3_daq_event_done    <= vfat3_daq_event_done(to_integer(unsigned(debug_vfat_select_i)));
-        dbg_vfat3_cnt_events        <= vfat3_daq_cnt_evt_arr(to_integer(unsigned(debug_vfat_select_i)));
+        dbg_vfat3_cnt_events        <= vfat3_daq_cnt_evt_arr(to_integer(unsigned(debug_vfat_select_i)))(7 downto 0);
         dbg_vfat3_cnt_crc_errors    <= vfat3_daq_cnt_crc_err_arr(to_integer(unsigned(debug_vfat_select_i)));
         
         i_vfat_ila : ila_vfat3
