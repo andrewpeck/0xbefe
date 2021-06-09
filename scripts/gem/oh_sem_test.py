@@ -5,10 +5,11 @@ OH_NUM = 0
 SLEEP = 1.0
 SLEEP_AFTER_SOFT_RESET = 16.5
 SLEEP_AFTER_HARD_RESET = 0.3
+SLEEP_AFTER_OBSERVATION_STATE = 0.06 # the time we give the SEM IP to find an error after entering observation state
 DO_SOFT_RESET = False
-DO_HARD_RESET = False
+DO_HARD_RESET = True
 TEST_SINGLE = False
-NUM_ADDRESSES_TO_TEST = 1000
+NUM_ADDRESSES_TO_TEST = 500
 
 def main():
 
@@ -46,8 +47,11 @@ def main():
         print("num corrections: %d, num critical errors: %d" % (corrCnt, critCnt))
         return
 
+    print("Running the test of injecting an error to %d addresses (this will take a few minutes)" % NUM_ADDRESSES_TO_TEST)
     corrCntPrev, critCntPrev = readSemCounters()
     for addr in range(NUM_ADDRESSES_TO_TEST):
+        if addr % 100 == 0:
+            print("Progress: injecting to address %d" % addr)
         injectSingle(0, False)
         corrCnt, critCnt = readSemCounters()
         if corrCnt - corrCntPrev != 1 or critCnt - critCntPrev != 0:
@@ -83,7 +87,7 @@ def injectSingle(addr, verbose=True):
     obs = 0
     while obs == 0:
         obs = parseInt(readReg(getNode("GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION")))
-    sleep(0.1)
+    sleep(SLEEP_AFTER_OBSERVATION_STATE)
 
 def readSemCounters():
     corrCnt = parseInt(readReg(getNode('GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.CNT_SEM_CORRECTION')))
