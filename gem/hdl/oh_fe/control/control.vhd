@@ -173,11 +173,21 @@ architecture Behavioral of control is
 
   -- SEM
 
+  signal sem_initialization : std_logic;
+  signal sem_classification : std_logic;
+  signal sem_observation    : std_logic;
   signal sem_correction     : std_logic;
-  signal sem_critical       : std_logic;
-  signal sem_inject_strobe  : std_logic;
-  signal sem_injection_o    : std_logic;
-  signal sem_inject_address : std_logic_vector(39 downto 0);
+  signal sem_uncorrectable  : std_logic;
+  signal sem_injection      : std_logic;
+  signal sem_essential      : std_logic;
+  signal sem_idle           : std_logic;
+
+  signal sem_inject_strobe       : std_logic;
+  signal sem_inject_address      : std_logic_vector(39 downto 0);
+  signal sem_critical_pulse      : std_logic;
+  signal sem_correction_pulse    : std_logic;
+  signal sem_uncorrectable_pulse : std_logic;
+  signal sem_essential_pulse     : std_logic;
 
   -- Sbits
 
@@ -264,7 +274,7 @@ architecture Behavioral of control is
     signal regs_write_done_arr  : std_logic_vector(REG_CONTROL_NUM_REGS - 1 downto 0) := (others => '1');
     signal regs_writable_arr    : std_logic_vector(REG_CONTROL_NUM_REGS - 1 downto 0) := (others => '0');
     -- Connect counter signal declarations
-    signal cnt_sem_critical : std_logic_vector (15 downto 0) := (others => '0');
+    signal cnt_sem_uncorrectable : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_sem_correction : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_sem_injection : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_bx0_lcl : std_logic_vector (23 downto 0) := (others => '0');
@@ -495,15 +505,22 @@ begin
     port map(
       clk_i            => clocks.clk40,
       heartbeat_o      => open,
-      initialization_o => open,
-      observation_o    => open,
-      correction_o     => sem_correction,
       inject_strobe    => sem_inject_strobe,
       inject_address   => sem_inject_address,
-      classification_o => open,
-      injection_o      => sem_injection_o,
-      essential_o      => open,
-      uncorrectable_o  => sem_critical
+
+      initialization_o => sem_initialization,
+      observation_o    => sem_observation,
+      correction_o     => sem_correction,
+      classification_o => sem_classification,
+      injection_o      => sem_injection,
+      idle_o           => sem_idle,
+
+      essential_o      => sem_essential,
+      uncorrectable_o  => sem_uncorrectable,
+
+      correction_pulse_o    => sem_correction_pulse,
+      uncorrectable_pulse_o => sem_uncorrectable_pulse,
+      essential_pulse_o     => sem_essential_pulse
       );
 
   --===============================================================================================
@@ -582,21 +599,29 @@ begin
 
     -- Connect read signals
     regs_read_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= loopback;
-    regs_read_arr(1)(REG_CONTROL_SEM_CNT_SEM_CRITICAL_MSB downto REG_CONTROL_SEM_CNT_SEM_CRITICAL_LSB) <= cnt_sem_critical;
+    regs_read_arr(1)(REG_CONTROL_SEM_CNT_SEM_CRITICAL_MSB downto REG_CONTROL_SEM_CNT_SEM_CRITICAL_LSB) <= cnt_sem_uncorrectable;
     regs_read_arr(2)(REG_CONTROL_SEM_CNT_SEM_CORRECTION_MSB downto REG_CONTROL_SEM_CNT_SEM_CORRECTION_LSB) <= cnt_sem_correction;
     regs_read_arr(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB) <= sem_inject_address(31 downto 0);
     regs_read_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= sem_inject_address(39 downto 32);
     regs_read_arr(5)(REG_CONTROL_SEM_CNT_SEM_INJECTIONS_MSB downto REG_CONTROL_SEM_CNT_SEM_INJECTIONS_LSB) <= cnt_sem_injection;
-    regs_read_arr(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
-    regs_read_arr(7)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
-    regs_read_arr(8)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;
-    regs_read_arr(9)(REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB) <= ttc_bxn_counter;
-    regs_read_arr(10)(REG_CONTROL_TTC_BXN_SYNC_ERR_BIT) <= ttc_bxn_sync_err;
-    regs_read_arr(11)(REG_CONTROL_TTC_BX0_SYNC_ERR_BIT) <= ttc_bx0_sync_err;
-    regs_read_arr(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= ttc_bxn_offset;
-    regs_read_arr(13)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
-    regs_read_arr(14)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;
-    regs_read_arr(15)(REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB) <= cnt_bx0_sync_err;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_INITIALIZATION_BIT) <= sem_initialization;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_OBSERVATION_BIT) <= sem_observation;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_CORRECTION_BIT) <= sem_correction;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_CLASSIFICATION_BIT) <= sem_classification;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_INJECTION_BIT) <= sem_injection;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_ESSENTIAL_BIT) <= sem_essential;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_UNCORRECTABLE_BIT) <= sem_uncorrectable;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_IDLE_BIT) <= sem_idle;
+    regs_read_arr(7)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
+    regs_read_arr(8)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
+    regs_read_arr(9)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;
+    regs_read_arr(10)(REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB) <= ttc_bxn_counter;
+    regs_read_arr(11)(REG_CONTROL_TTC_BXN_SYNC_ERR_BIT) <= ttc_bxn_sync_err;
+    regs_read_arr(12)(REG_CONTROL_TTC_BX0_SYNC_ERR_BIT) <= ttc_bx0_sync_err;
+    regs_read_arr(13)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= ttc_bxn_offset;
+    regs_read_arr(14)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
+    regs_read_arr(15)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;
+    regs_read_arr(16)(REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB) <= cnt_bx0_sync_err;
     regs_read_arr(16)(REG_CONTROL_SBITS_CLUSTER_RATE_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_LSB) <= cluster_rate;
     regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= sbit_sel0;
     regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= sbit_sel1;
@@ -638,8 +663,8 @@ begin
     loopback <= regs_write_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB);
     sem_inject_address(31 downto 0) <= regs_write_arr(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB);
     sem_inject_address(39 downto 32) <= regs_write_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB);
-    vfat_reset(11 downto 0) <= regs_write_arr(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB);
-    ttc_bxn_offset <= regs_write_arr(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB);
+    vfat_reset(11 downto 0) <= regs_write_arr(7)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB);
+    ttc_bxn_offset <= regs_write_arr(13)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB);
     sbit_sel0 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB);
     sbit_sel1 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB);
     sbit_sel2 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB);
@@ -677,9 +702,9 @@ begin
     port map (
         ref_clk_i => clocks.clk40,
         reset_i   => reset,
-        en_i      => sem_critical,
+        en_i      => sem_uncorrectable_pulse,
         snap_i    => cnt_snap,
-        count_o   => cnt_sem_critical
+        count_o   => cnt_sem_uncorrectable
     );
 
 
@@ -690,7 +715,7 @@ begin
     port map (
         ref_clk_i => clocks.clk40,
         reset_i   => reset,
-        en_i      => sem_correction,
+        en_i      => sem_correction_pulse,
         snap_i    => cnt_snap,
         count_o   => cnt_sem_correction
     );
@@ -703,7 +728,7 @@ begin
     port map (
         ref_clk_i => clocks.clk40,
         reset_i   => reset,
-        en_i      => sem_injection_o,
+        en_i      => sem_injection,
         snap_i    => cnt_snap,
         count_o   => cnt_sem_injection
     );
@@ -818,8 +843,8 @@ begin
     regs_defaults(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= REG_CONTROL_LOOPBACK_DATA_DEFAULT;
     regs_defaults(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB) <= REG_CONTROL_SEM_INJ_ADDR_LSBS_DEFAULT;
     regs_defaults(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= REG_CONTROL_SEM_INJ_ADDR_MSBS_DEFAULT;
-    regs_defaults(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= REG_CONTROL_VFAT_RESET_DEFAULT;
-    regs_defaults(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= REG_CONTROL_TTC_BXN_OFFSET_DEFAULT;
+    regs_defaults(7)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= REG_CONTROL_VFAT_RESET_DEFAULT;
+    regs_defaults(13)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= REG_CONTROL_TTC_BXN_OFFSET_DEFAULT;
     regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= REG_CONTROL_HDMI_SBIT_SEL0_DEFAULT;
     regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= REG_CONTROL_HDMI_SBIT_SEL1_DEFAULT;
     regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= REG_CONTROL_HDMI_SBIT_SEL2_DEFAULT;
@@ -842,8 +867,8 @@ begin
     regs_writable_arr(0) <= '1';
     regs_writable_arr(4) <= '1';
     regs_writable_arr(5) <= '1';
-    regs_writable_arr(6) <= '1';
-    regs_writable_arr(12) <= '1';
+    regs_writable_arr(7) <= '1';
+    regs_writable_arr(13) <= '1';
     regs_writable_arr(17) <= '1';
     regs_writable_arr(18) <= '1';
     regs_writable_arr(20) <= '1';

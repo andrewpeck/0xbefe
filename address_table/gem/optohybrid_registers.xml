@@ -32,14 +32,14 @@
         <node id="SEM" address="0x3" description = "Connects to Outputs of the FPGA's built-in single event upset monitoring system">
             <node id="CNT_SEM_CRITICAL" address="0x0" permission="r"
                   mask="0x0000ffff"
-                  description="Counts of critical single event upsets"
-                  fw_cnt_en_signal="sem_critical"
+                  description="Counts of uncorrectable single event upsets"
+                  fw_cnt_en_signal="sem_uncorrectable_pulse"
                   fw_cnt_snap_signal="cnt_snap"
-                  fw_signal="cnt_sem_critical"/>
+                  fw_signal="cnt_sem_uncorrectable"/>
             <node id="CNT_SEM_CORRECTION" address="0x1" permission="r"
                   mask="0xffff0000"
                   description="Counts of corrected single event upsets"
-                  fw_cnt_en_signal="sem_correction"
+                  fw_cnt_en_signal="sem_correction_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_correction"/>
             <node id="INJ_PULSE" address="0x2" permission="w"
@@ -59,12 +59,44 @@
             <node id="CNT_SEM_INJECTIONS" address="0x4" permission="r"
                   mask="0xffff0000"
                   description="Counts of completed injected sem errors"
-                  fw_cnt_en_signal="sem_injection_o"
+                  fw_cnt_en_signal="sem_injection"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_injection"/>
+            <node id="SEM_STATUS_INITIALIZATION" address="0x5" permission="r"
+                  mask="0x1"
+                  description=""
+                  fw_signal="sem_initialization"/>
+            <node id="SEM_STATUS_OBSERVATION" address="0x5" permission="r"
+                  mask="0x2"
+                  description=""
+                  fw_signal="sem_observation"/>
+            <node id="SEM_STATUS_CORRECTION" address="0x5" permission="r"
+                  mask="0x4"
+                  description=""
+                  fw_signal="sem_correction"/>
+            <node id="SEM_STATUS_CLASSIFICATION" address="0x5" permission="r"
+                  mask="0x8"
+                  description=""
+                  fw_signal="sem_classification"/>
+            <node id="SEM_STATUS_INJECTION" address="0x5" permission="r"
+                  mask="0x10"
+                  description=""
+                  fw_signal="sem_injection"/>
+            <node id="SEM_STATUS_ESSENTIAL" address="0x5" permission="r"
+                  mask="0x20"
+                  description=""
+                  fw_signal="sem_essential"/>
+            <node id="SEM_STATUS_UNCORRECTABLE" address="0x5" permission="r"
+                  mask="0x40"
+                  description=""
+                  fw_signal="sem_uncorrectable"/>
+            <node id="SEM_STATUS_IDLE" address="0x5" permission="r"
+                  mask="0x80"
+                  description=""
+                  fw_signal="sem_idle"/>
         </node> <!--SEM-->
 
-        <node id="VFAT" address="0x8" description = "Controls the 12 VFAT reset outputs from the FPGA">
+        <node id="VFAT" address="0x9" description = "Controls the 12 VFAT reset outputs from the FPGA">
             <node id="RESET" address="0x0" permission="rw"
                   mask="0x00000fff"
                   description="Mask of VFAT Reset Outputs; 1=reset 0=enable"
@@ -72,7 +104,7 @@
                   fw_default="0x0"/>
         </node> <!--VFAT-->
 
-        <node id="TTC" address="0x9" description = "TTC Status and Control">
+        <node id="TTC" address="0xA" description = "TTC Status and Control">
             <node id="BX0_CNT_LOCAL" address="0x0" permission="r"
                   mask="0x00ffffff"
                   description="TTC BX0 Local Counter"

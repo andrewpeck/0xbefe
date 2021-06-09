@@ -43,43 +43,67 @@ package registers is
     constant REG_CONTROL_SEM_CNT_SEM_INJECTIONS_MSB    : integer := 31;
     constant REG_CONTROL_SEM_CNT_SEM_INJECTIONS_LSB     : integer := 16;
 
-    constant REG_CONTROL_VFAT_RESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_INITIALIZATION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_INITIALIZATION_BIT    : integer := 0;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_OBSERVATION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_OBSERVATION_BIT    : integer := 1;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_CORRECTION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_CORRECTION_BIT    : integer := 2;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_CLASSIFICATION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_CLASSIFICATION_BIT    : integer := 3;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_INJECTION_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_INJECTION_BIT    : integer := 4;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_ESSENTIAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_ESSENTIAL_BIT    : integer := 5;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_UNCORRECTABLE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_UNCORRECTABLE_BIT    : integer := 6;
+
+    constant REG_CONTROL_SEM_SEM_STATUS_IDLE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_CONTROL_SEM_SEM_STATUS_IDLE_BIT    : integer := 7;
+
+    constant REG_CONTROL_VFAT_RESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
     constant REG_CONTROL_VFAT_RESET_MSB    : integer := 11;
     constant REG_CONTROL_VFAT_RESET_LSB     : integer := 0;
     constant REG_CONTROL_VFAT_RESET_DEFAULT : std_logic_vector(11 downto 0) := x"000";
 
-    constant REG_CONTROL_TTC_BX0_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
+    constant REG_CONTROL_TTC_BX0_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
     constant REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB    : integer := 23;
     constant REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BX0_CNT_TTC_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
+    constant REG_CONTROL_TTC_BX0_CNT_TTC_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
     constant REG_CONTROL_TTC_BX0_CNT_TTC_MSB    : integer := 23;
     constant REG_CONTROL_TTC_BX0_CNT_TTC_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_CONTROL_TTC_BXN_CNT_LOCAL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
     constant REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB    : integer := 11;
     constant REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
+    constant REG_CONTROL_TTC_BXN_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_BIT    : integer := 12;
 
-    constant REG_CONTROL_TTC_BX0_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
+    constant REG_CONTROL_TTC_BX0_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_BIT    : integer := 13;
 
-    constant REG_CONTROL_TTC_BXN_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
+    constant REG_CONTROL_TTC_BXN_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
     constant REG_CONTROL_TTC_BXN_OFFSET_MSB    : integer := 27;
     constant REG_CONTROL_TTC_BXN_OFFSET_LSB     : integer := 16;
     constant REG_CONTROL_TTC_BXN_OFFSET_DEFAULT : std_logic_vector(27 downto 16) := x"000";
 
-    constant REG_CONTROL_TTC_L1A_CNT_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
+    constant REG_CONTROL_TTC_L1A_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
     constant REG_CONTROL_TTC_L1A_CNT_MSB    : integer := 23;
     constant REG_CONTROL_TTC_L1A_CNT_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB    : integer := 15;
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
+    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"2";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB    : integer := 31;
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB     : integer := 16;
 
