@@ -112,7 +112,7 @@ architecture ttc_arch of ttc is
     signal gen_single_resync        : std_logic;
     signal gen_single_ec0           : std_logic;
     signal gen_cyclic_l1a_gap       : std_logic_vector(15 downto 0);
-    signal gen_cyclic_l1a_cnt       : std_logic_vector(23 downto 0);
+    signal gen_cyclic_l1a_cnt       : std_logic_vector(31 downto 0);
     signal gen_cyclic_cal_l1a_gap   : std_logic_vector(11 downto 0);
     signal gen_cyclic_cal_prescale  : std_logic_vector(11 downto 0);
     signal gen_cyclic_l1a_start     : std_logic;
