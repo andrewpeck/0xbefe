@@ -124,7 +124,7 @@ architecture optohybrid_arch of optohybrid is
     signal vfat3_daq_event_done     : std_logic_vector(23 downto 0);
     
     signal vfat3_daq_cnt_crc_err_arr: t_std8_array(23 downto 0);
-    signal vfat3_daq_cnt_evt_arr    : t_std8_array(23 downto 0);
+    signal vfat3_daq_cnt_evt_arr    : t_std16_array(23 downto 0);
     
     --== FPGA register access requests ==--
 
