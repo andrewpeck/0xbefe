@@ -18,7 +18,7 @@ ASIAGO_SLOT_SBIT_ELINK = [  [3, 13, 5, 1, 0, 2, 12, 4],
                             [15, 14, 12, 10, 11, 13, 19, 17],
                             [16, 18, 20, 22, 24, 26, 21, 23] ]
 
-ASIAGO_CONTROL_ELINK_TO_SLOTS = [ [1, 0], [3, 1], [4, 5], [-1, -1] ] # defines which local ASIAGO vfat slots each of the 4 control elinks is controlling (placeholder -1 is used for unconnected elink)
+ASIAGO_CONTROL_ELINK_TO_SLOTS = [ [2, 0], [3, 1], [4, 5], [-1, -1] ] # defines which local ASIAGO vfat slots each of the 4 control elinks is controlling (placeholder -1 is used for unconnected elink)
 
 def main():
 
@@ -106,7 +106,7 @@ def getVfatNumber(asiago, asiagoSlot):
             asiagoVfats.append(vfat)
     for vfat in asiagoVfats:
         if VFAT_ASIAGO_SLOT[vfat] == asiagoSlot:
-            return VFAT_ASIAGO_SLOT[vfat]
+            return vfat
 
 def getGbt(vfat):
     return VFAT_ASIAGO[vfat] * 2 + ASIAGO_SLOT_DAQ_GBT[VFAT_ASIAGO_SLOT[vfat]]

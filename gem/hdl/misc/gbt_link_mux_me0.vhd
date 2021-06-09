@@ -386,21 +386,21 @@ begin
         gbt_tx_data_arr(i * 8 + 6).tx_ec_data <= gbt_ic_tx_data_arr_i(i * 8 + 7)(0) & gbt_ic_tx_data_arr_i(i * 8 + 7)(1); -- GBT7 (slave); bits reversed
 
         -- VFAT control
-        gbt_tx_data_arr(i * 8 + 0).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(01) when vfat3_tx_data_arr_i(i)(01) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(01) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(00); -- GBT0 tx elink 00: VFAT1 & VFAT00
-        gbt_tx_data_arr(i * 8 + 0).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(03) when vfat3_tx_data_arr_i(i)(03) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(03) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(01); -- GBT0 tx elink 01: VFAT3 & VFAT01
-        gbt_tx_data_arr(i * 8 + 0).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(04) when vfat3_tx_data_arr_i(i)(04) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(04) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(05); -- GBT0 tx elink 02: VFAT4 & VFAT05
+        gbt_tx_data_arr(i * 8 + 0).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(09) when vfat3_tx_data_arr_i(i)(09) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(09) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(17); -- GBT0 tx elink 00: VFAT9 & VFAT17
+        gbt_tx_data_arr(i * 8 + 0).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(08) when vfat3_tx_data_arr_i(i)(08) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(08) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(16); -- GBT0 tx elink 01: VFAT8 & VFAT16
+        gbt_tx_data_arr(i * 8 + 0).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(01) when vfat3_tx_data_arr_i(i)(01) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(01) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(00); -- GBT0 tx elink 02: VFAT1 & VFAT00
         gbt_tx_data_arr(i * 8 + 0).tx_data(31 downto 24) <= (others => '0'); -- GBT0 tx elink 03 is not connected
-        gbt_tx_data_arr(i * 8 + 2).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(01) when vfat3_tx_data_arr_i(i)(01) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(01) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(00); -- GBT2 tx elink 00: VFAT1 & VFAT00
-        gbt_tx_data_arr(i * 8 + 2).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(03) when vfat3_tx_data_arr_i(i)(03) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(03) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(01); -- GBT2 tx elink 01: VFAT3 & VFAT01
-        gbt_tx_data_arr(i * 8 + 2).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(04) when vfat3_tx_data_arr_i(i)(04) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(04) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(05); -- GBT2 tx elink 02: VFAT4 & VFAT05
+        gbt_tx_data_arr(i * 8 + 2).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(11) when vfat3_tx_data_arr_i(i)(11) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(11) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(19); -- GBT2 tx elink 00: VFAT11 & VFAT19
+        gbt_tx_data_arr(i * 8 + 2).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(10) when vfat3_tx_data_arr_i(i)(10) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(10) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(18); -- GBT2 tx elink 01: VFAT10 & VFAT18
+        gbt_tx_data_arr(i * 8 + 2).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(03) when vfat3_tx_data_arr_i(i)(03) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(03) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(02); -- GBT2 tx elink 02: VFAT3 & VFAT02
         gbt_tx_data_arr(i * 8 + 2).tx_data(31 downto 24) <= (others => '0'); -- GBT2 tx elink 03 is not connected
-        gbt_tx_data_arr(i * 8 + 4).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(01) when vfat3_tx_data_arr_i(i)(01) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(01) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(00); -- GBT4 tx elink 00: VFAT1 & VFAT00
-        gbt_tx_data_arr(i * 8 + 4).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(03) when vfat3_tx_data_arr_i(i)(03) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(03) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(01); -- GBT4 tx elink 01: VFAT3 & VFAT01
-        gbt_tx_data_arr(i * 8 + 4).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(04) when vfat3_tx_data_arr_i(i)(04) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(04) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(05); -- GBT4 tx elink 02: VFAT4 & VFAT05
+        gbt_tx_data_arr(i * 8 + 4).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(13) when vfat3_tx_data_arr_i(i)(13) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(13) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(21); -- GBT4 tx elink 00: VFAT13 & VFAT21
+        gbt_tx_data_arr(i * 8 + 4).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(04) when vfat3_tx_data_arr_i(i)(04) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(04) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(20); -- GBT4 tx elink 01: VFAT4 & VFAT20
+        gbt_tx_data_arr(i * 8 + 4).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(05) when vfat3_tx_data_arr_i(i)(05) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(05) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(12); -- GBT4 tx elink 02: VFAT5 & VFAT12
         gbt_tx_data_arr(i * 8 + 4).tx_data(31 downto 24) <= (others => '0'); -- GBT4 tx elink 03 is not connected
-        gbt_tx_data_arr(i * 8 + 6).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(01) when vfat3_tx_data_arr_i(i)(01) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(01) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(00); -- GBT6 tx elink 00: VFAT1 & VFAT00
-        gbt_tx_data_arr(i * 8 + 6).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(03) when vfat3_tx_data_arr_i(i)(03) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(03) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(01); -- GBT6 tx elink 01: VFAT3 & VFAT01
-        gbt_tx_data_arr(i * 8 + 6).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(04) when vfat3_tx_data_arr_i(i)(04) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(04) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(05); -- GBT6 tx elink 02: VFAT4 & VFAT05
+        gbt_tx_data_arr(i * 8 + 6).tx_data(07 downto 00) <= vfat3_tx_data_arr_i(i)(15) when vfat3_tx_data_arr_i(i)(15) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(15) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(23); -- GBT6 tx elink 00: VFAT15 & VFAT23
+        gbt_tx_data_arr(i * 8 + 6).tx_data(15 downto 08) <= vfat3_tx_data_arr_i(i)(06) when vfat3_tx_data_arr_i(i)(06) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(06) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(22); -- GBT6 tx elink 01: VFAT6 & VFAT22
+        gbt_tx_data_arr(i * 8 + 6).tx_data(23 downto 16) <= vfat3_tx_data_arr_i(i)(07) when vfat3_tx_data_arr_i(i)(07) = VFAT3_SC0_WORD or vfat3_tx_data_arr_i(i)(07) = VFAT3_SC1_WORD else vfat3_tx_data_arr_i(i)(14); -- GBT6 tx elink 02: VFAT7 & VFAT14
         gbt_tx_data_arr(i * 8 + 6).tx_data(31 downto 24) <= (others => '0'); -- GBT6 tx elink 03 is not connected
 
         -- Repeat the same data on the second transmitter (unused)
@@ -410,5 +410,5 @@ begin
         gbt_tx_data_arr(i * 8 + 7) <= gbt_tx_data_arr(i * 8 + 6); -- GBT7
 
     end generate;
-
+    
 end gbt_link_mux_me0_arch;
