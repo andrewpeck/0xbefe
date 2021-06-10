@@ -271,12 +271,10 @@ package registers is
     constant REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
 
     constant REG_CONTROL_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(5 downto 0) := "11" & x"3";
-    constant REG_CONTROL_TMR_TMR_CNT_RESET_MSB    : integer := 31;
-    constant REG_CONTROL_TMR_TMR_CNT_RESET_LSB     : integer := 0;
+    constant REG_CONTROL_TMR_TMR_CNT_RESET_BIT    : integer := 0;
 
     constant REG_CONTROL_TMR_TMR_ERR_INJ_ADDR    : std_logic_vector(5 downto 0) := "11" & x"4";
-    constant REG_CONTROL_TMR_TMR_ERR_INJ_MSB    : integer := 31;
-    constant REG_CONTROL_TMR_TMR_ERR_INJ_LSB     : integer := 0;
+    constant REG_CONTROL_TMR_TMR_ERR_INJ_BIT    : integer := 0;
 
 
     --============================================================================
@@ -1170,8 +1168,7 @@ package registers is
     constant REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_DEFAULT : std_logic_vector(29 downto 25) := '0' & x"0";
 
     constant REG_TRIG_SBIT_MONITOR_RESET_ADDR    : std_logic_vector(7 downto 0) := x"90";
-    constant REG_TRIG_SBIT_MONITOR_RESET_MSB    : integer := 31;
-    constant REG_TRIG_SBIT_MONITOR_RESET_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_MONITOR_RESET_BIT    : integer := 0;
 
     constant REG_TRIG_SBIT_MONITOR_CLUSTER0_ADDR    : std_logic_vector(7 downto 0) := x"91";
     constant REG_TRIG_SBIT_MONITOR_CLUSTER0_MSB    : integer := 15;
@@ -1210,8 +1207,7 @@ package registers is
     constant REG_TRIG_SBIT_MONITOR_L1A_DELAY_LSB     : integer := 0;
 
     constant REG_TRIG_SBIT_HITMAP_RESET_ADDR    : std_logic_vector(7 downto 0) := x"b0";
-    constant REG_TRIG_SBIT_HITMAP_RESET_MSB    : integer := 31;
-    constant REG_TRIG_SBIT_HITMAP_RESET_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_HITMAP_RESET_BIT    : integer := 0;
 
     constant REG_TRIG_SBIT_HITMAP_ACQUIRE_ADDR    : std_logic_vector(7 downto 0) := x"b1";
     constant REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT    : integer := 0;
@@ -1334,12 +1330,10 @@ package registers is
     constant REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB     : integer := 16;
 
     constant REG_TRIG_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(7 downto 0) := x"f2";
-    constant REG_TRIG_TMR_TMR_CNT_RESET_MSB    : integer := 31;
-    constant REG_TRIG_TMR_TMR_CNT_RESET_LSB     : integer := 0;
+    constant REG_TRIG_TMR_TMR_CNT_RESET_BIT    : integer := 0;
 
     constant REG_TRIG_TMR_TMR_ERR_INJ_ADDR    : std_logic_vector(7 downto 0) := x"f3";
-    constant REG_TRIG_TMR_TMR_ERR_INJ_MSB    : integer := 31;
-    constant REG_TRIG_TMR_TMR_ERR_INJ_LSB     : integer := 0;
+    constant REG_TRIG_TMR_TMR_ERR_INJ_BIT    : integer := 0;
 
 
     --============================================================================
@@ -1374,16 +1368,13 @@ package registers is
     constant REG_GBT_RX_CNT_LINK_ERR_LSB     : integer := 0;
 
     constant REG_GBT_TTC_FORCE_L1A_ADDR    : std_logic_vector(4 downto 0) := '0' & x"5";
-    constant REG_GBT_TTC_FORCE_L1A_MSB    : integer := 31;
-    constant REG_GBT_TTC_FORCE_L1A_LSB     : integer := 0;
+    constant REG_GBT_TTC_FORCE_L1A_BIT    : integer := 0;
 
     constant REG_GBT_TTC_FORCE_BC0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"6";
-    constant REG_GBT_TTC_FORCE_BC0_MSB    : integer := 31;
-    constant REG_GBT_TTC_FORCE_BC0_LSB     : integer := 0;
+    constant REG_GBT_TTC_FORCE_BC0_BIT    : integer := 0;
 
     constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(4 downto 0) := '0' & x"7";
-    constant REG_GBT_TTC_FORCE_RESYNC_MSB    : integer := 31;
-    constant REG_GBT_TTC_FORCE_RESYNC_LSB     : integer := 0;
+    constant REG_GBT_TTC_FORCE_RESYNC_BIT    : integer := 0;
 
     constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"0";
     constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB    : integer := 15;
@@ -1398,12 +1389,10 @@ package registers is
     constant REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB     : integer := 0;
 
     constant REG_GBT_TMR_TMR_CNT_RESET_ADDR    : std_logic_vector(4 downto 0) := '1' & x"2";
-    constant REG_GBT_TMR_TMR_CNT_RESET_MSB    : integer := 31;
-    constant REG_GBT_TMR_TMR_CNT_RESET_LSB     : integer := 0;
+    constant REG_GBT_TMR_TMR_CNT_RESET_BIT    : integer := 0;
 
     constant REG_GBT_TMR_TMR_ERR_INJ_ADDR    : std_logic_vector(4 downto 0) := '1' & x"3";
-    constant REG_GBT_TMR_TMR_ERR_INJ_MSB    : integer := 31;
-    constant REG_GBT_TMR_TMR_ERR_INJ_LSB     : integer := 0;
+    constant REG_GBT_TMR_TMR_ERR_INJ_BIT    : integer := 0;
 
 
     --============================================================================
@@ -1440,20 +1429,16 @@ package registers is
     constant REG_MGT_CONTROL0_TX_DIFFCTRL0_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
     constant REG_MGT_CONTROL0_GTTXRESET0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"2";
-    constant REG_MGT_CONTROL0_GTTXRESET0_MSB    : integer := 31;
-    constant REG_MGT_CONTROL0_GTTXRESET0_LSB     : integer := 0;
+    constant REG_MGT_CONTROL0_GTTXRESET0_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"3";
-    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_MSB    : integer := 31;
-    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_LSB     : integer := 0;
+    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL0_TXPCSRESET0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"4";
-    constant REG_MGT_CONTROL0_TXPCSRESET0_MSB    : integer := 31;
-    constant REG_MGT_CONTROL0_TXPCSRESET0_LSB     : integer := 0;
+    constant REG_MGT_CONTROL0_TXPCSRESET0_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL0_TXPMARESET0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"5";
-    constant REG_MGT_CONTROL0_TXPMARESET0_MSB    : integer := 31;
-    constant REG_MGT_CONTROL0_TXPMARESET0_LSB     : integer := 0;
+    constant REG_MGT_CONTROL0_TXPMARESET0_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL1_TX_PRBS_MODE1_ADDR    : std_logic_vector(4 downto 0) := '0' & x"6";
     constant REG_MGT_CONTROL1_TX_PRBS_MODE1_MSB    : integer := 2;
@@ -1476,20 +1461,16 @@ package registers is
     constant REG_MGT_CONTROL1_TX_DIFFCTRL1_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
     constant REG_MGT_CONTROL1_GTTXRESET1_ADDR    : std_logic_vector(4 downto 0) := '0' & x"7";
-    constant REG_MGT_CONTROL1_GTTXRESET1_MSB    : integer := 31;
-    constant REG_MGT_CONTROL1_GTTXRESET1_LSB     : integer := 0;
+    constant REG_MGT_CONTROL1_GTTXRESET1_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_ADDR    : std_logic_vector(4 downto 0) := '0' & x"8";
-    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_MSB    : integer := 31;
-    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_LSB     : integer := 0;
+    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL1_TXPCSRESET1_ADDR    : std_logic_vector(4 downto 0) := '0' & x"9";
-    constant REG_MGT_CONTROL1_TXPCSRESET1_MSB    : integer := 31;
-    constant REG_MGT_CONTROL1_TXPCSRESET1_LSB     : integer := 0;
+    constant REG_MGT_CONTROL1_TXPCSRESET1_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL1_TXPMARESET1_ADDR    : std_logic_vector(4 downto 0) := '0' & x"a";
-    constant REG_MGT_CONTROL1_TXPMARESET1_MSB    : integer := 31;
-    constant REG_MGT_CONTROL1_TXPMARESET1_LSB     : integer := 0;
+    constant REG_MGT_CONTROL1_TXPMARESET1_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL2_TX_PRBS_MODE2_ADDR    : std_logic_vector(4 downto 0) := '0' & x"b";
     constant REG_MGT_CONTROL2_TX_PRBS_MODE2_MSB    : integer := 2;
@@ -1512,20 +1493,16 @@ package registers is
     constant REG_MGT_CONTROL2_TX_DIFFCTRL2_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
     constant REG_MGT_CONTROL2_GTTXRESET2_ADDR    : std_logic_vector(4 downto 0) := '0' & x"c";
-    constant REG_MGT_CONTROL2_GTTXRESET2_MSB    : integer := 31;
-    constant REG_MGT_CONTROL2_GTTXRESET2_LSB     : integer := 0;
+    constant REG_MGT_CONTROL2_GTTXRESET2_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_ADDR    : std_logic_vector(4 downto 0) := '0' & x"d";
-    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_MSB    : integer := 31;
-    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_LSB     : integer := 0;
+    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL2_TXPCSRESET2_ADDR    : std_logic_vector(4 downto 0) := '0' & x"e";
-    constant REG_MGT_CONTROL2_TXPCSRESET2_MSB    : integer := 31;
-    constant REG_MGT_CONTROL2_TXPCSRESET2_LSB     : integer := 0;
+    constant REG_MGT_CONTROL2_TXPCSRESET2_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL2_TXPMARESET2_ADDR    : std_logic_vector(4 downto 0) := '0' & x"f";
-    constant REG_MGT_CONTROL2_TXPMARESET2_MSB    : integer := 31;
-    constant REG_MGT_CONTROL2_TXPMARESET2_LSB     : integer := 0;
+    constant REG_MGT_CONTROL2_TXPMARESET2_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL3_TX_PRBS_MODE3_ADDR    : std_logic_vector(4 downto 0) := '1' & x"0";
     constant REG_MGT_CONTROL3_TX_PRBS_MODE3_MSB    : integer := 2;
@@ -1548,20 +1525,16 @@ package registers is
     constant REG_MGT_CONTROL3_TX_DIFFCTRL3_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
     constant REG_MGT_CONTROL3_GTTXRESET3_ADDR    : std_logic_vector(4 downto 0) := '1' & x"1";
-    constant REG_MGT_CONTROL3_GTTXRESET3_MSB    : integer := 31;
-    constant REG_MGT_CONTROL3_GTTXRESET3_LSB     : integer := 0;
+    constant REG_MGT_CONTROL3_GTTXRESET3_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_ADDR    : std_logic_vector(4 downto 0) := '1' & x"2";
-    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_MSB    : integer := 31;
-    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_LSB     : integer := 0;
+    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL3_TXPCSRESET3_ADDR    : std_logic_vector(4 downto 0) := '1' & x"3";
-    constant REG_MGT_CONTROL3_TXPCSRESET3_MSB    : integer := 31;
-    constant REG_MGT_CONTROL3_TXPCSRESET3_LSB     : integer := 0;
+    constant REG_MGT_CONTROL3_TXPCSRESET3_BIT    : integer := 0;
 
     constant REG_MGT_CONTROL3_TXPMARESET3_ADDR    : std_logic_vector(4 downto 0) := '1' & x"4";
-    constant REG_MGT_CONTROL3_TXPMARESET3_MSB    : integer := 31;
-    constant REG_MGT_CONTROL3_TXPMARESET3_LSB     : integer := 0;
+    constant REG_MGT_CONTROL3_TXPMARESET3_BIT    : integer := 0;
 
     constant REG_MGT_STATUS0_TXFSM_RESET_DONE0_ADDR    : std_logic_vector(4 downto 0) := '1' & x"5";
     constant REG_MGT_STATUS0_TXFSM_RESET_DONE0_BIT    : integer := 0;

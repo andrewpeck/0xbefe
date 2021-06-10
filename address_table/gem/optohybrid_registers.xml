@@ -334,10 +334,10 @@
                   fw_cnt_snap_signal="'1'"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
-            <node id="TMR_CNT_RESET" address="0x3" permission="w"
+            <node id="TMR_CNT_RESET" address="0x3" permission="w" mask="0x1"
                   description="Reset Control TMR Error counters"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
-            <node id="TMR_ERR_INJ" address="0x4" permission="w"
+            <node id="TMR_ERR_INJ" address="0x4" permission="w" mask="0x1"
                   description="Inject a TMR Error"
                   fw_write_pulse_signal="tmr_err_inj"/>
         </node>
@@ -1256,7 +1256,7 @@
 
         <node id="SBIT_MONITOR" address="0x90"
               description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
-            <node id="RESET" address="0x0" permission="w"
+            <node id="RESET" address="0x0" permission="w" mask="0x1"
                   description="Reset the sbit monitor module and re-arm for triggering"
                   fw_write_pulse_signal="reset_monitor"/>
             <node id="CLUSTER${CLUSTER_IDX}" address="0x1" mask="0x0000ffff" permission="r"
@@ -1271,7 +1271,7 @@
         <node id="SBIT_HITMAP" address="0xb0"
               description="The Sbit hitmap module accumulates all incoming Sbits during a period of time">
             <node id="RESET" address="0x0" permission="w"
-                  description="Reset the accumulation registers"
+                  description="Reset the accumulation registers" mask="0x1"
                   fw_write_pulse_signal="hitmap_reset"/>
             <node id="ACQUIRE" address="0x1" mask="0x1" permission="rw"
                   description="Sbits are accumulated as long as this flag is set"
@@ -1323,10 +1323,10 @@
                   fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
             <node id="TMR_CNT_RESET" address="0x2" permission="w"
-                  description="Reset trigger TMR Error counters"
+                  description="Reset trigger TMR Error counters" mask="0x1"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
             <node id="TMR_ERR_INJ" address="0x3" permission="w"
-                  description="Inject a TMR Error"
+                  description="Inject a TMR Error" mask="0x1"
                   fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
@@ -1386,13 +1386,13 @@
 
         <node id="TTC" address="0x5" description = "Emulates the TTC commands from GBTx through Wishbone">
             <node id="FORCE_L1A" address="0x0" permission="w"
-                  description="GBT Force L1A"
+                  description="GBT Force L1A" mask="0x1"
                   fw_write_pulse_signal="l1a_force"/>
             <node id="FORCE_BC0" address="0x1" permission="w"
-                  description="GBT Force BC0"
+                  description="GBT Force BC0" mask="0x1"
                   fw_write_pulse_signal="bc0_force"/>
             <node id="FORCE_RESYNC" address="0x2" permission="w"
-                  description="GBT Force Resync"
+                  description="GBT Force Resync" mask="0x1"
                   fw_write_pulse_signal="resync_force"/>
         </node> <!--TTC-->
 
@@ -1419,10 +1419,10 @@
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
             <node id="TMR_CNT_RESET" address="0x2" permission="w"
-                  description="Reset GBT TMR Error counters"
+                  description="Reset GBT TMR Error counters" mask="0x1"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
             <node id="TMR_ERR_INJ" address="0x3" permission="w"
-                  description="Inject a TMR Error"
+                  description="Inject a TMR Error" mask="0x1"
                   fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
@@ -1478,19 +1478,19 @@
                   fw_signal="control(${GT}).txdiffctrl"/>
 
             <node id="GTTXRESET${GT}" address="0x1" permission="w"
-                  description="GT TX Reset"
+                  description="GT TX Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).gttxreset"/>
 
             <node id="TXPRBS_FORCE_ERR${GT}" address="0x2" permission="w"
-                  description="TX PRBS Force Error"
+                  description="TX PRBS Force Error" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txprbsforceerr"/>
 
             <node id="TXPCSRESET${GT}" address="0x3" permission="w"
-                  description="TX PCS Reset"
+                  description="TX PCS Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpcsreset"/>
 
             <node id="TXPMARESET${GT}" address="0x4" permission="w"
-                  description="TX PMA Reset"
+                  description="TX PMA Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpmareset"/>
         </node> <!--Control-->
 
