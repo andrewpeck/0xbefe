@@ -13,8 +13,9 @@ DO_HARD_RESET = True
 TEST_SINGLE = False
 TEST_DOUBLE_ADJACENT = False
 TEST_CRITICAL = False
-TEST_MULTI_DOUBLE_ADJACENT = True
+TEST_MULTI_DOUBLE_ADJACENT = False
 NUM_ADDRESSES_TO_TEST = 50
+INJECT_ADDR_START = 65000000
 
 def main():
 
@@ -48,19 +49,19 @@ def main():
 #       sleep(SLEEP_AFTER_SOFT_RESET)
 
     if TEST_SINGLE:
-        injectSemError(0, True)
+        injectSemError(INJECT_ADDR_START, True)
         readSemCounters(True)
         readSemStatus(True)
         return
 
     if TEST_CRITICAL:
-        injectSemError(0, True, True)
+        injectSemError(INJECT_ADDR_START, True, True)
         readSemCounters(True)
         readSemStatus(True)
         return
 
     if TEST_DOUBLE_ADJACENT:
-        injectSemError(0, True, False, True)
+        injectSemError(INJECT_ADDR_START, True, False, True)
         readSemCounters(True)
         readSemStatus(True)
         return
@@ -70,7 +71,7 @@ def main():
     for addr in range(NUM_ADDRESSES_TO_TEST):
         if addr % 100 == 0:
             print("Progress: injecting to address %d" % addr)
-        injectSemError(0, False, False, TEST_MULTI_DOUBLE_ADJACENT)
+        injectSemError(INJECT_ADDR_START, False, False, TEST_MULTI_DOUBLE_ADJACENT)
         corrCnt, critCnt = readSemCounters(False)
         if corrCnt - corrCntPrev != 1 or critCnt - critCntPrev != 0:
             print("ERROR: the correction count didn't increase by 1 or a critical error was found. Correction cnt = %d, previous correction cnt = %d, critical error cnt = %d, previous critical error cnt = %d" % (corrCnt, corrCntPrev, critCnt, critCntPrev))
