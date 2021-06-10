@@ -33,12 +33,14 @@
             <node id="CNT_SEM_CRITICAL" address="0x0" permission="r"
                   mask="0x0000ffff"
                   description="Counts of uncorrectable single event upsets"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
                   fw_cnt_en_signal="sem_uncorrectable_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_uncorrectable"/>
             <node id="CNT_SEM_CORRECTION" address="0x1" permission="r"
                   mask="0xffff0000"
                   description="Counts of corrected single event upsets"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
                   fw_cnt_en_signal="sem_correction_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_correction"/>
@@ -59,6 +61,7 @@
             <node id="CNT_SEM_INJECTIONS" address="0x4" permission="r"
                   mask="0xffff0000"
                   description="Counts of completed injected sem errors"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
                   fw_cnt_en_signal="sem_injection"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_injection"/>
@@ -94,9 +97,13 @@
                   mask="0x80"
                   description=""
                   fw_signal="sem_idle"/>
+            <node id="SEM_CNT_RESET" address="0x6" permission="w"
+                  description="Pulse to reset SEM counters"
+                  mask="0x1"
+                  fw_write_pulse_signal="sem_cnt_reset"/>
         </node> <!--SEM-->
 
-        <node id="VFAT" address="0x9" description = "Controls the 12 VFAT reset outputs from the FPGA">
+        <node id="VFAT" address="0xA" description = "Controls the 12 VFAT reset outputs from the FPGA">
             <node id="RESET" address="0x0" permission="rw"
                   mask="0x00000fff"
                   description="Mask of VFAT Reset Outputs; 1=reset 0=enable"
@@ -104,7 +111,7 @@
                   fw_default="0x0"/>
         </node> <!--VFAT-->
 
-        <node id="TTC" address="0xA" description = "TTC Status and Control">
+        <node id="TTC" address="0xB" description = "TTC Status and Control">
             <node id="BX0_CNT_LOCAL" address="0x0" permission="r"
                   mask="0x00ffffff"
                   description="TTC BX0 Local Counter"
@@ -160,13 +167,13 @@
         </node> <!--TTC-->
 
 
-        <node id="SBITS" address="0x12" description = "S-bit and Cluster Packing Rate">
+        <node id="SBITS" address="0x13" description = "S-bit and Cluster Packing Rate">
             <node id="CLUSTER_RATE" address="0x0" permission="r"
                   description="Trigger cluster rate measured in Hz"
                   fw_signal="cluster_rate"/>
         </node> <!--SBITS-->
 
-        <node id="HDMI" address="0x13" description = "HDMI Connector Control:
+        <node id="HDMI" address="0x14" description = "HDMI Connector Control:
                                                       \\ Mode=0: Each signal is a single VFAT. The VFAT of interest is chosen by SBIT_SEL
                                                       \\ Mode=1: Each signal is the OR of three VFATs in an ieta row. The row of interest is configured by SBIT_SEL
                                                       \\ Mode=2: Each signal is the OR of four VFATs in an iphi half column (e.g. 0-3, 4-7, 8-11, 12-15, 16-19, 20-23)">
@@ -267,7 +274,7 @@
                   fw_default="0x0"/>
         </node> <!--HDMI-->
 
-        <node id="CNT_SNAP" address="0x15" description = "Control the global counter snapshot">
+        <node id="CNT_SNAP" address="0x16" description = "Control the global counter snapshot">
             <node id="PULSE" address="0x0" permission="w"
                   description="Pulse to take a counter snapshot"
                   mask="0x1"
@@ -279,7 +286,7 @@
                   fw_signal="cnt_snap_disable"/>
         </node> <!--CNT_SNAP-->
 
-        <node id="DNA" address="0x18" description = "57 Bit FPGA-specific device identifier">
+        <node id="DNA" address="0x19" description = "57 Bit FPGA-specific device identifier">
             <node id="DNA_LSBS" address="0x0" permission="r"
                   description = "Device DNA bits 31 downto 0"
                   mask="0xffffffff"
@@ -290,15 +297,15 @@
                   fw_signal="dna(56 downto 32)"/>
         </node> <!--DNA-->
 
-        <node id="UPTIME" address="0x1A" description="Uptime in seconds" permission="r"
+        <node id="UPTIME" address="0x1B" description="Uptime in seconds" permission="r"
               mask="0xfffff"
               fw_signal="std_logic_vector(uptime)"/>
 
-        <node id="USR_ACCESS" address="0x20" description="Git hash read from USR_ACCESS field" permission="r"
+        <node id="USR_ACCESS" address="0x21" description="Git hash read from USR_ACCESS field" permission="r"
               mask="0xffffffff"
               fw_signal="usr_access"/>
 
-        <node id="HOG" address="0x22" description = "">
+        <node id="HOG" address="0x23" description = "">
             <node id="GLOBAL_DATE" permission="r" address="0x0" description="HOG Global Date"    fw_signal="GLOBAL_DATE"/>
             <node id="GLOBAL_TIME" permission="r" address="0x1" description="HOG Global Time"    fw_signal="GLOBAL_TIME"/>
             <node id="GLOBAL_VER"  permission="r" address="0x2" description="HOG Global Version" fw_signal="GLOBAL_VER"/>
@@ -312,7 +319,7 @@
             <node id="FLAVOUR"     permission="r" address="0xa" description="Flavor"             fw_signal="std_logic_vector(to_unsigned(FLAVOUR,32))"/>
         </node> <!--HOG-->
 
-        <node id="TMR" address="0x30">
+        <node id="TMR" address="0x31">
             <node id="TTC_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0x0000ffff"
                   description="TTC TMR Error Count"
