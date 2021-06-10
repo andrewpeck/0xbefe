@@ -3,15 +3,17 @@ from rw_reg import *
 
 OH_NUM = 0
 SLEEP = 1.0
-SLEEP_AFTER_SOFT_RESET = 16.5
+SLEEP_AFTER_SOFT_RESET = 8.25 # @ 80MHz
 SLEEP_AFTER_HARD_RESET = 0.3
-SLEEP_AFTER_OBSERVATION_SINGLE = 0.06 # the time we give the SEM IP to find a single error after entering observation state
-SLEEP_AFTER_OBSERVATION_UNCORR = 0.2 # the time we give the SEM IP to find an uncorrectable error after entering observation state
+SLEEP_AFTER_OBSERVATION_SINGLE = (22.875 + 0.76 + 0.9375) / 1000.0 # the time we give the SEM IP to find a single error after entering observation state (22.875ms for scanning the whole device + 0.76ms for correction + 0.9375ms for classification @ 80MHz clock)
+SLEEP_AFTER_OBSERVATION_TWO_ADJ = (22.875 + 23.4875 + 0.9375) / 1000.0 # the time we give the SEM IP to find an uncorrectable error after entering observation state (22.875ms for scanning the whole device + 23.4875ms for correction + 0.9375ms for classification @ 80MHz clock)
+SLEEP_AFTER_OBSERVATION_UNCORR = (22.875 + 11.3875 + 0.0125) / 1000.0 # the time we give the SEM IP to find an uncorrectable error after entering observation state (22.875ms for scanning the whole device + 11.3875ms for attempted correction + 0.0125ms for classification @ 80MHz clock)
 DO_SOFT_RESET = False
 DO_HARD_RESET = True
 TEST_SINGLE = False
 TEST_DOUBLE_ADJACENT = False
 TEST_CRITICAL = False
+TEST_MULTI_DOUBLE_ADJACENT = True
 NUM_ADDRESSES_TO_TEST = 50
 
 def main():
@@ -68,7 +70,7 @@ def main():
     for addr in range(NUM_ADDRESSES_TO_TEST):
         if addr % 100 == 0:
             print("Progress: injecting to address %d" % addr)
-        injectSemError(0, False)
+        injectSemError(0, False, False, TEST_MULTI_DOUBLE_ADJACENT)
         corrCnt, critCnt = readSemCounters(False)
         if corrCnt - corrCntPrev != 1 or critCnt - critCntPrev != 0:
             print("ERROR: the correction count didn't increase by 1 or a critical error was found. Correction cnt = %d, previous correction cnt = %d, critical error cnt = %d, previous critical error cnt = %d" % (corrCnt, corrCntPrev, critCnt, critCntPrev))
@@ -119,7 +121,9 @@ def injectSemError(address, verbose=True, injectCritical=False, injectDoubleAdja
         obs = 0
         while obs == 0:
             obs = parseInt(readReg(getNode("GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION")))
-    sleepTime = SLEEP_AFTER_OBSERVATION_SINGLE if not injectCritical else SLEEP_AFTER_OBSERVATION_UNCORR
+    sleepTime = SLEEP_AFTER_OBSERVATION_UNCORR if injectCritical else SLEEP_AFTER_OBSERVATION_TWO_ADJ if injectDoubleAdjacent else SLEEP_AFTER_OBSERVATION_SINGLE
+    if verbose:
+        print("Waiting %fms to allow for detection of the error, attempted correction, and classification" % (sleepTime*1000))
     sleep(sleepTime)
 
 def readSemCounters(verbose=False):
