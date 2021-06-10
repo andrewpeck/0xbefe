@@ -1,7 +1,8 @@
 EMU 0xBEFE Project
 ========================
 
-This repository contains firmware code for endcap muon systems (GEM and CSC) backend and frontend electronics.
+This repository contains firmware code for endcap muon systems (GEM and CSC)
+backend and frontend electronics.
 
 ```
 0xBEFE
@@ -31,3 +32,8 @@ This repository contains firmware code for endcap muon systems (GEM and CSC) bac
 ├── IP_repository ; Folder for packaged Xilinx IP
 └── scripts       ; useful scripts
 ```
+
+## Building the firmware
+This firmware is using the HOG framework as a build system:
+ - HOG Documentation: http://hog-user-docs.web.cern.ch
+ - HOG Source Code: https://gitlab.cern.ch/hog/Hog

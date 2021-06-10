@@ -1,103 +1,16 @@
-* Optohybrid v3 Firmware [[https://gitlab.cern.ch/apeck/OptoHybridv3/badges/master/pipeline.svg]]
-
-[[file:doc/images/block_diagram.svg]]
-
-Directory Hierarchy:
-
-#+BEGIN_SRC
-├── optohybrid_registers.xml -- XML Address Table
-├── Hog                      -- Hog build system submodule
-├── doc                      -- documentation/images
-├── tools                    -- Python scripts
-├── src                      -- Source code, constraints, IP cores
-│   ├── optohybrid_top.vhd
-│   ├── cluster_building     -- Cluster building
-│   ├── control              -- Control
-│   ├── gbt                  -- GBTx Tx/Rx
-│   ├── ip_cores             -- Virtex-6 IP Cores
-│   ├── ip_cores_a7          -- Artix-7 IP Cores
-│   ├── mgt                  -- Transceivers
-│   ├── pkg                  -- VHDL Packages
-│   ├── trigger              -- S-bits
-│   ├── ucf                  -- Constraints
-│   ├── utils                -- Shared/misc utility modules
-│   └── wb                   -- Wishbone
-├── Top                      -- Hog top levels
-│   ├── oh11
-│   └── oh21
-└── README.org               -- This readme
-#+END_SRC
-
-*** [[file:doc/latex/address_table_ge21.org][GE21 Address Table]]
-*** [[file:doc/latex/address_table_ge11-long.org][GE11-Long Address Table]]
-*** [[file:doc/latex/address_table_ge11-short.org][GE11-Short Address Table]]
-
-** Building the firmware
-
-This firmware is using the HOG framework as a build system:
- - HOG Documentation: http://hog-user-docs.web.cern.ch
- - HOG Source Code: https://gitlab.cern.ch/hog/Hog
-
-A Makefile is provided that should make firmware building more straightforward. You can run for example:
-#+BEGIN_SRC bash
-make update      # update from the XML file
-make oh21-200    # builds the 200t version of the  ge21 firmware
-make oh21-75     # builds the 75t version of the ge21 firmware
-make oh11        # builds long and short versions of the GE11 firmware
-#+END_SRC
-
-*n.b. Support for GE1/1 through a planAhead wrapper is in development (but still experimental)*
-
-Alternatively, you can build the firmware manually, for example, the firmware can be built as:
-
-#+BEGIN_SRC  bash
-git clone https://github.com/cms-gem-daq-project/OptoHybridv3
-cd OptoHybridv3
-git submodule update --init
-make
-#+END_SRC
-
-
-** Updating the address table or firmware version
-
-The firmware can be updated from the address table by running =make update= from the root of the repository.
-
-If you want to increment the version, just run make with an argument, e.g.
-
-#+BEGIN_SRC
-make update version=03.04.01
-#+END_SRC`
-
-** Versioning
-
-Releases are labeled as =version_major.version_minor.version_patch.hardware_id=
-
-i.e. in HARDWARE_VERSION XY
-
-x=chamber type (0=GE11 short, 1=GE11 long, 2=GE21)
-y=hardware generation
-
-Specifically:
-
-| Station | OH Version | Chamber Variant | Tag |
-|---------+------------+-----------------+-----|
-| GE1/1   | v3B        | Short           | 0B  |
-| GE1/1   | v3C        | Short           | 0C  |
-| GE1/1   | v3C        | Long            | 1C  |
-| GE2/1   | v1         |                 | 2A  |
-| GE2/1   | v2         |                 | 2B  |
+* Optohybrid v3 Firmware
 
 ** TMR
 
-TMR for different modules can be configured on and off to allow for customization between GE2/1 and GE1/1.
+TMR for different modules can be configured on and off to allow for
+customization between GE2/1 and GE1/1.
 
-It is controlled by the platform specific hardware package, viz. hardware_pkg_ge11.vhd and hardware_pkg_ge21.vhd
+It is controlled by the platform specific hardware package, viz.
+~hardware_pkg_ge11.vhd~ and ~hardware_pkg_ge21.vhd~
 
 For example:
 
 #+BEGIN_SRC vhdl
-constant EN_TMR : integer := 1;
-
 constant EN_TMR_TRIG_FORMATTER     : integer := 1*EN_TMR;
 constant EN_TMR_GBT_DRU            : integer := 1*EN_TMR;
 constant EN_TMR_SBIT_DRU           : integer := 1*EN_TMR;
@@ -105,7 +18,13 @@ constant EN_TMR_SOT_DRU            : integer := 1*EN_TMR;
 constant EN_TMR_CLUSTER_PACKER     : integer := 0*EN_TMR;
 #+END_SRC
 
-You can change a 1 to a 0 to to disable TMR for that module, or =EN_TMR= from 1 to 0 to disable TMR entirely.
+You can change a 1 to a 0 to disable TMR for that module.
+
+To disable TMR entirely you should set the project's TMR source file to
+#+begin_src
+gem/hdl/oh_fe/pkg/tmr_dis_pkg.vhd
+#+end_src
+(e.g. by editing ~Top/oh_ge21.75/list/optohybrid.src~)
 
 ** LED Indicators
 
@@ -120,15 +39,21 @@ You can change a 1 to a 0 to to disable TMR for that module, or =EN_TMR= from 1 
 | led[9] = Resync Flash          | led[1] = Cluster Rate >= 10 Hz         |
 | led[8] = BC0 Flash             | led[0] = Cluster Rate >= 1 Hz          |
 
-The “right side” LED indicators provide a logarithmic progress bar indicator which provides a convenient way to monitor the rate of incoming clusters received by the Optohybrid.
+The “right side” LED indicators provide a logarithmic progress bar indicator
+which provides a convenient way to monitor the rate of incoming clusters
+received by the Optohybrid.
 
-Prior to the receipt of the first S-bit (after a reset or resync), the progress bar will show a strobing “cylon” pattern to indicate an idle state.
+Prior to the receipt of the first S-bit (after a reset or resync), the progress
+bar will show a strobing “cylon” pattern to indicate an idle state.
 
 ** HDMI Output
 
-The Optohybrid has an HDMI connector connected to differential pairs of the FPGA.
+The Optohybrid has an HDMI connector connected to differential pairs of the
+FPGA.
 
-The functionality is programmable by changing firmware, but in the current configuration they provide a programmable way to output S-bits for use in the cosmic ray test stand.
+The functionality is programmable by changing firmware, but in the current
+configuration they provide a programmable way to output S-bits for use in the
+cosmic ray test stand.
 
 Each conductor can be individually programmed into one of 4 modes:
 
@@ -160,33 +85,53 @@ NET "ext_sbits_o[7]" LOC = M18; # tmds d0  n
 
 ** Control
 
-In the version 3 firmware, all Optohybrid registers are accessible through a Wishbone bus with an address table defined in single XML file, =optohybrid_registers.xml= (accessible in Github at ./optohybrid_registers.xml):
+In the version 3 firmware, all Optohybrid registers are accessible through a
+Wishbone bus with an address table defined in single XML file,
+=optohybrid_registers.xml= (accessible in Github at ./optohybrid_registers.xml):
 
-This file can be used in the same way as the backend (CTP-7) registers file and with the same tools, e.g. =rw_reg.py=. The contents of this file should be embedded into the CTP-7 firmware at a sub-address which is allocated to the Optohybrid.
+This file can be used in the same way as the backend (CTP-7) registers file and
+with the same tools, e.g. =rw_reg.py=. The contents of this file should be
+embedded into the CTP-7 firmware at a sub-address which is allocated to the
+Optohybrid.
 
-16 bits are allocated for the Optohybrid address space. Within this 16-bit address space, the bits are subdivided according to the scheme:
+16 bits are allocated for the Optohybrid address space. Within this 16-bit
+address space, the bits are subdivided according to the scheme:
 
--- highest 4 are used as the module ID (wishbone slave #)
+- highest 4 are used as the module ID (wishbone slave #)
 
--- lowest 12 bits are used by the wishbone splitters as individual register addresses
+- lowest 12 bits are used by the wishbone splitters as individual register
+  addresses
 
-Thus we can have up to 16 slaves, and 4096 endpoints per slave. Presently we use only 6 slaves with a firmware that is nearly finalized, so it is expected that 16 slaves will not be a limiting factor.
+Thus we can have up to 16 slaves, and 4096 endpoints per slave. Presently we use
+only 6 slaves with a firmware that is nearly finalized, so it is expected that
+16 slaves will not be a limiting factor.
 
 ** TTC Synchronization
 
-The Optohybrid has a local accumulator which increments bunch crossing number (bxn) and produces a locally generated bx0 flag.
+The Optohybrid has a local accumulator which increments bunch crossing number
+(bxn) and produces a locally generated bx0 flag.
 
-In order for the two flags, (1) locally generated and (2) received from GBTx, to be in sync a programmable parameter (bxn offset) is provided which allows you to set an “offset” which is the value which will be assumed by the bxn counter after ttc resync.
+In order for the two flags, (1) locally generated and (2) received from GBTx, to
+be in sync a programmable parameter (bxn offset) is provided which allows you to
+set an “offset” which is the value which will be assumed by the bxn counter
+after ttc resync.
 
-The synchronization of these two flags can be monitored by checking the status of bxn_sync_error in the OH status register (/n.b. that bx0_sync_error is NOT suitable for this, as it is a 1bx wide pulse useful for internal counters when the bx0 is received, while bxn_sync_error will persist for the entire orbit/).
+The synchronization of these two flags can be monitored by checking the status
+of bxn_sync_error in the OH status register (/n.b. that bx0_sync_error is NOT
+suitable for this, as it is a 1bx wide pulse useful for internal counters when
+the bx0 is received, while bxn_sync_error will persist for the entire orbit/).
 
-When the Optohybrid is correctly timed in to the TTC system, bxn_sync_error should be 0. A software routine in the CTP-7 to find the correct bxn offset should be easily designed.
+When the Optohybrid is correctly timed in to the TTC system, bxn_sync_error
+should be 0. A software routine in the CTP-7 to find the correct bxn offset
+should be easily designed.
 
-A counter in the counters module counts the number of bx0 sync errors since the last resync or hard-reset.
+A counter in the counters module counts the number of bx0 sync errors since the
+last resync or hard-reset.
 
 The anticipated synchronization process is:
 
 1. From the backend electronics, send a BC0 is to all Optohybrids
 2. Inside of the Optohybrid, adjust the BXN offset until bxn_sync_error is read to be 0
    - This indicates that the local OH bxn counter matches the remote counter
-3. Inside of the backend electronics, adjust the delays of incoming trigger data until the 0x50 (BC0) frame markers are aligned between all Optohybrids
+3. Inside of the backend electronics, adjust the delays of incoming trigger data
+   until the 0x50 (BC0) frame markers are aligned between all Optohybrids
