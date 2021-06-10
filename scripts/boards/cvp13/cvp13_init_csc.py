@@ -19,10 +19,10 @@ def main():
         writeReg(getNode("CSC_FED.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET" % chan), 1)
 
     sleep(0.1)
-    writeReg(getNode("CSC_FED.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1)
+    writeReg(getNode("CSC_FED.SYSTEM.CTRL.GLOBAL_RESET"), 1)
 
     sleep(0.3)
-    writeReg(getNode("CSC_FED.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
+    writeReg(getNode("CSC_FED.SYSTEM.CTRL.LINK_RESET"), 1)
 
     print("DONE")
 
