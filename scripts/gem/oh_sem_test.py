@@ -10,6 +10,7 @@ SLEEP_AFTER_OBSERVATION_UNCORR = 0.2 # the time we give the SEM IP to find an un
 DO_SOFT_RESET = False
 DO_HARD_RESET = True
 TEST_SINGLE = False
+TEST_DOUBLE_ADJACENT = True
 TEST_CRITICAL = False
 NUM_ADDRESSES_TO_TEST = 50
 
@@ -56,6 +57,12 @@ def main():
         readSemStatus(True)
         return
 
+    if TEST_DOUBLE_ADJACENT:
+        injectSemError(0, True, False, True)
+        readSemCounters(True)
+        readSemStatus(True)
+        return
+
     print("Running the test of injecting an error to %d addresses (this will take a few minutes)" % NUM_ADDRESSES_TO_TEST)
     corrCntPrev, critCntPrev = readSemCounters()
     for addr in range(NUM_ADDRESSES_TO_TEST):
@@ -73,7 +80,7 @@ def main():
     readSemCounters(True)
     readSemStatus(True)
 
-def injectSemError(address, verbose=True, injectCritical=False):
+def injectSemError(address, verbose=True, injectCritical=False, injectDoubleAdjacent=False):
 
     # enter idle state
     if verbose:
@@ -85,11 +92,13 @@ def injectSemError(address, verbose=True, injectCritical=False):
         idle = parseInt(readReg(getNode("GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_IDLE")))
 
     # inject error(s)
-    addresses = [address] if not injectCritical else range(address, address + 10, 1)
+    addresses = range(address, address + 3, 2) if injectCritical else range(address, address + 2, 1) if injectDoubleAdjacent else [address]
 
     if verbose:
         if injectCritical:
             print("injecting an uncorrectable error at addresses: %s" % (addresses))
+        elif injectDoubleAdjacent:
+            print("injecting two correctable errors to adjacent bits at addresses: %s" % (addresses))
         else:
             print("injecting an error at address: %d" % addresses[0])
 
