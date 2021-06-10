@@ -103,7 +103,7 @@ package registers is
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB    : integer := 15;
     constant REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB     : integer := 0;
 
-    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"2";
+    constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB    : integer := 31;
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB     : integer := 16;
 
@@ -195,7 +195,7 @@ package registers is
     constant REG_CONTROL_CNT_SNAP_PULSE_BIT    : integer := 0;
 
     constant REG_CONTROL_CNT_SNAP_DISABLE_ADDR    : std_logic_vector(5 downto 0) := "01" & x"6";
-    constant REG_CONTROL_CNT_SNAP_DISABLE_BIT    : integer := 1;
+    constant REG_CONTROL_CNT_SNAP_DISABLE_BIT    : integer := 0;
     constant REG_CONTROL_CNT_SNAP_DISABLE_DEFAULT : std_logic := '1';
 
     constant REG_CONTROL_DNA_DNA_LSBS_ADDR    : std_logic_vector(5 downto 0) := "01" & x"8";
@@ -1343,7 +1343,7 @@ package registers is
     -- GBTx to FPGA link
     --============================================================================
 
-    constant REG_GBT_NUM_REGS : integer := 10;
+    constant REG_GBT_NUM_REGS : integer := 11;
     constant REG_GBT_ADDRESS_MSB : integer := 4;
     constant REG_GBT_ADDRESS_LSB : integer := 0;
     constant REG_GBT_TX_CNT_RESPONSE_SENT_ADDR    : std_logic_vector(4 downto 0) := '0' & x"0";
@@ -1367,13 +1367,13 @@ package registers is
     constant REG_GBT_RX_CNT_LINK_ERR_MSB    : integer := 23;
     constant REG_GBT_RX_CNT_LINK_ERR_LSB     : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_L1A_ADDR    : std_logic_vector(4 downto 0) := '0' & x"5";
+    constant REG_GBT_TTC_FORCE_L1A_ADDR    : std_logic_vector(4 downto 0) := '0' & x"6";
     constant REG_GBT_TTC_FORCE_L1A_BIT    : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_BC0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"6";
+    constant REG_GBT_TTC_FORCE_BC0_ADDR    : std_logic_vector(4 downto 0) := '0' & x"7";
     constant REG_GBT_TTC_FORCE_BC0_BIT    : integer := 0;
 
-    constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(4 downto 0) := '0' & x"7";
+    constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(4 downto 0) := '0' & x"8";
     constant REG_GBT_TTC_FORCE_RESYNC_BIT    : integer := 0;
 
     constant REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_ADDR    : std_logic_vector(4 downto 0) := '1' & x"0";

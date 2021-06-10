@@ -249,10 +249,11 @@ begin
     regs_addresses(3)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"5";
     regs_addresses(4)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"6";
     regs_addresses(5)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"7";
-    regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"0";
-    regs_addresses(7)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"1";
-    regs_addresses(8)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"2";
-    regs_addresses(9)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"3";
+    regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"8";
+    regs_addresses(7)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"0";
+    regs_addresses(8)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"1";
+    regs_addresses(9)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"2";
+    regs_addresses(10)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"3";
 
     -- Connect read signals
     regs_read_arr(0)(REG_GBT_TX_CNT_RESPONSE_SENT_MSB downto REG_GBT_TX_CNT_RESPONSE_SENT_LSB) <= cnt_ipb_response;
@@ -261,18 +262,18 @@ begin
     regs_read_arr(2)(REG_GBT_RX_RX_VALID_BIT) <= gbt_rxvalid_i;
     regs_read_arr(2)(REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB downto REG_GBT_RX_CNT_REQUEST_RECEIVED_LSB) <= cnt_ipb_request;
     regs_read_arr(3)(REG_GBT_RX_CNT_LINK_ERR_MSB downto REG_GBT_RX_CNT_LINK_ERR_LSB) <= cnt_link_err;
-    regs_read_arr(6)(REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB) <= gbt_link_tmr_err_cnt;
-    regs_read_arr(6)(REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB) <= gbt_serdes_tmr_err_cnt;
-    regs_read_arr(7)(REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(7)(REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB) <= gbt_link_tmr_err_cnt;
+    regs_read_arr(7)(REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB) <= gbt_serdes_tmr_err_cnt;
+    regs_read_arr(8)(REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
 
     -- Connect write signals
 
     -- Connect write pulse signals
-    l1a_force <= regs_write_pulse_arr(3);
-    bc0_force <= regs_write_pulse_arr(4);
-    resync_force <= regs_write_pulse_arr(5);
-    tmr_cnt_reset <= regs_write_pulse_arr(8);
-    tmr_err_inj <= regs_write_pulse_arr(9);
+    l1a_force <= regs_write_pulse_arr(4);
+    bc0_force <= regs_write_pulse_arr(5);
+    resync_force <= regs_write_pulse_arr(6);
+    tmr_cnt_reset <= regs_write_pulse_arr(9);
+    tmr_err_inj <= regs_write_pulse_arr(10);
 
     -- Connect write done signals
 

@@ -150,7 +150,7 @@
                   fw_cnt_reset_signal="cnt_reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bxn_sync_err"/>
-            <node id="BX0_SYNC_ERR_CNT" address="0x8" permission="r"
+            <node id="BX0_SYNC_ERR_CNT" address="0x7" permission="r"
                   mask="0xffff0000"
                   description="BX0 Sync Error Counter"
                   fw_cnt_en_signal="ttc_bx0_sync_err"
@@ -274,7 +274,7 @@
                   fw_write_pulse_signal="cnt_snap_pulse"/>
             <node id="DISABLE" address="0x1" permission="rw"
                   description="0=enable snapshots (counters freeze synchronously and need a snapshot to update)"
-                  mask="0x2"
+                  mask="0x1"
                   fw_default="1"
                   fw_signal="cnt_snap_disable"/>
         </node> <!--CNT_SNAP-->
@@ -1384,7 +1384,7 @@
                   fw_signal="cnt_link_err"/>
         </node> <!--RX-->
 
-        <node id="TTC" address="0x5" description = "Emulates the TTC commands from GBTx through Wishbone">
+        <node id="TTC" address="0x6" description = "Emulates the TTC commands from GBTx through Wishbone">
             <node id="FORCE_L1A" address="0x0" permission="w"
                   description="GBT Force L1A" mask="0x1"
                   fw_write_pulse_signal="l1a_force"/>
