@@ -100,6 +100,7 @@ package types_pkg is
     locked    : std_logic;
     sysclk    : std_logic;
     clk40     : std_logic;
+    clk80     : std_logic;
     clk160_0  : std_logic;
     clk160_90 : std_logic;
     clk200    : std_logic;

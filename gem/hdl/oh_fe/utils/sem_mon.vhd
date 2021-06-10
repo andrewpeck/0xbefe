@@ -16,6 +16,7 @@ use work.hardware_pkg.all;
 entity sem_mon is
   port(
     clk_i            : in  std_logic;
+    sysclk_i         : in  std_logic;
     inject_strobe    : in  std_logic;
     inject_address   : in  std_logic_vector(39 downto 0);
     heartbeat_o      : out std_logic;
@@ -218,9 +219,11 @@ begin
 
     signal idle : std_logic;
 
-    signal correction_r    : std_logic;
-    signal uncorrectable_r : std_logic;
-    signal essential_r     : std_logic;
+    signal correction_r     : std_logic;
+    signal uncorrectable_r  : std_logic;
+    signal essential_r      : std_logic;
+    signal inject_strobe_r  : std_logic := '0';
+    signal inject_strobe_os : std_logic := '0';
 
   begin
 
@@ -244,14 +247,23 @@ begin
     idle_o           <= idle;
 
     -- for counting, make rising edge sensitive versions of these signals
-    process (clk_i) is
+    process (sysclk_i) is
     begin
-      if (rising_edge(clk_i)) then
+      if (rising_edge(sysclk_i)) then
         correction_r    <= status_correction;
         uncorrectable_r <= status_uncorrectable;
         essential_r     <= status_essential;
       end if;
     end process;
+
+    process (clk_i) is
+    begin
+      if (rising_edge(clk_i)) then
+        inject_strobe_r <= inject_strobe;
+      end if;
+    end process;
+
+    inject_strobe_os <= '1' when inject_strobe_r = '0' and inject_strobe = '1' else '0';
 
     correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
     uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
@@ -274,7 +286,7 @@ begin
         monitor_rxdata        => (others => '0'),
         monitor_rxread        => open,
         monitor_rxempty       => '1',
-        inject_strobe         => inject_strobe,
+        inject_strobe         => inject_strobe_os,
         inject_address        => inject_address,
         icap_o                => icap_o,
         icap_csib             => icap_csb,

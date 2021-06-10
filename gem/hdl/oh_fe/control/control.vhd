@@ -503,7 +503,8 @@ begin
 
   sem_mon_inst : entity work.sem_mon
     port map(
-      clk_i            => clocks.clk40,
+      clk_i            => clocks.clk80,
+      sysclk_i         => clocks.clk40,
       heartbeat_o      => open,
       inject_strobe    => sem_inject_strobe,
       inject_address   => sem_inject_address,
