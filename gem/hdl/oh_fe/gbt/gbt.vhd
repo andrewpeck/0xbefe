@@ -61,9 +61,9 @@ end gbt;
 
 architecture Behavioral of gbt is
 
-  signal ipb_slave_tmr_err : std_logic;
-  signal gbt_link_tmr_err : std_logic;
-  signal gbt_serdes_tmr_err   : std_logic;
+  signal ipb_slave_tmr_err  : std_logic;
+  signal gbt_link_tmr_err   : std_logic;
+  signal gbt_serdes_tmr_err : std_logic;
 
   signal gbt_tx_data : std_logic_vector(7 downto 0) := (others => '0');
   signal gbt_rx_data : std_logic_vector(7 downto 0) := (others => '0');
@@ -168,7 +168,7 @@ begin
       data_o => gbt_rx_data,            -- Parallel data out
       data_i => gbt_tx_data,            -- Parallel data in
 
-      tmr_err_o     => gbt_serdes_tmr_err
+      tmr_err_o => gbt_serdes_tmr_err
       );
 
   --------------------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ begin
       error_o    => gbt_link_error,
 
       tmr_err_inj_i => tmr_err_inj,
-      tmr_err_o => gbt_link_tmr_err
+      tmr_err_o     => gbt_link_tmr_err
 
       );
 
@@ -320,7 +320,7 @@ begin
     );
 
 
-    COUNTER_GBT_TMR_GBT_LINK_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_GBT_LINK_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -328,11 +328,12 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_link_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => gbt_link_tmr_err_cnt
     );
 
 
-    COUNTER_GBT_TMR_GBT_SERDES_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_GBT_SERDES_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -340,11 +341,12 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_serdes_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => gbt_serdes_tmr_err_cnt
     );
 
 
-    COUNTER_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -352,6 +354,7 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ipb_slave_tmr_err_cnt
     );
 

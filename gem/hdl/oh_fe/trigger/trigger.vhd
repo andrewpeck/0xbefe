@@ -1188,7 +1188,7 @@ begin
     );
 
 
-    COUNTER_TRIG_TMR_CLUSTER_TMR_ERR_CNT : entity work.counter
+    COUNTER_TRIG_TMR_CLUSTER_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -1196,11 +1196,12 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset_i or tmr_cnt_reset,
         en_i      => cluster_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => cluster_tmr_err_cnt
     );
 
 
-    COUNTER_TRIG_TMR_SBIT_RX_TMR_ERR_CNT : entity work.counter
+    COUNTER_TRIG_TMR_SBIT_RX_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -1208,11 +1209,12 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset_i or tmr_cnt_reset,
         en_i      => trig_alignment_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => trig_alignment_tmr_err_cnt
     );
 
 
-    COUNTER_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter
+    COUNTER_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -1220,11 +1222,12 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset_i or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ipb_slave_tmr_err_cnt
     );
 
 
-    COUNTER_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT : entity work.counter
+    COUNTER_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
@@ -1232,6 +1235,7 @@ begin
         ref_clk_i => clocks.clk40,
         reset_i   => reset_i or tmr_cnt_reset,
         en_i      => trig_formatter_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => trig_formatter_tmr_err_cnt
     );
 

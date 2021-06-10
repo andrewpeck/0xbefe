@@ -58,7 +58,8 @@ begin
   begin
     if (rising_edge(ref_clk_i)) then
       if (reset = '1') then
-        count <= (others => '0');
+        count      <= (others => '0');
+        count_copy <=  (others => '0');
       else
         if en_i = '1' and (count < max_count or g_ALLOW_ROLLOVER) then
           count <= count + g_INCREMENT_STEP;
