@@ -303,7 +303,7 @@ begin
 
     ------------- L1A request -------------
     
-    i_l1a_req_sync : entity work.synch generic map(N_STAGES => 11, IS_RESET => false) port map(async_i => local_l1a_req_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_sync);
+    i_l1a_req_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_req_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_sync);
     i_l1a_req_oneshot : entity work.oneshot
         port map(
             reset_i   => reset,
