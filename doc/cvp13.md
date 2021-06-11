@@ -1,4 +1,4 @@
-﻿
+
 # Setting up CVP13
 The setup process consists of these steps:
 1. Install the card in the computer, connect cooling, and the micro USB cable
@@ -139,6 +139,13 @@ Mapping to GE2/1 OHs is the following:
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
 
+CSC Fiber mapping (for now only one QSFP is used):
+|          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|----------|-------|-------|-------|-------|
+| DMB0     | 1&12  |       |       |       |
+| DMB1     | 2&11  |       |       |       |
+| Spy GbE  | 3&10  |       |       |       |
+
 ## PROMless
 The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless_load.py``` script e.g.:
 ```
@@ -151,5 +158,8 @@ write GEM_AMC.TTC.GENERATOR.ENABLE 1
 write GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET 1
 ```
 
-## General operation
-
+## CSC operation
+First of all, initialize the firmware by running: ```sudo boards/cvp13/cvp13_init_csc.py```
+Then you can start the DAQ by running the ```csc/csc_daq.py``` application, which will ask a series of self explanatory questions for which for the most part defaults are going to be fine, but if no TCDS is used you have to make sure to answer "no" to "Should we keep the DAQ in reset until a resync" and "yes" to "Should we use local L1A generation based on DAQ data".
+For now the readout through PCIe is not yet implemented, so one has to use the Spy GbE port connected to a compatible NIC and running the CSC DAQ driver + RUI application. The spy output is identical to the DDU output, except that it is sending fully ethernet compliant packets (a modification to the offset in the driver is needed when using the ethernet-compliant option which is normally meant for ODMB "PC" port readout).
+There's also a script to send some dummy ethernet packets to the spy GbE port for testing the readout application on the DAQ machine: ```csc/csc_eth_packet_test.py```
