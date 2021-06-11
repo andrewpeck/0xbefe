@@ -405,12 +405,9 @@ begin
         g_debug_ge11_trig_link : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
             i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
                 port map(
-                    clk_i          => gth_rx_trig_usrclk_i(0),
-                    kchar_i        => gth_rx_trig_data_i(0).rxcharisk(1 downto 0),
-                    comma_i        => gth_rx_trig_data_i(0).rxchariscomma(1 downto 0),
-                    not_in_table_i => gth_rx_trig_data_i(0).rxnotintable(1 downto 0),
-                    disperr_i      => gth_rx_trig_data_i(0).rxdisperr(1 downto 0),
-                    data_i         => gth_rx_trig_data_i(0).rxdata(15 downto 0)
+                    clk_i        => gth_rx_trig_usrclk_i(0),
+                    rx_data_i    => gth_rx_trig_data_i(0),
+                    mgt_status_i => MGT_STATUS_NULL
                 );
        end generate;
 

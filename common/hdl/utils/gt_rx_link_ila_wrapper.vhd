@@ -16,12 +16,9 @@ use work.common_pkg.all;
 entity gt_rx_link_ila_wrapper is
   port (
       
-      clk_i   : in std_logic;
-      kchar_i : in std_logic_vector(1 downto 0);
-      comma_i           : in std_logic_vector(1 downto 0);
-      not_in_table_i    : in std_logic_vector(1 downto 0);
-      disperr_i         : in std_logic_vector(1 downto 0);
-      data_i            : in std_logic_vector(15 downto 0)      
+      clk_i         : in std_logic;
+      rx_data_i     : in t_mgt_16b_rx_data;
+      mgt_status_i  : in t_mgt_status      
   );
 end gt_rx_link_ila_wrapper;
 
@@ -34,7 +31,11 @@ architecture Behavioral of gt_rx_link_ila_wrapper is
             probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
             probe2 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
             probe3 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-            probe4 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
+            probe4 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            probe5 : IN STD_LOGIC;
+            probe6 : IN STD_LOGIC;
+            probe7 : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+            probe8 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
         );
     end component gt_rx_link_ila;
         
@@ -43,11 +44,15 @@ begin
     i_gt_rx_link_ila : component gt_rx_link_ila
         port map(
             clk         => clk_i,
-            probe0      => data_i,
-            probe1      => kchar_i,
-            probe2      => comma_i,
-            probe3      => not_in_table_i,
-            probe4      => disperr_i
+            probe0      => rx_data_i.rxdata,
+            probe1      => rx_data_i.rxcharisk,
+            probe2      => rx_data_i.rxchariscomma,
+            probe3      => rx_data_i.rxnotintable,
+            probe4      => rx_data_i.rxdisperr,
+            probe5      => rx_data_i.rxbyteisaligned,
+            probe6      => rx_data_i.rxbyterealign,
+            probe7      => mgt_status_i.rxbufstatus,
+            probe8      => mgt_status_i.rxclkcorcnt
         );
         
 end Behavioral;

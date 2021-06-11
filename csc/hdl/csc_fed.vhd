@@ -77,6 +77,29 @@ end csc_fed;
 
 architecture csc_fed_arch of csc_fed is
 
+    --================================--
+    -- Components
+    --================================--
+
+    component ila_gbt
+        port(
+            clk     : in std_logic;
+            probe0  : in std_logic_vector(83 downto 0);
+            probe1  : in std_logic_vector(83 downto 0);
+            probe2  : in std_logic_vector(31 downto 0);
+            probe3  : in std_logic;
+            probe4  : in std_logic;
+            probe5  : in std_logic;
+            probe6  : in std_logic;
+            probe7  : in std_logic;
+            probe8  : in std_logic_vector(5 downto 0)
+        );
+    end component;
+    
+    --================================--
+    -- Constants
+    --================================--
+
     constant POWER_UP_RESET_TIME : std_logic_vector(31 downto 0) := x"02625a00"; -- 40_000_000 clock cycles (1s) - way too long of course, but fine -- this is only used at powerup (FED doesn't care about hard resets), it's not like someone will want to start taking data sooner than that :) 
 
     --================================--
@@ -282,6 +305,38 @@ begin
             ipb_clk_i         => ipb_clk_i,
             ipb_miso_o        => ipb_miso_arr(C_IPB_SLV.tests),
             ipb_mosi_i        => ipb_mosi_arr_i(C_IPB_SLV.tests)
+        );
+
+    --================================--
+    -- Debug
+    --================================--
+
+    i_ila_dmb0_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_dmb_rx_usrclk_arr_i(0),
+            rx_data_i    => csc_dmb_rx_data_arr_i(0),
+            mgt_status_i => csc_dmb_rx_status_arr_i(0)
+        );
+
+    i_ila_dmb1_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_dmb_rx_usrclk_arr_i(1),
+            rx_data_i    => csc_dmb_rx_data_arr_i(1),
+            mgt_status_i => csc_dmb_rx_status_arr_i(1)
+        );
+
+    i_ila_gbe_rx_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_spy_usrclk_i,
+            rx_data_i    => csc_spy_rx_data_i,
+            mgt_status_i => csc_spy_rx_status_i
+        );
+
+    i_ila_gbe_tx_link : entity work.gt_tx_link_ila_wrapper
+        port map(
+            clk_i   => csc_spy_usrclk_i,
+            kchar_i => csc_spy_tx_data_o.txcharisk,
+            data_i  => csc_spy_tx_data_o.txdata
         );
 
 end csc_fed_arch;

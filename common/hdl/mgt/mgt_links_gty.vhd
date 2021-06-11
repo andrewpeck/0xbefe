@@ -361,7 +361,9 @@ begin
                 generic map(
                     g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
                     g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
-                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
@@ -416,13 +418,15 @@ begin
             chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.gbe;
 
             -- generic control signals
-            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on DMB links
+            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
             
             i_chan_gbe : entity work.gty_channel_gbe
                 generic map(
                     g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
                     g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
-                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
