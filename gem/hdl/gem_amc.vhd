@@ -309,6 +309,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
+            local_l1a_req_i     => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,

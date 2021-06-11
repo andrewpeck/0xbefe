@@ -121,6 +121,7 @@ architecture csc_fed_arch of csc_fed is
     signal ttc_cmd              : t_ttc_cmds;
     signal ttc_counters         : t_ttc_daq_cntrs;
     signal ttc_status           : t_ttc_status;
+    signal daq_l1a_request      : std_logic := '0';
 
     --== Spy path ==--
     signal spy_gbe_test_en      : std_logic;
@@ -184,6 +185,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
+            local_l1a_req_i     => daq_l1a_request,
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -213,6 +215,7 @@ begin
             ttc_cmds_i       => ttc_cmd,
             ttc_daq_cntrs_i  => ttc_counters,
             ttc_status_i     => ttc_status,
+            l1a_request_o    => daq_l1a_request,
             input_clk_arr_i  => csc_dmb_rx_usrclk_arr_i,
             input_link_arr_i => csc_dmb_rx_data_arr_i,
             spy_clk_i        => csc_spy_usrclk_i,

@@ -226,6 +226,12 @@
             <node id="RESET_TILL_RESYNC"        address="0x1"  mask="0x02000000" permission="rw"
                   description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
                   fw_signal="reset_till_resync" fw_default="0x0"/>
+            <node id="L1A_REQUEST_EN"        address="0x1"  mask="0x04000000" permission="rw"
+                  description="If this is set to 1, a local L1A will be generated (originating from the TTC module) whenever the DAQ module receives a new event from any input for which the L1A hasn't yet been requested.
+                               This can be used in setups where a TCDS system is not available.
+                               This works regardless if the TTC generator is used or not in the TTC module.
+                               Note that this won't work with AMC13 readout (because AMC13 would not receive the L1A). This should work with DTH though (at least in the current state it doesn't require L1As to readout)"
+                  fw_signal="l1a_req_en" fw_default="0x0"/>
             <node id="RUN_TYPE"       address="0x2"  mask="0x0f000000" permission="rw"
                   description="User settable run type that gets embedded into the AMC header"
                   fw_signal="run_type" fw_default="0x0"/>
