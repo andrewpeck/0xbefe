@@ -31,8 +31,8 @@ def main():
     if not filename:
         filename = os.environ['HOME'] + "/csc_fed/data/run_" + datetime.datetime.now().strftime("%Y-%m-%d__%H_%M_%S") + ".raw"
 
-    inputMask = 0x7efd
-    inputMaskStr = raw_input("DAQ input enable bitmask as hex (default = 0x7efd, meaning only the first input is enabled)")
+    inputMask = 0x1
+    inputMaskStr = raw_input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
     if inputMaskStr:
         inputMask = parseInt(inputMaskStr)
 
@@ -62,7 +62,7 @@ def main():
         useCscTtcEncoding = True
 
     useLocalL1a = 0
-    useLocalL1aStr = raw_input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = yes)")
+    useLocalL1aStr = raw_input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = no)")
     if (useLocalL1aStr == "yes") or (useLocalL1aStr == "y"):
         useLocalL1a = 1
 
