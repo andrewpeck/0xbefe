@@ -27,12 +27,13 @@ use work.common_pkg.all;
 
 entity gbt is
     generic(
-        NUM_LINKS       : integer              := 1;
-        TX_OPTIMIZATION : integer range 0 to 1 := STANDARD;
-        RX_OPTIMIZATION : integer range 0 to 1 := STANDARD;
-        TX_ENCODING     : integer range 0 to 1 := GBT_FRAME;
-        RX_ENCODING_ODD : integer range 0 to 1 := GBT_FRAME;
-        RX_ENCODING_EVEN: integer range 0 to 1 := GBT_FRAME
+        NUM_LINKS           : integer              := 1;
+        TX_OPTIMIZATION     : integer range 0 to 1 := STANDARD;
+        RX_OPTIMIZATION     : integer range 0 to 1 := STANDARD;
+        TX_ENCODING         : integer range 0 to 1 := GBT_FRAME;
+        RX_ENCODING_ODD     : integer range 0 to 1 := GBT_FRAME;
+        RX_ENCODING_EVEN    : integer range 0 to 1 := GBT_FRAME;
+        g_USE_RX_SYNC_FIFOS : boolean              := true -- when set to true the MGT RX data will be taken through a FIFO to transfer to rx_word_common_clk_i before even connecting to GBTX RX core (this will cause RX latency to not be deterministic, but it's useful if all rx_word_clk_arr_i clocks cannot be put on BUFGs, and will synthesize even if they're on BUFHs, while it would be very tight if not using the FIFOs). When false, rx_word_common_clk_i is not used
     );
     port(
         reset_i                     : in  std_logic;
@@ -119,11 +120,8 @@ architecture gbt_arch of gbt is
     
     signal rx_data_encoded_arr          : t_std120_array(NUM_LINKS - 1 downto 0);
     
-    signal rx_word_data_arr             : t_std40_array(NUM_LINKS - 1 downto 0);
-
-    signal rx_common_word_clk           : std_logic;
-    signal mgt_sync_rx_data_arr         : t_std40_array(NUM_LINKS - 1 downto 0);
-    signal mgt_sync_rx_valid_arr        : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_word_clk_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal mgt_rx_data_arr              : t_std40_array(NUM_LINKS - 1 downto 0);
    
     signal mgt_rx_bitslip_cnt_arr       : t_std8_array(NUM_LINKS - 1 downto 0);
     signal mgt_rx_data_bitslipped_arr   : t_std40_array(NUM_LINKS - 1 downto 0);
@@ -152,55 +150,66 @@ begin                                   --========####   Architecture Body   ###
 --=================================================================================================--
 
     mgt_ctrl_arr_o <= (others => (txreset => '0', rxreset => '0', rxslide => '0'));
-    
+        
    --===============--
    -- RX Sync FIFOs --
    --===============--
 
     -- put the data from all GBT MGT RXs through sync a FIFO immediately to get it out of the BUFH domain and put it on a common clock domain which is on BUFG
     -- This is to let the GBT cores to be placed more freely (not constrained to the area that the RX BUFHs are spanning)
-   
-    rx_common_word_clk <= rx_word_common_clk_i;
-    
+       
     g_rx_sync_fifos : for i in 0 to NUM_LINKS - 1 generate
-        
-        i_rx_sync_fifo : entity work.gearbox
-            generic map(
-                g_IMPL_TYPE         => "FIFO",
-                g_INPUT_DATA_WIDTH  => 40,
-                g_OUTPUT_DATA_WIDTH => 40
-            )
-            port map(
-                reset_i     => reset_i or not mgt_status_arr_i(i).rx_reset_done,
-                wr_clk_i    => rx_word_clk_arr_i(i),
-                rd_clk_i    => rx_common_word_clk,
-                din_i       => rx_word_data_arr(i),
-                valid_i     => '1',
-                dout_o      => mgt_sync_rx_data_arr(i),
-                valid_o     => mgt_sync_rx_valid_arr(i),
-                overflow_o  => rx_ovf_arr(i),
-                underflow_o => rx_unf_arr(i)
-            );
-        
-        rx_word_data_arr(i) <= mgt_rx_data_arr_i(i);
-        
-        i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_common_word_clk, sync_o  => rx_ovf_sync_arr(i));
-        i_gbt_rx_sync_ovf_latch : entity work.latch
-            port map(
-                reset_i => reset_i or cnt_reset_i,
-                clk_i   => rx_common_word_clk,
-                input_i => rx_ovf_sync_arr(i),
-                latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_ovf
-            );
 
-        i_gbt_rx_sync_unf_latch : entity work.latch
-            port map(
-                reset_i => reset_i or cnt_reset_i,
-                clk_i   => rx_common_word_clk,
-                input_i => rx_unf_arr(i),
-                latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_unf
-            );
-                    
+        gen_use_rx_sync_fifos : if g_USE_RX_SYNC_FIFOS generate 
+    
+            rx_word_clk_arr(i) <= rx_word_common_clk_i;
+            
+            i_rx_sync_fifo : entity work.gearbox
+                generic map(
+                    g_IMPL_TYPE         => "FIFO",
+                    g_INPUT_DATA_WIDTH  => 40,
+                    g_OUTPUT_DATA_WIDTH => 40
+                )
+                port map(
+                    reset_i     => reset_i or not mgt_status_arr_i(i).rx_reset_done,
+                    wr_clk_i    => rx_word_clk_arr_i(i),
+                    rd_clk_i    => rx_word_clk_arr(i),
+                    din_i       => mgt_rx_data_arr_i(i),
+                    valid_i     => '1',
+                    dout_o      => mgt_rx_data_arr(i),
+                    valid_o     => open,
+                    overflow_o  => rx_ovf_arr(i),
+                    underflow_o => rx_unf_arr(i)
+                );
+            
+            i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_word_clk_arr(i), sync_o  => rx_ovf_sync_arr(i));
+            i_gbt_rx_sync_ovf_latch : entity work.latch
+                port map(
+                    reset_i => reset_i or cnt_reset_i,
+                    clk_i   => rx_word_clk_arr(i),
+                    input_i => rx_ovf_sync_arr(i),
+                    latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_ovf
+                );
+    
+            i_gbt_rx_sync_unf_latch : entity work.latch
+                port map(
+                    reset_i => reset_i or cnt_reset_i,
+                    clk_i   => rx_word_clk_arr(i),
+                    input_i => rx_unf_arr(i),
+                    latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_unf
+                );
+        
+        end generate;
+
+        gen_no_rx_sync_fifos : if not g_USE_RX_SYNC_FIFOS generate
+            
+            mgt_rx_data_arr(i) <= mgt_rx_data_arr_i(i);
+            rx_word_clk_arr(i) <= rx_word_clk_arr_i(i);
+            link_status_arr_o(i).gbt_rx_sync_status.had_ovf <= '0';
+            link_status_arr_o(i).gbt_rx_sync_status.had_unf <= '0';
+            
+        end generate;
+            
     end generate;
    
    --========--
@@ -303,7 +312,7 @@ begin                                   --========####   Architecture Body   ###
             )
             port map(
                 RX_RESET_I      => reset_i,
-                RX_WORDCLK_I    => rx_common_word_clk, --rx_word_clk_arr_i(i), -- TODO: remove the sync fifos
+                RX_WORDCLK_I    => rx_word_clk_arr(i),
                 RX_FRAMECLK_I   => rx_frame_clk_i,
                 RX_CLKEN_i      => '1',
                 RX_CLKEN_o      => rx_gearbox_clk_en(i),
@@ -360,7 +369,7 @@ begin                                   --========####   Architecture Body   ###
         patternSearch : entity work.mgt_framealigner_pattsearch
             port map(
                 RX_RESET_I         => not (mgt_status_arr_i(i).rx_reset_done),
-                RX_WORDCLK_I       => rx_common_word_clk, --rx_word_clk_arr_i(i), -- TODO: remove the sync fifos
+                RX_WORDCLK_I       => rx_word_clk_arr(i),
                 RX_BITSLIP_CMD_O   => rx_bitslip_en(i),
                 MGT_BITSLIPDONE_i  => '1',
                 RX_HEADER_LOCKED_O => rx_header_locked(i),
@@ -379,9 +388,9 @@ begin                                   --========####   Architecture Body   ###
                 sync_o  => rx_header_locked_sync(i)
             );
 
-        process(rx_common_word_clk) -- TODO: remove the sync fifos
+        process(rx_word_clk_arr(i))
         begin
-            if rising_edge(rx_common_word_clk) then -- TODO: remove the sync fifos
+            if rising_edge(rx_word_clk_arr(i)) then
                 if (reset_i = '1') then
                     mgt_rx_bitslip_cnt_arr(i) <= (others => '0');
                 else
@@ -403,9 +412,9 @@ begin                                   --========####   Architecture Body   ###
                 g_TRANSMIT_LOW_TO_HIGH => true
             )
             port map(
-                clk_i      => rx_common_word_clk, -- TODO: remove the sync fifos
+                clk_i      => rx_word_clk_arr(i),
                 slip_cnt_i => mgt_rx_bitslip_cnt_arr(i),
-                data_i     => mgt_sync_rx_data_arr(i), --rx_wordNbit_from_mgt(i) -- TODO: remove the sync fifos
+                data_i     => mgt_rx_data_arr(i),
                 data_o     => mgt_rx_data_bitslipped_arr(i)
             );
 
@@ -424,7 +433,7 @@ begin                                   --========####   Architecture Body   ###
                 input_i => not rx_header_locked_sync(i),
                 latch_o => link_status_arr_o(i).gbt_rx_header_had_unlock
             );
-
+        
 	end generate;
 
    --=====================================================================================--
