@@ -182,6 +182,16 @@ begin
             txph_syncdone_arr(chan) <= tx_status_arr(chan).txsyncdone;
             txph_syncout_arr(chan) <= tx_status_arr(chan).txsyncout;
         end generate;
+
+        g_tx_no_phalign : if not g_LINK_CONFIG(chan).tx_multilane_phalign generate
+            tx_init_arr(chan).txsyncallin <= '0';
+            tx_init_arr(chan).txsyncin <= '0';      
+            tx_init_arr(chan).txsyncmode <= '0';    
+            tx_init_arr(chan).txdlysreset <= '0';   
+            txph_phaligndone_arr(chan) <= '1'; 
+            txph_syncdone_arr(chan) <= '1';
+            txph_syncout_arr(chan) <= '1';
+        end generate;
         
         --================================--
         -- GBTX MGT type

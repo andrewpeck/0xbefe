@@ -100,7 +100,7 @@ begin
     -- some synchronizers for the handshake signals
     i_pulse_req_sync : entity work.synch
         generic map(
-            N_STAGES => 2
+            N_STAGES => 3
         )
         port map(
             async_i => pulse_req,
@@ -110,7 +110,7 @@ begin
 
     i_pulse_ack_sync : entity work.synch
         generic map(
-            N_STAGES => 2
+            N_STAGES => 3
         )
         port map(
             async_i => pulse_ack,
