@@ -24,6 +24,7 @@ entity system_regs is
         g_BOARD_TYPE    : std_logic_vector(3 downto 0);
         
         g_NUM_IPB_MON_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS      : integer;
         
         -- Firmware version, date, time, git sha
         g_FW_DATE            : std_logic_vector (31 downto 0);

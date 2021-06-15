@@ -610,7 +610,8 @@ begin
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
             g_DEBUG => true,
-            g_IPB_CLK_ASYNC => true
+            g_IPB_CLK_ASYNC => true,
+            g_IPB_TIMEOUT => 15000
         )
         port map(
             axi_aclk_i     => axi_clk,

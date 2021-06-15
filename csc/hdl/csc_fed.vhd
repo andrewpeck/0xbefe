@@ -25,6 +25,7 @@ entity csc_fed is
         g_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- this is not used except for putting it in a register for the user to see
         g_NUM_OF_DMBs        : integer;
         g_NUM_IPB_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQLINK_CLK_FREQ   : integer;
         g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
 
@@ -175,8 +176,9 @@ begin
     --================================--
 
     i_ttc : entity work.ttc
-        generic map (
-            g_DISABLE_TTC_DATA => g_DISABLE_TTC_DATA
+        generic map(
+            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i             => reset,
@@ -202,8 +204,9 @@ begin
 
     i_daq : entity work.daq
         generic map(
-            g_NUM_OF_DMBs => g_NUM_OF_DMBs,
-            g_DAQ_CLK_FREQ => g_DAQLINK_CLK_FREQ
+            g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_DAQ_CLK_FREQ      => g_DAQLINK_CLK_FREQ,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i          => reset,
@@ -237,6 +240,7 @@ begin
             g_NUM_OF_DMBs        => g_NUM_OF_DMBs,
             g_BOARD_TYPE         => g_BOARD_TYPE,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
             g_FW_DATE            => g_FW_DATE,
             g_FW_TIME            => g_FW_TIME,
             g_FW_VER             => g_FW_VER,
@@ -265,7 +269,8 @@ begin
 
     i_link_monitor : entity work.link_monitor
         generic map(
-            g_NUM_OF_DMBs => g_NUM_OF_DMBs
+            g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset,
@@ -297,6 +302,9 @@ begin
     --================================--
 
     i_csc_tests : entity work.csc_tests
+        generic map(
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
+        )
         port map(
             reset_i           => reset,
             ttc_clk_i         => ttc_clocks,

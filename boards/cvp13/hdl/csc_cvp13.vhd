@@ -103,6 +103,9 @@ architecture csc_cvp13_arch of csc_cvp13 is
         probe_out0 : OUT STD_LOGIC_VECTOR(11 DOWNTO 0)
       );
     END COMPONENT;
+
+    -- constants
+    constant IPB_CLK_PERIOD_NS  : integer := 10;
        
     -- resets 
     signal reset                : std_logic;
@@ -257,7 +260,8 @@ begin
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 10
+            g_STABLE_CLK_PERIOD => 10,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS 
         )
         port map(
             reset_i              => '0',
@@ -287,8 +291,9 @@ begin
 
     i_promless : entity work.promless
         generic map(
-            g_MAX_SIZE_BYTES   => 8_388_608, --9_437_184, -- 9_600_000,
-            g_MEMORY_PRIMITIVE => "ultra"
+            g_MAX_SIZE_BYTES    => 8_388_608, --9_437_184, -- 9_600_000,
+            g_MEMORY_PRIMITIVE  => "ultra",
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i         => '0',
@@ -313,6 +318,7 @@ begin
             g_BOARD_TYPE        => CFG_BOARD_TYPE,
             g_NUM_OF_DMBs       => CFG_NUM_DMBS,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQLINK_CLK_FREQ  => 100_000_000,
             g_DISABLE_TTC_DATA  => true
         )

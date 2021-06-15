@@ -100,6 +100,9 @@ architecture gem_apex_arch of gem_apex is
         );
     end component apex_blk;
 
+    -- constants
+    constant IPB_CLK_PERIOD_NS  : integer := 20;
+
     -- resets 
     --signal reset                : std_logic;
     signal gem_powerup_reset    : std_logic;
@@ -235,7 +238,8 @@ begin
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
             g_DEBUG => true,
-            g_IPB_CLK_ASYNC => false
+            g_IPB_CLK_ASYNC => false,
+            g_IPB_TIMEOUT => 3000
         )
         port map(
             axi_aclk_i     => axil_clk,
@@ -322,7 +326,8 @@ begin
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 20
+            g_STABLE_CLK_PERIOD => 20,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i              => '0',
@@ -352,10 +357,11 @@ begin
 
     i_slink_rocket : entity work.slink_rocket
         generic map(
-            g_NUM_CHANNELS => 1,
-            g_LINE_RATE    => "25.78125",
-            q_REF_CLK_FREQ => "322.265625",
-            g_MGT_TYPE     => "GTY"
+            g_NUM_CHANNELS      => 1,
+            g_LINE_RATE         => "25.78125",
+            q_REF_CLK_FREQ      => "322.265625",
+            g_MGT_TYPE          => "GTY",
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i          => gem_powerup_reset,
@@ -386,6 +392,7 @@ begin
             g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS,
             g_NUM_TRIG_TX_LINKS => CFG_NUM_TRIG_TX,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQ_CLK_FREQ      => 50_000_000,
             g_DISABLE_TTC_DATA  => true
         )

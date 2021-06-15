@@ -26,7 +26,8 @@ use work.board_config_package.all;
 entity daq is
 generic(
     g_NUM_OF_DMBs        : integer;
-    g_DAQ_CLK_FREQ       : integer
+    g_DAQ_CLK_FREQ       : integer;
+    g_IPB_CLK_PERIOD_NS  : integer
 );
 port(
 

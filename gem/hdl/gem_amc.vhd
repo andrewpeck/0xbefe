@@ -34,6 +34,7 @@ entity gem_amc is
         g_NUM_TRIG_TX_LINKS  : integer;
         
         g_NUM_IPB_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS  : integer; 
         g_DAQ_CLK_FREQ       : integer;
         g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
         
@@ -300,7 +301,8 @@ begin
 
     i_ttc : entity work.ttc
         generic map (
-            g_DISABLE_TTC_DATA => g_DISABLE_TTC_DATA
+            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i             => reset,
@@ -342,7 +344,8 @@ begin
     
     i_vfat3_slow_control : entity work.vfat3_slow_control
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs
+            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset or link_reset,
@@ -369,10 +372,11 @@ begin
 
         i_optohybrid_single : entity work.optohybrid
             generic map(
-                g_GEM_STATION   => g_GEM_STATION,
-                g_OH_VERSION    => CFG_OH_VERSION,
-                g_OH_IDX        => std_logic_vector(to_unsigned(i, 4)),
-                g_DEBUG         => CFG_DEBUG_OH and (i = 0)
+                g_GEM_STATION       => g_GEM_STATION,
+                g_OH_VERSION        => CFG_OH_VERSION,
+                g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                g_DEBUG             => CFG_DEBUG_OH and (i = 0)
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -428,10 +432,11 @@ begin
 
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
-            g_DEBUG => CFG_DEBUG_TRIGGER
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_TRIGGER
         )
         port map(
             reset_i            => reset or link_reset,
@@ -512,10 +517,11 @@ begin
 
     i_daq : entity work.daq
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
-            g_DAQ_CLK_FREQ => g_DAQ_CLK_FREQ,
-            g_INCLUDE_SPY_FIFO => false,
-            g_DEBUG => CFG_DEBUG_DAQ
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
+            g_INCLUDE_SPY_FIFO  => false,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_DAQ
         )
         port map(
             reset_i                 => reset,
@@ -546,12 +552,13 @@ begin
     --================================--
 
     i_gem_system : entity work.gem_system_regs
-        generic map (
+        generic map(
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
-            g_FW_DATE => g_FW_DATE,
-            g_FW_TIME => g_FW_TIME,
-            g_FW_VER => g_FW_VER,
-            g_FW_SHA => g_FW_SHA
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
+            g_FW_DATE            => g_FW_DATE,
+            g_FW_TIME            => g_FW_TIME,
+            g_FW_VER             => g_FW_VER,
+            g_FW_SHA             => g_FW_SHA
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
@@ -581,7 +588,8 @@ begin
     i_oh_link_registers : entity work.oh_link_regs
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
-            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH
+            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset,
@@ -607,6 +615,7 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
             g_DEBUG             => false
         )
         port map(
@@ -633,7 +642,8 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
-            g_GEM_STATION       => g_GEM_STATION
+            g_GEM_STATION       => g_GEM_STATION,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                     => reset_i,
@@ -662,7 +672,8 @@ begin
                 RX_OPTIMIZATION     => 0,
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
-                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS
+                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS,
+                g_USE_RX_SYNC_FIFOS => false
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,

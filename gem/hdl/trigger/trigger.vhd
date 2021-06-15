@@ -23,6 +23,7 @@ entity trigger is
         g_NUM_OF_OHs        : integer;
         g_NUM_TRIG_TX_LINKS : integer;
         g_USE_TRIG_TX_LINKS : boolean;
+        g_IPB_CLK_PERIOD_NS : integer;
         g_DEBUG             : boolean
     );
     port(

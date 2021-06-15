@@ -11,3 +11,4 @@ common/ip/vio_gem_loader/vio_gem_loader.xci
 common/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
 common/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 common/ip/ila_clk_phase_check/ila_clk_phase_check.xci
+common/ip/vio_ipb_bus_debug_select/vio_ipb_bus_debug_select.xci

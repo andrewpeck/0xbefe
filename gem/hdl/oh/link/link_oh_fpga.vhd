@@ -18,6 +18,9 @@ use work.gem_pkg.all;
 use work.ipbus.all;
 
 entity link_oh_fpga is
+    generic(
+        g_IPB_CLK_PERIOD_NS : integer
+    );
     port(
         -- reset
         reset_i         : in  std_logic;
@@ -45,13 +48,13 @@ end link_oh_fpga;
 
 architecture link_oh_fpga_arch of link_oh_fpga is
     
-    constant TRANSACTION_TIMEOUT    : unsigned(11 downto 0) := x"7ff";
+    constant TRANSACTION_TIMEOUT    : unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
     
     type state_t is (IDLE, RSPD, RST);
         
     signal state                : state_t;
 
-    signal transaction_timer    : unsigned(11 downto 0) := (others => '0');
+    signal transaction_timer    : unsigned(15 downto 0) := (others => '0');
     signal timeout_err_cnt      : unsigned(15 downto 0) := (others => '0');
     signal axi_strobe_err_cnt   : unsigned(15 downto 0) := (others => '0');
     

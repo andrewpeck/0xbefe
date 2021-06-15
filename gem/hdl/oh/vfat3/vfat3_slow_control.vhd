@@ -22,7 +22,8 @@ use work.ipbus.all;
 
 entity vfat3_slow_control is
     generic(
-        g_NUM_OF_OHs            : integer
+        g_NUM_OF_OHs        : integer;
+        g_IPB_CLK_PERIOD_NS : integer         
     );
     port(
         -- reset
@@ -68,7 +69,7 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
         );
     end component;
 	
-	constant TRANSACTION_TIMEOUT	: unsigned(11 downto 0) := x"7ff";
+	constant TRANSACTION_TIMEOUT	: unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
 	
     type state_t is (IDLE, RSPD, RSPD_CACHE, RST, WAIT_CACHE_UPDATE);
         
@@ -82,7 +83,7 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_reset_clk40       : std_logic;
 
     signal transaction_id       : unsigned(15 downto 0) := (others => '0');
-	signal transaction_timer	: unsigned(11 downto 0) := (others => '0');
+	signal transaction_timer	: unsigned(15 downto 0) := (others => '0');
 	signal timeout_err_cnt      : unsigned(15 downto 0) := (others => '0');
 	signal axi_strobe_err_cnt   : unsigned(15 downto 0) := (others => '0');
 	
@@ -110,6 +111,8 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_bitstuff_err_cnt  : std_logic_vector(15 downto 0) := (others => '0');
     signal rx_crc_err_cnt       : std_logic_vector(15 downto 0) := (others => '0');
     
+    signal ipb_miso             : ipb_rbus;
+    
     -- ADC cache
     signal adc_cache_en         : std_logic;
     signal adc_cache_we         : std_logic;
@@ -132,6 +135,7 @@ begin
 
     tx_oh_idx_o <= tx_oh_idx;
     tx_vfat_idx_o <= tx_vfat_idx;
+    ipb_miso_o <= ipb_miso;
 
     status_o.bitstuff_error_cnt     <= rx_bitstuff_err_cnt;
     status_o.crc_error_cnt          <= rx_crc_err_cnt;
@@ -151,7 +155,7 @@ begin
     begin    
         if (rising_edge(ipb_clk_i)) then      
             if (reset_clkipb = '1') then    
-                ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                 tx_is_write <= '0';
                 tx_reg_addr <= (others => '0');
                 tx_reg_value <= (others => '0');
@@ -171,7 +175,7 @@ begin
                 case state is
                     when IDLE =>    
                     
-                    	ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                    	ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                     	transaction_timer <= (others => '0');
                     	adc_cache_we <= '0';
                     	adc_cache_din <= (others => '0');
@@ -219,7 +223,7 @@ begin
                                 state <= RSPD;
                             else
                                 tx_command_en <= '0';
-                                tx_reset <= '1';
+                                tx_reset <= '0';
                                 rx_reset <= '1';
                                 adc_cache_en <= '1';
                                 adc_cache_addr <= ipb_mosi_i.ipb_addr(19 downto 11) & ipb_mosi_i.ipb_addr(0);
@@ -231,7 +235,7 @@ begin
                         	
                         	tx_command_en <= '0';
                         	state <= IDLE;
-                            tx_reset <= '1';
+                            tx_reset <= '0';
                             rx_reset <= '1';
                             adc_cache_en <= '0';
                             adc_cache_addr <= (others => '0');
@@ -250,17 +254,17 @@ begin
                             rx_reset <= '1';
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
                         elsif (tx_reg_addr(19 downto 8) = x"200") then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => (others => '0'));
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => (others => '0'));
                             state <= WAIT_CACHE_UPDATE;
                         elsif (rx_valid_sync = '1') then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => rx_reg_value);
                             state <= RST;
                         elsif (rx_error_sync = '1') then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
                             state <= RST;
                         elsif (transaction_timer = TRANSACTION_TIMEOUT) then
                             timeout_err_cnt <= timeout_err_cnt + 1;
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
                             state <= RST;
                         end if;
 
@@ -277,12 +281,14 @@ begin
                     -- respond with cached data (only used for ADCs, which are slow)
                     when RSPD_CACHE =>
                         
+                        ipb_miso <= ipb_miso;
+                        
                         if (ipb_mosi_i.ipb_strobe = '0') then
                             state <= IDLE;
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
                             transaction_timer <= (others => '0');
-                        elsif (transaction_timer = x"002") then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => x"00000" & "00" & adc_cache_dout);
+                        elsif (transaction_timer = x"0002") then
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => x"00000" & "00" & adc_cache_dout);
                             state <= RST;
                             transaction_timer <= (others => '0');
                         else
@@ -298,8 +304,8 @@ begin
                     when RST =>
                     	
                     	if (ipb_mosi_i.ipb_strobe = '0') then 
-	                        ipb_miso_o.ipb_ack <= '0';
-	                        ipb_miso_o.ipb_err <= '0';
+	                        ipb_miso.ipb_ack <= '0';
+	                        ipb_miso.ipb_err <= '0';
 	                        state <= IDLE;
 	                        tx_reset <= '1';
 	                        rx_reset <= '1';
@@ -310,6 +316,8 @@ begin
 	                        rx_calc_crc_last <= rx_calc_crc;
 	                        tx_raw_last_packet_last <= tx_raw_last_packet;
 	                        rx_raw_last_reply_last <= rx_raw_last_reply;
+	                    else
+                            ipb_miso <= ipb_miso;	                        
                     	end if;
 
                         adc_cache_en <= '0';
@@ -321,7 +329,9 @@ begin
                     when WAIT_CACHE_UPDATE =>
                     
                         if (ipb_mosi_i.ipb_strobe = '0') then
-                            ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                            ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                        else
+                            ipb_miso <= ipb_miso;                            
                         end if;
                         
                         if (tx_busy = '1') then
@@ -360,7 +370,7 @@ begin
                     -- who knows what might happen :)
                     when others =>
                         
-                        ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0')); 
+                        ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0')); 
                         state <= IDLE;
                         tx_is_write <= '0';
                         tx_reg_addr <= (others => '0');

@@ -32,7 +32,8 @@ entity mgt_links_gty is
         g_NUM_CHANNELS          : integer;
         g_NUM_QPLLS             : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
-        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20  -- Period of the stable clock driving the state machines (ns)        
+        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
+        g_IPB_CLK_PERIOD_NS     : integer        
     );
     port(
         
@@ -597,7 +598,8 @@ begin
 
     i_slow_control : entity work.mgt_slow_control
         generic map(
-            g_NUM_CHANNELS => g_NUM_CHANNELS
+            g_NUM_CHANNELS      => g_NUM_CHANNELS,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             clk_stable_i          => clk_stable_i,

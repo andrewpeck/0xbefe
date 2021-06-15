@@ -29,7 +29,8 @@ use work.registers.all;
 
 entity ttc is
     generic(
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
         -- reset

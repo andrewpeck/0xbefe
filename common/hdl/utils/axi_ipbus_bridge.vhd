@@ -24,7 +24,8 @@ use work.ipb_sys_addr_decode.all;
 entity axi_ipbus_bridge is
     generic (
         g_DEBUG         : boolean := false;
-        g_IPB_CLK_ASYNC : boolean := false
+        g_IPB_CLK_ASYNC : boolean := false;
+        g_IPB_TIMEOUT   : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
     );
     port (
         -- AXI4-Lite interface
@@ -48,6 +49,13 @@ entity axi_ipbus_bridge is
 end axi_ipbus_bridge;
 
 architecture arch_imp of axi_ipbus_bridge is
+
+    component vio_ipb_bus_debug_select
+        port(
+            clk        : in  std_logic;
+            probe_out0 : out std_logic_vector(5 downto 0)
+        );
+    end component;    
 
     component ila_axi_ipbus_bridge is
         port(
@@ -94,7 +102,6 @@ architecture arch_imp of axi_ipbus_bridge is
 
     type t_axi_ipb_state is (IDLE, WRITE, READ, WAIT_FOR_WRITE_ACK, WAIT_FOR_READ_ACK, AXI_READ_HANDSHAKE, AXI_WRITE_HANDSHAKE);
     
-    constant ipb_timeout        : unsigned(23 downto 0) := x"000bb8"; --x"0000f5"; -- 254 clocks to ~match the 255 cycle limit on the Zynq fw --x"027100"; -- 3000 clock cycles = ~60us
     signal ipb_reset            : std_logic;
     signal ipb_state            : t_axi_ipb_state;
     signal ipb_sys_transact     : std_logic;
@@ -105,6 +112,10 @@ architecture arch_imp of axi_ipbus_bridge is
     signal ipb_sys_mosi         : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_miso         : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_slv_select   : integer range 0 to C_NUM_IPB_SYS_SLAVES := 0;
+
+    signal dbg_bus_select       : std_logic_vector(5 downto 0);
+    signal dbg_ipb_usr_mosi     : ipb_wbus;
+    signal dbg_ipb_usr_miso     : ipb_rbus;
 
 begin
     -- I/O Connections assignments
@@ -218,7 +229,7 @@ begin
                             end if;
     
                         -- IPbus timed out
-                        elsif (ipb_timer > ipb_timeout) then
+                        elsif (ipb_timer > to_unsigned(g_IPB_TIMEOUT, 24)) then
                             ipb_state <= AXI_READ_HANDSHAKE;
                             ipb_timer <= (others => '0');
                             axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "10", rvalid => '1'); -- SLVERR: slave error response
@@ -289,7 +300,7 @@ begin
                             end if;
     
                         -- IPbus timed out
-                        elsif (ipb_timer > ipb_timeout) then
+                        elsif (ipb_timer > to_unsigned(g_IPB_TIMEOUT, 24)) then
                             ipb_state <= AXI_WRITE_HANDSHAKE;
                             ipb_timer <= (others => '0');
                             axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
@@ -430,6 +441,15 @@ begin
     
     gen_debug : if g_DEBUG generate
     
+        i_vio_ipb_bus_debug_select : vio_ipb_bus_debug_select
+            port map(
+                clk        => axi_aclk_i,
+                probe_out0 => dbg_bus_select
+            );    
+    
+        dbg_ipb_usr_mosi <= ipb_usr_mosi(to_integer(unsigned(dbg_bus_select)));
+        dbg_ipb_usr_miso <= ipb_usr_miso(to_integer(unsigned(dbg_bus_select)));
+    
         ila_axi_ipbus_bridge_inst : ila_axi_ipbus_bridge
             port map(
                 clk     => axi_aclk_i,
@@ -455,13 +475,13 @@ begin
                 probe19 => axil_s2m.rdata,
                 probe20 => axil_s2m.rresp,
                 probe21 => axil_s2m.rvalid,
-                probe22 => ipb_usr_mosi(C_IPB_SLV.system).ipb_addr,
-                probe23 => ipb_usr_mosi(C_IPB_SLV.system).ipb_wdata,
-                probe24 => ipb_usr_mosi(C_IPB_SLV.system).ipb_strobe,
-                probe25 => ipb_usr_mosi(C_IPB_SLV.system).ipb_write,
-                probe26 => ipb_usr_miso(C_IPB_SLV.system).ipb_rdata,
-                probe27 => ipb_usr_miso(C_IPB_SLV.system).ipb_ack,
-                probe28 => ipb_usr_miso(C_IPB_SLV.system).ipb_err,
+                probe22 => dbg_ipb_usr_mosi.ipb_addr,
+                probe23 => dbg_ipb_usr_mosi.ipb_wdata,
+                probe24 => dbg_ipb_usr_mosi.ipb_strobe,
+                probe25 => dbg_ipb_usr_mosi.ipb_write,
+                probe26 => dbg_ipb_usr_miso.ipb_rdata,
+                probe27 => dbg_ipb_usr_miso.ipb_ack,
+                probe28 => dbg_ipb_usr_miso.ipb_err,
                 probe29 => std_logic_vector(to_unsigned(ipb_usr_slv_select, 8))
             );
     end generate;

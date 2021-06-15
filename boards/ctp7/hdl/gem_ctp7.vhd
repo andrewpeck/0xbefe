@@ -314,7 +314,8 @@ begin
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
             g_DEBUG => true,
-            g_IPB_CLK_ASYNC => false
+            g_IPB_CLK_ASYNC => false,
+            g_IPB_TIMEOUT => 3000
         )
         port map(
             axi_aclk_i     => axi_clk,
@@ -349,6 +350,7 @@ begin
                 g_USE_TRIG_TX_LINKS  => CFG_USE_TRIG_TX_LINKS,
                 g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX,
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
+                g_IPB_CLK_PERIOD_NS  => 10,
                 g_DAQ_CLK_FREQ       => 62_500_000 --50_000_000
             )
             port map(

@@ -20,10 +20,11 @@ use work.ipbus.all;
 
 entity optohybrid is
     generic(
-        g_GEM_STATION   : integer;
-        g_OH_VERSION    : integer;
-        g_OH_IDX        : std_logic_vector(3 downto 0);
-        g_DEBUG         : boolean := false -- if this is set to true, some chipscope cores will be inserted
+        g_GEM_STATION       : integer;
+        g_OH_VERSION        : integer;
+        g_OH_IDX            : std_logic_vector(3 downto 0);
+        g_IPB_CLK_PERIOD_NS : integer;
+        g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted
     );
     port(
         -- reset
@@ -249,6 +250,9 @@ begin
     
     g_use_fpga_links : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_oh_slow_control : entity work.link_oh_fpga
+            generic map (
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
+            )
             port map(
                 reset_i    => reset_i or oh_reg_ipb_reset_i,
                 ttc_clk_i  => ttc_clk_i,

@@ -22,12 +22,13 @@ use work.board_config_package.all;
 entity gem_system_regs is
 generic(
     g_NUM_IPB_MON_SLAVES     : integer;
+    g_IPB_CLK_PERIOD_NS      : integer;
     
     -- Firmware version, date, time, git sha
     g_FW_DATE            : std_logic_vector (31 downto 0);
     g_FW_TIME            : std_logic_vector (31 downto 0);
     g_FW_VER             : std_logic_vector (31 downto 0);
-    g_FW_SHA             : std_logic_vector (31 downto 0)            
+    g_FW_SHA             : std_logic_vector (31 downto 0)
 );
 port(
     

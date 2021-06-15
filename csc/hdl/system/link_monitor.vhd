@@ -20,7 +20,8 @@ use work.registers.all;
 
 entity link_monitor is
     generic(
-        g_NUM_OF_DMBs : integer
+        g_NUM_OF_DMBs       : integer;
+        g_IPB_CLK_PERIOD_NS : integer
     );
     port(
         -- reset

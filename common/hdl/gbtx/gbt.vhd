@@ -16,6 +16,9 @@ use ieee.numeric_std.all;
 library unisim;
 use unisim.vcomponents.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 -- Custom libraries and packages:
 use work.gbt_bank_package.all;
 use work.vendor_specific_gbt_bank_package.all;
@@ -91,7 +94,7 @@ architecture gbt_arch of gbt is
 
     type t_int_array is array (integer range <>) of integer;
     constant RX_ENCODING_EVEN_ODD   : t_int_array(0 to 1) := (RX_ENCODING_EVEN, RX_ENCODING_ODD);
-    constant TX_READY_DLY           : std_logic_vector(15 downto 0) := x"1000";
+    constant TX_READY_DLY           : std_logic_vector(15 downto 0) := x"2000";
     
     --================================ Signal Declarations ================================--
 
@@ -127,9 +130,9 @@ architecture gbt_arch of gbt is
     signal rx_word_clk_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal mgt_rx_data_arr              : t_std40_array(NUM_LINKS - 1 downto 0);
     signal mgt_rx_sync_valid_arr        : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal mgt_rx_sync_valid_frameclkarr: std_logic_vector(NUM_LINKS - 1 downto 0);
    
-    signal mgt_rx_bitslip_cnt_arr       : t_std8_array(NUM_LINKS - 1 downto 0);
+    signal mgt_rx_slip_cnt_arr          : t_std8_array(NUM_LINKS - 1 downto 0);
+    signal mgt_rx_slip_cnt_frameclk_arr : t_std8_array(NUM_LINKS - 1 downto 0);
    
     signal rx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
     signal rx_data_widebus_arr          : t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
@@ -152,7 +155,6 @@ architecture gbt_arch of gbt is
     signal rx_bitslip_is_even           : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_bitslip_ready             : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_bitslip_en_pulse          : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_bitslip_en_pulse_frameclk : std_logic_vector(NUM_LINKS - 1 downto 0);
         
 --=====================================================================================--
 
@@ -191,7 +193,6 @@ begin                                   --========####   Architecture Body   ###
                     underflow_o => rx_unf_arr(i)
                 );
             
-            i_sync_valid : entity work.synch generic map(N_STAGES => 3) port map(async_i => mgt_rx_sync_valid_arr(i), clk_i   => rx_frame_clk_i, sync_o  => mgt_rx_sync_valid_frameclkarr(i));
             i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_word_clk_arr(i), sync_o  => rx_ovf_sync_arr(i));
                 
             i_gbt_rx_sync_ovf_latch : entity work.latch
@@ -331,7 +332,8 @@ begin                                   --========####   Architecture Body   ###
 
         i_tx_ready_sync : entity work.synch
             generic map(
-                N_STAGES => 3
+                N_STAGES => 5,
+                IS_RESET => true
             )
             port map(
                 async_i => tx_ready(i),
@@ -403,7 +405,7 @@ begin                                   --========####   Architecture Body   ###
         link_status_arr_o(i).gbt_rx_correction_flag   <= rx_error_detect_flag(i);
         link_status_arr_o(i).gbt_rx_gearbox_ready     <= rx_gearbox_ready(i);
         link_status_arr_o(i).gbt_rx_header_locked     <= rx_header_locked_sync(i);
-        link_status_arr_o(i).gbt_rx_num_bitslips      <= mgt_rx_bitslip_cnt_arr(i);
+        link_status_arr_o(i).gbt_rx_num_bitslips      <= mgt_rx_slip_cnt_frameclk_arr(i);
 		rx_data_arr_o(i)                              <= rx_data_arr(i);
         rx_data_widebus_arr_o(i)                      <= rx_data_widebus_arr(i);
 		
@@ -458,26 +460,29 @@ begin                                   --========####   Architecture Body   ###
                 oneshot_o => rx_bitslip_en_pulse(i)
             );
 
-        i_sync_rx_bitslip_pulse : entity work.synch
-            generic map(
-                N_STAGES => 4
-            )
-            port map(
-                async_i => rx_bitslip_en_pulse(i),
-                clk_i   => rx_frame_clk_i,
-                sync_o  => rx_bitslip_en_pulse_frameclk(i)
-            );
-
         i_bitslip_cnt : entity work.counter
             generic map(
                 g_COUNTER_WIDTH  => 8,
                 g_ALLOW_ROLLOVER => false
             )
             port map(
-                ref_clk_i => rx_frame_clk_i,
+                ref_clk_i => rx_word_clk_arr(i),
                 reset_i   => rx_framealign_reset(i),
-                en_i      => rx_bitslip_en_pulse_frameclk(i),
-                count_o   => mgt_rx_bitslip_cnt_arr(i)
+                en_i      => rx_bitslip_en_pulse(i),
+                count_o   => mgt_rx_slip_cnt_arr(i)
+            );
+
+        i_bitslip_cnt_sync : xpm_cdc_gray
+            generic map(
+                DEST_SYNC_FF          => 4,
+                REG_OUTPUT            => 0,
+                WIDTH                 => 8
+            )
+            port map(
+                src_clk      => rx_word_clk_arr(i),
+                src_in_bin   => mgt_rx_slip_cnt_arr(i),
+                dest_clk     => rx_frame_clk_i,
+                dest_out_bin => mgt_rx_slip_cnt_frameclk_arr(i)
             );
 
         i_gbt_rx_not_ready_latch : entity work.latch

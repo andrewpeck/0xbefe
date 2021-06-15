@@ -25,7 +25,8 @@ use work.registers.all;
 entity promless is
     generic(
         g_MAX_SIZE_BYTES    : integer; -- NOTE: must be a multiple of 32KB (kilobytes) if g_MEMORY_PRIMITIVE is set to "ultra" (using UltraRAM)
-        g_MEMORY_PRIMITIVE  : string := "ultra"
+        g_MEMORY_PRIMITIVE  : string := "ultra";
+        g_IPB_CLK_PERIOD_NS : integer
     );
     port (
         reset_i             : in  std_logic;
