@@ -298,23 +298,9 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     subheading('Starting GBT%d phase scan checking %d slow control transactions and %d daq data packets on each phase' % (gbtSelect, numSlowControlTransactions, numDaqPackets))
     for elink, vfat in elinkToVfatMap[gbtSelect].items():
         subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
-        for phase in range(0, 16):
-            # set phase
-            if isLpGbt: # LpGBT
-                addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
-                value = (phase << 4) + ME0_LPGBT_ELINK_CTRL_REG_DEFAULT
-                wReg(ADDR_IC_ADDR, addr)
-                wReg(ADDR_IC_WRITE_DATA, value)
-                wReg(ADDR_IC_EXEC_WRITE, 1)
-                sleep(0.000001) # writing is too fast for CVP13 :)
-            else: # GBTX
-                for subReg in range(0, 3):
-                    addr = GBT_ELINK_SAMPLE_PHASE_REGS[elink][subReg]
-                    value = (gbtRegs[addr] & 0xf0) + phase
-                    wReg(ADDR_IC_ADDR, addr)
-                    wReg(ADDR_IC_WRITE_DATA, value)
-                    wReg(ADDR_IC_EXEC_WRITE, 1)
-                    sleep(0.000001) # writing is too fast for CVP13 :)
+        goodPhases = []
+        for phase in range(0, 15):
+            setElinkPhase(isLpGbt, gbtRegs, elink, phase)
 
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
@@ -338,7 +324,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
 
             # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
             daqCrcErrCnt = -1
-            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
+            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0 and numDaqPackets > 0:
                 wReg(cfgAddr, 1) # set the VFAT to run mode
                 writeReg(getNode("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
                 writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
@@ -356,7 +342,15 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
             if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0) or (daqCrcErrCnt > 0):
                 color = Colors.RED
                 prefix = '>>>>>>>> BAD <<<<<<<< '
+                goodPhases.append(False)
+            else:
+                goodPhases.append(True)
             print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt), Colors.ENDC
+
+        # select the best phase for this elink
+        bestPhase = getBestPhase(goodPhases)
+        print("Setting phase = %d" % bestPhase)
+        setElinkPhase(isLpGbt, gbtRegs, elink, bestPhase)
 
     # restore the TTC generator settings
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -364,6 +358,47 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), calpulseGap)
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
+
+def setElinkPhase(isLpGbt, gbtRegs, elink, phase):
+    # set phase
+    if isLpGbt: # LpGBT
+        addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
+        value = (phase << 4) + ME0_LPGBT_ELINK_CTRL_REG_DEFAULT
+        wReg(ADDR_IC_ADDR, addr)
+        wReg(ADDR_IC_WRITE_DATA, value)
+        wReg(ADDR_IC_EXEC_WRITE, 1)
+        sleep(0.000001) # writing is too fast for CVP13 :)
+    else: # GBTX
+        for subReg in range(0, 3):
+            addr = GBT_ELINK_SAMPLE_PHASE_REGS[elink][subReg]
+            value = (gbtRegs[addr] & 0xf0) + phase
+            wReg(ADDR_IC_ADDR, addr)
+            wReg(ADDR_IC_WRITE_DATA, value)
+            wReg(ADDR_IC_EXEC_WRITE, 1)
+            sleep(0.000001) # writing is too fast for CVP13 :)
+
+def getBestPhase(goodPhases):
+    distanceToBad = []
+    for i in range(len(goodPhases)):
+        distRight = 0
+        for j in range(i, i + 15):
+            phaseIdx = j if j < 15 else j - 15
+            if not goodPhases(phaseIdx):
+                break
+            else:
+                distRight += 1
+        distLeft = 0
+        for j in range(i, i - 15, -1):
+            phaseIdx = j
+            if not goodPhases(phaseIdx):
+                break
+            else:
+                distLeft += 1
+        dist = distRight if distRight > distLeft else distLeft
+        distanceToBad.append(dist)
+    bestPhase = distanceToBad.index(max(distanceToBad))
+    print("Best phase is %d, distance to bad spot = %d" % (bestPhase, distanceToBad[bestPhase]))
+    return bestPhase
 
 def downloadConfig(ohIdx, gbtIdx, filename):
     f = open(filename, 'r')
