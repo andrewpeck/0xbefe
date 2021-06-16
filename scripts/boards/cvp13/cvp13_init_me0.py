@@ -6,6 +6,8 @@ import array
 import struct
 from config_me0 import *
 
+ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12]
+
 def main():
 
     parseXML()
@@ -36,6 +38,10 @@ def main():
             # Only reset MGT channel for master lpGBTs
             if chan%2==0:
                 writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET" % chan), 1)
+
+    # set VFAT HDLC addresses
+    for vfat in range(24):
+        writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat), ME0_VFAT_HDLC_ADDRESSES[vfat])
 
     if config_param["add_sleep"]:
         # Sleep and then reset MGT channel for slave lpGBTs (so that master lpGBTs are already ready)
