@@ -6,7 +6,6 @@ import array
 import struct
 import signal
 import sys
-from math import abs
 
 DEBUG=False
 
