@@ -65,7 +65,8 @@ ME0_SPICY_ELINK_TO_VFAT = [ME0_GBT0_SPICY_ELINK_TO_VFAT, ME0_GBT1_SPICY_ELINK_TO
 ME0_PIZZA_ELINK_TO_VFAT = [ME0_CLASSIC_ELINK_TO_VFAT, ME0_SPICY_ELINK_TO_VFAT]
 
 LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0cc
-ME0_LPGBT_ELINK_CTRL_REG_DEFAULT = 0x02
+ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT = [0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0xa, 0xa, 0xa, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0x3]
+ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT = [0x2, 0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0xa, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0xa, 0x3]
 
 PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS = 10000
 PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS = 1000000
@@ -362,11 +363,13 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
 
-def setElinkPhase(isLpGbt, gbtRegs, elink, phase):
+def setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase):
     # set phase
     if isLpGbt: # LpGBT
+        isMaster = gbtSelect % 2 == 0
+        ctrlRegDefault = ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT[elink] if isMaster else ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT[elink]
         addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
-        value = (phase << 4) + ME0_LPGBT_ELINK_CTRL_REG_DEFAULT
+        value = (phase << 4) + ctrlRegDefault
         wReg(ADDR_IC_ADDR, addr)
         wReg(ADDR_IC_WRITE_DATA, value)
         wReg(ADDR_IC_EXEC_WRITE, 1)
