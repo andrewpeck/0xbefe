@@ -324,17 +324,20 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
 
             # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
             daqCrcErrCnt = -1
-            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0 and numDaqPackets > 0:
-                wReg(cfgAddr, 1) # set the VFAT to run mode
-                writeReg(getNode("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
-                writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
-                genRunning = 1
-                while genRunning == 1:
-                    genRunning = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING")))
-                daqCrcErrCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat))))
-                daqEvtCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat))))
-                if daqEvtCnt == 0:
-                    daqCrcErrCnt = 999
+            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
+                if numDaqPackets <= 0:
+                    wReg(cfgAddr, 0) # set the VFAT to sleep mode
+                else:
+                    wReg(cfgAddr, 1) # set the VFAT to run mode
+                    writeReg(getNode("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+                    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    genRunning = 1
+                    while genRunning == 1:
+                        genRunning = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING")))
+                    daqCrcErrCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat))))
+                    daqEvtCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat))))
+                    if daqEvtCnt == 0:
+                        daqCrcErrCnt = 999
 
             # print the results
             color = Colors.GREEN
