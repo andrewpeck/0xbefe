@@ -401,9 +401,10 @@ def getBestPhase(goodPhases):
                 distLeft += 1
 
         if distLeft + distRight > bestDistLeft + bestDistRight or (distLeft + distRight == bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight)):
-            bestDistLeft = distLeft
-            bestDistRight = distRight
-            bestPhase = i
+            if distLeft <= 4: # don't set a phase with distance more than 4 to the left (to protect against cases where the second bad spot is not detected)
+                bestDistLeft = distLeft
+                bestDistRight = distRight
+                bestPhase = i
 
     print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
     return bestPhase
