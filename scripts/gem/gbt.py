@@ -6,6 +6,7 @@ import array
 import struct
 import signal
 import sys
+from math import abs
 
 DEBUG=False
 
@@ -378,7 +379,9 @@ def setElinkPhase(isLpGbt, gbtRegs, elink, phase):
             sleep(0.000001) # writing is too fast for CVP13 :)
 
 def getBestPhase(goodPhases):
-    distanceToBad = []
+    bestDistLeft = 0
+    bestDistRight = 0
+    bestPhase = 0
     for i in range(len(goodPhases)):
         distRight = 0
         for j in range(i, i + 15):
@@ -394,10 +397,13 @@ def getBestPhase(goodPhases):
                 break
             else:
                 distLeft += 1
-        dist = distRight if distRight > distLeft else distLeft
-        distanceToBad.append(dist)
-    bestPhase = distanceToBad.index(max(distanceToBad))
-    print("Best phase is %d, distance to bad spot = %d" % (bestPhase, distanceToBad[bestPhase]))
+
+        if distLeft > bestDistLeft and distRight > bestDistRight:
+            bestDistLeft = distLeft
+            bestDistRight = distRight
+            bestPhase = i
+
+    print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
     return bestPhase
 
 def downloadConfig(ohIdx, gbtIdx, filename):
