@@ -383,14 +383,14 @@ def getBestPhase(goodPhases):
         distRight = 0
         for j in range(i, i + 15):
             phaseIdx = j if j < 15 else j - 15
-            if not goodPhases(phaseIdx):
+            if not goodPhases[phaseIdx]:
                 break
             else:
                 distRight += 1
         distLeft = 0
         for j in range(i, i - 15, -1):
             phaseIdx = j
-            if not goodPhases(phaseIdx):
+            if not goodPhases[phaseIdx]:
                 break
             else:
                 distLeft += 1
