@@ -97,7 +97,7 @@ def main():
     if ohSelect > 11:
         printRed("The given OH index (%d) is out of range (must be 0-11)" % ohSelect)
         return
-    if gbtSelect > 2:
+    if gbtSelect > 7:
         printRed("The given GBT index (%d) is out of range (must be 0-2)" % gbtSelect)
         return
 
