@@ -397,7 +397,7 @@ def getBestPhase(goodPhases):
             else:
                 distLeft += 1
 
-        if distLeft + distRight >= bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight):
+        if distLeft + distRight > bestDistLeft + bestDistRight or (distLeft + distRight == bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight)):
             bestDistLeft = distLeft
             bestDistRight = distRight
             bestPhase = i
