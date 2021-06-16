@@ -301,7 +301,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
         goodPhases = []
         for phase in range(0, 15):
-            setElinkPhase(isLpGbt, gbtRegs, elink, phase)
+            setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase)
 
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
@@ -354,7 +354,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         # select the best phase for this elink
         bestPhase = getBestPhase(goodPhases)
         print("Setting phase = %d" % bestPhase)
-        setElinkPhase(isLpGbt, gbtRegs, elink, bestPhase)
+        setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, bestPhase)
 
     # restore the TTC generator settings
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
