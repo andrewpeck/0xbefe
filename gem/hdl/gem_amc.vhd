@@ -710,7 +710,7 @@ begin
                 g_RX_RATE               => DATARATE_10G24,
                 g_RX_ENCODING           => FEC5,
                 g_RESET_MGT_ON_EVEN     => 0,
-                g_USE_RX_SYNC_FIFOS     => true,
+                g_USE_RX_SYNC_FIFOS     => false,
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(

@@ -78,9 +78,20 @@ package board_config_package is
     --== Link configuration ==--
     --========================--
 
-    -- defines the GT index for each type of OH link
-    type t_link_arr is array(integer range <>) of integer range 0 to CFG_BOARD_MAX_LINKS;
+    constant TXRX_NULL : integer := CFG_BOARD_MAX_LINKS;
+    
+    -- this record represents a single link (TXRX_NULL can be used to represent an unused tx or rx)
+    type t_link is record
+        tx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+        rx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+    end record;
 
+    -- this constant can be used to represent an unused link
+    constant LINK_NULL : t_link := (tx => TXRX_NULL, rx => TXRX_NULL);
+
+    -- defines the GT index for each type of OH link
+    type t_link_arr is array(integer range <>) of t_link;
+    
     type t_oh_link_config is record
         gbt_links       : t_link_arr(0 to 7); -- GBT links
         trig_rx_links   : t_link_arr(0 to 1); -- GE1/1 trigger RX links
@@ -88,45 +99,43 @@ package board_config_package is
     
     type t_oh_link_config_arr is array (0 to 11) of t_oh_link_config;
 
-    constant LINK_NULL : integer := CFG_BOARD_MAX_LINKS;
-
     constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (
-        ((0, 1, 2, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (40, 41)), 
-        ((3, 4, 5, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (42, 43)),
-        ((6, 7, 8, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (44, 45)), 
-        ((9, 10, 11, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (46, 47)),
-
-        ((12, 13, 14, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (48, 49)), 
-        ((15, 16, 17, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (50, 51)), 
-        ((18, 19, 20, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (52, 53)), 
-        ((21, 22, 23, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (54, 55)), 
-
-        ((24, 25, 26, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (56, 57)), 
-        ((27, 28, 29, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (58, 59)), 
-        ((30, 31, 32, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (68, 69)), 
-        ((33, 34, 35, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (70, 71)) 
+        (((0,  0),  (1,  1),  (2,  2),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 40), (tx => TXRX_NULL, rx => 41))), 
+        (((3,  3),  (4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 42), (tx => TXRX_NULL, rx => 43))),
+        (((6,  6),  (7,  7),  (8,  8),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 44), (tx => TXRX_NULL, rx => 45))), 
+        (((9,  9),  (10, 10), (11, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 46), (tx => TXRX_NULL, rx => 47))),
+                                                                                                 
+        (((12, 12), (13, 13), (14, 14), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 48), (tx => TXRX_NULL, rx => 49))), 
+        (((15, 15), (16, 16), (17, 17), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 50), (tx => TXRX_NULL, rx => 51))), 
+        (((18, 18), (19, 19), (20, 20), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 52), (tx => TXRX_NULL, rx => 53))), 
+        (((21, 21), (22, 22), (23, 23), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 54), (tx => TXRX_NULL, rx => 55))), 
+                                                                                                 
+        (((24, 24), (25, 25), (26, 26), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 56), (tx => TXRX_NULL, rx => 57))), 
+        (((27, 27), (28, 28), (29, 29), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 58), (tx => TXRX_NULL, rx => 59))), 
+        (((30, 30), (31, 31), (32, 32), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 68), (tx => TXRX_NULL, rx => 69))), 
+        (((33, 33), (34, 34), (35, 35), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 70), (tx => TXRX_NULL, rx => 71))) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
-        ((0,  1,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (40, 41)), 
-        ((2,  3,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (42, 43)),
-        ((4,  5,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (44, 45)), 
-        ((6,  7,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (46, 47)),
-        ((8,  9,  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (48, 49)), 
-        ((10, 11, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (50, 51)),
-         
-        ((12, 13, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (52, 53)), 
-        ((14, 15, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (54, 55)), 
-        ((16, 17, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (56, 57)), 
-        ((18, 19, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (58, 59)), 
-        ((20, 21, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (68, 69)), 
-        ((22, 23, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (70, 71)) 
+        (((0,  0),  (1,  1),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 40), (tx => TXRX_NULL, rx => 41))), 
+        (((2,  2),  (3,  3),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 42), (tx => TXRX_NULL, rx => 43))),
+        (((4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 44), (tx => TXRX_NULL, rx => 45))), 
+        (((6,  6),  (7,  7),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 46), (tx => TXRX_NULL, rx => 47))),
+        (((8,  8),  (9,  9),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 48), (tx => TXRX_NULL, rx => 49))), 
+        (((10, 10), (11, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 50), (tx => TXRX_NULL, rx => 51))),
+                                                                                                  
+        (((12, 12), (13, 13), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 52), (tx => TXRX_NULL, rx => 53))), 
+        (((14, 14), (15, 15), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 54), (tx => TXRX_NULL, rx => 55))), 
+        (((16, 16), (17, 17), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 56), (tx => TXRX_NULL, rx => 57))), 
+        (((18, 18), (19, 19), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 58), (tx => TXRX_NULL, rx => 59))), 
+        (((20, 20), (21, 21), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 68), (tx => TXRX_NULL, rx => 69))), 
+        (((22, 22), (23, 23), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 70), (tx => TXRX_NULL, rx => 71))) 
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
-        ((0,  1,  2,  3,  4,  5,  6,  7), (LINK_NULL, LINK_NULL)),
-        ((12, 13, 14, 15, 16, 17, 18, 19), (LINK_NULL, LINK_NULL)),
-        ((24, 25, 26, 27, 28, 29, 30, 31), (LINK_NULL, LINK_NULL)),
+        (((0,  0),  (TXRX_NULL, 1),  (1,  2),  (TXRX_NULL, 3),  (2,  4),  (TXRX_NULL, 5),  (3,  6),  (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),
+        (((12, 12), (TXRX_NULL, 13), (13, 14), (TXRX_NULL, 15), (14, 16), (TXRX_NULL, 17), (15, 18), (TXRX_NULL, 19)), (LINK_NULL, LINK_NULL)),
+        (((24, 24), (TXRX_NULL, 25), (25, 26), (TXRX_NULL, 27), (26, 28), (TXRX_NULL, 29), (27, 30), (TXRX_NULL, 31)), (LINK_NULL, LINK_NULL)),
         
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
@@ -150,8 +159,8 @@ package board_config_package is
 
     -- this record is used in CXP fiber to GTH map (holding tx and rx GTH index)
     type t_cxp_fiber_to_gth_link is record
-        tx      : integer range 0 to 67; -- GTH TX index (#67 means disconnected/non-existing)
-        rx      : integer range 0 to 67; -- GTH RX index (#67 means disconnected/non-existing)
+        tx      : integer range 0 to 68; -- GTH TX index (#68 means disconnected/non-existing)
+        rx      : integer range 0 to 68; -- GTH RX index (#68 means disconnected/non-existing)
     end record;
     
     -- this array is meant to hold mapping from CXP fiber index to GTH TX and RX indexes
@@ -166,7 +175,7 @@ package board_config_package is
     -- MP TX : fibers 48-59
     -- MP2 RX: fibers 60-71
     -- DUMMY: fiber 72 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
-    -- note that GTH channel #67 is used as a placeholder for fiber links that are not connected to the FPGA
+    -- note that GTH channel #68 is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_CXP_FIBER_TO_GTH_MAP : t_cxp_fiber_to_gth_link_map := (
         --=== CXP0 ===--
         (1, 2), -- fiber 0
@@ -208,18 +217,18 @@ package board_config_package is
         (33, 33), -- fiber 34
         (31, 34), -- fiber 35
         --=== no TX / MP0 RX ===--
-        (67, 67), -- fiber 36 -- RX NULL (not connected)
-        (67, 66), -- fiber 37
-        (67, 64), -- fiber 38
-        (67, 65), -- fiber 39
-        (67, 62), -- fiber 40
-        (67, 63), -- fiber 41
-        (67, 61), -- fiber 42
-        (67, 60), -- fiber 43
-        (67, 59), -- fiber 44
-        (67, 58), -- fiber 45
-        (67, 57), -- fiber 46
-        (67, 56), -- fiber 47
+        (68, 68), -- fiber 36 -- RX NULL (not connected)
+        (68, 66), -- fiber 37
+        (68, 64), -- fiber 38
+        (68, 65), -- fiber 39
+        (68, 62), -- fiber 40
+        (68, 63), -- fiber 41
+        (68, 61), -- fiber 42
+        (68, 60), -- fiber 43
+        (68, 59), -- fiber 44
+        (68, 58), -- fiber 45
+        (68, 57), -- fiber 46
+        (68, 56), -- fiber 47
         --=== MP TX / MP1 RX ===--
         (59, 54), -- fiber 48 
         (56, 55), -- fiber 49
@@ -234,20 +243,20 @@ package board_config_package is
         (58, 45), -- fiber 58
         (57, 44), -- fiber 59
         --=== no TX / MP2 RX ===--
-        (67, 67),  -- fiber 60 -- RX NULL (not connected)
-        (67, 67), -- fiber 61 -- RX NULL (not connected)
-        (67, 43), -- fiber 62
-        (67, 67), -- fiber 63 -- RX NULL (not connected)
-        (67, 42), -- fiber 64 
-        (67, 67), -- fiber 65 -- RX NULL (not connected)
-        (67, 40), -- fiber 66
+        (68, 68),  -- fiber 60 -- RX NULL (not connected)
+        (68, 68), -- fiber 61 -- RX NULL (not connected)
+        (68, 43), -- fiber 62
+        (68, 68), -- fiber 63 -- RX NULL (not connected)
+        (68, 42), -- fiber 64 
+        (68, 68), -- fiber 65 -- RX NULL (not connected)
+        (68, 40), -- fiber 66
         (67, 36), -- fiber 67 -- RX inverted
-        (67, 41), -- fiber 68 
-        (67, 37), -- fiber 69 -- RX inverted
-        (67, 38), -- fiber 70
-        (67, 39), -- fiber 71        
+        (68, 41), -- fiber 68 
+        (68, 37), -- fiber 69 -- RX inverted
+        (68, 38), -- fiber 70
+        (68, 39), -- fiber 71        
         --=== DUMMY channel - use for unconnected channels ===--
-        (67, 67) -- fiber 72        
+        (68, 68) -- fiber 72        
     );
     
     -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors

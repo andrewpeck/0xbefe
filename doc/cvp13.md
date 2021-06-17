@@ -139,6 +139,26 @@ Mapping to GE2/1 OHs is the following:
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
 
+Mapping to GE2/1 OHs is the following:
+|             | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|-------------|-------|-------|-------|-------|
+| OH0 GBT0 RX | 12    |       |       |       |
+| OH0 GBT1 RX | --    |       |       |       |
+| OH0 GBT2 RX | 11    |       |       |       |
+| OH0 GBT3 RX | --    |       |       |       |
+| OH0 GBT4 RX | 10    |       |       |       |
+| OH0 GBT5 RX | --    |       |       |       |
+| OH0 GBT6 RX | 9     |       |       |       |
+| OH0 GBT7 RX | --    |       |       |       |
+| OH0 GBT0 TX | 1     |       |       |       |
+| OH0 GBT1 TX | 2     |       |       |       |
+| OH0 GBT2 TX | 3     |       |       |       |
+| OH0 GBT3 TX | 4     |       |       |       |
+| OH0 GBT4 TX |       | 1     |       |       |
+| OH0 GBT5 TX |       | 2     |       |       |
+| OH0 GBT6 TX |       | 3     |       |       |
+| OH0 GBT7 TX |       | 4     |       |       |
+
 CSC Fiber mapping (for now only one QSFP is used):
 |          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
 |----------|-------|-------|-------|-------|

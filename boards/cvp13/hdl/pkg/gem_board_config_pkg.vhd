@@ -68,8 +68,19 @@ package board_config_package is
     --== Link configuration ==--
     --========================--
 
+    constant TXRX_NULL : integer := CFG_BOARD_MAX_LINKS;
+    
+    -- this record represents a single link (TXRX_NULL can be used to represent an unused tx or rx)
+    type t_link is record
+        tx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+        rx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+    end record;
+
+    -- this constant can be used to represent an unused link
+    constant LINK_NULL : t_link := (tx => TXRX_NULL, rx => TXRX_NULL);
+
     -- defines the GT index for each type of OH link
-    type t_link_arr is array(integer range <>) of integer range 0 to CFG_BOARD_MAX_LINKS;
+    type t_link_arr is array(integer range <>) of t_link;
     
     type t_oh_link_config is record
         gbt_links       : t_link_arr(0 to 7); -- GBT links
@@ -78,11 +89,9 @@ package board_config_package is
     
     type t_oh_link_config_arr is array (0 to 7) of t_oh_link_config;
 
-    constant LINK_NULL : integer := CFG_BOARD_MAX_LINKS;
-    
     constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (
-        ((0, 1, 2, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (8, 9)), 
-        ((4, 5, 6, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (12, 13)),
+        (((0, 0), (1, 1), (2, 2), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 8,  tx => TXRX_NULL), (rx => 9,  tx => TXRX_NULL))), 
+        (((4, 4), (5, 5), (6, 6), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 12, tx => TXRX_NULL), (rx => 13, tx => TXRX_NULL))),
         
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
@@ -95,11 +104,11 @@ package board_config_package is
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
-        ((0, 1, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (2, 3)), 
-        ((4, 5, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (6, 7)),
+        (((0, 0), (1, 1), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 2, tx => TXRX_NULL), (rx => 3, tx => TXRX_NULL))), 
+        (((4, 4), (5, 5), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 6, tx => TXRX_NULL), (rx => 7, tx => TXRX_NULL))),
         
-        ((8, 9, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (10, 11)), 
-        ((12, 13, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (14, 15)),
+        (((8,  8),  (9,  9),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 10, tx => TXRX_NULL), (rx => 11, tx => TXRX_NULL))), 
+        (((12, 12), (13, 13), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((rx => 14, tx => TXRX_NULL), (rx => 15, tx => TXRX_NULL))),
         
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
@@ -109,8 +118,8 @@ package board_config_package is
     );
 
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
-        ((0,  1,  2,  3,  4,  5,  6, 7), (LINK_NULL, LINK_NULL)),         
-        ((8,  9, 10, 11, 12, 13, 14, 15), (LINK_NULL, LINK_NULL)), 
+        (((0, 0), (TXRX_NULL, 1), (1, 2),  (TXRX_NULL, 3),  (2, 4),   (TXRX_NULL, 5),  (3, 6),   (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),         
+        (((8, 8), (TXRX_NULL, 9), (9, 10), (TXRX_NULL, 11), (10, 12), (TXRX_NULL, 13), (11, 14), (TXRX_NULL, 15)), (LINK_NULL, LINK_NULL)), 
 
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
@@ -125,20 +134,16 @@ package board_config_package is
 
     type t_trig_tx_link_config_arr is array (0 to CFG_NUM_TRIG_TX - 1) of integer range 0 to CFG_BOARD_MAX_LINKS;
     
-    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL);
+    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL);
     
     --================================--
     -- Fiber to MGT mapping
     --================================--    
-        
-    -- this record is used in fiber to MGT map (holding tx and rx MGT index)
-    type t_fiber_to_mgt_link is record
-        tx      : integer range 0 to CFG_BOARD_MAX_LINKS; -- MGT TX index (#CFG_BOARD_MAX_LINKS means disconnected/non-existing)
-        rx      : integer range 0 to CFG_BOARD_MAX_LINKS; -- MGT RX index (#CFG_BOARD_MAX_LINKS means disconnected/non-existing)
-    end record;
-    
+
+    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+                
     -- this array is meant to hold a mapping from fiber index to MGT TX and RX indices
-    type t_fiber_to_mgt_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_fiber_to_mgt_link;
+    type t_fiber_to_mgt_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_link;
 
     -- defines the MGT TX and RX index for each fiber index
     -- QSFP-0 (quad 233): fibers 0-3
@@ -169,14 +174,12 @@ package board_config_package is
         (14, 14), -- fiber 2
         (15, 15), -- fiber 3
         --=== DUMMY channel - use for unconnected channels ===--
-        (LINK_NULL, LINK_NULL)  -- dummy fiber
+        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS)  -- dummy fiber
     );
     
     --================================--
     -- MGT configuration
     --================================--    
-    
-    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
     
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
