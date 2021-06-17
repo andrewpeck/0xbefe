@@ -363,6 +363,10 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
     writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
 
+    # reset the links
+    sleep(0.1)
+    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+
 def setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase):
     # set phase
     if isLpGbt: # LpGBT
