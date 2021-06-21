@@ -137,7 +137,7 @@ def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
         newNode.warn_min_value = node.get('sw_monitor_warn_min_threshold')
     if node.get('sw_monitor_error_min_threshold') is not None:
         newNode.error_min_value = node.get('sw_monitor_error_min_threshold')
-    nodes.append(newNode)
+    nodes[newNode.name] = newNode
     if parentNode is not None:
         parentNode.addChild(newNode)
         newNode.parent = parentNode
