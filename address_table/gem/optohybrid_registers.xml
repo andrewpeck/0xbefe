@@ -345,7 +345,7 @@
                   description="Reset Control TMR Error counters"
                   fw_write_pulse_signal="tmr_cnt_reset"/>
             <node id="TMR_ERR_INJ" address="0x4" permission="w" mask="0x1"
-                  description="Inject a TMR Error"
+                  description="Inject a TMR Error (into the TTC module)"
                   fw_write_pulse_signal="tmr_err_inj"/>
         </node>
 
