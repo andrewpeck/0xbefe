@@ -439,6 +439,7 @@ begin
     formatter_loop : for I in 0 to 2*EN_TMR_TRIG_FORMATTER generate
     begin
       trigger_data_formatter_inst : entity work.trigger_data_formatter
+        generic map (g_TMR_INST => I)
         port map (
           clocks          => clocks,
           reset_i         => system_reset,

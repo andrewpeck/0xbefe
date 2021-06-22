@@ -29,7 +29,7 @@ gem/hdl/cluster_finding/cluster_finding.src
 # Trigger
 gem/hdl/oh_fe/trigger/active_vfats.vhd 93
 gem/hdl/oh_fe/trigger/channel_to_strip.vhd 93
-gem/hdl/oh_fe/trigger/trigger_data_formatter.vhd 93
+gem/hdl/oh_fe/trigger/data_formatter/trigger_data_formatter.vhd 93
 common/hdl/utils/prbs_any.vhd 93
 gem/hdl/oh_fe/trigger/sbit_monitor.vhd 93
 gem/hdl/oh_fe/trigger/sbits.vhd 93

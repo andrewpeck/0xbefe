@@ -32,6 +32,10 @@ use work.hardware_pkg.all;
 use work.cluster_pkg.all;
 
 entity trigger_data_formatter is
+  generic(
+    g_TMR_INST : natural := 0;
+    g_DEBUG    : natural := 0
+    );
   port(
 
     clocks : in clocks_t;
@@ -61,6 +65,7 @@ end trigger_data_formatter;
 architecture Behavioral of trigger_data_formatter is
 
   signal reset : std_logic := '0';
+  signal enable : std_logic := '0';
 
   -- NUM_FOUND_CLUSTERS = # clusters found per bx
   -- NUM_OUTPUT_CLUSTERS = # clusters we can send on the output link
@@ -201,6 +206,7 @@ begin
   begin
     if (rising_edge(clocks.clk40)) then
       reset <= reset_i;
+      enable <= not reset_i;
     end if;
   end process;
 
@@ -268,6 +274,10 @@ begin
     end if;
   end process;
 
+  --------------------------------------------------------------------------------
+  -- Build cluster words
+  --------------------------------------------------------------------------------
+
   clusterloop : for I in 0 to NUM_OUTPUT_CLUSTERS-1 generate  -- 5 clusters in GE2/1, 5 + 5 in GE1/1
   begin
 
@@ -277,7 +287,12 @@ begin
     -- any valid cluster from this bx is sent... for the others they are either overflow or
     -- invalid so we can just make this simple and set them all to 1
 
-    late_cluster_flag(I) <= not clusters(I).vpf;
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        late_cluster_flag(I) <= not clusters_i(I).vpf;
+      end if;
+    end process;
 
     -- create cluster words for ge1/1 or ge2/1
     ge21_gen : if (GE21 = 1) generate
@@ -304,12 +319,15 @@ begin
   -- 3'h6 Reserved
   -- 3'h7 Error
 
+  special_bits (9 downto 5) <= special_bits (4 downto 0); -- make a copy for the second link
+
   process (clocks.clk160_0)
   begin
     -- clock once to align with cluster selector
     if (rising_edge(clocks.clk160_0)) then
 
       special_bits(0) <= ttc_i.bc0;
+      special_bits(4) <= '0'; -- reserved
 
       if (error_i = '1') then
         special_bits (3 downto 1) <= "111";  -- 7
@@ -327,6 +345,7 @@ begin
   --------------------------------------------------------------------------------
   -- Optical Data Packet
   --------------------------------------------------------------------------------
+  --
   -- GE1/1 sends clusters on two
   -- On the 8b10b link we will transmit the 16 bit data words at 200 MHz in the following order:
   -- CL WORD0 -> CL WORD1 -> CL WORD2 -> CL WORD3 -> CL WORD4 / ECC8 [7:0] + -- Comma/BC0 [15:8].
@@ -408,7 +427,7 @@ begin
         port map (
           clk_i        => clocks.clk160_0,
           rst_i        => reset,
-          en_i         => not reset,
+          en_i         => enable,
           data_i       => packet_i,
           data_o       => packet_o,
           data_valid_o => open,
@@ -485,7 +504,7 @@ begin
         port map (
           clk_i        => clocks.clk160_0,
           rst_i        => reset,
-          en_i         => not reset,
+          en_i         => enable,
           data_i       => packet_i,
           data_o       => packet_o,
           data_valid_o => open,
