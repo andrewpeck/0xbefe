@@ -6,6 +6,8 @@ Top/me0_apex/project_config.vhd
 # Common libs
 common/hdl/common.src
 common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/sca.src
 
 # GEM source
 gem/hdl/gem.src
@@ -25,13 +27,12 @@ gem/hdl/slow_control/generated/me0_apex/slow_control.vhd
 gem/hdl/trigger/generated/me0_apex/trigger.vhd
 
 common/hdl/slink_rocket/generated/me0_apex/slink_rocket.vhd
-#common/hdl/slink_rocket/slink_rocket.vhd
 common/hdl/slink_rocket.src
 
 # GEM IP
 gem/ip/gem_common_ip.src
 
 # APEX IP & BD
-boards/apex/ip/gem_apex_ip.src
-boards/apex/bd/gem_apex_bd.src
+boards/apex/ip/apex_ip.src
+boards/apex/bd/apex_bd.src
 

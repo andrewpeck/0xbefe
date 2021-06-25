@@ -25,7 +25,7 @@ entity gty_channel_dmb is
         g_REFCLK_01     : integer range 0 to 1 := 0;
         g_QPLL_01       : integer range 0 to 1 := 0;
         g_USE_QPLL      : boolean := FALSE; -- when set to true the QPLL is used for ref clock
-        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
         g_RXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
     );
     port(

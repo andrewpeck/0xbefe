@@ -32,7 +32,8 @@ entity mgt_links_gty is
         g_NUM_CHANNELS          : integer;
         g_NUM_QPLLS             : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
-        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20  -- Period of the stable clock driving the state machines (ns)        
+        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
+        g_IPB_CLK_PERIOD_NS     : integer        
     );
     port(
         
@@ -181,6 +182,16 @@ begin
             txph_phaligndone_arr(chan) <= tx_status_arr(chan).txphaligndone; 
             txph_syncdone_arr(chan) <= tx_status_arr(chan).txsyncdone;
             txph_syncout_arr(chan) <= tx_status_arr(chan).txsyncout;
+        end generate;
+
+        g_tx_no_phalign : if not g_LINK_CONFIG(chan).tx_multilane_phalign generate
+            tx_init_arr(chan).txsyncallin <= '0';
+            tx_init_arr(chan).txsyncin <= '0';      
+            tx_init_arr(chan).txsyncmode <= '0';    
+            tx_init_arr(chan).txdlysreset <= '0';   
+            txph_phaligndone_arr(chan) <= '1'; 
+            txph_syncdone_arr(chan) <= '1';
+            txph_syncout_arr(chan) <= '1';
         end generate;
         
         --================================--
@@ -361,7 +372,9 @@ begin
                 generic map(
                     g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
                     g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
-                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
@@ -416,13 +429,15 @@ begin
             chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.gbe;
 
             -- generic control signals
-            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on DMB links
+            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
             
             i_chan_gbe : entity work.gty_channel_gbe
                 generic map(
                     g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
                     g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
-                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
@@ -583,7 +598,8 @@ begin
 
     i_slow_control : entity work.mgt_slow_control
         generic map(
-            g_NUM_CHANNELS => g_NUM_CHANNELS
+            g_NUM_CHANNELS      => g_NUM_CHANNELS,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             clk_stable_i          => clk_stable_i,

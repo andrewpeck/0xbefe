@@ -24,7 +24,8 @@ entity slink_rocket is
         g_NUM_CHANNELS          : integer;
         g_LINE_RATE             : string := "25.78125";   --possible choices are 15.66 or 25.78125
         q_REF_CLK_FREQ          : string := "322.265625"; --possible choices are 156.25 or 322.265625 
-        g_MGT_TYPE              : string := "GTY"         -- possible choices are GTY or GTH or GTH_KU
+        g_MGT_TYPE              : string := "GTY";        -- possible choices are GTY or GTH or GTH_KU
+        g_IPB_CLK_PERIOD_NS     : integer
     );
     port(
         

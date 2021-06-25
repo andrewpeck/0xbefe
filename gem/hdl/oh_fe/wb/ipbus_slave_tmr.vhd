@@ -13,7 +13,8 @@ entity ipbus_slave_tmr is
     g_NUM_REGS             : integer := 2;  -- number of 32bit registers in this slave (use them wisely, don't allocate 100 times more than you need). If there are big gaps in the register addresses, please use individual address mapping.
     g_ADDR_HIGH_BIT        : integer := 5;  -- MSB of the IPbus address that will be mapped to registers
     g_ADDR_LOW_BIT         : integer := 0;  -- LSB of the IPbus address that will be mapped to registers
-    g_USE_INDIVIDUAL_ADDRS : boolean := false  -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+    g_USE_INDIVIDUAL_ADDRS : boolean := false;  -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+    g_IPB_CLK_PERIOD_NS    : integer            -- ipb_clk_i period, this is used to set the timeout
     );
   port(
     ipb_reset_i : in  std_logic;        -- IPbus reset (will reset the register values to the provided defaults)
@@ -54,7 +55,8 @@ begin
         g_ADDR_HIGH_BIT        => g_ADDR_HIGH_BIT,
         g_ADDR_LOW_BIT         => g_ADDR_LOW_BIT,
         g_USE_INDIVIDUAL_ADDRS => g_USE_INDIVIDUAL_ADDRS,
-        g_N_SYNC_STAGES        => g_N_SYNC_STAGES
+        g_N_SYNC_STAGES        => g_N_SYNC_STAGES,
+        g_IPB_CLK_PERIOD_NS    => g_IPB_CLK_PERIOD_NS
         )
       port map(
         -- inputs
@@ -107,7 +109,8 @@ begin
           g_ADDR_HIGH_BIT        => g_ADDR_HIGH_BIT,
           g_ADDR_LOW_BIT         => g_ADDR_LOW_BIT,
           g_USE_INDIVIDUAL_ADDRS => g_USE_INDIVIDUAL_ADDRS,
-          g_N_SYNC_STAGES        => g_N_SYNC_STAGES
+          g_N_SYNC_STAGES        => g_N_SYNC_STAGES,
+          g_IPB_CLK_PERIOD_NS    => g_IPB_CLK_PERIOD_NS
           )
         port map(
           -- inputs

@@ -1,0 +1,36 @@
+# -*- mode: TCL;-*-
+
+# Project config
+Top/csc_apex/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+
+# CSC source
+csc/hdl/csc.src
+
+# CSC APEX source
+boards/apex/hdl/csc_apex.src
+
+# sources with generated registers
+csc/hdl/pkg/generated/csc_apex/registers.vhd
+common/hdl/mgt/generated/csc_apex/mgt_slow_control.vhd
+common/hdl/ttc/generated/csc_apex/ttc.vhd
+common/hdl/misc/generated/csc_apex/promless_bram.vhd
+csc/hdl/system/generated/csc_apex/system_regs.vhd
+csc/hdl/system/generated/csc_apex/link_monitor.vhd
+csc/hdl/tests/generated/csc_apex/csc_tests.vhd
+csc/hdl/daq/generated/csc_apex/daq.vhd
+
+common/hdl/slink_rocket/generated/csc_apex/slink_rocket.vhd
+common/hdl/slink_rocket.src
+
+# CSC IP
+csc/ip/csc_common_ip.src
+
+# CVP13 IP
+boards/apex/ip/apex_ip.src
+boards/apex/bd/apex_bd.src
+

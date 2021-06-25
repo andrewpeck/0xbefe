@@ -3,8 +3,9 @@ import sys, os, subprocess
 from ctypes import *
 from config import *
 import imp
+import sys
 
-print 'Loading shared library: librwreg.so'
+print('Loading shared library: librwreg.so')
 lib = CDLL("librwreg.so")
 rReg = lib.getReg
 rReg.restype = c_uint
@@ -26,6 +27,8 @@ nodes = []
 
 boardType = os.environ.get('BOARD_TYPE')
 DEVICE = CONFIG_RWREG[boardType]['DEVICE']
+if sys.version_info[0] == 3:
+    DEVICE = CONFIG_RWREG[boardType]['DEVICE'].encode()
 BASE_ADDR = CONFIG_RWREG[boardType]['BASE_ADDR']
 
 class Node:
@@ -52,33 +55,33 @@ class Node:
         return self.name.replace(TOP_NODE_NAME + '.', '').replace('.', '_')
 
     def output(self):
-        print 'Name:',self.name
-        print 'Description:',self.description
-        print 'Address:','{0:#010x}'.format(self.address)
-        print 'Permission:',self.permission
-        print 'Mask:','{0:#010x}'.format(self.mask)
-        print 'Module:',self.isModule
-        print 'Parent:',self.parent.name
+        print('Name:',self.name)
+        print('Description:',self.description)
+        print('Address:','{0:#010x}'.format(self.address))
+        print('Permission:',self.permission)
+        print('Mask:','{0:#010x}'.format(self.mask))
+        print('Module:',self.isModule)
+        print('Parent:',self.parent.name)
 
 def main():
     parseXML()
-    print 'Example:'
+    print('Example:')
     random_node = nodes[76]
     #print str(random_node.__class__.__name__)
-    print 'Node:',random_node.name
-    print 'Parent:',random_node.parent.name
+    print('Node:',random_node.name)
+    print('Parent:',random_node.parent.name)
     kids = []
     getAllChildren(random_node, kids)
-    print len(kids), kids.name
+    print(len(kids), kids.name)
 
 def parseXML():
     if regInitExists:
         regInit(DEVICE)
     addressTable = os.environ.get('ADDRESS_TABLE')
     if addressTable is None:
-        print 'Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT
+        print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
         addressTable = ADDRESS_TABLE_DEFAULT
-    print 'Parsing',addressTable,'...'
+    print('Parsing',addressTable,'...')
     tree = None
     lxmlExists = False
     try:
@@ -103,7 +106,7 @@ def parseXML():
 
 def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
 
-    if node.get('id') is None:
+    if node.get('id') is None or (node.get('ignore') is not None and eval(node.get('ignore')) == True):
         return
 
     if (isGenerated == None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':

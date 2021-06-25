@@ -26,7 +26,8 @@ use work.board_config_package.all;
 entity daq is
 generic(
     g_NUM_OF_DMBs        : integer;
-    g_DAQ_CLK_FREQ       : integer
+    g_DAQ_CLK_FREQ       : integer;
+    g_IPB_CLK_PERIOD_NS  : integer
 );
 port(
 
@@ -46,6 +47,7 @@ port(
     ttc_cmds_i                  : in  t_ttc_cmds;
     ttc_daq_cntrs_i             : in  t_ttc_daq_cntrs;
     ttc_status_i                : in  t_ttc_status;
+    l1a_request_o               : out std_logic;
 
     -- Data
     input_clk_arr_i             : in std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
@@ -69,78 +71,6 @@ port(
 end daq;
 
 architecture Behavioral of daq is
-
-    --================== COMPONENTS ==================--
-
-    component daq_l1a_fifo is
-        port(
-            rst           : in  std_logic;
-            wr_clk        : in  std_logic;
-            rd_clk        : in  std_logic;
-            din           : in  std_logic_vector(52 downto 0);
-            wr_en         : in  std_logic;
-            wr_ack        : out std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(52 downto 0);
-            full          : out std_logic;
-            overflow      : out std_logic;
-            almost_full   : out std_logic;
-            empty         : out std_logic;
-            valid         : out std_logic;
-            underflow     : out std_logic;
-            prog_full     : out std_logic;
-            rd_data_count : out std_logic_vector(12 downto 0)
-        );
-    end component daq_l1a_fifo;  
-
-    component daq_output_fifo
-        port(
-            clk           : in  std_logic;
-            rst           : in  std_logic;
-            din           : in  std_logic_vector(65 downto 0);
-            wr_en         : in  std_logic;
-            rd_en         : in  std_logic;
-            dout          : out std_logic_vector(65 downto 0);
-            full          : out std_logic;
-            empty         : out std_logic;
-            valid         : out std_logic;
-            prog_full     : out std_logic;
-            data_count    : out std_logic_vector(12 downto 0)
-        );
-    end component;
-
-    component daq_last_event_fifo
-        port(
-            rst      : in  std_logic;
-            wr_clk   : in  std_logic;
-            rd_clk   : in  std_logic;
-            din      : in  std_logic_vector(63 downto 0);
-            wr_en    : in  std_logic;
-            rd_en    : in  std_logic;
-            dout     : out std_logic_vector(31 downto 0);
-            full     : out std_logic;
-            overflow : out std_logic;
-            empty    : out std_logic;
-            valid    : out std_logic
-        );
-    end component;
-
-    component daq_spy_fifo
-        port(
-            rst          : in  std_logic;
-            wr_clk       : in  std_logic;
-            rd_clk       : in  std_logic;
-            din          : in  std_logic_vector(63 downto 0);
-            wr_en        : in  std_logic;
-            rd_en        : in  std_logic;
-            dout         : out std_logic_vector(15 downto 0);
-            full         : out std_logic;
-            overflow     : out std_logic;
-            empty        : out std_logic;
-            almost_empty : out std_logic;
-            prog_full    : out std_logic
-        );
-    end component;
 
     --================== SIGNALS ==================--
 
@@ -295,6 +225,10 @@ architecture Behavioral of daq is
     signal last_dav_timer           : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
     signal dav_timeout              : std_logic_vector(23 downto 0) := x"03d090"; -- 10ms (very large)
     signal dav_timeout_flags        : std_logic_vector(23 downto 0) := (others => '0'); -- inputs which have timed out
+    
+    -- L1A request
+    signal l1a_req_en               : std_logic;
+    signal l1a_req_evt_num          : unsigned(23 downto 0) := (others => '0');
     
     ---=== AMC Event Builder signals ===---
     
@@ -879,6 +813,31 @@ begin
         chmb_tts_states(i) <= input_status_arr(i).tts_state;
         
     end generate;
+        
+    --================================--
+    -- L1A request logic
+    --================================--
+        
+    process (daq_clk_i)
+    begin
+        if rising_edge(daq_clk_i) then
+            if (reset_daq = '1') then
+                l1a_req_evt_num <= (others => '0');
+                l1a_request_o <= '0';
+            else
+                l1a_req_evt_num <= l1a_req_evt_num;
+                l1a_request_o <= '0';
+                
+                for i in 0 to (g_NUM_OF_DMBs - 1) loop
+                    if chamber_evtfifos(i).valid = '1' and input_mask(i) = '1' and (unsigned(chamber_evtfifos(i).dout(59 downto 36)) > l1a_req_evt_num or (chamber_evtfifos(i).dout(59 downto 36) = x"000000" and l1a_req_evt_num = x"ffffff")) then
+                        l1a_req_evt_num <= unsigned(chamber_evtfifos(i).dout(59 downto 36));
+                        l1a_request_o <= l1a_req_en;
+                    end if;
+                end loop;
+            
+            end if;
+        end if;
+    end process;
         
     --================================--
     -- TTS

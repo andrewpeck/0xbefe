@@ -42,6 +42,9 @@ architecture vfat_input_buffer_arch of vfat_input_buffer is
 
     -- currently we only handle lossless packets with default config, later on this can be configurable to accomodate other data formats
     constant PACKET_NUM_WORDS   : integer := 22;
+
+    signal reset_data_clk   : std_logic;
+    signal reset_rd_clk     : std_logic;    
     
     signal packet_buf   : std_logic_vector(175 downto 0) := (others => '0'); -- our fake 1-deep fifo :)
     signal packet       : std_logic_vector(175 downto 0) := (others => '0');
@@ -60,6 +63,9 @@ begin
     
     --======== Wiring ========--
     
+    i_sync_reset_rd_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => fifo_rd_clk_i, sync_o => reset_rd_clk);
+    i_sync_reset_data_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => daq_data_clk_i, sync_o => reset_data_clk);
+    
     empty_o <= fifo_empty_rd;
     overflow_o <= fifo_ovf;
     underflow_o <= fifo_unf;
@@ -73,7 +79,7 @@ begin
     process(daq_data_clk_i)
     begin
         if (rising_edge(daq_data_clk_i)) then
-            if (reset_i = '1') then
+            if (reset_data_clk = '1') then
                 packet <= (others => '0');
                 word_cnt <= 0;
             else
@@ -99,7 +105,7 @@ begin
     process(daq_data_clk_i)
     begin
         if (rising_edge(daq_data_clk_i)) then
-            if (reset_i = '1') then
+            if (reset_data_clk = '1') then
                 fifo_empty <= '1';
                 fifo_pop_ack <= '0';
             else
@@ -127,7 +133,7 @@ begin
     process(fifo_rd_clk_i)
     begin
         if (rising_edge(fifo_rd_clk_i)) then
-            if (reset_i = '1') then
+            if (reset_rd_clk = '1') then
                 fifo_unf <= '0';
                 fifo_pop_req <= '0';
             else

@@ -45,7 +45,7 @@ package body ipb_addr_decode is
         --   0x3: TTC
         --   0x4: DAQ
     
-        if    std_match(addr, "--------0001000-----------------") then sel := C_IPB_SLV.system;
+        if    std_match(addr, "--------1001000-----------------") then sel := C_IPB_SLV.system;
         elsif std_match(addr, "--------00100000000-------------") then sel := C_IPB_SLV.links;
         elsif std_match(addr, "--------0011000000000000--------") then sel := C_IPB_SLV.ttc;
         elsif std_match(addr, "--------01000000000-------------") then sel := C_IPB_SLV.daq;

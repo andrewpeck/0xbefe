@@ -146,7 +146,7 @@ end generate;
       ALIGN_PCOMMA_VALUE => ("0101111100"),
       SHOW_REALIGN_COMMA => ("FALSE"),
       RXSLIDE_AUTO_WAIT  => (7),
-      RXSLIDE_MODE       => ("PCS"),
+      RXSLIDE_MODE       => ("PMA"),
       RX_SIG_VALID_DLY   => (10),
 
       ------------------RX 8B/10B Decoder Attributes---------------

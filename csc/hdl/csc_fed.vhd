@@ -25,6 +25,7 @@ entity csc_fed is
         g_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- this is not used except for putting it in a register for the user to see
         g_NUM_OF_DMBs        : integer;
         g_NUM_IPB_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQLINK_CLK_FREQ   : integer;
         g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
 
@@ -77,6 +78,29 @@ end csc_fed;
 
 architecture csc_fed_arch of csc_fed is
 
+    --================================--
+    -- Components
+    --================================--
+
+    component ila_gbt
+        port(
+            clk     : in std_logic;
+            probe0  : in std_logic_vector(83 downto 0);
+            probe1  : in std_logic_vector(83 downto 0);
+            probe2  : in std_logic_vector(31 downto 0);
+            probe3  : in std_logic;
+            probe4  : in std_logic;
+            probe5  : in std_logic;
+            probe6  : in std_logic;
+            probe7  : in std_logic;
+            probe8  : in std_logic_vector(5 downto 0)
+        );
+    end component;
+    
+    --================================--
+    -- Constants
+    --================================--
+
     constant POWER_UP_RESET_TIME : std_logic_vector(31 downto 0) := x"02625a00"; -- 40_000_000 clock cycles (1s) - way too long of course, but fine -- this is only used at powerup (FED doesn't care about hard resets), it's not like someone will want to start taking data sooner than that :) 
 
     --================================--
@@ -98,6 +122,7 @@ architecture csc_fed_arch of csc_fed is
     signal ttc_cmd              : t_ttc_cmds;
     signal ttc_counters         : t_ttc_daq_cntrs;
     signal ttc_status           : t_ttc_status;
+    signal daq_l1a_request      : std_logic := '0';
 
     --== Spy path ==--
     signal spy_gbe_test_en      : std_logic;
@@ -151,8 +176,9 @@ begin
     --================================--
 
     i_ttc : entity work.ttc
-        generic map (
-            g_DISABLE_TTC_DATA => g_DISABLE_TTC_DATA
+        generic map(
+            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i             => reset,
@@ -161,6 +187,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
+            local_l1a_req_i     => daq_l1a_request,
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -177,8 +204,9 @@ begin
 
     i_daq : entity work.daq
         generic map(
-            g_NUM_OF_DMBs => g_NUM_OF_DMBs,
-            g_DAQ_CLK_FREQ => g_DAQLINK_CLK_FREQ
+            g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_DAQ_CLK_FREQ      => g_DAQLINK_CLK_FREQ,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i          => reset,
@@ -190,6 +218,7 @@ begin
             ttc_cmds_i       => ttc_cmd,
             ttc_daq_cntrs_i  => ttc_counters,
             ttc_status_i     => ttc_status,
+            l1a_request_o    => daq_l1a_request,
             input_clk_arr_i  => csc_dmb_rx_usrclk_arr_i,
             input_link_arr_i => csc_dmb_rx_data_arr_i,
             spy_clk_i        => csc_spy_usrclk_i,
@@ -211,6 +240,7 @@ begin
             g_NUM_OF_DMBs        => g_NUM_OF_DMBs,
             g_BOARD_TYPE         => g_BOARD_TYPE,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
             g_FW_DATE            => g_FW_DATE,
             g_FW_TIME            => g_FW_TIME,
             g_FW_VER             => g_FW_VER,
@@ -239,7 +269,8 @@ begin
 
     i_link_monitor : entity work.link_monitor
         generic map(
-            g_NUM_OF_DMBs => g_NUM_OF_DMBs
+            g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset,
@@ -271,6 +302,9 @@ begin
     --================================--
 
     i_csc_tests : entity work.csc_tests
+        generic map(
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
+        )
         port map(
             reset_i           => reset,
             ttc_clk_i         => ttc_clocks,
@@ -282,6 +316,38 @@ begin
             ipb_clk_i         => ipb_clk_i,
             ipb_miso_o        => ipb_miso_arr(C_IPB_SLV.tests),
             ipb_mosi_i        => ipb_mosi_arr_i(C_IPB_SLV.tests)
+        );
+
+    --================================--
+    -- Debug
+    --================================--
+
+    i_ila_dmb0_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_dmb_rx_usrclk_arr_i(0),
+            rx_data_i    => csc_dmb_rx_data_arr_i(0),
+            mgt_status_i => csc_dmb_rx_status_arr_i(0)
+        );
+
+    i_ila_dmb1_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_dmb_rx_usrclk_arr_i(1),
+            rx_data_i    => csc_dmb_rx_data_arr_i(1),
+            mgt_status_i => csc_dmb_rx_status_arr_i(1)
+        );
+
+    i_ila_gbe_rx_link : entity work.gt_rx_link_ila_wrapper
+        port map(
+            clk_i        => csc_spy_usrclk_i,
+            rx_data_i    => csc_spy_rx_data_i,
+            mgt_status_i => csc_spy_rx_status_i
+        );
+
+    i_ila_gbe_tx_link : entity work.gt_tx_link_ila_wrapper
+        port map(
+            clk_i   => csc_spy_usrclk_i,
+            kchar_i => csc_spy_tx_data_o.txcharisk,
+            data_i  => csc_spy_tx_data_o.txdata
         );
 
 end csc_fed_arch;

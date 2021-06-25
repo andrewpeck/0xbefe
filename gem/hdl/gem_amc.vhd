@@ -34,6 +34,7 @@ entity gem_amc is
         g_NUM_TRIG_TX_LINKS  : integer;
         
         g_NUM_IPB_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS  : integer; 
         g_DAQ_CLK_FREQ       : integer;
         g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
         
@@ -229,7 +230,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat_mask_arr                : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
     
     signal use_v3b_elink_mapping        : std_logic;
-    signal use_vfat_addressing          : std_logic;
+    signal vfat_hdlc_address_arr        : t_std4_array(23 downto 0);
 
     -- test module links
     signal test_gbt_wide_rx_data_arr    : t_gbt_wide_frame_array((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
@@ -300,7 +301,8 @@ begin
 
     i_ttc : entity work.ttc
         generic map (
-            g_DISABLE_TTC_DATA => g_DISABLE_TTC_DATA
+            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i             => reset,
@@ -309,6 +311,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
+            local_l1a_req_i     => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -341,23 +344,24 @@ begin
     
     i_vfat3_slow_control : entity work.vfat3_slow_control
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs
+            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i          => reset or link_reset,
-            ttc_clk_i        => ttc_clocks_i,
-            ipb_clk_i        => ipb_clk_i,
-            ipb_mosi_i       => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
-            ipb_miso_o       => ipb_miso_arr(C_IPB_SLV.vfat3),
-            tx_data_o        => vfat3_sc_tx_data,
-            tx_rd_en_i       => vfat3_sc_tx_rd_en,
-            tx_empty_o       => vfat3_sc_tx_empty,
-            tx_oh_idx_o      => vfat3_sc_tx_oh_idx,
-            tx_vfat_idx_o    => vfat3_sc_tx_vfat_idx,
-            rx_data_en_i     => vfat3_sc_rx_data_en,
-            rx_data_i        => vfat3_sc_rx_data,
-            status_o         => vfat3_sc_status,
-            use_addressing_i => use_vfat_addressing
+            reset_i                 => reset or link_reset,
+            ttc_clk_i               => ttc_clocks_i,
+            ipb_clk_i               => ipb_clk_i,
+            ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
+            ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.vfat3),
+            tx_data_o               => vfat3_sc_tx_data,
+            tx_rd_en_i              => vfat3_sc_tx_rd_en,
+            tx_empty_o              => vfat3_sc_tx_empty,
+            tx_oh_idx_o             => vfat3_sc_tx_oh_idx,
+            tx_vfat_idx_o           => vfat3_sc_tx_vfat_idx,
+            rx_data_en_i            => vfat3_sc_rx_data_en,
+            rx_data_i               => vfat3_sc_rx_data,
+            status_o                => vfat3_sc_status,
+            vfat_hdlc_address_arr_i => vfat_hdlc_address_arr
         );
 
     --================================--
@@ -368,10 +372,11 @@ begin
 
         i_optohybrid_single : entity work.optohybrid
             generic map(
-                g_GEM_STATION   => g_GEM_STATION,
-                g_OH_VERSION    => CFG_OH_VERSION,
-                g_OH_IDX        => std_logic_vector(to_unsigned(i, 4)),
-                g_DEBUG         => CFG_DEBUG_OH and (i = 0)
+                g_GEM_STATION       => g_GEM_STATION,
+                g_OH_VERSION        => CFG_OH_VERSION,
+                g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                g_DEBUG             => CFG_DEBUG_OH and (i = 0)
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -427,10 +432,11 @@ begin
 
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
-            g_DEBUG => CFG_DEBUG_TRIGGER
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_TRIGGER
         )
         port map(
             reset_i            => reset or link_reset,
@@ -511,10 +517,11 @@ begin
 
     i_daq : entity work.daq
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
-            g_DAQ_CLK_FREQ => g_DAQ_CLK_FREQ,
-            g_INCLUDE_SPY_FIFO => false,
-            g_DEBUG => CFG_DEBUG_DAQ
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
+            g_INCLUDE_SPY_FIFO  => false,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_DAQ
         )
         port map(
             reset_i                 => reset,
@@ -545,12 +552,13 @@ begin
     --================================--
 
     i_gem_system : entity work.gem_system_regs
-        generic map (
+        generic map(
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
-            g_FW_DATE => g_FW_DATE,
-            g_FW_TIME => g_FW_TIME,
-            g_FW_VER => g_FW_VER,
-            g_FW_SHA => g_FW_SHA
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
+            g_FW_DATE            => g_FW_DATE,
+            g_FW_TIME            => g_FW_TIME,
+            g_FW_VER             => g_FW_VER,
+            g_FW_SHA             => g_FW_SHA
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
@@ -564,7 +572,7 @@ begin
             loopback_gbt_test_en_o      => loopback_gbt_test_en,
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
-            use_vfat_addressing_o       => use_vfat_addressing,
+            vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
@@ -580,7 +588,8 @@ begin
     i_oh_link_registers : entity work.oh_link_regs
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
-            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH
+            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset,
@@ -606,6 +615,7 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
             g_DEBUG             => false
         )
         port map(
@@ -632,7 +642,8 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
-            g_GEM_STATION       => g_GEM_STATION
+            g_GEM_STATION       => g_GEM_STATION,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                     => reset_i,
@@ -661,7 +672,8 @@ begin
                 RX_OPTIMIZATION     => 0,
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
-                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS
+                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS,
+                g_USE_RX_SYNC_FIFOS => false
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
@@ -698,7 +710,7 @@ begin
                 g_RX_RATE               => DATARATE_10G24,
                 g_RX_ENCODING           => FEC5,
                 g_RESET_MGT_ON_EVEN     => 0,
-                g_USE_RX_SYNC_FIFOS     => true,
+                g_USE_RX_SYNC_FIFOS     => false,
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(

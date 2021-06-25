@@ -23,6 +23,7 @@ entity slow_control is
     generic(
         g_NUM_OF_OHs        : integer;
         g_NUM_GBTS_PER_OH   : integer;
+        g_IPB_CLK_PERIOD_NS : integer;
         g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted
     );
     port(

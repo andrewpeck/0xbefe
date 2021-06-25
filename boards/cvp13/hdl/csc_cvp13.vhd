@@ -103,6 +103,9 @@ architecture csc_cvp13_arch of csc_cvp13 is
         probe_out0 : OUT STD_LOGIC_VECTOR(11 DOWNTO 0)
       );
     END COMPONENT;
+
+    -- constants
+    constant IPB_CLK_PERIOD_NS  : integer := 10;
        
     -- resets 
     signal reset                : std_logic;
@@ -167,7 +170,7 @@ architecture csc_cvp13_arch of csc_cvp13 is
     signal daq_to_daqlink           : t_daq_to_daqlink;
     signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', almost_full => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
 
-    -------------------- GEM loader ---------------------------------
+    -------------------- PROMless ---------------------------------
     signal to_promless              : t_to_promless := (clk => '0', en => '0');
     signal from_promless            : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
 
@@ -179,6 +182,7 @@ begin
     
     reset <= not reset_b_i;
     i2c_master_en_b_o <= '0';
+    ipb_clk <= clk100;
     
     --================================--
     -- Clocks
@@ -237,9 +241,10 @@ begin
             pcie_link_up_o      => pcie_link_up,
             
             status_leds_o       => leds_o,
+            led_i               => ttc_clks.clk_160,
 
             ipb_reset_o         => ipb_reset,
-            ipb_clk_o           => ipb_clk,
+            ipb_clk_i           => ipb_clk,
             ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
             ipb_usr_mosi_arr_o  => ipb_usr_mosi_arr,
             ipb_sys_miso_arr_i  => ipb_sys_miso_arr,
@@ -255,7 +260,8 @@ begin
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 10
+            g_STABLE_CLK_PERIOD => 10,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS 
         )
         port map(
             reset_i              => '0',
@@ -285,8 +291,9 @@ begin
 
     i_promless : entity work.promless
         generic map(
-            g_MAX_SIZE_BYTES   => 8_388_608, --9_437_184, -- 9_600_000,
-            g_MEMORY_PRIMITIVE => "ultra"
+            g_MAX_SIZE_BYTES    => 8_388_608, --9_437_184, -- 9_600_000,
+            g_MEMORY_PRIMITIVE  => "ultra",
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i         => '0',
@@ -311,6 +318,7 @@ begin
             g_BOARD_TYPE        => CFG_BOARD_TYPE,
             g_NUM_OF_DMBs       => CFG_NUM_DMBS,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQLINK_CLK_FREQ  => 100_000_000,
             g_DISABLE_TTC_DATA  => true
         )

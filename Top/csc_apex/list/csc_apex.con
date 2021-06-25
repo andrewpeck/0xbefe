@@ -1,0 +1,6 @@
+# -*- mode: TCL;-*-
+
+boards/apex/constraints/ku15p.xdc
+boards/apex/constraints/mgt_csc.xdc
+boards/apex/constraints/slink.xdc
+boards/apex/constraints/timing_csc.xdc

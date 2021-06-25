@@ -22,35 +22,36 @@ use work.ipbus.all;
 
 entity vfat3_slow_control is
     generic(
-        g_NUM_OF_OHs         : integer
+        g_NUM_OF_OHs        : integer;
+        g_IPB_CLK_PERIOD_NS : integer         
     );
     port(
         -- reset
-        reset_i             : in  std_logic;
+        reset_i                 : in  std_logic;
         
         -- clocks
-        ttc_clk_i           : in  t_ttc_clks;
-        ipb_clk_i           : in  std_logic;
+        ttc_clk_i               : in  t_ttc_clks;
+        ipb_clk_i               : in  std_logic;
         
         -- ipbus
-        ipb_mosi_i          : in  ipb_wbus;
-        ipb_miso_o          : out ipb_rbus;
+        ipb_mosi_i              : in  ipb_wbus;
+        ipb_miso_o              : out ipb_rbus;
         
         -- fifo I/O
-        tx_data_o           : out std_logic;
-        tx_rd_en_i          : in  std_logic;
-        tx_empty_o          : out std_logic;
-        tx_oh_idx_o         : out std_logic_vector(3 downto 0);
-        tx_vfat_idx_o       : out std_logic_vector(4 downto 0);
+        tx_data_o               : out std_logic;
+        tx_rd_en_i              : in  std_logic;
+        tx_empty_o              : out std_logic;
+        tx_oh_idx_o             : out std_logic_vector(3 downto 0);
+        tx_vfat_idx_o           : out std_logic_vector(4 downto 0);
         
-        rx_data_en_i        : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-        rx_data_i           : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        rx_data_en_i            : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        rx_data_i               : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
         
         -- monitoring
-        status_o            : out t_vfat_slow_control_status;
+        status_o                : out t_vfat_slow_control_status;
         
         -- config
-        use_addressing_i    : in  std_logic
+        vfat_hdlc_address_arr_i : in  t_std4_array(23 downto 0)
         
     );
 end vfat3_slow_control;
@@ -68,18 +69,21 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
         );
     end component;
 	
-	constant TRANSACTION_TIMEOUT	: unsigned(11 downto 0) := x"7ff";
-	constant DEFAULT_HDLC_ADDRESS   : std_logic_vector(7 downto 0) := x"00";
+	constant TRANSACTION_TIMEOUT	: unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
 	
     type state_t is (IDLE, RSPD, RSPD_CACHE, RST, WAIT_CACHE_UPDATE);
         
     signal state                : state_t;
 
+    signal reset_clkipb         : std_logic;
+    signal reset_clk40          : std_logic;
     signal tx_reset             : std_logic;
+    signal tx_reset_clk40       : std_logic;
     signal rx_reset             : std_logic;
+    signal rx_reset_clk40       : std_logic;
 
     signal transaction_id       : unsigned(15 downto 0) := (others => '0');
-	signal transaction_timer	: unsigned(11 downto 0) := (others => '0');
+	signal transaction_timer	: unsigned(15 downto 0) := (others => '0');
 	signal timeout_err_cnt      : unsigned(15 downto 0) := (others => '0');
 	signal axi_strobe_err_cnt   : unsigned(15 downto 0) := (others => '0');
 	
@@ -107,6 +111,8 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_bitstuff_err_cnt  : std_logic_vector(15 downto 0) := (others => '0');
     signal rx_crc_err_cnt       : std_logic_vector(15 downto 0) := (others => '0');
     
+    signal ipb_miso             : ipb_rbus;
+    
     -- ADC cache
     signal adc_cache_en         : std_logic;
     signal adc_cache_we         : std_logic;
@@ -129,6 +135,7 @@ begin
 
     tx_oh_idx_o <= tx_oh_idx;
     tx_vfat_idx_o <= tx_vfat_idx;
+    ipb_miso_o <= ipb_miso;
 
     status_o.bitstuff_error_cnt     <= rx_bitstuff_err_cnt;
     status_o.crc_error_cnt          <= rx_crc_err_cnt;
@@ -137,13 +144,18 @@ begin
     status_o.axi_strobe_error_cnt   <= std_logic_vector(axi_strobe_err_cnt);
     status_o.transaction_cnt        <= std_logic_vector(transaction_id);
 
+    i_sync_reset_ipb : entity work.synch generic map(N_STAGES => 2, IS_RESET => true) port map(async_i => reset_i, clk_i => ipb_clk_i, sync_o => reset_clkipb);
+    i_sync_reset_clk40 : entity work.synch generic map(N_STAGES => 2, IS_RESET => true) port map(async_i => reset_i, clk_i => ttc_clk_i.clk_40, sync_o => reset_clk40);
+    i_sync_tx_reset_clk40 : entity work.synch generic map(N_STAGES => 2, IS_RESET => true) port map(async_i => tx_reset, clk_i => ttc_clk_i.clk_40, sync_o => tx_reset_clk40);
+    i_sync_rx_reset_clk40 : entity work.synch generic map(N_STAGES => 2, IS_RESET => true) port map(async_i => rx_reset, clk_i => ttc_clk_i.clk_40, sync_o => rx_reset_clk40);
+
     --== IPbus process ==--
 
     process(ipb_clk_i)       
     begin    
         if (rising_edge(ipb_clk_i)) then      
-            if (reset_i = '1') then    
-                ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+            if (reset_clkipb = '1') then    
+                ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                 tx_is_write <= '0';
                 tx_reg_addr <= (others => '0');
                 tx_reg_value <= (others => '0');
@@ -163,7 +175,7 @@ begin
                 case state is
                     when IDLE =>    
                     
-                    	ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                    	ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                     	transaction_timer <= (others => '0');
                     	adc_cache_we <= '0';
                     	adc_cache_din <= (others => '0');
@@ -200,12 +212,7 @@ begin
                                 tx_oh_idx   <= ipb_mosi_i.ipb_addr(19 downto 16);
                                 tx_vfat_idx <= ipb_mosi_i.ipb_addr(15 downto 11);
                                 
-                                if (use_addressing_i = '1') then
-                                    --hdlc_address <= "000" & std_logic_vector(unsigned(ipb_mosi_i.ipb_addr(15 downto 11)) + 1);
-                                    hdlc_address <= "000" & ipb_mosi_i.ipb_addr(15 downto 11);
-                                else
-                                    hdlc_address <= DEFAULT_HDLC_ADDRESS;
-                                end if;
+                                hdlc_address <= x"0" & vfat_hdlc_address_arr_i(to_integer(unsigned(ipb_mosi_i.ipb_addr(15 downto 11))));
                                                             
                                 tx_reset <= '0';
                                 rx_reset <= '1';
@@ -216,7 +223,7 @@ begin
                                 state <= RSPD;
                             else
                                 tx_command_en <= '0';
-                                tx_reset <= '1';
+                                tx_reset <= '0';
                                 rx_reset <= '1';
                                 adc_cache_en <= '1';
                                 adc_cache_addr <= ipb_mosi_i.ipb_addr(19 downto 11) & ipb_mosi_i.ipb_addr(0);
@@ -228,7 +235,7 @@ begin
                         	
                         	tx_command_en <= '0';
                         	state <= IDLE;
-                            tx_reset <= '1';
+                            tx_reset <= '0';
                             rx_reset <= '1';
                             adc_cache_en <= '0';
                             adc_cache_addr <= (others => '0');
@@ -247,17 +254,17 @@ begin
                             rx_reset <= '1';
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
                         elsif (tx_reg_addr(19 downto 8) = x"200") then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => (others => '0'));
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => (others => '0'));
                             state <= WAIT_CACHE_UPDATE;
                         elsif (rx_valid_sync = '1') then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => rx_reg_value);
                             state <= RST;
                         elsif (rx_error_sync = '1') then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
                             state <= RST;
                         elsif (transaction_timer = TRANSACTION_TIMEOUT) then
                             timeout_err_cnt <= timeout_err_cnt + 1;
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
                             state <= RST;
                         end if;
 
@@ -274,12 +281,14 @@ begin
                     -- respond with cached data (only used for ADCs, which are slow)
                     when RSPD_CACHE =>
                         
+                        ipb_miso <= ipb_miso;
+                        
                         if (ipb_mosi_i.ipb_strobe = '0') then
                             state <= IDLE;
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
                             transaction_timer <= (others => '0');
-                        elsif (transaction_timer = x"002") then
-                            ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => x"00000" & "00" & adc_cache_dout);
+                        elsif (transaction_timer = x"0002") then
+                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => x"00000" & "00" & adc_cache_dout);
                             state <= RST;
                             transaction_timer <= (others => '0');
                         else
@@ -295,8 +304,8 @@ begin
                     when RST =>
                     	
                     	if (ipb_mosi_i.ipb_strobe = '0') then 
-	                        ipb_miso_o.ipb_ack <= '0';
-	                        ipb_miso_o.ipb_err <= '0';
+	                        ipb_miso.ipb_ack <= '0';
+	                        ipb_miso.ipb_err <= '0';
 	                        state <= IDLE;
 	                        tx_reset <= '1';
 	                        rx_reset <= '1';
@@ -307,6 +316,8 @@ begin
 	                        rx_calc_crc_last <= rx_calc_crc;
 	                        tx_raw_last_packet_last <= tx_raw_last_packet;
 	                        rx_raw_last_reply_last <= rx_raw_last_reply;
+	                    else
+                            ipb_miso <= ipb_miso;	                        
                     	end if;
 
                         adc_cache_en <= '0';
@@ -318,7 +329,9 @@ begin
                     when WAIT_CACHE_UPDATE =>
                     
                         if (ipb_mosi_i.ipb_strobe = '0') then
-                            ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                            ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                        else
+                            ipb_miso <= ipb_miso;                            
                         end if;
                         
                         if (tx_busy = '1') then
@@ -357,7 +370,7 @@ begin
                     -- who knows what might happen :)
                     when others =>
                         
-                        ipb_miso_o <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0')); 
+                        ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0')); 
                         state <= IDLE;
                         tx_is_write <= '0';
                         tx_reg_addr <= (others => '0');
@@ -377,7 +390,7 @@ begin
 
 	i_vfat3_sc_tx_cmd_en_sync : entity work.synch
 		generic map(
-			N_STAGES => 2
+			N_STAGES => 4
 		)
 		port map(
 			async_i => tx_command_en,
@@ -387,7 +400,7 @@ begin
 
 	i_vfat3_sc_rx_valid_sync : entity work.synch
 		generic map(
-			N_STAGES => 2
+			N_STAGES => 4
 		)
 		port map(
 			async_i => rx_valid,
@@ -397,7 +410,7 @@ begin
 
 	i_vfat3_sc_rx_error_sync : entity work.synch
 		generic map(
-			N_STAGES => 2
+			N_STAGES => 4
 		)
 		port map(
 			async_i => rx_error,
@@ -407,7 +420,7 @@ begin
 		
     i_vfat3_sc_tx : entity work.vfat3_sc_tx
         port map(
-            reset_i           => reset_i or tx_reset,
+            reset_i           => reset_clk40 or tx_reset_clk40,
             clk_40_i          => ttc_clk_i.clk_40,
             data_o            => tx_din,
             data_en_o         => tx_en,
@@ -437,7 +450,7 @@ begin
         )
         port map(
             sleep         => '0',
-            rst           => reset_i or tx_reset,
+            rst           => reset_clk40 or tx_reset_clk40,
             wr_clk        => ttc_clk_i.clk_40,
             wr_en         => tx_en,
             din(0)        => tx_din,
@@ -450,8 +463,8 @@ begin
 
     i_vfat3_sc_rx : entity work.vfat3_sc_rx
         port map(
-            reset_i            => reset_i,
-            fsm_reset_i        => rx_reset,
+            reset_i            => reset_clk40,
+            fsm_reset_i        => rx_reset_clk40,
             clk_40_i           => ttc_clk_i.clk_40,
             data_i             => rx_data,
             data_en_i          => rx_data_en,

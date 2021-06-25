@@ -35,10 +35,11 @@ entity pcie is
         pcie_link_up_o      : out std_logic;
         
         status_leds_o       : out std_logic_vector(3 downto 0);
+        led_i               : in  std_logic;
         
         -- IPbus
         ipb_reset_o         : out std_logic;
-        ipb_clk_o           : out std_logic;
+        ipb_clk_i           : out std_logic;
         ipb_usr_miso_arr_i  : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
         ipb_usr_mosi_arr_o  : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
         ipb_sys_miso_arr_i  : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
@@ -400,6 +401,8 @@ architecture pcie_arch of pcie is
     signal axil_m2s             : t_axi_lite_m2s;
     signal axil_s2m             : t_axi_lite_s2m;
 
+    signal ipb_mmcm_fbclk       : std_logic;
+
     signal ipb_read_active      : std_logic;
     signal ipb_write_active     : std_logic;
     
@@ -601,12 +604,14 @@ begin
         );
 
     --================================--
-    -- IPbus / wishbone
+    -- IPbus / wishbone bridge
     --================================--
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
-            C_DEBUG => true
+            g_DEBUG => true,
+            g_IPB_CLK_ASYNC => true,
+            g_IPB_TIMEOUT => 15000
         )
         port map(
             axi_aclk_i     => axi_clk,
@@ -614,7 +619,7 @@ begin
             axil_m2s_i     => axil_m2s,
             axil_s2m_o     => axil_s2m,
             ipb_reset_o    => ipb_reset_o,
-            ipb_clk_o      => ipb_clk_o,
+            ipb_clk_i      => ipb_clk_i,
             ipb_sys_miso_i => ipb_sys_miso_arr_i,
             ipb_sys_mosi_o => ipb_sys_mosi_arr_o,
             ipb_usr_miso_i => ipb_usr_miso_arr_i,
@@ -726,9 +731,8 @@ begin
         end if;
     end process;
     
-    -- LED[3] shows activity on the AXI stream bus (just blinks when either a read or a write request is received)
-    -- not yet implemented
-    status_leds(3) <= '0';
+    -- optional LED input from outside
+    status_leds(3) <= led_i;
 
 
 end pcie_arch;

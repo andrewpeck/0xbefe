@@ -32,6 +32,7 @@ generic(
     g_NUM_OF_OHs         : integer;
     g_DAQ_CLK_FREQ       : integer;
     g_INCLUDE_SPY_FIFO   : boolean := false;
+    g_IPB_CLK_PERIOD_NS  : integer;
     g_DEBUG              : boolean := false
 );
 port(

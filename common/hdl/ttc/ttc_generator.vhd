@@ -36,7 +36,7 @@ entity ttc_generator is
         single_ec0_i            : in std_logic;
         
         cyclic_l1a_gap_i        : in std_logic_vector(15 downto 0);
-        cyclic_l1a_cnt_i        : in std_logic_vector(23 downto 0);
+        cyclic_l1a_cnt_i        : in std_logic_vector(31 downto 0);
         cyclic_cal_l1a_gap_i    : in std_logic_vector(11 downto 0);
         cyclic_cal_prescale_i   : in std_logic_vector(11 downto 0);
         cyclic_l1a_start_i      : in std_logic;
@@ -61,7 +61,7 @@ architecture Behavioral of ttc_generator is
     signal cyclic_calpulse_fire : std_logic := '0';
     signal cyclic_l1a_veto      : std_logic := '0';
     signal cyclic_running       : std_logic := '0';
-    signal cyclic_l1a_cntdown   : unsigned(23 downto 0);
+    signal cyclic_l1a_cntdown   : unsigned(31 downto 0);
     signal calpulse_prescale_cnt: unsigned(11 downto 0) := (others => '0');
        
 begin
@@ -205,11 +205,11 @@ begin
                     cyclic_running <= '1';
                 end if;
                 
-                if (cyclic_running = '1') and (cyclic_l1a_cnt_i /= x"000000") and (cyclic_l1a_cntdown /= x"000000") and (cyclic_l1a_fire = '1') then
+                if (cyclic_running = '1') and (cyclic_l1a_cnt_i /= x"00000000") and (cyclic_l1a_cntdown /= x"00000000") and (cyclic_l1a_fire = '1') then
                     cyclic_l1a_cntdown <= cyclic_l1a_cntdown - 1;
                 end if;
                 
-                if (cyclic_running = '1') and (cyclic_l1a_cnt_i /= x"000000") and (cyclic_l1a_cntdown = x"000000") then
+                if (cyclic_running = '1') and (cyclic_l1a_cnt_i /= x"00000000") and (cyclic_l1a_cntdown = x"00000000") then
                     cyclic_running <= '0';
                 end if;
                 

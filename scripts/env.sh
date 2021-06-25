@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ -z "$2" ]; then
-    echo "Usage: source env_gem.sh <station> <board_name>"
-    echo "    station: can be ge11, ge21, or me0"
+    echo "Usage: source env.sh <station> <board_name>"
+    echo "    station: can be ge11, ge21, me0, or csc"
     echo "    board_name: can be cvp13, apex, apd1, ctp7"
     echo "e.g.: env_gem.sh me0 cvp13"
 else
@@ -11,7 +11,13 @@ else
     BOARD=`echo "$2" | awk '{print tolower($0)}'`
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     LIBRWREG_FILE="$SCRIPT_DIR/boards/$BOARD/rwreg/librwreg.so"
-    ADDR_TBL=$SCRIPT_DIR/../address_table/gem/generated/${STATION}_${BOARD}/gem_amc.xml
+    PROJECT="gem"
+    ADDR_TBL_FILE="gem_amc.xml"
+    if [ $STATION == "csc" ]; then
+        PROJECT="csc"
+	ADDR_TBL_FILE="csc_fed.xml"
+    fi
+    ADDR_TBL=$SCRIPT_DIR/../address_table/${PROJECT}/generated/${STATION}_${BOARD}/${ADDR_TBL_FILE}
 
     if [ ! -f "$LIBRWREG_FILE" ]; then
         echo "ERROR: $LIBRWREG_FILE does not exist, please compile the librwreg by running these commands:"

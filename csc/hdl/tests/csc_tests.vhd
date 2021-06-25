@@ -19,6 +19,9 @@ use work.ipbus.all;
 use work.registers.all;
 
 entity csc_tests is
+    generic(
+        g_IPB_CLK_PERIOD_NS : integer
+    );
     port(
         -- reset
         reset_i                     : in  std_logic;

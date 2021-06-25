@@ -6,6 +6,8 @@ Top/ge21_cvp13/project_config.vhd
 # Common libs
 common/hdl/common.src
 common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/sca.src
 
 # GEM source
 gem/hdl/gem.src

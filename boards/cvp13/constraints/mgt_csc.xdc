@@ -18,10 +18,10 @@ create_clock -name qsfp2_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[1]}]
 create_clock -name qsfp1_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[2]}]
 create_clock -name qsfp0_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[3]}]
 
-create_clock -name qsfp3_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[0]}]
-create_clock -name qsfp2_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[1]}]
-create_clock -name qsfp1_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[2]}]
-create_clock -name qsfp0_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[3]}]
+create_clock -name qsfp3_refclk1 -period 5.000 [get_ports {qsfp_refclk1_p_i[0]}]
+create_clock -name qsfp2_refclk1 -period 5.000 [get_ports {qsfp_refclk1_p_i[1]}]
+create_clock -name qsfp1_refclk1 -period 5.000 [get_ports {qsfp_refclk1_p_i[2]}]
+create_clock -name qsfp0_refclk1 -period 5.000 [get_ports {qsfp_refclk1_p_i[3]}]
 
 ##############################################
 ################  Location  ##################
@@ -51,15 +51,15 @@ set_property LOC GTYE4_CHANNEL_X1Y55 [get_cells {i_mgts/g_channels[15].g_chan_*/
 ################   outclk   ##################
 ##############################################
 
-# QSFP0 (GBTX)
-create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*RXOUTCLK}]
+# QSFP0 (DMB, DMB, GBE, GBTX)
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*RXOUTCLK}]
@@ -117,6 +117,6 @@ create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[15]
 ################   GBTX   ##################
 ##############################################
 
-set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*/scrambler/*/C}] -to [get_pins -hier -filter {NAME =~ */*/*/txGearbox/*/D}] -datapath_only
-set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].gbtTx/txPhaseMon/DONE*/C}] -to [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].i_sync_gearbox_align*FDE_INST/D}] -datapath_only
-set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].gbtTx/txPhaseMon/GOOD*/C}] -to [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].i_sync_gearbox_align*FDE_INST/D}] -datapath_only
+#set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*/scrambler/*/C}] -to [get_pins -hier -filter {NAME =~ */*/*/txGearbox/*/D}] -datapath_only
+#set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].gbtTx/txPhaseMon/DONE*/C}] -to [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].i_sync_gearbox_align*FDE_INST/D}] -datapath_only
+#set_max_delay 16 -from [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].gbtTx/txPhaseMon/GOOD*/C}] -to [get_pins -hier -filter {NAME =~ */*/*gbtTx_gen[*].i_sync_gearbox_align*FDE_INST/D}] -datapath_only

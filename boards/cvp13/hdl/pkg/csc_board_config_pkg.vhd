@@ -18,10 +18,6 @@ use work.project_config.all;
 --============================================================================
 package board_config_package is
 
-    function get_num_gbts_per_oh(gem_station : integer) return integer;
-    function get_num_vfats_per_oh(gem_station : integer) return integer;
-    function get_gbt_widebus(gem_station, oh_version : integer) return integer;
-    
     ------------ Board specific constants ------------
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"2"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
@@ -70,7 +66,7 @@ package board_config_package is
 
     type t_dmb_config_arr is array (integer range <>) of t_dmb_config;
 
-    constant CFG_NUM_DMBS           : integer := 2;    -- total number of DMBs to instanciate
+    constant CFG_NUM_DMBS           : integer := PRJ_CFG_NUM_DMBS;    -- total number of DMBs to instanciate
 
     constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr(0 to CFG_NUM_DMBS - 1) := (
         (num_fibers => 1, rx_fibers => (0, 0, 0)),

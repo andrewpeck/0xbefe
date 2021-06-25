@@ -46,6 +46,16 @@ GE21_GBT_ELINK_TO_FPGA = [GE21_GBT0_ELINK_TO_FPGA, GE21_GBT1_ELINK_TO_FPGA]
 
 GBT_ELINK_SAMPLE_PHASE_REGS = [[69, 73, 77], [67, 71, 75], [93, 97, 101], [91, 95, 99], [117, 121, 125], [115, 119, 123], [141, 145, 149], [139, 143, 147], [165, 169, 173], [163, 167, 171], [189, 193, 197], [187, 191, 195], [213, 217, 221], [211, 215, 219]]
 
+ME0_GBT0_ELINK_TO_VFAT = {3: 8, 25: 0, 27: 1}
+ME0_GBT1_ELINK_TO_VFAT = {24: 16, 11: 9, 6: 17}
+ME0_GBT2_ELINK_TO_VFAT = {3: 10, 25: 2, 27: 3}
+ME0_GBT3_ELINK_TO_VFAT = {24: 18, 11: 11, 6: 19}
+ME0_GBT4_ELINK_TO_VFAT = {27: 5, 25: 12, 3: 4}
+ME0_GBT5_ELINK_TO_VFAT = {24: 20, 11: 13, 6: 21}
+ME0_GBT6_ELINK_TO_VFAT = {27: 7, 25: 14, 3: 6}
+ME0_GBT7_ELINK_TO_VFAT = {24: 22, 11: 15, 6: 23}
+ME0_ELINK_TO_VFAT = [ME0_GBT0_ELINK_TO_VFAT, ME0_GBT1_ELINK_TO_VFAT, ME0_GBT2_ELINK_TO_VFAT, ME0_GBT3_ELINK_TO_VFAT, ME0_GBT4_ELINK_TO_VFAT, ME0_GBT5_ELINK_TO_VFAT, ME0_GBT6_ELINK_TO_VFAT, ME0_GBT7_ELINK_TO_VFAT]
+
 ME0_GBT0_CLASSIC_ELINK_TO_VFAT = {3: 3, 27: 4, 25: 5}
 ME0_GBT1_CLASSIC_ELINK_TO_VFAT = {6: 0, 24: 1, 11: 2}
 ME0_CLASSIC_ELINK_TO_VFAT = [ME0_GBT0_CLASSIC_ELINK_TO_VFAT, ME0_GBT1_CLASSIC_ELINK_TO_VFAT]
@@ -53,8 +63,14 @@ ME0_GBT0_SPICY_ELINK_TO_VFAT = {6: 0, 16: 1, 15: 3}
 ME0_GBT1_SPICY_ELINK_TO_VFAT = {18: 2, 3: 4, 17: 5}
 ME0_SPICY_ELINK_TO_VFAT = [ME0_GBT0_SPICY_ELINK_TO_VFAT, ME0_GBT1_SPICY_ELINK_TO_VFAT]
 ME0_PIZZA_ELINK_TO_VFAT = [ME0_CLASSIC_ELINK_TO_VFAT, ME0_SPICY_ELINK_TO_VFAT]
+
 LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0cc
-ME0_LPGBT_ELINK_CTRL_REG_DEFAULT = 0x02
+ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT = [0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0xa, 0xa, 0xa, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0x3]
+ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT = [0x2, 0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0xa, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0xa, 0x3]
+
+PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS = 10000
+PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS = 1000000
+PHASE_SCAN_L1A_GAP = 40 # 1MHz
 
 def main():
 
@@ -66,11 +82,11 @@ def main():
         print('Usage: gbt.py <oh_num> <gbt_num> <command>')
         print('available commands:')
         print('  config <config_filename_txt>:   Configures the GBT with the given config file (must use the txt version of the config file, can be generated with the GBT programmer software)')
-        print('  v3b-phase-scan <base_config_filename_txt>:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase')
-        print('  ge21-phase-scan <base_config_filename_txt>:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase')
+        print('  v3b-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
+        print('  ge21-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  ge21-fpga-phase-scan <base_config_filename_txt> [time_per_phase_sec]:   Configures the GBT with the given config file, and performs a phase scan on elinks connected to the FPGA while checking the PRBS error count for each phase. NOTE: This requires the FPGA to be loaded with a loopback firmware (future OH fw versions will probably have the PRBS sender built in). Optionally a number of seconds to spend on each phase can be supplied as the last argument.')
         print('  ge21-program-phases <elink_0_phase> <elink_1_phase> <elink_2_phase> <elink_3_phase> etc... :   Programs the provided GBTX sampling phases to as many elinks as the numbers provided (can also include wide-bus elinks)')
-        print('  me0-phase-scan-pizza:   Performs an elink phase scan while checking the VFAT communication for each phase -- used with ME0 OH on PIZZA (OH0 corresponds to the classic slot, OH1 corresponds to the spicy slot)')
+        print('  me0-phase-scan [num_slow_control] [num_daq_packets]:   Performs an elink phase scan while checking the VFAT communication for each phase (used with ME0 GEB). Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.' % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  charge-pump-current-scan:   Scans the CDR phase detector charge pump current from highest to the lowest that still works')
         return
     else:
@@ -81,7 +97,7 @@ def main():
     if ohSelect > 11:
         printRed("The given OH index (%d) is out of range (must be 0-11)" % ohSelect)
         return
-    if gbtSelect > 2:
+    if gbtSelect > 7:
         printRed("The given GBT index (%d) is out of range (must be 0-2)" % gbtSelect)
         return
 
@@ -136,70 +152,14 @@ def main():
         print('time took = ' + str(totalTime) + 's')
 
         if (command == 'v3b-phase-scan'):
-            initVfatRegAddrs()
-            for elink, vfat in V3B_GBT_ELINK_TO_VFAT[gbtSelect].items():
-                subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
-                for phase in range(0, 16):
-                    # set phase
-                    for subReg in range(0, 3):
-                        addr = GBT_ELINK_SAMPLE_PHASE_REGS[elink][subReg]
-                        value = (regs[addr] & 0xf0) + phase
-                        wReg(ADDR_IC_ADDR, addr)
-                        wReg(ADDR_IC_WRITE_DATA, value)
-                        wReg(ADDR_IC_EXEC_WRITE, 1)
-                        sleep(0.000001) # writing is too fast for CVP13 :)
-                    # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
-                    sleep(0.1)
-                    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
-                    # wReg(ADDR_LINK_RESET, 1)
-                    sleep(0.3)
-                    linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-                    syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
-                    cfgRun = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
-                    color = Colors.GREEN
-                    prefix = 'GOOD: '
-                    if (linkGood == 0) or (syncErrCnt > 0) or (cfgRun != '0x00000000' and cfgRun != '0x00000001'):
-                        color = Colors.RED
-                        prefix = '>>>>>>>> BAD <<<<<<<< '
-                    print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN=%s' % (phase, vfat, linkGood, syncErrCnt, cfgRun), Colors.ENDC
+            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parseInt(sys.argv[5])
+            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parseInt(sys.argv[6])
+            phaseScan(False, V3B_GBT_ELINK_TO_VFAT, ohSelect, gbtSelect, regs, numScTrans, numDaqPackets)
 
         if (command == 'ge21-phase-scan'):
-            initVfatRegAddrs()
-            for elink, vfat in GE21_GBT_ELINK_TO_VFAT[gbtSelect].items():
-                subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
-                for phase in range(0, 16):
-                    # set phase
-                    for subReg in range(0, 3):
-                        addr = GBT_ELINK_SAMPLE_PHASE_REGS[elink][subReg]
-                        value = (regs[addr] & 0xf0) + phase
-                        wReg(ADDR_IC_ADDR, addr)
-                        wReg(ADDR_IC_WRITE_DATA, value)
-                        wReg(ADDR_IC_EXEC_WRITE, 1)
-                        sleep(0.000001) # writing is too fast for CVP13 :)
-
-                    # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
-                    sleep(0.1)
-                    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
-                    sleep(0.001)
-                    cfgRunGood = 1
-                    cfgAddr = getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).real_address
-                    for i in range(100000):
-                        #ret = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
-                        ret = rReg(cfgAddr)
-                        #if (ret != '0x00000000' and ret != '0x00000001'):
-                        if (ret != 0 and ret != 1):
-                            cfgRunGood = 0
-                            break
-                    #sleep(0.3)
-                    #sleep(0.5)
-                    linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-                    syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
-                    color = Colors.GREEN
-                    prefix = 'GOOD: '
-                    if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
-                        color = Colors.RED
-                        prefix = '>>>>>>>> BAD <<<<<<<< '
-                    print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
+            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parseInt(sys.argv[5])
+            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parseInt(sys.argv[6])
+            phaseScan(False, GE21_GBT_ELINK_TO_VFAT, ohSelect, gbtSelect, regs, numScTrans, numDaqPackets)
 
         if (command == 'ge21-fpga-phase-scan'):
             # if there's an additional argument -- take it as the number of seconds to spend on each phase
@@ -301,45 +261,10 @@ def main():
                         prefix = 'COMMUNICATION BAD on elink %d VFAT%d: ' % (elink, vfat)
                     print color, prefix, 'Phase = %d, LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
 
-    elif (command == 'me0-phase-scan-pizza'):
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
-        initVfatRegAddrs()
-        for elink, vfat in ME0_PIZZA_ELINK_TO_VFAT[ohSelect][gbtSelect].items():
-            subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
-            for phase in range(0, 16):
-                # set phase
-                addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
-                value = (phase << 4) + ME0_LPGBT_ELINK_CTRL_REG_DEFAULT
-                wReg(ADDR_IC_ADDR, addr)
-                wReg(ADDR_IC_WRITE_DATA, value)
-                wReg(ADDR_IC_EXEC_WRITE, 1)
-                sleep(0.000001) # writing is too fast for CVP13 :)
-
-                # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
-                sleep(0.1)
-                writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
-                sleep(0.001)
-                cfgRunGood = 1
-                cfgAddr = getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).real_address
-                for i in range(100000):
-                    #ret = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
-                    ret = rReg(cfgAddr)
-                    #if (ret != '0x00000000' and ret != '0x00000001'):
-                    if (ret != 0 and ret != 1):
-                        cfgRunGood = 0
-                        break
-                #sleep(0.3)
-                #sleep(0.5)
-                linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-                syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
-                color = Colors.GREEN
-                prefix = 'GOOD: '
-                if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
-                    color = Colors.RED
-                    prefix = '>>>>>>>> BAD <<<<<<<< '
-                print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
-
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+    elif (command == 'me0-phase-scan'):
+        numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 5 else parseInt(sys.argv[4])
+        numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 6 else parseInt(sys.argv[5])
+        phaseScan(True, ME0_ELINK_TO_VFAT, ohSelect, gbtSelect, [], numScTrans, numDaqPackets)
 
     elif command == 'destroy':
         subheading('Destroying configuration of OH%d GBT%d' % (ohSelect, gbtSelect))
@@ -351,6 +276,145 @@ def main():
 
     print("")
     print("bye now..")
+
+def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowControlTransactions, numDaqPackets):
+    if isLpGbt:
+        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+    else:
+        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+
+    # setup the TTC generator for a DAQ test
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    genEn = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE")))
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    calpulseGap = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP")))
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
+    l1aCnt = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT")))
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), numDaqPackets)
+    l1aGap = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP")))
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
+
+    # start the scan
+    initVfatRegAddrs()
+    subheading('Starting GBT%d phase scan checking %d slow control transactions and %d daq data packets on each phase' % (gbtSelect, numSlowControlTransactions, numDaqPackets))
+    for elink, vfat in elinkToVfatMap[gbtSelect].items():
+        subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
+        goodPhases = []
+        for phase in range(0, 15):
+            setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase)
+
+            # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
+            sleep(0.1)
+            writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+            sleep(0.001)
+
+            # check slow control to the VFAT
+            cfgRunGood = 1
+            cfgAddr = getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).real_address
+            for i in range(numSlowControlTransactions):
+                #ret = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+                ret = rReg(cfgAddr)
+                #if (ret != '0x00000000' and ret != '0x00000001'):
+                if (ret != 0 and ret != 1):
+                    cfgRunGood = 0
+                    break
+
+            # check sync status
+            linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
+            syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+
+            # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
+            daqCrcErrCnt = -1
+            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
+                if numDaqPackets <= 0:
+                    wReg(cfgAddr, 0) # set the VFAT to sleep mode
+                else:
+                    wReg(cfgAddr, 1) # set the VFAT to run mode
+                    writeReg(getNode("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+                    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    genRunning = 1
+                    while genRunning == 1:
+                        genRunning = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING")))
+                    daqCrcErrCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat))))
+                    daqEvtCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat))))
+                    if daqEvtCnt == 0:
+                        daqCrcErrCnt = 999
+
+            # print the results
+            color = Colors.GREEN
+            prefix = 'GOOD: '
+            if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0) or (daqCrcErrCnt > 0):
+                color = Colors.RED
+                prefix = '>>>>>>>> BAD <<<<<<<< '
+                goodPhases.append(False)
+            else:
+                goodPhases.append(True)
+            print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt), Colors.ENDC
+
+        # select the best phase for this elink
+        bestPhase = getBestPhase(goodPhases)
+        print("Setting phase = %d" % bestPhase)
+        setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, bestPhase)
+
+    # restore the TTC generator settings
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE"), genEn)
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), calpulseGap)
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
+    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
+
+    # reset the links
+    sleep(0.1)
+    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+
+def setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase):
+    # set phase
+    if isLpGbt: # LpGBT
+        isMaster = gbtSelect % 2 == 0
+        ctrlRegDefault = ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT[elink] if isMaster else ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT[elink]
+        addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
+        value = (phase << 4) + ctrlRegDefault
+        wReg(ADDR_IC_ADDR, addr)
+        wReg(ADDR_IC_WRITE_DATA, value)
+        wReg(ADDR_IC_EXEC_WRITE, 1)
+        sleep(0.000001) # writing is too fast for CVP13 :)
+    else: # GBTX
+        for subReg in range(0, 3):
+            addr = GBT_ELINK_SAMPLE_PHASE_REGS[elink][subReg]
+            value = (gbtRegs[addr] & 0xf0) + phase
+            wReg(ADDR_IC_ADDR, addr)
+            wReg(ADDR_IC_WRITE_DATA, value)
+            wReg(ADDR_IC_EXEC_WRITE, 1)
+            sleep(0.000001) # writing is too fast for CVP13 :)
+
+def getBestPhase(goodPhases):
+    bestDistLeft = 0
+    bestDistRight = 0
+    bestPhase = 0
+    for i in range(len(goodPhases)):
+        distRight = 0
+        for j in range(i, i + 15):
+            phaseIdx = j if j < 15 else j - 15
+            if not goodPhases[phaseIdx]:
+                break
+            else:
+                distRight += 1
+        distLeft = 0
+        for j in range(i, i - 15, -1):
+            phaseIdx = j
+            if not goodPhases[phaseIdx]:
+                break
+            else:
+                distLeft += 1
+
+        if distLeft + distRight > bestDistLeft + bestDistRight or (distLeft + distRight == bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight)):
+            if distLeft <= 4: # don't set a phase with distance more than 4 to the left (to protect against cases where the second bad spot is not detected)
+                bestDistLeft = distLeft
+                bestDistRight = distRight
+                bestPhase = i
+
+    print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
+    return bestPhase
 
 def downloadConfig(ohIdx, gbtIdx, filename):
     f = open(filename, 'r')
@@ -403,7 +467,7 @@ def initVfatRegAddrs():
 
 def selectGbt(ohIdx, gbtIdx):
     station = parseInt(readReg(getNode('GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION')))
-    numGbtsPerOh = 3 if station == 1 else 2
+    numGbtsPerOh = 3 if station == 1 else 8 if station == 0 else 2
     linkIdx = ohIdx * numGbtsPerOh + gbtIdx
 
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)

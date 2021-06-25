@@ -11,17 +11,25 @@ class Colors:
     RED     = '\033[91m'
     ENDC    = '\033[0m'
 
+CONVERT_ALL_HEX_TO_BINARY = True # if false, hex values are represented as x"1234" in VHDL, if true then all hex values are converted to VHDL binary format
+
 def main():
 
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 8:
         print('This utility uses output files from describe_mgt.tcl to update a given VHDL file which instantiates an MGT channel with the correct parameters and port constants')
-        print('Usage: update_mgt.py <mgt_channel_vhd_file> <port_file> <property_file> <output_file>')
+        print('Usage: update_mgt.py <mgt_channel_vhd_file> <port_file> <property_file> <output_file> <mgt_type> <tx_sync_type> <rx_slide_mode>')
+        print('    * mgt_type: gty or gth')
+        print('    * tx_sync_type: can be "no" (TX buffer bypass is not used), "multilane_auto" (use for GTY), "multilane_manual" (use for GTH)')
+        print('    * rx_slide_mode: can be "PCS" or "PMA" (use PMA for GBT links)')
         return
 
     vhdlFName = sys.argv[1]
     portFName = sys.argv[2]
     propFName = sys.argv[3]
     outFName = sys.argv[4]
+    mgtType = sys.argv[5]
+    txSyncType = sys.argv[6]
+    rxSlideMode = sys.argv[7]
 
     # make a dictionary for properties
     print("======================== properties ========================")
@@ -59,7 +67,7 @@ def main():
         elif type.lower() == "hex":
             numBits = int(val[:val.index("'h")])
             # if the number of bits is a multiple of 4 then use the x"123" notation, otherwise just convert to binary
-            if numBits % 4 != 0:
+            if numBits % 4 != 0 or CONVERT_ALL_HEX_TO_BINARY:
                 valHex = int(val[val.index("'h")+2:], base=16)
                 binStr = bin(valHex)[2:].zfill(numBits)
                 valVhdl = '"%s"' % binStr
@@ -82,6 +90,53 @@ def main():
         print("%s => %s" % (name, valVhdl))
 
     propFile.close()
+
+    print("======================== special properties ========================")
+
+    if mgtType not in ["gty", "gth"]:
+        print('ERROR: unsupported MGT type "%s", supported types are: gty, gth' % mgtType)
+        return
+
+    if mgtType == "gty":
+        if txSyncType == "no":
+            props["TXSYNC_MULTILANE"] = "'0'"
+            props["TXSYNC_OVRD"] = "'0'"
+            props["TXSYNC_SKIP_DA"] = "'0'"
+        elif txSyncType == "multilane_auto":
+            props["TXSYNC_MULTILANE"] = "'1'"
+            props["TXSYNC_OVRD"] = "'0'"
+            props["TXSYNC_SKIP_DA"] = "'0'"
+        else:
+            print('ERROR: unsupported tx_sync_type "%s" for MGT type "%s", supported types are: no, multilane_auto' % (txSyncType, mgtType))
+            return
+
+    if mgtType == "gth":
+        if txSyncType == "no":
+            props["TXSYNC_MULTILANE"] = "'0'"
+            props["TXSYNC_OVRD"] = "'0'"
+            props["TXSYNC_SKIP_DA"] = "'0'"
+        elif txSyncType == "multilane_manual":
+            props["TXSYNC_MULTILANE"] = "'0'"
+            props["TXSYNC_OVRD"] = "'1'"
+            props["TXSYNC_SKIP_DA"] = "'0'"
+        else:
+            print('ERROR: unsupported tx_sync_type "%s" for MGT type "%s", supported types are: no, multilane_auto' % (txSyncType, mgtType))
+            return
+
+    if rxSlideMode not in ["PCS", "PMA"]:
+        print('ERROR: unsupported RX slide mode "%s", supported types are: PCS, PMA' % rxSlideMode)
+        return
+
+    props["RXSLIDE_MODE"] = '"%s"' % rxSlideMode
+
+    # always single auto
+    props["RXSYNC_MULTILANE"] = "'0'"
+    props["RXSYNC_OVRD"] = "'0'"
+    props["RXSYNC_SKIP_DA"] = "'0'"
+
+    # always select programmable termination at 800mV trim
+    props["RX_CM_SEL"] = "3"
+    props["RX_CM_TRIM"] = "10"
 
     print("======================== ports ========================")
 
@@ -166,7 +221,9 @@ def main():
         # port
         else:
             # skip if the port isn't in the map, or it is not a constant in the original file
-            if not name in ports or ("'" not in line and '"' not in line):
+            if not name in ports or (("'" not in line and '"' not in line) or "&" in line):
+                if ("&" in line):
+                    print("SKIPPING %s" % line)
                 vhdl += line
                 continue
 
