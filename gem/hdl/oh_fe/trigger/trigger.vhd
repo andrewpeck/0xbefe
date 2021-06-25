@@ -357,7 +357,8 @@ begin
            g_NUM_REGS             => REG_TRIG_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_TRIG_ADDRESS_MSB,
            g_ADDR_LOW_BIT         => REG_TRIG_ADDRESS_LSB,
-           g_USE_INDIVIDUAL_ADDRS => true
+           g_USE_INDIVIDUAL_ADDRS => true,
+           g_IPB_CLK_PERIOD_NS    => 25
        )
        port map(
            ipb_reset_i            => ipb_reset,
