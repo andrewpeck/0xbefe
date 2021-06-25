@@ -1260,6 +1260,10 @@
             <!-- END: TIMING_DELAYS DO NOT EDIT -->
         </node> <!--Timing Delays-->
 
+        <node id="SBIT_INJECTOR" address="0x80" mask="0xffffff" permission="rw"
+              description="Injects an S-bit into the VFATs specified by the mask"
+              fw_default="0x0"
+              fw_signal="inject_sbits"/>
 
         <node id="SBIT_MONITOR" address="0x90"
               description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">

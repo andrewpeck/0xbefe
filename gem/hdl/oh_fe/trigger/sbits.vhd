@@ -33,6 +33,8 @@ entity sbits is
 
     vfat_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
 
+    inject_sbits_i : in std_logic_vector (NUM_VFATS-1 downto 0);
+
     sbits_mux_sel_i : in  std_logic_vector (4 downto 0);
     sbits_mux_o     : out std_logic_vector (63 downto 0);
 
@@ -78,8 +80,12 @@ end sbits;
 
 architecture Behavioral of sbits is
 
+  signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
+  signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
+
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits              : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
 
   constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
 
@@ -165,14 +171,43 @@ begin
 
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
-    vfat_sbits (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS) when REVERSE_VFAT_SBITS(I) = '0' else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
+    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS) when REVERSE_VFAT_SBITS(I) = '0' else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
   end generate;
 
   channel_to_strip_inst : entity work.channel_to_strip
     port map (
-      channels_in => vfat_sbits,
+      channels_in => vfat_sbits_raw,
       strips_out  => vfat_sbits_strip_mapped
       );
+
+  --------------------------------------------------------------------------------
+  -- S-bit injector
+  --------------------------------------------------------------------------------
+
+  sbit_inject_gen : for I in 0 to (NUM_VFATS-1) generate
+    -- make it rising edge sensitive
+    process (clocks.clk40) is
+    begin
+      if (rising_edge(clocks.clk40)) then
+        inject_sbits_r(I) <= inject_sbits_i(I);
+        if (inject_sbits_r(I) = '0' and inject_sbits(I) = '1') then
+          inject_sbits(I) <= '1';
+        else
+          inject_sbits(I) <= '0';
+        end if;
+      end if;
+    end process;
+
+    stripgen : for J in 0 to 63 generate
+    begin
+      inj : if (J = 0) generate
+        vfat_sbits(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
+      end generate;
+      noinj : if (J /= 0) generate
+        vfat_sbits(I)(J) <= vfat_sbits_strip_mapped(I)(J);
+      end generate;
+    end generate;
+  end generate;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Active VFAT Flags
@@ -192,7 +227,7 @@ begin
   process (clocks.clk40)
   begin
     if (rising_edge(clocks.clk40)) then
-      sbits_mux_s0 <= vfat_sbits_strip_mapped(to_integer(unsigned(sbits_mux_sel)));
+      sbits_mux_s0 <= vfat_sbits(to_integer(unsigned(sbits_mux_sel)));
       sbits_mux_s1 <= sbits_mux_s0;
       sbits_mux    <= sbits_mux_s1;
       sbits_mux_o  <= sbits_mux;
@@ -211,7 +246,7 @@ begin
       clock_i   => clocks.clk40,
       reset_i   => hitmap_reset_i,
       acquire_i => hitmap_acquire_i,
-      sbits_i   => vfat_sbits_strip_mapped,
+      sbits_i   => vfat_sbits,
       hitmap_o  => hitmap_sbits_o
       );
 
@@ -243,7 +278,7 @@ begin
     cluster_packer_loop : for I in 0 to 2*EN_TMR_CLUSTER_PACKER generate
     begin
 
-      errinj : if (I=0) generate
+      errinj : if (I = 0) generate
         tmr_err_inj <= tmr_err_inj_i;
       end generate;
 
@@ -260,7 +295,7 @@ begin
           clk_fast => clocks.clk160_0,
           reset    => reset_i or tmr_err_inj,
 
-          sbits_i => vfat_sbits_strip_mapped,
+          sbits_i => vfat_sbits,
 
           cluster_count_o => cluster_count(I),
           clusters_o      => clusters(I),
