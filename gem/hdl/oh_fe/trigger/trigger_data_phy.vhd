@@ -306,7 +306,11 @@ begin
           clusters <= clusters_i;
 
           if (clusters(I).vpf = '1') then
-            legacy_clusters(I) <= clusters(I).cnt & get_adr(clusters(I).adr, clusters(I).prt);
+            if (USE_NEW_FORMAT_WITH_OLD_OPTICS) then
+              legacy_clusters(I) <= clusters(I).cnt & clusters(I).adr & clusters(I).prt;
+            else
+              legacy_clusters(I) <= clusters(I).cnt & get_adr(clusters(I).adr, clusters(I).prt);
+            end if;
           else
             legacy_clusters(I) <= (others => '1');
           end if;
