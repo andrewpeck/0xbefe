@@ -3,7 +3,7 @@
       description="Trigger module handles everything related to sbit cluster data
                    (link synchronization, monitoring, local triggering, matching to L1A and reporting data to DAQ)"
       fw_is_module="true"
-      fw_module_file="../gem/hdl/trigger/trigger.vhd" "../gem/hdl/misc/gem_system_regs.vhd"
+      fw_module_file="../gem/hdl/trigger/trigger.vhd" 
       fw_user_clock_signal="ttc_clk_i.clk_40"
       fw_bus_clock_signal="ipb_clk_i"
       fw_bus_reset_signal="ipb_reset_i"
