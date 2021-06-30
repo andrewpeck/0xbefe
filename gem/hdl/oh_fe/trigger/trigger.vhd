@@ -36,7 +36,7 @@ entity trigger is
 
     sbit_clusters_o : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    reset_i    : in std_logic;
+    reset_i : in std_logic;
 
     -- ttc
 
@@ -61,7 +61,7 @@ entity trigger is
     master_slave_p : inout std_logic_vector (11 downto 0);
     master_slave_n : inout std_logic_vector (11 downto 0);
 
-    trigger_prbs_en_o  : out std_logic;
+    trigger_prbs_en_o : out std_logic;
 
     trig_formatter_tmr_err : in std_logic;
 
@@ -72,7 +72,7 @@ end trigger;
 
 architecture Behavioral of trigger is
 
-  signal trigger_prbs_en  : std_logic;
+  signal trigger_prbs_en : std_logic;
 
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
@@ -101,8 +101,8 @@ architecture Behavioral of trigger is
   signal reset_monitor : std_logic;
   signal ipb_reset     : std_logic;
 
-  attribute EQUIVALENT_REGISTER_REMOVAL                  : string;
-  attribute EQUIVALENT_REGISTER_REMOVAL of ipb_reset     : signal is "NO";
+  attribute EQUIVALENT_REGISTER_REMOVAL              : string;
+  attribute EQUIVALENT_REGISTER_REMOVAL of ipb_reset : signal is "NO";
 
   signal sot_is_aligned      : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sot_unstable        : std_logic_vector (NUM_VFATS-1 downto 0);
@@ -115,8 +115,8 @@ architecture Behavioral of trigger is
   signal sbits_mux     : std_logic_vector (63 downto 0);
 
   signal inject_sbits_mask : std_logic_vector (23 downto 0) := (others => '0');
-  signal inject_sbits : std_logic;
-  signal cyclic_inject_en : std_logic;
+  signal inject_sbits      : std_logic;
+  signal cyclic_inject_en  : std_logic;
 
   signal hitmap_reset   : std_logic;
   signal hitmap_acquire : std_logic;
@@ -194,7 +194,7 @@ begin
   -- Resets
   --------------------------------------------------------------------------------------------------------------------
 
-  ipb_reset     <= reset_i;
+  ipb_reset <= reset_i;
 
   process (clocks.clk40)
   begin
@@ -250,8 +250,10 @@ begin
   begin
     if (rising_edge(clocks.clk40)) then
 
-      if (unsigned(cluster_count) > 0) then sbits_comparator_over_threshold(0) <= '1';
-      else sbits_comparator_over_threshold(0)                                  <= '0';
+      if (unsigned(cluster_count) > 0) then
+        sbits_comparator_over_threshold(0) <= '1';
+      else
+        sbits_comparator_over_threshold(0) <= '0';
       end if;
     end if;
   end process;
@@ -262,8 +264,10 @@ begin
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
-        if (unsigned(cluster_count) > 63*I) then sbits_comparator_over_threshold(I) <= '1';
-        else sbits_comparator_over_threshold(I)                                     <= '0';
+        if (unsigned(cluster_count) > 63*I) then
+          sbits_comparator_over_threshold(I) <= '1';
+        else
+          sbits_comparator_over_threshold(I) <= '0';
         end if;
       end if;
     end process;
@@ -279,8 +283,8 @@ begin
     port map (
 
       -- clock and reset
-      clocks      => clocks,
-      reset_i     => reset_i,
+      clocks  => clocks,
+      reset_i => reset_i,
 
       -- sbit inputs
       sbits_p => vfat_sbits_p,
@@ -310,10 +314,10 @@ begin
       hitmap_sbits_o   => hitmap_sbits,
 
       -- sbit outputs
-      active_vfats_o       => active_vfats,
-      clusters_o           => sbit_clusters,
-      cluster_count_o      => cluster_count,
-      overflow_o           => sbit_overflow,
+      active_vfats_o  => active_vfats,
+      clusters_o      => sbit_clusters,
+      cluster_count_o => cluster_count,
+      overflow_o      => sbit_overflow,
 
       -- status outputs
       sot_is_aligned_o      => sot_is_aligned,

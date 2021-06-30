@@ -89,7 +89,7 @@ architecture behavioral of find_clusters is
         end if;
       end if;
     else
-        return '1' & x"FF";
+      return '1' & x"FF";
     end if;
 
   end to_address;

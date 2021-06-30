@@ -30,7 +30,6 @@ entity cluster_packer is
 
     cluster_count_o : out std_logic_vector (10 downto 0);
     clusters_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    clusters_ena_o  : out std_logic;
     overflow_o      : out std_logic
     );
 end cluster_packer;
@@ -192,7 +191,8 @@ begin
     process (clk_fast) is
     begin
       if (rising_edge(clk_fast)) then
-        sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS) <= partitions_os(iprt);
+        sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
+          <= partitions_os(iprt);
       end if;
     end process;
   end generate;
@@ -289,16 +289,15 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  process (clk_fast)
+  process (clk_40)
   begin
-    if (rising_edge(clk_fast)) then
+    if (rising_edge(clk_40)) then
       if (reset = '1') then
         clusters_o <= (others => NULL_CLUSTER);
       else
         clusters_o <= clusters;
       end if;
     end if;
-    clusters_ena_o <= cluster_latch;
   end process;
 
 end behavioral;

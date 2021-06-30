@@ -64,9 +64,9 @@ entity sbits is
     cluster_count_o : out std_logic_vector (10 downto 0);
     overflow_o      : out std_logic;
 
-    sot_is_aligned_o      : out std_logic_vector (NUM_VFATS-1 downto 0);
-    sot_unstable_o        : out std_logic_vector (NUM_VFATS-1 downto 0);
-    sot_invalid_bitskip_o : out std_logic_vector (NUM_VFATS-1 downto 0);
+    sot_is_aligned_o      : out std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
+    sot_unstable_o        : out std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
+    sot_invalid_bitskip_o : out std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
     sot_tap_delay  : in t_std5_array (NUM_VFATS-1 downto 0);
     trig_tap_delay : in t_std5_array (NUM_VFATS*8-1 downto 0);
@@ -96,7 +96,7 @@ architecture Behavioral of sbits is
 
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
-  signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0);
+  signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0) := (others => '0');
 
   signal active_vfats_s1 : std_logic_vector (NUM_VFATS*8-1 downto 0);
 
@@ -288,7 +288,7 @@ begin
   --------------------------------------------------------------------------------------------------------------------
 
 
-  cluster_packer_tmr : if (true) generate
+  cluster_packer_tmr : if (true) generate  -- generate for local scoped signals
 
     type sbit_cluster_array_array_t is array(integer range<>)
       of sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
