@@ -307,7 +307,11 @@ begin
 
           if (clusters(I).vpf = '1') then
             if (USE_NEW_FORMAT_WITH_OLD_OPTICS) then
-              legacy_clusters(I) <= clusters(I).cnt & clusters(I).prt & clusters(I).adr;
+              if (GE21=1) then
+                legacy_clusters(I) <= '0' & clusters(I).cnt & clusters(I).prt(0 downto 0) & clusters(I).adr(8 downto 0);
+              else
+                legacy_clusters(I) <= clusters(I).cnt & clusters(I).prt(2 downto 0) & clusters(I).adr(7 downto 0);
+              end if;
             else
               legacy_clusters(I) <= clusters(I).cnt & get_adr(clusters(I).adr, clusters(I).prt);
             end if;
