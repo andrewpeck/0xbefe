@@ -45,9 +45,9 @@ entity trigger is
         ipb_reset_i         : in  std_logic;
         ipb_clk_i           : in  std_logic;
         ipb_miso_o          : out ipb_rbus;
-        ipb_mosi_i          : in  ipb_wbus
+        ipb_mosi_i          : in  ipb_wbus;
         
-        vfat3_sbits_arr_i           : in t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0)
+        vfat3_sbits_arr_i   : in t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0)
     );
 end trigger;
 
@@ -263,7 +263,7 @@ begin
             g_ALLOW_ROLLOVER => false
         )
         port map(
-            ref_clk_i => ttc_clks_i.clk_40,
+            ref_clk_i => ttc_clk_i.clk_40,
             reset_i   => sbit_test_reset_o,
             en_i      => vfat3_sbit0xe_test(7) or
                          vfat3_sbit0xe_test(6) or
@@ -273,7 +273,7 @@ begin
                          vfat3_sbit0xe_test(2) or
                          vfat3_sbit0xe_test(1) or
                          vfat3_sbit0xe_test(0),
-            count_o   => test_sbit0xx_count_me0
+            count_o   => test_sbit0xe_count_me0
         );   
         
      vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
@@ -284,7 +284,7 @@ begin
             g_ALLOW_ROLLOVER => false
         )
         port map(
-            ref_clk_i => ttc_clks_i.clk_40,
+            ref_clk_i => ttc_clk_i.clk_40,
             reset_i   => sbit_test_reset_o,
             en_i      => vfat3_sbit0xs_test,
             count_o   => test_sbit0xs_count_me0
