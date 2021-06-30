@@ -16,20 +16,23 @@ DEBUG=False
 SOURCE_MAC = 0xdbdbdbdbdbdb
 DESTINATION_MAC = 0x00151714809e
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 REG_PUSH_GBE_DATA = None
 REG_START_TRANSMIT = None
 REG_EMPTY_BUSY = None
 REG_MANUAL_READ = None
+REG_PREFIX_GEM = "GEM_AMC.GEM_TESTS"
+REG_PREFIX_CSC = "CSC_FED.TEST"
+REG_PREFIX = REG_PREFIX_GEM
 
 def main():
 
@@ -63,7 +66,8 @@ def main():
     initRegAddrs()
 
     if localDaqFilename is None:
-        sendDummyEmptyDduPacket()
+        sendAutoNegAckPacket()
+        # sendDummyEmptyDduPacket()
         # sendDummyEthPacket()
         return
 
@@ -145,10 +149,10 @@ def initRegAddrs():
     global REG_START_TRANSMIT
     global REG_EMPTY_BUSY
     global REG_MANUAL_READ
-    REG_PUSH_GBE_DATA = getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA').real_address
-    REG_START_TRANSMIT = getNode('CSC_FED.TEST.GBE_TEST.START_TRANSMIT').real_address
-    REG_EMPTY_BUSY = getNode('CSC_FED.TEST.GBE_TEST.BUSY').real_address
-    REG_MANUAL_READ = getNode('CSC_FED.TEST.GBE_TEST.MANUAL_READ').real_address
+    REG_PUSH_GBE_DATA = getNode('%s.GBE_TEST.PUSH_GBE_DATA' % REG_PREFIX).real_address
+    REG_START_TRANSMIT = getNode('%s.GBE_TEST.START_TRANSMIT' % REG_PREFIX).real_address
+    REG_EMPTY_BUSY = getNode('%s.GBE_TEST.BUSY' % REG_PREFIX).real_address
+    REG_MANUAL_READ = getNode('%s.GBE_TEST.MANUAL_READ' % REG_PREFIX).real_address
 
 # this function pushes an ETH frame with the provided payload to the CTP7 and sends it out
 # note that the payload can be provided as either an array of 64 bit words (default), or an array of 16bit words (only used for fake packet testing)
@@ -320,6 +324,24 @@ def readBackTest(expected_words16):
             return False
 
     return True
+
+def sendAutoNegAckPacket():
+    # words16_1 = [0x142bc, 0x0000, 0x1b5bc, 0x0000, 0x142bc, 0x0000, 0x1b5bc, 0x0000, 0x142bc, 0x0000, 0x1b5bc, 0x0000] * 100
+    # words16_2 = [0x142bc, 0x0040, 0x1b5bc, 0x0040, 0x142bc, 0x0040, 0x1b5bc, 0x0040, 0x142bc, 0x0040, 0x1b5bc, 0x0040] * 100
+    words16_2 = [0x195bc, 0xb5b5] * 10000
+    # words16 = [0x3fefe] * 100
+
+    writeReg(getNode('GEM_AMC.GEM_TESTS.GBE_TEST.ENABLE'), 0x1)
+    pushNode = getNode('GEM_AMC.GEM_TESTS.GBE_TEST.PUSH_GBE_DATA')
+    transmitNode = getNode('GEM_AMC.GEM_TESTS.GBE_TEST.START_TRANSMIT')
+    for i in range(100000):
+        # for word in words16_1:
+        #     writeReg(pushNode, word)
+        for word in words16_2:
+            writeReg(pushNode, word)
+        writeReg(transmitNode, 0x1)
+
+    print("Auto neg test packet sent")
 
 def sendDummyEthPacket():
     words16 = []

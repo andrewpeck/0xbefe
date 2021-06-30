@@ -5,8 +5,8 @@ from time import *
 import array
 import struct
 
-RX_INVERTION = [1, 1, 0, 0, 1, 1, 1, 1] # channel inversion as it is on the APEX
-TX_INVERTION = [0, 0, 0, 0, 1, 1, 1, 1] # channel inversion as it is on the APEX
+RX_INVERTION = [1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1] # channel inversion as it is on the APEX
+TX_INVERTION = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1] # channel inversion as it is on the APEX
 
 def main():
 
@@ -18,7 +18,7 @@ def main():
     for i in range(len(RX_INVERTION)):
         RX_INVERTION[i] = 1 if RX_INVERTION[i] == 0 else 0
 
-    for chan in range(8):
+    for chan in range(12):
         writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.TX_DIFF_CTRL" % chan), 0x18)
         writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.TX_POLARITY" % chan), TX_INVERTION[chan])
         writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.RX_POLARITY" % chan), RX_INVERTION[chan])

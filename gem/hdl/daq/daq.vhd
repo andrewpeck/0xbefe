@@ -59,6 +59,10 @@ port(
     -- Track data
     vfat3_daq_clk_i             : in std_logic;
     vfat3_daq_links_arr_i       : in t_oh_vfat_daq_link_arr(g_NUM_OF_OHs - 1 downto 0);
+
+    -- Spy
+    spy_clk_i                   : in  std_logic;
+    spy_link_o                  : out t_mgt_16b_tx_data;
     
     -- IPbus
     ipb_reset_i                 : in  std_logic;
@@ -100,6 +104,7 @@ architecture Behavioral of daq is
     signal reset_daqlink        : std_logic := '1'; -- should only be done once at powerup
     signal reset_pwrup          : std_logic := '1';
     signal reset_local          : std_logic := '1';
+    signal reset_local_latched  : std_logic := '0';
     signal reset_daqlink_ipb    : std_logic := '0';
 
     -- Input links
@@ -156,6 +161,10 @@ architecture Behavioral of daq is
     signal run_type             : std_logic_vector(3 downto 0) := x"0"; -- run type (set by software and included in the AMC header)
     signal run_params           : std_logic_vector(23 downto 0) := x"000000"; -- optional run parameters (set by software and included in the AMC header)
     signal zero_suppression_en  : std_logic;
+    signal ignore_amc13         : std_logic := '0'; -- when this is set to true, DAQLink status is ignored (useful for local spy-only data taking) 
+    signal block_last_evt_fifo  : std_logic := '0'; -- if true, then events are not written to the last event fifo (could be useful to toggle this from software in order to know how many events are read exactly because sometimes you may miss empty=true)
+    signal freeze_on_error      : std_logic := '0'; -- this is a debug feature which when turned on will start sending only IDLE words to all input processors as soon as TTS error is detected
+    signal reset_till_resync    : std_logic := '0'; -- if this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run.
     
     -- DAQ counters
     signal cnt_sent_events      : unsigned(31 downto 0) := (others => '0');
@@ -201,6 +210,37 @@ architecture Behavioral of daq is
     signal daqfifo_near_full        : std_logic;
     signal daqfifo_data_cnt         : std_logic_vector(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0);
     signal daqfifo_near_full_cnt    : std_logic_vector(15 downto 0);
+
+    -- Last event spy fifo
+    signal last_evt_fifo_en         : std_logic := '0';
+    signal last_evt_fifo_rd_en      : std_logic := '0';
+    signal last_evt_fifo_dout       : std_logic_vector(31 downto 0);
+    signal last_evt_fifo_empty      : std_logic := '0';
+    signal last_evt_fifo_valid      : std_logic := '0';
+    
+    -- Spy path
+    signal spy_fifo_wr_en           : std_logic;
+    signal spy_fifo_rd_en           : std_logic;
+    signal spy_fifo_dout            : std_logic_vector(15 downto 0);
+    signal spy_fifo_ovf             : std_logic;
+    signal spy_fifo_empty           : std_logic;
+    signal spy_fifo_prog_full       : std_logic;
+    signal spy_fifo_prog_empty      : std_logic;
+    signal spy_fifo_prog_empty_wrclk: std_logic;
+    signal spy_fifo_aempty          : std_logic;
+    signal spy_fifo_afull           : std_logic;
+    signal err_spy_fifo_ovf         : std_logic;
+    signal spy_fifo_afull_cnt       : std_logic_vector(15 downto 0);
+    
+    signal spy_gbe_skip_headers     : std_logic;
+    signal spy_prescale             : std_logic_vector(15 downto 0);
+    
+    signal spy_err_evt_too_big      : std_logic;
+    signal spy_err_eoe_not_found    : std_logic;
+    signal spy_word_rate            : std_logic_vector(31 downto 0);
+    signal spy_evt_sent             : std_logic_vector(31 downto 0);
+    signal spy_prescale_counter     : unsigned(15 downto 0) := x"0001";    
+    signal spy_prescale_keep_evt    : std_logic := '0';
                             
     -- Timeouts
     signal dav_timer                : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
@@ -352,7 +392,7 @@ begin
             sync_o  => reset_global
         );
     
-    reset_daq_async <= reset_pwrup or reset_global or reset_local or resync_done_delayed;
+    reset_daq_async <= reset_pwrup or reset_global or reset_local or resync_done_delayed or reset_local_latched;
     reset_daqlink <= reset_pwrup or reset_global or reset_daqlink_ipb;
     
     -- Reset after powerup
@@ -391,6 +431,25 @@ begin
             pulse_i        => reset_daq_async_dly,
             pulse_o        => reset_daq -- TODO: need to also sync this to the daqclk, and use that signal on the daqclk domain  
         );
+
+    -- if reset_till_resync option is enabled, latch the user requested reset_local till a resync is received
+    
+    process(ttc_clks_i.clk_40)
+    begin
+        if (rising_edge(ttc_clks_i.clk_40)) then
+            if (reset_till_resync = '1') then
+                if (reset_local = '1') then
+                    reset_local_latched <= '1'; 
+                elsif (ttc_cmds_i.resync = '1') then
+                    reset_local_latched  <= '0';
+                else 
+                    reset_local_latched <= reset_local_latched;
+                end if;
+            else
+                reset_local_latched <= '0';
+            end if;
+        end if;
+    end process;
 
     --================================--
     -- Input links and fanout feature for rate testing
@@ -459,7 +518,7 @@ begin
         );
 
     daqfifo_din <= daq_event_header & daq_event_trailer & daq_event_data;
-    daqfifo_wr_en <= daq_event_write_en;
+    daqfifo_wr_en <= daq_event_write_en and (not ignore_amc13);
     
     -- daq fifo read logic
     process(daq_clk_i)
@@ -514,6 +573,55 @@ begin
         en_i    => daqfifo_wr_en,
         rate_o  => daq_word_rate
     );
+
+    --================================--
+    -- Last event spy fifo (used for readout through regs)
+    --================================--
+
+    -- this fifo is used to store a single event at a time which can then be read through slow control (it's then filled with the next available event after it's been emptied)
+    i_last_event_fifo : xpm_fifo_async
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_LASTEVT_FIFO_DEPTH,
+            RELATED_CLOCKS      => 0,
+            WRITE_DATA_WIDTH    => 64,
+            READ_MODE           => "std",
+            FIFO_READ_LATENCY   => 1,
+            FULL_RESET_VALUE    => 0,
+            USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+            READ_DATA_WIDTH     => 32,
+            CDC_SYNC_STAGES     => 2,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_daq,
+            wr_clk        => daq_clk_i,
+            wr_en         => daq_event_write_en and last_evt_fifo_en,
+            din           => daq_event_data(31 downto 0) & daq_event_data(63 downto 32),
+            full          => open,
+            prog_full     => open,
+            wr_data_count => open,
+            overflow      => open,
+            wr_rst_busy   => open,
+            almost_full   => open,
+            wr_ack        => open,
+            rd_clk        => ipb_clk_i,
+            rd_en         => last_evt_fifo_rd_en,
+            dout          => last_evt_fifo_dout,
+            empty         => last_evt_fifo_empty,
+            prog_empty    => open,
+            rd_data_count => open,
+            underflow     => open,
+            rd_rst_busy   => open,
+            almost_empty  => open,
+            data_valid    => last_evt_fifo_valid,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );    
 
     --================================--
     -- L1A FIFO
@@ -583,7 +691,7 @@ begin
                 err_l1afifo_full <= '0';
                 l1afifo_wr_en <= '0';
             else
-                if (ttc_cmds_i.l1a = '1') then
+                if ((ttc_cmds_i.l1a = '1') and (freeze_on_error = '0' or tts_critical_error = '0')) then
                     if (l1afifo_full = '0') then
                         l1afifo_din <= ttc_daq_cntrs_i.l1id & ttc_daq_cntrs_i.orbit & ttc_daq_cntrs_i.bx;
                         l1afifo_wr_en <= '1';
@@ -612,6 +720,119 @@ begin
     );
     
     --================================--
+    -- Spy Path
+    --================================--
+
+    i_spy_fifo : xpm_fifo_async
+        generic map(
+            FIFO_MEMORY_TYPE    => "block",
+            FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
+            RELATED_CLOCKS      => 0,
+            WRITE_DATA_WIDTH    => 64,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
+            FULL_RESET_VALUE    => 1,
+            USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+            READ_DATA_WIDTH     => 16,
+            CDC_SYNC_STAGES     => 2,
+            PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
+            PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
+            DOUT_RESET_VALUE    => "0",
+            ECC_MODE            => "no_ecc"
+        )
+        port map(
+            sleep         => '0',
+            rst           => reset_daq,
+            wr_clk        => daq_clk_i,
+            wr_en         => spy_fifo_wr_en and spy_prescale_keep_evt,
+            din           => daq_event_data,
+            full          => open,
+            prog_full     => spy_fifo_prog_full,
+            wr_data_count => open,
+            overflow      => spy_fifo_ovf,
+            wr_rst_busy   => open,
+            almost_full   => open,
+            wr_ack        => open,
+            rd_clk        => spy_clk_i,
+            rd_en         => spy_fifo_rd_en,
+            dout          => spy_fifo_dout,
+            empty         => spy_fifo_empty,
+            prog_empty    => spy_fifo_prog_empty,
+            rd_data_count => open,
+            underflow     => open,
+            rd_rst_busy   => open,
+            almost_empty  => spy_fifo_aempty,
+            data_valid    => open,
+            injectsbiterr => '0',
+            injectdbiterr => '0',
+            sbiterr       => open,
+            dbiterr       => open
+        );    
+
+    spy_fifo_wr_en <= daq_event_write_en; -- write the same exact data as to the AMC13 for now
+
+    i_sync_spyfifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => spy_fifo_prog_empty, clk_i => daq_clk_i, sync_o => spy_fifo_prog_empty_wrclk);
+    i_latch_spyfifo_near_full : entity work.latch port map(
+            reset_i => spy_fifo_prog_empty_wrclk,
+            clk_i   => daq_clk_i,
+            input_i => spy_fifo_prog_full,
+            latch_o => spy_fifo_afull
+        );        
+    
+    i_spy_ethernet_driver : entity work.gbe_tx_driver
+        generic map(
+            g_MAX_PAYLOAD_WORDS   => 3976,
+            g_MIN_PAYLOAD_WORDS   => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
+            g_MAX_EVT_WORDS       => 50000,
+            g_NUM_IDLES_SMALL_EVT => 2,
+            g_NUM_IDLES_BIG_EVT   => 7,
+            g_SMALL_EVT_MAX_WORDS => 24
+        )
+        port map(
+            reset_i             => reset_daq,
+            gbe_clk_i           => spy_clk_i,
+            gbe_tx_data_o       => spy_link_o,
+            skip_eth_header_i   => spy_gbe_skip_headers,
+            data_empty_i        => spy_fifo_empty,
+            data_i              => spy_fifo_dout,
+            data_rd_en          => spy_fifo_rd_en,
+            last_valid_word_i   => spy_fifo_aempty,
+            err_event_too_big_o => spy_err_evt_too_big,
+            err_eoe_not_found_o => spy_err_eoe_not_found,
+            word_rate_o         => spy_word_rate,
+            evt_cnt_o           => spy_evt_sent
+        );    
+
+    -- Near-full counter
+    i_spy_near_full_counter : entity work.counter
+    generic map(
+        g_COUNTER_WIDTH  => 16,
+        g_ALLOW_ROLLOVER => FALSE
+    )
+    port map(
+        ref_clk_i => daq_clk_i,
+        reset_i   => reset_daq,
+        en_i      => spy_fifo_afull,
+        count_o   => spy_fifo_afull_cnt
+    );
+        
+    -- latch the spy fifo overflow error
+    process(daq_clk_i)
+    begin
+        if (rising_edge(daq_clk_i)) then
+            if (reset_daq = '1') then
+                err_spy_fifo_ovf <= '0';
+            else
+                if (spy_fifo_ovf = '1') then
+                    err_spy_fifo_ovf <= '1';
+                else
+                    err_spy_fifo_ovf <= err_spy_fifo_ovf;
+                end if;
+            end if;
+        end if;
+    end process;
+        
+    --================================--
     -- Chamber Event Builders
     --================================--
 
@@ -628,7 +849,7 @@ begin
             reset_i                     => reset_daq,
 
             -- Config
-            input_enable_i              => input_mask(i),
+            input_enable_i              => input_mask(i) and not (freeze_on_error and tts_critical_error),
 
             -- FIFOs
             fifo_rd_clk_i               => daq_clk_i,
@@ -752,7 +973,7 @@ begin
                 end if;
                 
                 -- wait for all L1As to be processed and output buffer drained and then reset everything (resync_done triggers the reset_daq)
-                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = x"0" and daqfifo_empty = '1') then
+                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = x"0" and (daqfifo_empty = '1' or ignore_amc13 = '1')) then
                     resync_done <= '1';
                 end if;
             end if;
@@ -809,6 +1030,7 @@ begin
                 last_dav_timer <= (others => '0');
                 dav_timeout_flags <= (others => '0');
                 chmb_infifo_underflow <= '0';
+                spy_prescale_keep_evt <= '0';
             else
             
                 chmb_evtfifos_rd_en <= (others => '0');
@@ -838,7 +1060,7 @@ begin
                     
                     -- have an L1A and data from all enabled inputs is ready (or these inputs have timed out)
                     if (l1afifo_empty = '0' and ((input_mask(g_NUM_OF_OHs - 1 downto 0) and ((not chmb_evtfifos_empty) or dav_timeout_flags(g_NUM_OF_OHs - 1 downto 0))) = input_mask(g_NUM_OF_OHs - 1 downto 0))) then
-                        if (daq_ready = '1' and daqfifo_near_full = '0' and daq_enable = '1') then -- everybody ready?.... GO! :)
+                        if (((daq_ready = '1' and daqfifo_near_full = '0') or (ignore_amc13 = '1')) and daq_enable = '1') then -- everybody ready?.... GO! :)
                             -- start the DAQ state machine
                             daq_state <= x"1";
                             
@@ -851,6 +1073,25 @@ begin
                             if ((dav_timer > max_dav_timer) and (or_reduce(dav_timeout_flags) = '0')) then
                                 max_dav_timer <= dav_timer;
                             end if;
+                            
+                            -- if last event fifo has already been read by the user then enable writing to this fifo for the current event
+                            last_evt_fifo_en <= last_evt_fifo_empty and (not block_last_evt_fifo);
+                            
+                            -- trying to match the CSC DDU logic here somewhat.. so it's kindof convoluted..
+                            -- the counter starts at 2 after resync, and then events are accepted when it's equal to the set prescale
+                            -- once an event is accepted, the counter is reset to 1 (note not 2)
+                            -- prescale values of 0 and 1 just allow all events 
+                            if (spy_prescale = x"0000" or spy_prescale = x"0001") then
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '1';
+                            elsif (std_logic_vector(spy_prescale_counter) = spy_prescale) then
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '1';
+                            else
+                                spy_prescale_counter <= spy_prescale_counter + 1;
+                                spy_prescale_keep_evt <= '0';
+                            end if;                            
+                            
                         end if;
                     -- have an L1A, but waiting for data -- start counting the time
                     elsif (l1afifo_empty = '0') then

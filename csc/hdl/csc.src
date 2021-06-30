@@ -12,7 +12,6 @@ csc/hdl/pkg/csc_pkg.vhd
 # DAQ
 #csc/hdl/daq/daq.vhd <-- use the generated version specific to the project
 csc/hdl/daq/input_processor.vhd
-csc/hdl/daq/gbe_tx_driver.vhd
 
 # System
 #csc/hdl/system/system_regs.vhd           <-- use the generated version specific to the project
@@ -20,4 +19,3 @@ csc/hdl/daq/gbe_tx_driver.vhd
 
 # Tests
 #csc/hdl/tests/csc_tests.vhd              <-- use the generated version specific to the project
-csc/hdl/tests/eth_test.vhd

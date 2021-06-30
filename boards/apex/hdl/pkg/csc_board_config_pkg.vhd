@@ -151,10 +151,10 @@ package board_config_package is
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
+        (link_type => MGT_GBE,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => true,  ibert_inst => true),        
         (link_type => MGT_DMB,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => true,  ibert_inst => true),        
         (link_type => MGT_DMB,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => false, ibert_inst => true),        
-        (link_type => MGT_GBE,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => true,  ibert_inst => true),        
-        (link_type => MGT_GBTX, use_refclk_01 => 0, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 40, tx_multilane_phalign => true,  rx_use_buf => false, is_master => true,  ibert_inst => true)        
+        (link_type => MGT_DMB,  use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false, is_master => false, ibert_inst => true)        
     );
 
 end board_config_package;

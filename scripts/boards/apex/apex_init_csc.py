@@ -5,7 +5,7 @@ from time import *
 import array
 import struct
 
-RX_INVERTION = [0, 1, 1, 1] # channel inversion as it is on the APEX
+RX_INVERTION = [1, 0, 1, 1] # channel inversion as it is on the APEX
 TX_INVERTION = [0, 0, 0, 0] # channel inversion as it is on the APEX
 
 def main():

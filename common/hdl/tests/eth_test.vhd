@@ -15,7 +15,6 @@ use ieee.numeric_std.all;
 library xpm;
 use xpm.vcomponents.all;
 
-use work.csc_pkg.all;
 use work.common_pkg.all;
 
 use work.board_config_package.all;
@@ -150,7 +149,7 @@ begin
     i_eth_fifo : xpm_fifo_async
         generic map(
             FIFO_MEMORY_TYPE    => "block",
-            FIFO_WRITE_DEPTH    => CFG_DAQ_LASTEVT_FIFO_DEPTH,
+            FIFO_WRITE_DEPTH    => CFG_ETH_TEST_FIFO_DEPTH,
             RELATED_CLOCKS      => 0,
             WRITE_DATA_WIDTH    => 18,
             READ_MODE           => "std",

@@ -44,18 +44,18 @@ set_property LOC GTYE4_CHANNEL_X0Y7 [get_cells {i_mgts/g_channels[3].g_chan_*/i_
 ################   outclk   ##################
 ##############################################
 
-# QSFP0 (DMB, DMB, GBE, GBTX)
-create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*RXOUTCLK}]
+# QSFP0 (GBE, DMB, DMB, DMB)
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 8.333 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 12.500 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 ## QSFP2 (GBTX)
 #create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[8].g_chan_*/i_gty_channel*TXOUTCLK}]

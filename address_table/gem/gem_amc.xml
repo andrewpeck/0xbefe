@@ -393,6 +393,30 @@
     </node>
   </node>
 
+  <node id="GBE_TEST" address="0x3000">
+      <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
+            description="Enable this module, note that this will cause the GbE link to be disconnected from DAQ and only be connected to the test module where you'll be able to generate your own packets."
+            fw_signal="gbe_test_enable" fw_default="0b0"/>
+      <node id="PUSH_GBE_DATA" address="0x1" mask="0x0003ffff" permission="w"
+            description="Writing this register will push this word into a fifo which holds the packet to be transmitted uppon the start command. Note that bits [17:16] denote if the characters in bits [15:0] are K characters or not."
+            fw_signal="gbe_user_data" fw_write_pulse_signal="gbe_user_data_en" fw_default="0x0"/>
+      <node id="START_TRANSMIT" address="0x2" permission="w" mask="0x80000000"
+            description="Writing to this register will trigger sending of the packet that's in the fifo."
+            fw_write_pulse_signal="gbe_send_en"/>
+      <node id="BUSY" address="0x3" mask="0x00000001" permission="r"
+            description="This is 1 while a packet transmission is ongoing"
+            fw_signal="gbe_busy"/>
+      <node id="EMPTY" address="0x3" mask="0x00000002" permission="r"
+            description="This is 1 when the fifo is empty, and ready for a new packet push"
+            fw_signal="gbe_empty"/>
+      <node id="MANUAL_READ_ENABLE" address="0x4" mask="0x00000001" permission="rw"
+            description="If this is set high, manual reading of the FIFO is enabled"
+            fw_signal="gbe_manual_rd_enabled" fw_default="0b0"/>
+      <node id="MANUAL_READ" address="0x5" mask="0x0003ffff" permission="r"
+            description="If manual reading is enabled, reading this register will read the first word in the fifo (and consume it)"
+            fw_signal="gbe_manual_rd_data" fw_read_pulse_signal="gbe_manual_rd_en" fw_read_ready_signal="gbe_manual_rd_valid"/>
+  </node>
+
 </node>
 
 <!--DAQ module -->
@@ -467,6 +491,23 @@
     <node id="CALIBRATION_MODE_CHAN"       address="0x2"  mask="0x0000007f" permission="rw"
           description="Channel number for which data will be included in the calibration mode data format (see CALIBRATION_MODE_EN)"
           fw_signal="format_calib_chan" fw_default="0b0000000"/>
+    <node id="IGNORE_AMC13"         address="0x2" mask="0x00000100" permission="rw"
+          description="If this is set to 1 then there will be no data sent to AMC13, but events will still be built and sent to spy path ignoring AMC13 DAQLink state"
+          fw_signal="ignore_amc13" fw_default="0b0"/>
+    <node id="FREEZE_ON_ERROR"        address="0x2"  mask="0x00000200" permission="rw"
+          description="This is a debug feature which when turned on will start sending only IDLE words to all input processors and block L1As as soon as TTS error is detected. This gets reset with a DAQ module reset or a TTC resync."
+          fw_signal="freeze_on_error" fw_default="0x0"/>
+    <node id="RESET_TILL_RESYNC"        address="0x2"  mask="0x00000400" permission="rw"
+          description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
+          fw_signal="reset_till_resync" fw_default="0x0"/>
+    <node id="SPY"  address="0xf" description="Spy path control registers">
+        <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
+              description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."
+              fw_signal="spy_gbe_skip_headers" fw_default="0b0"/>
+        <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
+              description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
+              fw_signal="spy_prescale" fw_default="0x0001"/>
+    </node>
   </node>
 
   <node id="EXT_CONTROL"  address="0x40"
@@ -477,6 +518,18 @@
     <node id="RUN_PARAMS"     address="0x0"  mask="0x00ffffff" permission="rw"
           description="User settable run params that gets embedded into the AMC header"
           fw_signal="run_params" fw_default="0x000000"/>
+  </node>
+
+  <node id="LAST_EVENT_FIFO"  address="0x30" description="DAQ last event fifo (read 32 bits at a time). This is only filled by DAQ when empty.">
+      <node id="DISABLE"       address="0x0" mask="0x80000000" permission="rw"
+            description="If set to true, then events are not written to the last event fifo. It's not needed to toggle this for data integrity reasons because this fifo is only written with one full event when it's empty, but setting this to true while reading current event could be useful if you want to know how many events you are reading exactly (because sometimes you may miss empty=true between consecutive events and read two or more events in a row)"
+            fw_signal="block_last_evt_fifo" fw_default="0b0"/>
+      <node id="EMPTY"       address="0x0"  mask="0x00000001" permission="r"
+            description="Fifo is empty"
+            fw_signal="last_evt_fifo_empty"/>
+      <node id="DATA"     address="0x1"  mask="0xffffffff" permission="r"
+            description="32bits of last event data"
+            fw_signal="last_evt_fifo_dout" fw_read_pulse_signal="last_evt_fifo_rd_en" fw_read_ready_signal="last_evt_fifo_valid"/>
   </node>
 
   <node id="STATUS"  address="0x50"
@@ -528,6 +581,33 @@
     <node id="TTS_STATE"       address="0x0"  mask="0xf0000000" permission="r"
           description="Current TTS state (READY, BUSY, ERROR, WARN, OUT-OF-SYNC)"
           fw_signal="tts_state"/>
+    <node id="SPY"  address="0x10" description="Spy path control registers">
+        <node id="SPY_WORD_RATE"  address="0x0"  mask="0xffffffff" permission="r"
+              description="Rate of 16bit words being sent out the spy path (including ethernet frame words). If this gets close to 1Gb/s, expect overflows."
+              fw_signal="spy_word_rate"/>
+        <node id="SPY_EVENTS_SENT"  address="0x1"  mask="0xffffffff" permission="r"
+              description="Number of events sent out the spy path."
+              fw_signal="spy_evt_sent"/>
+        <node id="ERR_BIG_EVENT"  address="0x2"  mask="0x00000001" permission="r"
+              description="This flag gets latched if the spy received an event bigger than 50000 16bit words (100KBytes). This doesn't cause any data loss by itself, but means that something wrong is going on either at the frontend or the FED (CSC events shouldn't get that big)."
+              fw_signal="spy_err_evt_too_big"
+              sw_monitor_warn_value="1"/>
+        <node id="ERR_EOE_NOT_FOUND"  address="0x2"  mask="0x00000002" permission="r"
+              description="This flag gets latched if the spy doesn't find an end of event before the spy FIFO goes dry."
+              fw_signal="spy_err_eoe_not_found"
+              sw_monitor_error_value="1"/>
+        <node id="ERR_SPY_FIFO_HAD_OFLOW"  address="0x2"  mask="0x00000004" permission="r"
+              description="This flag gets latched if the spy fifo has an overflow."
+              fw_signal="err_spy_fifo_ovf"
+              sw_monitor_error_value="1"/>
+        <node id="SPY_FIFO_AFULL_CNT"  address="0x2"  mask="0xffff0000" permission="r"
+              description="Number of clocks the spy fifo spent being 75% full (full warning is set on 75% and reset at 50%)"
+              fw_signal="spy_fifo_afull_cnt"
+              sw_monitor_warn_min_threshold="100"/>
+        <node id="SPY_FIFO_IS_EMPTY"  address="0x2"  mask="0x00000008" permission="r"
+              description="Spy fifo is currently empty"
+              fw_signal="spy_fifo_empty"/>
+    </node>
   </node>
 
   <node id="EXT_STATUS"  address="0x80"
@@ -848,6 +928,32 @@
     </node>
 
   </node>
+
+  <node id="SPY" address="0xa" description="Spy readout link">
+      <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
+            description="Number of times that MGT elastic buffer has been in overflow"
+            fw_signal="spy_mgt_buf_ovf_sync"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
+            description="Number of times that MGT elastic buffer has been in underflow"
+            fw_signal="spy_mgt_buf_unf_sync"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
+            description="Number of times that MGT has added a fake idle word to correct for clock drift"
+            fw_signal="spy_clk_corr_add_sync"/>
+      <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
+            description="Number of times that MGT has dropped an idle word to correct for clock drift"
+            fw_signal="spy_clk_corr_drop_sync"/>
+      <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
+            description="Number of not-in-table errors"
+            fw_signal="spy_not_in_table_sync"
+            sw_monitor_warn_min_threshold="1000"/>
+      <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
+            description="Number of disparity errors"
+            fw_signal="spy_disperr_sync"
+            sw_monitor_warn_min_threshold="1000"/>
+  </node>
+
 </node>
 
 <!--GEM slow control module -->

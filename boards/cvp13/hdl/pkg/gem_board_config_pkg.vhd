@@ -58,6 +58,15 @@ package board_config_package is
     constant CFG_DAQ_L1AFIFO_PROG_FULL_RESET: integer := 4096;
     constant CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH : integer := 13;
 
+    constant CFG_DAQ_SPYFIFO_DEPTH          : integer := 32768;
+    constant CFG_DAQ_SPYFIFO_PROG_FULL_SET  : integer := 24576;
+    constant CFG_DAQ_SPYFIFO_PROG_FULL_RESET: integer := 16384;
+    constant CFG_DAQ_SPYFIFO_DATA_CNT_WIDTH : integer := 17;
+
+    constant CFG_DAQ_LASTEVT_FIFO_DEPTH     : integer := 4096;
+
+    constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
+
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
@@ -135,6 +144,9 @@ package board_config_package is
     type t_trig_tx_link_config_arr is array (0 to CFG_NUM_TRIG_TX - 1) of integer range 0 to CFG_BOARD_MAX_LINKS;
     
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL);
+    
+    constant CFG_USE_SPY_LINK : boolean := false;
+    constant CFG_SPY_LINK : integer := 3;
     
     --================================--
     -- Fiber to MGT mapping
