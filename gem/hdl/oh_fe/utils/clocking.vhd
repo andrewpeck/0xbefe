@@ -20,7 +20,10 @@ use work.ipbus_pkg.all;
 use work.registers.all;
 
 entity clocking is
+  generic (ASYNC_MODE : boolean := false);
   port(
+
+    async_clock_i : in std_logic;
 
     clock_p : in std_logic;
     clock_n : in std_logic;
@@ -56,18 +59,26 @@ begin
 
   -- Input buffering
   --------------------------------------
-  clkin1_buf : IBUFGDS
-    port map (
-      O  => clock_i,
-      I  => clock_p,
-      IB => clock_n
-      );
+  sync_gen : if (not ASYNC_MODE) generate
 
-  sysclk_bufg : BUFG
-    port map (
-      I => clock_i,
-      O => sysclk
-      );
+    clkin1_buf : IBUFGDS
+      port map (
+        O  => clock_i,
+        I  => clock_p,
+        IB => clock_n
+        );
+
+    sysclk_bufg : BUFG
+      port map (
+        I => clock_i,
+        O => sysclk
+        );
+
+  end generate;
+
+  async_gen : if (ASYNC_MODE) generate
+    clock_i <= async_clock_i;
+  end generate;
 
   clocks_inst : clocks
     port map(

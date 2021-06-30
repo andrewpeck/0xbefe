@@ -23,6 +23,8 @@ use unisim.vcomponents.all;
 entity optohybrid_fw is
   generic (
 
+    STANDALONE_MODE : boolean := false;
+
     -- turn off to disable the MGTs (for simulation and such)
     GEN_TRIG_PHY : boolean := true;
 
@@ -135,6 +137,7 @@ architecture Behavioral of optohybrid_fw is
   signal idlyrdy     : std_logic;
   signal mmcm_locked : std_logic;
   signal clocks      : clocks_t;
+  signal async_clock : std_logic := '0';
   signal ttc         : ttc_t;
 
   signal vtrx_mabs : std_logic_vector (1 downto 0);
@@ -152,7 +155,7 @@ architecture Behavioral of optohybrid_fw is
   signal system_reset  : std_logic;
   signal cnt_snap      : std_logic;
 
-  signal trigger_prbs_en  : std_logic;
+  signal trigger_prbs_en : std_logic;
 
   attribute MAX_FANOUT                 : string;
   attribute MAX_FANOUT of system_reset : signal is "50";
@@ -204,7 +207,9 @@ begin
   --------------------------------------------------------------------------------
 
   clocking_inst : entity work.clocking
+    generic map (ASYNC_MODE => STANDALONE_MODE)
     port map(
+      async_clock_i => async_clock,
       clock_p       => clock_p,
       clock_n       => clock_n,
       mmcm_locked_o => mmcm_locked,
@@ -340,9 +345,10 @@ begin
       ipb_switch_tmr_err => ipb_switch_tmr_err,
 
       -- clock and reset
-      clocks => clocks,
-      reset  => system_reset,
-      ttc_i  => ttc,
+      clocks        => clocks,
+      async_clock_o => async_clock,
+      reset         => system_reset,
+      ttc_i         => ttc,
 
       -- to drive LED controller only
       mgts_ready => mgts_ready,
@@ -378,6 +384,7 @@ begin
   --------------------------------------------------------------------------------
 
   trigger_inst : entity work.trigger
+    generic map (STANDALONE_MODE => STANDALONE_MODE)
     port map (
 
       -- wishbone

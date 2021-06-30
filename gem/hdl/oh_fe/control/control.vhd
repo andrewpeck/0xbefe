@@ -49,9 +49,14 @@ entity control is
 
     --== TTC ==--
 
-    clocks : in clocks_t;
     ttc_i  : in ttc_t;
+
+    -- Clock and Reset
+    clocks        : in  clocks_t;
+    async_clock_o : out std_logic;
     reset  : in std_logic;
+
+    -- Wishbone
 
     ipb_mosi_i : in  ipb_wbus;
     ipb_miso_o : out ipb_rbus;
@@ -245,7 +250,6 @@ architecture Behavioral of control is
 
   component led_control
     port(
-      mgts_ready           : in  std_logic;
       txfsm_done           : in  std_logic;
       pll_lock             : in  std_logic;
       clock                : in  std_logic;
@@ -258,8 +262,10 @@ architecture Behavioral of control is
       gbt_link_ready       : in  std_logic;
       gbt_request_received : in  std_logic;
       reset                : in  std_logic;
+      mgts_ready           : in  std_logic;
       cluster_count_i      : in  std_logic_vector(10 downto 0);
       cluster_rate         : out std_logic_vector(31 downto 0);
+      async_clock_o        : out std_logic;
       led_out              : out std_logic_vector(15 downto 0)
       );
   end component;
@@ -373,9 +379,10 @@ begin
     port map (
 
       -- clock
-      clock       => clocks.clk40,
-      mmcm_locked => mmcms_locked_i,
-      reset       => reset,
+      clock         => clocks.clk40,
+      mmcm_locked   => mmcms_locked_i,
+      reset         => reset,
+      async_clock_o => async_clock_o,
 
       -- mgt
       mgts_ready => mgts_ready,
