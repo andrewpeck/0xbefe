@@ -46,6 +46,8 @@ entity trigger is
         ipb_clk_i           : in  std_logic;
         ipb_miso_o          : out ipb_rbus;
         ipb_mosi_i          : in  ipb_wbus
+        
+        vfat3_sbits_arr_i           : in t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0)
     );
 end trigger;
 
@@ -94,7 +96,7 @@ architecture trigger_arch of trigger is
     -- debug
     signal dbg_oh_triggers      : std_logic_vector(11 downto 0) := (others => '0');
     
-    -- debug me0 sbits
+    -- debug me0 sbits    
     signal sbit_test_reset_o            : std_logic := '0' ;
     
     signal test_sbit0xe_count_me0 : std_logic_vector(31 downto 0);
