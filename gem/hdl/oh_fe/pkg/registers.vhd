@@ -342,7 +342,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 104;
+    constant REG_TRIG_NUM_REGS : integer := 105;
     constant REG_TRIG_ADDRESS_MSB : integer := 7;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"00";
@@ -1170,10 +1170,17 @@ package registers is
     constant REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_LSB     : integer := 25;
     constant REG_TRIG_TIMING_SOT_TAP_DELAY_VFAT11_DEFAULT : std_logic_vector(29 downto 25) := '0' & x"0";
 
-    constant REG_TRIG_SBIT_INJECTOR_ADDR    : std_logic_vector(7 downto 0) := x"80";
-    constant REG_TRIG_SBIT_INJECTOR_MSB    : integer := 23;
-    constant REG_TRIG_SBIT_INJECTOR_LSB     : integer := 0;
-    constant REG_TRIG_SBIT_INJECTOR_DEFAULT : std_logic_vector(23 downto 0) := x"000000";
+    constant REG_TRIG_SBIT_INJECT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"80";
+    constant REG_TRIG_SBIT_INJECT_MASK_MSB    : integer := 23;
+    constant REG_TRIG_SBIT_INJECT_MASK_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_INJECT_MASK_DEFAULT : std_logic_vector(23 downto 0) := x"000000";
+
+    constant REG_TRIG_CYCLIC_INJECT_EN_ADDR    : std_logic_vector(7 downto 0) := x"80";
+    constant REG_TRIG_CYCLIC_INJECT_EN_BIT    : integer := 24;
+    constant REG_TRIG_CYCLIC_INJECT_EN_DEFAULT : std_logic := '0';
+
+    constant REG_TRIG_SBIT_INJECT_ADDR    : std_logic_vector(7 downto 0) := x"82";
+    constant REG_TRIG_SBIT_INJECT_BIT    : integer := 0;
 
     constant REG_TRIG_SBIT_MONITOR_RESET_ADDR    : std_logic_vector(7 downto 0) := x"90";
     constant REG_TRIG_SBIT_MONITOR_RESET_BIT    : integer := 0;

@@ -29,11 +29,14 @@ entity sbits is
   port(
     clocks : in clocks_t;
 
+    cyclic_inject_en : std_logic := '1';
+
     reset_i : in std_logic;
 
     vfat_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
 
-    inject_sbits_i : in std_logic_vector (NUM_VFATS-1 downto 0);
+    inject_sbits_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
+    inject_sbits_i      : in std_logic;
 
     sbits_mux_sel_i : in  std_logic_vector (4 downto 0);
     sbits_mux_o     : out std_logic_vector (63 downto 0);
@@ -86,6 +89,7 @@ architecture Behavioral of sbits is
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits              : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
   constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
 
@@ -171,7 +175,26 @@ begin
 
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
-    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS) when REVERSE_VFAT_SBITS(I) = '0' else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
+
+
+    -- optionally reverse the sbit order... needed for some slots on ge11 ?
+
+    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS)
+                          when REVERSE_VFAT_SBITS(I) = '0'
+                          else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
+
+    -- inject sbits into the 0th channel
+
+    stripgen : for J in 0 to 63 generate
+    begin
+      inj : if (J = 0) generate
+        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
+      end generate;
+      noinj : if (J /= 0) generate
+        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J);
+      end generate;
+    end generate;
+
   end generate;
 
   channel_to_strip_inst : entity work.channel_to_strip
@@ -180,33 +203,38 @@ begin
       strips_out  => vfat_sbits_strip_mapped
       );
 
+  vfat_sbits <= vfat_sbits_injected;
+
   --------------------------------------------------------------------------------
   -- S-bit injector
   --------------------------------------------------------------------------------
 
   sbit_inject_gen : for I in 0 to (NUM_VFATS-1) generate
-    -- make it rising edge sensitive
     process (clocks.clk40) is
+      variable inj_cnt : integer range 0 to 255 := 0;
     begin
+
       if (rising_edge(clocks.clk40)) then
-        inject_sbits_r(I) <= inject_sbits_i(I);
-        if (inject_sbits_r(I) = '0' and inject_sbits(I) = '1') then
+        if (inj_cnt = 255) then
+          inj_cnt := 0;
+        else
+          inj_cnt := inj_cnt + 1;
+        end if;
+      end if;
+
+      if (rising_edge(clocks.clk40)) then
+
+        if ((inject_sbits_i = '1' and inject_sbits_mask_i(I) = '1') or
+            ((cyclic_inject_en = '1' and inj_cnt = 0) and inject_sbits_mask_i(I) = '1'))
+        then
           inject_sbits(I) <= '1';
         else
           inject_sbits(I) <= '0';
         end if;
+
       end if;
     end process;
 
-    stripgen : for J in 0 to 63 generate
-    begin
-      inj : if (J = 0) generate
-        vfat_sbits(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
-      end generate;
-      noinj : if (J /= 0) generate
-        vfat_sbits(I)(J) <= vfat_sbits_strip_mapped(I)(J);
-      end generate;
-    end generate;
   end generate;
 
   --------------------------------------------------------------------------------------------------------------------

@@ -1260,10 +1260,19 @@
             <!-- END: TIMING_DELAYS DO NOT EDIT -->
         </node> <!--Timing Delays-->
 
-        <node id="SBIT_INJECTOR" address="0x80" mask="0xffffff" permission="rw"
-              description="Injects an S-bit into the VFATs specified by the mask"
+        <node id="SBIT_INJECT_MASK" address="0x80" mask="0xffffff" permission="rw"
+              description="Injects an S-bit into the 0th channel of the VFATs specified by the mask. Useful for standalone OH testing."
+              fw_default="0x000000"
+              fw_signal="inject_sbits_mask"/>
+
+        <node id="CYCLIC_INJECT_EN" address="0x80" mask="0x1000000" permission="rw"
+              description="When enabled, periodically injects a cluster into the VFATs specified by the mask"
               fw_default="0x0"
-              fw_signal="inject_sbits"/>
+              fw_signal="cyclic_inject_en"/>
+
+        <node id="SBIT_INJECT" address="0x82" mask="0x1" permission="w"
+              description="Fires injector"
+              fw_write_pulse_signal="inject_sbits" />
 
         <node id="SBIT_MONITOR" address="0x90"
               description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
