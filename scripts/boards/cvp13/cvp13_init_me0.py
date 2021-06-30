@@ -39,10 +39,6 @@ def main():
             if chan%2==0:
                 writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET" % chan), 1)
 
-    # set VFAT HDLC addresses
-    for vfat in range(24):
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat), ME0_VFAT_HDLC_ADDRESSES[vfat])
-
     if config_param["add_sleep"]:
         # Sleep and then reset MGT channel for slave lpGBTs (so that master lpGBTs are already ready)
         sleep(2)
@@ -74,6 +70,13 @@ def main():
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12F)
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
+
+    sleep(0.1)
+    for vfat in range(0,24):
+        if config_param["hdlc_addr"]:
+            writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)), ME0_VFAT_HDLC_ADDRESSES[vfat])
+        else:
+            writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)), 0)
 
     sleep(0.1)
     writeReg(getNode("GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1)
