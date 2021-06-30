@@ -29,7 +29,7 @@ async def random_clusters(dut):
     """Test for priority encoder with randomized data on all inputs"""
 
     nloops = 100
-    nhits = 99
+    nhits = 14
 
     cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
 
