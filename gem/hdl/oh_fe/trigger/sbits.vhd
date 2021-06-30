@@ -26,6 +26,7 @@ use work.hardware_pkg.all;
 use work.cluster_pkg.all;
 
 entity sbits is
+  generic (STANDALONE_MODE : boolean := false);
   port(
     clocks : in clocks_t;
 
@@ -132,42 +133,46 @@ begin
   -- S-bit Deserialization and Alignment
   --------------------------------------------------------------------------------------------------------------------
 
-  -- deserializes and aligns the 192 320 MHz s-bits into 1536 40MHz s-bits
 
-  trig_alignment : entity work.trig_alignment
-    port map (
+  notstandalone_gen : if (not STANDALONE_MODE) generate
 
-      vfat_mask_i => vfat_mask_i,
+    -- deserializes and aligns the 192 320 MHz s-bits into 1536 40MHz s-bits
+    trig_alignment : entity work.trig_alignment
+      port map (
 
-      reset_i => reset_i,
+        vfat_mask_i => vfat_mask_i,
 
-      sbits_p => sbits_p,
-      sbits_n => sbits_n,
+        reset_i => reset_i,
 
-      sot_invert_i => sot_invert_i,
-      tu_invert_i  => tu_invert_i,
-      tu_mask_i    => tu_mask_i,
+        sbits_p => sbits_p,
+        sbits_n => sbits_n,
 
-      aligned_count_to_ready => aligned_count_to_ready,
+        sot_invert_i => sot_invert_i,
+        tu_invert_i  => tu_invert_i,
+        tu_mask_i    => tu_mask_i,
 
-      start_of_frame_p => start_of_frame_p,
-      start_of_frame_n => start_of_frame_n,
+        aligned_count_to_ready => aligned_count_to_ready,
 
-      clock     => clocks.clk40,
-      clk160_0  => clocks.clk160_0,
-      clk160_90 => clocks.clk160_90,
+        start_of_frame_p => start_of_frame_p,
+        start_of_frame_n => start_of_frame_n,
 
-      sot_is_aligned      => sot_is_aligned_o,
-      sot_unstable        => sot_unstable_o,
-      sot_invalid_bitskip => sot_invalid_bitskip_o,
+        clock     => clocks.clk40,
+        clk160_0  => clocks.clk160_0,
+        clk160_90 => clocks.clk160_90,
 
-      sot_tap_delay  => sot_tap_delay,
-      trig_tap_delay => trig_tap_delay,
+        sot_is_aligned      => sot_is_aligned_o,
+        sot_unstable        => sot_unstable_o,
+        sot_invalid_bitskip => sot_invalid_bitskip_o,
 
-      sbits => sbits,
+        sot_tap_delay  => sot_tap_delay,
+        trig_tap_delay => trig_tap_delay,
 
-      tmr_err_o => trig_alignment_tmr_err_o
-      );
+        sbits => sbits,
+
+        tmr_err_o => trig_alignment_tmr_err_o
+        );
+
+  end generate;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Channel to Strip Mapping
