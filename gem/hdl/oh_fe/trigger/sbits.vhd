@@ -326,13 +326,12 @@ begin
         port map (
           clk_40   => clocks.clk40,
           clk_fast => clocks.clk160_0,
-          reset    => reset_i or tmr_err_inj,
+          reset    => reset_i,
 
           sbits_i => vfat_sbits,
 
           cluster_count_o => cluster_count(I),
           clusters_o      => clusters(I),
-          clusters_ena_o  => open,
           overflow_o      => overflow(I)
           );
     end generate;
@@ -340,7 +339,7 @@ begin
     tmr_gen : if (EN_TMR = 1) generate
     begin
 
-      majority_err (overflow_o, cluster_tmr_err(0), overflow(0), overflow(1), overflow(2));
+      majority_err (overflow_o, cluster_tmr_err(0), tmr_err_inj xor overflow(0), overflow(1), overflow(2));
       majority_err (cluster_count_o, cluster_tmr_err(1), cluster_count(0), cluster_count(1), cluster_count(2));
 
       cluster_assign_loop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
