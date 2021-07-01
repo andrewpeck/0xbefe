@@ -26,7 +26,7 @@ ADDRESS_TABLE_DEFAULT = './address_table.xml'
 nodes = []
 
 boardType = os.environ.get('BOARD_TYPE')
-boardIdx = os.environ.get('BOARD_IDX')
+boardIdx = int(os.environ.get('BOARD_IDX'))
 DEVICE = CONFIG_RWREG[boardType][boardIdx]['DEVICE']
 if sys.version_info[0] == 3:
     DEVICE = CONFIG_RWREG[boardType]['DEVICE'].encode()
