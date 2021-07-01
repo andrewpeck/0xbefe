@@ -103,7 +103,7 @@ module   gem_data_out #(
   //--------------------------------------------------------------------------------------------------------------------
 
   localparam READY_CNT_MAX = 2**18-1;
-  localparam READY_BITS    = $clog2 (READY_CNT_MAX);
+  parameter READY_BITS    = $clog2 (READY_CNT_MAX);
   reg [READY_BITS-1:0] ready_cnt = 0;
 
   always @ (posedge clock_40) begin
@@ -129,7 +129,7 @@ module   gem_data_out #(
   //--------------------------------------------------------------------------------------------------------------------
 
   localparam STARTUP_RESET_CNT_MAX = 2**22-1;
-  localparam STARTUP_RESET_BITS    = $clog2 (STARTUP_RESET_CNT_MAX);
+  parameter STARTUP_RESET_BITS    = $clog2 (STARTUP_RESET_CNT_MAX);
 
   reg [STARTUP_RESET_BITS-1:0] startup_reset_cnt = 0;
 
