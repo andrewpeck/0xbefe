@@ -29,8 +29,8 @@ boardType = os.environ.get('BOARD_TYPE')
 boardIdx = int(os.environ.get('BOARD_IDX'))
 DEVICE = CONFIG_RWREG[boardType][boardIdx]['DEVICE']
 if sys.version_info[0] == 3:
-    DEVICE = CONFIG_RWREG[boardType]['DEVICE'].encode()
-BASE_ADDR = CONFIG_RWREG[boardType]['BASE_ADDR']
+    DEVICE = CONFIG_RWREG[boardType][boardIdx]['DEVICE'].encode()
+BASE_ADDR = CONFIG_RWREG[boardType][boardIdx]['BASE_ADDR']
 
 class Node:
     name = ''
