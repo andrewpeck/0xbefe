@@ -18,6 +18,10 @@ The following table shows how the front panel ports on the prototype board at 90
 | Bottom (904 rev 1 GEM) | 133 (GTY X0Y24-27) |                   | 134 (GTY X0Y28-31) |                             |
 | Bottom (904 rev 1 GEM) | 233 (GTH X0Y36-39) |                   | 234 (GTH X0Y40-43) |                             |
 
+For link to MGT mapping and channel inversions please refer to the CFG_FIBER_TO_MGT_MAP constant, defined in the board config files:
+   * boards/apex/hdl/pkg/gem_board_config_pkg.vhd
+   * boards/apex/hdl/pkg/csc_board_config_pkg.vhd
+
 Refclk connections:
 
 | Refclk in schematics | refclk in fw  | MGT |

@@ -139,7 +139,7 @@ Mapping to GE2/1 OHs is the following:
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
 
-Mapping to GE2/1 OHs is the following:
+Mapping to ME0 OHs is the following:
 |             | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
 |-------------|-------|-------|-------|-------|
 | OH0 GBT0 RX | 12    |       |       |       |
