@@ -23,6 +23,8 @@ use unisim.vcomponents.all;
 entity optohybrid_fw is
   generic (
 
+    STANDALONE_MODE : boolean := false;
+
     -- turn off to disable the MGTs (for simulation and such)
     GEN_TRIG_PHY : boolean := true;
 
@@ -34,6 +36,9 @@ entity optohybrid_fw is
 
     TOP_SHA : std_logic_vector (31 downto 0) := x"00000000";
     TOP_VER : std_logic_vector (31 downto 0) := x"00000000";
+
+    XML_VER : std_logic_vector (31 downto 0) := x"00000000";
+    XML_SHA : std_logic_vector (31 downto 0) := x"00000000";
 
     HOG_SHA : std_logic_vector (31 downto 0) := x"00000000";
     HOG_VER : std_logic_vector (31 downto 0) := x"00000000";
@@ -132,6 +137,7 @@ architecture Behavioral of optohybrid_fw is
   signal idlyrdy     : std_logic;
   signal mmcm_locked : std_logic;
   signal clocks      : clocks_t;
+  signal async_clock : std_logic := '0';
   signal ttc         : ttc_t;
 
   signal vtrx_mabs : std_logic_vector (1 downto 0);
@@ -149,8 +155,10 @@ architecture Behavioral of optohybrid_fw is
   signal system_reset  : std_logic;
   signal cnt_snap      : std_logic;
 
+  signal trigger_prbs_en : std_logic;
+
   attribute MAX_FANOUT                 : string;
-  attribute MAX_FANOUT of system_reset : signal is "300";
+  attribute MAX_FANOUT of system_reset : signal is "50";
 
   -- TTC
   signal bxn_counter : std_logic_vector(11 downto 0);
@@ -171,6 +179,9 @@ architecture Behavioral of optohybrid_fw is
   signal ipb_mosi_gbt : ipb_wbus;
   signal ipb_miso_gbt : ipb_rbus;
 
+  signal ipb_mosi_vio : ipb_wbus;
+  signal ipb_miso_vio : ipb_rbus;
+
   -- Master
   signal ipb_mosi_masters : ipb_wbus_array (WB_MASTERS-1 downto 0);
   signal ipb_miso_masters : ipb_rbus_array (WB_MASTERS-1 downto 0);
@@ -178,6 +189,9 @@ architecture Behavioral of optohybrid_fw is
   -- Slaves
   signal ipb_mosi_slaves : ipb_wbus_array (WB_SLAVES-1 downto 0);
   signal ipb_miso_slaves : ipb_rbus_array (WB_SLAVES-1 downto 0);
+
+  signal trigger_data_formatter_tmr_err : std_logic := '0';
+  signal ipb_switch_tmr_err             : std_logic := '0';
 
 begin
 
@@ -196,7 +210,9 @@ begin
   --------------------------------------------------------------------------------
 
   clocking_inst : entity work.clocking
+    generic map (ASYNC_MODE => STANDALONE_MODE)
     port map(
+      async_clock_i => async_clock,
       clock_p       => clock_p,
       clock_n       => clock_n,
       mmcm_locked_o => mmcm_locked,
@@ -260,10 +276,24 @@ begin
   -- Wishbone
   --------------------------------------------------------------------------------
 
+  vio_ipb_master_1 : entity work.vio_ipb_master
+    generic map (
+      GE21 => GE21,
+      GE11 => GE11
+      )
+    port map (
+      clock      => clocks.clk40,
+      ipb_mosi_o => ipb_mosi_vio,
+      ipb_miso_i => ipb_miso_vio
+      );
+
   -- This module is the Wishbone switch which redirects requests from the masters to the slaves.
 
   ipb_mosi_masters(0) <= ipb_mosi_gbt;
   ipb_miso_gbt        <= ipb_miso_masters(0);
+
+  ipb_mosi_masters(1) <= ipb_mosi_vio;
+  ipb_miso_vio        <= ipb_miso_masters(1);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
     generic map (EN_TMR_IPB_SWITCH)
@@ -277,7 +307,9 @@ begin
 
       -- connect to slaves
       mosi_slaves => ipb_mosi_slaves,
-      miso_slaves => ipb_miso_slaves
+      miso_slaves => ipb_miso_slaves,
+
+      tmr_err_o => ipb_switch_tmr_err
       );
 
   --------------------------------------------------------------------------------
@@ -315,6 +347,8 @@ begin
       TOP_SHA        => TOP_SHA,
       TOP_VER        => TOP_VER,
       HOG_SHA        => HOG_SHA,
+      XML_VER        => XML_VER,
+      XML_SHA        => XML_SHA,
       HOG_VER        => HOG_VER,
       OPTOHYBRID_VER => OPTOHYBRID_VER,
       OPTOHYBRID_SHA => OPTOHYBRID_SHA,
@@ -325,10 +359,13 @@ begin
       ipb_mosi_i => ipb_mosi_slaves (IPB_SLAVE.CONTROL),
       ipb_miso_o => ipb_miso_slaves (IPB_SLAVE.CONTROL),
 
+      ipb_switch_tmr_err => ipb_switch_tmr_err,
+
       -- clock and reset
-      clocks => clocks,
-      reset  => system_reset,
-      ttc_i  => ttc,
+      clocks        => clocks,
+      async_clock_o => async_clock,
+      reset         => system_reset,
+      ttc_i         => ttc,
 
       -- to drive LED controller only
       mgts_ready => mgts_ready,
@@ -364,7 +401,9 @@ begin
   --------------------------------------------------------------------------------
 
   trigger_inst : entity work.trigger
+    generic map (STANDALONE_MODE => STANDALONE_MODE)
     port map (
+
       -- wishbone
       ipb_mosi_i => ipb_mosi_slaves(IPB_SLAVE.TRIG),
       ipb_miso_o => ipb_miso_slaves(IPB_SLAVE.TRIG),
@@ -377,7 +416,8 @@ begin
       bxn_counter_i => bxn_counter,
       ttc           => ttc,
 
-      cnt_snap => cnt_snap,
+      cnt_snap               => cnt_snap,
+      trig_formatter_tmr_err => trigger_data_formatter_tmr_err,
 
       -- sbits inputs
       vfat_sbits_p => vfat_sbits_p,
@@ -389,7 +429,10 @@ begin
       sbit_clusters_o => sbit_clusters,
       cluster_count_o => cluster_count,
       overflow_o      => sbit_overflow,
-      active_vfats_o  => active_vfats
+      active_vfats_o  => active_vfats,
+
+      --
+      trigger_prbs_en_o => trigger_prbs_en
       );
 
   --------------------------------------------------------------------------------
@@ -414,16 +457,18 @@ begin
     attribute DONT_TOUCH of elink_packets_tmr : signal is "true";
     attribute DONT_TOUCH of fiber_kchars_tmr  : signal is "true";
 
+
   begin
 
     formatter_loop : for I in 0 to 2*EN_TMR_TRIG_FORMATTER generate
     begin
-
       trigger_data_formatter_inst : entity work.trigger_data_formatter
+        generic map (g_TMR_INST => I)
         port map (
           clocks          => clocks,
           reset_i         => system_reset,
           ttc_i           => ttc,
+          prbs_en_i       => trigger_prbs_en,
           clusters_i      => sbit_clusters,
           overflow_i      => sbit_overflow,
           bxn_counter_i   => bxn_counter,
@@ -432,26 +477,39 @@ begin
           fiber_kchars_o  => fiber_kchars_tmr(I),
           elink_packets_o => elink_packets_tmr(I)
           );
+    end generate;
 
-      tmr_gen : if (EN_TMR = 1) generate
+    tmr_gen : if (EN_TMR = 1) generate
+      signal fiber_packets_tmr_err : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0) := (others => '0');
+      signal fiber_kchars_tmr_err  : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0) := (others => '0');
+      signal elink_packets_tmr_err : std_logic_vector (NUM_ELINK_PACKETS-1 downto 0)   := (others => '0');
+    begin
+      fiber_assign_loop : for I in 0 to NUM_OPTICAL_PACKETS-1 generate
+        majority_err (fiber_packets(I), fiber_packets_tmr_err(I), fiber_packets_tmr(0)(I), fiber_packets_tmr(1)(I), fiber_packets_tmr(2)(I));
+        majority_err (fiber_kchars(I), fiber_kchars_tmr_err(I), fiber_kchars_tmr(0)(I), fiber_kchars_tmr(1)(I), fiber_kchars_tmr(2)(I));
+      end generate;
+      elink_assign_loop : for I in 0 to NUM_ELINK_PACKETS-1 generate
+        majority_err (elink_packets(I), elink_packets_tmr_err(I), elink_packets_tmr(0)(I), elink_packets_tmr(1)(I), elink_packets_tmr(2)(I));
+      end generate;
+
+      process (clocks.clk40) is
       begin
-        fiber_assign_loop : for I in 0 to NUM_OPTICAL_PACKETS-1 generate
-          fiber_packets(I) <= majority (fiber_packets_tmr(0)(I), fiber_packets_tmr(1)(I), fiber_packets_tmr(2)(I));
-          fiber_kchars(I)  <= majority (fiber_kchars_tmr(0)(I), fiber_kchars_tmr(1)(I), fiber_kchars_tmr(2)(I));
-        end generate;
-        elink_assign_loop : for I in 0 to NUM_ELINK_PACKETS-1 generate
-          elink_packets(I) <= majority (elink_packets_tmr(0)(I), elink_packets_tmr(1)(I), elink_packets_tmr(2)(I));
-        end generate;
-
-      end generate;
-
-      notmr_gen : if (EN_TMR = 0) generate
-        fiber_packets <= fiber_packets_tmr(0);
-        elink_packets <= elink_packets_tmr(0);
-        fiber_kchars  <= fiber_kchars_tmr(0);
-      end generate;
+        if (rising_edge(clocks.clk40)) then
+          trigger_data_formatter_tmr_err <= or_reduce(fiber_packets_tmr_err) or
+                                            or_reduce(fiber_kchars_tmr_err) or
+                                            or_reduce(elink_packets_tmr_err);
+        end if;
+      end process;
 
     end generate;
+
+
+    notmr_gen : if (EN_TMR = 0) generate
+      fiber_packets <= fiber_packets_tmr(0);
+      elink_packets <= elink_packets_tmr(0);
+      fiber_kchars  <= fiber_kchars_tmr(0);
+    end generate;
+
   end generate;
 
   --------------------------------------------------------------------------------

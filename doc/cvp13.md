@@ -1,3 +1,4 @@
+
 # Setting up CVP13
 The setup process consists of these steps:
 1. Install the card in the computer, connect cooling, and the micro USB cable
@@ -94,7 +95,7 @@ This repository contains low level hardware access software as well as python sc
 You can use the scripts directly from this repo, all you have to do is:
 1. Generate the XML address table file by running this command at the root of the repository: ```make update_me0_cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is only needed after cloning or updating the repository.
 1. Compile the rwreg library that is used for hardware access: ```scripts/boards/cvp13/rwreg && make```. This step is only needed after cloning or updating the repository.
-1. Set up the environment for your station and card combination: ```cd scripts && source env_gem.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
+1. Set up the environment for your station and card combination: ```cd scripts && source env.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
 1. Initialize and configure the CVP13 firmware for the given station: ```cd scripts && python boards/cvp13/cvp13_init_me0.py```. This step is only needed after a CVP13 power cycle or CVP13 FPGA programming.
 1. Use the scripts e.g.:
 	1. start the interactive register access tool: ```python common/reg_interface.py```, once the tool is running e.g. to read the GBT link status registers of OH0 type ```readKW OH_LINKS.OH0.GBT``` (readKW means read all registers matching the substring), or check the CVP13 firmware version and configuration: ```readKW GEM_SYSTEM```. You can also write to registers using the write command. You can get some help by typing help. Refer to the address table XML file to find what registers exist and what they do (there's documentation for each register). At some point PDF document should also get generated from the XML when running make update_me0_cvp13, but that's not yet working..
@@ -137,3 +138,48 @@ Mapping to GE2/1 OHs is the following:
 | OH6 GBT1 |       |       |       | 2&11  |
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
+
+Mapping to GE2/1 OHs is the following:
+|             | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|-------------|-------|-------|-------|-------|
+| OH0 GBT0 RX | 12    |       |       |       |
+| OH0 GBT1 RX | --    |       |       |       |
+| OH0 GBT2 RX | 11    |       |       |       |
+| OH0 GBT3 RX | --    |       |       |       |
+| OH0 GBT4 RX | 10    |       |       |       |
+| OH0 GBT5 RX | --    |       |       |       |
+| OH0 GBT6 RX | 9     |       |       |       |
+| OH0 GBT7 RX | --    |       |       |       |
+| OH0 GBT0 TX | 1     |       |       |       |
+| OH0 GBT1 TX | 2     |       |       |       |
+| OH0 GBT2 TX | 3     |       |       |       |
+| OH0 GBT3 TX | 4     |       |       |       |
+| OH0 GBT4 TX |       | 1     |       |       |
+| OH0 GBT5 TX |       | 2     |       |       |
+| OH0 GBT6 TX |       | 3     |       |       |
+| OH0 GBT7 TX |       | 4     |       |       |
+
+CSC Fiber mapping (for now only one QSFP is used):
+|          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|----------|-------|-------|-------|-------|
+| DMB0     | 1&12  |       |       |       |
+| DMB1     | 2&11  |       |       |       |
+| Spy GbE  | 3&10  |       |       |       |
+
+## PROMless
+The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless_load.py``` script e.g.:
+```
+sudo python common/promless_load.py ~/oh_fw/oh_ge21.200-v4.0.2-23-gf349814-dirty.bit
+```
+(this is equivalent to calling the gemloader_configure.sh script on CTP7)
+To trigger the hard-reset manually in order to program the frontend you can use the built-in TTC generator module e.g. by running these commands using the ```common/reg_interface.py```:
+```
+write GEM_AMC.TTC.GENERATOR.ENABLE 1
+write GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET 1
+```
+
+## CSC operation
+First of all, initialize the firmware by running: ```sudo boards/cvp13/cvp13_init_csc.py```
+Then you can start the DAQ by running the ```csc/csc_daq.py``` application, which will ask a series of self explanatory questions for which for the most part defaults are going to be fine, but if no TCDS is used you have to make sure to answer "no" to "Should we keep the DAQ in reset until a resync" and "yes" to "Should we use local L1A generation based on DAQ data".
+For now the readout through PCIe is not yet implemented, so one has to use the Spy GbE port connected to a compatible NIC and running the CSC DAQ driver + RUI application. The spy output is identical to the DDU output, except that it is sending fully ethernet compliant packets (a modification to the offset in the driver is needed when using the ethernet-compliant option which is normally meant for ODMB "PC" port readout).
+There's also a script to send some dummy ethernet packets to the spy GbE port for testing the readout application on the DAQ machine: ```csc/csc_eth_packet_test.py```

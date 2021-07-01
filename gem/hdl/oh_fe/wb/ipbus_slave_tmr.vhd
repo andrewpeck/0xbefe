@@ -13,7 +13,8 @@ entity ipbus_slave_tmr is
     g_NUM_REGS             : integer := 2;  -- number of 32bit registers in this slave (use them wisely, don't allocate 100 times more than you need). If there are big gaps in the register addresses, please use individual address mapping.
     g_ADDR_HIGH_BIT        : integer := 5;  -- MSB of the IPbus address that will be mapped to registers
     g_ADDR_LOW_BIT         : integer := 0;  -- LSB of the IPbus address that will be mapped to registers
-    g_USE_INDIVIDUAL_ADDRS : boolean := false  -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+    g_USE_INDIVIDUAL_ADDRS : boolean := false;  -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+    g_IPB_CLK_PERIOD_NS    : integer            -- ipb_clk_i period, this is used to set the timeout
     );
   port(
     ipb_reset_i : in  std_logic;        -- IPbus reset (will reset the register values to the provided defaults)
@@ -33,11 +34,16 @@ entity ipbus_slave_tmr is
     writable_regs_i        : in std_logic_vector(g_NUM_REGS - 1 downto 0);  -- bitmask indicating which registers are writable and need defaults to be loaded (this helps to save resources)
     individual_addrs_arr_i : in t_std32_array(g_NUM_REGS - 1 downto 0);     -- individual register addresses - only used when g_USE_INDIVIDUAL_ADDRS = "TRUE"
 
-    sump : out std_logic
+    sump : out std_logic;
+
+    tmr_err_o : out std_logic
     );
 end ipbus_slave_tmr;
 
 architecture Behavioral of ipbus_slave_tmr is
+
+  signal tmr_err : std_logic_vector (3*(g_NUM_REGS+1) downto 0) := (others => '0');
+
 begin
 
   NO_TMR : if (g_ENABLE_TMR = 0) generate
@@ -49,7 +55,8 @@ begin
         g_ADDR_HIGH_BIT        => g_ADDR_HIGH_BIT,
         g_ADDR_LOW_BIT         => g_ADDR_LOW_BIT,
         g_USE_INDIVIDUAL_ADDRS => g_USE_INDIVIDUAL_ADDRS,
-        g_N_SYNC_STAGES        => g_N_SYNC_STAGES
+        g_N_SYNC_STAGES        => g_N_SYNC_STAGES,
+        g_IPB_CLK_PERIOD_NS    => g_IPB_CLK_PERIOD_NS
         )
       port map(
         -- inputs
@@ -102,7 +109,8 @@ begin
           g_ADDR_HIGH_BIT        => g_ADDR_HIGH_BIT,
           g_ADDR_LOW_BIT         => g_ADDR_LOW_BIT,
           g_USE_INDIVIDUAL_ADDRS => g_USE_INDIVIDUAL_ADDRS,
-          g_N_SYNC_STAGES        => g_N_SYNC_STAGES
+          g_N_SYNC_STAGES        => g_N_SYNC_STAGES,
+          g_IPB_CLK_PERIOD_NS    => g_IPB_CLK_PERIOD_NS
           )
         port map(
           -- inputs
@@ -127,15 +135,22 @@ begin
     end generate;
 
     regloop : for I in 0 to g_NUM_REGS-1 generate
-      write_pulse_arr_o(I) <= majority (write_pulse_arr_tmr(0)(I), write_pulse_arr_tmr(1)(I), write_pulse_arr_tmr(2)(I));
-      read_pulse_arr_o(I)  <= majority (read_pulse_arr_tmr (0)(I), read_pulse_arr_tmr (1)(I), read_pulse_arr_tmr (2)(I));
-      regs_write_arr_o(I)  <= majority (regs_write_arr_tmr (0)(I), regs_write_arr_tmr (1)(I), regs_write_arr_tmr (2)(I));
+      majority_err (write_pulse_arr_o(I), tmr_err(3*I+0), write_pulse_arr_tmr(0)(I), write_pulse_arr_tmr(1)(I), write_pulse_arr_tmr(2)(I));
+      majority_err (read_pulse_arr_o(I), tmr_err(3*I+1), read_pulse_arr_tmr (0)(I), read_pulse_arr_tmr (1)(I), read_pulse_arr_tmr (2)(I));
+      majority_err (regs_write_arr_o(I), tmr_err(3*I+2), regs_write_arr_tmr (0)(I), regs_write_arr_tmr (1)(I), regs_write_arr_tmr (2)(I));
     end generate;
 
-    ipb_miso_o.ipb_rdata <= majority(ipb_miso_tmr(0).ipb_rdata, ipb_miso_tmr(1).ipb_rdata, ipb_miso_tmr(2).ipb_rdata);
-    ipb_miso_o.ipb_ack   <= majority(ipb_miso_tmr(0).ipb_ack, ipb_miso_tmr(1).ipb_ack, ipb_miso_tmr(2).ipb_ack);
-    ipb_miso_o.ipb_err   <= majority(ipb_miso_tmr(0).ipb_err, ipb_miso_tmr(1).ipb_err, ipb_miso_tmr(2).ipb_err);
+    majority_err(ipb_miso_o.ipb_rdata, tmr_err(3*g_NUM_REGS+0), ipb_miso_tmr(0).ipb_rdata, ipb_miso_tmr(1).ipb_rdata, ipb_miso_tmr(2).ipb_rdata);
+    majority_err(ipb_miso_o.ipb_ack, tmr_err(3*g_NUM_REGS+1), ipb_miso_tmr(0).ipb_ack, ipb_miso_tmr(1).ipb_ack, ipb_miso_tmr(2).ipb_ack);
+    majority_err(ipb_miso_o.ipb_err, tmr_err(3*g_NUM_REGS+2), ipb_miso_tmr(0).ipb_err, ipb_miso_tmr(1).ipb_err, ipb_miso_tmr(2).ipb_err);
 
   end generate;
+
+  process (ipb_clk_i) is
+  begin
+    if (rising_edge(ipb_clk_i)) then
+      tmr_err_o <= or_reduce(tmr_err);
+    end if;
+  end process;
 
 end Behavioral;

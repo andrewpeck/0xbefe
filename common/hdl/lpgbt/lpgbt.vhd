@@ -16,7 +16,6 @@ library unisim;
 use unisim.vcomponents.all;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 use work.lpgbtfpga_package.all;
 
 entity lpgbt is
@@ -113,6 +112,9 @@ architecture lpgbt_arch of lpgbt is
     signal rx_header_locked : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_header_flag   : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_mgt_reset     : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+    signal rx_slide         : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+    signal rx_slide_frameclk: std_logic_vector(g_NUM_LINKS - 1 downto 0);
+    signal rx_slide_cnt     : t_std8_array(g_NUM_LINKS - 1 downto 0);
     
 begin 
 
@@ -275,6 +277,31 @@ begin
         link_status_arr_o(i).gbt_rx_header_locked <= rx_header_locked(i);
         link_status_arr_o(i).gbt_rx_correction_flag <= rx_corr_flag(i);
         link_status_arr_o(i).gbt_rx_correction_cnt <= rx_corr_cnt(i);
+        link_status_arr_o(i).gbt_rx_num_bitslips <= rx_slide_cnt(i);
+        
+        i_rx_slide_sync : entity work.oneshot_cross_domain
+            generic map(
+                G_N_STAGES => 3
+            )
+            port map(
+                reset_i       => reset_i or cnt_reset_i,
+                input_clk_i   => rx_word_clk_arr_i(i),
+                oneshot_clk_i => rx_frame_clk_i,
+                input_i       => rx_slide(i),
+                oneshot_o     => rx_slide_frameclk(i)
+            );
+        
+        i_rx_slide_cnt : entity work.counter
+            generic map(
+                g_COUNTER_WIDTH  => 8,
+                g_ALLOW_ROLLOVER => true
+            )
+            port map(
+                ref_clk_i => rx_frame_clk_i,
+                reset_i   => reset_i or cnt_reset_i,
+                en_i      => rx_slide_frameclk(i),
+                count_o   => rx_slide_cnt(i)
+            );
         
         i_rx_not_ready_latch : entity work.latch
             port map(
@@ -395,7 +422,7 @@ begin
                 rst_mgtctrler_i         => rx_fa_reset(i),
                 rst_rstoneven_o         => rx_mgt_reset(i),
                 
-                cmd_bitslipCtrl_o       => mgt_ctrl_arr_o(i).rxslide,
+                cmd_bitslipCtrl_o       => rx_slide(i),
                 cmd_rstonevenoroddsel_i => '0',
                 
                 sta_headerLocked_o      => rx_header_locked(i),
@@ -405,6 +432,7 @@ begin
             );
 
         mgt_ctrl_arr_o(i).txreset <= '0';
+        mgt_ctrl_arr_o(i).rxslide <= rx_slide(i);
 
         g_use_mgt_reset_on_even : if g_RESET_MGT_ON_EVEN = 1 generate
             mgt_ctrl_arr_o(i).rxreset <= rx_mgt_reset(i);

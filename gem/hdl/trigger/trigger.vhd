@@ -23,6 +23,7 @@ entity trigger is
         g_NUM_OF_OHs        : integer;
         g_NUM_TRIG_TX_LINKS : integer;
         g_USE_TRIG_TX_LINKS : boolean;
+        g_IPB_CLK_PERIOD_NS : integer;
         g_DEBUG             : boolean
     );
     port(
@@ -60,7 +61,7 @@ architecture trigger_arch of trigger is
             probe1 : IN STD_LOGIC_VECTOR(11 DOWNTO 0)
         );
     END COMPONENT;    
-    
+
     signal reset_global         : std_logic;
     signal reset_local          : std_logic;
     signal reset                : std_logic;

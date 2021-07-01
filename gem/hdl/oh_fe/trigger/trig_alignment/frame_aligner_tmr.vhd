@@ -6,6 +6,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library work;
@@ -26,11 +27,16 @@ entity frame_aligner_tmr is
     aligned_count_to_ready_i : in  std_logic_vector (11 downto 0);
     sbits_o                  : out std_logic_vector (MXSBITS-1 downto 0);
     sot_unstable_o           : out std_logic;
-    sot_is_aligned_o         : out std_logic);
+    sot_is_aligned_o         : out std_logic;
+    tmr_err_o                : out std_logic := '0'
+    );
 
 end frame_aligner_tmr;
 
 architecture Behavioral of frame_aligner_tmr is
+
+  signal tmr_err : std_logic_vector (2 downto 0) := (others => '0');
+
   component frame_aligner
     generic (
       EN_BITSLIP_TMR : integer
@@ -53,6 +59,13 @@ architecture Behavioral of frame_aligner_tmr is
   end component;
 
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      tmr_err_o <= or_reduce(tmr_err);
+    end if;
+  end process;
 
   NO_TMR : if (g_ENABLE_TMR = 0) generate
 
@@ -105,9 +118,9 @@ begin
 
     end generate;
 
-    sbits_o          <= majority (sbits_tmr(0), sbits_tmr(1), sbits_tmr(2));
-    sot_unstable_o   <= majority (sot_unstable_tmr(0), sot_unstable_tmr(1), sot_unstable_tmr(2));
-    sot_is_aligned_o <= majority (sot_is_aligned_tmr(0), sot_is_aligned_tmr(1), sot_is_aligned_tmr(2));
+    majority_err (sbits_o, tmr_err(0), sbits_tmr(0), sbits_tmr(1), sbits_tmr(2));
+    majority_err (sot_unstable_o, tmr_err(1), sot_unstable_tmr(0), sot_unstable_tmr(1), sot_unstable_tmr(2));
+    majority_err (sot_is_aligned_o, tmr_err(2), sot_is_aligned_tmr(0), sot_is_aligned_tmr(1), sot_is_aligned_tmr(2));
 
   end generate TMR;
 

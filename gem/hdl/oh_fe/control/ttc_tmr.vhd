@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library work;
@@ -8,15 +9,17 @@ use work.ipbus_pkg.all;
 
 entity ttc_tmr is
   port (
-    clock        : in  std_logic;
-    reset        : in  std_logic;
-    ttc_bx0      : in  std_logic;
-    ttc_resync   : in  std_logic;
-    bxn_offset   : in  std_logic_vector (11 downto 0);
-    bx0_local    : out std_logic;
-    bxn_counter  : out std_logic_vector (11 downto 0);
-    bx0_sync_err : out std_logic;
-    bxn_sync_err : out std_logic
+    clock         : in  std_logic;
+    reset         : in  std_logic;
+    ttc_bx0       : in  std_logic;
+    ttc_resync    : in  std_logic;
+    bxn_offset    : in  std_logic_vector (11 downto 0);
+    bx0_local     : out std_logic;
+    bxn_counter   : out std_logic_vector (11 downto 0);
+    bx0_sync_err  : out std_logic;
+    bxn_sync_err  : out std_logic;
+    tmr_err_inj_i : in  std_logic := '0';
+    tmr_err_o     : out std_logic := '0'
     );
 end entity ttc_tmr;
 
@@ -49,10 +52,20 @@ architecture behavioral of ttc_tmr is
   attribute DONT_TOUCH of bx0_sync_err_tmr : signal is "true";
   attribute DONT_TOUCH of bxn_sync_err_tmr : signal is "true";
 
+  signal tmr_err : std_logic_vector (3 downto 0) := (others => '0');
+
+
 begin
 
   tmr_loop : for I in 0 to 2 generate
+    signal tmr_err_inj : std_logic := '0';
   begin
+
+    -- inject an error into one of the copies
+    errgen : if (I=1) generate
+      tmr_err_inj <= tmr_err_inj_i;
+    end generate;
+
     ttc_inst : ttc
       port map (
 
@@ -61,8 +74,8 @@ begin
         reset => reset,
 
         -- ttc commands
-        ttc_bx0    => ttc_bx0,
-        ttc_resync => ttc_resync,
+        ttc_bx0    => ttc_bx0 xor tmr_err_inj,
+        ttc_resync => ttc_resync xor tmr_err_inj,
 
         -- control
         bxn_offset => bxn_offset,
@@ -76,9 +89,16 @@ begin
 
   end generate;
 
-  bx0_local    <= majority (bx0_local_tmr (0), bx0_local_tmr (1), bx0_local_tmr (2));
-  bxn_counter  <= majority (bxn_counter_tmr (0), bxn_counter_tmr (1), bxn_counter_tmr (2));
-  bx0_sync_err <= majority (bx0_sync_err_tmr(0), bx0_sync_err_tmr(1), bx0_sync_err_tmr(2));
-  bxn_sync_err <= majority (bxn_sync_err_tmr(0), bxn_sync_err_tmr(1), bxn_sync_err_tmr(2));
+  majority_err (bx0_local, tmr_err(0), bx0_local_tmr (0), bx0_local_tmr (1), bx0_local_tmr (2));
+  majority_err (bxn_counter, tmr_err(1), bxn_counter_tmr (0), bxn_counter_tmr (1), bxn_counter_tmr (2));
+  majority_err (bx0_sync_err, tmr_err(2), bx0_sync_err_tmr(0), bx0_sync_err_tmr(1), bx0_sync_err_tmr(2));
+  majority_err (bxn_sync_err, tmr_err(3), bxn_sync_err_tmr(0), bxn_sync_err_tmr(1), bxn_sync_err_tmr(2));
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      tmr_err_o <= or_reduce(tmr_err);
+    end if;
+  end process;
 
 end behavioral;

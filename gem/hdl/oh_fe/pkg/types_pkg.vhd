@@ -39,15 +39,13 @@ package types_pkg is
     we   : std_logic;
   end record;
 
-  constant drp_i_null  : drp_i_t :=
-    (
+  constant drp_i_null : drp_i_t := (
     addr => (others => '0'),
     di   => (others => '0'),
     clk  => '0',
     en   => '0',
     we   => '0'
-
-);
+    );
 
   type drp_o_t is record
     do  : std_logic_vector(15 downto 0);
@@ -102,6 +100,7 @@ package types_pkg is
     locked    : std_logic;
     sysclk    : std_logic;
     clk40     : std_logic;
+    clk80     : std_logic;
     clk160_0  : std_logic;
     clk160_90 : std_logic;
     clk200    : std_logic;
@@ -154,6 +153,14 @@ package types_pkg is
 
   type wb_res_array_t is array(integer range <>) of wb_res_t;
 
+  procedure majority_err (signal o : out std_logic_vector;
+                          signal e : out std_logic;
+                          a, b, c  : in  std_logic_vector);
+
+  procedure majority_err (signal o : out std_logic;
+                          signal e : out std_logic;
+                          a, b, c  : in  std_logic);
+
   function majority (a : std_logic_vector; b : std_logic_vector; c : std_logic_vector)
     return std_logic_vector;
 
@@ -163,6 +170,36 @@ package types_pkg is
 end types_pkg;
 
 package body types_pkg is
+
+  procedure majority_err (signal o : out std_logic_vector;
+                          signal e : out std_logic;
+                          a, b, c  : in  std_logic_vector) is
+  begin
+
+    if (a = b and b = c) then
+      e <= '0';
+    else
+      e <= '1';
+    end if;
+
+    o <= (a and b) or (b and c) or (a and c);
+
+  end majority_err;
+
+  procedure majority_err (signal o : out std_logic;
+                          signal e : out std_logic;
+                          a, b, c  : in  std_logic) is
+  begin
+
+    if (a = b and b = c) then
+      e <= '0';
+    else
+      e <= '1';
+    end if;
+
+    o <= (a and b) or (b and c) or (a and c);
+
+  end majority_err;
 
   function majority (a : std_logic_vector; b : std_logic_vector; c : std_logic_vector)
     return std_logic_vector is

@@ -6,16 +6,12 @@
 ----------------------------------------------------------------------------------
 -- Description:
 --   This module takes in 192 s-bits and 24 start-of-frame signals and outputs
---   1536 (or x2 at DDR) aligned S-bits
-----------------------------------------------------------------------------------
--- 2017/07/24 -- Initial
--- 2017/11/13 -- Port to VHDL
--- 2018/04/18 -- Mods for OH Lite
--- 2018/10/11 -- New oversampler and frame aligner modules
+--   1536 aligned S-bits
 ----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library UNISIM;
@@ -55,11 +51,17 @@ entity trig_alignment is
     clk160_0  : in std_logic;
     clk160_90 : in std_logic;
 
-    sbits : out std_logic_vector ((MXSBITS_CHAMBER - 1) downto 0)
+    sbits : out std_logic_vector ((MXSBITS_CHAMBER - 1) downto 0);
+
+    tmr_err_o : out std_logic := '0'
     );
 end trig_alignment;
 
 architecture Behavioral of trig_alignment is
+
+  signal frame_aligner_tmr_err : std_logic_vector (NUM_VFATS-1 downto 0);
+  signal sot_tmr_err           : std_logic_vector (NUM_VFATS-1 downto 0);
+  signal sbit_tmr_err          : std_logic_vector (NUM_VFATS*8-1 downto 0);
 
   signal start_of_frame_8b  : t_std8_array (NUM_VFATS-1 downto 0);
   signal vfat_phase_sel     : t_std2_array (NUM_VFATS-1 downto 0);
@@ -92,6 +94,9 @@ begin
       tu_invert  <= tu_invert_i;
       vfat_mask  <= vfat_mask_i;
       tu_mask    <= tu_mask_i;
+
+      tmr_err_o <= or_reduce (frame_aligner_tmr_err) or or_reduce(sot_tmr_err) or or_reduce(sbit_tmr_err);
+
     end if;
   end process;
 
@@ -129,7 +134,8 @@ begin
         e4_out            => vfat_e4(I),
         phase_sel_in      => (others => '0'),
         phase_sel_out     => vfat_phase_sel(I),
-        invalid_bitskip_o => sot_invalid_bitskip(I)
+        invalid_bitskip_o => sot_invalid_bitskip(I),
+        tmr_err_o         => sot_tmr_err(I)
         );
 
   end generate;
@@ -168,7 +174,8 @@ begin
         e4_out            => open,
         phase_sel_in      => vfat_phase_sel(I/8),
         phase_sel_out     => open,
-        invalid_bitskip_o => open
+        invalid_bitskip_o => open,
+        tmr_err_o         => sbit_tmr_err(I)
         );
 
   end generate;
@@ -194,7 +201,8 @@ begin
 
         sbits_o          => sbits((I+1)*MXSBITS - 1 downto I*MXSBITS),
         sot_is_aligned_o => sot_is_aligned_int(I),
-        sot_unstable_o   => sot_unstable(I)
+        sot_unstable_o   => sot_unstable(I),
+        tmr_err_o        => frame_aligner_tmr_err(I)
         );
 
   end generate;

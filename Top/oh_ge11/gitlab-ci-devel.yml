@@ -3,7 +3,6 @@ generate_project:oh_ge11_devel:
     variables:
       extends: .vars
       PROJECT_NAME: oh_ge11
-      HOG_ONLY_SYNTH: 0 # if 1 runs only the synthesis
       INTERMEDIATE_BUILD: 1
     tags:
       - ise

@@ -3,8 +3,6 @@
 -- GEM Collaboration
 -- Optohybrid v3 Firmware -- SEM
 ----------------------------------------------------------------------------------
--- 2018/04/18 -- Add Artix-7 support
-----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -18,6 +16,9 @@ use work.hardware_pkg.all;
 entity sem_mon is
   port(
     clk_i            : in  std_logic;
+    sysclk_i         : in  std_logic;
+    inject_strobe    : in  std_logic;
+    inject_address   : in  std_logic_vector(39 downto 0);
     heartbeat_o      : out std_logic;
     initialization_o : out std_logic;
     observation_o    : out std_logic;
@@ -25,7 +26,13 @@ entity sem_mon is
     classification_o : out std_logic;
     injection_o      : out std_logic;
     essential_o      : out std_logic;
-    uncorrectable_o  : out std_logic
+    uncorrectable_o  : out std_logic;
+
+    correction_pulse_o    : out std_logic;
+    uncorrectable_pulse_o : out std_logic;
+    essential_pulse_o     : out std_logic;
+
+    idle_o : out std_logic
     );
 end sem_mon;
 
@@ -206,25 +213,81 @@ begin
 
   sem_gen_a7 : if (FPGA_TYPE = "A7") generate
 
+    signal status_initialization, status_observation, status_correction,
+      status_classification, status_injection, status_essential,
+      status_uncorrectable : std_logic;
+
+    signal idle : std_logic;
+
+    signal correction_r     : std_logic;
+    signal uncorrectable_r  : std_logic;
+    signal essential_r      : std_logic;
+    signal inject_strobe_r  : std_logic := '0';
+    signal inject_strobe_os : std_logic := '0';
+
+  begin
+
+
+    -- The error injection control is used to indicate an error injection
+    -- request. The inject_strobe signal should be pulsed high for one cycle,
+    -- synchronous to icap_clk, concurrent with the application of a valid
+    -- address to the inject_address input. The error injection control must
+    -- only be used when the controller is idle
+
+    idle <= not (status_initialization or status_observation or
+                 status_correction or status_classification or status_injection);
+
+    initialization_o <= status_initialization;
+    observation_o    <= status_observation;
+    correction_o     <= status_correction;
+    classification_o <= status_classification;
+    injection_o      <= status_injection;
+    essential_o      <= status_essential;
+    uncorrectable_o  <= status_uncorrectable;
+    idle_o           <= idle;
+
+    -- for counting, make rising edge sensitive versions of these signals
+    process (sysclk_i) is
+    begin
+      if (rising_edge(sysclk_i)) then
+        correction_r    <= status_correction;
+        uncorrectable_r <= status_uncorrectable;
+        essential_r     <= status_essential;
+      end if;
+    end process;
+
+    process (clk_i) is
+    begin
+      if (rising_edge(clk_i)) then
+        inject_strobe_r <= inject_strobe;
+      end if;
+    end process;
+
+    inject_strobe_os <= '1' when inject_strobe_r = '0' and inject_strobe = '1' else '0';
+
+    correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
+    uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
+    essential_pulse_o     <= '1' when essential_r = '0' and status_essential = '1'         else '0';
+
     sem_a7_inst : sem_a7
 
       port map (
         status_heartbeat      => heartbeat_o,
-        status_initialization => initialization_o,
-        status_observation    => observation_o,
-        status_correction     => correction_o,
-        status_classification => classification_o,
-        status_injection      => injection_o,
-        status_essential      => essential_o,
-        status_uncorrectable  => uncorrectable_o,
+        status_initialization => status_initialization,
+        status_observation    => status_observation,
+        status_correction     => status_correction,
+        status_classification => status_classification,
+        status_injection      => status_injection,
+        status_essential      => status_essential,
+        status_uncorrectable  => status_uncorrectable,
         monitor_txdata        => open,
         monitor_txwrite       => open,
         monitor_txfull        => '0',
         monitor_rxdata        => (others => '0'),
         monitor_rxread        => open,
         monitor_rxempty       => '1',
-        inject_strobe         => '0',
-        inject_address        => (others => '0'),
+        inject_strobe         => inject_strobe_os,
+        inject_address        => inject_address,
         icap_o                => icap_o,
         icap_csib             => icap_csb,
         icap_rdwrb            => icap_rdwrb,
@@ -246,34 +309,34 @@ begin
     ICAPE2_inst : ICAPE2
       generic map (
         DEVICE_ID         => X"03651093",  -- Specifies the pre-programmed Device ID value to be used for simulation purposes.
-        ICAP_WIDTH        => "X32",  -- Specifies the input and output data width.
-        SIM_CFG_FILE_NAME => "NONE"  -- Specifies the Raw Bitstream (RBT) file to be parsed by the simulation model.
+        ICAP_WIDTH        => "X32",        -- Specifies the input and output data width.
+        SIM_CFG_FILE_NAME => "NONE"        -- Specifies the Raw Bitstream (RBT) file to be parsed by the simulation model.
         )
       port map (
-        o     => icap_o,  -- 32-bit output: configuration data output bus
-        clk   => clk_i,                 -- 1-bit input: clock input
-        csib  => icap_csb,              -- 1-bit input: active-low icap enable
-        i     => icap_i,  -- 32-bit input: configuration data input bus
-        rdwrb => icap_rdwrb             -- 1-bit input: read/write select input
+        o     => icap_o,                   -- 32-bit output: configuration data output bus
+        clk   => clk_i,                    -- 1-bit input: clock input
+        csib  => icap_csb,                 -- 1-bit input: active-low icap enable
+        i     => icap_i,                   -- 32-bit input: configuration data input bus
+        rdwrb => icap_rdwrb                -- 1-bit input: read/write select input
         );
 
     FRAME_ECCE2_inst : FRAME_ECCE2
       generic map (
-        FARSRC                => "EFAR",  -- Determines if the output of FAR[25:0] configuration register points
+        FARSRC                => "EFAR",       -- Determines if the output of FAR[25:0] configuration register points
         -- to the FAR or EFAR. Sets configuration option register bit CTL0[7].
-        FRAME_RBT_IN_FILENAME => "None"  -- This file is output by the ICAP_E2 model and it contains Frame Data
+        FRAME_RBT_IN_FILENAME => "None"        -- This file is output by the ICAP_E2 model and it contains Frame Data
        -- information for the Raw Bitstream (RBT) file. The FRAME_ECCE2 model
        -- will parse this file, calculate ECC and output any error conditions.
         )
       port map (
-        crcerror       => fecc_crcerr,  -- 1-bit output: Output indicating a CRC error.
-        eccerror       => fecc_eccerr,  -- 1-bit output: Output indicating an ECC error.
-        eccerrorsingle => fecc_eccerrsingle,  -- 1-bit output: Output Indicating single-bit Frame ECC error detected.
-        far            => fecc_far,  -- 26-bit output: Frame Address Register Value output.
-        synbit         => fecc_synbit,  -- 5-bit output: Output bit address of error.
-        syndrome       => fecc_syndrome,  -- 13-bit output: Output location of erroneous bit.
+        crcerror       => fecc_crcerr,         -- 1-bit output: Output indicating a CRC error.
+        eccerror       => fecc_eccerr,         -- 1-bit output: Output indicating an ECC error.
+        eccerrorsingle => fecc_eccerrsingle,   -- 1-bit output: Output Indicating single-bit Frame ECC error detected.
+        far            => fecc_far,            -- 26-bit output: Frame Address Register Value output.
+        synbit         => fecc_synbit,         -- 5-bit output: Output bit address of error.
+        syndrome       => fecc_syndrome,       -- 13-bit output: Output location of erroneous bit.
         syndromevalid  => fecc_syndromevalid,  -- 1-bit output: Frame ECC output indicating the SYNDROME output is valid.
-        synword        => fecc_synword  -- 7-bit output: Word output in the frame where an ECC error has been detected.
+        synword        => fecc_synword         -- 7-bit output: Word output in the frame where an ECC error has been detected.
 
         );
 

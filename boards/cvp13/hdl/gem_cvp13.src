@@ -1,9 +1,7 @@
 # -*- mode: TCL;-*-
 
+boards/cvp13/hdl/common_cvp13.src
+
 boards/cvp13/hdl/gem_cvp13.vhd
-boards/cvp13/hdl/system/led_controller.vhd
-boards/cvp13/hdl/system/pcie.vhd
-boards/cvp13/hdl/system/clk_bufs.vhd
 boards/cvp13/hdl/pkg/gem_board_config_pkg.vhd
-boards/cvp13/hdl/pkg/ipb_sys_addr_decode.vhd
 

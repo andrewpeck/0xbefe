@@ -17,14 +17,14 @@ use IEEE.NUMERIC_STD.all;
 
 use work.ipbus.all;
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity ipbus_slave is
     generic(
         g_NUM_REGS             : integer := 32;     -- number of 32bit registers in this slave (use them wisely, don't allocate 100 times more than you need). If there are big gaps in the register addresses, please use individual address mapping.
         g_ADDR_HIGH_BIT        : integer := 5;      -- MSB of the IPbus address that will be mapped to registers
         g_ADDR_LOW_BIT         : integer := 0;      -- LSB of the IPbus address that will be mapped to registers
-        g_USE_INDIVIDUAL_ADDRS : boolean := false -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+        g_USE_INDIVIDUAL_ADDRS : boolean := false;  -- when true, we will map the registers to the individual addresses provided in individual_addrs_arr_i(g_ADDR_HIGH_BIT downto g_ADDR_LOW_BIT)
+        g_IPB_CLK_PERIOD_NS    : integer            -- ipb_clk_i period, this is used to set the timeout, which is 40us
     );
     port(
         ipb_reset_i            : in  std_logic;                              -- IPbus reset (will reset the register values to the provided defaults)
@@ -71,7 +71,7 @@ architecture Behavioral of ipbus_slave is
     signal regs_read_pulse_done     : std_logic := '0'; 
     
     -- Timeout
-    constant ipb_timeout      : unsigned(15 downto 0) := x"07d0"; -- 2000 clock cycles
+    constant ipb_timeout      : unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
     signal ipb_timer          : unsigned(15 downto 0) := (others => '0');
         
 begin

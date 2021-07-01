@@ -1,0 +1,7 @@
+# -*- mode: TCL;-*-
+
+boards/cvp13/hdl/common_cvp13.src
+
+boards/cvp13/hdl/csc_cvp13.vhd
+boards/cvp13/hdl/pkg/csc_board_config_pkg.vhd
+

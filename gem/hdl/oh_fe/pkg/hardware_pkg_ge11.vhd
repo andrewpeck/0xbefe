@@ -48,6 +48,7 @@ package hardware_pkg is
   constant ENABLE_ECC : integer := 1;
 
   constant USE_LEGACY_OPTICS : boolean := true;
+  constant USE_NEW_FORMAT_WITH_OLD_OPTICS : boolean := true;
 
   -- TMR Enables
   constant EN_TMR_TRIG_FORMATTER     : integer := 0*EN_TMR;
@@ -59,11 +60,11 @@ package hardware_pkg is
   constant EN_TMR_FRAME_BITSLIP      : integer := 0*EN_TMR;
   constant EN_TMR_GBT_LINK           : integer := 1*EN_TMR;
   constant EN_TMR_IPB_SWITCH         : integer := 1*EN_TMR;
-  constant EN_TMR_IPB_SLAVE_TRIG     : integer := 1*EN_TMR;
-  constant EN_TMR_IPB_SLAVE_CONTROL  : integer := 1*EN_TMR;
+  constant EN_TMR_IPB_SLAVE_TRIG     : integer := 0*EN_TMR;
+  constant EN_TMR_IPB_SLAVE_CONTROL  : integer := 0*EN_TMR;
   constant EN_TMR_IPB_SLAVE_GBT      : integer := 1*EN_TMR;
-  constant EN_TMR_IPB_SLAVE_ADC      : integer := 1*EN_TMR;
-  constant EN_TMR_IPB_SLAVE_CLOCKING : integer := 1*EN_TMR;
-  constant EN_TMR_IPB_SLAVE_MGT      : integer := 1*EN_TMR;
+  constant EN_TMR_IPB_SLAVE_ADC      : integer := 0*EN_TMR;
+  constant EN_TMR_IPB_SLAVE_CLOCKING : integer := 0*EN_TMR;
+  constant EN_TMR_IPB_SLAVE_MGT      : integer := 0*EN_TMR;
 
 end hardware_pkg;

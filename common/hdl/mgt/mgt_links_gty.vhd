@@ -22,19 +22,18 @@ library unisim;
 use unisim.vcomponents.all;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 use work.mgt_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 entity mgt_links_gty is
     generic(
         g_NUM_CHANNELS          : integer;
         g_NUM_QPLLS             : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
-        g_MASTER_CHANNEL        : integer ;
-        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20  -- Period of the stable clock driving the state machines (ns)        
+        g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
+        g_IPB_CLK_PERIOD_NS     : integer        
     );
     port(
         
@@ -56,9 +55,12 @@ entity mgt_links_gty is
         tx_usrclk_arr_o         : out std_logic_vector(g_NUM_CHANNELS-1 downto 0);
         rx_usrclk_arr_o         : out std_logic_vector(g_NUM_CHANNELS-1 downto 0);
 
-        master_txoutclk_o       : out std_logic;
-        master_txusrclk_o       : out std_logic;
-        master_rxusrclk_o       : out std_logic;
+        master_txoutclk_o       : out t_mgt_master_clks;
+        master_txusrclk_o       : out t_mgt_master_clks;
+        master_rxusrclk_o       : out t_mgt_master_clks;
+        
+        tx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+        rx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         
         ipb_reset_i             : in  std_logic;
         ipb_clk_i               : in  std_logic;
@@ -92,6 +94,10 @@ architecture mgt_links_gty_arch of mgt_links_gty is
 
     signal chan_clks_in_arr     : t_mgt_clk_in_arr(g_NUM_CHANNELS-1 downto 0);
     signal chan_clks_out_arr    : t_mgt_clk_out_arr(g_NUM_CHANNELS-1 downto 0);
+
+    signal master_txoutclk      : t_mgt_master_clks;
+    signal master_txusrclk      : t_mgt_master_clks;
+    signal master_rxusrclk      : t_mgt_master_clks;
 
     signal tx_data_arr          : t_mgt_64b_tx_data_arr(g_NUM_CHANNELS-1 downto 0);
     signal rx_data_arr          : t_mgt_64b_rx_data_arr(g_NUM_CHANNELS-1 downto 0);
@@ -138,6 +144,10 @@ begin
     tx_data_arr <= tx_data_arr_i;
     rx_data_arr_o <= rx_data_arr;
     
+    master_txoutclk_o <= master_txoutclk;
+    master_txusrclk_o <= master_txusrclk;
+    master_rxusrclk_o <= master_rxusrclk;
+    
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
 
         --================================--
@@ -148,18 +158,17 @@ begin
 
         tx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).txusrclk2;
         rx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).rxusrclk2;
-        
-        g_master_clks : if chan = g_MASTER_CHANNEL generate
-            master_txoutclk_o <= chan_clks_out_arr(chan).txoutclk;
-            master_txusrclk_o <= chan_clks_in_arr(chan).txusrclk2;
-            master_rxusrclk_o <= chan_clks_in_arr(chan).rxusrclk2;
-        end generate;
-        
+                
         status_arr_o(chan).tx_reset_done <= tx_reset_done_arr(chan);
         status_arr_o(chan).rx_reset_done <= rx_reset_done_arr(chan);
         status_arr_o(chan).tx_cpll_locked <= cpll_status_arr(chan).cplllock;
         status_arr_o(chan).rx_cpll_locked <= cpll_status_arr(chan).cplllock;
         status_arr_o(chan).qpll_locked <= '0';
+        status_arr_o(chan).rxbufstatus <= rx_status_arr(chan).rxbufstatus;
+        status_arr_o(chan).rxclkcorcnt <= rx_status_arr(chan).rxclkcorcnt;
+
+        tx_reset_arr_o(chan) <= reset_i or ctrl_arr_i(chan).txreset or sc_tx_reset_arr(chan);
+        rx_reset_arr_o(chan) <= reset_i or ctrl_arr_i(chan).rxreset or sc_rx_reset_arr(chan);
 
         --===================================================--
         -- TX multi-lane phase alignment signal assignments
@@ -174,12 +183,22 @@ begin
             txph_syncdone_arr(chan) <= tx_status_arr(chan).txsyncdone;
             txph_syncout_arr(chan) <= tx_status_arr(chan).txsyncout;
         end generate;
+
+        g_tx_no_phalign : if not g_LINK_CONFIG(chan).tx_multilane_phalign generate
+            tx_init_arr(chan).txsyncallin <= '0';
+            tx_init_arr(chan).txsyncin <= '0';      
+            tx_init_arr(chan).txsyncmode <= '0';    
+            tx_init_arr(chan).txdlysreset <= '0';   
+            txph_phaligndone_arr(chan) <= '1'; 
+            txph_syncdone_arr(chan) <= '1';
+            txph_syncout_arr(chan) <= '1';
+        end generate;
         
         --================================--
         -- GBTX MGT type
         --================================--
         g_chan_gbtx : if g_LINK_CONFIG(chan).link_type = MGT_GBTX generate
-        
+                
             -- TX user clocks
             chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_120;
             chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_120;
@@ -188,6 +207,13 @@ begin
             g_rx_use_buf : if g_LINK_CONFIG(chan).rx_use_buf generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_120;
                 chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_120;
+            end generate;
+
+            -- master clocks       
+            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
+                master_txoutclk.gbt <= chan_clks_out_arr(chan).txoutclk;
+                master_txusrclk.gbt <= chan_clks_in_arr(chan).txusrclk2;
+                master_rxusrclk.gbt <= chan_clks_in_arr(chan).rxusrclk2;
             end generate;
             
             -- RX user clocks when elastic buffer is bypassed
@@ -253,6 +279,13 @@ begin
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_320;
                 chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_320;
             end generate;
+
+            -- master clocks       
+            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
+                master_txoutclk.gbt <= chan_clks_out_arr(chan).txoutclk;
+                master_txusrclk.gbt <= chan_clks_in_arr(chan).txusrclk2;
+                master_rxusrclk.gbt <= chan_clks_in_arr(chan).rxusrclk2;
+            end generate;
             
             -- RX user clocks when elastic buffer is bypassed
             g_rx_no_buf : if not g_LINK_CONFIG(chan).rx_use_buf generate
@@ -279,6 +312,132 @@ begin
                     g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
                     g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
                     g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => tx_cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_i          => chan_drp_in_arr(chan),
+                    drp_o          => chan_drp_out_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --================================--
+        -- DMB MGT type (1.6Gb/s)
+        --================================--
+        g_chan_dmb : if g_LINK_CONFIG(chan).link_type = MGT_DMB generate
+        
+            -- master clocks       
+            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
+                i_bufg_master_txoutclk : BUFG_GT
+                    port map(
+                        O       => master_txoutclk.dmb,
+                        CE      => '1',
+                        CEMASK  => '0',
+                        CLR     => '0',
+                        CLRMASK => '0',
+                        DIV     => "000",
+                        I       => chan_clks_out_arr(chan).txoutclk
+                    );                  
+                master_txusrclk.dmb <= chan_clks_in_arr(chan).txusrclk2;
+                master_rxusrclk.dmb <= chan_clks_in_arr(chan).rxusrclk2;
+            end generate;
+            
+            -- TX user clocks
+            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.dmb;
+            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.dmb;
+            
+            -- DMB links always use elastic buffers
+            chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.dmb;
+            chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.dmb;
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on DMB links
+            
+            i_chan_dmb : entity work.gty_channel_dmb
+                generic map(
+                    g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
+                    g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => tx_cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_i          => chan_drp_in_arr(chan),
+                    drp_o          => chan_drp_out_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --================================--
+        -- GbE MGT type (1.25Gb/s)
+        --================================--
+        g_chan_gbe : if g_LINK_CONFIG(chan).link_type = MGT_GBE generate
+        
+            -- master clocks       
+            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
+                i_bufg_master_txoutclk : BUFG_GT
+                    port map(
+                        O       => master_txoutclk.gbe,
+                        CE      => '1',
+                        CEMASK  => '0',
+                        CLR     => '0',
+                        CLRMASK => '0',
+                        DIV     => "000",
+                        I       => chan_clks_out_arr(chan).txoutclk
+                    );                  
+                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
+                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
+            end generate;
+            
+            -- TX user clocks
+            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.gbe;
+            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.gbe;
+            
+            -- GbE links always use elastic buffers
+            chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.gbe;
+            chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.gbe;
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
+            
+            i_chan_gbe : entity work.gty_channel_gbe
+                generic map(
+                    g_REFCLK_01   => g_LINK_CONFIG(chan).use_refclk_01,
+                    g_QPLL_01     => g_LINK_CONFIG(chan).use_qpll_01,
+                    g_USE_QPLL    => g_LINK_CONFIG(chan).use_qpll,
+                    g_TXOUTCLKSEL => "010", -- from PMA (same frequency as the user clocks)
+                    g_RXOUTCLKSEL => "010"  -- recovered clock by default
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
@@ -418,7 +577,7 @@ begin
         generic map(
             g_STABLE_CLK_PERIOD  => g_STABLE_CLK_PERIOD,
             g_NUM_CHANNELS       => g_NUM_CHANNELS,
-            g_MASTER_CHANNEL     => g_MASTER_CHANNEL
+            g_LINK_CONFIG        => g_LINK_CONFIG
         )
         port map(
             clk_stable_i             => clk_stable_i,
@@ -439,7 +598,8 @@ begin
 
     i_slow_control : entity work.mgt_slow_control
         generic map(
-            g_NUM_CHANNELS => g_NUM_CHANNELS
+            g_NUM_CHANNELS      => g_NUM_CHANNELS,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             clk_stable_i          => clk_stable_i,

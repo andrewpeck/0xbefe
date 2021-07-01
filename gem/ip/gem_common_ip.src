@@ -1,20 +1,9 @@
 # -*- mode: TCL;-*-
 
 gem/ip/bram_vfat3_sc_adc/bram_vfat3_sc_adc.xci
-gem/ip/gt_rx_link_ila/gt_rx_link_ila.xci
-gem/ip/gt_tx_link_ila/gt_tx_link_ila.xci
-gem/ip/ila_axi_ipbus_bridge/ila_axi_ipbus_bridge.xci
 gem/ip/ila_daq/ila_daq.xci
-gem/ip/ila_gbt_mgt/ila_gbt_mgt.xci
-gem/ip/ila_gbt/ila_gbt.xci
-gem/ip/ila_gem_loader/ila_gem_loader.xci
-gem/ip/ila_lpgbt/ila_lpgbt.xci
 gem/ip/ila_trig_rx_link/ila_trig_rx_link.xci
 gem/ip/ila_vfat3/ila_vfat3.xci
 gem/ip/vio_debug_link_selector/vio_debug_link_selector.xci
-gem/ip/vio_gem_loader/vio_gem_loader.xci
-gem/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
-gem/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 gem/ip/ila_trigger/ila_trigger.xci
-gem/ip/ila_clk_phase_check/ila_clk_phase_check.xci
 gem/ip/ila_ge21_trigger_link/ila_ge21_trigger_link.xci

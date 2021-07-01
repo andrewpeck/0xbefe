@@ -6,10 +6,6 @@ gem/hdl/oh_fe/gbt/fifo_a7.vhd
 # ip
 boards/ge21_oh/ip/*/*.xci
 
-# cluster finding
-gem/hdl/cluster_finding/count768.v
-gem/hdl/cluster_finding/priority192.v
-
 # gtp
 gem/hdl/oh_fe/mgt/gtp/*.vhd
 gem/hdl/oh_fe/mgt/mgt_wrapper.vhd

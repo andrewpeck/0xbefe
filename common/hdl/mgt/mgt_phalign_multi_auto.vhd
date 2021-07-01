@@ -16,11 +16,14 @@ use ieee.std_logic_misc.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.mgt_pkg.all;
+use work.board_config_package.all;
+
 entity mgt_phalign_multi_auto is
     generic(
         g_STABLE_CLK_PERIOD     : integer; -- ns
         g_NUM_CHANNELS          : integer;
-        g_MASTER_CHANNEL        : integer -- index of the master channel
+        g_LINK_CONFIG           : t_mgt_config_arr
     );
     port(
         
@@ -71,12 +74,13 @@ begin
     
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
     
-        g_master : if chan = g_MASTER_CHANNEL generate
+        g_master : if g_LINK_CONFIG(chan).tx_multilane_phalign and g_LINK_CONFIG(chan).is_master generate
             mgt_syncmode_arr_o(chan) <= '1';
             mgt_master_syncout <= mgt_syncout_arr_i(chan);
+            i_sync_syncdone : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => mgt_syncdone_arr_i(chan), clk_i => clk_stable_i, sync_o  => mgt_master_syncdone);
         end generate;
         
-        g_slave : if chan /= g_MASTER_CHANNEL generate
+        g_slave : if not g_LINK_CONFIG(chan).is_master generate
             mgt_syncmode_arr_o(chan) <= '0';
         end generate;
         
@@ -89,8 +93,6 @@ begin
         
     end generate;
     
-    i_sync_syncdone : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => mgt_syncdone_arr_i(g_MASTER_CHANNEL), clk_i => clk_stable_i, sync_o  => mgt_master_syncdone);
-
     -------- the FSM --------
     --   1) reset the FSM and go to INIT whenever channel_reset_done_i goes low
     --   2) assert the DLYSRESET on all channels for TIMER_DLYSRESET

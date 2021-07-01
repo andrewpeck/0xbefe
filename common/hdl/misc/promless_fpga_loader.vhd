@@ -14,7 +14,6 @@ use ieee.numeric_std.all;
 
 use work.ttc_pkg.all;
 use work.common_pkg.all;
-use work.gem_pkg.all;
 
 entity promless_fpga_loader is
     generic(
@@ -26,14 +25,14 @@ entity promless_fpga_loader is
         gbt_clk_i           : in std_logic; -- 40MHz
         loader_clk_i        : in std_logic; -- 80MHz
         
-        to_gem_loader_o     : out t_to_gem_loader;
-        from_gem_loader_i   : in  t_from_gem_loader;
+        to_promless_o       : out t_to_promless;
+        from_promless_i     : in  t_from_promless;
         
         elink_data_o        : out std_logic_vector(15 downto 0);
         hard_reset_i        : in std_logic;
         
-        gem_loader_stats_o  : out t_gem_loader_stats;
-        gem_loader_cfg_i    : in  t_gem_loader_cfg
+        promless_stats_o    : out t_promless_stats;
+        promless_cfg_i      : in  t_promless_cfg
     );
 end promless_fpga_loader;
 
@@ -41,28 +40,28 @@ architecture Behavioral of promless_fpga_loader is
     
     ------------- components -------------
     
-    COMPONENT ila_gem_loader
-        PORT(
-            clk    : IN STD_LOGIC;
-            probe0 : IN STD_LOGIC;
-            probe1 : IN STD_LOGIC;
-            probe2 : IN STD_LOGIC;
-            probe3 : IN STD_LOGIC;
-            probe4 : IN STD_LOGIC;
-            probe5 : IN STD_LOGIC;
-            probe6 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-            probe7 : IN STD_LOGIC
+    component ila_gem_loader
+        port(
+            clk    : in std_logic;
+            probe0 : in std_logic;
+            probe1 : in std_logic;
+            probe2 : in std_logic;
+            probe3 : in std_logic;
+            probe4 : in std_logic;
+            probe5 : in std_logic;
+            probe6 : in std_logic_vector(7 downto 0);
+            probe7 : in std_logic
         );
-    END COMPONENT;
+    end component;
     
-    COMPONENT vio_gem_loader
-        PORT(
-            clk        : IN  STD_LOGIC;
-            probe_in0  : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-            probe_in1  : IN  STD_LOGIC_VECTOR(7 DOWNTO 0);
-            probe_out0 : OUT STD_LOGIC
+    component vio_gem_loader
+        port(
+            clk        : in  std_logic;
+            probe_in0  : in  std_logic_vector(7 downto 0);
+            probe_in1  : in  std_logic_vector(7 downto 0);
+            probe_out0 : out std_logic
         );
-    END COMPONENT;
+    end component;
 
     ------------- signals -------------
 
@@ -117,9 +116,9 @@ begin
                 loading_started <= '0';
                 load_req_cnt <= (others => '0');
                 gap_det_cnt <= (others => '0');
-                firmware_size <= unsigned(gem_loader_cfg_i.firmware_size);
+                firmware_size <= unsigned(promless_cfg_i.firmware_size);
             else
-                firmware_size <= unsigned(gem_loader_cfg_i.firmware_size);
+                firmware_size <= unsigned(promless_cfg_i.firmware_size);
                 case state is
                     when IDLE =>
                         elink_data_o <= (others => '1');
@@ -217,8 +216,8 @@ begin
         end if;
     end process;
     
-    to_gem_loader_o.en  <= loader_en;
-    to_gem_loader_o.clk <= loader_clk_i;
+    to_promless_o.en  <= loader_en;
+    to_promless_o.clk <= loader_clk_i;
 
     g_loader_fifo_80mhz: if g_LOADER_CLK_80_MHZ generate    
 
@@ -232,8 +231,8 @@ begin
                 reset_i  => reset_i,
                 wr_clk_i => loader_clk_i,
                 rd_clk_i => gbt_clk_i,
-                din_i    => from_gem_loader_i.data,
-                valid_i  => from_gem_loader_i.valid,
+                din_i    => from_promless_i.data,
+                valid_i  => from_promless_i.valid,
                 dout_o   => loader_data,
                 valid_o  => loader_valid
             );
@@ -241,15 +240,15 @@ begin
     end generate;
     
     g_loader_fifo_40mhz: if not g_LOADER_CLK_80_MHZ generate    
-        loader_data <= from_gem_loader_i.data & from_gem_loader_i.data;
-        loader_valid <= from_gem_loader_i.valid;
+        loader_data <= from_promless_i.data & from_promless_i.data;
+        loader_valid <= from_promless_i.valid;
     end generate;
 
     i_gemloader_err_oneshot : entity work.oneshot
         port map(
             reset_i   => reset_i,
             clk_i     => loader_clk_i,
-            input_i   => from_gem_loader_i.error,
+            input_i   => from_promless_i.error,
             oneshot_o => loader_err_os
         );
         
@@ -265,22 +264,22 @@ begin
             count_o   => loader_err_cnt
         );
 
-    gem_loader_stats_o.load_request_cnt <= std_logic_vector(load_req_cnt);
-    gem_loader_stats_o.success_cnt <= std_logic_vector(success_cnt);
-    gem_loader_stats_o.fail_cnt <= std_logic_vector(fail_cnt);
-    gem_loader_stats_o.gap_detect_cnt <= std_logic_vector(gap_det_cnt);
-    gem_loader_stats_o.loader_ovf_unf_cnt <= loader_err_cnt;
+    promless_stats_o.load_request_cnt <= std_logic_vector(load_req_cnt);
+    promless_stats_o.success_cnt <= std_logic_vector(success_cnt);
+    promless_stats_o.fail_cnt <= std_logic_vector(fail_cnt);
+    promless_stats_o.gap_detect_cnt <= std_logic_vector(gap_det_cnt);
+    promless_stats_o.loader_ovf_unf_cnt <= loader_err_cnt;
 
     i_ila : ila_gem_loader
         port map(
             clk    => loader_clk_i,
             probe0 => loader_en,
-            probe1 => from_gem_loader_i.ready,
-            probe2 => from_gem_loader_i.valid,
-            probe3 => from_gem_loader_i.first,
-            probe4 => from_gem_loader_i.last,
-            probe5 => from_gem_loader_i.error,
-            probe6 => from_gem_loader_i.data,
+            probe1 => from_promless_i.ready,
+            probe2 => from_promless_i.valid,
+            probe3 => from_promless_i.first,
+            probe4 => from_promless_i.last,
+            probe5 => from_promless_i.error,
+            probe6 => from_promless_i.data,
             probe7 => gap_detected
         );
 

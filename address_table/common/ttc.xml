@@ -223,7 +223,7 @@
                          TTC module reset, but this should be reset by control software before each run)"
             fw_signal="ttc_status.bc0_status.udf_cnt"
             sw_monitor_error_min_threshold="1"/>
-    </node>        
+    </node>
   </node>
 
   <node id="CMD_COUNTERS" address="0x50"
@@ -273,7 +273,7 @@
                      and freezes until the user reads it out, once read out it resets and
                      fills up again with new TTC commands received from that point on"
         fw_signal="ttc_spy_buffer" fw_read_pulse_signal="ttc_spy_reset"/>
-        
+
   <node id="GENERATOR" address="0x70"
         description="TTC generator that can be used to generate fake single and cyclic commands that may be useful for calibration">
     <node id="RESET" address="0x0" permission="w"
@@ -305,9 +305,9 @@
     <node id="CYCLIC_CALPULSE_PRESCALE" address="0x7" mask="0x00000fff" permission="rw"
           description="This register lets you prescale the calpulse in relation to L1A. A value of 0 means that there will be a calpulse before every L1A (if the CYCLIC_CALPULSE_TO_L1A_GAP is more than 0) while e.g. a value of 100 means that there will be a calpulse before every 100th L1A."
           fw_signal="gen_cyclic_cal_prescale" fw_default="0x000"/>
-    <node id="CYCLIC_L1A_COUNT" address="0x5" mask="0x00ffffff" permission="rw"
+    <node id="CYCLIC_L1A_COUNT" address="0x5" mask="0xffffffff" permission="rw"
           description="This register lets you set the number of cyclic L1As (and calpulses) to be sent uppon cyclic-start command. If this is set to 0 then cyclic L1As will be sent forever uppon cyclic-start command and can only be stopped with a reset or disabling the generator module."
-          fw_signal="gen_cyclic_l1a_cnt" fw_default="0x002710"/>
+          fw_signal="gen_cyclic_l1a_cnt" fw_default="0x00002710"/>
     <node id="CYCLIC_RUNNING" address="0x1" mask="0x00000002" permission="r"
           description="This register indicates if the cyclic generator is running or not"
           fw_signal="gen_cyclic_l1a_running"/>
@@ -315,5 +315,5 @@
           description="Writing to this register will trigger a start of the cyclic generator"
           fw_write_pulse_signal="gen_cyclic_l1a_start"/>
   </node>
-  
+
 </node>

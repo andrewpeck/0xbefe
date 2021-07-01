@@ -15,7 +15,9 @@
 // 2018/04/17 -- Add lite mode
 //--------------------------------------------------------------------------------
 
-module external (
+module external
+  #(parameter GE21=0,
+    parameter NUM_VFATS = 24) (
 
   input clock,
 
@@ -46,9 +48,6 @@ module external (
   output reg [7:0]  ext_sbits_o
 
 );
-
-  parameter GE21=0;
-  parameter NUM_VFATS = 24;
 
   initial $display ("Instantiating external.v with NUM_VFATS=%d OH_LITE=%d", NUM_VFATS, GE21);
 

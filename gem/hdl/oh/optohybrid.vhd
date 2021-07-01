@@ -20,10 +20,11 @@ use work.ipbus.all;
 
 entity optohybrid is
     generic(
-        g_GEM_STATION   : integer;
-        g_OH_VERSION    : integer;
-        g_OH_IDX        : std_logic_vector(3 downto 0);
-        g_DEBUG         : boolean := false -- if this is set to true, some chipscope cores will be inserted
+        g_GEM_STATION       : integer;
+        g_OH_VERSION        : integer;
+        g_OH_IDX            : std_logic_vector(3 downto 0);
+        g_IPB_CLK_PERIOD_NS : integer;
+        g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted
     );
     port(
         -- reset
@@ -124,7 +125,7 @@ architecture optohybrid_arch of optohybrid is
     signal vfat3_daq_event_done     : std_logic_vector(23 downto 0);
     
     signal vfat3_daq_cnt_crc_err_arr: t_std8_array(23 downto 0);
-    signal vfat3_daq_cnt_evt_arr    : t_std8_array(23 downto 0);
+    signal vfat3_daq_cnt_evt_arr    : t_std16_array(23 downto 0);
     
     --== FPGA register access requests ==--
 
@@ -249,6 +250,9 @@ begin
     
     g_use_fpga_links : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_oh_slow_control : entity work.link_oh_fpga
+            generic map (
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
+            )
             port map(
                 reset_i    => reset_i or oh_reg_ipb_reset_i,
                 ttc_clk_i  => ttc_clk_i,
@@ -378,7 +382,7 @@ begin
         dbg_vfat3_daq_data_en       <= vfat3_daq_data_en(to_integer(unsigned(debug_vfat_select_i)));
         dbg_vfat3_daq_crc_err       <= vfat3_daq_crc_err(to_integer(unsigned(debug_vfat_select_i)));
         dbg_vfat3_daq_event_done    <= vfat3_daq_event_done(to_integer(unsigned(debug_vfat_select_i)));
-        dbg_vfat3_cnt_events        <= vfat3_daq_cnt_evt_arr(to_integer(unsigned(debug_vfat_select_i)));
+        dbg_vfat3_cnt_events        <= vfat3_daq_cnt_evt_arr(to_integer(unsigned(debug_vfat_select_i)))(7 downto 0);
         dbg_vfat3_cnt_crc_errors    <= vfat3_daq_cnt_crc_err_arr(to_integer(unsigned(debug_vfat_select_i)));
         
         i_vfat_ila : ila_vfat3
@@ -405,12 +409,9 @@ begin
         g_debug_ge11_trig_link : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
             i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
                 port map(
-                    clk_i          => gth_rx_trig_usrclk_i(0),
-                    kchar_i        => gth_rx_trig_data_i(0).rxcharisk(1 downto 0),
-                    comma_i        => gth_rx_trig_data_i(0).rxchariscomma(1 downto 0),
-                    not_in_table_i => gth_rx_trig_data_i(0).rxnotintable(1 downto 0),
-                    disperr_i      => gth_rx_trig_data_i(0).rxdisperr(1 downto 0),
-                    data_i         => gth_rx_trig_data_i(0).rxdata(15 downto 0)
+                    clk_i        => gth_rx_trig_usrclk_i(0),
+                    rx_data_i    => gth_rx_trig_data_i(0),
+                    mgt_status_i => MGT_STATUS_NULL
                 );
        end generate;
 

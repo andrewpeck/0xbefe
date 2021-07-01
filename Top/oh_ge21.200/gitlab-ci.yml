@@ -3,7 +3,3 @@ generate_project:oh_ge21.200:
     variables:
       extends: .vars
       PROJECT_NAME: oh_ge21.200
-      HOG_ONLY_SYNTH: 0 # if 1 runs only the synthesis
-      INTERMEDIATE_BUILD: "0"
-    tags:
-      - vivado20202

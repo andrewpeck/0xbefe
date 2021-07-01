@@ -20,7 +20,7 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 use work.ttc_pkg.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 --============================================================================
 --                                                          Entity declaration

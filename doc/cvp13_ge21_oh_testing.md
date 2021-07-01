@@ -1,4 +1,4 @@
-# Setting up GE21 testing environment for CVP13 
+﻿# Setting up GE21 testing environment for CVP13 
 Clone the 0xBEFE repository, and setup the CVP13 as explained in this document: https://gitlab.cern.ch/emu/0xbefe/-/blob/devel/doc/cvp13.md
 
 For now CVP13 software requires root privileges (this will change in the future), so always become root before using the CVP13 like this: ```sudo su -```
@@ -7,7 +7,7 @@ Copy-paste this into your ~root/.bash_profile file (edit the first line to refle
 ```
 BEFE_DIR=~gem2rice/CVP-13/0xbefe
 cd $BEFE_DIR/scripts/
-source env_gem.sh ge21 cvp13
+source env.sh ge21 cvp13
 alias reg='python $BEFE_DIR/scripts/common/reg_interface.py'
 ```
 This way the environment will be ready to use the CVP13 as soon as you become root. Note that it's necessary to log out and log back in for the .bash_profile changes to take effect (or source it manually).
@@ -69,4 +69,3 @@ You can read the RSSI currents by using ```gem/ge21_oh_rssi_monitor.py <oh_mask>
 python gem/ge21_oh_rssi_monitor.py 1
 ```
 The program reads every 1 second in an infinite loop, to exit use CTRL+C
-

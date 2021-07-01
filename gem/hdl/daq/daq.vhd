@@ -25,13 +25,14 @@ use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
 
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 entity daq is
 generic(
     g_NUM_OF_OHs         : integer;
     g_DAQ_CLK_FREQ       : integer;
     g_INCLUDE_SPY_FIFO   : boolean := false;
+    g_IPB_CLK_PERIOD_NS  : integer;
     g_DEBUG              : boolean := false
 );
 port(
@@ -169,13 +170,6 @@ architecture Behavioral of daq is
     signal format_calib_mode    : std_logic := '0';
     signal format_calib_chan    : std_logic_vector(6 downto 0);
         
-    -- IPbus registers
-    type ipb_state_t is (IDLE, RSPD, RST);
-    signal ipb_state                : ipb_state_t := IDLE;    
-    signal ipb_reg_sel              : integer range 0 to (16 * (g_NUM_OF_OHs + 10)) + 15;  -- 16 regs for AMC evt builder and 16 regs for each chamber evt builder   
-    signal ipb_read_reg_data        : t_std32_array(0 to (16 * (g_NUM_OF_OHs + 10)) + 15); -- 16 regs for AMC evt builder and 16 regs for each chamber evt builder
-    signal ipb_write_reg_data       : t_std32_array(0 to (16 * (g_NUM_OF_OHs + 10)) + 15); -- 16 regs for AMC evt builder and 16 regs for each chamber evt builder
-    
     -- L1A FIFO
     signal l1afifo_din              : std_logic_vector(51 downto 0) := (others => '0');
     signal l1afifo_wr_en            : std_logic := '0';

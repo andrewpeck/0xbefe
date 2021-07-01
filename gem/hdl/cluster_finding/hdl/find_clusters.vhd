@@ -16,18 +16,19 @@ entity find_clusters is
   port (
     clock : in std_logic;
 
-    latch_i : in std_logic;            -- this should go high when new vpfs are ready and stay high for just 1 clock
+    latch_i : in std_logic;             -- this should go high when new vpfs are ready and stay high for just 1 clock
 
     vpfs_i : in std_logic_vector (MXSBITS*NUM_VFATS -1 downto 0);
     cnts_i : in std_logic_vector (MXSBITS*NUM_VFATS*3-1 downto 0);
 
     clusters_o : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    latch_o : out std_logic := '0'           -- this should go high when new vpfs are ready and stay high for just 1 clock
+    latch_o : out std_logic := '0'      -- this should go high when new vpfs are ready and stay high for just 1 clock
     );
 end find_clusters;
 
 architecture behavioral of find_clusters is
+  signal clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
   function if_then_else (bool : boolean; a : integer; b : integer) return integer is
   begin
@@ -63,7 +64,7 @@ architecture behavioral of find_clusters is
     -- ME0 + GE11
     if (station = 1 or station = 0) then
       if (vpf = '0') then
-        return '1' & x"FF"; -- FIXME: this should only be 8 bits for GE11
+        return '1' & x"FF";             -- FIXME: this should only be 8 bits for GE11
       elsif (int(adr) > 191) then
         return std_logic_vector(to_unsigned(int(adr)-192, adr'length));
       else
@@ -88,7 +89,10 @@ architecture behavioral of find_clusters is
           return adr;
         end if;
       end if;
+    else
+      return '1' & x"FF";
     end if;
+
   end to_address;
 
   function to_partition (station : integer; encoder : integer; adr : std_logic_vector; vpf : std_logic) return std_logic_vector is
@@ -128,7 +132,8 @@ architecture behavioral of find_clusters is
   --------------------------------------------------------------------------------
 
   signal clusters_s1  : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0) := (others => NULL_CLUSTER);
-  signal latch_out_s1 : std_logic_vector (NUM_ENCODERS-1 downto 0) := (others => '0');
+  signal latch_out_s1 : std_logic_vector (NUM_ENCODERS-1 downto 0)           := (others => '0');
+  signal latch        : std_logic;
 
 begin
 
@@ -161,13 +166,13 @@ begin
 
   encoder_gen : for I in 0 to (NUM_ENCODERS-1) generate
 
-    signal truncator_cycle : std_logic_vector (2 downto 0) := (others => '0');
-    signal encoder_cycle   : std_logic_vector (2 downto 0) := (others => '0');
+    signal truncator_cycle : std_logic_vector (2 downto 0)                := (others => '0');
+    signal encoder_cycle   : std_logic_vector (2 downto 0)                := (others => '0');
     signal clusters_buf    : sbit_cluster_array_t (NUM_CYCLES-1 downto 0) := (others => NULL_CLUSTER);
 
     signal adr_enc : std_logic_vector(MXADRB-1 downto 0) := (others => '0');
     signal cnt_enc : std_logic_vector(MXCNTB-1 downto 0) := (others => '0');
-    signal vpf_enc : std_logic := '0';
+    signal vpf_enc : std_logic                           := '0';
 
     signal vpfs_truncated : std_logic_vector (ENCODER_SIZE-1 downto 0) := (others => '0');
 
@@ -219,8 +224,8 @@ begin
     ----------------------------
     priority_inst : priority_n
       generic map (
-        MXKEYS => ENCODER_SIZE,
-        MXCNTB => MXCNTB,
+        MXKEYS    => ENCODER_SIZE,
+        MXCNTB    => MXCNTB,
         MXKEYBITS => MXADRB
         )
       port map (
@@ -233,26 +238,6 @@ begin
         adr_o  => adr_enc,
         vpf_o  => vpf_enc
         );
-
-    --priority_encoder_inst : entity work.priority_encoder
-    --generic map (
-    --  WIDTH      => WIDTH,
-    --  REG_INPUT  => REG_INPUT,
-    --  REG_OUTPUT => REG_OUTPUT,
-    --  REG_STAGES => REG_STAGES,
-    --  DAT_BITS   => DAT_BITS,
-    --  QLT_BITS   => QLT_BITS,
-    --  ADR_BITS_o => integer(ceil(log2(real(WIDTH)))),
-    --  STAGE      => STAGE
-    --  )
-    --port map (
-    --  clock => clock,
-    --  dav_i => dav_i,
-    --  dav_o => dav_o,
-    --  dat_i => dat_i,
-    --  dat_o => dat_o,
-    --  adr_o => adr_o
-    --  );
 
     process (clock)
     begin
@@ -287,16 +272,24 @@ begin
   -- (should choose lowest addr first--- highest addr is invalid)
 
   sorter : if (true) generate
-    constant size         : integer := 1+MXADRB+MXCNTB+MXPRTB;
+
+    constant size : integer := 1+MXADRB+MXCNTB+MXPRTB;
+
     signal data_i, data_o : std_logic_vector (NUM_FOUND_CLUSTERS*SIZE-1 downto 0) := (others => '0');
+
   begin
 
     wrapup : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
     begin
-      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
-      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
+        end if;
+      end process;
     end generate;
 
     unwrap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
@@ -313,31 +306,45 @@ begin
       constant cnt_lo : integer := lo+1+MXPRTB+MXADRB;
       constant cnt_hi : integer := lo+1+MXPRTB+MXADRB+MXCNTB-1;
     begin
-      clusters_o(15-I).cnt <= data_o (cnt_hi downto cnt_lo);
-      clusters_o(15-I).adr <= data_o (adr_hi downto adr_lo);
-      clusters_o(15-I).prt <= data_o (prt_hi downto prt_lo);
-      clusters_o(15-I).vpf <= data_o (vpf_lo);
+
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          if (latch = '1') then
+            clusters(I).cnt <= data_o (cnt_hi downto cnt_lo);
+            clusters(I).adr <= data_o (adr_hi downto adr_lo);
+            clusters(I).prt <= data_o (prt_hi downto prt_lo);
+            clusters(I).vpf <= data_o (vpf_lo);
+          end if;
+        end if;
+      end process;
+
     end generate;
 
-    bitonic_sort_inst : entity work.bitonic_sort
+    bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
-        INPUTS               => NUM_FOUND_CLUSTERS,
-        OUTPUTS              => NUM_FOUND_CLUSTERS,
-        KEY_BITS             => 1 + MXPRTB,
-        DATA_BITS            => 1 + MXADRB + MXCNTB + MXPRTB,
-        META_BITS            => 1,
-        PIPELINE_STAGE_AFTER => 2,
-        ADD_INPUT_REGISTERS  => false,
-        ADD_OUTPUT_REGISTERS => true
+        WORDS     => NUM_FOUND_CLUSTERS,
+        WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
+        COMP_HIGH => 1 + MXPRTB,
+        COMP_LOW  => 0,
+        INFO_BITS => 1
         )
       port map (
-        clock  => clock,
-        reset  => '0',
-        data_i => data_i,
-        data_o => data_o,
-        meta_i(0) => latch_out_s1(0),
-        meta_o(0) => latch_o
+        CLK       => clock,
+        RST       => '0',
+        CLR       => '0',
+        I_SORT    => '1',
+        I_UP      => '1',
+        I_DATA    => data_i,
+        O_DATA    => data_o,
+        O_SORT    => open,
+        O_UP      => open,
+        I_INFO(0) => latch_out_s1(0),
+        O_INFO(0) => latch
         );
+
+    latch_o    <= latch;
+    clusters_o <= clusters;
 
   end generate;
 

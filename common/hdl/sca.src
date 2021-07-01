@@ -1,0 +1,8 @@
+# -*- mode: TCL;-*-
+
+# SCA
+common/hdl/slow_control/sca_controller.vhd
+common/hdl/slow_control/sca_tx.vhd
+common/hdl/slow_control/sca_rx.vhd
+common/hdl/slow_control/gbt_ic_controller.vhd
+

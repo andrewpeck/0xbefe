@@ -22,7 +22,8 @@ entity gem_tests is
     generic(
         g_NUM_OF_OHs        : integer;
         g_NUM_GBTS_PER_OH   : integer;
-        g_GEM_STATION       : integer
+        g_GEM_STATION       : integer;
+        g_IPB_CLK_PERIOD_NS : integer
     );
     port(
         -- reset

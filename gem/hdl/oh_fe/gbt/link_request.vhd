@@ -39,6 +39,14 @@ end link_request;
 
 architecture Behavioral of link_request is
 
+  constant FIFO_RESET_CNT_MAX  : integer                               := 1023;
+  constant FIFO_RESET_WAITTIME : integer                               := 1023;
+  signal fifo_init_reset       : std_logic                             := '0';
+  signal fifo_init_done        : std_logic                             := '0';
+  signal fifo_reset_cnt        : integer range 0 to FIFO_RESET_CNT_MAX := FIFO_RESET_CNT_MAX;
+
+  signal tx_valid : std_logic;
+
   signal rd_valid     : std_logic;
   signal rd_data      : std_logic_vector(IPB_REQ_BITS-1 downto 0);
   signal tx_dout_sump : std_logic_vector(64-32-1 downto 0);
@@ -67,26 +75,61 @@ architecture Behavioral of link_request is
 
 begin
 
+  -- It was found in testing the TMR counters that some errors are generated in
+  -- startup the XPM fifo requests that resets must be synchronous and only
+  -- asserted when the clock is free-running... this keeps the FIFO out of reset
+  -- until the clock is stable, waits for some time, and then resets the fifos.
+  -- In the meantime it blocks the outputs and keeps any data from coming out on
+  -- the ports
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      --
+      if (fifo_reset_cnt = 0) then
+        fifo_init_done <= '1';
+      else
+        fifo_init_done <= '0';
+      end if;
+
+      --
+      if (fifo_reset_cnt = FIFO_RESET_WAITTIME) then
+        fifo_init_reset <= '1';
+      else
+        fifo_init_reset <= '0';
+      end if;
+
+    end if;
+
+    -- Counter
+    if (rising_edge(clock)) then
+      if (reset_i = '1') then
+        fifo_reset_cnt <= FIFO_RESET_CNT_MAX;
+      elsif (fifo_reset_cnt > 0) then
+        fifo_reset_cnt <= fifo_reset_cnt - 1;
+      end if;
+    end if;
+
+  end process;
+
+
   -- Rx Request processing
 
   process(clock)
   begin
     if (rising_edge(clock)) then
       if (reset_i = '1') then
-        ipb_mosi_o <= (
-          ipb_strobe => '0',
-          ipb_write  => '0',
-          ipb_addr   => (others => '0'),
-          ipb_wdata  => (others => '0')
-          );
+        ipb_mosi_o <= (ipb_strobe => '0',
+                       ipb_write  => '0',
+                       ipb_addr   => (others => '0'),
+                       ipb_wdata  => (others => '0'));
       else
         if (rd_valid = '1') then
-          ipb_mosi_o <= (
-            ipb_strobe => '1',
-            ipb_write  => rd_data(IPB_REQ_BITS-1),
-            ipb_addr   => rd_data(47 downto 32),
-            ipb_wdata  => rd_data(31 downto 0)
-            );
+          ipb_mosi_o <= (ipb_strobe => '1',
+                         ipb_write  => rd_data(IPB_REQ_BITS-1),
+                         ipb_addr   => rd_data(47 downto 32),
+                         ipb_wdata  => rd_data(31 downto 0));
         else
           ipb_mosi_o.ipb_strobe <= '0';
         end if;
@@ -96,11 +139,11 @@ begin
 
   rx_din(63 downto 49) <= (others => '0');
   rx_din(48 downto 0)  <= rx_data_i;
-  rd_data <= rx_dout(48 downto 0);
+  rd_data              <= rx_dout(48 downto 0);
 
   fifo_request_rx_inst : fifo
     port map(
-      rst     => reset_i,
+      rst     => fifo_init_reset,
       clk     => clock,
       din     => rx_din,
       dout    => rx_dout,
@@ -115,20 +158,21 @@ begin
 
   fifo_request_tx_inst : fifo
     port map(
-      rst     => reset_i,
+      rst     => fifo_init_reset,
       clk     => clock,
       wr_en   => ipb_miso_i.ipb_ack,
       din     => tx_din,
       dout    => tx_dout,
       rd_en   => tx_en_i,
-      valid   => tx_valid_o,
+      valid   => tx_valid,
       full    => open,
       empty   => open,
       sbiterr => open,
       dbiterr => open
       );
 
-  tx_data_o <= tx_dout(31 downto 0);
+  tx_valid_o           <= tx_valid             when fifo_init_done = '1' else '0';
+  tx_data_o            <= tx_dout(31 downto 0) when fifo_init_done = '1' else x"00000000";
   tx_din(31 downto 0)  <= ipb_miso_i.ipb_rdata;
   tx_din(63 downto 32) <= (others => '0');
 

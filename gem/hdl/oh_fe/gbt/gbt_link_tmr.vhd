@@ -6,11 +6,10 @@
 ----------------------------------------------------------------------------------
 -- Description: TMR wrapper for gbt link module
 ----------------------------------------------------------------------------------
--- 2019/05/16 -- Init
-----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library work;
@@ -43,7 +42,10 @@ entity gbt_link_tmr is
     -- status
     ready_o    : out std_logic;
     error_o    : out std_logic;
-    unstable_o : out std_logic
+    unstable_o : out std_logic;
+
+    tmr_err_inj_i : in  std_logic := '0';
+    tmr_err_o     : out std_logic := '0'
     );
 end gbt_link_tmr;
 
@@ -84,6 +86,7 @@ begin
   end generate NO_TMR;
 
   TMR : if (g_ENABLE_TMR = 1) generate
+
     signal resync_tmr   : std_logic_vector(2 downto 0);
     signal l1a_tmr      : std_logic_vector(2 downto 0);
     signal bc0_tmr      : std_logic_vector(2 downto 0);
@@ -94,8 +97,10 @@ begin
     signal ipb_mosi_tmr : ipb_wbus_array (2 downto 0);
     signal data_tmr     : t_std8_array (2 downto 0);
 
-    attribute DONT_TOUCH : string;
+    signal tmr_err : std_logic_vector (10 downto 0) := (others => '0');
 
+
+    attribute DONT_TOUCH : string;
     attribute DONT_TOUCH of resync_tmr   : signal is "true";
     attribute DONT_TOUCH of l1a_tmr      : signal is "true";
     attribute DONT_TOUCH of bc0_tmr      : signal is "true";
@@ -105,14 +110,14 @@ begin
     attribute DONT_TOUCH of ready_tmr    : signal is "true";
     attribute DONT_TOUCH of ipb_mosi_tmr : signal is "true";
     attribute DONT_TOUCH of data_tmr     : signal is "true";
+
   begin
 
     tmr_loop : for I in 0 to 2 generate
     begin
+
       gbt_link_inst : entity work.gbt_link
-        generic map(
-          g_TMR_INSTANCE => I
-          )
+        generic map(g_TMR_INSTANCE => I)
         port map(
 
           -- reset
@@ -142,20 +147,25 @@ begin
 
     end generate;
 
-    data_o <= majority (data_tmr(0), data_tmr(1), data_tmr(2));
+    majority_err (data_o, tmr_err(0), data_tmr(0), data_tmr(1), data_tmr(2));
+    majority_err (ipb_mosi_o.ipb_wdata, tmr_err(1), ipb_mosi_tmr(0).ipb_wdata, ipb_mosi_tmr(1).ipb_wdata, ipb_mosi_tmr(2).ipb_wdata);
+    majority_err (ipb_mosi_o.ipb_write, tmr_err(2), ipb_mosi_tmr(0).ipb_write, ipb_mosi_tmr(1).ipb_write, ipb_mosi_tmr(2).ipb_write);
+    majority_err (ipb_mosi_o.ipb_strobe, tmr_err(3), ipb_mosi_tmr(0).ipb_strobe, ipb_mosi_tmr(1).ipb_strobe, ipb_mosi_tmr(2).ipb_strobe);
+    majority_err (ipb_mosi_o.ipb_addr, tmr_err(4), ipb_mosi_tmr(0).ipb_addr, ipb_mosi_tmr(1).ipb_addr, ipb_mosi_tmr(2).ipb_addr);
+    majority_err (resync_o, tmr_err(5), resync_tmr(0), resync_tmr(1), resync_tmr(2));
+    majority_err (l1a_o, tmr_err(6), tmr_err_inj_i xor l1a_tmr(0), l1a_tmr(1), l1a_tmr(2));
+    majority_err (bc0_o, tmr_err(7), bc0_tmr(0), bc0_tmr(1), bc0_tmr(2));
+    majority_err (unstable_o, tmr_err(8), unstable_tmr(0), unstable_tmr(1), unstable_tmr(2));
+    majority_err (error_o, tmr_err(9), error_tmr(0), error_tmr(1), error_tmr(2));
+    majority_err (ready_o, tmr_err(10), ready_tmr(0), ready_tmr(1), ready_tmr(2));
 
-    ipb_mosi_o.ipb_wdata  <= majority (ipb_mosi_tmr(0).ipb_wdata, ipb_mosi_tmr(1).ipb_wdata, ipb_mosi_tmr(2).ipb_wdata);
-    ipb_mosi_o.ipb_write  <= majority (ipb_mosi_tmr(0).ipb_write, ipb_mosi_tmr(1).ipb_write, ipb_mosi_tmr(2).ipb_write);
-    ipb_mosi_o.ipb_strobe <= majority (ipb_mosi_tmr(0).ipb_strobe, ipb_mosi_tmr(1).ipb_strobe, ipb_mosi_tmr(2).ipb_strobe);
-    ipb_mosi_o.ipb_addr   <= majority (ipb_mosi_tmr(0).ipb_addr, ipb_mosi_tmr(1).ipb_addr, ipb_mosi_tmr(2).ipb_addr);
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        tmr_err_o <= or_reduce(tmr_err);
+      end if;
+    end process;
 
-    resync_o <= majority (resync_tmr(0), resync_tmr(1), resync_tmr(2));
-    l1a_o    <= majority (l1a_tmr(0), l1a_tmr(1), l1a_tmr(2));
-    bc0_o    <= majority (bc0_tmr(0), bc0_tmr(1), bc0_tmr(2));
-
-    unstable_o <= majority (unstable_tmr(0), unstable_tmr(1), unstable_tmr(2));
-    error_o    <= majority (error_tmr(0), error_tmr(1), error_tmr(2));
-    ready_o    <= majority (ready_tmr(0), ready_tmr(1), ready_tmr(2));
   end generate TMR;
 
 end Behavioral;

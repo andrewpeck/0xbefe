@@ -21,7 +21,8 @@ use work.registers.all;
 entity oh_link_regs is
     generic(
         g_NUM_OF_OHs        : integer;
-        g_NUM_GBTS_PER_OH   : integer
+        g_NUM_GBTS_PER_OH   : integer;
+        g_IPB_CLK_PERIOD_NS : integer
     );
     port(
         -- reset
