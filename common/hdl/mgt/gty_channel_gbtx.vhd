@@ -477,7 +477,7 @@ begin
             RX_CLK_SLIP_OVRD             => "00000",
             RX_CM_BUF_CFG                => "1010",
             RX_CM_BUF_PD                 => '0',
-            RX_CM_SEL                    => 0,
+            RX_CM_SEL                    => 3,
             RX_CM_TRIM                   => 10,
             RX_CTLE_PWR_SAVING           => '0',
             RX_CTLE_RES_CTRL             => "0000",

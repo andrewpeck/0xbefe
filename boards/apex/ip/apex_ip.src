@@ -2,3 +2,6 @@
 
 # APEX IP
 boards/apex/ip/slink_rocket_sender/slink_rocket_sender.xci
+boards/apex/ip/c2c_gth_3p125g/c2c_gth_3p125g.xci
+boards/apex/ip/c2c_gth_vio_0/c2c_gth_vio_0.xci
+

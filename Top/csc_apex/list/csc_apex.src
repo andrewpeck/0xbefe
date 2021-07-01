@@ -12,6 +12,7 @@ common/hdl/gbt.src
 csc/hdl/csc.src
 
 # CSC APEX source
+boards/apex/hdl/apex_common.src
 boards/apex/hdl/csc_apex.src
 
 # sources with generated registers
@@ -32,5 +33,6 @@ csc/ip/csc_common_ip.src
 
 # CVP13 IP
 boards/apex/ip/apex_ip.src
+boards/apex/ip/apex_ip_rev2.src
 boards/apex/bd/apex_bd.src
 

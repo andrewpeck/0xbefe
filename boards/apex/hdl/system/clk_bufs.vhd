@@ -19,6 +19,9 @@ use work.common_pkg.all;
 use work.mgt_pkg.all;
 
 entity clk_bufs is
+    generic(
+        g_USE_GTH_CLKS              : boolean := false -- if set to true the GTH clocks will be used, otherwise they will just be set to 0        
+    );    
     port (
         gth_refclk0_p_i             : in  std_logic_vector(2 downto 0);
         gth_refclk0_n_i             : in  std_logic_vector(2 downto 0);
@@ -63,35 +66,46 @@ begin
     -- GTH refclks
     --================================--
 
-    g_gth_refclk_bufs : for i in 0 to 2 generate
+    g_gth_clk_en : if g_USE_GTH_CLKS generate
 
-        i_gth_refclk0_buf : IBUFDS_GTE4
-            port map(
-                O     => gth_refclk0(i),
-                ODIV2 => gth_refclk0_div2(i),
-                CEB   => '0',
-                I     => gth_refclk0_p_i(i),
-                IB    => gth_refclk0_n_i(i)
-            );
-
-        i_gth_refclk1_buf : IBUFDS_GTE4
-            port map(
-                O     => gth_refclk1(i),
-                ODIV2 => gth_refclk1_div2(i),
-                CEB   => '0',
-                I     => gth_refclk1_p_i(i),
-                IB    => gth_refclk1_n_i(i)
-            );
-
-        --TODO: connect the channel refclks here
-
+        g_gth_refclk_bufs : for i in 0 to 2 generate
+    
+            i_gth_refclk0_buf : IBUFDS_GTE4
+                port map(
+                    O     => gth_refclk0(i),
+                    ODIV2 => gth_refclk0_div2(i),
+                    CEB   => '0',
+                    I     => gth_refclk0_p_i(i),
+                    IB    => gth_refclk0_n_i(i)
+                );
+    
+            i_gth_refclk1_buf : IBUFDS_GTE4
+                port map(
+                    O     => gth_refclk1(i),
+                    ODIV2 => gth_refclk1_div2(i),
+                    CEB   => '0',
+                    I     => gth_refclk1_p_i(i),
+                    IB    => gth_refclk1_n_i(i)
+                );
+    
+            --TODO: connect the channel refclks here
+    
+        end generate;
+    
+        gth_refclk0_o <= gth_refclk0;
+        gth_refclk1_o <= gth_refclk1;
+        gth_refclk0_div2_o <= gth_refclk0_div2;
+        gth_refclk1_div2_o <= gth_refclk1_div2;
+    
     end generate;
-
-    gth_refclk0_o <= gth_refclk0;
-    gth_refclk1_o <= gth_refclk1;
-    gth_refclk0_div2_o <= gth_refclk0_div2;
-    gth_refclk1_div2_o <= gth_refclk1_div2;
-
+    
+    g_gth_clk_dis : if not g_USE_GTH_CLKS generate
+        gth_refclk0_o <= (others => '0');
+        gth_refclk1_o <= (others => '0');
+        gth_refclk0_div2_o <= (others => '0');
+        gth_refclk1_div2_o <= (others => '0');        
+    end generate;
+    
     --================================--
     -- GTY refclks
     --================================--

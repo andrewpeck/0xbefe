@@ -11,9 +11,18 @@ CONFIG_RWREG_CTP7 = {
     'BASE_ADDR'                     : 0x64000000
 }
 
-CONFIG_RWREG_APEX = {
+CONFIG_RWREG_APEX0 = {
+    'DEVICE'                        : 'FPGA0', # for APEX set this to either FPGA0 or FPGA1
+    'BASE_ADDR'                     : 0
+}
+CONFIG_RWREG_APEX0 = {
     'DEVICE'                        : 'FPGA0', # for APEX set this to either FPGA0 or FPGA1
     'BASE_ADDR'                     : 0
 }
 
-CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX}
+CONFIG_RWREG_APEX1 = {
+    'DEVICE'                        : 'FPGA1', # for APEX set this to either FPGA0 or FPGA1
+    'BASE_ADDR'                     : 0
+}
+
+CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex0": CONFIG_RWREG_APEX0, "apex1": CONFIG_RWREG_APEX1}
