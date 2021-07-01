@@ -20,6 +20,11 @@ set_property LOC GTYE4_CHANNEL_X0Y5 [get_cells {i_mgts/g_channels[1].g_chan_*/i_
 set_property LOC GTYE4_CHANNEL_X0Y6 [get_cells {i_mgts/g_channels[2].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X0Y7 [get_cells {i_mgts/g_channels[3].g_chan_*/i_gty_channel}]
 
+set_property LOC GTYE4_CHANNEL_X0Y12 [get_cells {i_mgts/g_channels[4].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y13 [get_cells {i_mgts/g_channels[5].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y14 [get_cells {i_mgts/g_channels[6].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y15 [get_cells {i_mgts/g_channels[7].g_chan_*/i_gty_channel}]
+
 #set_property LOC GTYE4_CHANNEL_X0Y8 [get_cells {i_mgts/g_channels[0].g_chan_*/i_gty_channel}]
 #set_property LOC GTYE4_CHANNEL_X0Y9 [get_cells {i_mgts/g_channels[1].g_chan_*/i_gty_channel}]
 #set_property LOC GTYE4_CHANNEL_X0Y10 [get_cells {i_mgts/g_channels[2].g_chan_*/i_gty_channel}]

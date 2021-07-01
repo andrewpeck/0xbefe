@@ -365,10 +365,14 @@ begin
             gty_refclk1_div2_o => gty_refclk1_div2
         );
     
-    -- temporary GTY channel refclk wiring for some selected channels
+    -- GTY channel refclk wiring
     g_mgt_quad_128_ref_clks: for i in 0 to 3 generate
         mgt_refclks(i).gtrefclk0 <= gty_refclk0(0);
         mgt_refclks(i).gtrefclk1 <= gty_refclk1(0);
+    end generate;
+    g_mgt_quad_130_ref_clks: for i in 4 to 7 generate
+        mgt_refclks(i).gtrefclk0 <= gty_refclk0(1);
+        mgt_refclks(i).gtrefclk1 <= gty_refclk1(1);
     end generate;
 
 

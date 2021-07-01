@@ -5,8 +5,8 @@ from time import *
 import array
 import struct
 
-RX_INVERTION = [1, 0, 1, 1] # channel inversion as it is on the APEX
-TX_INVERTION = [0, 0, 0, 0] # channel inversion as it is on the APEX
+RX_INVERTION = [1, 0, 1, 1, 0, 1, 1, 1] # channel inversion as it is on the APEX
+TX_INVERTION = [0, 0, 0, 0, 0, 0, 0, 0] # channel inversion as it is on the APEX
 
 def main():
 
@@ -14,7 +14,7 @@ def main():
 
     writeReg(getNode("CSC_FED.TTC.CTRL.DISABLE_PHASE_ALIGNMENT"), 1)
 
-    for chan in range(4):
+    for chan in range(8):
         writeReg(getNode("CSC_FED.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.TX_DIFF_CTRL" % chan), 0x18)
         writeReg(getNode("CSC_FED.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.TX_POLARITY" % chan), TX_INVERTION[chan])
         writeReg(getNode("CSC_FED.OPTICAL_LINKS.MGT_CHANNEL_%d.CTRL.RX_POLARITY" % chan), RX_INVERTION[chan])
