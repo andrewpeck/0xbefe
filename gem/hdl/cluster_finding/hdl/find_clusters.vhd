@@ -287,7 +287,6 @@ begin
       begin
         if (rising_edge(clock)) then
           data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
-          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
         end if;
       end process;
     end generate;
