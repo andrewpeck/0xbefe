@@ -24,6 +24,7 @@ entity trigger is
         g_NUM_TRIG_TX_LINKS : integer;
         g_USE_TRIG_TX_LINKS : boolean;
         g_IPB_CLK_PERIOD_NS : integer;
+        g_GEM_STATION       : integer;
         g_DEBUG             : boolean
     );
     port(
@@ -161,6 +162,9 @@ begin
     for i in 0 to g_NUM_OF_OHs - 1 generate
         
         i_input_processor: entity work.trigger_input_processor
+            generic map (
+                g_GEM_STATION => g_GEM_STATION
+            )
             port map(
                 reset_i              => reset,
                 reset_cnt_i          => reset_cnt,
