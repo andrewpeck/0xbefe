@@ -324,7 +324,7 @@ begin
       generic map (
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
-        COMP_HIGH => 1 + MXPRTB,
+        COMP_HIGH => 1 + MXPRTB-1, -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
         COMP_LOW  => 0,
         INFO_BITS => 1
         )
@@ -332,8 +332,8 @@ begin
         CLK       => clock,
         RST       => '0',
         CLR       => '0',
-        I_SORT    => '1',
-        I_UP      => '1',
+        I_SORT    => '1', -- set to 0 and the module won't sort
+        I_UP      => '0', -- set to 0 to prefer the highest number on the lowest input
         I_DATA    => data_i,
         O_DATA    => data_o,
         O_SORT    => open,
