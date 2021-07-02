@@ -4,7 +4,7 @@
 
 # Main E-link clock
 NET "clock_p" TNM_NET = "TN_CLOCK";
-TIMESPEC TS_clock = PERIOD "TN_CLOCK" 3.09 ns HIGH 50 %;
+TIMESPEC TS_clock = PERIOD "TN_CLOCK" 3.1 ns HIGH 50 %;
 
 ## MGT reference clocks
 #NET "mgt_clk_p_i<0>" TNM_NET = "TN_MGT_CLK_0";
@@ -68,7 +68,7 @@ INST "trigger*/sbits/trig_alignment/*oversample*/*ise1*/*" TNM = sbit_serdes_grp
 TIMESPEC TS_SBIT_IOTIG = FROM sbit_i_grp TO sbit_serdes_grp TIG;
 
 
-TIMEGRP "sbit_i_grp" OFFSET = IN 4 ns VALID 3.125 ns BEFORE "clock_p" RISING;
+TIMEGRP "sbit_i_grp" OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
 
 ########################################################################################################################
 # GBT Status
