@@ -176,8 +176,6 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
-    signal vfat3_sbits_arr          : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
-    
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal lpgbt_tx_data_arr            : t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
@@ -453,7 +451,7 @@ begin
             ipb_miso_o         => ipb_miso_arr(C_IPB_SLV.trigger),
             ipb_mosi_i         => ipb_mosi_arr_i(C_IPB_SLV.trigger),
 
-	    vfat3_sbits_arr_i  => vfat3_sbits_arr
+	    vfat3_sbits_arr_i  => me0_vfat3_sbits_arr
         );
 
     --================================--
