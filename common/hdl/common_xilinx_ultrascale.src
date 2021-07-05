@@ -19,6 +19,7 @@ common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd
 common/hdl/mgt/gty_channel_dmb.vhd
 common/hdl/mgt/gty_channel_gbe.vhd
+common/hdl/mgt/gty_qpll_gbtx.vhd
 
 # IP
 common/ip/common_xilinx_ultrascale_ip.src

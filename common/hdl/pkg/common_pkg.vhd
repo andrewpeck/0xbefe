@@ -410,14 +410,13 @@ package common_pkg is
     type t_mgt_status is record
         tx_reset_done   : std_logic;
         rx_reset_done   : std_logic;
-        tx_cpll_locked  : std_logic;
-        rx_cpll_locked  : std_logic;
-        qpll_locked     : std_logic;
+        tx_pll_locked   : std_logic;
+        rx_pll_locked   : std_logic;
         rxbufstatus     : std_logic_vector(2 downto 0);
         rxclkcorcnt     : std_logic_vector(1 downto 0);
     end record;
 
-    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_cpll_locked => '0', rx_cpll_locked => '0', qpll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
+    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
 

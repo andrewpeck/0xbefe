@@ -20,12 +20,14 @@ use xpm.vcomponents.all;
 
 use work.common_pkg.all;
 use work.mgt_pkg.all;
+use work.board_config_package.all;
 use work.ipbus.all;
 use work.registers.all;
 
 entity mgt_slow_control is
     generic(
         g_NUM_CHANNELS          : integer;
+        g_LINK_CONFIG           : t_mgt_config_arr;        
         g_IPB_CLK_PERIOD_NS     : integer
     );
     port(
@@ -40,11 +42,13 @@ entity mgt_slow_control is
         tx_slow_ctrl_arr_o      : out t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
         rx_slow_ctrl_arr_o      : out t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
         misc_ctrl_arr_o         : out t_mgt_misc_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
+        qpll_ctrl_arr_o         : out t_mgt_qpll_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
 
         tx_status_arr_i         : in  t_mgt_tx_status_arr(g_NUM_CHANNELS - 1 downto 0);
         rx_status_arr_i         : in  t_mgt_rx_status_arr(g_NUM_CHANNELS - 1 downto 0);
         misc_status_arr_i       : in  t_mgt_misc_status_arr(g_NUM_CHANNELS - 1 downto 0);
         ibert_eyescanreset_i    : in  std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+        qpll_status_arr_i       : in  t_mgt_qpll_status_arr(g_NUM_CHANNELS - 1 downto 0);
         
         tx_reset_done_arr_i     : in  std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         rx_reset_done_arr_i     : in  std_logic_vector(g_NUM_CHANNELS - 1 downto 0);

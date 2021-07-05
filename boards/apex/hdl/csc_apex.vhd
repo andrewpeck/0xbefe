@@ -396,7 +396,6 @@ begin
     i_mgts : entity work.mgt_links_gty
         generic map(
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
-            g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
             g_STABLE_CLK_PERIOD => 20,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS

@@ -30,7 +30,6 @@ use work.board_config_package.all;
 entity mgt_links_gty is
     generic(
         g_NUM_CHANNELS          : integer;
-        g_NUM_QPLLS             : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
         g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
         g_IPB_CLK_PERIOD_NS     : integer        
@@ -106,6 +105,12 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal rx_cpll_reset_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal cpll_status_arr      : t_mgt_cpll_status_arr(g_NUM_CHANNELS-1 downto 0);
 
+    signal qpll_clks_tmp_arr    : t_mgt_qpll_clk_out_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_CLK_NULL);
+    signal qpll_clks_arr        : t_mgt_qpll_clk_out_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_CLK_NULL);
+    signal qpll_ctrl_arr        : t_mgt_qpll_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+    signal qpll_status_tmp_arr  : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
+    signal qpll_status_arr      : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
+
     signal chan_drp_in_arr      : t_drp_in_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_IN_NULL);
     signal chan_drp_out_arr     : t_drp_out_arr(g_NUM_CHANNELS-1 downto 0);
 
@@ -161,9 +166,8 @@ begin
                 
         status_arr_o(chan).tx_reset_done <= tx_reset_done_arr(chan);
         status_arr_o(chan).rx_reset_done <= rx_reset_done_arr(chan);
-        status_arr_o(chan).tx_cpll_locked <= cpll_status_arr(chan).cplllock;
-        status_arr_o(chan).rx_cpll_locked <= cpll_status_arr(chan).cplllock;
-        status_arr_o(chan).qpll_locked <= '0';
+        status_arr_o(chan).tx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).use_qpll_01); 
+        status_arr_o(chan).rx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).use_qpll_01); 
         status_arr_o(chan).rxbufstatus <= rx_status_arr(chan).rxbufstatus;
         status_arr_o(chan).rxclkcorcnt <= rx_status_arr(chan).rxclkcorcnt;
 
@@ -463,6 +467,36 @@ begin
         end generate;
 
         --================================--
+        -- GBTX QPLL 
+        --================================--
+
+        g_qpll_gbtx : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_GBTX generate
+            
+            i_qpll_gbtx : entity work.gty_qpll_gbtx
+                generic map(
+                    g_REFCLK_01 => g_LINK_CONFIG(chan).use_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
+        -- QPLL channel mapping 
+        --================================--
+
+        qpll_clks_arr(chan) <= qpll_clks_tmp_arr(g_LINK_CONFIG(chan).qpll_idx);
+        qpll_status_arr(chan) <= qpll_status_tmp_arr(g_LINK_CONFIG(chan).qpll_idx);
+        chan_clks_in_arr(chan).qpllclks <= qpll_clks_tmp_arr(g_LINK_CONFIG(chan).qpll_idx);
+
+        --================================--
         -- TX Reset FSM
         --================================--
         
@@ -482,8 +516,8 @@ begin
                 txrxresetdone_i   => tx_status_arr(chan).txresetdone,               
                 usrclk_locked_i   => ttc_clks_locked_i,
                 cpll_locked_i     => cpll_status_arr(chan).cplllock,
-                qpll0_locked_i    => '0',
-                qpll1_locked_i    => '0',
+                qpll0_locked_i    => qpll_status_arr(chan).qplllock(0),
+                qpll1_locked_i    => qpll_status_arr(chan).qplllock(1),
                 gtreset_o         => tx_init_arr(chan).gttxreset,
                 usrclkrdy_o       => tx_init_arr(chan).txuserrdy,
                 cpllreset_o       => tx_cpll_reset_arr(chan),
@@ -512,8 +546,8 @@ begin
                 txrxresetdone_i   => rx_status_arr(chan).rxresetdone,               
                 usrclk_locked_i   => ttc_clks_locked_i,
                 cpll_locked_i     => cpll_status_arr(chan).cplllock,
-                qpll0_locked_i    => '0',
-                qpll1_locked_i    => '0',
+                qpll0_locked_i    => qpll_status_arr(chan).qplllock(0),
+                qpll1_locked_i    => qpll_status_arr(chan).qplllock(1),
                 gtreset_o         => rx_init_arr(chan).gtrxreset,
                 usrclkrdy_o       => rx_init_arr(chan).rxuserrdy,
                 cpllreset_o       => rx_cpll_reset_arr(chan),
@@ -552,7 +586,7 @@ begin
                     drpclk_o       => chan_drp_in_arr(chan).clk,
                     gt0_drpen_o    => chan_drp_in_arr(chan).en,
                     gt0_drpwe_o    => chan_drp_in_arr(chan).we,
-                    gt0_drpaddr_o  => chan_drp_in_arr(chan).addr,
+                    gt0_drpaddr_o  => chan_drp_in_arr(chan).addr(9 downto 0),
                     gt0_drpdi_o    => chan_drp_in_arr(chan).di,
                     gt0_drprdy_i   => chan_drp_out_arr(chan).rdy,
                     gt0_drpdo_i    => chan_drp_out_arr(chan).do,
@@ -599,6 +633,7 @@ begin
     i_slow_control : entity work.mgt_slow_control
         generic map(
             g_NUM_CHANNELS      => g_NUM_CHANNELS,
+            g_LINK_CONFIG       => g_LINK_CONFIG,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
@@ -609,10 +644,12 @@ begin
             tx_slow_ctrl_arr_o    => tx_slow_ctrl_arr,
             rx_slow_ctrl_arr_o    => rx_slow_ctrl_arr,
             misc_ctrl_arr_o       => misc_ctrl_arr,
+            qpll_ctrl_arr_o       => qpll_ctrl_arr,
             tx_status_arr_i       => tx_status_arr,
             rx_status_arr_i       => rx_status_arr,
             misc_status_arr_i     => misc_status_arr,
             ibert_eyescanreset_i  => ibert_scanreset_arr,
+            qpll_status_arr_i     => qpll_status_arr,
             tx_reset_done_arr_i   => tx_reset_done_arr,
             rx_reset_done_arr_i   => rx_reset_done_arr,
             tx_phalign_done_arr_i => tx_phalign_done_arr,

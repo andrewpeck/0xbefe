@@ -60,6 +60,76 @@ end gty_channel_gbtx;
 
 architecture gty_channel_gbtx_arch of gty_channel_gbtx is
 
+    -- selects the TXOUT_DIV and RXOUT_DIV based on if we're using a CPLL or a QPLL
+    function get_txrxout_div(use_qpll : boolean) return integer is
+    begin
+        if use_qpll then
+            return 2;
+        else
+            return 1;  
+        end if;
+    end function get_txrxout_div;    
+
+    -- selects the TX_PROGDIV_CFG based on if we're using a CPLL or a QPLL
+    function get_tx_progdiv_cfg(use_qpll : boolean) return real is
+    begin
+        if use_qpll then
+            return 40.0;
+        else
+            return 20.0;  
+        end if;
+    end function get_tx_progdiv_cfg;    
+
+    -- selects RXCDR, RXPI, TXPH, and TXPI parameter values based on if we're using a CPLL or a QPLL
+    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    begin
+        if use_qpll then
+            if param_name = "RXCDR_CFG2" then
+                return "0000001001011001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001011001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001011001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000000100000000";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000001010100";
+            elsif param_name = "TXPH_CFG" then
+                return "0000011100100011";
+            elsif param_name = "TXPI_CFG1" then
+                return "0001000000000000";
+            end if;
+        else
+            if param_name = "RXCDR_CFG2" then
+                return "0000001001101001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001101001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001101001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000001100000001";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000011111100";
+            elsif param_name = "TXPH_CFG" then
+                return "0000001100100011";
+            elsif param_name = "TXPI_CFG1" then
+                return "0111010101010101";
+            end if;
+        end if;
+    end function get_slv_param;    
+
+
+    constant TXRXOUT_DIV        : integer := get_txrxout_div(g_USE_QPLL);
+    constant TX_PROGDIV_CFG     : real := get_tx_progdiv_cfg(g_USE_QPLL);
+    constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_USE_QPLL);
+    constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_USE_QPLL);
+    constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_USE_QPLL);
+    constant RXPI_CFG0          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_USE_QPLL);
+    constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_USE_QPLL);
+    constant TXPH_CFG           : std_logic_vector(15 downto 0) := get_slv_param("TXPH_CFG", g_USE_QPLL);
+    constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_USE_QPLL);
+
+
     -- clocking
     signal refclks          : std_logic_vector(1 downto 0);
     signal qpllclks         : std_logic_vector(1 downto 0);
@@ -69,6 +139,8 @@ architecture gty_channel_gbtx_arch of gty_channel_gbtx is
     signal txpllclksel      : std_logic_vector(1 downto 0);
     signal rxpllclksel      : std_logic_vector(1 downto 0);
     signal cpllpd           : std_logic;
+    signal cpllreset        : std_logic;
+    signal cplllocken       : std_logic;
 
     -- fake floating clock
     signal float_clk        : std_logic;
@@ -103,6 +175,8 @@ begin
         txsysclksel <= "00";
         rxpllclksel <= "00";
         txpllclksel <= "00";
+        cpllreset <= '0';
+        cplllocken <= '1';
         cpllpd <= cpllreset_i;
                 
     end generate;
@@ -111,8 +185,8 @@ begin
     g_qpll : if g_USE_QPLL generate
         
         g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpll0clk.qpllclk;
-            qpllrefclks(0) <= clks_i.qpll0clk.qpllrefclk;
+            qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+            qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
             rxsysclksel <= "10";
             txsysclksel <= "10";
             rxpllclksel <= "11";
@@ -120,8 +194,8 @@ begin
         end generate;
         
         g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpll1clk.qpllclk;
-            qpllrefclks(1) <= clks_i.qpll1clk.qpllrefclk;
+            qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+            qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
             rxsysclksel <= "11";
             txsysclksel <= "11";
             rxpllclksel <= "10";
@@ -130,6 +204,8 @@ begin
         
         refclks <= "00";
         cpllpd <= '1';
+        cpllreset <= '1';
+        cplllocken <= '0';
                 
     end generate;
 
@@ -356,9 +432,9 @@ begin
             RXCDR_CFG0_GEN3              => "0000000000000011",
             RXCDR_CFG1                   => "0000000000000000",
             RXCDR_CFG1_GEN3              => "0000000000000000",
-            RXCDR_CFG2                   => "0000001001101001",
-            RXCDR_CFG2_GEN2              => "1001101001",
-            RXCDR_CFG2_GEN3              => "0000001001101001",
+            RXCDR_CFG2                   => RXCDR_CFG2, -- keep
+            RXCDR_CFG2_GEN2              => RXCDR_CFG2_GEN2, -- keep
+            RXCDR_CFG2_GEN3              => RXCDR_CFG2_GEN3, -- keep
             RXCDR_CFG2_GEN4              => "0000000101100100",
             RXCDR_CFG3                   => "0000000000010010",
             RXCDR_CFG3_GEN2              => "010010",
@@ -449,15 +525,15 @@ begin
             RXOOB_CFG                    => "000000110",
             RXOOB_CLK_CFG                => "PMA",
             RXOSCALRESET_TIME            => "00011",
-            RXOUT_DIV                    => 1,
+            RXOUT_DIV                    => TXRXOUT_DIV, -- keep
             RXPCSRESET_TIME              => "00011",
             RXPHBEACON_CFG               => "0000000000000000",
             RXPHDLY_CFG                  => "0010000001110000",
             RXPHSAMP_CFG                 => "0010000100000000",
             RXPHSLIP_CFG                 => "1001100100110011",
             RXPH_MONITOR_SEL             => "00000",
-            RXPI_CFG0                    => "0000001100000001",
-            RXPI_CFG1                    => "0000000011111100",
+            RXPI_CFG0                    => RXPI_CFG0, -- keep
+            RXPI_CFG1                    => RXPI_CFG1, -- keep
             RXPMACLK_SEL                 => "DATA",
             RXPMARESET_TIME              => "00011",
             RXPRBS_ERR_LOOPBACK          => '0',
@@ -561,15 +637,15 @@ begin
             TXFIFO_ADDR_CFG              => "LOW",
             TXGBOX_FIFO_INIT_RD_ADDR     => 4,
             TXGEARBOX_EN                 => "FALSE",
-            TXOUT_DIV                    => 1,
+            TXOUT_DIV                    => TXRXOUT_DIV, -- keep
             TXPCSRESET_TIME              => "00011",
             TXPHDLY_CFG0                 => "0110000001110000",
             TXPHDLY_CFG1                 => "0000000000001111",
-            TXPH_CFG                     => "0000001100100011",
+            TXPH_CFG                     => TXPH_CFG, -- keep
             TXPH_CFG2                    => "0000000000000000",
             TXPH_MONITOR_SEL             => "00000",
             TXPI_CFG0                    => "0000001100000000",
-            TXPI_CFG1                    => "0111010101010101",
+            TXPI_CFG1                    => TXPI_CFG1, -- keep
             TXPI_GRAY_SEL                => '0',
             TXPI_INVSTROBE_SEL           => '0',
             TXPI_PPM                     => '0',
@@ -619,7 +695,7 @@ begin
             TX_PMA_RSV0                  => "0000000000000000",
             TX_PMA_RSV1                  => "0000000000000000",
             TX_PROGCLK_SEL               => "PREPI",
-            TX_PROGDIV_CFG               => 20.0,
+            TX_PROGDIV_CFG               => TX_PROGDIV_CFG, -- keep
             TX_PROGDIV_RATE              => "0000000000000001",
             TX_RXDETECT_CFG              => "00000000110010",
             TX_RXDETECT_REF              => 5,
@@ -769,13 +845,13 @@ begin
             CLKRSVD1             => '0',
             CPLLFREQLOCK         => '0',
             CPLLLOCKDETCLK       => clk_stable_i,
-            CPLLLOCKEN           => '1',
+            CPLLLOCKEN           => cplllocken,
             CPLLPD               => cpllpd,
             CPLLREFCLKSEL        => "001",
-            CPLLRESET            => '0',
+            CPLLRESET            => cpllreset,
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
-            DRPADDR              => drp_i.addr,
+            DRPADDR              => drp_i.addr(9 downto 0),
             DRPCLK               => drp_i.clk,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,

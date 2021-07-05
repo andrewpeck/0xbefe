@@ -66,6 +66,15 @@
       <node id="RX_PRBS_CNT_RESET" address="0x4" permission="w"
             description="Writing 1 here resets the PRBS error counters"
             fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
+      <node id="QPLL_POWERDOWN" address="0x0" mask="0x30000000" permission="rw"
+            description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
+            fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
+      <node id="QPLL0_RESET" address="0x5" permission="w"
+            description="Writing 1 here resets the QPLL0 of this quad"
+            fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(0)"/>
+      <node id="QPLL1_RESET" address="0x6" permission="w"
+            description="Writing 1 here resets the QPLL1 of this quad"
+            fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(1)"/>
     </node>
 
     <node id="STATUS" address="0x20">
@@ -90,9 +99,45 @@
       <node id="CPLL_REF_CLK_LOST" address="0x0" mask="0x00000040" permission="r"
             description="CPLL reference clock is lost if this is 1"
             fw_signal="cpll_status_arr_i(${MGT}).cpllrefclklost"/>
+      <node id="QPLL_LOCKED" address="0x0" mask="0x00000300" permission="r"
+            description="QPLL0 and QPLL1 locked signal"
+            fw_signal="qpll_status_arr_i(${MGT}).qplllock"/>
+      <node id="QPLL_REF_CLK_LOST" address="0x0" mask="0x00000c00" permission="r"
+            description="QPLL0 and QPLL1 reference clock lost singals"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllrefclklost"/>
+      <node id="QPLL_FB_CLK_LOST" address="0x0" mask="0x00003000" permission="r"
+            description="QPLL0 and QPLL1 feedback clock lost singals"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllfbclklost"/>
       <node id="PRBS_ERROR_CNT" address="0x1" permission="r"
             description="PRBS error counter"
             fw_signal="prbs_err_cnt_sync_arr(${MGT})"/>
+    </node>
+
+    <node id="CONFIG" address="0x30">
+      <node id="LINK_TYPE" address="0x0" mask="0x0000000f" permission="r"
+            description="MGT channel type"
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).link_type), 4))"/>
+      <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
+            description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"/>
+      <node id="USE_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
+            description="Indicates whether this MGT channel is using refclk0 or refclk1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_refclk_01 = 1 else '0'"/>
+      <node id="USE_QPLL" address="0x0" mask="0x00000200" permission="r"
+            description="Indicates whether this MGT channel is using a QPLL (1) or a CPLL (0)"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_qpll else '0'"/>
+      <node id="USE_QPLL_01" address="0x0" mask="0x00000400" permission="r"
+            description="Indicates whether this MGT channel is using QPLL0 or QPLL1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_qpll_01 = 1 else '0'"/>
+      <node id="QPLL_IDX" address="0x0" mask="0x0007f000" permission="r"
+            description="Indicates which QPLL index this channel is using."
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).qpll_idx, 7))"/>
+      <node id="IS_MASTER" address="0x0" mask="0x00000800" permission="r"
+            description="Indicates whether this channel is the master channel for this type of MGTs. Master channels provide the TXUSRCLK to all MGTs of the same type. Also the TTC clocks are generated from the TXOUTCLK of the master channel of type GBTX or LpGBT."
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).is_master else '0'"/>
+      <node id="IBERT_INST" address="0x0" mask="0x00080000" permission="r"
+            description="Indicates whether this channel has an IBERT instantiation that can be used to make eye diagrams."
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).ibert_inst else '0'"/>
     </node>
 
   </node>

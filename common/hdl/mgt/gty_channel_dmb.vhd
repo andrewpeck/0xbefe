@@ -111,8 +111,8 @@ begin
     g_qpll : if g_USE_QPLL generate
         
         g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpll0clk.qpllclk;
-            qpllrefclks(0) <= clks_i.qpll0clk.qpllrefclk;
+            qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+            qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
             rxsysclksel <= "10";
             txsysclksel <= "10";
             rxpllclksel <= "11";
@@ -120,8 +120,8 @@ begin
         end generate;
         
         g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpll1clk.qpllclk;
-            qpllrefclks(1) <= clks_i.qpll1clk.qpllrefclk;
+            qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+            qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
             rxsysclksel <= "11";
             txsysclksel <= "11";
             rxpllclksel <= "10";
@@ -765,7 +765,7 @@ begin
             CPLLRESET            => '0',
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
-            DRPADDR              => drp_i.addr,
+            DRPADDR              => drp_i.addr(9 downto 0),
             DRPCLK               => drp_i.clk,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,

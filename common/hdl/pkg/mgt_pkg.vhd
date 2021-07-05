@@ -14,12 +14,15 @@ use ieee.numeric_std.all;
 package mgt_pkg is
 
     type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_GBE);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX);
 
     type t_mgt_config is record
         link_type               : t_mgt_link_type;
         use_refclk_01           : integer range 0 to 1;
+        qpll_inst_type          : t_mgt_qpll_type;
         use_qpll                : boolean;
         use_qpll_01             : integer range 0 to 1;
+        qpll_idx                : integer;
         tx_bus_width            : integer range 16 to 64;
         tx_multilane_phalign    : boolean; -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
         rx_use_buf              : boolean;
@@ -37,7 +40,7 @@ package mgt_pkg is
     end record;
 
     type t_drp_in is record
-        addr : std_logic_vector(9 downto 0);
+        addr : std_logic_vector(15 downto 0);
         clk  : std_logic;
         di   : std_logic_vector(15 downto 0);
         en   : std_logic;
@@ -58,19 +61,24 @@ package mgt_pkg is
         cpllrefclklost : std_logic;
     end record;
 
-    type t_mgt_qpll_refclks is record
-        gtrefclk0      : std_logic;
-        gtrefclk1      : std_logic;
+    type t_mgt_qpll_clk_out is record
+        qpllclk    : std_logic_vector(1 downto 0);
+        qpllrefclk : std_logic_vector(1 downto 0);
     end record;
 
-    type t_mgt_qpll_clk_out is record
-        qpllclk    : std_logic;
-        qpllrefclk : std_logic;
-    end record;
+    constant MGT_QPLL_CLK_NULL : t_mgt_qpll_clk_out := (qpllclk => "00", qpllrefclk => "00");
 
     type t_mgt_qpll_status is record
-        qplllock       : std_logic;
-        qpllrefclklost : std_logic;
+        qplllock       : std_logic_vector(1 downto 0);
+        qpllrefclklost : std_logic_vector(1 downto 0);
+        qpllfbclklost  : std_logic_vector(1 downto 0);
+    end record;
+    
+    constant MGT_QPLL_STATUS_NULL : t_mgt_qpll_status := (qplllock => "00", qpllrefclklost => "00", qpllfbclklost => "00");
+
+    type t_mgt_qpll_ctrl is record
+        power_down     : std_logic_vector(1 downto 0);
+        reset          : std_logic_vector(1 downto 0);
     end record;
 
     type t_mgt_refclks is record
@@ -80,8 +88,7 @@ package mgt_pkg is
 
     type t_mgt_clk_in is record
         refclks     : t_mgt_refclks;   
-        qpll0clk    : t_mgt_qpll_clk_out;
-        qpll1clk    : t_mgt_qpll_clk_out;
+        qpllclks    : t_mgt_qpll_clk_out;
         rxusrclk    : std_logic;
         rxusrclk2   : std_logic;
         txusrclk    : std_logic;
@@ -195,7 +202,7 @@ package mgt_pkg is
     type t_drp_out_arr is array (integer range <>) of t_drp_out;
 
     type t_mgt_qpll_clk_out_arr is array (integer range <>) of t_mgt_qpll_clk_out;
-    type t_mgt_qpll_clk_in_arr is array (integer range <>) of t_mgt_qpll_refclks;
+    type t_mgt_qpll_ctrl_arr is array (integer range <>) of t_mgt_qpll_ctrl;
     type t_mgt_qpll_status_arr is array (integer range <>) of t_mgt_qpll_status;
 
     type t_mgt_cpll_status_arr is array (integer range <>) of t_mgt_cpll_status;

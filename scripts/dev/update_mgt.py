@@ -210,6 +210,8 @@ def main():
 
         # prop
         if not portSection:
+            if "--" in line and "keep" in line:
+                print("SKIPPING GENERIC %s due to 'keep' comment" % line)
             if not name in props:
                 print("ERROR: Unknown generic: %s" % name)
                 print("Exiting...")

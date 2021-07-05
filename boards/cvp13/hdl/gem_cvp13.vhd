@@ -273,7 +273,6 @@ begin
     i_mgts : entity work.mgt_links_gty
         generic map(
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
-            g_NUM_QPLLS         => 0,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
             g_STABLE_CLK_PERIOD => 10,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
@@ -408,9 +407,9 @@ begin
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxreset <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxreset;
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxslide <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxslide;
             gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_reset_done;
-            gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_cpll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_cpll_locked;
+            gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_pll_locked;
             gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_reset_done;
-            gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_cpll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_cpll_locked;
+            gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_pll_locked;
         end generate;     
 
         --=== Trigger links (GE1/1 and GE2/1 only) ===--
