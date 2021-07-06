@@ -917,13 +917,13 @@ wire local_do_cc = (cc_cnt == 8'h0);
 
 `ifdef C2C_R1_UEC3 // for revision 1 KU15P module, need to use RX and TX in different MGTs due to PCB routing in UEC3 connector
         .mgt_rx_data  (hb1_gtwiz_userdata_rx_int),
-        .mgt_rx_k     (ch1_rxctrl2_int[3:0]),
+        .mgt_rx_k     (ch1_rxctrl0_int[3:0]),
         .rx_aligned   (ch1_rxbyteisaligned_int),
         .mgt_tx_data  (hb0_gtwiz_userdata_tx_int),
         .mgt_tx_k     (ch0_txctrl2_int)
 `else
         .mgt_rx_data  (hb1_gtwiz_userdata_rx_int),
-        .mgt_rx_k     (ch1_rxctrl2_int[3:0]),
+        .mgt_rx_k     (ch1_rxctrl0_int[3:0]),
         .rx_aligned   (ch1_rxbyteisaligned_int),
         .mgt_tx_data  (hb1_gtwiz_userdata_tx_int),
         .mgt_tx_k     (ch1_txctrl2_int)
