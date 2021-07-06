@@ -60,6 +60,53 @@ end gty_channel_lpgbt;
 
 architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
 
+    -- selects various integer parameters based on if we're using a CPLL or a QPLL
+    function get_int_param(param_name : string; use_qpll : boolean) return integer is
+    begin
+        if use_qpll then
+            if param_name = "RX_CLK25_DIV" then
+                return 7;
+            elsif param_name = "TX_CLK25_DIV" then
+                return 7;
+            end if;
+        else
+            if param_name = "RX_CLK25_DIV" then
+                return 13;
+            elsif param_name = "TX_CLK25_DIV" then
+                return 13;
+            end if;
+        end if;
+    end function get_int_param;    
+
+    -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
+    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    begin
+        if use_qpll then
+            if param_name = "PCIE_BUFG_DIV_CTRL" then
+                return "0011010100000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN12" then
+                return "10";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "10";
+            end if;
+        else
+            if param_name = "PCIE_BUFG_DIV_CTRL" then
+                return "0001000000000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN12" then
+                return "11";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "11";
+            end if;
+        end if;
+    end function get_slv_param;    
+
+    constant PCIE_BUFG_DIV_CTRL         : std_logic_vector(15 downto 0) := get_slv_param("PCIE_BUFG_DIV_CTRL", g_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN12    : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN12", g_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN3     : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_USE_QPLL);
+    constant RX_CLK25_DIV               : integer := get_int_param("RX_CLK25_DIV", g_USE_QPLL);
+    constant TX_CLK25_DIV               : integer := get_int_param("TX_CLK25_DIV", g_USE_QPLL);
+
+
     -- clocking
     signal refclks          : std_logic_vector(1 downto 0);
     signal qpllclks         : std_logic_vector(1 downto 0);
@@ -69,6 +116,8 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
     signal txpllclksel      : std_logic_vector(1 downto 0);
     signal rxpllclksel      : std_logic_vector(1 downto 0);
     signal cpllpd           : std_logic;
+    signal cpllreset        : std_logic;
+    signal cplllocken       : std_logic;
 
     -- fake floating clock
     signal float_clk        : std_logic;
@@ -103,6 +152,8 @@ begin
         txsysclksel <= "00";
         rxpllclksel <= "00";
         txpllclksel <= "00";
+        cpllreset <= '0';
+        cplllocken <= '1';
         cpllpd <= cpllreset_i;
                 
     end generate;
@@ -130,6 +181,8 @@ begin
         
         refclks <= "00";
         cpllpd <= '1';
+        cpllreset <= '1';
+        cplllocken <= '0';
                 
     end generate;
 
@@ -301,10 +354,10 @@ begin
             PCIE3_CLK_COR_MIN_LAT        => "00000",
             PCIE3_CLK_COR_THRSH_TIMER    => "001000",
             PCIE_64B_DYN_CLKSW_DIS       => "FALSE",
-            PCIE_BUFG_DIV_CTRL           => "0001000000000000",
+            PCIE_BUFG_DIV_CTRL           => PCIE_BUFG_DIV_CTRL, -- keep
             PCIE_GEN4_64BIT_INT_EN       => "FALSE",
-            PCIE_PLL_SEL_MODE_GEN12      => "11",
-            PCIE_PLL_SEL_MODE_GEN3       => "11",
+            PCIE_PLL_SEL_MODE_GEN12      => PCIE_PLL_SEL_MODE_GEN12, -- keep
+            PCIE_PLL_SEL_MODE_GEN3       => PCIE_PLL_SEL_MODE_GEN3, -- keep
             PCIE_PLL_SEL_MODE_GEN4       => "10",
             PCIE_RXPCS_CFG_GEN3          => "0000101010100101",
             PCIE_RXPMA_CFG               => "0010100000001010",
@@ -455,7 +508,7 @@ begin
             RX_BIAS_CFG0                 => "0001001010110000",
             RX_BUFFER_CFG                => "000000",
             RX_CAPFF_SARC_ENB            => '0',
-            RX_CLK25_DIV                 => 13,
+            RX_CLK25_DIV                 => RX_CLK25_DIV, -- keep
             RX_CLKMUX_EN                 => '1',
             RX_CLK_SLIP_OVRD             => "00000",
             RX_CM_BUF_CFG                => "1010",
@@ -566,7 +619,7 @@ begin
             TXSYNC_MULTILANE             => '1',
             TXSYNC_OVRD                  => '0',
             TXSYNC_SKIP_DA               => '0',
-            TX_CLK25_DIV                 => 13,
+            TX_CLK25_DIV                 => TX_CLK25_DIV, -- keep
             TX_CLKMUX_EN                 => '1',
             TX_DATA_WIDTH                => 32,
             TX_DCC_LOOP_RST_CFG          => "0000000000000100",
@@ -752,10 +805,10 @@ begin
             CLKRSVD1             => '0',
             CPLLFREQLOCK         => '0',
             CPLLLOCKDETCLK       => clk_stable_i,
-            CPLLLOCKEN           => '1',
+            CPLLLOCKEN           => cplllocken,
             CPLLPD               => cpllpd,
             CPLLREFCLKSEL        => "001",
-            CPLLRESET            => '0',
+            CPLLRESET            => cpllreset,
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),

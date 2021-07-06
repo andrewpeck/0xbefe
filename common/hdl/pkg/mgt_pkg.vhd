@@ -14,7 +14,7 @@ use ieee.numeric_std.all;
 package mgt_pkg is
 
     type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_GBE);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT);
 
     type t_mgt_config is record
         link_type               : t_mgt_link_type;

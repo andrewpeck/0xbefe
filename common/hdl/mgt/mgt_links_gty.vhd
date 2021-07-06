@@ -489,6 +489,28 @@ begin
         end generate;
 
         --================================--
+        -- LpGBT QPLL 
+        --================================--
+
+        g_qpll_lpgbt : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_LPGBT generate
+            
+            i_qpll_lpgbt : entity work.gty_qpll_lpgbt
+                generic map(
+                    g_REFCLK_01 => g_LINK_CONFIG(chan).use_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
         -- QPLL channel mapping 
         --================================--
 
