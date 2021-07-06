@@ -4,6 +4,7 @@ from ctypes import *
 from config import *
 import imp
 import sys
+from collections import OrderedDict
 
 print('Loading shared library: librwreg.so')
 lib = CDLL("librwreg.so")
@@ -23,7 +24,7 @@ except:
 
 DEBUG = True
 ADDRESS_TABLE_DEFAULT = './address_table.xml'
-nodes = {}
+nodes = OrderedDict()
 
 boardType = os.environ.get('BOARD_TYPE')
 DEVICE = CONFIG_RWREG[boardType]['DEVICE']
