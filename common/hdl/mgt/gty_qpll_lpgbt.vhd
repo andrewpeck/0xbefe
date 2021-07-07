@@ -213,7 +213,7 @@ begin
             QPLL0LOCKEN       => '1',
             QPLL0PD           => '0',
             QPLL0REFCLKSEL    => "001",
-            QPLL0RESET        => '1',
+            QPLL0RESET        => ctrl_i.reset(0),
             QPLL1CLKRSVD0     => '0',
             QPLL1CLKRSVD1     => '0',
             QPLL1FBDIV        => "00000000",
