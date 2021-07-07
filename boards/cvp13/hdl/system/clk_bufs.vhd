@@ -47,14 +47,30 @@ end clk_bufs;
 
 architecture clk_bufs_arch of clk_bufs is
 
+    component freq_meter is
+        generic(
+            REF_F       : std_logic_vector(31 downto 0);
+            N           : integer
+        );
+        port(
+            ref_clk     : in  std_logic;
+            f           : in  std_logic_vector(N - 1 downto 0);
+            freq        : out t_std32_array(N - 1 downto 0)
+        );
+    end component freq_meter;
+
     signal sysclk100                : std_logic;
     signal sysclk100_bufg           : std_logic;
 
     -- per quad refclks
     signal qsfp_refclk0             : std_logic_vector(3 downto 0);
     signal qsfp_refclk1             : std_logic_vector(3 downto 0);
+    signal qsfp_refclk0_div2_tmp    : std_logic_vector(3 downto 0);
+    signal qsfp_refclk1_div2_tmp    : std_logic_vector(3 downto 0);
     signal qsfp_refclk0_div2        : std_logic_vector(3 downto 0);
     signal qsfp_refclk1_div2        : std_logic_vector(3 downto 0);
+    signal qsfp_refclk0_div2_freq   : t_std32_array(3 downto 0);
+    signal qsfp_refclk1_div2_freq   : t_std32_array(3 downto 0);
 
     signal pcie_refclk0             : std_logic;
     signal pcie_refclk0_div2        : std_logic;
@@ -70,7 +86,7 @@ begin
         i_qsfp_refclk0_buf : IBUFDS_GTE4
             port map(
                 O     => qsfp_refclk0(i),
-                ODIV2 => qsfp_refclk0_div2(i),
+                ODIV2 => qsfp_refclk0_div2_tmp(i),
                 CEB   => '0',
                 I     => qsfp_refclk0_p_i(i),
                 IB    => qsfp_refclk0_n_i(i)
@@ -79,15 +95,39 @@ begin
         i_qsfp_refclk1_buf : IBUFDS_GTE4
             port map(
                 O     => qsfp_refclk1(i),
-                ODIV2 => qsfp_refclk1_div2(i),
+                ODIV2 => qsfp_refclk1_div2_tmp(i),
                 CEB   => '0',
                 I     => qsfp_refclk1_p_i(i),
                 IB    => qsfp_refclk1_n_i(i)
             );
 
+        i_qsfp_refclk0_div2_bufg : BUFG_GT
+            port map(
+                O       => qsfp_refclk0_div2(i),
+                CE      => '1',
+                CEMASK  => '0',
+                CLR     => '0',
+                CLRMASK => '0',
+                DIV     => "000",
+                I       => qsfp_refclk0_div2_tmp(i)
+            );    
+
+        i_qsfp_refclk1_div2_bufg : BUFG_GT
+            port map(
+                O       => qsfp_refclk1_div2(i),
+                CE      => '1',
+                CEMASK  => '0',
+                CLR     => '0',
+                CLRMASK => '0',
+                DIV     => "000",
+                I       => qsfp_refclk1_div2_tmp(i)
+            );    
+
         g_channel : for chan in 0 to 3 generate
             qsfp_mgt_refclks_o(i * 4 + chan).gtrefclk0 <= qsfp_refclk0(i);
             qsfp_mgt_refclks_o(i * 4 + chan).gtrefclk1 <= qsfp_refclk1(i);
+            qsfp_mgt_refclks_o(i * 4 + chan).gtrefclk0_freq <= qsfp_refclk0_div2_freq(i);
+            qsfp_mgt_refclks_o(i * 4 + chan).gtrefclk1_freq <= qsfp_refclk1_div2_freq(i);
         end generate;
 
     end generate;
@@ -96,6 +136,29 @@ begin
     qsfp_refclk1_o <= qsfp_refclk1;
     qsfp_refclk0_div2_o <= qsfp_refclk0_div2;
     qsfp_refclk1_div2_o <= qsfp_refclk1_div2;
+
+    -- frequency meters
+    i_qsfp_refclk0_freq_meter : freq_meter
+        generic map(
+            REF_F => x"05f5e100", -- 100MHz
+            N     => 4
+        )
+        port map(
+            ref_clk => sysclk100_bufg,
+            f       => qsfp_refclk0_div2,
+            freq    => qsfp_refclk0_div2_freq
+        );
+
+    i_qsfp_refclk1_freq_meter : freq_meter
+        generic map(
+            REF_F => x"05f5e100", -- 100MHz
+            N     => 4
+        )
+        port map(
+            ref_clk => sysclk100_bufg,
+            f       => qsfp_refclk1_div2,
+            freq    => qsfp_refclk1_div2_freq
+        );
 
 -- can use the refclk on the fabric like this if needed:
 --    i_ibert_sysclk_buf : BUFG_GT

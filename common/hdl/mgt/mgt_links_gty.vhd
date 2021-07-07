@@ -660,6 +660,7 @@ begin
         )
         port map(
             clk_stable_i          => clk_stable_i,
+            channel_refclk_arr_i  => channel_refclk_arr_i,
             mgt_clks_arr_i        => chan_clks_in_arr,
             tx_reset_arr_o        => sc_tx_reset_arr,
             rx_reset_arr_o        => sc_rx_reset_arr,

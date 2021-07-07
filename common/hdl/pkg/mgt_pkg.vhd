@@ -84,6 +84,8 @@ package mgt_pkg is
     type t_mgt_refclks is record
         gtrefclk0      : std_logic;
         gtrefclk1      : std_logic;
+        gtrefclk0_freq : std_logic_vector(31 downto 0);
+        gtrefclk1_freq : std_logic_vector(31 downto 0);
     end record;
 
     type t_mgt_clk_in is record

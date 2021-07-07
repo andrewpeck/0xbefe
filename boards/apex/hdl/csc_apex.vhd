@@ -147,6 +147,8 @@ architecture csc_apex_arch of csc_apex is
     signal gty_refclk1          : std_logic_vector(2 downto 0);
     signal gty_refclk0_div2     : std_logic_vector(2 downto 0);
     signal gty_refclk1_div2     : std_logic_vector(2 downto 0);
+    signal gty_refclk0_freq     : t_std32_array(2 downto 0);
+    signal gty_refclk1_freq     : t_std32_array(2 downto 0);
 
     signal drp_clk              : std_logic;
 
@@ -340,7 +342,8 @@ begin
     
     i_clk_bufs : entity work.clk_bufs
             generic map (
-                g_USE_GTH_CLKS => false
+                g_USE_GTH_CLKS => false,
+                g_FREQ_METER_CLK_FREQ => x"02faf080" -- 50MHz
             )
         port map(
             gth_refclk0_p_i    => (others => '0'),
@@ -362,17 +365,27 @@ begin
             gty_refclk0_o      => gty_refclk0,
             gty_refclk1_o      => gty_refclk1,
             gty_refclk0_div2_o => gty_refclk0_div2,
-            gty_refclk1_div2_o => gty_refclk1_div2
+            gty_refclk1_div2_o => gty_refclk1_div2,
+
+            freq_meter_clk_i   => axil_clk,
+            gty_refclk0_freq_o => gty_refclk0_freq,
+            gty_refclk1_freq_o => gty_refclk1_freq,
+            gth_refclk0_freq_o => open,
+            gth_refclk1_freq_o => open
         );
     
     -- GTY channel refclk wiring
     g_mgt_quad_128_ref_clks: for i in 0 to 3 generate
         mgt_refclks(i).gtrefclk0 <= gty_refclk0(0);
         mgt_refclks(i).gtrefclk1 <= gty_refclk1(0);
+        mgt_refclks(i).gtrefclk0_freq <= gty_refclk0_freq(0);
+        mgt_refclks(i).gtrefclk1_freq <= gty_refclk1_freq(0);
     end generate;
     g_mgt_quad_130_ref_clks: for i in 4 to 7 generate
         mgt_refclks(i).gtrefclk0 <= gty_refclk0(1);
         mgt_refclks(i).gtrefclk1 <= gty_refclk1(1);
+        mgt_refclks(i).gtrefclk0_freq <= gty_refclk0_freq(1);
+        mgt_refclks(i).gtrefclk1_freq <= gty_refclk1_freq(1);
     end generate;
 
 

@@ -111,6 +111,12 @@
       <node id="PRBS_ERROR_CNT" address="0x1" permission="r"
             description="PRBS error counter"
             fw_signal="prbs_err_cnt_sync_arr(${MGT})"/>
+      <node id="REFCLK0_FREQ" address="0x2" permission="r"
+            description="Frequency of the refclk0 used by this MGT"
+            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk0_freq"/>
+      <node id="REFCLK1_FREQ" address="0x3" permission="r"
+            description="Frequency of the refclk1 used by this MGT"
+            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"/>
     </node>
 
     <node id="CONFIG" address="0x30">

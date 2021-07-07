@@ -33,6 +33,8 @@ entity mgt_slow_control is
     port(
         
         clk_stable_i            : in  std_logic;
+
+        channel_refclk_arr_i    : in  t_mgt_refclks_arr(g_NUM_CHANNELS-1 downto 0);
         
         mgt_clks_arr_i          : in  t_mgt_clk_in_arr(g_NUM_CHANNELS - 1 downto 0);
 

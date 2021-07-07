@@ -23,6 +23,16 @@ create_clock -name qsfp2_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[1]}]
 create_clock -name qsfp1_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[2]}]
 create_clock -name qsfp0_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[3]}]
 
+set_clock_groups -group [get_clocks qsfp3_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp2_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp1_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp0_refclk0] -asynchronous
+
+set_clock_groups -group [get_clocks qsfp3_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp2_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp1_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp0_refclk1] -asynchronous
+
 ##############################################
 ################  Location  ##################
 ##############################################
