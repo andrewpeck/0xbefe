@@ -5,7 +5,9 @@
 -- Create Date:    2021-06-02
 -- Module Name:    GTY_QPLL_LPGBT
 -- Description:    This is a wrapper for a GTY QPLL that can be used with a LpGBT GTY channel.
---                 The refclk has to be 160MHz (only one refclk is used based on g_REFCLK_01 generic)
+--                 Only QPLL0 is used
+--                 QPLL0 requires a 160MHz LHC freq refclck
+--                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- expected refclk is 160MHz
@@ -22,7 +24,8 @@ use work.mgt_pkg.all;
 
 entity gty_qpll_lpgbt is
     generic(
-        g_REFCLK_01     : integer range 0 to 1 := 0
+        g_QPLL0_REFCLK_01   : integer range 0 to 1 := 0;
+        g_QPLL1_REFCLK_01   : integer range 0 to 1 := 0
     );
     port(
         
@@ -41,17 +44,26 @@ end gty_qpll_lpgbt;
 
 architecture gty_qpll_lpgbt_arch of gty_qpll_lpgbt is
 
-    signal refclks          : std_logic_vector(1 downto 0);
+    signal qpll0_refclks    : std_logic_vector(1 downto 0);
+    signal qpll1_refclks    : std_logic_vector(1 downto 0);
 
 begin
 
     -- Select the ref clock
-    g_ref_clk0 : if g_REFCLK_01 = 0 generate
-        refclks(0) <= refclks_i.gtrefclk0;
+    g_qpll0_ref_clk0 : if g_QPLL0_REFCLK_01 = 0 generate
+        qpll0_refclks(0) <= refclks_i.gtrefclk0;
     end generate;
     
-    g_ref_clk1 : if g_REFCLK_01 = 1 generate
-        refclks(1) <= refclks_i.gtrefclk1;
+    g_qpll0_ref_clk1 : if g_QPLL0_REFCLK_01 = 1 generate
+        qpll0_refclks(1) <= refclks_i.gtrefclk1;
+    end generate;
+
+    g_qpll1_ref_clk0 : if g_QPLL1_REFCLK_01 = 0 generate
+        qpll1_refclks(0) <= refclks_i.gtrefclk0;
+    end generate;
+    
+    g_qpll1_ref_clk1 : if g_QPLL1_REFCLK_01 = 1 generate
+        qpll1_refclks(1) <= refclks_i.gtrefclk1;
     end generate;
     
     i_qpll : GTYE4_COMMON
@@ -194,10 +206,10 @@ begin
             GTNORTHREFCLK01   => '0',
             GTNORTHREFCLK10   => '0',
             GTNORTHREFCLK11   => '0',
-            GTREFCLK00        => refclks(0),
-            GTREFCLK01        => refclks(0),
-            GTREFCLK10        => refclks(1),
-            GTREFCLK11        => refclks(1),
+            GTREFCLK00        => qpll0_refclks(0),
+            GTREFCLK01        => qpll1_refclks(0),
+            GTREFCLK10        => qpll0_refclks(1),
+            GTREFCLK11        => qpll1_refclks(1),
             GTSOUTHREFCLK00   => '0',
             GTSOUTHREFCLK01   => '0',
             GTSOUTHREFCLK10   => '0',
@@ -210,16 +222,16 @@ begin
             QPLL0CLKRSVD1     => '0',
             QPLL0FBDIV        => "00000000",
             QPLL0LOCKDETCLK   => clk_stable_i,
-            QPLL0LOCKEN       => '1',
-            QPLL0PD           => '0',
+            QPLL0LOCKEN       => not ctrl_i.power_down(0),
+            QPLL0PD           => ctrl_i.power_down(0),
             QPLL0REFCLKSEL    => "001",
             QPLL0RESET        => ctrl_i.reset(0),
             QPLL1CLKRSVD0     => '0',
             QPLL1CLKRSVD1     => '0',
             QPLL1FBDIV        => "00000000",
             QPLL1LOCKDETCLK   => clk_stable_i,
-            QPLL1LOCKEN       => '0',
-            QPLL1PD           => '1',
+            QPLL1LOCKEN       => not ctrl_i.power_down(1),
+            QPLL1PD           => ctrl_i.power_down(1),
             QPLL1REFCLKSEL    => "001",
             QPLL1RESET        => ctrl_i.reset(1),
             QPLLRSVD1         => "00000000",

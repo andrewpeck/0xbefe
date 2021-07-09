@@ -13,15 +13,19 @@ use ieee.numeric_std.all;
 
 package mgt_pkg is
 
-    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_GBE);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT);
+    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57);
 
     type t_mgt_config is record
         link_type               : t_mgt_link_type;
-        use_refclk_01           : integer range 0 to 1;
+        cpll_refclk_01          : integer range 0 to 1;
         qpll_inst_type          : t_mgt_qpll_type;
-        use_qpll                : boolean;
-        use_qpll_01             : integer range 0 to 1;
+        qpll0_refclk_01         : integer range 0 to 1;
+        qpll1_refclk_01         : integer range 0 to 1;
+        tx_use_qpll             : boolean;
+        rx_use_qpll             : boolean;
+        tx_qpll_01              : integer range 0 to 1;
+        rx_qpll_01              : integer range 0 to 1;
         qpll_idx                : integer;
         tx_bus_width            : integer range 16 to 64;
         tx_multilane_phalign    : boolean; -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
@@ -34,9 +38,10 @@ package mgt_pkg is
     -- NOTE t_mgt_config_arr type should be defined in the board package with the correct length
 
     type t_mgt_master_clks is record
-        gbt : std_logic;
-        dmb : std_logic;
-        gbe : std_logic;
+        gbt    : std_logic;
+        dmb    : std_logic;
+        odmb57 : std_logic;
+        gbe    : std_logic;
     end record;
 
     type t_drp_in is record

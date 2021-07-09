@@ -11,70 +11,87 @@
       fw_reg_addr_msb="15"
       fw_reg_addr_lsb="0">
 
-  <node id="MGT_CHANNEL_${MGT}" address="0x0"
-        description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer to the gem_board_config_pkg.vhd for the mapping details."
-        generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000040" generate_idx_var="MGT">
+  <node id="NUM_LINKS" address="0x0" mask="0x000000ff" permission="r"
+        description="The number of logic optical links that this board has."
+        fw_signal="std_logic_vector(to_unsigned(CFG_BOARD_MAX_LINKS, 8))"/>
 
-    <node id="RESET" address="0x0" permission="w"
-          description="Writing anything to this register will trigger a TX and RX reset for this MGT"
-          fw_write_pulse_signal="reset_arr(${MGT})"/>
+  <node id="NUM_MGTS" address="0x0" mask="0x0000ff00" permission="r"
+        description="The number of MGTs that are intantiated in this firmware."
+        fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
+
+  <node id="BOARD_TYPE" address="0x0" mask="0x000f0000" permission="r"
+        description="Type of board that this firmware is running on: "
+        fw_signal="std_logic_vector(to_unsigned(CFG_BOARD_TYPE, 4))"/>
+
+  <node id="MGT_CHANNEL_${MGT}" address="0x100"
+        description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer to the gem_board_config_pkg.vhd for the mapping details."
+        generate="true" generate_size="&NUM_MGTS;" generate_address_step="0x00000040" generate_idx_var="MGT">
 
     <node id="CTRL" address="0x10"
           description="This register exposes multiple MGT controls: bit 0 -- TX powerdown, bit 1 -- RX powerdown, bit 2 -- TX polarity, bit 3 -- RX polarity, bit 4 -- loopback, bit 5 -- TX inhibit, bit 6 -- RX low power mode enable">
-      <node id="TX_POWERDOWN" address="0x0" mask="0x00000001" permission="rw"
-            description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"
-            fw_signal="txpd_arr(${MGT})" fw_default="0b0"/>
-      <node id="RX_POWERDOWN" address="0x0" mask="0x00000002" permission="rw"
-            description="Setting this to 1 will powerdown the RX (writes 11 to RXPD), and 0 will put it in normal power mode (writes 00 to RXPD)"
-            fw_signal="rxpd_arr(${MGT})" fw_default="0b0"/>
-      <node id="TX_POLARITY" address="0x0" mask="0x00000004" permission="rw"
-            description="Setting this to 1 will invert the polarity of TX, setting to 0 will result in normal TX polarity"
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txpolarity" fw_default="0b0"/>
-      <node id="RX_POLARITY" address="0x0" mask="0x00000008" permission="rw"
-            description="Setting this to 1 will invert the polarity of RX, setting to 0 will result in normal RX polarity"
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxpolarity" fw_default="0b0"/>
-      <node id="LOOPBACK" address="0x0" mask="0x00000010" permission="rw"
-            description="Setting this to 1 will enable the near-end PMA loopback of the MGT (sets MGT LOOPBACK port to 010). This is an expert debug feature."
-            fw_signal="loopback_arr(${MGT})" fw_default="0b0"/>
-      <node id="TX_INHIBIT" address="0x0" mask="0x00000020" permission="rw"
-            description="Setting this to 1 will inhibit the TX channel (forces MGTHTXP to 0 and MGTHTXN to 1). This is an expert debug feature."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txinhibit" fw_default="0b0"/>
-      <node id="RX_LOW_POWER_MODE" address="0x0" mask="0x00000040" permission="rw"
-            description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxlpmen" fw_default="0b1"/>
-      <node id="TX_DIFF_CTRL" address="0x1" mask="0x0000001f" permission="rw"
-            description="Conrtols the differential swing amplitude, is directly wired to the TXDIFFCTRL port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txdiffctrl" fw_default="0b11000"/>
-      <node id="TX_PRE_CURSOR" address="0x1" mask="0x00001f00" permission="rw"
-            description="Directly wired to the TXPRECURSOR port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txprecursor" fw_default="0b00000"/>
-      <node id="TX_POST_CURSOR" address="0x1" mask="0x001f0000" permission="rw"
-            description="Directly wired to the TXPOSTCURSOR port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txpostcursor" fw_default="0b00000"/>
-      <node id="TX_MAIN_CURSOR" address="0x1" mask="0x7f000000" permission="rw"
-            description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
-      <node id="RX_PRBS_SEL" address="0x2" mask="0x00000007" permission="rw"
-            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxprbssel" fw_default="0b000"/>
-      <node id="TX_PRBS_SEL" address="0x2" mask="0x00000070" permission="rw"
-            description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txprbssel" fw_default="0b000"/>
-      <node id="TX_PRBS_FORCE_ERR" address="0x3" permission="w"
-            description="Writing anything here forces a PRBS error on the TX"
-            fw_write_pulse_signal="tx_slow_ctrl_arr(${MGT}).txprbsforceerr"/>
-      <node id="RX_PRBS_CNT_RESET" address="0x4" permission="w"
-            description="Writing 1 here resets the PRBS error counters"
-            fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
-      <node id="QPLL_POWERDOWN" address="0x0" mask="0x30000000" permission="rw"
-            description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
-            fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
-      <node id="QPLL0_RESET" address="0x5" permission="w"
+      <node id="TX_RESET" address="0x0" permission="w"
+            description="Writing anything to this register will trigger a TX reset for this MGT"
+            fw_write_pulse_signal="tx_reset_arr_o(${MGT})"/>
+      <node id="RX_RESET" address="0x1" permission="w"
+            description="Writing anything to this register will trigger a RX reset for this MGT"
+            fw_write_pulse_signal="rx_reset_arr_o(${MGT})"/>
+      <node id="CPLL_RESET" address="0x2" permission="w"
+            description="Writing anything to this register will trigger a CPLL reset for this MGT"
+            fw_write_pulse_signal="cpll_reset_arr(${MGT})"/>
+      <node id="QPLL0_RESET" address="0x3" permission="w"
             description="Writing 1 here resets the QPLL0 of this quad"
             fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(0)"/>
-      <node id="QPLL1_RESET" address="0x6" permission="w"
+      <node id="QPLL1_RESET" address="0x4" permission="w"
             description="Writing 1 here resets the QPLL1 of this quad"
             fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(1)"/>
+      <node id="QPLL_POWERDOWN" address="0x5" mask="0x30000000" permission="rw"
+            description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
+            fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
+      <node id="TX_POWERDOWN" address="0x5" mask="0x00000001" permission="rw"
+            description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"
+            fw_signal="txpd_arr(${MGT})" fw_default="0b0"/>
+      <node id="RX_POWERDOWN" address="0x5" mask="0x00000002" permission="rw"
+            description="Setting this to 1 will powerdown the RX (writes 11 to RXPD), and 0 will put it in normal power mode (writes 00 to RXPD)"
+            fw_signal="rxpd_arr(${MGT})" fw_default="0b0"/>
+      <node id="TX_POLARITY" address="0x5" mask="0x00000004" permission="rw"
+            description="Setting this to 1 will invert the polarity of TX, setting to 0 will result in normal TX polarity"
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txpolarity" fw_default="0b0"/>
+      <node id="RX_POLARITY" address="0x5" mask="0x00000008" permission="rw"
+            description="Setting this to 1 will invert the polarity of RX, setting to 0 will result in normal RX polarity"
+            fw_signal="rx_slow_ctrl_arr(${MGT}).rxpolarity" fw_default="0b0"/>
+      <node id="LOOPBACK" address="0x5" mask="0x00000010" permission="rw"
+            description="Setting this to 1 will enable the near-end PMA loopback of the MGT (sets MGT LOOPBACK port to 010). This is an expert debug feature."
+            fw_signal="loopback_arr(${MGT})" fw_default="0b0"/>
+      <node id="TX_INHIBIT" address="0x5" mask="0x00000020" permission="rw"
+            description="Setting this to 1 will inhibit the TX channel (forces MGTHTXP to 0 and MGTHTXN to 1). This is an expert debug feature."
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txinhibit" fw_default="0b0"/>
+      <node id="RX_LOW_POWER_MODE" address="0x5" mask="0x00000040" permission="rw"
+            description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."
+            fw_signal="rx_slow_ctrl_arr(${MGT}).rxlpmen" fw_default="0b1"/>
+      <node id="TX_DIFF_CTRL" address="0x6" mask="0x0000001f" permission="rw"
+            description="Conrtols the differential swing amplitude, is directly wired to the TXDIFFCTRL port of the MGT, refer to the MGT manual for units."
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txdiffctrl" fw_default="0b11000"/>
+      <node id="TX_PRE_CURSOR" address="0x6" mask="0x00001f00" permission="rw"
+            description="Directly wired to the TXPRECURSOR port of the MGT, refer to the MGT manual for units."
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txprecursor" fw_default="0b00000"/>
+      <node id="TX_POST_CURSOR" address="0x6" mask="0x001f0000" permission="rw"
+            description="Directly wired to the TXPOSTCURSOR port of the MGT, refer to the MGT manual for units."
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txpostcursor" fw_default="0b00000"/>
+      <node id="TX_MAIN_CURSOR" address="0x6" mask="0x7f000000" permission="rw"
+            description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
+      <node id="RX_PRBS_SEL" address="0x7" mask="0x00000007" permission="rw"
+            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
+            fw_signal="rx_slow_ctrl_arr(${MGT}).rxprbssel" fw_default="0b000"/>
+      <node id="TX_PRBS_SEL" address="0x7" mask="0x00000070" permission="rw"
+            description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
+            fw_signal="tx_slow_ctrl_arr(${MGT}).txprbssel" fw_default="0b000"/>
+      <node id="TX_PRBS_FORCE_ERR" address="0x8" permission="w"
+            description="Writing anything here forces a PRBS error on the TX"
+            fw_write_pulse_signal="tx_slow_ctrl_arr(${MGT}).txprbsforceerr"/>
+      <node id="RX_PRBS_CNT_RESET" address="0x9" permission="w"
+            description="Writing 1 here resets the PRBS error counters"
+            fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
     </node>
 
     <node id="STATUS" address="0x20">
@@ -126,26 +143,57 @@
       <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
             fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"/>
-      <node id="USE_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
-            description="Indicates whether this MGT channel is using refclk0 or refclk1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_refclk_01 = 1 else '0'"/>
-      <node id="USE_QPLL" address="0x0" mask="0x00000200" permission="r"
-            description="Indicates whether this MGT channel is using a QPLL (1) or a CPLL (0)"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_qpll else '0'"/>
-      <node id="USE_QPLL_01" address="0x0" mask="0x00000400" permission="r"
-            description="Indicates whether this MGT channel is using QPLL0 or QPLL1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).use_qpll_01 = 1 else '0'"/>
-      <node id="QPLL_IDX" address="0x0" mask="0x0007f000" permission="r"
+      <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
+            description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).cpll_refclk_01 = 1 else '0'"/>
+      <node id="QPLL0_REFCLK_01" address="0x0" mask="0x00000200" permission="r"
+            description="Indicates whether this MGT quad QPLL0 is using refclk0 or refclk1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).qpll0_refclk_01 = 1 else '0'"/>
+      <node id="QPLL1_REFCLK_01" address="0x0" mask="0x00000400" permission="r"
+            description="Indicates whether this MGT quad QPLL1 is using refclk0 or refclk1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).qpll1_refclk_01 = 1 else '0'"/>
+      <node id="TX_USE_QPLL" address="0x0" mask="0x00000800" permission="r"
+            description="Indicates whether this MGT TX is using a QPLL"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).tx_use_qpll else '0'"/>
+      <node id="RX_USE_QPLL" address="0x0" mask="0x00001000" permission="r"
+            description="Indicates whether this MGT RX is using a QPLL"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).rx_use_qpll else '0'"/>
+      <node id="TX_QPLL_01" address="0x0" mask="0x00002000" permission="r"
+            description="Indicates whether this MGT TX is using QPLL0 or QPLL1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).tx_qpll_01 = 1 else '0'"/>
+      <node id="RX_QPLL_01" address="0x0" mask="0x00004000" permission="r"
+            description="Indicates whether this MGT RX is using QPLL0 or QPLL1"
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).rx_qpll_01 = 1 else '0'"/>
+      <node id="QPLL_IDX" address="0x0" mask="0x00ff0000" permission="r"
             description="Indicates which QPLL index this channel is using."
-            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).qpll_idx, 7))"/>
-      <node id="IS_MASTER" address="0x0" mask="0x00000800" permission="r"
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).qpll_idx, 8))"/>
+      <node id="IS_MASTER" address="0x0" mask="0x00008000" permission="r"
             description="Indicates whether this channel is the master channel for this type of MGTs. Master channels provide the TXUSRCLK to all MGTs of the same type. Also the TTC clocks are generated from the TXOUTCLK of the master channel of type GBTX or LpGBT."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).is_master else '0'"/>
-      <node id="IBERT_INST" address="0x0" mask="0x00080000" permission="r"
+      <node id="IBERT_INST" address="0x0" mask="0x01000000" permission="r"
             description="Indicates whether this channel has an IBERT instantiation that can be used to make eye diagrams."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).ibert_inst else '0'"/>
     </node>
 
+  </node>
+
+  <node id="LINK_${LINK}" address="0x4000"
+        description="Link ${LINK} settings. Link number is logical link number that generally goes in sequence with the transceiver placement on the board and natural fiber numbers in the transceiver. For more details on link numbering on any specific board, please refer to the 0xBEFE repository doc directory."
+        generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000010" generate_idx_var="LINK">
+    <node id="CONFIG" address="0x0">
+      <node id="TX_MGT_IDX" address="0x0" mask="0x000000ff" permission="r"
+            description="TX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).tx, 8))"/>
+      <node id="RX_MGT_IDX" address="0x0" mask="0x0000ff00" permission="r"
+            description="RX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).rx, 8))"/>
+      <node id="TX_INVERTED" address="0x0" mask="0x00010000" permission="r"
+            description="If this is 1 it means that this TX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).tx_inv else '0'"/>
+      <node id="RX_INVERTED" address="0x0" mask="0x00020000" permission="r"
+            description="If this is 1 it means that this RX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).rx_inv else '0'"/>
+    </node>
   </node>
 
 </node> <!--End of optical links module -->

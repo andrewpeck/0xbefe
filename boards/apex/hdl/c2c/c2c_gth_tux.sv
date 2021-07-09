@@ -33,8 +33,8 @@ module c2c_gth_tux
   input [31:0] c2c_tx_tdata,
   input        c2c_tx_tvalid,
   input        c2c_do_cc,
-  output [2:0] c2c_rxbufstatus,
-  output [1:0] c2c_rxclkcorcnt,
+  output [5:0] c2c_rxbufstatus,
+  output [3:0] c2c_rxclkcorcnt,
   output       c2c_link_reset
 );
 
@@ -936,7 +936,7 @@ assign c2c_channel_up    = ch1_rxbyteisaligned_int;
 assign c2c_init_clk      = mgtrefclk_odiv2; // 250M clock directly from refclk buffer
 assign c2c_phy_clk       = gtwiz_userclk_tx_usrclk2_int;
 
-assign c2c_rxbufstatus = rxbufstatus_out [5:3];
-assign c2c_rxclkcorcnt = rxclkcorcnt_out [3:2];
+assign c2c_rxbufstatus = rxbufstatus_out;
+assign c2c_rxclkcorcnt = rxclkcorcnt_out;
 
 endmodule

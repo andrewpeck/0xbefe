@@ -22,11 +22,13 @@ use work.mgt_pkg.all;
 
 entity gty_channel_gbe is
     generic(
-        g_REFCLK_01     : integer range 0 to 1 := 0;
-        g_QPLL_01       : integer range 0 to 1 := 0;
-        g_USE_QPLL      : boolean := FALSE; -- when set to true the QPLL is used for ref clock
-        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
-        g_RXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_CPLL_REFCLK_01    : integer range 0 to 1 := 0;
+        g_TX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for TX
+        g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
+        g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
+        g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
+        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
     );
     port(
         
@@ -69,6 +71,8 @@ architecture gty_channel_gbe_arch of gty_channel_gbe is
     signal txpllclksel      : std_logic_vector(1 downto 0);
     signal rxpllclksel      : std_logic_vector(1 downto 0);
     signal cpllpd           : std_logic;
+    signal cpllreset        : std_logic;
+    signal cplllocken       : std_logic;
 
     -- fake floating clock
     signal float_clk        : std_logic;
@@ -88,49 +92,71 @@ architecture gty_channel_gbe_arch of gty_channel_gbe is
     
 begin
 
+    -- CPLL clock selection
+    g_cpll_ref_clk0 : if g_CPLL_REFCLK_01 = 0 generate
+        refclks(0) <= clks_i.refclks.gtrefclk0;
+    end generate;
+    
+    g_cpll_ref_clk1 : if g_CPLL_REFCLK_01 = 1 generate
+        refclks(1) <= clks_i.refclks.gtrefclk1;
+    end generate;
+
     -- CPLL is used
-    g_cpll : if not g_USE_QPLL generate
-        
-        g_ref_clk0 : if g_REFCLK_01 = 0 generate
-            refclks(0) <= clks_i.refclks.gtrefclk0;
-        end generate;
-        
-        g_ref_clk1 : if g_REFCLK_01 = 1 generate
-            refclks(1) <= clks_i.refclks.gtrefclk1;
-        end generate;
-        
-        rxsysclksel <= "00";
-        txsysclksel <= "00";
-        rxpllclksel <= "00";
-        txpllclksel <= "00";
+    g_cpll_used : if (not g_TX_USE_QPLL) or (not g_RX_USE_QPLL) generate
+        cpllreset <= '0';
+        cplllocken <= '1';
         cpllpd <= cpllreset_i;
-                
+    end generate;
+
+    -- CPLL not used
+    g_cpll_not_used : if g_TX_USE_QPLL and g_RX_USE_QPLL generate
+        cpllpd <= '1';
+        cpllreset <= '1';
+        cplllocken <= '0';
     end generate;
 
     -- QPLL is used
-    g_qpll : if g_USE_QPLL generate
-        
-        g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
-            qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
-            rxsysclksel <= "10";
-            txsysclksel <= "10";
-            rxpllclksel <= "11";
-            txpllclksel <= "11";
-        end generate;
-        
-        g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
-            qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
-            rxsysclksel <= "11";
-            txsysclksel <= "11";
-            rxpllclksel <= "10";
-            txpllclksel <= "10";
-        end generate;
-        
-        refclks <= "00";
-        cpllpd <= '1';
-                
+    g_qpll_used : if g_TX_USE_QPLL or g_RX_USE_QPLL generate
+        qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+        qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
+        qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+        qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
+    end generate;
+
+    -- TX CPLL
+    g_tx_cpll : if not g_TX_USE_QPLL generate
+        txsysclksel <= "00";
+        txpllclksel <= "00";
+    end generate;
+
+    -- RX CPLL
+    g_rx_cpll : if not g_RX_USE_QPLL generate
+        rxsysclksel <= "00";
+        rxpllclksel <= "00";
+    end generate;
+
+    -- TX QPLL0
+    g_tx_qpll0 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 0 generate
+        txsysclksel <= "10";
+        txpllclksel <= "11";
+    end generate;
+
+    -- RX QPLL0
+    g_rx_qpll0 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 0 generate
+        rxsysclksel <= "10";
+        rxpllclksel <= "11";
+    end generate;
+
+    -- TX QPLL1
+    g_tx_qpll1 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 1 generate
+        txsysclksel <= "11";
+        txpllclksel <= "10";
+    end generate;
+
+    -- RX QPLL1
+    g_rx_qpll1 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 1 generate
+        rxsysclksel <= "11";
+        rxpllclksel <= "10";
     end generate;
 
     -- 8b10b encoding 16bit wide data bus
@@ -759,10 +785,10 @@ begin
             CLKRSVD1             => '0',
             CPLLFREQLOCK         => '0',
             CPLLLOCKDETCLK       => clk_stable_i,
-            CPLLLOCKEN           => '1',
+            CPLLLOCKEN           => cplllocken,
             CPLLPD               => cpllpd,
             CPLLREFCLKSEL        => "001",
-            CPLLRESET            => '0',
+            CPLLRESET            => cpllreset,
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),
@@ -897,7 +923,7 @@ begin
             RXPMARESET           => '0',
             RXPOLARITY           => rx_slow_ctrl_i.rxpolarity,
             RXPRBSCNTRESET       => '0',
-            RXPRBSSEL            => "0000",
+            RXPRBSSEL            => '0' & rx_slow_ctrl_i.rxprbssel,
             RXPROGDIVRESET       => '0',
             RXRATE               => rx_slow_ctrl_i.rxrate,
             RXRATEMODE           => '0',
@@ -969,7 +995,7 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => "0000",
+            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
             TXPROGDIVRESET       => '0',
             TXRATE               => "000",

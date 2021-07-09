@@ -81,21 +81,15 @@ architecture csc_apex_arch of csc_apex is
             c2c_tx_tdata        : in  std_logic_vector(31 downto 0);
             c2c_tx_tvalid       : in  std_logic;
             c2c_do_cc           : in  std_logic;
-            c2c_rxbufstatus     : out std_logic_vector(2 downto 0);
-            c2c_rxclkcorcnt     : out std_logic_vector(1 downto 0);
+            c2c_rxbufstatus     : out std_logic_vector(5 downto 0);
+            c2c_rxclkcorcnt     : out std_logic_vector(3 downto 0);
             c2c_link_reset      : out std_logic
         );
     end component c2c_gth_tux;
 
     component apex_blk is
         port(
-            drp_clk           : out std_logic;
-            drp_do            : in  std_logic_vector(63 downto 0);
-            drp_di            : out std_logic_vector(63 downto 0);
-            drp_en            : out std_logic;
-            drp_we            : out std_logic_vector(7 downto 0);
-            drp_rdy           : in  std_logic;
-            drp_addr          : out std_logic_vector(13 downto 0);
+            clk_50_o          : out std_logic;
             user_axil_clk_o   : out std_logic;
             axi_reset_b_o     : out std_logic;
             clk_100_o         : out std_logic;
@@ -107,8 +101,8 @@ architecture csc_apex_arch of csc_apex is
             c2c_tx_ready      : in  std_logic;
             c2c_rx_valid      : in  std_logic;
             c2c_rx_data       : in  std_logic_vector(31 downto 0);
-            c2c_rxclkcorcnt   : in  std_logic_vector(1 downto 0);
-            c2c_rxbufstatus   : in  std_logic_vector(2 downto 0);
+            c2c_rxclkcorcnt   : in  std_logic_vector(3 downto 0);
+            c2c_rxbufstatus   : in  std_logic_vector(5 downto 0);
             c2c_do_cc         : out std_logic;
             c2c_tx_tvalid     : out std_logic;
             c2c_tx_tdata      : out std_logic_vector(31 downto 0);
@@ -136,7 +130,7 @@ architecture csc_apex_arch of csc_apex is
     end component apex_blk;
 
     -- constants
-    constant IPB_CLK_PERIOD_NS  : integer := 20;
+    constant IPB_CLK_PERIOD_NS  : integer := 10;
 
     -- resets 
     --signal reset                : std_logic;
@@ -149,8 +143,6 @@ architecture csc_apex_arch of csc_apex is
     signal gty_refclk1_div2     : std_logic_vector(2 downto 0);
     signal gty_refclk0_freq     : t_std32_array(2 downto 0);
     signal gty_refclk1_freq     : t_std32_array(2 downto 0);
-
-    signal drp_clk              : std_logic;
 
     -- qsfp mgts
     signal mgt_refclks          : t_mgt_refclks_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
@@ -184,8 +176,8 @@ architecture csc_apex_arch of csc_apex is
     signal c2c_tx_tdata         : std_logic_vector(31 downto 0);
     signal c2c_tx_tvalid        : std_logic;
     signal c2c_do_cc            : std_logic;
-    signal c2c_rxbufstatus      : std_logic_vector(2 downto 0);
-    signal c2c_rxclkcorcnt      : std_logic_vector(1 downto 0);
+    signal c2c_rxbufstatus      : std_logic_vector(5 downto 0);
+    signal c2c_rxclkcorcnt      : std_logic_vector(3 downto 0);
     signal c2c_link_reset       : std_logic;
     
     -- slow control
@@ -201,6 +193,7 @@ architecture csc_apex_arch of csc_apex is
     signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
       
     -- DAQ and other
+    signal clk_50               : std_logic;
     signal clk_100              : std_logic;
     signal slink_mgt_ref_clk    : std_logic;
       
@@ -239,7 +232,7 @@ begin
             gthrxp_int        => c2c_rxp,
             gthtxn_int        => c2c_txn,
             gthtxp_int        => c2c_txp,
-            drp_clk           => drp_clk,
+            drp_clk           => clk_50,
             c2c_channel_up    => c2c_channel_up,
             c2c_init_clk      => c2c_init_clk,
             c2c_mmcm_unlocked => c2c_mmcm_unlocked,
@@ -258,13 +251,6 @@ begin
 
     i_apex_c2c : apex_blk
         port map(
-            drp_clk           => drp_clk,
-            drp_do            => (others => '0'),
-            drp_di            => open,
-            drp_en            => open,
-            drp_we            => open,
-            drp_rdy           => '1',
-            drp_addr          => open,
             c2c_link_reset    => c2c_link_reset,
             c2c_mmcm_unlocked => c2c_mmcm_unlocked,
             c2c_init_clk      => c2c_init_clk,
@@ -300,7 +286,8 @@ begin
             user_axil_rresp   => axil_s2m.rresp,
             user_axil_rvalid  => axil_s2m.rvalid,
             user_axil_rready  => axil_m2s.rready,
-            clk_100_o         => clk_100
+            clk_100_o         => clk_100,
+            clk_50_o          => clk_50
         );
 
     --================================--
@@ -311,7 +298,7 @@ begin
         generic map(
             g_DEBUG => true,
             g_IPB_CLK_ASYNC => false,
-            g_IPB_TIMEOUT => 3000
+            g_IPB_TIMEOUT => 6000
         )
         port map(
             axi_aclk_i     => axil_clk,
@@ -343,7 +330,7 @@ begin
     i_clk_bufs : entity work.clk_bufs
             generic map (
                 g_USE_GTH_CLKS => false,
-                g_FREQ_METER_CLK_FREQ => x"02faf080" -- 50MHz
+                g_FREQ_METER_CLK_FREQ => x"05f5e100" -- 100MHz
             )
         port map(
             gth_refclk0_p_i    => (others => '0'),
@@ -410,7 +397,7 @@ begin
         generic map(
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 20,
+            g_STABLE_CLK_PERIOD => 10,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(

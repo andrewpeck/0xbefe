@@ -5,7 +5,7 @@
 -- Create Date:    2020-06-09
 -- Module Name:    GTY_CHANNEL_GBTX
 -- Description:    This is a wrapper for a single GTY channel that can be used with GBTX core: it's a raw 4.8Gb/s link with bypassed buffers, and 40bit wide bus.
---                 The refclk has to be 160MHz (only one refclk is used based on g_REFCLK_01 generic), and user clocks 120MHz 
+--                 The refclk has to be 160MHz LHC freq (only one refclk is used based on g_REFCLK_01 generic), and user clocks 120MHz 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- expected refclk is 160MHz
@@ -22,11 +22,13 @@ use work.mgt_pkg.all;
 
 entity gty_channel_gbtx is
     generic(
-        g_REFCLK_01     : integer range 0 to 1 := 0;
-        g_QPLL_01       : integer range 0 to 1 := 0;
-        g_USE_QPLL      : boolean := FALSE; -- when set to true the QPLL is used for ref clock
-        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
-        g_RXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_CPLL_REFCLK_01    : integer range 0 to 1 := 0;
+        g_TX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for TX
+        g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
+        g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
+        g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
+        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
     );
     port(
         
@@ -119,15 +121,16 @@ architecture gty_channel_gbtx_arch of gty_channel_gbtx is
     end function get_slv_param;    
 
 
-    constant TXRXOUT_DIV        : integer := get_txrxout_div(g_USE_QPLL);
-    constant TX_PROGDIV_CFG     : real := get_tx_progdiv_cfg(g_USE_QPLL);
-    constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_USE_QPLL);
-    constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_USE_QPLL);
-    constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_USE_QPLL);
-    constant RXPI_CFG0          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_USE_QPLL);
-    constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_USE_QPLL);
-    constant TXPH_CFG           : std_logic_vector(15 downto 0) := get_slv_param("TXPH_CFG", g_USE_QPLL);
-    constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_USE_QPLL);
+    constant TXOUT_DIV          : integer := get_txrxout_div(g_TX_USE_QPLL);
+    constant RXOUT_DIV          : integer := get_txrxout_div(g_RX_USE_QPLL);
+    constant TX_PROGDIV_CFG     : real := get_tx_progdiv_cfg(g_TX_USE_QPLL);
+    constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
+    constant RXPI_CFG0          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_RX_USE_QPLL);
+    constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
+    constant TXPH_CFG           : std_logic_vector(15 downto 0) := get_slv_param("TXPH_CFG", g_TX_USE_QPLL);
+    constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_TX_USE_QPLL);
 
 
     -- clocking
@@ -160,53 +163,71 @@ architecture gty_channel_gbtx_arch of gty_channel_gbtx is
     
 begin
 
+    -- CPLL clock selection
+    g_cpll_ref_clk0 : if g_CPLL_REFCLK_01 = 0 generate
+        refclks(0) <= clks_i.refclks.gtrefclk0;
+    end generate;
+    
+    g_cpll_ref_clk1 : if g_CPLL_REFCLK_01 = 1 generate
+        refclks(1) <= clks_i.refclks.gtrefclk1;
+    end generate;
+
     -- CPLL is used
-    g_cpll : if not g_USE_QPLL generate
-        
-        g_ref_clk0 : if g_REFCLK_01 = 0 generate
-            refclks(0) <= clks_i.refclks.gtrefclk0;
-        end generate;
-        
-        g_ref_clk1 : if g_REFCLK_01 = 1 generate
-            refclks(1) <= clks_i.refclks.gtrefclk1;
-        end generate;
-        
-        rxsysclksel <= "00";
-        txsysclksel <= "00";
-        rxpllclksel <= "00";
-        txpllclksel <= "00";
+    g_cpll_used : if (not g_TX_USE_QPLL) or (not g_RX_USE_QPLL) generate
         cpllreset <= '0';
         cplllocken <= '1';
         cpllpd <= cpllreset_i;
-                
     end generate;
 
-    -- QPLL is used
-    g_qpll : if g_USE_QPLL generate
-        
-        g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
-            qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
-            rxsysclksel <= "10";
-            txsysclksel <= "10";
-            rxpllclksel <= "11";
-            txpllclksel <= "11";
-        end generate;
-        
-        g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
-            qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
-            rxsysclksel <= "11";
-            txsysclksel <= "11";
-            rxpllclksel <= "10";
-            txpllclksel <= "10";
-        end generate;
-        
-        refclks <= "00";
+    -- CPLL not used
+    g_cpll_not_used : if g_TX_USE_QPLL and g_RX_USE_QPLL generate
         cpllpd <= '1';
         cpllreset <= '1';
         cplllocken <= '0';
-                
+    end generate;
+
+    -- QPLL is used
+    g_qpll_used : if g_TX_USE_QPLL or g_RX_USE_QPLL generate
+        qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+        qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
+        qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+        qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
+    end generate;
+
+    -- TX CPLL
+    g_tx_cpll : if not g_TX_USE_QPLL generate
+        txsysclksel <= "00";
+        txpllclksel <= "00";
+    end generate;
+
+    -- RX CPLL
+    g_rx_cpll : if not g_RX_USE_QPLL generate
+        rxsysclksel <= "00";
+        rxpllclksel <= "00";
+    end generate;
+
+    -- TX QPLL0
+    g_tx_qpll0 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 0 generate
+        txsysclksel <= "10";
+        txpllclksel <= "11";
+    end generate;
+
+    -- RX QPLL0
+    g_rx_qpll0 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 0 generate
+        rxsysclksel <= "10";
+        rxpllclksel <= "11";
+    end generate;
+
+    -- TX QPLL1
+    g_tx_qpll1 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 1 generate
+        txsysclksel <= "11";
+        txpllclksel <= "10";
+    end generate;
+
+    -- RX QPLL1
+    g_rx_qpll1 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 1 generate
+        rxsysclksel <= "11";
+        rxpllclksel <= "10";
     end generate;
 
     -- raw encoding 40 bit wide data bus
@@ -525,7 +546,7 @@ begin
             RXOOB_CFG                    => "000000110",
             RXOOB_CLK_CFG                => "PMA",
             RXOSCALRESET_TIME            => "00011",
-            RXOUT_DIV                    => TXRXOUT_DIV, -- keep
+            RXOUT_DIV                    => RXOUT_DIV, -- keep
             RXPCSRESET_TIME              => "00011",
             RXPHBEACON_CFG               => "0000000000000000",
             RXPHDLY_CFG                  => "0010000001110000",
@@ -637,7 +658,7 @@ begin
             TXFIFO_ADDR_CFG              => "LOW",
             TXGBOX_FIFO_INIT_RD_ADDR     => 4,
             TXGEARBOX_EN                 => "FALSE",
-            TXOUT_DIV                    => TXRXOUT_DIV, -- keep
+            TXOUT_DIV                    => TXOUT_DIV, -- keep
             TXPCSRESET_TIME              => "00011",
             TXPHDLY_CFG0                 => "0110000001110000",
             TXPHDLY_CFG1                 => "0000000000001111",

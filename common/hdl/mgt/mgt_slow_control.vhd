@@ -28,7 +28,8 @@ entity mgt_slow_control is
     generic(
         g_NUM_CHANNELS          : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;        
-        g_IPB_CLK_PERIOD_NS     : integer
+        g_IPB_CLK_PERIOD_NS     : integer;
+        g_STABLE_CLK_PERIOD_NS  : integer
     );
     port(
         
@@ -40,6 +41,7 @@ entity mgt_slow_control is
 
         tx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         rx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+        cpll_reset_arr_o        : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         
         tx_slow_ctrl_arr_o      : out t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
         rx_slow_ctrl_arr_o      : out t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
@@ -68,11 +70,13 @@ end mgt_slow_control;
 
 architecture mgt_slow_control_arch of mgt_slow_control is
 
+    constant CPLLPD_PULSE_LENGTH    : std_logic_vector(11 downto 0) := std_logic_vector(to_unsigned(2_000 / g_STABLE_CLK_PERIOD_NS, 12)); -- 2us
+
     signal tx_slow_ctrl_arr         : t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
     signal rx_slow_ctrl_arr         : t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
     signal misc_ctrl_arr            : t_mgt_misc_ctrl_arr(g_NUM_CHANNELS - 1 downto 0);
 
-    signal reset_arr                : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+    signal cpll_reset_arr           : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
     signal loopback_arr             : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
     signal txpd_arr                 : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
     signal rxpd_arr                 : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
@@ -95,9 +99,6 @@ architecture mgt_slow_control_arch of mgt_slow_control is
 
 begin
 
-    tx_reset_arr_o <= reset_arr;
-    rx_reset_arr_o <= reset_arr;
-    
     tx_slow_ctrl_arr_o <= tx_slow_ctrl_arr;
     rx_slow_ctrl_arr_o <= rx_slow_ctrl_arr;
     misc_ctrl_arr_o <= misc_ctrl_arr;
@@ -136,6 +137,19 @@ begin
                 src_in_bin   => prbs_err_cnt_arr(chan),
                 dest_clk     => clk_stable_i,
                 dest_out_bin => prbs_err_cnt_sync_arr(chan)
+            );
+        
+        -- CPLL is reset using the CPLLPD port, which has a required pulse length of 2us or more
+        i_cpll_reset_pulse_extend : entity work.pulse_extend
+            generic map(
+                DELAY_CNT_LENGTH => 12
+            )
+            port map(
+                clk_i          => clk_stable_i,
+                rst_i          => '0',
+                pulse_length_i => CPLLPD_PULSE_LENGTH,
+                pulse_i        => cpll_reset_arr(chan),
+                pulse_o        => cpll_reset_arr_o(chan)
             );
         
     end generate;
