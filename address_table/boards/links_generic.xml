@@ -20,8 +20,8 @@
         fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
 
   <node id="BOARD_TYPE" address="0x0" mask="0x000f0000" permission="r"
-        description="Type of board that this firmware is running on: "
-        fw_signal="std_logic_vector(to_unsigned(CFG_BOARD_TYPE, 4))"/>
+        description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
+        fw_signal="CFG_BOARD_TYPE"/>
 
   <node id="MGT_CHANNEL_${MGT}" address="0x100"
         description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer to the gem_board_config_pkg.vhd for the mapping details."
