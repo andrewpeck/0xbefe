@@ -22,12 +22,12 @@ mkdir $BASE_DIR/sigasi/$PROJECT
 
 SCRIPTS_DIR=`pwd`
 cd $BASE_DIR/sigasi/$PROJECT
-source /opt/Xilinx/Vivado/$VIVADO_VER/settings64.sh
+source /tools/Xilinx/Vivado/2020.2/settings64.sh
 #generate a list of files in CSV format
-vivado -mode batch -source $HOME/programs/dev/sigasi/SigasiProjectCreator/convertVivadoProjectToCsv.tcl $SCRIPTS_DIR/../Projects/$PROJECT/$PROJECT.xpr
+vivado -mode batch -source $HOME/sigasi/SigasiProjectCreator/convertVivadoProjectToCsv.tcl $SCRIPTS_DIR/../Projects/$PROJECT/$PROJECT.xpr
 
 #generate the sigasi project
-python2 $HOME/programs/dev/sigasi/SigasiProjectCreator/convertCsvFileToTree.py $PROJECT vivado_files.csv
+python2 $HOME/sigasi/SigasiProjectCreator/convertCsvFileToTree.py $PROJECT vivado_files.csv
 
 #remove all IP files
 sed -i "/\/ip\//d" .library_mapping.xml

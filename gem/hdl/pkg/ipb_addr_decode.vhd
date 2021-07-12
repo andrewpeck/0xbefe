@@ -13,6 +13,7 @@ package ipb_addr_decode is
         daq              : integer;
         ttc              : integer;
         trigger          : integer;
+        me0_trigger      : integer;
         system           : integer;
         test             : integer;
         slow_control     : integer;
@@ -34,7 +35,8 @@ package ipb_addr_decode is
         test => 22,
         slow_control => 23,
         config_blaster => 24,
-        none => 25
+        none => 25,
+        me0_trigger => 26
     );
 
     function ipb_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer;
@@ -93,6 +95,7 @@ package body ipb_addr_decode is
         elsif std_match(addr, "--------01100000000-------------") then sel := C_IPB_SLV.oh_links;
         elsif std_match(addr, "--------011100000000000---------") then sel := C_IPB_SLV.daq;
         elsif std_match(addr, "--------10000000000-------------") then sel := C_IPB_SLV.trigger;
+        elsif std_match(addr, "--------------------------------") then sel := C_IPB_SLV.me0_trigger;
         elsif std_match(addr, "--------1001000-----------------") then sel := C_IPB_SLV.system;
         elsif std_match(addr, "--------1010000-----------------") then sel := C_IPB_SLV.test;
         elsif std_match(addr, "--------1011000-----------------") then sel := C_IPB_SLV.slow_control;
