@@ -24,7 +24,7 @@ package system_package is
   constant g_NUM_OF_GTH_COMMONs : integer := 17;
   constant g_NUM_OF_GTH_GTs     : integer := 68;
 
-  type t_gth_link_type is (gth_null, gth_4p8g, gth_3p2g, gth_10p24g, gth_tx_10p24g_rx_3p2g, gth_9p6g, gth_2p56g); -- the 3.2Gbps and 9.6Gbps are 8b10b, while 4.8, 10.24, and 2.56Gbps are raw (used with GBT core)
+  type t_gth_link_type is (gth_null, gth_1p6g_8b10b_buf, gth_1p25g_8b10b_buf, gth_4p8g, gth_3p2g, gth_10p24g, gth_tx_10p24g_rx_3p2g, gth_9p6g, gth_2p56g); -- the 3.2Gbps and 9.6Gbps are 8b10b, while 4.8, 10.24, and 2.56Gbps are raw (used with GBT core)
   type t_gth_txusrclk is (GTH_USRCLK_40, GTH_USRCLK_80, GTH_USRCLK_120, GTH_USRCLK_160, GTH_USRCLK_320, GTH_USRCLK_NULL);
 
   type t_gth_config is
