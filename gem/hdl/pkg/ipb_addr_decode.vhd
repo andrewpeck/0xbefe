@@ -34,7 +34,7 @@ package ipb_addr_decode is
         test => 22,
         slow_control => 23,
         config_blaster => 24,
-        none => 25
+        none => C_NUM_IPB_SLAVES
     );
 
     function ipb_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer;

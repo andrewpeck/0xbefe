@@ -99,7 +99,7 @@ entity gem_amc is
         daq_to_daqlink_o        : out t_daq_to_daqlink;
         daqlink_to_daq_i        : in  t_daqlink_to_daq;
         
-        -- Board serial number
+        -- Board ID
         board_id_i              : in std_logic_vector(15 downto 0);
       
         -- PROMless
@@ -573,11 +573,7 @@ begin
     i_gem_system : entity work.gem_system_regs
         generic map(
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
-            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
-            g_FW_DATE            => g_FW_DATE,
-            g_FW_TIME            => g_FW_TIME,
-            g_FW_VER             => g_FW_VER,
-            g_FW_SHA             => g_FW_SHA
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
@@ -587,7 +583,6 @@ begin
             ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.system),
             ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.system),
             ipb_mon_miso_arr_i          => ipb_miso_arr,
-            board_id_o                  => open,
             loopback_gbt_test_en_o      => loopback_gbt_test_en,
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,

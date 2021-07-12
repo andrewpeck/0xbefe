@@ -1,0 +1,53 @@
+<!-- Optical links module -->
+<node id="SYSTEM"  address="0x00000000"
+      description="This module contains counters and control registers of all the optical links on the board (regardless of link rate or what they connect to)"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/misc/board_system.vhd"
+      fw_user_clock_signal="ipb_clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="GENERAL" address="0x0">
+    <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
+          description="User programmable board ID that gets embedded in the DAQ data stream"
+          fw_signal="board_id" fw_default="0xbefe"/>
+  </node>
+
+  <node id="RELEASE" address="0x50">
+    <node id="MAJOR" address="0x0" mask="0xff000000" permission="r"
+          description="Firmware release major version"
+          fw_signal="g_FW_VER(31 downto 24)"/>
+    <node id="MINOR" address="0x0" mask="0x00ff0000" permission="r"
+          description="Firmware release minor version"
+          fw_signal="g_FW_VER(23 downto 16)"/>
+    <node id="BUILD" address="0x0" mask="0x0000ffff" permission="r"
+          description="Firmware release build version"
+          fw_signal="g_FW_VER(15 downto 0)"/>
+    <node id="DATE" address="0x1" permission="r"
+          description="Firmware release date (read as hex, format: ddmmyyyy)"
+          fw_signal="g_FW_DATE"/>
+    <node id="TIME" address="0x2" permission="r"
+          description="Firmware release time (read as hex, format: 00HHMMSS)"
+          fw_signal="g_FW_TIME"/>
+    <node id="GIT_SHA" address="0x3" permission="r"
+          description="Firmware release git commit hash"
+          fw_signal="g_FW_SHA"/>
+    <node id="FW_FLAVOR" address="0x4" mask="0x0000000f" permission="r"
+          description="Firmware flavor: 0 = GEM_AMC, 1 = CSC_FED"
+          fw_signal="CFG_FW_FLAVOR"/>
+    <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
+          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
+          fw_signal="CFG_BOARD_TYPE"/>
+    <node id="NUM_LINKS" address="0x4" mask="0x0000ff00" permission="r"
+          description="The number of logic optical links that this board has."
+          fw_signal="std_logic_vector(to_unsigned(CFG_BOARD_MAX_LINKS, 8))"/>
+    <node id="NUM_MGTS" address="0x4" mask="0x00ff0000" permission="r"
+          description="The number of MGTs that are intantiated in this firmware."
+          fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
+  </node>
+
+</node> <!-- End of system module -->

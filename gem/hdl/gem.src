@@ -36,7 +36,6 @@ gem/hdl/oh/link/link_rx_trigger_ge21.vhd
 # Trigger
 #gem/hdl/trigger/trigger.vhd                <-- use the generated version specific to the project
 gem/hdl/trigger/trigger_output.vhd
-gem/hdl/trigger/trigger_me0.vhd
 gem/hdl/trigger/trigger_input_processor.vhd
 gem/hdl/trigger/sbit_monitor.vhd
 

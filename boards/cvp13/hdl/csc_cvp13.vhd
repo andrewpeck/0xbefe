@@ -147,6 +147,7 @@ architecture csc_cvp13_arch of csc_cvp13 is
     
     -- other
     signal clk100               : std_logic;
+    signal board_id             : std_logic_vector(15 downto 0);
 
     -- debug
     signal tst_bx_cnt           : unsigned(11 downto 0) := (others => '0');
@@ -305,16 +306,32 @@ begin
         );
 
     --================================--
-    -- CSC Logic
+    -- Board System registers
     --================================--
 
-    i_csc_fed : entity work.csc_fed
+    i_board_system : entity work.board_system
         generic map(
             g_FW_DATE           => GLOBAL_DATE,
             g_FW_TIME           => GLOBAL_TIME,
             g_FW_VER            => GLOBAL_VER,
             g_FW_SHA            => GLOBAL_SHA,
-            g_BOARD_TYPE        => CFG_BOARD_TYPE,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+        )
+        port map(
+            reset_i     => '0',
+            board_id_o  => board_id,
+            ipb_reset_i => ipb_reset,
+            ipb_clk_i   => ipb_clk,
+            ipb_mosi_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+        );
+
+    --================================--
+    -- CSC Logic
+    --================================--
+
+    i_csc_fed : entity work.csc_fed
+        generic map(
             g_NUM_OF_DMBs       => CFG_NUM_DMBS,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
@@ -355,6 +372,9 @@ begin
             daqlink_clk_locked_i    => '1',
             daq_to_daqlink_o        => daq_to_daqlink,
             daqlink_to_daq_i        => daqlink_to_daq,
+
+            -- Board ID
+            board_id_i              => board_id,
             
             -- PROMless
             to_promless_o           => to_promless,

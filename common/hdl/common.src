@@ -57,6 +57,7 @@ common/hdl/mgt/mgt_phalign_multi_auto.vhd
 common/hdl/misc/promless_fpga_loader.vhd
 #common/hdl/misc/promless_bram.vhd            <-- use the generated version specific to the project
 common/hdl/misc/gbe_tx_driver.vhd
+#common/hdl/misc/board_system.vhd             <-- use the generated version specific to the project
 
 # Tests
 common/hdl/tests/eth_test.vhd

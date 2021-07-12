@@ -148,36 +148,11 @@
           sw_ctrl_configure_set="0x1"/>
   </node>
 
-  <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
-        description="Board ID that gets embedded in the AMC13 header"
-        fw_signal="board_id" fw_default="0xbefe"/>
-
   <node id="RELEASE" address="0x3">
-    <node id="MAJOR" address="0x0" mask="0xff000000" permission="r"
-          description="Firmware release major version"
-          fw_signal="g_FW_VER(31 downto 24)"/>
-    <node id="MINOR" address="0x0" mask="0x00ff0000" permission="r"
-          description="Firmware release minor version"
-          fw_signal="g_FW_VER(23 downto 16)"/>
-    <node id="BUILD" address="0x0" mask="0x0000ffff" permission="r"
-          description="Firmware release build version"
-          fw_signal="g_FW_VER(15 downto 0)"/>
-    <node id="DATE" address="0x1" permission="r"
-          description="Firmware release date (read as hex, format: ddmmyyyy)"
-          fw_signal="g_FW_DATE"/>
-    <node id="TIME" address="0x2" permission="r"
-          description="Firmware release time (read as hex, format: 00HHMMSS)"
-          fw_signal="g_FW_TIME"/>
-    <node id="GIT_SHA" address="0x3" permission="r"
-          description="Firmware release git commit hash"
-          fw_signal="g_FW_SHA"/>
-    <node id="GEM_STATION" address="0x4" mask="0x00000003" permission="r"
+    <node id="GEM_STATION" address="0x0" mask="0x00000003" permission="r"
           description="GEM station that this firmware was compiled for (0 means ME0, 1 means GE1/1, 2 means GE2/1)"
           fw_signal="std_logic_vector(to_unsigned(gem_station, 2))"/>
-    <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
-          description="Board type: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
-          fw_signal="board_type"/>
-    <node id="NUM_OF_OH" address="0x4" mask="0x00001f00" permission="r"
+    <node id="NUM_OF_OH" address="0x0" mask="0x000001f0" permission="r"
           description="Number of supported optohybrids"
           fw_signal="num_of_oh"/>
   </node>

@@ -18,8 +18,11 @@ use work.project_config.all;
 --============================================================================
 package board_config_package is
 
-    ------------ Board specific constants ------------
+    ------------ Firmware flavor and board type  ------------
+    constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"1"; -- 0 = GEM_AMC; 1 = CSC_FED
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"3"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
+
+    ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
 
     ------------ DAQ configuration ------------

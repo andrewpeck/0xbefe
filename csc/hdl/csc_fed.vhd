@@ -22,18 +22,11 @@ use work.ttc_pkg.all;
 
 entity csc_fed is
     generic(
-        g_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- this is not used except for putting it in a register for the user to see
         g_NUM_OF_DMBs        : integer;
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQLINK_CLK_FREQ   : integer;
-        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
-
-        -- Firmware version, date, time, git sha
-        g_FW_DATE            : std_logic_vector (31 downto 0);
-        g_FW_TIME            : std_logic_vector (31 downto 0);
-        g_FW_VER             : std_logic_vector (31 downto 0);
-        g_FW_SHA             : std_logic_vector (31 downto 0)        
+        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
     );
     port(
         -- Resets
@@ -69,6 +62,9 @@ entity csc_fed is
         daqlink_clk_locked_i    : in  std_logic;
         daq_to_daqlink_o        : out t_daq_to_daqlink;
         daqlink_to_daq_i        : in  t_daqlink_to_daq;
+        
+        -- Board ID
+        board_id_i              : in std_logic_vector(15 downto 0);
         
         -- PROMless
         to_promless_o           : out t_to_promless;
@@ -136,8 +132,8 @@ architecture csc_fed_arch of csc_fed is
     signal ipb_miso_arr         : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
 
     --== PROMless ==--
-    signal promless_stats               : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
-    signal promless_cfg                 : t_promless_cfg;
+    signal promless_stats       : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
+    signal promless_cfg         : t_promless_cfg;
 
 begin
 
@@ -153,6 +149,8 @@ begin
 
     ipb_miso_arr_o <= ipb_miso_arr;
     csc_spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
+    
+    board_id <= board_id_i;
 
     --================================--
     -- Power-on reset  
@@ -238,13 +236,8 @@ begin
     i_system : entity work.system_regs
         generic map(
             g_NUM_OF_DMBs        => g_NUM_OF_DMBs,
-            g_BOARD_TYPE         => g_BOARD_TYPE,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
-            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
-            g_FW_DATE            => g_FW_DATE,
-            g_FW_TIME            => g_FW_TIME,
-            g_FW_VER             => g_FW_VER,
-            g_FW_SHA             => g_FW_SHA
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i              => reset,
@@ -254,7 +247,6 @@ begin
             ipb_mosi_i           => ipb_mosi_arr_i(C_IPB_SLV.system),
             ipb_miso_o           => ipb_miso_arr(C_IPB_SLV.system),
             ipb_mon_miso_arr_i   => ipb_miso_arr,
-            board_id_o           => board_id,
             global_reset_o       => manual_global_reset,
             gbt_reset_o          => manual_gbt_reset,
             manual_ipbus_reset_o => manual_ipbus_reset,
