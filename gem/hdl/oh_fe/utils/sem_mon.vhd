@@ -16,6 +16,7 @@ use work.hardware_pkg.all;
 entity sem_mon is
   port(
     clk_i            : in  std_logic;
+    sysclk_i         : in  std_logic;
     inject_strobe    : in  std_logic;
     inject_address   : in  std_logic_vector(39 downto 0);
     heartbeat_o      : out std_logic;
@@ -25,7 +26,13 @@ entity sem_mon is
     classification_o : out std_logic;
     injection_o      : out std_logic;
     essential_o      : out std_logic;
-    uncorrectable_o  : out std_logic
+    uncorrectable_o  : out std_logic;
+
+    correction_pulse_o    : out std_logic;
+    uncorrectable_pulse_o : out std_logic;
+    essential_pulse_o     : out std_logic;
+
+    idle_o : out std_logic
     );
 end sem_mon;
 
@@ -206,24 +213,80 @@ begin
 
   sem_gen_a7 : if (FPGA_TYPE = "A7") generate
 
+    signal status_initialization, status_observation, status_correction,
+      status_classification, status_injection, status_essential,
+      status_uncorrectable : std_logic;
+
+    signal idle : std_logic;
+
+    signal correction_r     : std_logic;
+    signal uncorrectable_r  : std_logic;
+    signal essential_r      : std_logic;
+    signal inject_strobe_r  : std_logic := '0';
+    signal inject_strobe_os : std_logic := '0';
+
+  begin
+
+
+    -- The error injection control is used to indicate an error injection
+    -- request. The inject_strobe signal should be pulsed high for one cycle,
+    -- synchronous to icap_clk, concurrent with the application of a valid
+    -- address to the inject_address input. The error injection control must
+    -- only be used when the controller is idle
+
+    idle <= not (status_initialization or status_observation or
+                 status_correction or status_classification or status_injection);
+
+    initialization_o <= status_initialization;
+    observation_o    <= status_observation;
+    correction_o     <= status_correction;
+    classification_o <= status_classification;
+    injection_o      <= status_injection;
+    essential_o      <= status_essential;
+    uncorrectable_o  <= status_uncorrectable;
+    idle_o           <= idle;
+
+    -- for counting, make rising edge sensitive versions of these signals
+    process (sysclk_i) is
+    begin
+      if (rising_edge(sysclk_i)) then
+        correction_r    <= status_correction;
+        uncorrectable_r <= status_uncorrectable;
+        essential_r     <= status_essential;
+      end if;
+    end process;
+
+    process (clk_i) is
+    begin
+      if (rising_edge(clk_i)) then
+        inject_strobe_r <= inject_strobe;
+      end if;
+    end process;
+
+    inject_strobe_os <= '1' when inject_strobe_r = '0' and inject_strobe = '1' else '0';
+
+    correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
+    uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
+    essential_pulse_o     <= '1' when essential_r = '0' and status_essential = '1'         else '0';
+
     sem_a7_inst : sem_a7
 
       port map (
         status_heartbeat      => heartbeat_o,
-        status_initialization => initialization_o,
-        status_observation    => observation_o,
-        status_correction     => correction_o,
-        status_classification => classification_o,
-        status_injection      => injection_o,
-        status_essential      => essential_o,
-        status_uncorrectable  => uncorrectable_o,
+        status_initialization => status_initialization,
+        status_observation    => status_observation,
+        status_correction     => status_correction,
+        status_classification => status_classification,
+        status_injection      => status_injection,
+        status_essential      => status_essential,
+        status_uncorrectable  => status_uncorrectable,
         monitor_txdata        => open,
         monitor_txwrite       => open,
         monitor_txfull        => '0',
         monitor_rxdata        => (others => '0'),
         monitor_rxread        => open,
         monitor_rxempty       => '1',
-        inject_strobe         => inject_strobe,
+        inject_strobe         => inject_strobe_os,
         inject_address        => inject_address,
         icap_o                => icap_o,
         icap_csib             => icap_csb,

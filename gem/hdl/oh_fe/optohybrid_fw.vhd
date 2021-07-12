@@ -23,6 +23,8 @@ use unisim.vcomponents.all;
 entity optohybrid_fw is
   generic (
 
+    STANDALONE_MODE : boolean := false;
+
     -- turn off to disable the MGTs (for simulation and such)
     GEN_TRIG_PHY : boolean := true;
 
@@ -135,6 +137,7 @@ architecture Behavioral of optohybrid_fw is
   signal idlyrdy     : std_logic;
   signal mmcm_locked : std_logic;
   signal clocks      : clocks_t;
+  signal async_clock : std_logic := '0';
   signal ttc         : ttc_t;
 
   signal vtrx_mabs : std_logic_vector (1 downto 0);
@@ -151,6 +154,8 @@ architecture Behavioral of optohybrid_fw is
   signal trigger_reset : std_logic;
   signal system_reset  : std_logic;
   signal cnt_snap      : std_logic;
+
+  signal trigger_prbs_en : std_logic;
 
   attribute MAX_FANOUT                 : string;
   attribute MAX_FANOUT of system_reset : signal is "50";
@@ -173,6 +178,9 @@ architecture Behavioral of optohybrid_fw is
   -- Master
   signal ipb_mosi_gbt : ipb_wbus;
   signal ipb_miso_gbt : ipb_rbus;
+
+  signal ipb_mosi_vio : ipb_wbus;
+  signal ipb_miso_vio : ipb_rbus;
 
   -- Master
   signal ipb_mosi_masters : ipb_wbus_array (WB_MASTERS-1 downto 0);
@@ -202,7 +210,9 @@ begin
   --------------------------------------------------------------------------------
 
   clocking_inst : entity work.clocking
+    generic map (ASYNC_MODE => STANDALONE_MODE)
     port map(
+      async_clock_i => async_clock,
       clock_p       => clock_p,
       clock_n       => clock_n,
       mmcm_locked_o => mmcm_locked,
@@ -266,10 +276,24 @@ begin
   -- Wishbone
   --------------------------------------------------------------------------------
 
+  vio_ipb_master_1 : entity work.vio_ipb_master
+    generic map (
+      GE21 => GE21,
+      GE11 => GE11
+      )
+    port map (
+      clock      => clocks.clk40,
+      ipb_mosi_o => ipb_mosi_vio,
+      ipb_miso_i => ipb_miso_vio
+      );
+
   -- This module is the Wishbone switch which redirects requests from the masters to the slaves.
 
   ipb_mosi_masters(0) <= ipb_mosi_gbt;
   ipb_miso_gbt        <= ipb_miso_masters(0);
+
+  ipb_mosi_masters(1) <= ipb_mosi_vio;
+  ipb_miso_vio        <= ipb_miso_masters(1);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
     generic map (EN_TMR_IPB_SWITCH)
@@ -338,9 +362,10 @@ begin
       ipb_switch_tmr_err => ipb_switch_tmr_err,
 
       -- clock and reset
-      clocks => clocks,
-      reset  => system_reset,
-      ttc_i  => ttc,
+      clocks        => clocks,
+      async_clock_o => async_clock,
+      reset         => system_reset,
+      ttc_i         => ttc,
 
       -- to drive LED controller only
       mgts_ready => mgts_ready,
@@ -376,7 +401,9 @@ begin
   --------------------------------------------------------------------------------
 
   trigger_inst : entity work.trigger
+    generic map (STANDALONE_MODE => STANDALONE_MODE)
     port map (
+
       -- wishbone
       ipb_mosi_i => ipb_mosi_slaves(IPB_SLAVE.TRIG),
       ipb_miso_o => ipb_miso_slaves(IPB_SLAVE.TRIG),
@@ -402,7 +429,10 @@ begin
       sbit_clusters_o => sbit_clusters,
       cluster_count_o => cluster_count,
       overflow_o      => sbit_overflow,
-      active_vfats_o  => active_vfats
+      active_vfats_o  => active_vfats,
+
+      --
+      trigger_prbs_en_o => trigger_prbs_en
       );
 
   --------------------------------------------------------------------------------
@@ -433,10 +463,12 @@ begin
     formatter_loop : for I in 0 to 2*EN_TMR_TRIG_FORMATTER generate
     begin
       trigger_data_formatter_inst : entity work.trigger_data_formatter
+        generic map (g_TMR_INST => I)
         port map (
           clocks          => clocks,
           reset_i         => system_reset,
           ttc_i           => ttc,
+          prbs_en_i       => trigger_prbs_en,
           clusters_i      => sbit_clusters,
           overflow_i      => sbit_overflow,
           bxn_counter_i   => bxn_counter,

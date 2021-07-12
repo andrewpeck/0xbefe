@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Mon Jun 22 20:27:00 2020
+# Date: Fri Jun 25 20:14:37 2021
 #
 ##############################################################
 #
@@ -49,7 +49,7 @@ CSET clk_out3_port=clk160_90_o
 CSET clk_out3_use_fine_ps_gui=false
 CSET clk_out4_port=clk200_o
 CSET clk_out4_use_fine_ps_gui=false
-CSET clk_out5_port=clk200_o
+CSET clk_out5_port=clk80_o
 CSET clk_out5_use_fine_ps_gui=false
 CSET clk_out6_port=clk40_alwayson_o
 CSET clk_out6_use_fine_ps_gui=false
@@ -89,9 +89,9 @@ CSET clkout4_requested_phase=0
 CSET clkout4_used=true
 CSET clkout5_drives=BUFG
 CSET clkout5_requested_duty_cycle=50.000
-CSET clkout5_requested_out_freq=200.0
+CSET clkout5_requested_out_freq=80
 CSET clkout5_requested_phase=0
-CSET clkout5_used=false
+CSET clkout5_used=true
 CSET clkout6_drives=BUFG
 CSET clkout6_requested_duty_cycle=50.000
 CSET clkout6_requested_out_freq=40.08
@@ -170,7 +170,7 @@ CSET mmcm_clkout3_duty_cycle=0.5
 CSET mmcm_clkout3_phase=0.000
 CSET mmcm_clkout3_use_fine_ps=false
 CSET mmcm_clkout4_cascade=false
-CSET mmcm_clkout4_divide=4
+CSET mmcm_clkout4_divide=10
 CSET mmcm_clkout4_duty_cycle=0.5
 CSET mmcm_clkout4_phase=0.000
 CSET mmcm_clkout4_use_fine_ps=false
@@ -189,7 +189,7 @@ CSET mmcm_notes=None
 CSET mmcm_ref_jitter1=0.002
 CSET mmcm_ref_jitter2=0.010
 CSET mmcm_startup_wait=false
-CSET num_out_clks=4
+CSET num_out_clks=5
 CSET override_dcm=false
 CSET override_dcm_clkgen=false
 CSET override_mmcm=false
@@ -266,4 +266,4 @@ CSET use_status=false
 MISC pkg_timestamp=2012-05-10T12:44:55Z
 # END Extra information
 GENERATE
-# CRC: d7001348
+# CRC: 74bcfbf5

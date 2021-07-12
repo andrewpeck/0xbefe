@@ -6,6 +6,7 @@
 ----------------------------------------------------------------------------------
 -- Description:
 --   This module implements base level functionality for a single counter
+--   with triple modular redundancy
 ----------------------------------------------------------------------------------
 
 library ieee;

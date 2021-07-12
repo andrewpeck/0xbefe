@@ -1,170 +1,176 @@
-module led_control (
-  input clock,
+module led_control
+  (
+   input             clock,
 
-  input mgts_ready,
-  input txfsm_done,
-  input pll_lock,
+   input             mgts_ready,
+   input             txfsm_done,
+   input             pll_lock,
 
-  input mmcm_locked,
+   input             mmcm_locked,
 
-  input ttc_l1a,
-  input ttc_bc0,
-  input ttc_resync,
+   input             ttc_l1a,
+   input             ttc_bc0,
+   input             ttc_resync,
 
-  input gbt_rxready,
-  input gbt_rxvalid,
-  input gbt_link_ready,
-  input gbt_request_received,
+   input             gbt_rxready,
+   input             gbt_rxvalid,
+   input             gbt_link_ready,
+   input             gbt_request_received,
 
-  input reset,
+   input             reset,
 
-  input [10:0] cluster_count_i,
+   input [10:0]      cluster_count_i,
 
-  output [31:0] cluster_rate,
+   output [31:0]     cluster_rate,
 
-  output reg [15:0] led_out
-);
+   output            async_clock_o,
 
-//----------------------------------------------------------------------------------------------------------------------
-// Emergency Clock
-//----------------------------------------------------------------------------------------------------------------------
+   output reg [15:0] led_out
+   );
 
-  wire async_clock;
+   //----------------------------------------------------------------------------------------------------------------------
+   // Emergency Clock
+   //----------------------------------------------------------------------------------------------------------------------
 
-  startup startup (.clock_o (async_clock)); // get ~50MHz clock from internal oscillator
+   wire              async_clock;
+   assign async_clock_o = async_clock;
 
-//----------------------------------------------------------------------------------------------------------------------
-// LED Source
-//----------------------------------------------------------------------------------------------------------------------
+   startup startup (.clock_o (async_clock)); // get ~50MHz clock from internal oscillator
 
-  wire cylon_mode;
+   //----------------------------------------------------------------------------------------------------------------------
+   // LED Source
+   //----------------------------------------------------------------------------------------------------------------------
 
-  wire [15:0] led_cylon;
-  wire [15:0] led_logic;
-  wire [15:0] led_err;
-  wire fader_led;
+   wire              cylon_mode;
 
-  always @(*) begin
+   wire [15:0]       led_cylon;
+   wire [15:0]       led_logic;
+   wire [15:0]       led_err;
+   wire              fader_led;
 
-    if (!gbt_rxready || !gbt_rxvalid)
-      led_out <= {led_logic[15:8],{8{fader_led}}};
+   always @(*) begin
 
-    else if (!mmcm_locked)
-      led_out <= {led_logic[15:8], (led_err[7:0] |  {8{mmcm_locked}})};
+      if (!gbt_rxready || !gbt_rxvalid)
+        led_out <= {led_logic[15:8],{8{fader_led}}};
 
-    else if (cylon_mode)
-      led_out <= led_cylon;
+      else if (!mmcm_locked)
+        led_out <= {led_logic[15:8], (led_err[7:0] |  {8{mmcm_locked}})};
 
-    else
-      led_out <= led_logic;
+      else if (cylon_mode)
+        led_out <= led_cylon;
 
-  end
+      else
+        led_out <= led_logic;
 
-//----------------------------------------------------------------------------------------------------------------------
-// LED Blinkers
-//----------------------------------------------------------------------------------------------------------------------
+   end
 
-  // count to 21 bits for 40 MHz clock to divide to 2 Hz
+   //----------------------------------------------------------------------------------------------------------------------
+   // LED Blinkers
+   //----------------------------------------------------------------------------------------------------------------------
 
-  wire clk = clock;
+   // count to 21 bits for 40 MHz clock to divide to 2 Hz
 
-  reg [20:0] clk_cnt=0;
-  reg        clk_led=0;
-  always @(posedge clk) begin
-    clk_cnt <= clk_cnt + 1'b1;
+   wire clk = clock;
 
-    if (clk_cnt==0)
-      clk_led <= ~ clk_led;
-  end
+   reg [20:0] clk_cnt=0;
+   reg        clk_led=0;
+   always @(posedge clk) begin
+      clk_cnt <= clk_cnt + 1'b1;
 
-  // count to 27 bits , ~3.5 second period
-  fader #(.MXFADERCNT(27), .MXFADERBITS(5)) fader (.clock (async_clock), .led(fader_led));
+      if (clk_cnt==0)
+        clk_led <= ~ clk_led;
+   end
 
-//----------------------------------------------------------------------------------------------------------------------
-// Rate Display
-//----------------------------------------------------------------------------------------------------------------------
+   // count to 27 bits , ~3.5 second period
+   fader #(.MXFADERCNT(27), .MXFADERBITS(5)) fader (.clock (async_clock), .led(fader_led));
 
-  wire [7:0] progress_bar;
-  reg [10:0] cluster_count;
+   //----------------------------------------------------------------------------------------------------------------------
+   // Rate Display
+   //----------------------------------------------------------------------------------------------------------------------
 
-  always @(posedge clock) begin
-    cluster_count <= cluster_count_i;
-  end
+   wire [7:0] progress_bar;
+   reg [10:0] cluster_count;
 
-  progress_bar #(
-    .g_LOGARITHMIC           (32'd1), // 1 for LOG scale (ignores step )
-    .g_CLK_FREQUENCY         (32'd40079000), // 40MHz LHC frequency
-    .g_COUNTER_WIDTH         (32'd32),
-    .g_INCREMENTER_WIDTH     (32'd11),
-    .g_PROGRESS_BAR_WIDTH    (32'd8),   // we'll have 8 LEDs as a rate progress bar
-    .g_PROGRESS_BAR_STEP     (32'd100), // each bar is 100 Hz
-    .g_SPEEDUP_FACTOR        (32'd4)    // update 16 times per second
-  )
-  u_rate_cnt (
-    .clk_i           (clock),
-    .reset_i         (reset),
-    .increment_i     (cluster_count),
-    .rate_o          (cluster_rate),
-    .progress_bar_o  (progress_bar)
-  );
+   always @(posedge clock) begin
+      cluster_count <= cluster_count_i;
+   end
 
-//----------------------------------------------------------------------------------------------------------------------
-// Cylon Mode
-//----------------------------------------------------------------------------------------------------------------------
+   progress_bar
+     #(
+       .g_LOGARITHMIC           (32'd1), // 1 for LOG scale (ignores step )
+       .g_CLK_FREQUENCY         (32'd40079000), // 40MHz LHC frequency
+       .g_COUNTER_WIDTH         (32'd32),
+       .g_INCREMENTER_WIDTH     (32'd11),
+       .g_PROGRESS_BAR_WIDTH    (32'd8),   // we'll have 8 LEDs as a rate progress bar
+       .g_PROGRESS_BAR_STEP     (32'd100), // each bar is 100 Hz
+       .g_SPEEDUP_FACTOR        (32'd4)    // update 16 times per second
+       )
+   u_rate_cnt
+     (
+      .clk_i           (clock),
+      .reset_i         (reset),
+      .increment_i     (cluster_count),
+      .rate_o          (cluster_rate),
+      .progress_bar_o  (progress_bar)
+      );
 
-  cylon1 u_cylon (clock, 2'd0, led_cylon[7:0]);
+   //----------------------------------------------------------------------------------------------------------------------
+   // Cylon Mode
+   //----------------------------------------------------------------------------------------------------------------------
 
-  assign led_cylon [15:8] = led_logic[15:8];
+   cylon1 u_cylon (clock, 2'd0, led_cylon[7:0]);
 
-  // leave cylon mode if we've seen a cluster this run
-  reg first_sbit_seen = 0;
-  always @(posedge clock) begin
-    if (ttc_resync || reset)
-      first_sbit_seen <= 1'b0;
-    else if (cluster_count > 0)
-      first_sbit_seen <= 1'b1;
-  end
+   assign led_cylon [15:8] = led_logic[15:8];
 
-  // once we see s-bits, leave cylon mode and start the rate counter
-  assign cylon_mode = ~first_sbit_seen;
+   // leave cylon mode if we've seen a cluster this run
+   reg first_sbit_seen = 0;
+   always @(posedge clock) begin
+      if (ttc_resync || reset)
+        first_sbit_seen <= 1'b0;
+      else if (cluster_count > 0)
+        first_sbit_seen <= 1'b1;
+   end
 
-//----------------------------------------------------------------------------------------------------------------------
-// Error Mode
-//----------------------------------------------------------------------------------------------------------------------
+   // once we see s-bits, leave cylon mode and start the rate counter
+   assign cylon_mode = ~first_sbit_seen;
 
-  err_indicator u_err_ind (async_clock, 2'd0, ~mmcm_locked, led_err[15:0]);
+   //----------------------------------------------------------------------------------------------------------------------
+   // Error Mode
+   //----------------------------------------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------------------------------------
-// GBT Req Rx
-//----------------------------------------------------------------------------------------------------------------------
+   err_indicator u_err_ind (async_clock, 2'd0, ~mmcm_locked, led_err[15:0]);
 
-  wire gbt_flash;
-  x_flashsm flash_gbt (gbt_request_received, 1'b0, clock, gbt_flash);
+   //----------------------------------------------------------------------------------------------------------------------
+   // GBT Req Rx
+   //----------------------------------------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------------------------------------
-// TTC Flash
-//----------------------------------------------------------------------------------------------------------------------
+   wire gbt_flash;
+   x_flashsm flash_gbt (gbt_request_received, 1'b0, clock, gbt_flash);
 
-  wire bc0_flash, resync_flash, l1a_flash;
+   //----------------------------------------------------------------------------------------------------------------------
+   // TTC Flash
+   //----------------------------------------------------------------------------------------------------------------------
 
-  x_flashsm flash_l1a        (ttc_l1a,    1'b0, clock, l1a_flash);
-  x_flashsm flash_bc0        (ttc_bc0,    1'b0, clock, bc0_flash);
-  x_flashsm flash_resync     (ttc_resync, 1'b0, clock, resync_flash);
+   wire bc0_flash, resync_flash, l1a_flash;
 
-//----------------------------------------------------------------------------------------------------------------------
-// Logic LED Assignments
-//----------------------------------------------------------------------------------------------------------------------
+   x_flashsm flash_l1a        (ttc_l1a,    1'b0, clock, l1a_flash);
+   x_flashsm flash_bc0        (ttc_bc0,    1'b0, clock, bc0_flash);
+   x_flashsm flash_resync     (ttc_resync, 1'b0, clock, resync_flash);
 
-  assign led_logic [7:0] = progress_bar;
+   //----------------------------------------------------------------------------------------------------------------------
+   // Logic LED Assignments
+   //----------------------------------------------------------------------------------------------------------------------
 
-  assign led_logic [15] = 1'b1;
-  assign led_logic [14] = clk_led;
-  assign led_logic [13] = mgts_ready & clk_led;
-  assign led_logic [12] = gbt_link_ready & clk_led;
+   assign led_logic [7:0] = progress_bar;
 
-  assign led_logic [11] = gbt_flash;
-  assign led_logic [10] = l1a_flash;
-  assign led_logic [9]  = resync_flash;
-  assign led_logic [8]  = bc0_flash;
+   assign led_logic [15] = 1'b1;
+   assign led_logic [14] = clk_led;
+   assign led_logic [13] = mgts_ready & clk_led;
+   assign led_logic [12] = gbt_link_ready & clk_led;
+
+   assign led_logic [11] = gbt_flash;
+   assign led_logic [10] = l1a_flash;
+   assign led_logic [9]  = resync_flash;
+   assign led_logic [8]  = bc0_flash;
 
 endmodule

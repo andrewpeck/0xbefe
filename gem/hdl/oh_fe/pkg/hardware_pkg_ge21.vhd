@@ -45,6 +45,7 @@ package hardware_pkg is
   constant ENABLE_ECC : integer := 1;
 
   constant USE_LEGACY_OPTICS : boolean := true;
+  constant USE_NEW_FORMAT_WITH_OLD_OPTICS : boolean := true;
 
   -- TMR Enables
   constant EN_TMR_TRIG_FORMATTER     : integer := 1*EN_TMR;
