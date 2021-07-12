@@ -20,6 +20,7 @@ boards/apex/hdl/gem_apex.src
 gem/hdl/pkg/generated/me0_apex/registers.vhd
 common/hdl/mgt/generated/me0_apex/mgt_slow_control.vhd
 common/hdl/ttc/generated/me0_apex/ttc.vhd
+common/hdl/misc/generated/me0_apex/board_system.vhd
 gem/hdl/misc/generated/me0_apex/gem_system_regs.vhd
 gem/hdl/tests/generated/me0_apex/gem_tests.vhd
 gem/hdl/oh/generated/me0_apex/oh_link_regs.vhd
