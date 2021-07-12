@@ -175,6 +175,9 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     
+    signal me0_clusters_o           : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal me0_cluster_count_o      : std_logic_vector(10 downto 0);
+    
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
     signal lpgbt_tx_data_arr            : t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);    
@@ -255,8 +258,7 @@ architecture gem_amc_arch of gem_amc is
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
-    signal me0_clusters_o : t_oh_clusters;
-    signal me0_cluster_count_o : std_logic_vector(10 downto 0);
+    
 
 begin
 
@@ -452,7 +454,8 @@ begin
     -- ME0 Trigger  
     --================================--
     me0_trigger : if (g_GEM_STATION = 0) generate
-        me0_cluster: entity work.trigger_me0
+        i_clusters : for i in 0 to g_NUM_OF_OHs - 1 generate
+        me0_cluster: entity work.sbit_me0
             generic map(
                 g_NUM_OF_OHs => g_NUM_OF_OHs,
                 g_NUM_VFATS_PER_OH => g_NUM_VFATS_PER_OH
@@ -461,37 +464,36 @@ begin
             reset_i => reset_i,
             ttc_clk_i => ttc_clocks_i,
             ttc_cmds_i => ttc_cmd,
-            vfat_sbits_arr_i => me0_vfat3_sbits_arr,
+            vfat3_sbits_arr_i => me0_vfat3_sbits_arr,
             ipb_reset_i => ipb_reset,
             ipb_clk_i => ipb_clk_i,
-            ipb_mosi_i => ipb_mosi_arr_i(C_IPB_SLV.me0_trigger),
+            ipb_mosi_i => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
             me0_cluster_count_o => me0_cluster_count_o,
-            me0_clusters_o => me0_clusters_o,
-            ipb_miso_o => ipb_miso_arr(C_IPB_SLV.me0_trigger)
+            me0_clusters_o => me0_clusters_o(i),
+            ipb_miso_o => ipb_miso_arr(C_IPB_SLV.sbit_me0)
         );
+    end generate;
     
---    i_trigger : entity work.trigger
---        generic map(
---            g_NUM_OF_OHs => g_NUM_OF_OHs,
---            g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
---            g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS
---        )
---        port map(
---            reset_i            => reset or link_reset,
---            ttc_clk_i          => ttc_clocks_i,
---            ttc_cmds_i         => ttc_cmd,
---            sbit_clusters_i    => sbit_clusters_arr,
---            sbit_link_status_i => sbit_links_status_arr,
---            trig_led_o         => led_trigger_o,
---            tx_link_clk_i      => gt_trig_tx_clk_i,
---            trig_tx_data_arr_o => gt_trig_tx_data_arr_o,      
---            ipb_reset_i        => ipb_reset,
---            ipb_clk_i          => ipb_clk_i,
---            ipb_miso_o         => ipb_miso_arr(C_IPB_SLV.trigger),
---            ipb_mosi_i         => ipb_mosi_arr_i(C_IPB_SLV.trigger)
---        );
---
---me0_vfat3_sbits_arr
+        i_trigger : entity work.trigger
+            generic map(
+                g_NUM_OF_OHs => g_NUM_OF_OHs,
+                g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
+                g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
+                g_DEBUG => CFG_DEBUG_TRIGGER
+            )
+            port map(
+                reset_i            => reset or link_reset,
+                ttc_clk_i          => ttc_clocks_i,
+                ttc_cmds_i         => ttc_cmd,
+                sbit_clusters_i    => me0_clusters_o,
+                sbit_link_status_i => sbit_links_status_arr,
+                trig_led_o         => led_trigger_o,
+                trig_tx_data_arr_o => emtf_data_arr,      
+                ipb_reset_i        => ipb_reset,
+                ipb_clk_i          => ipb_clk_i,
+                ipb_miso_o         => ipb_miso_arr(C_IPB_SLV.trigger),
+                ipb_mosi_i         => ipb_mosi_arr_i(C_IPB_SLV.trigger)
+            );
     end generate;
     --================================--
     -- EMTF Transmitters (LpGBT TX)  

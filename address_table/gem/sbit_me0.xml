@@ -1,9 +1,9 @@
 <!--Trigger module -->
-<node id="TRIGGER"  address="0x00800000"
+<node id="TRIGGER"  address="0x00d00000"
       description="Trigger module handles everything related to sbit cluster data
                    (link synchronization, monitoring, local triggering, matching to L1A and reporting data to DAQ)"
       fw_is_module="true"
-      fw_module_file="../gem/hdl/trigger/trigger.vhd"
+      fw_module_file="../gem/hdl/trigger/sbit_me0.vhd"
       fw_user_clock_signal="ttc_clk_i.clk_40"
       fw_bus_clock_signal="ipb_clk_i"
       fw_bus_reset_signal="ipb_reset_i"
@@ -21,97 +21,62 @@
           description="Trigger counter reset"
           fw_write_pulse_signal="reset_cnt"
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
-    <node id="OH_KILL_MASK" address="0x2" mask="0x00ffffff" permission="rw"
-          description="OH trigger kill mask (kills all sbits from the corresponding OHs)"
-          fw_signal="oh_mask"
-          fw_default="0x000000"/>
-    <node id="SECTOR_ID" address="0x2" mask="0x0f000000" permission="rw"
-          description="Sector ID that gets embedded in the TX links to EMTF"
-          fw_signal="sector_id"
-          fw_default="0x0"/>
-  </node>
-
-  <node id="STATUS" address="0x10"
-        description="Trigger status">
-    <node id="OR_TRIGGER_RATE" address="0x0" permission="r"
-          description="OR-Trigger rate (Hz) -- this trigger fires whenever there's at least one valid sbit cluster on any link"
-          fw_signal="or_trigger_rate"
-          sw_monitor_warn_min_threshold="1000000"/>
-    <node id="OR_TRIGGER_CNT" address="0x1" permission="r"
-          description="OR-Trigger count -- this trigger fires whenever there's at least one valid sbit cluster on any link"
-          fw_signal="or_trigger_cnt"/>
-  </node>
-
-  <node id="SBIT_MONITOR" address="0x80"
-        description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
-    <node id="RESET" address="0x0" permission="w"
-          description="Reset the sbit monitor module and re-arm for triggering"
-          fw_write_pulse_signal="sbitmon_reset"/>
-    <node id="OH_SELECT" address="0x1" mask="0x0000000f" permission="rw"
-          description="Selects the OH to monitor and trigger on"
-          fw_signal="sbitmon_link_select"
-          fw_default="0x0"/>
-    <node id="CLUSTER${CLUSTER_IDX}" address="0x2" mask="0x0000ffff" permission="r"
-          description="Last cluster ${CLUSTER_IDX}"
-          fw_signal="'0' &amp; sbitmon_sbits(${CLUSTER_IDX}).size &amp; '0' &amp; sbitmon_sbits(${CLUSTER_IDX}).address"
-          generate="true" generate_size="8" generate_address_step="0x1" generate_idx_var="CLUSTER_IDX"/>
-    <node id="L1A_DELAY" address="0xa" mask="0xffffffff" permission="r"
-          description="Number of BX between this sbit and the subsequent L1A"
-          fw_signal="sbitmon_l1a_delay"/>
+    <node id="SBIT_TEST_RESET" address="0x2" permission="w"
+          description="Reset all the SBIT counters"
+          fw_write_pulse_signal="sbit_test_reset_o"
+          sw_ctrl_configure_set="0x1"/>
+    
   </node>
 
   <node id="OH${OH_IDX}" address="0x100"
         description="Trigger link for OH ${OH_IDX}"
-        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x100" generate_idx_var="OH_IDX">
-    <node id="TRIGGER_RATE" address="0x0" permission="r"
-          description="Trigger rate (Hz) -- this trigger fires whenever there's at least one valid sbit cluster"
-          fw_signal="trigger_rate(${OH_IDX})"
-          sw_monitor_warn_min_threshold="1000000"/>
-    <node id="TRIGGER_CNT" address="0x1" permission="r"
-          description="Trigger count -- this trigger fires whenever there's at least one valid sbit cluster"
-          fw_signal="trigger_cnt(${OH_IDX})"
-          sw_monitor_warn_min_threshold="1000000"/>
-    <node id="CLUSTER_COUNT_${CS_IDX}_RATE" address="0x10" permission="r"
-          description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
-          fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
-          generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
-    <node id="CLUSTER_COUNT_${CS_IDX}_CNT" address="0x20" permission="r"
-          description="Count of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
-          fw_signal="cluster_cnt(${OH_IDX} * 9 + ${CS_IDX})"
-          generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="CS_IDX"/>
-    <node id="LINK0_SBIT_OVERFLOW_CNT" address="0xa0" mask="0x0000ffff" permission="r"
-          description="Count of overflow markers received from OH on lin 0"
-          fw_signal="sbit_overflow_cnt(${OH_IDX})(15 downto 0)"
-          sw_monitor_error_min_threshold="100"/>
-    <node id="LINK1_SBIT_OVERFLOW_CNT" address="0xa0" mask="0xffff0000" permission="r"
-          description="Count of overflow markers received from OH on link 1"
-          fw_signal="sbit_overflow_cnt(${OH_IDX})(31 downto 16)"
-          sw_monitor_error_min_threshold="100"/>
-    <node id="LINK0_MISSED_COMMA_CNT" address="0xa1" mask="0x0000ffff" permission="r"
-          description="Count of missed comma character at the expected time for link 0 (this indicates an out-of-sync condition)"
-          fw_signal="missed_comma_cnt(${OH_IDX})(15 downto 0)"
-          sw_monitor_error_min_threshold="1"/>
-    <node id="LINK1_MISSED_COMMA_CNT" address="0xa1" mask="0xffff0000" permission="r"
-          description="Count of missed comma character at the expected time for link 1 (this indicates an out-of-sync condition)"
-          fw_signal="missed_comma_cnt(${OH_IDX})(31 downto 16)"
-          sw_monitor_error_min_threshold="1"/>
-    <node id="LINK0_OVERFLOW_CNT" address="0xa3" mask="0x0000ffff" permission="r"
-          description="Count of overflow occurances in the sync FIFO for link 0"
-          fw_signal="link_overflow_cnt(${OH_IDX})(15 downto 0)"
-          sw_monitor_error_min_threshold="1"/>
-    <node id="LINK1_OVERFLOW_CNT" address="0xa3" mask="0xffff0000" permission="r"
-          description="Count of overflow occurances in the sync FIFO for link 1"
-          fw_signal="link_overflow_cnt(${OH_IDX})(31 downto 16)"
-          sw_monitor_error_min_threshold="1"/>
-    <node id="LINK0_UNDERFLOW_CNT" address="0xa4" mask="0x0000ffff" permission="r"
-          description="Count of underflow occurances in the sync FIFO for link 0"
-          fw_signal="link_underflow_cnt(${OH_IDX})(15 downto 0)"
-          sw_monitor_error_min_threshold="1"/>
-    <node id="LINK1_UNDERFLOW_CNT" address="0xa4" mask="0xffff0000" permission="r"
-          description="Count of underflow occurances in the sync FIFO for link 1"
-          fw_signal="link_underflow_cnt(${OH_IDX})(31 downto 16)"
-          sw_monitor_error_min_threshold="1"/>
+        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x10" generate_idx_var="OH_IDX">
+    <node id="VFAT_SBIT_MASK_ARR" address="0x0" permission="r"
+          description="Control signal for array of sbits from VFATs of particular OH_IDX"
+          fw_signal="vfat_sbit_mask_arr(${OH_IDX})"/>
+    <node id="VFAT_SBITS_ARR" address="0x1" permission="r"
+          description="Array of sbits (after masking) from VFATs of particular OH_IDX"
+          fw_signal="vfat_sbits_arr(${OH_IDX})"/>
+    <node id="VFAT_TRIGGER_ARR" address="0x2" permission="r"
+          description="trigger per vfat (or of all unmasked sbits)"
+          fw_signal="vfat_trigger_arr(${OH_IDX})"/>
+    <node id="VFAT_TRIGGER_ARR" address="0x3" permission="r"
+          description="trigger per vfat (or of all unmasked sbits)"
+          fw_signal="vfat_trigger_cnt_arr(${OH_IDX})"/>
   </node>
+
+  <node id="VFAT_SBITS_STRIP_MAPPED" address="0x10" mask="0xffffffff" permission="r"
+        description="Not sure of this"
+        fw_signal="vfat_sbits_strip_mapped"/>
+
+  <node id="ME0_CLUSTERS" address="0x11" mask="0xffffffff" permission="r"
+        description="output of sbit clusterizer for me0"
+        fw_signal="me0_clusters"/>
+
+  <node id="ME0_CLUSTER_COUNT" address="0x12" mask="0xffffffff" permission="r"
+        description="output of sbit clusterizer for me0"
+        fw_signal="me0_cluster_count"/>
+
+  <node id="ME0_OVERFLOW" address="0x13" mask="0xffffffff" permission="r"
+        description="output of sbit clusterizer for me0"
+        fw_signal="me0_overflow"/>
+
+  <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit0xs_count_me0"/>
+  <node id="TEST_SBIT0XE_COUNT_ME0" address="0x21" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit0xe_count_me0"/>
+  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000002"/>
+  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
+  
 
 </node>
 <!--end trigger module -->
