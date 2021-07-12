@@ -99,6 +99,20 @@ def main():
     print("")
     print("    end generate;")
 
+    # gbtMaps = [{}, {}, {}, {}, {}, {}, {}, {}]
+    # for vfat in range(24):
+    #     asiago = VFAT_ASIAGO[vfat]
+    #     slot = VFAT_ASIAGO_SLOT[vfat]
+    #     daqGbt = asiago * 2 + ASIAGO_SLOT_DAQ_GBT[slot]
+    #     daqElink = ASIAGO_SLOT_DAQ_ELINK[slot]
+    #     daqBits = getElinkBits(daqElink, 3)
+    #     print("VFAT %d ASIAGO %d slot %d GBT %d elink %d bits %s" % (vfat, asiago, slot, daqGbt, daqElink, daqBits))
+    #     gbtMaps[daqGbt][daqElink] = vfat
+    # for gbt in range(8):
+    #     map = gbtMaps[gbt]
+    #     print("ME0_GEB_GBT%d_ELINK_TO_VFAT" % gbt)
+    #     print(map)
+
 def getVfatNumber(asiago, asiagoSlot):
     asiagoVfats = []
     for vfat in range(NUM_VFATS):
