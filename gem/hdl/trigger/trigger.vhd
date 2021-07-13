@@ -257,7 +257,7 @@ begin
  
      --== Debug me0 sbits ==--
      
-     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+     test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
      
      elink_i: for i in 0 to 7 generate
          me0_sbit0xe_count : entity work.counter
