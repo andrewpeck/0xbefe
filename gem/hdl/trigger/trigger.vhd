@@ -257,8 +257,7 @@ begin
  
      --== Debug me0 sbits ==--
      
-     test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
-     
+     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
      elink_i: for i in 0 to 7 generate
          me0_sbit0xe_count : entity work.counter
             generic map(
@@ -273,7 +272,7 @@ begin
             );   
      end generate;
      
-     test_sbit0xe_count_me0 <= test_sbit0xe_presum(0) + test_sbit0xe_presum(1) + test_sbit0xe_presum(2) + test_sbit0xe_presum(3) + test_sbit0xe_presum(4) + test_sbit0xe_presum(5) + test_sbit0xe_presum(6) + test_sbit0xe_presum(7);
+     test_sbit0xe_count_me0 <= std_logic_vector(to_unsigned(to_integer(unsigned(test_sbit0xe_presum(0))) + to_integer(unsigned(test_sbit0xe_presum(1))) + to_integer(unsigned(test_sbit0xe_presum(2))) + to_integer(unsigned(test_sbit0xe_presum(3))) + to_integer(unsigned(test_sbit0xe_presum(4))) + to_integer(unsigned(test_sbit0xe_presum(5))) + to_integer(unsigned(test_sbit0xe_presum(6))) + to_integer(unsigned(test_sbit0xe_presum(7)))),32);
      
         
      vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
