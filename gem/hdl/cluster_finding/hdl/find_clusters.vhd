@@ -294,7 +294,7 @@ begin
 
         -- for equal vpf, use the greater partition (lower eta)
         prt_sort_check : if (clusters(I).vpf = '1' and (clusters(I).vpf = clusters(J).vpf)) generate
-          assert clusters(I).prt >= clusters(J).prt  report
+          assert clusters(I).prt >= clusters(J).prt report
             "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & " " &
             "prt(" & integer'image(I) & ") = " & integer'image(to_integer(unsigned(clusters(I).prt))) & ";  " &
             "prt(" & integer'image(J) & ") = " & integer'image(to_integer(unsigned(clusters(J).prt))) & " " &
@@ -352,7 +352,7 @@ begin
       generic map (
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
-        COMP_HIGH => 1 + MXPRTB-1, -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
+        COMP_HIGH => 1 + MXPRTB-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
         COMP_LOW  => 0,
         INFO_BITS => 1
         )
@@ -360,8 +360,8 @@ begin
         CLK       => clock,
         RST       => '0',
         CLR       => '0',
-        I_SORT    => '1', -- set to 0 and the module won't sort
-        I_UP      => '0', -- set to 0 to prefer the highest number on the lowest input
+        I_SORT    => '1',               -- set to 0 and the module won't sort
+        I_UP      => '0',               -- set to 0 to prefer the highest number on the lowest input
         I_DATA    => data_i,
         O_DATA    => data_o,
         O_SORT    => open,
