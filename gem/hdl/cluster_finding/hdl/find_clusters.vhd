@@ -285,6 +285,7 @@ begin
       -- make sure that every higher numbered cluster is worse or equal quality
       worseloop : for J in I+1 to NUM_FOUND_CLUSTERS-1 generate
 
+        -- pragma translate_off
         -- check vpf sorting
         assert clusters(I).vpf >= clusters(J).vpf report
           "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & ";  " &
@@ -300,6 +301,7 @@ begin
             "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters(J).vpf)
             severity error;
         end generate;
+        -- pragma translate_on
 
       end generate;
 
