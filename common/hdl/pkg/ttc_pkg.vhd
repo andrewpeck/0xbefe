@@ -13,6 +13,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+use ieee.numeric_std.all;
 
 --============================================================================
 --                                                         Package declaration
@@ -20,7 +21,7 @@ use IEEE.STD_LOGIC_1164.all;
 package ttc_pkg is
 
     constant C_TTC_CLK_FREQUENCY        : integer := 40_079_000;
-    constant C_TTC_CLK_FREQUENCY_SLV    : std_logic_vector(31 downto 0) := x"02638e98";
+    constant C_TTC_CLK_FREQUENCY_SLV    : std_logic_vector(31 downto 0) := std_logic_vector(to_unsigned(C_TTC_CLK_FREQUENCY, 32));
     constant C_TTC_NUM_BXs              : std_logic_vector(11 downto 0) := x"dec";
 
     type t_ttc_clks is record

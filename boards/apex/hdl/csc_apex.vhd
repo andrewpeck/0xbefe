@@ -133,8 +133,6 @@ architecture csc_apex_arch of csc_apex is
     constant IPB_CLK_PERIOD_NS  : integer := 10;
 
     -- resets 
-    --signal reset                : std_logic;
-    signal gem_powerup_reset    : std_logic;
    
     -- clocks
     signal gty_refclk0          : std_logic_vector(2 downto 0);
@@ -150,14 +148,14 @@ architecture csc_apex_arch of csc_apex is
     signal mgt_master_txusrclk  : t_mgt_master_clks;
     signal mgt_master_rxusrclk  : t_mgt_master_clks;
     
-    signal mgt_status_arr       : t_mgt_status_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
-    signal mgt_ctrl_arr         : t_mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0) := (others => (txreset => '0', rxreset => '0', rxslide => '0'));
+    signal mgt_status_arr       : t_mgt_status_arr(CFG_MGT_NUM_CHANNELS downto 0);
+    signal mgt_ctrl_arr         : t_mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS downto 0) := (others => (txreset => '0', rxreset => '0', rxslide => '0'));
     
-    signal mgt_tx_data_arr      : t_mgt_64b_tx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0) := (others => MGT_64B_TX_DATA_NULL);
-    signal mgt_rx_data_arr      : t_mgt_64b_rx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
+    signal mgt_tx_data_arr      : t_mgt_64b_tx_data_arr(CFG_MGT_NUM_CHANNELS downto 0) := (others => MGT_64B_TX_DATA_NULL);
+    signal mgt_rx_data_arr      : t_mgt_64b_rx_data_arr(CFG_MGT_NUM_CHANNELS downto 0);
 
-    signal mgt_tx_usrclk_arr    : std_logic_vector(CFG_MGT_NUM_CHANNELS - 1 downto 0);
-    signal mgt_rx_usrclk_arr    : std_logic_vector(CFG_MGT_NUM_CHANNELS - 1 downto 0);    
+    signal mgt_tx_usrclk_arr    : std_logic_vector(CFG_MGT_NUM_CHANNELS downto 0);
+    signal mgt_rx_usrclk_arr    : std_logic_vector(CFG_MGT_NUM_CHANNELS downto 0);    
     
     -- ttc
     signal ttc_clks             : t_ttc_clks;
@@ -408,12 +406,12 @@ begin
             ttc_clks_locked_i    => ttc_clk_status.mmcm_locked,
             ttc_clks_reset_o     => open,
             channel_refclk_arr_i => mgt_refclks,
-            status_arr_o         => mgt_status_arr,
-            ctrl_arr_i           => mgt_ctrl_arr,
-            tx_data_arr_i        => mgt_tx_data_arr,
-            rx_data_arr_o        => mgt_rx_data_arr,
-            tx_usrclk_arr_o      => mgt_tx_usrclk_arr,
-            rx_usrclk_arr_o      => mgt_rx_usrclk_arr,
+            status_arr_o         => mgt_status_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            ctrl_arr_i           => mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            tx_data_arr_i        => mgt_tx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            rx_data_arr_o        => mgt_rx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            tx_usrclk_arr_o      => mgt_tx_usrclk_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            rx_usrclk_arr_o      => mgt_rx_usrclk_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             master_txoutclk_o    => mgt_master_txoutclk,
             master_txusrclk_o    => mgt_master_txusrclk,
             master_rxusrclk_o    => mgt_master_rxusrclk,
@@ -436,7 +434,7 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i          => gem_powerup_reset,
+            reset_i          => '0',
             clk_stable_100_i => clk_100,
             mgt_ref_clk_i    => slink_mgt_ref_clk,
             ipb_reset_i      => ipb_reset,
@@ -460,12 +458,12 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i     => '0',
-            board_id_o  => board_id,
-            ipb_reset_i => ipb_reset,
-            ipb_clk_i   => ipb_clk,
-            ipb_mosi_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
-            ipb_miso_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+            reset_i      => '0',
+            board_id_o   => board_id,
+            ipb_reset_i  => ipb_reset,
+            ipb_clk_i    => ipb_clk,
+            ipb_mosi_i   => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o   => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
         );
 
     --================================--

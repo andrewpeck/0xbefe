@@ -17,6 +17,7 @@ use work.common_pkg.all;
 use work.csc_pkg.all;
 use work.registers.all;
 use work.ttc_pkg.all;
+use work.board_config_package.all;
 
 entity system_regs is
     generic(
@@ -50,8 +51,6 @@ architecture system_regs_arch of system_regs is
 
     signal reset_cnt                : std_logic := '0';
     
-    signal num_of_dmbs              : std_logic_vector(7 downto 0);
-    
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
 
@@ -72,9 +71,6 @@ architecture system_regs_arch of system_regs is
     ------ Register signals end ----------------------------------------------
     
 begin
-
-    --=== board type and configuration parameters ===--
-    num_of_dmbs    <= std_logic_vector(to_unsigned(g_NUM_OF_DMBs, 8));
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;

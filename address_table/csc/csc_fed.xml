@@ -11,7 +11,7 @@
           fw_reg_addr_msb="16"
           fw_reg_addr_lsb="0">
 
-        <node id="CTRL" address="0x100">
+        <node id="CTRL" address="0x0">
           <node id="GLOBAL_RESET" address="0x0" permission="w"
                 description="Global reset of the GEM logic (resets all modules)"
                 fw_write_pulse_signal="global_reset_trig"
@@ -30,10 +30,44 @@
                 sw_ctrl_configure_set="0x1"/>
         </node>
 
-        <node id="RELEASE" address="0x3">
-          <node id="NUM_OF_DMBS" address="0x4" mask="0x00000ff0" permission="r"
+        <node id="RELEASE" address="0x30">
+          <node id="NUM_OF_DMBS" address="0x0" mask="0x000000ff" permission="r"
                 description="Number of DMB inputs supported in this build"
-                fw_signal="num_of_dmbs"/>
+                fw_signal="std_logic_vector(to_unsigned(g_NUM_OF_DMBs, 8))"/>
+          <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
+                description="Indicates whether or not local DAQ link is supported by this firmware build"
+                fw_signal="'1' when CFG_USE_SPY_LINK else '0'"/>
+          <node id="DMB_LINK_CONFIG" address="0x5">
+            <node id="DMB${DMB_IDX}" address="0x0"
+                  description="DMB${DMB_IDX} link numbers"
+                  generate="true" generate_size="&NUM_DMBS;" generate_address_step="0x00000002" generate_idx_var="DMB_IDX">
+              <node id="TYPE" address="0x0" mask="0x00000007" permission="r"
+                    description="DMB${DMB_IDX} type: 0 = DMB, 1 = ODMB, 2 = ODMB5, 3 = ODMB7"
+                    sw_enum="['DMB', 'ODMB', 'ODMB5', 'ODMB7']"
+                    fw_signal="std_logic_vector(to_unsigned((t_dmb_type'POS(CFG_DMB_CONFIG_ARR(${DMB_IDX}).dmb_type), 3))"/>
+              <node id="NUM_RX_LINKS" address="0x0" mask="0x00000038" permission="r"
+                    description="Number of RX links that DMB${DMB_IDX} uses"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).num_fibers, 3))"/>
+              <node id="TX_LINK" address="0x0" mask="0x0000ff00" permission="r"
+                    description="DMB${DMB_IDX} TX link number"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).tx_fiber, 8))"/>
+              <node id="RX0_LINK" address="0x0" mask="0x00ff0000" permission="r"
+                    description="DMB${DMB_IDX} RX0 link number"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(0), 8))"/>
+              <node id="RX1_LINK" address="0x0" mask="0xff000000" permission="r"
+                    description="DMB${DMB_IDX} RX1 link number"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(1), 8))"/>
+              <node id="RX2_LINK" address="0x0" mask="0xff000000" permission="r"
+                    description="DMB${DMB_IDX} RX2 link number"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(2), 8))"/>
+              <node id="RX3_LINK" address="0x1" mask="0x000000ff" permission="r"
+                    description="DMB${DMB_IDX} RX3 link number"
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(3), 8))"/>
+            </node>
+          </node>
+          <node id="LOCAL_DAQ_LINK" address="0x200" mask="0x000000ff" permission="r"
+                description="Local DAQ link number"
+                fw_signal="std_logic_vector(to_unsigned(CFG_SPY_LINK, 8))"/>
         </node>
 
         <node id="PROMLESS" address="0x400">

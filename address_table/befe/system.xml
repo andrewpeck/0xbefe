@@ -11,7 +11,7 @@
       fw_reg_addr_msb="15"
       fw_reg_addr_lsb="0">
 
-  <node id="GENERAL" address="0x0">
+  <node id="CTRL" address="0x0">
     <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
           description="User programmable board ID that gets embedded in the DAQ data stream"
           fw_signal="board_id" fw_default="0xbefe"/>
@@ -38,9 +38,11 @@
           fw_signal="g_FW_SHA"/>
     <node id="FW_FLAVOR" address="0x4" mask="0x0000000f" permission="r"
           description="Firmware flavor: 0 = GEM_AMC, 1 = CSC_FED"
+          sw_enum="['GEM_AMC', 'CSC_FED']"
           fw_signal="CFG_FW_FLAVOR"/>
     <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
-          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
+          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O"
+          sw_enum="['GLIB', 'CTP7', 'CVP13', 'APEX', 'X2O']"
           fw_signal="CFG_BOARD_TYPE"/>
     <node id="NUM_LINKS" address="0x4" mask="0x0000ff00" permission="r"
           description="The number of logic optical links that this board has."

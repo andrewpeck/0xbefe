@@ -12,6 +12,7 @@ use IEEE.STD_LOGIC_1164.all;
 
 use work.mgt_pkg.all;
 use work.project_config.all;
+use work.ttc_pkg.C_TTC_CLK_FREQUENCY;  
 
 --============================================================================
 --                                                         Package declaration
@@ -131,29 +132,80 @@ package board_config_package is
     --================================--
     -- MGT configuration
     --================================--    
+
+    constant CFG_ASYNC_REFCLK_FREQ  : integer := 200_000_000;
+    constant CFG_LHC_REFCLK_FREQ    : integer := C_TTC_CLK_FREQUENCY * 4;
+    
+    constant CFG_MGT_GBE : t_mgt_type_config := (
+        link_type               => MGT_GBE,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => false, 
+        rx_use_qpll             => false,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true
+    );
+
+    constant CFG_MGT_DMB : t_mgt_type_config := (
+        link_type               => MGT_DMB,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => false, 
+        rx_use_qpll             => false,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true
+    );
+
+    constant CFG_MGT_ODMB57 : t_mgt_type_config := (
+        link_type               => MGT_ODMB57,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        tx_bus_width            => 40,
+        tx_multilane_phalign    => true, 
+        rx_use_buf              => true
+    );
         
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (link_type => MGT_DMB,    cpll_refclk_01 => 1, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, qpll_idx => 0,  tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => true, is_master => true,  ibert_inst => true),        
-        (link_type => MGT_DMB,    cpll_refclk_01 => 1, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, qpll_idx => 0,  tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_DMB,    cpll_refclk_01 => 1, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, qpll_idx => 0,  tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_GBE,    cpll_refclk_01 => 1, qpll_inst_type => QPLL_ODMB57, qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, qpll_idx => 0,  tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => true, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0,  is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0,  is_master => true,  ibert_inst => true),        
 
-        (link_type => MGT_ODMB57, cpll_refclk_01 => 0, qpll_inst_type => QPLL_ODMB57, qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => true,  rx_use_qpll => true,  tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 4,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => true,  ibert_inst => true),        
-        (link_type => MGT_ODMB57, cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => true,  rx_use_qpll => true,  tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 4,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_ODMB57, cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => true,  rx_use_qpll => true,  tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 4,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_ODMB57, cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => true,  rx_use_qpll => true,  tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 4,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57, qpll_idx => 4,  is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4,  is_master => false, ibert_inst => true),        
 
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true),        
-        (link_type => MGT_NULL,   cpll_refclk_01 => 0, qpll_inst_type => QPLL_NULL,   qpll0_refclk_01 => 1, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 1, rx_qpll_01 => 0, qpll_idx => 8,  tx_bus_width => 64, tx_multilane_phalign => true,  rx_use_buf => true, is_master => false, ibert_inst => true)        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 8,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 8,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 8,  is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 8,  is_master => false, ibert_inst => true),        
+                     
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 12, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 12, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 12, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_NULL,   qpll_inst_type => QPLL_NULL,   qpll_idx => 12, is_master => false, ibert_inst => true)        
     );
 
 end board_config_package;

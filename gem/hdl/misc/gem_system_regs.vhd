@@ -56,9 +56,6 @@ architecture gem_system_regs_arch of gem_system_regs is
 
     signal reset_cnt                : std_logic := '0';
     
-    signal gem_station              : integer range 0 to 2;
-    signal num_of_oh                : std_logic_vector(4 downto 0);
-    
     signal loopback_gbt_test_en     : std_logic;
     
     signal vfat3_sc_only_mode       : std_logic;
@@ -87,10 +84,6 @@ architecture gem_system_regs_arch of gem_system_regs is
     
 begin
 
-    --=== board type and configuration parameters ===--
-    num_of_oh      <= std_logic_vector(to_unsigned(CFG_NUM_OF_OHs, 5));
-    gem_station    <= CFG_GEM_STATION;
-            
     --=== Tests === --
     loopback_gbt_test_en_o <= loopback_gbt_test_en; 
     

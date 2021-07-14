@@ -167,8 +167,8 @@ begin
                 
         status_arr_o(chan).tx_reset_done <= tx_reset_done_arr(chan);
         status_arr_o(chan).rx_reset_done <= rx_reset_done_arr(chan);
-        status_arr_o(chan).tx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).tx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).tx_qpll_01); 
-        status_arr_o(chan).rx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).rx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).rx_qpll_01); 
+        status_arr_o(chan).tx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.tx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.tx_qpll_01); 
+        status_arr_o(chan).rx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.rx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.rx_qpll_01); 
         status_arr_o(chan).rxbufstatus <= rx_status_arr(chan).rxbufstatus;
         status_arr_o(chan).rxclkcorcnt <= rx_status_arr(chan).rxclkcorcnt;
 
@@ -179,7 +179,7 @@ begin
         -- TX multi-lane phase alignment signal assignments
         --===================================================--
         
-        g_tx_multilane_phalign : if g_LINK_CONFIG(chan).tx_multilane_phalign generate
+        g_tx_multilane_phalign : if g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign generate
             tx_init_arr(chan).txsyncallin <= txph_syncallin_arr(chan);
             tx_init_arr(chan).txsyncin <= txph_syncin_arr(chan);      
             tx_init_arr(chan).txsyncmode <= txph_syncmode_arr(chan);    
@@ -189,7 +189,7 @@ begin
             txph_syncout_arr(chan) <= tx_status_arr(chan).txsyncout;
         end generate;
 
-        g_tx_no_phalign : if not g_LINK_CONFIG(chan).tx_multilane_phalign generate
+        g_tx_no_phalign : if not g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign generate
             tx_init_arr(chan).txsyncallin <= '0';
             tx_init_arr(chan).txsyncin <= '0';      
             tx_init_arr(chan).txsyncmode <= '0';    
@@ -202,14 +202,14 @@ begin
         --================================--
         -- GBTX MGT type
         --================================--
-        g_chan_gbtx : if g_LINK_CONFIG(chan).link_type = MGT_GBTX generate
+        g_chan_gbtx : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_GBTX generate
                 
             -- TX user clocks
             chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_120;
             chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_120;
             
             -- RX user clocks when using elastic buffer
-            g_rx_use_buf : if g_LINK_CONFIG(chan).rx_use_buf generate
+            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_120;
                 chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_120;
             end generate;
@@ -222,7 +222,7 @@ begin
             end generate;
             
             -- RX user clocks when elastic buffer is bypassed
-            g_rx_no_buf : if not g_LINK_CONFIG(chan).rx_use_buf generate
+            g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 
                 i_rxoutclk_buf : BUFG_GT
                     port map(
@@ -243,11 +243,11 @@ begin
             
             i_chan_gbtx : entity work.gty_channel_gbtx
                 generic map(
-                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).cpll_refclk_01,
-                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).tx_use_qpll,
-                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).rx_use_qpll,
-                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).tx_qpll_01,
-                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).rx_qpll_01,
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -277,14 +277,14 @@ begin
         --================================--
         -- LpGBT MGT type
         --================================--
-        g_chan_lpgbt : if g_LINK_CONFIG(chan).link_type = MGT_LPGBT generate
+        g_chan_lpgbt : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_LPGBT generate
         
             -- TX user clocks
             chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_320;
             chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_320;
             
             -- RX user clocks when using elastic buffer
-            g_rx_use_buf : if g_LINK_CONFIG(chan).rx_use_buf generate
+            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_320;
                 chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_320;
             end generate;
@@ -297,7 +297,7 @@ begin
             end generate;
             
             -- RX user clocks when elastic buffer is bypassed
-            g_rx_no_buf : if not g_LINK_CONFIG(chan).rx_use_buf generate
+            g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 
                 i_rxoutclk_buf : BUFG_GT
                     port map(
@@ -318,11 +318,11 @@ begin
             
             i_chan_lpgbt : entity work.gty_channel_lpgbt
                 generic map(
-                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).cpll_refclk_01,
-                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).tx_use_qpll,
-                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).rx_use_qpll,
-                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).tx_qpll_01,
-                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).rx_qpll_01,
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -352,7 +352,7 @@ begin
         --================================--
         -- DMB MGT type (1.6Gb/s)
         --================================--
-        g_chan_dmb : if g_LINK_CONFIG(chan).link_type = MGT_DMB generate
+        g_chan_dmb : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_DMB generate
         
             -- master clocks       
             g_master_clks : if g_LINK_CONFIG(chan).is_master generate
@@ -383,11 +383,11 @@ begin
             
             i_chan_dmb : entity work.gty_channel_dmb
                 generic map(
-                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).cpll_refclk_01,
-                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).tx_use_qpll,
-                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).rx_use_qpll,
-                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).tx_qpll_01,
-                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).rx_qpll_01,
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TXOUTCLKSEL    => "010", -- from PMA (same frequency as the user clocks)
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -417,7 +417,7 @@ begin
         --================================--
         -- ODMB57 MGT type (RX: 12.5Gb/s, TX: 4.8Gb/s GBTX)
         --================================--
-        g_chan_odmb57 : if g_LINK_CONFIG(chan).link_type = MGT_ODMB57 generate
+        g_chan_odmb57 : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_ODMB57 generate
 
             -- TX user clocks
             chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_120;
@@ -470,11 +470,11 @@ begin
             
             i_chan_odmb57 : entity work.gty_channel_odmb57
                 generic map(
-                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).cpll_refclk_01,
-                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).tx_use_qpll,
-                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).rx_use_qpll,
-                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).tx_qpll_01,
-                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).rx_qpll_01,
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "101" -- from RXPROGDIV (same frequency as the required rxusrclk = 312.5MHz, note that rxusrclk must be half of that)
                 )
@@ -504,7 +504,7 @@ begin
         --================================--
         -- GbE MGT type (1.25Gb/s)
         --================================--
-        g_chan_gbe : if g_LINK_CONFIG(chan).link_type = MGT_GBE generate
+        g_chan_gbe : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_GBE generate
         
             -- master clocks       
             g_master_clks : if g_LINK_CONFIG(chan).is_master generate
@@ -535,11 +535,11 @@ begin
             
             i_chan_gbe : entity work.gty_channel_gbe
                 generic map(
-                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).cpll_refclk_01,
-                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).tx_use_qpll,
-                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).rx_use_qpll,
-                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).tx_qpll_01,
-                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).rx_qpll_01,
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TXOUTCLKSEL    => "010", -- from PMA (same frequency as the user clocks)
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -574,8 +574,8 @@ begin
             
             i_qpll_gbtx : entity work.gty_qpll_gbtx
                 generic map(
-                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).qpll0_refclk_01,
-                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).qpll1_refclk_01
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
                 )
                 port map(
                     clk_stable_i => clk_stable_i,
@@ -597,8 +597,8 @@ begin
             
             i_qpll_lpgbt : entity work.gty_qpll_lpgbt
                 generic map(
-                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).qpll0_refclk_01,
-                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).qpll1_refclk_01
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
                 )
                 port map(
                     clk_stable_i => clk_stable_i,
@@ -620,8 +620,8 @@ begin
             
             i_qpll_odmb57 : entity work.gty_qpll_odmb57
                 generic map(
-                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).qpll0_refclk_01,
-                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).qpll1_refclk_01
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
                 )
                 port map(
                     clk_stable_i => clk_stable_i,
@@ -649,10 +649,10 @@ begin
         i_tx_reset : entity work.gty_channel_reset
             generic map(
                 g_STABLE_CLK_PERIOD => g_STABLE_CLK_PERIOD,
-                g_USRCLK_WAIT_TIME  => 10_000,
-                g_CPLL_USED         => not g_LINK_CONFIG(chan).tx_use_qpll,
-                g_QPLL0_USED        => g_LINK_CONFIG(chan).tx_use_qpll and g_LINK_CONFIG(chan).tx_qpll_01 = 0,
-                g_QPLL1_USED        => g_LINK_CONFIG(chan).tx_use_qpll and g_LINK_CONFIG(chan).tx_qpll_01 = 1
+                g_USRCLK_WAIT_TIME  => 500_000,
+                g_CPLL_USED         => not g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                g_QPLL0_USED        => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll and g_LINK_CONFIG(chan).mgt_type.tx_qpll_01 = 0,
+                g_QPLL1_USED        => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll and g_LINK_CONFIG(chan).mgt_type.tx_qpll_01 = 1
             )
             port map(
                 reset_i           => reset_i or ctrl_arr_i(chan).txreset or sc_tx_reset_arr(chan),
@@ -680,9 +680,9 @@ begin
             generic map(
                 g_STABLE_CLK_PERIOD => g_STABLE_CLK_PERIOD,
                 g_USRCLK_WAIT_TIME  => 500_000, -- give ample of time for the CDR to lock
-                g_CPLL_USED         => not g_LINK_CONFIG(chan).rx_use_qpll,
-                g_QPLL0_USED        => g_LINK_CONFIG(chan).rx_use_qpll and (g_LINK_CONFIG(chan).rx_qpll_01 = 0),
-                g_QPLL1_USED        => g_LINK_CONFIG(chan).rx_use_qpll and (g_LINK_CONFIG(chan).rx_qpll_01 = 1)
+                g_CPLL_USED         => not g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                g_QPLL0_USED        => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll and (g_LINK_CONFIG(chan).mgt_type.rx_qpll_01 = 0),
+                g_QPLL1_USED        => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll and (g_LINK_CONFIG(chan).mgt_type.rx_qpll_01 = 1)
             )
             port map(
                 reset_i           => reset_i or ctrl_arr_i(chan).rxreset or sc_rx_reset_arr(chan),

@@ -85,10 +85,12 @@
     <node id="STATUS" address="0x20">
       <node id="TX_RESET_DONE" address="0x0" mask="0x00000001" permission="r"
             description="TX reset done signal"
-            fw_signal="tx_reset_done_arr_i(${MGT})"/>
+            fw_signal="tx_reset_done_arr_i(${MGT})"
+            sw_val_good="self == 1" sw_val_bad="self != 1"/>
       <node id="RX_RESET_DONE" address="0x0" mask="0x00000002" permission="r"
             description="RX reset done signal"
-            fw_signal="rx_reset_done_arr_i(${MGT})"/>
+            fw_signal="rx_reset_done_arr_i(${MGT})"
+            sw_val_good="self == 1" sw_val_bad="self != 1"/>
       <node id="TX_PHALIGN_DONE" address="0x0" mask="0x00000004" permission="r"
             description="TX phase alignment is done (only valid for buffer bypass MGTs)"
             fw_signal="tx_phalign_done_arr_i(${MGT})"/>
@@ -97,16 +99,25 @@
             fw_signal="rx_phalign_done_arr_i(${MGT})"/>
       <node id="POWER_GOOD" address="0x0" mask="0x00000010" permission="r"
             description="Power good signal from the MGT"
-            fw_signal="misc_status_arr_i(${MGT}).powergood"/>
+            fw_signal="misc_status_arr_i(${MGT}).powergood"
+            sw_val_good="self == 1" sw_val_bad="self != 1"/>
       <node id="CPLL_LOCKED" address="0x0" mask="0x00000020" permission="r"
             description="CPLL locked signal"
-            fw_signal="cpll_status_arr_i(${MGT}).cplllock"/>
+            fw_signal="cpll_status_arr_i(${MGT}).cplllock"
+            sw_val_good="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 or readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) and self == 1"
+            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1"/>
       <node id="CPLL_REF_CLK_LOST" address="0x0" mask="0x00000040" permission="r"
             description="CPLL reference clock is lost if this is 1"
-            fw_signal="cpll_status_arr_i(${MGT}).cpllrefclklost"/>
+            fw_signal="cpll_status_arr_i(${MGT}).cpllrefclklost"
+            sw_val_good="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 or readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) and self == 0"
+            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1"/>
       <node id="QPLL_LOCKED" address="0x0" mask="0x00000300" permission="r"
             description="QPLL0 and QPLL1 locked signal"
-            fw_signal="qpll_status_arr_i(${MGT}).qplllock"/>
+            fw_signal="qpll_status_arr_i(${MGT}).qplllock"
+            sw_val_good="TAKE INTO ACCOUNT IF BOTH QPLLS ARE USED! (((readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 0)) and self &amp; 1 == 1) or
+                         (((readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 1) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 1)) and self &amp; 2 == 1)"
+            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0"
+            />
       <node id="QPLL_REF_CLK_LOST" address="0x0" mask="0x00000c00" permission="r"
             description="QPLL0 and QPLL1 reference clock lost singals"
             fw_signal="qpll_status_arr_i(${MGT}).qpllrefclklost"/>
@@ -127,40 +138,51 @@
     <node id="CONFIG" address="0x30">
       <node id="LINK_TYPE" address="0x0" mask="0x0000000f" permission="r"
             description="MGT channel type"
-            fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).link_type), 4))"/>
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).mgt_type.link_type), 4))"
+            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_GBE']"/>
       <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
-            fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"/>
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).cpll_refclk_01 = 1 else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>
       <node id="QPLL0_REFCLK_01" address="0x0" mask="0x00000200" permission="r"
             description="Indicates whether this MGT quad QPLL0 is using refclk0 or refclk1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).qpll0_refclk_01 = 1 else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.qpll0_refclk_01 = 1 else '0'"/>
       <node id="QPLL1_REFCLK_01" address="0x0" mask="0x00000400" permission="r"
             description="Indicates whether this MGT quad QPLL1 is using refclk0 or refclk1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).qpll1_refclk_01 = 1 else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.qpll1_refclk_01 = 1 else '0'"/>
       <node id="TX_USE_QPLL" address="0x0" mask="0x00000800" permission="r"
             description="Indicates whether this MGT TX is using a QPLL"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).tx_use_qpll else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.tx_use_qpll else '0'"/>
       <node id="RX_USE_QPLL" address="0x0" mask="0x00001000" permission="r"
             description="Indicates whether this MGT RX is using a QPLL"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).rx_use_qpll else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.rx_use_qpll else '0'"/>
       <node id="TX_QPLL_01" address="0x0" mask="0x00002000" permission="r"
             description="Indicates whether this MGT TX is using QPLL0 or QPLL1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).tx_qpll_01 = 1 else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.tx_qpll_01 = 1 else '0'"/>
       <node id="RX_QPLL_01" address="0x0" mask="0x00004000" permission="r"
             description="Indicates whether this MGT RX is using QPLL0 or QPLL1"
-            fw_signal="'1' when g_LINK_CONFIG(${MGT}).rx_qpll_01 = 1 else '0'"/>
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.rx_qpll_01 = 1 else '0'"/>
       <node id="QPLL_IDX" address="0x0" mask="0x00ff0000" permission="r"
             description="Indicates which QPLL index this channel is using."
             fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).qpll_idx, 8))"/>
-      <node id="IS_MASTER" address="0x0" mask="0x00008000" permission="r"
+      <node id="TX_USE_PHALIGN" address="0x0" mask="0x00008000" permission="r"
+            description="Indicates whether this channel uses TX multilane phase alignment or not."
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.tx_multilane_phalign else '0'"/>
+      <node id="IS_MASTER" address="0x0" mask="0x40000000" permission="r"
             description="Indicates whether this channel is the master channel for this type of MGTs. Master channels provide the TXUSRCLK to all MGTs of the same type. Also the TTC clocks are generated from the TXOUTCLK of the master channel of type GBTX or LpGBT."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).is_master else '0'"/>
-      <node id="IBERT_INST" address="0x0" mask="0x01000000" permission="r"
+      <node id="IBERT_INST" address="0x0" mask="0x80000000" permission="r"
             description="Indicates whether this channel has an IBERT instantiation that can be used to make eye diagrams."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).ibert_inst else '0'"/>
+      <node id="TX_REFCLK_FREQ" address="0x1" permission="r"
+            description="Indicates the expected TX refclk frequency"
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.tx_refclk_freq, 32))"/>
+      <node id="RX_REFCLK_FREQ" address="0x2" permission="r"
+            description="Indicates the expected TX refclk frequency"
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.rx_refclk_freq, 32))"/>
     </node>
 
   </node>

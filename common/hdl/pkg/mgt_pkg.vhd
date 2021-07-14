@@ -11,28 +11,38 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
+
 package mgt_pkg is
 
     type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE);
     type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57);
 
+    type t_mgt_type_config is record
+        link_type               : t_mgt_link_type;          -- type of MGT to instantiate
+        cpll_refclk_01          : integer range 0 to 1;     -- CPLL refclk source to use (0: refclk0, 1: refclk1) 
+        qpll0_refclk_01         : integer range 0 to 1;     -- QPLL0 refclk source to use (0: refclk0, 1: refclk1)
+        qpll1_refclk_01         : integer range 0 to 1;     -- QPLL1 refclk source to use (0: refclk0, 1: refclk1)
+        tx_use_qpll             : boolean;                  -- if true, this MGT channel TX uses QPLL, otherwise CPLL 
+        rx_use_qpll             : boolean;                  -- if true, this MGT channel RX uses QPLL, otherwise CPLL
+        tx_qpll_01              : integer range 0 to 1;     -- when tx_use_qpll is true, this defines if TX is using QPLL0 or QPLL1
+        rx_qpll_01              : integer range 0 to 1;     -- when rx_use_qpll is true, this defines if RX is using QPLL0 or QPLL1
+        tx_refclk_freq          : integer;                  -- expected refclk frequency for the TX CPLL or QPLL
+        rx_refclk_freq          : integer;                  -- expected refclk frequency for the TX CPLL or QPLL
+        tx_bus_width            : integer range 16 to 64;   -- the width of the TX user data bus
+        tx_multilane_phalign    : boolean;                  -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
+        rx_use_buf              : boolean;                  -- defines if the MGT RX is using elastic buffer or not
+        --mgt_rx_bus_width     : integer range 16 to 64;
+    end record;
+
+    constant CFG_MGT_NULL : t_mgt_type_config := (link_type => MGT_NULL, cpll_refclk_01 => 0, qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, tx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, rx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, tx_bus_width => 0, tx_multilane_phalign => false, rx_use_buf => false);
+
     type t_mgt_config is record
-        link_type               : t_mgt_link_type;
-        cpll_refclk_01          : integer range 0 to 1;
-        qpll_inst_type          : t_mgt_qpll_type;
-        qpll0_refclk_01         : integer range 0 to 1;
-        qpll1_refclk_01         : integer range 0 to 1;
-        tx_use_qpll             : boolean;
-        rx_use_qpll             : boolean;
-        tx_qpll_01              : integer range 0 to 1;
-        rx_qpll_01              : integer range 0 to 1;
-        qpll_idx                : integer;
-        tx_bus_width            : integer range 16 to 64;
-        tx_multilane_phalign    : boolean; -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
-        rx_use_buf              : boolean;
-        is_master               : boolean; -- if true, the TXOUTCLK from this MGT is used to drive the TXUSRCLK of all the other MGTs of the same type (this can only be set to true on one channel of any given type)
-        ibert_inst              : boolean; -- if true, an in-system ibert will be instantiated for this channel
-    --mgt_rx_bus_width     : integer range 16 to 64;
+        mgt_type                : t_mgt_type_config;    -- MGT type configuration
+        qpll_inst_type          : t_mgt_qpll_type;      -- defines which type of QPLL should be instantiated on this MGT channel number (only one per quad should be set to a non QPLL_NULL value)
+        qpll_idx                : integer;              -- defines which QPLL index to use on this channel (e.g. if MGT #4 has a non QPLL_NULL value for qpll_inst_type, this should be set to 4 on that channel and also 4 on the other 3 channels that belong to the same quad)
+        is_master               : boolean;              -- if true, the TXOUTCLK from this MGT is used to drive the TXUSRCLK of all the other MGTs of the same type (this can only be set to true on one channel of any given type)
+        ibert_inst              : boolean;              -- if true, an in-system ibert will be instantiated for this channel
     end record;
 
     -- NOTE t_mgt_config_arr type should be defined in the board package with the correct length
@@ -162,16 +172,6 @@ package mgt_pkg is
     type t_mgt_rx_init is record
         gtrxreset       : std_logic;
         rxuserrdy       : std_logic;
-        rxdfeagchold    : std_logic;
-        rxdfeagcovrden  : std_logic;
-        rxdfelfhold     : std_logic;
-        rxdfelpmreset   : std_logic;
-        rxlpmlfklovrden : std_logic;
-        rxdfelfovrden   : std_logic;
-        rxlpmhfhold     : std_logic;
-        rxlpmhfovrden   : std_logic;
-        rxlpmlfhold     : std_logic;
-        rxdlyen         : std_logic;
         rxdlysreset     : std_logic;
         rxphalign       : std_logic;
         rxphalignen     : std_logic;
@@ -179,7 +179,6 @@ package mgt_pkg is
         rxsyncallin     : std_logic;
         rxsyncin        : std_logic;
         rxsyncmode      : std_logic;
-        rxcdrhold       : std_logic;
     end record;
 
     type t_mgt_rx_status is record
