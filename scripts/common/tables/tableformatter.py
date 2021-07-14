@@ -9,7 +9,7 @@ import re
 import textwrap as textw
 from typing import List, Iterable, Optional, Tuple, Union, Callable, Sequence
 
-from wcwidth import wcswidth
+from common.tables.wcwidth import wcswidth
 
 # This whole try/except exists to make sure a Collection type exists for use with optional type hinting and isinstance
 try:

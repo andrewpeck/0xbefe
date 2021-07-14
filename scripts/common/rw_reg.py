@@ -5,6 +5,7 @@ from common.config import *
 import imp
 import sys
 import math
+import time
 from collections import OrderedDict
 from common.utils import *
 
@@ -53,6 +54,7 @@ class Node:
     sw_val_bad = None
     sw_val_warn = None
     sw_val_neutral = None
+    sw_units = None
 
     def __init__(self):
         self.children = []
@@ -64,46 +66,98 @@ class Node:
         return self.name.replace(TOP_NODE_NAME + '.', '').replace('.', '_')
 
     def output(self):
-        print('Name:',self.name)
-        print('Description:',self.description)
-        print('Local Address:','{0:#010x}'.format(self.local_address))
-        print('Address:','{0:#010x}'.format(self.address))
-        print('Permission:',self.permission)
-        print('Mask:','{0:#010x}'.format(self.mask))
-        print('Module:',self.isModule)
-        print('Parent:',self.parent.name)
+        print('Name: ' + self.name)
+        print('Description: ' + self.description)
+        print('Local Address: ' + '{0:#010x}'.format(self.local_address))
+        print('Address: ' + '{0:#010x}'.format(self.address))
+        print('Permission: ' + self.permission)
+        print('Mask: ' + '{0:#010x}'.format(self.mask))
+        print('Module: ' + self.isModule)
+        print('Parent: ' + self.parent.name)
 
 class RegVal(int):
     reg = None
 
-    def __str__(self):
+    def get_color(self):
+        if self.reg.sw_val_neutral is not None and eval(self.reg.sw_val_neutral):
+            return None
+        elif self.reg.sw_val_bad is not None and eval(self.reg.sw_val_bad):
+            return Colors.RED
+        elif self.reg.sw_val_warn is not None and eval(self.reg.sw_val_warn):
+            return Colors.YELLOW
+        elif self.reg.sw_val_good is not None and eval(self.reg.sw_val_good):
+            return Colors.GREEN
+        elif self.reg.sw_val_good is not None:
+            return Colors.RED
+        elif self.reg.sw_val_bad is not None:
+            return Colors.GREEN
+
+    def to_string(self, hex=True, hex_padded32=True, use_color=True):
         if self == 0xdeaddead:
-            return Colors.RED + "Bus Error" + Colors.ENDC
-        val = "0x%08x" % self
+            if use_color:
+                return Colors.RED + "Bus Error" + Colors.ENDC
+            else:
+                return "Bus Error"
+
+        val = ""
+        if hex:
+            if hex_padded32:
+                val = "0x%08x" % self
+            else:
+                val = "0x%x" % self
+
         if self.reg.sw_enum is not None:
             enum_val = "UNKNOWN" if self >= len(self.reg.sw_enum) else self.reg.sw_enum[self]
-            val += " (%s)" % enum_val
+            if hex:
+                val += " (%s)" % enum_val
+            else:
+                val = enum_val
+        elif self.reg.sw_units is not None:
+            if len(self.reg.sw_units) == 0:
+                if hex:
+                    val += " (%d)" % self
+                else:
+                    val = "%d" % self
+            else:
+                modifier = self.reg.sw_units[0]
+                val_pretty = None
+                if modifier == "G":
+                    val_pretty = self / 1000000000.0
+                elif modifier == "M":
+                    val_pretty = self / 1000000.0
+                elif modifier == "K":
+                    val_pretty = self / 1000.0
 
-        if self.reg.sw_val_neutral is not None and eval(self.reg.sw_val_neutral):
-            val = val
-        elif self.reg.sw_val_bad is not None and eval(self.reg.sw_val_bad):
-            val = Colors.RED + val + Colors.ENDC
-        elif self.reg.sw_val_warn is not None and eval(self.reg.sw_val_warn):
-            val = Colors.YELLOW + val + Colors.ENDC
-        elif self.reg.sw_val_good is not None and eval(self.reg.sw_val_good):
-            val = Colors.GREEN + val + Colors.ENDC
-        elif self.reg.sw_val_good is not None:
-            val = Colors.RED + val + Colors.ENDC
+                if val_pretty is None:
+                    if hex:
+                        val += " (%d%s)" % (self, self.reg.sw_units)
+                    else:
+                        val = "%d%s" % (self, self.reg.sw_units)
+                else:
+                    if hex:
+                        val += " (%f%s)" % (val_pretty, self.reg.sw_units)
+                    else:
+                        val = "%f%s" % (val_pretty, self.reg.sw_units)
+        elif not hex:
+            val = "%d" % self
+
+        if use_color:
+            col = self.get_color()
+            if col is not None:
+                val = col + val + Colors.ENDC
 
         return val
+
+    def __str__(self):
+        return self.to_string()
 
 def main():
     parseXML()
     print('Example:')
     random_node = nodes["GEM_AMC.GEM_SYSTEM.BOARD_ID"]
     #print str(random_node.__class__.__name__)
-    print('Node:',random_node.name)
-    print('Parent:',random_node.parent.name)
+    print('Node: ' + random_node.name)
+    print('Parent: ' + random_node.parent.name)
     kids = []
     getAllChildren(random_node, kids)
     print(len(kids), kids.name)
@@ -115,7 +169,8 @@ def parseXML():
     if addressTable is None:
         print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
         addressTable = ADDRESS_TABLE_DEFAULT
-    print('Parsing',addressTable,'...')
+    print('Parsing ' + addressTable + '...')
+    t1 = time.time()
     tree = None
     lxmlExists = False
     try:
@@ -136,19 +191,20 @@ def parseXML():
 
     root = tree.getroot()
     vars = {}
-    makeTree(root,'',0x0,nodes,None,vars,False)
-    print("Parsing done. Total num register nodes: %d" % len(nodes))
+    makeTree(root, '', 0x0, nodes, None, vars, False)
+    t2 = time.time()
+    print("Parsing done, took %fs. Total num register nodes: %d" % ((t2 - t1), len(nodes)))
 
 # returns the position of the first set bit
 def findFirstSetBitPos(n):
-    return int(math.log(n&-n, 2))
+    return int(math.log(n & -n, 2))
 
-def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
+def makeTree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated):
 
     if node.get('id') is None or (node.get('ignore') is not None and eval(node.get('ignore')) == True):
         return
 
-    if (isGenerated == None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':
+    if (isGenerated is None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':
         generateSize = parseInt(node.get('generate_size'))
         generateAddressStep = parseInt(node.get('generate_address_step'))
         generateIdxVar = node.get('generate_idx_var')
@@ -158,7 +214,8 @@ def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
         return
     newNode = Node()
     name = baseName
-    if baseName != '': name += '.'
+    if baseName != '':
+        name += '.'
     name += node.get('id')
     name = substituteVars(name, vars)
     newNode.name = name
@@ -168,7 +225,7 @@ def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
     if node.get('address') is not None:
         address = baseAddress + parseInt(node.get('address'))
     newNode.local_address = address
-    newNode.address = (address<<2) + BASE_ADDR
+    newNode.address = (address << 2) + BASE_ADDR
     newNode.permission = node.get('permission')
     if newNode.permission is None:
         newNode.permission = ""
@@ -186,44 +243,50 @@ def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
         newNode.sw_val_warn = substituteVars(node.get('sw_val_warn'), vars)
     if node.get('sw_val_neutral') is not None:
         newNode.sw_val_neutral = substituteVars(node.get('sw_val_neutral'), vars)
+    if node.get('sw_units') is not None:
+        newNode.sw_units = node.get('sw_units')
     nodes[newNode.name] = newNode
     if parentNode is not None:
         parentNode.addChild(newNode)
         newNode.parent = parentNode
-        newNode.level = parentNode.level+1
+        newNode.level = parentNode.level + 1
     for child in node:
-        makeTree(child,name,address,nodes,newNode,vars,False)
+        makeTree(child, name, address, nodes, newNode, vars, False)
 
 
-def getAllChildren(node,kids=[]):
-    if node.children==[]:
+def getAllChildren(node, kids=[]):
+    if node.children == []:
         kids.append(node)
         return kids
     else:
         for child in node.children:
-            getAllChildren(child,kids)
+            getAllChildren(child, kids)
 
 def getNode(nodeName):
     thisnode = None
     if nodeName in nodes:
         thisnode = nodes[nodeName]
-    if (thisnode == None):
-        print (nodeName)
+    if (thisnode is None):
+        printRed("ERROR: %s does not exist" % nodeName)
     return thisnode
 
 def getNodeFromAddress(nodeAddress):
-    return next((nodes[nodename] for nodename in nodes if nodes[nodename].address == nodeAddress),None)
+    return next((nodes[nodename] for nodename in nodes if nodes[nodename].address == nodeAddress), None)
 
 def getNodesContaining(nodeString):
     nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename]
-    if len(nodelist): return nodelist
-    else: return None
+    if len(nodelist):
+        return nodelist
+    else:
+        return None
 
 #returns *readable* registers
 def getRegsContaining(nodeString):
     nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename and nodes[nodename].permission is not None and 'r' in nodes[nodename].permission]
-    if len(nodelist): return nodelist
-    else: return None
+    if len(nodelist):
+        return nodelist
+    else:
+        return None
 
 def readAddress(address):
     return rReg(address)
@@ -233,13 +296,13 @@ def readReg(reg, verbose=True):
     if isinstance(reg, str):
         reg = getNode(reg)
     if 'r' not in reg.permission:
-        print("No read permission for register %s" % reg.name)
+        printRed("No read permission for register %s" % reg.name)
         return RegVal(0xdeaddead, reg)
     val = rReg(reg.address)
     if val == 0xdeaddead:
         if verbose:
-            print("Bus error while reading %s" % reg.name)
-    if reg.mask is not None:
+            printRed("Bus error while reading %s" % reg.name)
+    elif reg.mask is not None:
         val = (val & reg.mask) >> reg.mask_start_bit_pos
 
     val = RegVal(val)
@@ -261,16 +324,16 @@ def readRegCache(reg):
     return val_cache[reg]
 
 
-def displayReg(reg,option=None):
+def displayReg(reg, option=None):
     val = readReg(reg, False)
     str_val = str(val)
-    return hex32(reg.address).rstrip('L')+' '+reg.permission+'\t'+tabPad(reg.name,7)+str_val
+    return hex32(reg.address).rstrip('L') + ' ' + reg.permission + '\t' + tabPad(reg.name, 7) + str_val
 
 def writeReg(reg, value):
     if isinstance(reg, str):
         reg = getNode(reg)
     if 'w' not in reg.permission:
-        print("No write permission for register %s" % reg.name)
+        printRed("No write permission for register %s" % reg.name)
         return -1
 
     # Apply Mask if applicable
@@ -281,18 +344,19 @@ def writeReg(reg, value):
         val32 = (val32 & ~reg.mask) | (val_shifted & reg.mask)
     ret = wReg(reg.address, val32)
     if ret < 0:
-        print("Bus error while writing to %s" % reg.name)
+        printRed("Bus error while writing to %s" % reg.name)
         return -1
     return 0
 
 def completeReg(string):
     possibleNodes = []
     completions = []
-    currentLevel = len([c for c in string if c=='.'])
+    currentLevel = len([c for c in string if c == '.'])
 
     possibleNodes = [nodes[nodename] for nodename in nodes if nodename.startswith(string) and nodes[nodename].level == currentLevel]
-    if len(possibleNodes)==1:
-        if possibleNodes[0].children == []: return [possibleNodes[0].name]
+    if len(possibleNodes) == 1:
+        if possibleNodes[0].children == []:
+            return [possibleNodes[0].name]
         for n in possibleNodes[0].children:
             completions.append(n.name)
     else:
@@ -309,7 +373,7 @@ def substituteVars(string, vars):
     return ret
 
 def tabPad(s, maxlen):
-    return s+"\t"*int((8*maxlen-len(s)-1)/8+1)
+    return s + "\t" * int((8 * maxlen - len(s) - 1) / 8 + 1)
 
 if __name__ == '__main__':
     main()

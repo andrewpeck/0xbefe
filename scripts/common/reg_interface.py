@@ -88,7 +88,7 @@ class Prompt(Cmd):
             print('Error retrieving node.')
             return
         if reg is not None:
-            print(hex(reg.address) + '\t' + readAddress(reg.address))
+            print(hex(reg.address) + '\t' + "0x%08x" % readAddress(reg.address))
         else:
             print(args + ' not found!')
 

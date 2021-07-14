@@ -25,8 +25,7 @@ class MgtPll:
 
     def get_locked(self):
         if self.is_qpll == 1:
-            qpll_locked = readReg("BEFE.MGTS.MGT%d.STATUS.QPLL_LOCKED" % self.idx)
-            return (qpll_locked & (self.qpll01 + 1)) >> self.qpll01
+            return readReg("BEFE.MGTS.MGT%d.STATUS.QPLL%d_LOCKED" % (self.idx, self.qpll01))
         else:
             return readReg("BEFE.MGTS.MGT%d.STATUS.CPLL_LOCKED" % self.idx)
 

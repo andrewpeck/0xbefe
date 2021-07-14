@@ -68,9 +68,9 @@ import sys
 import warnings
 
 # local
-from table_wide import WIDE_EASTASIAN
-from table_zero import ZERO_WIDTH
-from unicode_versions import list_versions
+from common.tables.table_wide import WIDE_EASTASIAN
+from common.tables.table_zero import ZERO_WIDTH
+from common.tables.unicode_versions import list_versions
 
 try:
     from functools import lru_cache
