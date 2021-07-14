@@ -1,7 +1,7 @@
-from rw_reg import *
+from common.rw_reg import *
 from os import path
 import struct
-from utils import *
+from common.utils import *
 
 MAX_FW_SIZE = 16000000
 

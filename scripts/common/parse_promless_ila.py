@@ -1,6 +1,6 @@
 import sys
 import csv
-from utils import *
+from common.utils import *
 import struct
 
 MAX_FW_SIZE = 16000000

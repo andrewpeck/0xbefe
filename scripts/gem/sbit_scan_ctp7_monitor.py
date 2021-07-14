@@ -1,5 +1,5 @@
-from rw_reg import *
-from vfat_config import *
+from common.rw_reg import *
+from gem.vfat_config import *
 from time import *
 
 QUICKTEST = True
@@ -53,7 +53,7 @@ def main():
     errorsFilePath = './'+resultFileName+'-errors.txt'
     f = open(resultFilePath, 'w')
     f_errors = open(errorsFilePath, 'w')
-    
+
     parseXML()
 
     if not SINGLEOH:
@@ -95,7 +95,7 @@ def main():
 
     f.close()
     f_errors.close()
-    
+
 
 def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     try:
@@ -106,7 +106,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         print 'Invalid input!'
         return
 
-   
+
     REG_PATH = 'GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
 
@@ -114,7 +114,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     try:
         oh_fw = parseInt(readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW')))
         print 'OH FW: ',hex(oh_fw)
-        if oh_fw < 1: 
+        if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
             return
     except ValueError as e:
@@ -139,7 +139,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     if not V2ATEST:
         heading('MASK VFATS')
         unmaskVFAT(optohybrid,vfat_slot)
-    
+
     # Set default VFAT values & Threshold,VCal,RunMode
     heading('SET VFAT SETTINGS')
     vfatWritten = setVFATRunMode(optohybrid,vfat_slot)
@@ -165,7 +165,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
 
     # Begin CalPulsing
     T1On(optohybrid)
-         
+
 
    # try:
     for strip in strips:
@@ -185,7 +185,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
                 encodedSBit = cluster_to_vfat2_sbit(value)
                 encodedSize = cluster_to_size(value)
                 goodCluster = False
-                if parseInt(encodedSlot) == parseInt(vfat_slot) and parseInt(encodedSBit) == parseInt((strip-1)//16) and parseInt(encodedSize) == 6: 
+                if parseInt(encodedSlot) == parseInt(vfat_slot) and parseInt(encodedSBit) == parseInt((strip-1)//16) and parseInt(encodedSize) == 6:
                     good_cluster_count+=1
                     goodCluster = True
 
@@ -202,10 +202,10 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         errfile.write('\n')
         # Mask Channel
         print writeReg(getNode(REG_PATH + 'VFATChannels.ChanReg' + str(strip)), 0)
-    
+
     # Stop CalPulses
     T1Off(optohybrid)
- 
+
 
 def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     try:
@@ -215,14 +215,14 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     except:
         print 'Invalid input!'
         return
-   
+
     REG_PATH = 'GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
     # Check for correct OH, good connection
     try:
         oh_fw = parseInt(readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW')))
         print 'OH FW: ',hex(oh_fw)
-        if oh_fw < 1: 
+        if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
             return
     except ValueError as e:
@@ -256,7 +256,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     # Make sure T1 Controller is OFF
     T1Off(optohybrid)
     print 'T1 Monitor: ',readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
-    
+
 
     # Reset Trigger Counters
     heading('Reset trigger counters')
@@ -266,7 +266,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     subheading('Verifying...')
     sleep(0.1)
     isReset,nSbits = verifyTCReset(optohybrid)
-    if not isReset: 
+    if not isReset:
         print 'Trigger Counter not reset! (%s)'%str(nSbits)
         outfile.write('Trigger Counter Reset did not clear Trigger Counts!\n')
         outfile.write('%s%s = %d' % ('Triggers: ',nSbits,parseInt(nSbits)))
@@ -307,19 +307,19 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
             subheading('Sending Calpulses')
             # Send CalPulses
             print writeReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.TOGGLE'),0xffffffff)
-                            
+
 
             sleep(0.1)
             print 'After sleep... T1 Status:',readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
             # Verify Triggers
             nSbits = readReg(getNode('GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.TRIGGER_CNT'))
-            try: 
+            try:
                 parseInt(nSbits)
                 print 'SBits:',nSbits,'=',parseInt(nSbits)
             except: # bus error
                 print 'SBits:',nSbits
                 nSbits = -1
-                
+
             ScanResults.append([strip,parseInt(nSbits)])
 
             if parseInt(nSbits) != 4*NUM_PULSES: # Not sure why quadrupled
@@ -327,7 +327,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
             else:
                 printCyan('Strip '+str(strip)+'\t Expected:'+str(4*NUM_PULSES)+'\t Received:'+str(parseInt(nSbits)) )
 
-    
+
             # Map Cluster
             if not QUICKTEST:
                 subheading('Cluster Info')
@@ -356,31 +356,31 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
 	writeReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.ContReg0'),0x36)
 
 
-# def cluster_to_vfat (cluster): 
+# def cluster_to_vfat (cluster):
 #     vfat_mapping =  [ 0, 8, 16, 1, 9, 17, 2, 10, 18, 3, 11, 19, 4, 12, 20, 5, 13, 21, 6, 14, 22, 7, 15, 23]
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         vfat_id = -1
-#     else: 
+#     else:
 #         natural_fat_id = (address)//64
 #         vfat_id = vfat_mapping[natural_fat_id]
 #     return vfat_id
 
 # def cluster_to_vfat2_sbit (cluster):
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         vfat2_sbit = -1
-#     else: 
+#     else:
 #         vfat3_sbit = (cluster&0x3f)
 #         vfat2_sbit = vfat3_sbit//8
 #     return vfat2_sbit
 
-# def cluster_to_size (cluster): 
+# def cluster_to_size (cluster):
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         size = -1
-#     else: 
-#         size = (cluster>>11)&0x7; 
+#     else:
+#         size = (cluster>>11)&0x7;
 #     return size
 
 

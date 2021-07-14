@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from utils import *
+from common.utils import *
 import signal
 import sys
 import os
@@ -8,7 +8,7 @@ import fnmatch
 import struct
 import zlib
 import math
-import analyze_events
+import gem.data_analyzer.analyze_events as an
 from enum import Enum
 
 IS_MINIDAQ_FORMAT = False
@@ -751,19 +751,19 @@ def main():
 
     # some quick and dirty analysis runs
     if "analyze_bx_diff" in sys.argv:
-        analyze_events.analyzeBxDiff(events)
+        an.analyzeBxDiff(events)
 
     if "analyze_bx" in sys.argv:
-        analyze_events.analyzeBx(events)
+        an.analyzeBx(events)
 
     if "analyze_num_chambers" in sys.argv:
-        analyze_events.analyzeNumChambers(events)
+        an.analyzeNumChambers(events)
 
     if "analyze_num_vfats" in sys.argv:
-        analyze_events.analyzeNumVfats(events)
+        an.analyzeNumVfats(events)
 
     if "analyze_vfat_bx_matching" in sys.argv:
-        analyze_events.analyzeVfatBxMatching(events)
+        an.analyzeVfatBxMatching(events)
 
 def readInitRecord(f, verbose=False):
     code = readNumber(f, 1)

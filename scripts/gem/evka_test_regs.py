@@ -1,24 +1,23 @@
 #!/bin/env python
-from rw_reg import *
-from mcs import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
 import random
 
-SLEEP_BETWEEN_COMMANDS=0.1
-DEBUG=False
+SLEEP_BETWEEN_COMMANDS = 0.1
+DEBUG = False
 CTP7HOSTNAME = "eagle33"
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 REG_CTP7_BOARD_ID = None
 REG_OH1_FW = None
@@ -28,7 +27,7 @@ REG_LINK_ENABLE_MASK = None
 
 def main():
 
-    instructions=""
+    instructions = ""
 
     if len(sys.argv) < 2:
         print('Usage: evkatest.py <instructions>')
@@ -104,15 +103,15 @@ def regTest(regAddress, initValue, regMask, doInitWrite, numIterations, rand_wri
         print("Progress: %d / %d" % ((chunk+1)*chunkSize, numIterations))
 
     totalTime = clock() - timeStart
-        
+
     printCyan("Test finished " + str(numIterations) + " iterations in " + str(totalTime) + " seconds. Bus errors = " + str(busErrors) + ", value errors = " + str(valueErrors))
 
 # freqDiv -- JTAG frequency expressed as a divider of 20MHz, so e.g. a value of 2 would give 10MHz, value of 10 would give 2MHz
 def enableJtag(freqDiv=None):
-    subheading('Disabling SCA ADC monitoring')                                                                                          
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x1)                                                    
-    sleep(0.01)                                                                                                                         
-    subheading('Enable JTAG module')                                                                                                    
+    subheading('Disabling SCA ADC monitoring')
+    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x1)
+    sleep(0.01)
+    subheading('Enable JTAG module')
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE'), 0x1)
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
@@ -125,10 +124,10 @@ def enableJtag(freqDiv=None):
 
 
 def disableJtag():
-    subheading('Disabling JTAG module')                                                                                                 
+    subheading('Disabling JTAG module')
     writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE'), 0x0)
-#    subheading('Enabling SCA ADC monitoring')                                                                                           
-#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)                                                    
+#    subheading('Enabling SCA ADC monitoring')
+#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)
 
 
 # restoreIdle -- if True then will restore to IDLE state before doing anything else
@@ -152,7 +151,7 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drRead):
     tdo = 0
     len = 0
     readIdx = 0
-    
+
     if restoreIdle:
         tms = 0b011111
         len = 6
@@ -175,20 +174,20 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drRead):
         len += drLen
         tms |= 0b01 << len     # update DR and go to IDLE
         len += 2
-        
+
 
     debug('Length = ' + str(len))
     debug('TMS = ' + binary(tms, len))
     debug('TDO = ' + binary(tdo, len))
     debug('Read start index = ' + str(readIdx))
-    
+
     debugCyan('Setting command length = ' + str(len))
     fw_len = len if len < 128 else 0 # in firmware 0 means 128 bits
     #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS'), fw_len)
     wReg(ADDR_JTAG_LENGTH, fw_len)
 
     # ================= SENDING LENGTH COMMAND JUST FOR TEST!! ===================
-    #debugCyan('Setting config registers: bit number = ' + hex(fw_len))                                               
+    #debugCyan('Setting config registers: bit number = ' + hex(fw_len))
     #sendScaCommand(0x13, 0x80, 0x4, 0xc00 | (fw_len << 24), False) # TX falling edge, shift LSB first, and set length
     # ============================================================================
 
@@ -215,62 +214,62 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drRead):
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo1)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    if len > 64:                                                               
-        tms = tms >> 32                                                                                                                 
+    if len > 64:
+        tms = tms >> 32
         debugCyan('Setting TMS 2 = ' + binary(tms & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms2)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
-        tdo = tdo >> 32                                                                                           
+        tdo = tdo >> 32
         debugCyan('Setting TDO 2 = ' + binary(tdo & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo2)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    if len > 96:                                                                                                                                                          
-        tms = tms >> 32                                                                                                                                                   
+    if len > 96:
+        tms = tms >> 32
         debugCyan('Setting TMS 3 = ' + binary(tms & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms3)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
-                                                                                                                                                                          
-        tdo = tdo >> 32                                                                                                                                                   
+
+        tdo = tdo >> 32
         debugCyan('Setting TDO 3 = ' + binary(tdo & 0xffffffff, 32))
         #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo3)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
-    # ================= SENDING JTAG GO COMMAND JUST FOR TEST!! ===================                                
-    #debugCyan('JTAG GO!')                                                                                                         
-    #sendScaCommand(0x13, 0xa2, 0x1, 0x0, False) 
-    # ============================================================================                                                        
+    # ================= SENDING JTAG GO COMMAND JUST FOR TEST!! ===================
+    #debugCyan('JTAG GO!')
+    #sendScaCommand(0x13, 0xa2, 0x1, 0x0, False)
+    # ============================================================================
 
     #raw_input("Press any key to read TDI...")
 
     if drRead:
-        debugCyan('Read TDI 0')                                                                                  
+        debugCyan('Read TDI 0')
         tdi = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))
         #tdi0_fast = parseInt(rReg(parseInt(ADDR_JTAG_TDI)))
         #print('normal tdi read = ' + hex(tdi0) + ', fast C tdi read = ' + hex(tdi0_fast) + ', parsed = ' + '{0:#010x}'.format(tdi0_fast))
         debug('tdi = ' + hex(tdi))
 
         if len > 32:
-            debugCyan('Read TDI 1')                                                                                                                                          
-            tdi1 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))        
+            debugCyan('Read TDI 1')
+            tdi1 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))
             tdi |= tdi1 << 32
             debug('tdi1 = ' + hex(tdi1))
             debug('tdi = ' + hex(tdi))
-        
-        if len > 64:                                                                                                                                                      
-            debugCyan('Read TDI 2')                                                                                                                                       
-            tdi2 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))                                                                                                             
-            tdi |= tdi2 << 64
-            debug('tdi2 = ' + hex(tdi2))                                                                                          
-            debug('tdi = ' + hex(tdi)) 
 
-        if len > 96:                                                                                                                                                      
-            debugCyan('Read TDI 3')                                                                                                                                       
-            tdi3 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))                                                                                                             
+        if len > 64:
+            debugCyan('Read TDI 2')
+            tdi2 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))
+            tdi |= tdi2 << 64
+            debug('tdi2 = ' + hex(tdi2))
+            debug('tdi = ' + hex(tdi))
+
+        if len > 96:
+            debugCyan('Read TDI 3')
+            tdi3 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')))
             tdi |= tdi3 << 96
-            debug('tdi3 = ' + hex(tdi3))                                                                                          
-            debug('tdi = ' + hex(tdi)) 
+            debug('tdi3 = ' + hex(tdi3))
+            debug('tdi = ' + hex(tdi))
 
         readValue = (tdi >> readIdx) & (0xffffffffffffffffffffffffffffffff >> (128  - drLen))
         debug('Read pos = ' + str(readIdx))
@@ -279,10 +278,10 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drRead):
     else:
         return 0
 
-    
+
 def sendScaCommand(sca_channel, sca_command, data_length, data, doRead):
     #print('fake send: channel ' + hex(sca_channel) + ', command ' + hex(sca_command) + ', length ' + hex(data_length) + ', data ' + hex(data) + ', doRead ' + str(doRead))
-    #return    
+    #return
 
     d = data
 
@@ -312,22 +311,22 @@ def debugCyan(string):
     if DEBUG:
         printCyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def printCyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def printRed(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:

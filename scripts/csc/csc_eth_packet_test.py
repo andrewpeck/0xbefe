@@ -1,6 +1,6 @@
-from rw_reg import *
-from data_processing_utils import *
-from utils import *
+from common.rw_reg import *
+from common.utils import *
+from csc.data_processing_utils import *
 from time import *
 import datetime
 import array
@@ -10,7 +10,7 @@ import sys
 import os
 import zlib
 
-DEBUG=False
+DEBUG = False
 
 # SOURCE_MAC = 0x00151714809e
 SOURCE_MAC = 0xdbdbdbdbdbdb
@@ -301,7 +301,7 @@ def sendDduEthPacket(payload_words64, packet_counter, add_idles = False, send = 
 def pushGbeWord16(word16, logFile = None, verbose = False):
     wReg(REG_PUSH_GBE_DATA, word16)
     if verbose:
-        print 'pushing ' + hex(word16)
+        print('pushing ' + hex(word16))
     if logFile is not None:
         logFile.write("%s\n" % hexPadded(word16, 2))
     return chr(word16 & 0xff) + chr((word16 >> 8) & 0xff)

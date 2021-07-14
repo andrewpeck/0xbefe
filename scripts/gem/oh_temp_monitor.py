@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
 
-DEBUG=False
+DEBUG = False
 
 def main():
 
@@ -19,7 +19,7 @@ def main():
         return
     else:
         ohMask = parseInt(sys.argv[1])
-        for i in range(0,12):
+        for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
         if len(sys.argv) > 2:
@@ -39,16 +39,15 @@ def main():
             else:
                 temps += "0.0\t"
         print(temps)
-        if out_file != None:
+        if out_file is not None:
             out_file.write("%s\n" % temps)
             out_file.flush()
         sleep(1.0)
         iter += 1
 
 
-
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
 
 def checkStatus(ohList):
     rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))

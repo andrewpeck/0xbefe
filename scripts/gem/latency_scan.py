@@ -1,6 +1,6 @@
 from cmd import Cmd
 import sys, os, subprocess
-from rw_reg import *
+from common.rw_reg import *
 import time
 
 class Colors:
@@ -13,21 +13,21 @@ class Colors:
     RED     = '\033[91m'
     ENDC    = '\033[0m'
 
-def printCyan(string):  
-    print Colors.CYAN  
-    print string, Colors.ENDC
+def printCyan(string):
+    print(Colors.CYAN)
+    print(string + Colors.ENDC)
 
 def printGreen(string):
-    print Colors.GREEN
-    print string, Colors.ENDC
-                          
+    print(Colors.GREEN)
+    print(string + Colors.ENDC)
+
 def printYellow(string):
-    print Colors.YELLOW
-    print string, Colors.ENDC
+    print(Colors.YELLOW)
+    print(string + Colors.ENDC)
 
 def printRed(string):
-    print Colors.RED
-    print string, Colors.ENDC
+    print(Colors.RED)
+    print(string + Colors.ENDC)
 
 vfat = 1
 min_latency = 0
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         evtCnt = int(readReg(getNode("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%i.GOOD_EVENTS_COUNT" % vfat)), 0)
 
         if (evtCnt != l1aCnt):
-            printRed("Good event count is not equal to L1A count!!! Good evt cnt = %i, l1a cnt = %i" %(evtCnt, l1aCnt))
+            printRed("Good event count is not equal to L1A count!!! Good evt cnt = %i, l1a cnt = %i" % (evtCnt, l1aCnt))
 
         l1aCounts[lat] = l1aCnt
         hitCounts[lat] = hitCnt

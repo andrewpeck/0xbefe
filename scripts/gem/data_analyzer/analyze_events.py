@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from utils import *
+from common.utils import *
 import math
-from text_histogram import histogram
+from common.text_histogram import histogram
 
 def analyzeBxDiff(events):
     ohAmcBxOffsets = []

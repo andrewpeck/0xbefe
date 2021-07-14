@@ -1,5 +1,5 @@
 #!/bin/env python
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
@@ -12,7 +12,7 @@ def main():
     writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
 
     #Example of reading a register
-    result = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH0.GBT0_READY'))) 
+    result = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH0.GBT0_READY')))
     print("OH0 GBT0 ready = %d" % result)
 
 

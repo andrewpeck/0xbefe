@@ -1,5 +1,5 @@
-from utils import *
-from data_processing_utils import *
+from common.utils import *
+from csc.data_processing_utils import *
 import signal
 import sys
 import os
@@ -106,7 +106,7 @@ def main():
         #     s = ""
         #     for j in range(0, 4):
         #         s += hexPadded(raw[i*4+j], 2) + " "
-        #     print s
+        #     print(s)
 
     print("Number of FED trailers checked: %d" % trailersChecked)
     print("Total number of errors found: %d" % errors)
@@ -121,7 +121,7 @@ def printWords16(words):
         # for j in reversed(range(0, 4)):
         for j in range(0, 4):
             s += hexPadded(words[i*4+j], 2) + " "
-        print s
+        print(s)
 
 if __name__ == '__main__':
     main()

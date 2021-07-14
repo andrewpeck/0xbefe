@@ -1,6 +1,6 @@
-from rw_reg import *
+from common.rw_reg import *
 from time import *
-from utils import *
+from common.utils import *
 import datetime
 import array
 import struct
@@ -8,7 +8,7 @@ import signal
 import sys
 import os
 
-DEBUG=False
+DEBUG = False
 
 class Colors:
     WHITE   = '\033[97m'
@@ -180,21 +180,21 @@ def debugCyan(string):
         printCyan('DEBUG: ' + string)
 
 def heading(string):
-    print Colors.BLUE
-    print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC
+    print(Colors.BLUE)
+    print('\n>>>>>>> ' + str(string).upper() + ' <<<<<<<')
+    print(Colors.ENDC)
 
 def subheading(string):
-    print Colors.YELLOW
-    print '---- '+str(string)+' ----',Colors.ENDC
+    print(Colors.YELLOW)
+    print('---- ' + str(string) + ' ----' + Colors.ENDC)
 
 def printCyan(string):
-    print Colors.CYAN
-    print string, Colors.ENDC
+    print(Colors.CYAN)
+    print(string + Colors.ENDC)
 
 def printRed(string):
-    print Colors.RED
-    print string, Colors.ENDC
+    print(Colors.RED)
+    print(string + Colors.ENDC)
 
 def hex(number):
     if number is None:

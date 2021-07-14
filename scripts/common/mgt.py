@@ -1,6 +1,6 @@
-from rw_reg import *
-from utils import *
-import tableformatter as tf
+from common.rw_reg import *
+from common.utils import *
+import common.tables.tableformatter as tf
 from enum import Enum
 
 class MgtTxRx(Enum):

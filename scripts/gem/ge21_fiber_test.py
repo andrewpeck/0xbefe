@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
@@ -17,8 +17,8 @@ class Colors:
     RED     = '\033[91m'
     ENDC    = '\033[0m'
 
-CXP_IDX=0
-NUM_ITER=500
+CXP_IDX = 0
+NUM_ITER = 500
 LOSS_THRESH_DB = -1.5
 
 REF_POWER_CXP0 = [743, 895, 797, 825, 704, 873, 789, 879, 803, 794, 982, 904]
@@ -192,7 +192,6 @@ def c6Mapping(txCableNum, rxCableNum):
         print("Invalid combination of TX and RX cable numbers.. You can only test 1-1, 1-2, and 2-2 combinations")
         exit()
 
-
     parseXML()
 
     for i in range(len(txChannels)):
@@ -274,7 +273,7 @@ def readCxpRxPower(cxpIdx, numIter=1):
     # max = [0, 0, 0, 0, 0]
     for i in range(0, numIter):
         for j in range(12):
-            ret[j] += power[i*12+j]
+            ret[j] += power[i * 12 + j]
             # if power[i*5+j] < min[j]:
             #     min[j] = power[i*5+j]
             # if power[i*5+j] > max[j]:

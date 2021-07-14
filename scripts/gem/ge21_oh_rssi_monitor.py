@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
@@ -15,7 +15,7 @@ class Colors:
     RED     = '\033[91m'
     ENDC    = '\033[0m'
 
-DEBUG=False
+DEBUG = False
 
 RSSI_R1 = 2000.0
 RSSI_R2 = 1000.0
@@ -33,7 +33,7 @@ def main():
         return
     else:
         ohMask = parseInt(sys.argv[1])
-        for i in range(0,12):
+        for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
         if len(sys.argv) > 2:
@@ -64,22 +64,22 @@ def main():
                     res = (results[0] >> 24) + ((results[0] >> 8) & 0xff00)
                     res_v = (1.0 / 0xfff) * float(res)
                     res_mv = res_v * 1000
-                    res_a = (((res_v / (RSSI_R2/(RSSI_R1+RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
+                    res_a = (((res_v / (RSSI_R2 / (RSSI_R1 + RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
                     res_ua = res_a * 1000000
                     rssi += "%f\t" % res_ua
                     sleep(0.001)
             else:
                 rssi += "0.0\t0.0\t"
         print(rssi)
-        if out_file != None:
+        if out_file is not None:
             out_file.write("%s\n" % rssi)
             out_file.flush()
         sleep(1.0)
         iter += 1
 
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
 
 def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
     #print('fake send: channel ' + hex(sca_channel) + ', command ' + hex(sca_command) + ', length ' + hex(data_length) + ', data ' + hex(data) + ', doRead ' + str(doRead))

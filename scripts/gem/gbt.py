@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
 import signal
 import sys
 
-DEBUG=False
+DEBUG = False
 
 class Colors:
     WHITE   = '\033[97m'
@@ -126,7 +126,7 @@ def main():
             wasNotReady = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (ohSelect, gbtSelect))))
             color = Colors.GREEN if wasNotReady == 0 else Colors.RED
             statusText = "GOOD" if wasNotReady == 0 else "BAD"
-            print color, "Charge pump current = %d  ------ GBT status = %s" % (curr, statusText), Colors.ENDC
+            print(color + "Charge pump current = %d  ------ GBT status = %s" % (curr, statusText) + Colors.ENDC)
             if wasNotReady != 0:
                 break
 
@@ -214,7 +214,7 @@ def main():
                     result += color + res + Colors.ENDC
 
                     if DEBUG:
-                        print color + 'Phase = %d, ELINK %d: PRBS_LOCKED=%d, MEGA_WORD_CNT=%d, ERROR_CNT=%d' % (phase, elink, prbsLocked, megaWordCnt, errorCnt) + Colors.ENDC
+                        print(color + 'Phase = %d, ELINK %d: PRBS_LOCKED=%d, MEGA_WORD_CNT=%d, ERROR_CNT=%d' % (phase, elink, prbsLocked, megaWordCnt, errorCnt) + Colors.ENDC)
 
                 print(result)
 

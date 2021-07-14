@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 ROUNDS = 20
 NUM_SHIFTS_PER_ROUND = 672 #1344
@@ -59,7 +59,7 @@ def main():
         writeReg(getNode('GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
         print("")
         printCyan("Bad spot starts at %d, size of the bad spot = %d" % (first_bad, bad_size))
- 
+
     writeReg(getNode('GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
 
 def readPhaseMonitor():
@@ -80,8 +80,8 @@ def getTtcStatus(verbose=False):
     return good
 
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
 
 def debug(string):
     if DEBUG:
@@ -91,22 +91,22 @@ def debugCyan(string):
     if DEBUG:
         printCyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def printCyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def printRed(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:

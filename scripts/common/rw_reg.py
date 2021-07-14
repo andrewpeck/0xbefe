@@ -1,12 +1,12 @@
 import xml.etree.ElementTree as xml
 import sys, os, subprocess
 from ctypes import *
-from config import *
+from common.config import *
 import imp
 import sys
 import math
 from collections import OrderedDict
-from utils import *
+from common.utils import *
 
 print('Loading shared library: librwreg.so')
 lib = CDLL("librwreg.so")

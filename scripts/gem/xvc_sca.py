@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from rw_reg import *
+from common.rw_reg import *
 import socketserver
 from math import ceil
 import argparse

@@ -1,5 +1,5 @@
-from utils import *
-from data_processing_utils import *
+from common.utils import *
+from csc.data_processing_utils import *
 import signal
 import sys
 import os

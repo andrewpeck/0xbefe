@@ -1,5 +1,5 @@
 from time import *
-from rw_reg import *
+from common.rw_reg import *
 
 OH_NUM = 0
 SLEEP = 1.0
@@ -124,7 +124,7 @@ def injectSemError(address, verbose=True, injectCritical=False, injectDoubleAdja
             obs = parseInt(readReg(getNode("GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION")))
     sleepTime = SLEEP_AFTER_OBSERVATION_UNCORR if injectCritical else SLEEP_AFTER_OBSERVATION_TWO_ADJ if injectDoubleAdjacent else SLEEP_AFTER_OBSERVATION_SINGLE
     if verbose:
-        print("Waiting %fms to allow for detection of the error, attempted correction, and classification" % (sleepTime*1000))
+        print("Waiting %fms to allow for detection of the error, attempted correction, and classification" % (sleepTime * 1000))
     sleep(sleepTime)
 
 def readSemCounters(verbose=False):

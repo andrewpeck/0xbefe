@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
 
-SLEEP_BETWEEN_COMMANDS=0.1
-DEBUG=False
+SLEEP_BETWEEN_COMMANDS = 0.1
+DEBUG = False
 CTP7HOSTNAME = "eagle34"
 
 class Colors:
@@ -84,7 +84,7 @@ def main():
         return
     else:
         ohMask = parseInt(sys.argv[1])
-        for i in range(0,12):
+        for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
         instructions = sys.argv[2]
@@ -94,7 +94,7 @@ def main():
 
     heading("Hola, I'm SCA controller tester :)")
 
-    if not 'r' in instructions:
+    if 'r' not in instructions:
         if not checkStatus(ohList):
             exit()
 
@@ -148,7 +148,7 @@ def main():
 
             ohIdx = 0
             for oh in ohList:
-                coreTemp = ((adc1[ohIdx] >> 6) & 0x3FF) * 503.975 / 1024.0-273.15
+                coreTemp = ((adc1[ohIdx] >> 6) & 0x3FF) * 503.975 / 1024.0 - 273.15
                 volt1 = ((adc2[ohIdx] >> 6) & 0x3FF) * 3.0 / 1024.0
                 volt2 = ((adc3[ohIdx] >> 6) & 0x3FF) * 3.0 / 1024.0
 
@@ -185,15 +185,15 @@ def main():
                 raise ValueError("MCS file is too short.. For Virtex6 we expect it to be " + str(FIRMWARE_SIZE) + " bytes long")
 
             print("Swapping bytes...")
-            for i in range(0, FIRMWARE_SIZE/4):
-                words.append((bytes[i*4 + 2] << 24) + (bytes[i*4 + 3] << 16) + (bytes[i*4] << 8) + (bytes[i*4 + 1]))
+            for i in range(0, FIRMWARE_SIZE / 4):
+                words.append((bytes[i * 4 + 2] << 24) + (bytes[i * 4 + 3] << 16) + (bytes[i * 4] << 8) + (bytes[i * 4 + 1]))
 
         elif type == "bit":
             f = open(filename, "rb")
             f.read(119) # skip the header
             print("Reading the bit file")
             bitWords = []
-            bitWords = struct.unpack('>{}I'.format(FIRMWARE_SIZE/4), f.read(FIRMWARE_SIZE))
+            bitWords = struct.unpack('>{}I'.format(FIRMWARE_SIZE / 4), f.read(FIRMWARE_SIZE))
             print("reversing bits")
 
             # reverse the bits using a lookup table -- that's the fastest way
@@ -218,7 +218,7 @@ def main():
             for word in bitWords:
                 words.append(bitReverseTable256[word & 0xff] << 24 | bitReverseTable256[(word >> 8) & 0xff] << 16 | bitReverseTable256[(word >> 16) & 0xff] << 8 | bitReverseTable256[(word >> 24) & 0xff])
 
-            if len(words) < FIRMWARE_SIZE/4:
+            if len(words) < FIRMWARE_SIZE / 4:
                 raise ValueError("Bit file is too short.. For Virtex6 we expect it to be " + str(FIRMWARE_SIZE) + " bytes long")
 
         numWords = FIRMWARE_SIZE / 4
@@ -353,7 +353,7 @@ def main():
     elif instructions == 'test1':
         timeStart = clock()
         nn = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
-        for i in range(0,1000000):
+        for i in range(0, 1000000):
             #print(str(i))
             #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_CHANNEL'), 0x02)
             #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_COMMAND'), 0x10)
@@ -372,7 +372,7 @@ def main():
     elif instructions == 'test2':
         timeStart = clock()
         nn = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
-        for i in range(0,10000):
+        for i in range(0, 10000):
             print(str(i))
             sleep(0.001)
             writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.FPGA_HARD_RESET'), 0x1)
@@ -397,7 +397,7 @@ def main():
                 if (res > 0xfff):
                     printRed("ERROR: ADC returned a reading above 0xfff!!")
                 res_mv = ((1.0 / 0xfff) * float(res)) * 1000
-                print "Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv)
+                print("Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv))
                 #print "curr = %s" % hex(curr[oh])
             sleep(0.001)
 
@@ -412,7 +412,7 @@ def main():
                 if (res > 0xfff):
                     printRed("ERROR: ADC returned a reading above 0xfff!!")
                 res_mv = ((1.0 / 0xfff) * float(res)) * 1000
-                print "Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv)
+                print("Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv))
             sleep(0.001)
 
     elif instructions == 'compare-mcs-bit':
@@ -429,7 +429,7 @@ def main():
         f.read(119)
         print("reading")
         bitWords = []
-        bitWords = struct.unpack('>{}I'.format(FIRMWARE_SIZE/4), f.read(FIRMWARE_SIZE))
+        bitWords = struct.unpack('>{}I'.format(FIRMWARE_SIZE / 4), f.read(FIRMWARE_SIZE))
         print("reversing bits")
         timeStart = clock()
 
@@ -468,9 +468,9 @@ def main():
         print("comparing bytes")
         errors = 0
         for i in range(0, FIRMWARE_SIZE / 4):
-            if (mcsBytes[i*4 + 2] << 24) + (mcsBytes[i*4 + 3] << 16) + (mcsBytes[i*4] << 8) + (mcsBytes[i*4 + 1]) != bitWordsReversed[i]:
+            if (mcsBytes[i * 4 + 2] << 24) + (mcsBytes[i * 4 + 3] << 16) + (mcsBytes[i * 4] << 8) + (mcsBytes[i * 4 + 1]) != bitWordsReversed[i]:
                 errors += 1
-                print("Ooops, bytes #%d are not equal : "%i + hex(mcsBytes[i]) + ", " + hex(bitBytes[i]))
+                print("Ooops, bytes #%d are not equal : " % i + hex(mcsBytes[i]) + ", " + hex(bitBytes[i]))
                 sleep(0.5)
 
         print("Num errors: " + str(errors))
@@ -500,7 +500,7 @@ def main():
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
         idx = 0
         for oh in ohList:
-            print('OH %d  GPIO Input = ' %(oh) + hex(readData[idx]))
+            print('OH %d  GPIO Input = ' % (oh) + hex(readData[idx]))
             idx += 1
 
 
@@ -527,7 +527,7 @@ def enableJtag(ohMask, freqDiv=None):
     if freqDiv is not None:
         subheading('Setting JTAG CLK frequency to ' + str(20 / (freqDiv)) + 'MHz (divider value = ' + hex((freqDiv - 1) << 24) + ')')
         ohList = []
-        for i in range(0,12):
+        for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
         sendScaCommand(ohList, 0x13, 0x90, 0x4, (freqDiv - 1) << 24, False)
@@ -580,7 +580,7 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
         len += 3
         readIdx = len
         tdo |= dr << len
-        tms |= 0b1 << (drLen -1 + len) # exit DR shift
+        tms |= 0b1 << (drLen - 1 + len) # exit DR shift
         len += drLen
         tms |= 0b01 << len     # update DR and go to IDLE
         len += 2
@@ -710,8 +710,8 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
             reply.append(parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i))))
     return reply
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
 
 def checkStatus(ohList):
     rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))

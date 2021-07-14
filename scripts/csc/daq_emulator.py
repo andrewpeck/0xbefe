@@ -14,7 +14,7 @@ BX_PER_SECOND = int(40079000 / PRESCALE)
 
 L1A_RATE = int(750000 / PRESCALE)
 
-#9 board setup
+# 9 board setup
 INPUT_TYPES = ["ME1/1", "ME1/1", "ME1/1", "ME1/1", "ME1/1", "ME1/1", "ME1/1", "ME1/1",
                "ME1/2", "ME1/2", "ME1/2", "ME1/2", "ME1/2", "ME1/2", "ME1/2", "ME1/2",
                "ME1/3", "ME1/3", "ME1/3", "ME1/3", "ME1/3", "ME1/3", "ME1/3", "ME1/3",

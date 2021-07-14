@@ -1,5 +1,5 @@
 import struct
-from utils import *
+from common.utils import *
 import numpy as np
 import time
 import os
@@ -118,7 +118,7 @@ class DmbEvent:
         pass
 
     def printDmbInfo(self):
-        print ("Crate %d DMB %d" % (self.crateId, self.dmbId))
+        print("Crate %d DMB %d" % (self.crateId, self.dmbId))
 
 class AlctEvent:
 
@@ -226,7 +226,7 @@ def unpackFile(localDaqFilename, removeEmptyEvents = False, removeDmbs = []):
         start = eoe + 3
         i += 1
         if (i % 1000 == 0):
-            print "%d events unpacked (out of %d)" % (i, eoes[0].size)
+            print("%d events unpacked (out of %d)" % (i, eoes[0].size))
 
 
     # for i in range(0, 20):
@@ -234,9 +234,9 @@ def unpackFile(localDaqFilename, removeEmptyEvents = False, removeDmbs = []):
     #     for dmb in events[i].dmbs:
     #         dmb.printDmbInfo()
 
-    print "=============== DONE ==============="
-    print "read %d bytes" % (raw.size * 8)
-    print "unpacked %d events" % len(events)
+    print("=============== DONE ===============")
+    print("read %d bytes" % (raw.size * 8))
+    print("unpacked %d events" % len(events))
 
     return events
 
@@ -410,7 +410,7 @@ def dumpEventsNumpy(words1, words2, annotateWords1 = True, maxSize = 5000):
 def printRawWords(words64):
     i = 0
     for word in words64:
-        print "%d\t: %s" % (i, hexPadded64(word))
+        print("%d\t: %s" % (i, hexPadded64(word)))
         i += 1
 
 #given a local daq raw file pattern, which can include a * for the part number (last number in the filename), this returns all available filenames

@@ -34,7 +34,7 @@ else
     else
         echo "Setting up environment for $STATION on $BOARD"
         export LD_LIBRARY_PATH=$SCRIPT_DIR/boards/$BOARD/rwreg:$LD_LIBRARY_PATH
-        export PYTHONPATH=$SCRIPT_DIR/common:$SCRIPT_DIR/boards/$BOARD:$SCRIPT_DIR/gem:$SCRIPT_DIR/csc:$PYTHONPATH
+        export PYTHONPATH=$SCRIPT_DIR
         export ADDRESS_TABLE=$ADDR_TBL
         export BOARD_TYPE=$BOARD
         export BOARD_IDX

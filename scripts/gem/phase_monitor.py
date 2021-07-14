@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
-from text_histogram import histogram
+from common.text_histogram import histogram
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 NUM_READS = 10000
 PHASE_UNITS_PS = 1.85963 # 18.6012 when using my phasemon, and 1.859630739 when using the DMTD from TCDS
@@ -56,22 +56,22 @@ def debugCyan(string):
     if DEBUG:
         printCyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def printCyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def printRed(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:

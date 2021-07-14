@@ -1,6 +1,6 @@
 import subprocess
 from time import *
-from rw_reg import *
+from common.rw_reg import *
 
 class Colors:
     WHITE   = '\033[97m'
