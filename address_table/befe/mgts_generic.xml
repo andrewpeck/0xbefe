@@ -93,10 +93,14 @@
             sw_val_good="self == 1"/>
       <node id="TX_PHALIGN_DONE" address="0x0" mask="0x00000004" permission="r"
             description="TX phase alignment is done (only valid for buffer bypass MGTs)"
-            fw_signal="tx_phalign_done_arr_i(${MGT})"/>
+            fw_signal="tx_phalign_done_arr_i(${MGT})"
+            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_PHALIGN') == 0"
+            sw_val_good="self == 1"/>
       <node id="RX_PHALIGN_DONE" address="0x0" mask="0x00000008" permission="r"
             description="RX phase alignment is done (only valid for buffer bypass MGTs)"
-            fw_signal="rx_phalign_done_arr_i(${MGT})"/>
+            fw_signal="rx_phalign_done_arr_i(${MGT})"
+            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_BUFFER') == 1"
+            sw_val_good="self == 1"/>
       <node id="POWER_GOOD" address="0x0" mask="0x00000010" permission="r"
             description="Power good signal from the MGT"
             fw_signal="misc_status_arr_i(${MGT}).powergood"
@@ -146,10 +150,12 @@
             fw_signal="prbs_err_cnt_sync_arr(${MGT})"/>
       <node id="REFCLK0_FREQ" address="0x2" permission="r"
             description="Frequency of the refclk0 used by this MGT"
-            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk0_freq"/>
+            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk0_freq"
+            sw_units="MHz"/>
       <node id="REFCLK1_FREQ" address="0x3" permission="r"
             description="Frequency of the refclk1 used by this MGT"
-            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"/>
+            fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"
+            sw_units="MHz"/>
     </node>
 
     <node id="CONFIG" address="0x30">
@@ -188,7 +194,7 @@
       <node id="TX_USE_PHALIGN" address="0x0" mask="0x00008000" permission="r"
             description="Indicates whether this channel uses TX multilane phase alignment or not."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.tx_multilane_phalign else '0'"/>
-      <node id="RX_USE_BUFFER" address="0x0" mask="0x00010000" permission="r"
+      <node id="RX_USE_BUFFER" address="0x0" mask="0x01000000" permission="r"
             description="Indicates whether this channel uses RX elastic buffer or not."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.rx_use_buf else '0'"/>
       <node id="IS_MASTER" address="0x0" mask="0x40000000" permission="r"
@@ -199,10 +205,12 @@
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).ibert_inst else '0'"/>
       <node id="TX_REFCLK_FREQ" address="0x1" permission="r"
             description="Indicates the expected TX refclk frequency"
-            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.tx_refclk_freq, 32))"/>
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.tx_refclk_freq, 32))"
+            sw_units="MHz"/>
       <node id="RX_REFCLK_FREQ" address="0x2" permission="r"
             description="Indicates the expected TX refclk frequency"
-            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.rx_refclk_freq, 32))"/>
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_CONFIG(${MGT}).mgt_type.rx_refclk_freq, 32))"
+            sw_units="MHz"/>
     </node>
 
   </node>
