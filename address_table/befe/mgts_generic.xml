@@ -111,19 +111,36 @@
             fw_signal="cpll_status_arr_i(${MGT}).cpllrefclklost"
             sw_val_good="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 or readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) and self == 0"
             sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1"/>
-      <node id="QPLL_LOCKED" address="0x0" mask="0x00000300" permission="r"
-            description="QPLL0 and QPLL1 locked signal"
-            fw_signal="qpll_status_arr_i(${MGT}).qplllock"
-            sw_val_good="TAKE INTO ACCOUNT IF BOTH QPLLS ARE USED! (((readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 0)) and self &amp; 1 == 1) or
-                         (((readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 1) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 1)) and self &amp; 2 == 1)"
-            sw_val_neutral="readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0"
-            />
-      <node id="QPLL_REF_CLK_LOST" address="0x0" mask="0x00000c00" permission="r"
-            description="QPLL0 and QPLL1 reference clock lost singals"
-            fw_signal="qpll_status_arr_i(${MGT}).qpllrefclklost"/>
-      <node id="QPLL_FB_CLK_LOST" address="0x0" mask="0x00003000" permission="r"
-            description="QPLL0 and QPLL1 feedback clock lost singals"
-            fw_signal="qpll_status_arr_i(${MGT}).qpllfbclklost"/>
+      <node id="QPLL0_LOCKED" address="0x0" mask="0x00000100" permission="r"
+            description="QPLL0 locked signal"
+            fw_signal="qpll_status_arr_i(${MGT}).qplllock(0)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 1)"
+            sw_val_good="self == 1"/>
+      <node id="QPLL1_LOCKED" address="0x0" mask="0x00000200" permission="r"
+            description="QPLL1 locked signal"
+            fw_signal="qpll_status_arr_i(${MGT}).qplllock(1)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 0)"
+            sw_val_good="self == 1"/>
+      <node id="QPLL0_REF_CLK_LOST" address="0x0" mask="0x00000400" permission="r"
+            description="QPLL0 reference clock lost singal"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllrefclklost(0)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 1)"
+            sw_val_good="self == 0"/>
+      <node id="QPLL1_REF_CLK_LOST" address="0x0" mask="0x00000800" permission="r"
+            description="QPLL1 reference clock lost singal"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllrefclklost(1)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 0)"
+            sw_val_good="self == 0"/>
+      <node id="QPLL0_FB_CLK_LOST" address="0x0" mask="0x00001000" permission="r"
+            description="QPLL0 feedback clock lost singal"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllfbclklost(0)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 1 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 1)"
+            sw_val_good="self == 0"/>
+      <node id="QPLL1_FB_CLK_LOST" address="0x0" mask="0x00002000" permission="r"
+            description="QPLL1 feedback clock lost singal"
+            fw_signal="qpll_status_arr_i(${MGT}).qpllfbclklost(1)"
+            sw_val_neutral="(readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_USE_QPLL') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_QPLL') == 0) or (readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.TX_QPLL_01') == 0 and readRegCache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_QPLL_01') == 0)"
+            sw_val_good="self == 0"/>
       <node id="PRBS_ERROR_CNT" address="0x1" permission="r"
             description="PRBS error counter"
             fw_signal="prbs_err_cnt_sync_arr(${MGT})"/>
