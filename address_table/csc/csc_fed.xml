@@ -44,7 +44,7 @@
               <node id="TYPE" address="0x0" mask="0x00000007" permission="r"
                     description="DMB${DMB_IDX} type: 0 = DMB, 1 = ODMB, 2 = ODMB5, 3 = ODMB7"
                     sw_enum="['DMB', 'ODMB', 'ODMB5', 'ODMB7']"
-                    fw_signal="std_logic_vector(to_unsigned((t_dmb_type'POS(CFG_DMB_CONFIG_ARR(${DMB_IDX}).dmb_type), 3))"/>
+                    fw_signal="std_logic_vector(to_unsigned(t_dmb_type'POS(CFG_DMB_CONFIG_ARR(${DMB_IDX}).dmb_type), 3))"/>
               <node id="NUM_RX_LINKS" address="0x0" mask="0x00000038" permission="r"
                     description="Number of RX links that DMB${DMB_IDX} uses"
                     fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).num_fibers, 3))"/>
