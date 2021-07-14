@@ -12,7 +12,7 @@ def check_bit(byteval,idx):
     return ((byteval&(1<<idx))!=0);
 
 def printColor(msg, color):
-    print color, msg, Colors.ENDC
+    print(color + msg + Colors.ENDC)
 
 def heading(msg):
     printColor('\n>>>>>>> ' + str(msg).upper() + ' <<<<<<<', Colors.BLUE)
@@ -39,13 +39,19 @@ def hex(number):
     if number is None:
         return 'None'
     else:
-        return "{0:#0x}".format(number)
+        return "0x%x" % number
+
+def hex32(number):
+    if number is None:
+        return 'None'
+    else:
+        return "0x%08x" % number
 
 def hexPadded64(number):
     if number is None:
         return 'None'
     else:
-        return "{0:#0{1}x}".format(number, 18)
+        return "0x%016x" % number
 
 def hexPadded(number, numBytes, include0x = True):
     if number is None:
