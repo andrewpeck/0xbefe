@@ -1,3 +1,6 @@
+import common.tables.tableformatter as tf
+from common.rw_reg import *
+
 class Colors:
     WHITE   = '\033[97m'
     CYAN    = '\033[96m'
@@ -7,6 +10,9 @@ class Colors:
     GREEN   = '\033[92m'
     RED     = '\033[91m'
     ENDC    = '\033[0m'
+
+#DEFAULT_TABLE_GRID_STYLE = tf.FancyGrid()
+DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
 
 def check_bit(byteval,idx):
     return ((byteval&(1<<idx))!=0);

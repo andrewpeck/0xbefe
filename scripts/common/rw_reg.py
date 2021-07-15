@@ -92,7 +92,7 @@ class RegVal(int):
         elif self.reg.sw_val_bad is not None:
             return Colors.GREEN
 
-    def to_string(self, hex=True, hex_padded32=True, use_color=True):
+    def to_string(self, hex=True, hex_padded32=True, use_color=True, bool_use_yesno=True):
         if self == 0xdeaddead:
             if use_color:
                 return Colors.RED + "Bus Error" + Colors.ENDC
@@ -118,6 +118,16 @@ class RegVal(int):
                     val += " (%d)" % self
                 else:
                     val = "%d" % self
+            elif "bool" == self.reg.sw_units.lower():
+                if bool_use_yesno:
+                    bool_val = "NO" if self == 0 else "YES"
+                else:
+                    bool_val = "FALSE" if self == 0 else "TRUE"
+
+                if hex:
+                    val += " (%s)" % bool_val
+                else:
+                    val = bool_val
             else:
                 modifier = self.reg.sw_units[0]
                 val_pretty = None

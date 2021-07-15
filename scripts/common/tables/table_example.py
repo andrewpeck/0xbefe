@@ -1,7 +1,7 @@
-import tableformatter as tf
+import common.tables.tableformatter as tf
 from colorama import Back
 # from colored import fg, bg, attr
-from prettytable import PrettyTable
+from common.tables.prettytable import PrettyTable
 
 tbl = PrettyTable()
 tbl.field_names = ["Name", "Country", "Num kids", "Is kid"]
