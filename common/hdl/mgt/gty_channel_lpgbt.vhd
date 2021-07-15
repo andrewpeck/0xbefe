@@ -28,7 +28,9 @@ entity gty_channel_lpgbt is
         g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
         g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
         g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
-        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
+        g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
+        g_RX_REFCLK_FREQ    : integer  -- TX refclk frequency
     );
     port(
         
@@ -62,24 +64,44 @@ end gty_channel_lpgbt;
 
 architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
 
-    -- selects various integer parameters based on if we're using a CPLL or a QPLL
-    function get_int_param(param_name : string; use_qpll : boolean) return integer is
+    -- selects the TX_CLK25_DIV and RX_CLK25_DIV based on the refclk frequency
+    function get_txrx_clk25_div(rx_refclk_freq : integer) return integer is
     begin
-        if use_qpll then
-            if param_name = "RX_CLK25_DIV" then
-                return 7;
-            elsif param_name = "TX_CLK25_DIV" then
-                return 7;
-            end if;
-        else
-            if param_name = "RX_CLK25_DIV" then
-                return 13;
-            elsif param_name = "TX_CLK25_DIV" then
-                return 13;
-            end if;
+        if rx_refclk_freq <= 25_000_000 then
+            return 1;
+        elsif rx_refclk_freq <= 50_000_000 then
+            return 2;  
+        elsif rx_refclk_freq <= 75_000_000 then
+            return 3;  
+        elsif rx_refclk_freq <= 100_000_000 then
+            return 4;  
+        elsif rx_refclk_freq <= 125_000_000 then
+            return 5;  
+        elsif rx_refclk_freq <= 150_000_000 then
+            return 6;  
+        elsif rx_refclk_freq <= 175_000_000 then
+            return 7;  
+        elsif rx_refclk_freq <= 200_000_000 then
+            return 8;  
+        elsif rx_refclk_freq <= 225_000_000 then
+            return 9;  
+        elsif rx_refclk_freq <= 250_000_000 then
+            return 10;  
+        elsif rx_refclk_freq <= 275_000_000 then
+            return 11;  
+        elsif rx_refclk_freq <= 300_000_000 then
+            return 12;  
+        elsif rx_refclk_freq <= 325_000_000 then
+            return 13;  
+        elsif rx_refclk_freq <= 350_000_000 then
+            return 14;  
+        elsif rx_refclk_freq <= 375_000_000 then
+            return 15;  
+        elsif rx_refclk_freq <= 400_000_000 then
+            return 16;  
         end if;
-    end function get_int_param;    
-
+    end function get_txrx_clk25_div;  
+    
     -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
     function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
     begin
@@ -102,11 +124,12 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
         end if;
     end function get_slv_param;    
 
+
+    constant TX_CLK25_DIV               : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
+    constant RX_CLK25_DIV               : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
     constant PCIE_BUFG_DIV_CTRL         : std_logic_vector(15 downto 0) := get_slv_param("PCIE_BUFG_DIV_CTRL", g_RX_USE_QPLL);
     constant PCIE_PLL_SEL_MODE_GEN12    : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN12", g_RX_USE_QPLL);
     constant PCIE_PLL_SEL_MODE_GEN3     : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL);
-    constant RX_CLK25_DIV               : integer := get_int_param("RX_CLK25_DIV", g_RX_USE_QPLL);
-    constant TX_CLK25_DIV               : integer := get_int_param("TX_CLK25_DIV", g_TX_USE_QPLL);
 
 
     -- clocking

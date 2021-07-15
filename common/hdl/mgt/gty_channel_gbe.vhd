@@ -29,7 +29,9 @@ entity gty_channel_gbe is
         g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
         g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
         g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
-        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010";  -- recovered clock by default
+        g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
+        g_RX_REFCLK_FREQ    : integer  -- TX refclk frequency
     );
     port(
         
@@ -63,28 +65,58 @@ end gty_channel_gbe;
 
 architecture gty_channel_gbe_arch of gty_channel_gbe is
 
+    -- selects the TX_CLK25_DIV and RX_CLK25_DIV based on the refclk frequency
+    function get_txrx_clk25_div(rx_refclk_freq : integer) return integer is
+    begin
+        if rx_refclk_freq <= 25_000_000 then
+            return 1;
+        elsif rx_refclk_freq <= 50_000_000 then
+            return 2;  
+        elsif rx_refclk_freq <= 75_000_000 then
+            return 3;  
+        elsif rx_refclk_freq <= 100_000_000 then
+            return 4;  
+        elsif rx_refclk_freq <= 125_000_000 then
+            return 5;  
+        elsif rx_refclk_freq <= 150_000_000 then
+            return 6;  
+        elsif rx_refclk_freq <= 175_000_000 then
+            return 7;  
+        elsif rx_refclk_freq <= 200_000_000 then
+            return 8;  
+        elsif rx_refclk_freq <= 225_000_000 then
+            return 9;  
+        elsif rx_refclk_freq <= 250_000_000 then
+            return 10;  
+        elsif rx_refclk_freq <= 275_000_000 then
+            return 11;  
+        elsif rx_refclk_freq <= 300_000_000 then
+            return 12;  
+        elsif rx_refclk_freq <= 325_000_000 then
+            return 13;  
+        elsif rx_refclk_freq <= 350_000_000 then
+            return 14;  
+        elsif rx_refclk_freq <= 375_000_000 then
+            return 15;  
+        elsif rx_refclk_freq <= 400_000_000 then
+            return 16;  
+        end if;
+    end function get_txrx_clk25_div;  
+    
     -- selects various integer parameters based on if we're using a CPLL or a QPLL
     function get_int_param(param_name : string; use_qpll : boolean) return integer is
     begin
         if use_qpll then
             if param_name = "RXOUT_DIV" then
-                return 4;
-            elsif param_name = "RX_CLK25_DIV" then
                 return 8;
             elsif param_name = "TXOUT_DIV" then
-                return 4;
-            elsif param_name = "TX_CLK25_DIV" then
                 return 8;
             end if;
         else
             if param_name = "RXOUT_DIV" then
-                return 8;
-            elsif param_name = "RX_CLK25_DIV" then
-                return 7;
+                return 4;
             elsif param_name = "TXOUT_DIV" then
-                return 8;
-            elsif param_name = "TX_CLK25_DIV" then
-                return 7;
+                return 4;
             end if;
         end if;
     end function get_int_param;    
@@ -93,20 +125,6 @@ architecture gty_channel_gbe_arch of gty_channel_gbe is
     function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
     begin
         if use_qpll then
-            if param_name = "RXCDR_CFG2" then
-                return "0000001001001001";
-            elsif param_name = "RXCDR_CFG2_GEN2" then
-                return "1001001001";
-            elsif param_name = "RXCDR_CFG2_GEN3" then
-                return "0000001001001001";
-            elsif param_name = "RXPI_CFG0" then
-                return "0000001100000001";
-            elsif param_name = "RXPI_CFG1" then
-                return "0000000011111100";
-            elsif param_name = "TXPI_CFG1" then
-                return "0111010101010101";
-            end if;
-        else
             if param_name = "RXCDR_CFG2" then
                 return "0000001000111001";
             elsif param_name = "RXCDR_CFG2_GEN2" then
@@ -120,9 +138,25 @@ architecture gty_channel_gbe_arch of gty_channel_gbe is
             elsif param_name = "TXPI_CFG1" then
                 return "0001000000000000";
             end if;
+        else
+            if param_name = "RXCDR_CFG2" then
+                return "0000001001001001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001001001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001001001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000001100000001";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000011111100";
+            elsif param_name = "TXPI_CFG1" then
+                return "0111010101010101";
+            end if;
         end if;
     end function get_slv_param;
     
+    constant TX_CLK25_DIV       : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
+    constant RX_CLK25_DIV       : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
     constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
     constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
     constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
@@ -130,9 +164,7 @@ architecture gty_channel_gbe_arch of gty_channel_gbe is
     constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
     constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_RX_USE_QPLL);
     constant RXOUT_DIV          : integer := get_int_param("RXOUT_DIV", g_RX_USE_QPLL);
-    constant RX_CLK25_DIV       : integer := get_int_param("RX_CLK25_DIV", g_RX_USE_QPLL);
     constant TXOUT_DIV          : integer := get_int_param("TXOUT_DIV", g_RX_USE_QPLL);
-    constant TX_CLK25_DIV       : integer := get_int_param("TX_CLK25_DIV", g_RX_USE_QPLL);
     
 
     -- clocking
