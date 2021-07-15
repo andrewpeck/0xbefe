@@ -52,4 +52,23 @@
           fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
   </node>
 
+  <node id="LINK_CONFIG" address="0x1000">
+    <node id="LINK${LINK}" address="0x0"
+          description="Link ${LINK} settings. Link number is logical link number that generally goes in sequence with the transceiver placement on the board and natural fiber numbers in the transceiver. For more details on link numbering on any specific board, please refer to the 0xBEFE repository doc directory."
+          generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000001" generate_idx_var="LINK">
+      <node id="TX_MGT_IDX" address="0x0" mask="0x000000ff" permission="r"
+            description="TX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).tx, 8))"/>
+      <node id="RX_MGT_IDX" address="0x0" mask="0x0000ff00" permission="r"
+            description="RX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).rx, 8))"/>
+      <node id="TX_INVERTED" address="0x0" mask="0x00010000" permission="r"
+            description="If this is 1 it means that this TX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).tx_inv else '0'"/>
+      <node id="RX_INVERTED" address="0x0" mask="0x00020000" permission="r"
+            description="If this is 1 it means that this RX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).rx_inv else '0'"/>
+    </node>
+  </node>
+
 </node> <!-- End of system module -->
