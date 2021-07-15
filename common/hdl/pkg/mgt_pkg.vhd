@@ -16,7 +16,7 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 package mgt_pkg is
 
     type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156);
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -35,7 +35,7 @@ package mgt_pkg is
         --mgt_rx_bus_width     : integer range 16 to 64;
     end record;
 
-    constant CFG_MGT_NULL : t_mgt_type_config := (link_type => MGT_NULL, cpll_refclk_01 => 0, qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, tx_qpll_01 => 0, rx_qpll_01 => 0, tx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, rx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, tx_bus_width => 0, tx_multilane_phalign => false, rx_use_buf => false);
+    constant CFG_MGT_TYPE_NULL : t_mgt_type_config := (link_type => MGT_NULL, cpll_refclk_01 => 0, qpll0_refclk_01 => 0, qpll1_refclk_01 => 0, tx_use_qpll => false, rx_use_qpll => false, rx_qpll_01 => 0, tx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, rx_refclk_freq => C_TTC_CLK_FREQUENCY * 4, tx_bus_width => 16, tx_multilane_phalign => false, rx_use_buf => false); 
 
     type t_mgt_config is record
         mgt_type                : t_mgt_type_config;    -- MGT type configuration
@@ -44,6 +44,8 @@ package mgt_pkg is
         is_master               : boolean;              -- if true, the TXOUTCLK from this MGT is used to drive the TXUSRCLK of all the other MGTs of the same type (this can only be set to true on one channel of any given type)
         ibert_inst              : boolean;              -- if true, an in-system ibert will be instantiated for this channel
     end record;
+
+    constant CFG_MGT_NULL : t_mgt_config := (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL, qpll_idx => 0, is_master => false, ibert_inst => false);
 
     -- NOTE t_mgt_config_arr type should be defined in the board package with the correct length
 

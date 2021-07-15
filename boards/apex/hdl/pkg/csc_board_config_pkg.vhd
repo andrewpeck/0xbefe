@@ -156,20 +156,21 @@ package board_config_package is
     -- MGT configuration
     --================================--    
     
-    constant CFG_ASYNC_REFCLK_FREQ  : integer := 200_000_000;
-    constant CFG_LHC_REFCLK_FREQ    : integer := C_TTC_CLK_FREQUENCY * 4;
+    constant CFG_ASYNC_REFCLK_200_FREQ      : integer := 200_000_000;
+    constant CFG_ASYNC_REFCLK_156p25_FREQ   : integer := 156_250_000;
+    constant CFG_LHC_REFCLK_FREQ            : integer := C_TTC_CLK_FREQUENCY * 4;
     
     constant CFG_MGT_GBE : t_mgt_type_config := (
         link_type               => MGT_GBE,
         cpll_refclk_01          => 1, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
-        tx_use_qpll             => false, 
-        rx_use_qpll             => false,
-        tx_qpll_01              => 0,
-        rx_qpll_01              => 0,
-        tx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
-        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 1,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
         rx_use_buf              => true
@@ -178,14 +179,14 @@ package board_config_package is
     constant CFG_MGT_DMB : t_mgt_type_config := (
         link_type               => MGT_DMB,
         cpll_refclk_01          => 1, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
-        tx_use_qpll             => false, 
-        rx_use_qpll             => false,
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
         tx_qpll_01              => 0,
         rx_qpll_01              => 0,
-        tx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
-        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
         rx_use_buf              => true
@@ -201,7 +202,7 @@ package board_config_package is
         tx_qpll_01              => 1,
         rx_qpll_01              => 0,
         tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
-        rx_refclk_freq          => CFG_ASYNC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 40,
         tx_multilane_phalign    => true, 
         rx_use_buf              => true
@@ -210,15 +211,15 @@ package board_config_package is
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,   qpll_idx => 0, is_master => false, ibert_inst => true),
-                                                                                                                                                                
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57, qpll_idx => 4, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,   qpll_idx => 4, is_master => false, ibert_inst => true)                
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),
+                                                                                                                                                                 
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57_156,  qpll_idx => 4, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true)                
     );
 
 end board_config_package;

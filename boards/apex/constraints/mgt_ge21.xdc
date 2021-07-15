@@ -7,9 +7,9 @@ create_clock -period 6.250 -name gty_0_refclk0 [get_ports {gty_refclk0_p_i[0]}]
 create_clock -period 6.250 -name gty_1_refclk0 [get_ports {gty_refclk0_p_i[1]}]
 create_clock -period 6.250 -name gty_2_refclk0 [get_ports {gty_refclk0_p_i[2]}]
 
-create_clock -period 5.000 -name gty_0_refclk1 [get_ports {gty_refclk1_p_i[0]}]
-create_clock -period 3.103 -name gty_1_refclk1 [get_ports {gty_refclk1_p_i[1]}]
-create_clock -period 5.000 -name gty_2_refclk1 [get_ports {gty_refclk1_p_i[2]}]
+create_clock -period 6.400 -name gty_0_refclk1 [get_ports {gty_refclk1_p_i[0]}]
+create_clock -period 6.400 -name gty_1_refclk1 [get_ports {gty_refclk1_p_i[1]}]
+create_clock -period 6.400 -name gty_2_refclk1 [get_ports {gty_refclk1_p_i[2]}]
 
 set_clock_groups -group [get_clocks gty_0_refclk0] -asynchronous
 set_clock_groups -group [get_clocks gty_1_refclk0] -asynchronous

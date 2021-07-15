@@ -248,6 +248,8 @@ begin
                     g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
                     g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
                     g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -323,6 +325,8 @@ begin
                     g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
                     g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
                     g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -388,6 +392,8 @@ begin
                     g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
                     g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
                     g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => "010", -- from PMA (same frequency as the user clocks)
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -475,6 +481,8 @@ begin
                     g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
                     g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
                     g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => "011", -- straight refclk by default
                     g_RXOUTCLKSEL    => "101" -- from RXPROGDIV (same frequency as the required rxusrclk = 312.5MHz, note that rxusrclk must be half of that)
                 )
@@ -540,6 +548,8 @@ begin
                     g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
                     g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
                     g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => "010", -- from PMA (same frequency as the user clocks)
                     g_RXOUTCLKSEL    => "010" -- recovered clock by default
                 )
@@ -613,12 +623,58 @@ begin
         end generate;
 
         --================================--
-        -- ODMB57 QPLL 
+        -- ODMB57 QPLL with 200MHz refclk
         --================================--
 
-        g_qpll_odmb57 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_ODMB57 generate
+        g_qpll_odmb57_200 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_ODMB57_200 generate
             
-            i_qpll_odmb57 : entity work.gty_qpll_odmb57
+            i_qpll_odmb57_200 : entity work.gty_qpll_odmb57_200
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
+        -- ODMB57 QPLL with 156.25MHz refclk
+        --================================--
+
+        g_qpll_odmb57_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_ODMB57_156 generate
+            
+            i_qpll_odmb57_156 : entity work.gty_qpll_odmb57_156p25
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
+        -- GbE TX DMB RX QPLL with 156.25MHz refclk
+        --================================--
+
+        g_qpll_dmb_gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_DMB_GBE_156 generate
+            
+            i_qpll_dmb_gbe_156 : entity work.gty_qpll0_dmb_qpll1_gbe_156p25
                 generic map(
                     g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
                     g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01

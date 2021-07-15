@@ -2,11 +2,11 @@
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
--- Create Date:    2021-07-15
--- Module Name:    GTY_QPLL0_DMB_QPLL1_GBE_156p25
--- Description:    This is a wrapper for a GTY QPLL that can be used with DMB and GbE GTY channels.
---                 QPLL0 can be used with DMB channels and requires a 156.25MHz refclk
---                 QPLL1 can be used with GbE channels and requires a 156.25MHz refclck
+-- Create Date:    2021-06-02
+-- Module Name:    GTY_QPLL_ODMB57_200
+-- Description:    This is a wrapper for a GTY QPLL that can be used with an ODMB57 GTY channel.
+--                 QPLL0 requires a 200MHz refclk
+--                 QPLL1 requires a 160MHz LHC freq refclck
 --                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ use unisim.vcomponents.all;
 use work.common_pkg.all;
 use work.mgt_pkg.all;
 
-entity gty_qpll0_dmb_qpll1_gbe_156p25 is
+entity gty_qpll_odmb57_156p25 is
     generic(
         g_QPLL0_REFCLK_01   : integer range 0 to 1 := 0;
         g_QPLL1_REFCLK_01   : integer range 0 to 1 := 0
@@ -37,9 +37,9 @@ entity gty_qpll0_dmb_qpll1_gbe_156p25 is
         drp_i           : in  t_drp_in;
         drp_o           : out t_drp_out        
     );
-end gty_qpll0_dmb_qpll1_gbe_156p25;
+end gty_qpll_odmb57_156p25;
 
-architecture gty_qpll0_dmb_qpll1_gbe_156p25_arch of gty_qpll0_dmb_qpll1_gbe_156p25 is
+architecture gty_qpll_odmb57_156p25_arch of gty_qpll_odmb57_156p25 is
 
     signal qpll0_refclks    : std_logic_vector(1 downto 0);
     signal qpll1_refclks    : std_logic_vector(1 downto 0);
@@ -94,7 +94,7 @@ begin
             QPLL0_CFG4            => "0000000000000010",
             QPLL0_CP              => "0011111111",
             QPLL0_CP_G3           => "0000001111",
-            QPLL0_FBDIV           => 81,
+            QPLL0_FBDIV           => 80,
             QPLL0_FBDIV_G3        => 160,
             QPLL0_INIT_CFG0       => "0000001010110010",
             QPLL0_INIT_CFG1       => "00000000",
@@ -105,7 +105,7 @@ begin
             QPLL0_PCI_EN          => '0',
             QPLL0_RATE_SW_USE_DRP => '1',
             QPLL0_REFCLK_DIV      => 1,
-            QPLL0_SDM_CFG0        => "0000000000000000",
+            QPLL0_SDM_CFG0        => "0000000010000000",
             QPLL0_SDM_CFG1        => "0000000000000000",
             QPLL0_SDM_CFG2        => "0000000000000000",
             QPLL1CLKOUT_RATE      => "HALF",
@@ -118,7 +118,7 @@ begin
             QPLL1_CFG4            => "0000000000000001",
             QPLL1_CP              => "0011111111",
             QPLL1_CP_G3           => "0001111111",
-            QPLL1_FBDIV           => 64,
+            QPLL1_FBDIV           => 60,
             QPLL1_FBDIV_G3        => 80,
             QPLL1_INIT_CFG0       => "0000001010110010",
             QPLL1_INIT_CFG1       => "00000000",
@@ -236,7 +236,7 @@ begin
             QPLLRSVD3         => "00000",
             QPLLRSVD4         => "00000000",
             RCALENB           => '1',
-            SDM0DATA          => "0111010111000010100011110",
+            SDM0DATA          => "0000000000000000000000000",
             SDM0RESET         => '0',
             SDM0TOGGLE        => '0',
             SDM0WIDTH         => "00",
@@ -262,4 +262,4 @@ begin
             UBMDMTDI          => '0'
         );
                  
-end gty_qpll0_dmb_qpll1_gbe_156p25_arch;
+end gty_qpll_odmb57_156p25_arch;
