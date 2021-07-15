@@ -86,7 +86,7 @@ architecture gty_channel_odmb57_arch of gty_channel_odmb57 is
         end if;
     end function get_tx_progdiv_cfg;    
 
-    -- selects RXCDR, RXPI, TXPH, and TXPI parameter values based on if we're using a CPLL or a QPLL
+    -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
     function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
     begin
         if use_qpll then
@@ -273,8 +273,8 @@ begin
             CKCAL2_CFG_4                 => "0000000000000000",
             CLK_CORRECT_USE              => "TRUE",
             CLK_COR_KEEP_IDLE            => "FALSE",
-            CLK_COR_MAX_LAT              => 33, --14,
-            CLK_COR_MIN_LAT              => 30, --11,
+            CLK_COR_MAX_LAT              => 29,
+            CLK_COR_MIN_LAT              => 24,
             CLK_COR_PRECEDENCE           => "TRUE",
             CLK_COR_REPEAT_WAIT          => 0,
             CLK_COR_SEQ_1_1              => "0110111100",
