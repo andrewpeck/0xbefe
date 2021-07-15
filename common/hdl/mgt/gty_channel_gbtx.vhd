@@ -374,11 +374,11 @@ begin
             CPLL_CFG1                    => "0000000000101011",
             CPLL_CFG2                    => "0000000000000010",
             CPLL_CFG3                    => "0000000000000000",
-            CPLL_FBDIV                   => 3,
-            CPLL_FBDIV_45                => 5,
+            CPLL_FBDIV                   => 3, -- keep
+            CPLL_FBDIV_45                => 5, -- keep
             CPLL_INIT_CFG0               => "0000001010110010",
             CPLL_LOCK_CFG                => "0000000111101000",
-            CPLL_REFCLK_DIV              => 1,
+            CPLL_REFCLK_DIV              => 1, -- keep
             CTLE3_OCAP_EXT_CTRL          => "000",
             CTLE3_OCAP_EXT_EN            => '0',
             DDI_CTRL                     => "00",
