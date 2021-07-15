@@ -108,23 +108,23 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
     begin
         if use_qpll then
             if param_name = "RXOUT_DIV" then
-                return 4;
+                return 8;
             elsif param_name = "TXOUT_DIV" then
-                return 4;
+                return 8;
             elsif param_name = "PREIQ_FREQ_BST" then
-                return 0;
+                return 1;
             elsif param_name = "TX_PI_BIASSET" then
-                return 0;
+                return 1;
             end if;
         else
             if param_name = "RXOUT_DIV" then
-                return 8;
+                return 4;
             elsif param_name = "TXOUT_DIV" then
-                return 8;
+                return 4;
             elsif param_name = "PREIQ_FREQ_BST" then
-                return 1;
+                return 0;
             elsif param_name = "TX_PI_BIASSET" then
-                return 1;
+                return 0;
             end if;
         end if;
     end function get_int_param;    
@@ -133,28 +133,6 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
     function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
     begin
         if use_qpll then
-            if param_name = "CH_HSPMUX" then
-                return "0010000000100000";
-            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
-                return "11";
-            elsif param_name = "RTX_BUF_CML_CTRL" then
-                return "011";
-            elsif param_name = "RXCDR_CFG2" then
-                return "0000001001001001";
-            elsif param_name = "RXCDR_CFG2_GEN2" then
-                return "1001001001";
-            elsif param_name = "RXCDR_CFG2_GEN3" then
-                return "0000001001001001";
-            elsif param_name = "RXPI_CFG0" then
-                return "0000001100000001";
-            elsif param_name = "RXPI_CFG1" then
-                return "0000000011111100";
-            elsif param_name = "TXPI_CFG0" then
-                return "0000001100000000";
-            elsif param_name = "TXPI_CFG1" then
-                return "0111010101010101";
-            end if;
-        else
             if param_name = "CH_HSPMUX" then
                 return "0100000001000000";
             elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
@@ -175,6 +153,28 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
                 return "0000000100000000";
             elsif param_name = "TXPI_CFG1" then
                 return "0001000000000000";
+            end if;
+        else
+            if param_name = "CH_HSPMUX" then
+                return "0010000000100000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "11";
+            elsif param_name = "RTX_BUF_CML_CTRL" then
+                return "011";
+            elsif param_name = "RXCDR_CFG2" then
+                return "0000001001001001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001001001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001001001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000001100000001";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000011111100";
+            elsif param_name = "TXPI_CFG0" then
+                return "0000001100000000";
+            elsif param_name = "TXPI_CFG1" then
+                return "0111010101010101";
             end if;
         end if;
     end function get_slv_param;
