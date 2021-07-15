@@ -69,22 +69,22 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
         if use_qpll then
             if param_name = "RXOUT_DIV" then
                 return 4;
-            elsif param_name = "RX_CLK25_DIV" then
-                return 8;
             elsif param_name = "TXOUT_DIV" then
                 return 4;
-            elsif param_name = "TX_CLK25_DIV" then
-                return 8;
+            elsif param_name = "PREIQ_FREQ_BST" then
+                return 0;
+            elsif param_name = "TX_PI_BIASSET" then
+                return 0;
             end if;
         else
             if param_name = "RXOUT_DIV" then
                 return 8;
-            elsif param_name = "RX_CLK25_DIV" then
-                return 7;
             elsif param_name = "TXOUT_DIV" then
                 return 8;
-            elsif param_name = "TX_CLK25_DIV" then
-                return 7;
+            elsif param_name = "PREIQ_FREQ_BST" then
+                return 1;
+            elsif param_name = "TX_PI_BIASSET" then
+                return 1;
             end if;
         end if;
     end function get_int_param;    
@@ -93,7 +93,13 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
     function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
     begin
         if use_qpll then
-            if param_name = "RXCDR_CFG2" then
+            if param_name = "CH_HSPMUX" then
+                return "0010000000100000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "11";
+            elsif param_name = "RTX_BUF_CML_CTRL" then
+                return "011";
+            elsif param_name = "RXCDR_CFG2" then
                 return "0000001001001001";
             elsif param_name = "RXCDR_CFG2_GEN2" then
                 return "1001001001";
@@ -103,36 +109,50 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
                 return "0000001100000001";
             elsif param_name = "RXPI_CFG1" then
                 return "0000000011111100";
+            elsif param_name = "TXPI_CFG0" then
+                return "0000001100000000";
             elsif param_name = "TXPI_CFG1" then
                 return "0111010101010101";
             end if;
         else
-            if param_name = "RXCDR_CFG2" then
+            if param_name = "CH_HSPMUX" then
+                return "0100000001000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "10";
+            elsif param_name = "RTX_BUF_CML_CTRL" then
+                return "100";
+            elsif param_name = "RXCDR_CFG2" then
                 return "0000001000111001";
             elsif param_name = "RXCDR_CFG2_GEN2" then
                 return "1000111001";
             elsif param_name = "RXCDR_CFG2_GEN3" then
                 return "0000001000111001";
             elsif param_name = "RXPI_CFG0" then
-                return "0000000100000000";
+                return "0000000100000010";
             elsif param_name = "RXPI_CFG1" then
                 return "0000000001010100";
+            elsif param_name = "TXPI_CFG0" then
+                return "0000000100000000";
             elsif param_name = "TXPI_CFG1" then
                 return "0001000000000000";
             end if;
         end if;
     end function get_slv_param;
     
-    constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
-    constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
-    constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
-    constant RXPI_CFG0          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_RX_USE_QPLL);
-    constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
-    constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_RX_USE_QPLL);
-    constant RXOUT_DIV          : integer := get_int_param("RXOUT_DIV", g_RX_USE_QPLL);
-    constant RX_CLK25_DIV       : integer := get_int_param("RX_CLK25_DIV", g_RX_USE_QPLL);
-    constant TXOUT_DIV          : integer := get_int_param("TXOUT_DIV", g_RX_USE_QPLL);
-    constant TX_CLK25_DIV       : integer := get_int_param("TX_CLK25_DIV", g_RX_USE_QPLL);
+    constant CH_HSPMUX              : std_logic_vector(15 downto 0) := get_slv_param("CH_HSPMUX", g_RX_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN3 : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL);
+    constant RTX_BUF_CML_CTRL       : std_logic_vector(2 downto 0) := get_slv_param("RTX_BUF_CML_CTRL", g_RX_USE_QPLL);
+    constant RXCDR_CFG2             : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN2        : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN3        : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
+    constant RXPI_CFG0              : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_RX_USE_QPLL);
+    constant RXPI_CFG1              : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
+    constant TXPI_CFG0              : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG0", g_RX_USE_QPLL);
+    constant TXPI_CFG1              : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_RX_USE_QPLL);
+    constant RXOUT_DIV              : integer := get_int_param("RXOUT_DIV", g_RX_USE_QPLL);
+    constant TXOUT_DIV              : integer := get_int_param("TXOUT_DIV", g_RX_USE_QPLL);
+    constant PREIQ_FREQ_BST         : integer := get_int_param("PREIQ_FREQ_BST", g_RX_USE_QPLL);
+    constant TX_PI_BIASSET          : integer := get_int_param("TX_PI_BIASSET", g_RX_USE_QPLL);
 
 
     -- clocking
@@ -292,7 +312,7 @@ begin
             CHAN_BOND_SEQ_2_ENABLE       => "1111",
             CHAN_BOND_SEQ_2_USE          => "FALSE",
             CHAN_BOND_SEQ_LEN            => 1,
-            CH_HSPMUX                    => "0010000000100000",
+            CH_HSPMUX                    => CH_HSPMUX, -- keep
             CKCAL1_CFG_0                 => "1100000011000000",
             CKCAL1_CFG_1                 => "0001000011000000",
             CKCAL1_CFG_2                 => "0010000000001000",
@@ -320,12 +340,12 @@ begin
             CLK_COR_SEQ_2_ENABLE         => "1111",
             CLK_COR_SEQ_2_USE            => "FALSE",
             CLK_COR_SEQ_LEN              => 2,
-            CPLL_CFG0                    => "0000111111111010",
-            CPLL_CFG1                    => "0000000000101001",
-            CPLL_CFG2                    => "0000001000000010",
+            CPLL_CFG0                    => "0000000111111010",
+            CPLL_CFG1                    => "0000000000101011",
+            CPLL_CFG2                    => "0000000000000010",
             CPLL_CFG3                    => "0000000000000000",
-            CPLL_FBDIV                   => 5,
-            CPLL_FBDIV_45                => 4,
+            CPLL_FBDIV                   => 2,
+            CPLL_FBDIV_45                => 5,
             CPLL_INIT_CFG0               => "0000001010110010",
             CPLL_LOCK_CFG                => "0000000111101000",
             CPLL_REFCLK_DIV              => 1,
@@ -410,7 +430,7 @@ begin
             PCIE_BUFG_DIV_CTRL           => "0001000000000000",
             PCIE_GEN4_64BIT_INT_EN       => "FALSE",
             PCIE_PLL_SEL_MODE_GEN12      => "00",
-            PCIE_PLL_SEL_MODE_GEN3       => "11",
+            PCIE_PLL_SEL_MODE_GEN3       => PCIE_PLL_SEL_MODE_GEN3, -- keep
             PCIE_PLL_SEL_MODE_GEN4       => "10",
             PCIE_RXPCS_CFG_GEN3          => "0000101010100101",
             PCIE_RXPMA_CFG               => "0010100000001010",
@@ -421,11 +441,11 @@ begin
             PD_TRANS_TIME_FROM_P2        => "000000111100",
             PD_TRANS_TIME_NONE_P2        => "00011001",
             PD_TRANS_TIME_TO_P2          => "01100100",
-            PREIQ_FREQ_BST               => 0,
+            PREIQ_FREQ_BST               => PREIQ_FREQ_BST, -- keep
             RATE_SW_USE_DRP              => '1',
             RCLK_SIPO_DLY_ENB            => '0',
             RCLK_SIPO_INV_EN             => '0',
-            RTX_BUF_CML_CTRL             => "011",
+            RTX_BUF_CML_CTRL             => RTX_BUF_CML_CTRL, -- keep
             RTX_BUF_TERM_CTRL            => "00",
             RXBUFRESET_TIME              => "00011",
             RXBUF_ADDR_MODE              => "FULL",
@@ -445,9 +465,9 @@ begin
             RXCDR_CFG0_GEN3              => "0000000000000011",
             RXCDR_CFG1                   => "0000000000000000",
             RXCDR_CFG1_GEN3              => "0000000000000000",
-            RXCDR_CFG2                   => "0000001001001001",
-            RXCDR_CFG2_GEN2              => "1001001001",
-            RXCDR_CFG2_GEN3              => "0000001001001001",
+            RXCDR_CFG2                   => RXCDR_CFG2, -- keep
+            RXCDR_CFG2_GEN2              => RXCDR_CFG2_GEN2, -- keep
+            RXCDR_CFG2_GEN3              => RXCDR_CFG2_GEN3, -- keep
             RXCDR_CFG2_GEN4              => "0000000101100100",
             RXCDR_CFG3                   => "0000000000010010",
             RXCDR_CFG3_GEN2              => "010010",
@@ -538,15 +558,15 @@ begin
             RXOOB_CFG                    => "000000110",
             RXOOB_CLK_CFG                => "PMA",
             RXOSCALRESET_TIME            => "00011",
-            RXOUT_DIV                    => 4,
+            RXOUT_DIV                    => RXOUT_DIV, -- keep
             RXPCSRESET_TIME              => "00011",
             RXPHBEACON_CFG               => "0000000000000000",
             RXPHDLY_CFG                  => "0010000001110000",
             RXPHSAMP_CFG                 => "0010000100000000",
             RXPHSLIP_CFG                 => "1001100100110011",
             RXPH_MONITOR_SEL             => "00000",
-            RXPI_CFG0                    => "0000001100000001",
-            RXPI_CFG1                    => "0000000011111100",
+            RXPI_CFG0                    => RXPI_CFG0, -- keep
+            RXPI_CFG1                    => RXPI_CFG1, -- keep
             RXPMACLK_SEL                 => "DATA",
             RXPMARESET_TIME              => "00011",
             RXPRBS_ERR_LOOPBACK          => '0',
@@ -650,15 +670,15 @@ begin
             TXFIFO_ADDR_CFG              => "LOW",
             TXGBOX_FIFO_INIT_RD_ADDR     => 4,
             TXGEARBOX_EN                 => "FALSE",
-            TXOUT_DIV                    => 4,
+            TXOUT_DIV                    => TXOUT_DIV, -- keep
             TXPCSRESET_TIME              => "00011",
             TXPHDLY_CFG0                 => "0110000001110000",
             TXPHDLY_CFG1                 => "0000000000001111",
             TXPH_CFG                     => "0000011100100011",
             TXPH_CFG2                    => "0000000000000000",
             TXPH_MONITOR_SEL             => "00000",
-            TXPI_CFG0                    => "0000001100000000",
-            TXPI_CFG1                    => "0111010101010101",
+            TXPI_CFG0                    => TXPI_CFG0, -- keep
+            TXPI_CFG1                    => TXPI_CFG1, -- keep
             TXPI_GRAY_SEL                => '0',
             TXPI_INVSTROBE_SEL           => '0',
             TXPI_PPM                     => '0',
@@ -702,7 +722,7 @@ begin
             TX_MARGIN_LOW_4              => "1000000",
             TX_PHICAL_CFG0               => "0000000000100000",
             TX_PHICAL_CFG1               => "0000000001000000",
-            TX_PI_BIASSET                => 0,
+            TX_PI_BIASSET                => TX_PI_BIASSET, -- keep
             TX_PMADATA_OPT               => '0',
             TX_PMA_POWER_SAVE            => '0',
             TX_PMA_RSV0                  => "0000000000000000",

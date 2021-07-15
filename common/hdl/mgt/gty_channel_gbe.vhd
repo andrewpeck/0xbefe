@@ -5,7 +5,8 @@
 -- Create Date:    2021-03-09
 -- Module Name:    GTY_CHANNEL_GBE
 -- Description:    This is a wrapper for a single GTY channel that can be used for Gigabit Ethernet: it's an 8b10b encoded 1.25Gb/s link with elastic buffers.
---                 User data bus width is 16 bits, the refclk has to be 200MHz (only one refclk is used based on g_REFCLK_01 generic), user clocks are 62.5MHz 
+--                 User data bus width is 16 bits, user clocks are 62.5MHz
+--                 In CPLL mode the refclk has to be 200MHz (only one refclk is used based on g_REFCLK_01 generic)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- expected refclk is 200MHz
@@ -27,7 +28,7 @@ entity gty_channel_gbe is
         g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
         g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
         g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
-        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
         g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
     );
     port(
@@ -61,6 +62,78 @@ entity gty_channel_gbe is
 end gty_channel_gbe;
 
 architecture gty_channel_gbe_arch of gty_channel_gbe is
+
+    -- selects various integer parameters based on if we're using a CPLL or a QPLL
+    function get_int_param(param_name : string; use_qpll : boolean) return integer is
+    begin
+        if use_qpll then
+            if param_name = "RXOUT_DIV" then
+                return 4;
+            elsif param_name = "RX_CLK25_DIV" then
+                return 8;
+            elsif param_name = "TXOUT_DIV" then
+                return 4;
+            elsif param_name = "TX_CLK25_DIV" then
+                return 8;
+            end if;
+        else
+            if param_name = "RXOUT_DIV" then
+                return 8;
+            elsif param_name = "RX_CLK25_DIV" then
+                return 7;
+            elsif param_name = "TXOUT_DIV" then
+                return 8;
+            elsif param_name = "TX_CLK25_DIV" then
+                return 7;
+            end if;
+        end if;
+    end function get_int_param;    
+
+    -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
+    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    begin
+        if use_qpll then
+            if param_name = "RXCDR_CFG2" then
+                return "0000001001001001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001001001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001001001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000001100000001";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000011111100";
+            elsif param_name = "TXPI_CFG1" then
+                return "0111010101010101";
+            end if;
+        else
+            if param_name = "RXCDR_CFG2" then
+                return "0000001000111001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1000111001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001000111001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000000100000000";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000001010100";
+            elsif param_name = "TXPI_CFG1" then
+                return "0001000000000000";
+            end if;
+        end if;
+    end function get_slv_param;
+    
+    constant RXCDR_CFG2         : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN2    : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN3    : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
+    constant RXPI_CFG0          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_RX_USE_QPLL);
+    constant RXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
+    constant TXPI_CFG1          : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_RX_USE_QPLL);
+    constant RXOUT_DIV          : integer := get_int_param("RXOUT_DIV", g_RX_USE_QPLL);
+    constant RX_CLK25_DIV       : integer := get_int_param("RX_CLK25_DIV", g_RX_USE_QPLL);
+    constant TXOUT_DIV          : integer := get_int_param("TXOUT_DIV", g_RX_USE_QPLL);
+    constant TX_CLK25_DIV       : integer := get_int_param("TX_CLK25_DIV", g_RX_USE_QPLL);
+    
 
     -- clocking
     signal refclks          : std_logic_vector(1 downto 0);
@@ -251,11 +324,11 @@ begin
             CPLL_CFG1                    => "0000000000101011",
             CPLL_CFG2                    => "0000000000000010",
             CPLL_CFG3                    => "0000000000000000",
-            CPLL_FBDIV                   => 5,
+            CPLL_FBDIV                   => 2,
             CPLL_FBDIV_45                => 5,
             CPLL_INIT_CFG0               => "0000001010110010",
             CPLL_LOCK_CFG                => "0000000111101000",
-            CPLL_REFCLK_DIV              => 2,
+            CPLL_REFCLK_DIV              => 1,
             CTLE3_OCAP_EXT_CTRL          => "000",
             CTLE3_OCAP_EXT_EN            => '0',
             DDI_CTRL                     => "00",
@@ -372,9 +445,9 @@ begin
             RXCDR_CFG0_GEN3              => "0000000000000011",
             RXCDR_CFG1                   => "0000000000000000",
             RXCDR_CFG1_GEN3              => "0000000000000000",
-            RXCDR_CFG2                   => "0000001001001001",
-            RXCDR_CFG2_GEN2              => "1001001001",
-            RXCDR_CFG2_GEN3              => "0000001001001001",
+            RXCDR_CFG2                   => RXCDR_CFG2, -- keep
+            RXCDR_CFG2_GEN2              => RXCDR_CFG2_GEN2, -- keep
+            RXCDR_CFG2_GEN3              => RXCDR_CFG2_GEN3, -- keep
             RXCDR_CFG2_GEN4              => "0000000101100100",
             RXCDR_CFG3                   => "0000000000010010",
             RXCDR_CFG3_GEN2              => "010010",
@@ -465,15 +538,15 @@ begin
             RXOOB_CFG                    => "000000110",
             RXOOB_CLK_CFG                => "PMA",
             RXOSCALRESET_TIME            => "00011",
-            RXOUT_DIV                    => 4,
+            RXOUT_DIV                    => RXOUT_DIV, -- keep
             RXPCSRESET_TIME              => "00011",
             RXPHBEACON_CFG               => "0000000000000000",
             RXPHDLY_CFG                  => "0010000001110000",
             RXPHSAMP_CFG                 => "0010000100000000",
             RXPHSLIP_CFG                 => "1001100100110011",
             RXPH_MONITOR_SEL             => "00000",
-            RXPI_CFG0                    => "0000001100000001",
-            RXPI_CFG1                    => "0000000011111100",
+            RXPI_CFG0                    => RXPI_CFG0, -- keep
+            RXPI_CFG1                    => RXPI_CFG1, -- keep
             RXPMACLK_SEL                 => "DATA",
             RXPMARESET_TIME              => "00011",
             RXPRBS_ERR_LOOPBACK          => '0',
@@ -488,7 +561,7 @@ begin
             RX_BIAS_CFG0                 => "0001001010110000",
             RX_BUFFER_CFG                => "000000",
             RX_CAPFF_SARC_ENB            => '0',
-            RX_CLK25_DIV                 => 8,
+            RX_CLK25_DIV                 => RX_CLK25_DIV, -- keep
             RX_CLKMUX_EN                 => '1',
             RX_CLK_SLIP_OVRD             => "00000",
             RX_CM_BUF_CFG                => "1010",
@@ -577,7 +650,7 @@ begin
             TXFIFO_ADDR_CFG              => "LOW",
             TXGBOX_FIFO_INIT_RD_ADDR     => 4,
             TXGEARBOX_EN                 => "FALSE",
-            TXOUT_DIV                    => 4,
+            TXOUT_DIV                    => TXOUT_DIV, -- keep
             TXPCSRESET_TIME              => "00011",
             TXPHDLY_CFG0                 => "0110000001110000",
             TXPHDLY_CFG1                 => "0000000000001111",
@@ -585,7 +658,7 @@ begin
             TXPH_CFG2                    => "0000000000000000",
             TXPH_MONITOR_SEL             => "00000",
             TXPI_CFG0                    => "0000001100000000",
-            TXPI_CFG1                    => "0111010101010101",
+            TXPI_CFG1                    => TXPI_CFG1, -- keep
             TXPI_GRAY_SEL                => '0',
             TXPI_INVSTROBE_SEL           => '0',
             TXPI_PPM                     => '0',
@@ -599,7 +672,7 @@ begin
             TXSYNC_MULTILANE             => '0',
             TXSYNC_OVRD                  => '0',
             TXSYNC_SKIP_DA               => '0',
-            TX_CLK25_DIV                 => 8,
+            TX_CLK25_DIV                 => TX_CLK25_DIV, -- keep
             TX_CLKMUX_EN                 => '1',
             TX_DATA_WIDTH                => 20,
             TX_DCC_LOOP_RST_CFG          => "0000000000000100",
