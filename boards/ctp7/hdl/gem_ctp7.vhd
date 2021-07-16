@@ -186,6 +186,12 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal gem_gt_gbt_ctrl_arr      : t_mgt_ctrl_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     
+    -------------------- Spy / LDAQ readout link ---------------------------------
+    signal spy_usrclk               : std_logic;
+    signal spy_rx_data              : t_mgt_16b_rx_data;
+    signal spy_tx_data              : t_mgt_16b_tx_data;
+    signal spy_rx_status            : t_mgt_status;
+    
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink       : t_daq_to_daqlink;
     signal daqlink_to_daq       : t_daqlink_to_daq;
@@ -382,6 +388,11 @@ begin
                 
                 gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
                 gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
+
+                spy_usrclk_i            => spy_usrclk,
+                spy_rx_data_i           => spy_rx_data,
+                spy_tx_data_o           => spy_tx_data,
+                spy_rx_status_i         => spy_rx_status,
                 
                 ipb_reset_i             => ipb_reset,
                 ipb_clk_i               => ipb_clk,
@@ -406,59 +417,85 @@ begin
         g_gem_links : for oh in 0 to CFG_NUM_OF_OHs - 1 generate
     
             g_gbt_links : for gbt in 0 to CFG_NUM_GBTS_PER_OH - 1 generate
-                gem_gt_gbt_rx_data_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxdata(39 downto 0);
-                gem_gt_gbt_rx_clk_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= clk_gth_rx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx);
-                gth_tx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).txdata(39 downto 0) <= gem_gt_gbt_tx_data_arr(oh * CFG_NUM_GBTS_PER_OH + gbt);
-                gem_gt_gbt_tx_clk_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= clk_gth_tx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx);
-                gt_ctrl_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).txreset <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).txreset;
-                gt_ctrl_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxreset <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxreset;
-                gt_ctrl_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxslide <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxslide;
-                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_reset_done <= gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_reset_done;
-                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_cpll_locked <= gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_cpll_locked;
-                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_reset_done <= gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_reset_done;
-                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_cpll_locked <= gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_cpll_locked;
+                gem_gt_gbt_rx_data_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxdata(39 downto 0);
+                gem_gt_gbt_rx_clk_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx);
+                gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).txdata(39 downto 0) <= gem_gt_gbt_tx_data_arr(oh * CFG_NUM_GBTS_PER_OH + gbt);
+                gem_gt_gbt_tx_clk_arr(oh * CFG_NUM_GBTS_PER_OH + gbt)     <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx);
+                gt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).txreset <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).txreset;
+                gt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxreset <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxreset;
+                gt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rxslide <= gem_gt_gbt_ctrl_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rxslide;
+                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_reset_done <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_reset_done;
+                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).tx_pll_locked <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).tx).tx).tx_pll_locked;
+                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_reset_done <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_reset_done;
+                gem_gt_gbt_status_arr(oh * CFG_NUM_GBTS_PER_OH + gbt).rx_pll_locked <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).gbt_links(gbt).rx).rx).rx_pll_locked;
             end generate;
         
             --=== Trigger links (GE1/1 and GE2/1 only) ===--
             g_non_me0_trig_links: if CFG_GEM_STATION /= 0 generate                
-                gem_gt_trig0_rx_clk_arr(oh)  <= clk_gth_rx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx);
-                gem_gt_trig1_rx_clk_arr(oh)  <= clk_gth_rx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx);
+                gem_gt_trig0_rx_clk_arr(oh)  <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx);
+                gem_gt_trig1_rx_clk_arr(oh)  <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx);
 
-                gem_gt_trig0_rx_data_arr(oh).rxdata <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxdata(15 downto 0);
-                gem_gt_trig0_rx_data_arr(oh).rxbyteisaligned <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxbyteisaligned;
-                gem_gt_trig0_rx_data_arr(oh).rxbyterealign <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxbyterealign;
-                gem_gt_trig0_rx_data_arr(oh).rxcommadet <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxcommadet;
-                gem_gt_trig0_rx_data_arr(oh).rxdisperr <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxdisperr(1 downto 0);
-                gem_gt_trig0_rx_data_arr(oh).rxnotintable <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxnotintable(1 downto 0);
-                gem_gt_trig0_rx_data_arr(oh).rxchariscomma <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxchariscomma(1 downto 0);
-                gem_gt_trig0_rx_data_arr(oh).rxcharisk <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxcharisk(1 downto 0);
+                gem_gt_trig0_rx_data_arr(oh).rxdata <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxdata(15 downto 0);
+                gem_gt_trig0_rx_data_arr(oh).rxbyteisaligned <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxbyteisaligned;
+                gem_gt_trig0_rx_data_arr(oh).rxbyterealign <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxbyterealign;
+                gem_gt_trig0_rx_data_arr(oh).rxcommadet <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxcommadet;
+                gem_gt_trig0_rx_data_arr(oh).rxdisperr <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxdisperr(1 downto 0);
+                gem_gt_trig0_rx_data_arr(oh).rxnotintable <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxnotintable(1 downto 0);
+                gem_gt_trig0_rx_data_arr(oh).rxchariscomma <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxchariscomma(1 downto 0);
+                gem_gt_trig0_rx_data_arr(oh).rxcharisk <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(0).rx).rx).rxcharisk(1 downto 0);
 
-                gem_gt_trig1_rx_data_arr(oh).rxdata <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxdata(15 downto 0);
-                gem_gt_trig1_rx_data_arr(oh).rxbyteisaligned <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxbyteisaligned;
-                gem_gt_trig1_rx_data_arr(oh).rxbyterealign <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxbyterealign;
-                gem_gt_trig1_rx_data_arr(oh).rxcommadet <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxcommadet;
-                gem_gt_trig1_rx_data_arr(oh).rxdisperr <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxdisperr(1 downto 0);
-                gem_gt_trig1_rx_data_arr(oh).rxnotintable <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxnotintable(1 downto 0);
-                gem_gt_trig1_rx_data_arr(oh).rxchariscomma <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxchariscomma(1 downto 0);
-                gem_gt_trig1_rx_data_arr(oh).rxcharisk <= gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxcharisk(1 downto 0);
+                gem_gt_trig1_rx_data_arr(oh).rxdata <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxdata(15 downto 0);
+                gem_gt_trig1_rx_data_arr(oh).rxbyteisaligned <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxbyteisaligned;
+                gem_gt_trig1_rx_data_arr(oh).rxbyterealign <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxbyterealign;
+                gem_gt_trig1_rx_data_arr(oh).rxcommadet <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxcommadet;
+                gem_gt_trig1_rx_data_arr(oh).rxdisperr <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxdisperr(1 downto 0);
+                gem_gt_trig1_rx_data_arr(oh).rxnotintable <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxnotintable(1 downto 0);
+                gem_gt_trig1_rx_data_arr(oh).rxchariscomma <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxchariscomma(1 downto 0);
+                gem_gt_trig1_rx_data_arr(oh).rxcharisk <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(oh).trig_rx_links(1).rx).rx).rxcharisk(1 downto 0);
             end generate;
             
         end generate; 
         
         -- MGT mapping to EMTF links
         g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX - 1 generate
-            gth_tx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(i)).tx).txdata <= gem_gt_trig_tx_data_arr(i);
-            gem_gt_trig_tx_status_arr(i) <= gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(i)).tx);
+            gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(i)).tx).txdata <= gem_gt_trig_tx_data_arr(i);
+            gem_gt_trig_tx_status_arr(i) <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(i)).tx);
         end generate;
-        gem_gt_trig_tx_clk <= clk_gth_tx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)).tx);
+        gem_gt_trig_tx_clk <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)).tx);
         
+    end generate;
+    
+    -- spy link mapping
+    g_spy_link : if CFG_USE_SPY_LINK generate
+        spy_usrclk                  <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
+        spy_rx_data.rxdata          <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdata(15 downto 0);
+        spy_rx_data.rxbyteisaligned <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyteisaligned;
+        spy_rx_data.rxbyterealign   <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyterealign;
+        spy_rx_data.rxcommadet      <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcommadet;
+        spy_rx_data.rxdisperr       <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdisperr(1 downto 0);
+        spy_rx_data.rxnotintable    <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxnotintable(1 downto 0);
+        spy_rx_data.rxchariscomma   <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxchariscomma(1 downto 0);
+        spy_rx_data.rxcharisk       <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcharisk(1 downto 0);
+        spy_rx_status               <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx);
+        
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+    end generate;
+
+    -- spy link mapping
+    g_csc_fake_spy_link : if not CFG_USE_SPY_LINK generate
+        spy_usrclk      <= '0';
+        spy_rx_data     <= MGT_16B_RX_DATA_NULL;
+        spy_rx_status   <= MGT_STATUS_NULL;
     end generate;
     
     -------------------------- LpGBT loopback test without GEM logic ---------------------------------
     
     g_lpgbt_loopback_logic : if CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         
-        lb_tx_clk <= clk_gth_tx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx);
+        lb_tx_clk <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx);
         
         i_vio_lpgbt_loopback : vio_lpgbt_loopback
             port map(
@@ -502,7 +539,7 @@ begin
         
         -- LpGBT TX core
         
-        lb_gbt_tx_gb_reset <= (not gt_status_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx).tx_reset_done) or lb_gbt_reset;
+        lb_gbt_tx_gb_reset <= (not gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx).tx_reset_done) or lb_gbt_reset;
         lb_gbt_tx_dp_reset <= not lb_gbt_gb_ready;
         
         g_gbt_not_use_clk_en : if not LB_GBT_USE_CLK_EN generate
@@ -642,13 +679,13 @@ begin
     g_ila_gbt0_mgt : if CFG_ILA_GBT0_MGT_EN generate
         i_ila_gbt0_mgt_tx : ila_gbt_mgt
             port map(
-                clk    => clk_gth_tx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx),
-                probe0 => gth_tx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx).txdata(39 downto 0)
+                clk    => clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx),
+                probe0 => gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).tx).tx).txdata(39 downto 0)
             );
         i_ila_gbt0_mgt_rx : ila_gbt_mgt
             port map(
-                clk    => clk_gth_rx_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).rx).rx),
-                probe0 => gth_rx_data_arr(CFG_CXP_FIBER_TO_GTH_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).rx).rx).rxdata(39 downto 0)
+                clk    => clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).rx).rx),
+                probe0 => gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_OH_LINK_CONFIG_ARR(0).gbt_links(0).rx).rx).rxdata(39 downto 0)
             );
     end generate;
     

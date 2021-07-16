@@ -549,17 +549,17 @@ begin
     --status
     gth_gem_mgt_status_arr_o(i).tx_reset_done <= s_gth_gt_txreset_done(i);
     gth_gem_mgt_status_arr_o(i).rx_reset_done <= s_gth_gt_rxreset_done(i);
-    gth_gem_mgt_status_arr_o(i).tx_cpll_locked <= s_gth_cpll_status_arr(i).cplllock;
-    gth_gem_mgt_status_arr_o(i).rx_cpll_locked <= s_gth_cpll_status_arr(i).cplllock;
+    gth_gem_mgt_status_arr_o(i).tx_pll_locked <= s_gth_cpll_status_arr(i).cplllock;
+    gth_gem_mgt_status_arr_o(i).rx_pll_locked <= s_gth_cpll_status_arr(i).cplllock;
   end generate;  
   
-  gen_gth_gem_qpll_stat : for i in 0 to g_NUM_OF_GTH_COMMONs - 1 generate
-    gen_gth_gem_qpll_chan : for j in 0 to 3 generate
-      gen_gth_gem_qpll_chan_check : if i*4+j < g_NUM_OF_GTH_GTs generate
-        gth_gem_mgt_status_arr_o(i*4+j).qpll_locked <= s_gth_common_status_arr(i).QPLLLOCK;
-      end generate;
-    end generate;
-  end generate;
+--  gen_gth_gem_qpll_stat : for i in 0 to g_NUM_OF_GTH_COMMONs - 1 generate
+--    gen_gth_gem_qpll_chan : for j in 0 to 3 generate
+--      gen_gth_gem_qpll_chan_check : if i*4+j < g_NUM_OF_GTH_GTs generate
+--        gth_gem_mgt_status_arr_o(i*4+j).qpll_locked <= s_gth_common_status_arr(i).QPLLLOCK;
+--      end generate;
+--    end generate;
+--  end generate;
   
   gen_gth_serial : for i in 0 to g_NUM_OF_GTH_GTs-1 generate
     s_gth_rx_serial_arr(i).gthrxn <= '0';

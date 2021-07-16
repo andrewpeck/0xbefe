@@ -10,9 +10,9 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 
-use work.common_pkg.all;
 use work.mgt_pkg.all;
 use work.project_config.all;
+use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 
 --============================================================================
 --                                                         Package declaration
@@ -62,6 +62,14 @@ package board_config_package is
     constant CFG_DAQ_L1AFIFO_PROG_FULL_RESET: integer := 4096;
     constant CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH : integer := 13;
 
+    constant CFG_DAQ_SPYFIFO_DEPTH          : integer := 32768;
+    constant CFG_DAQ_SPYFIFO_PROG_FULL_SET  : integer := 24576;
+    constant CFG_DAQ_SPYFIFO_PROG_FULL_RESET: integer := 16384;
+    constant CFG_DAQ_SPYFIFO_DATA_CNT_WIDTH : integer := 17;
+
+    constant CFG_DAQ_LASTEVT_FIFO_DEPTH     : integer := 4096;
+
+    constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
@@ -159,15 +167,26 @@ package board_config_package is
 --    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59);
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (48, 49, 50, 51, 52, 53, 54, 59);
 
+    constant CFG_USE_SPY_LINK : boolean := false;
+    constant CFG_SPY_LINK : integer := 0;
 
-    -- this record is used in CXP fiber to GTH map (holding tx and rx GTH index)
-    type t_cxp_fiber_to_gth_link is record
-        tx      : integer range 0 to 68; -- GTH TX index (#68 means disconnected/non-existing)
-        rx      : integer range 0 to 68; -- GTH RX index (#68 means disconnected/non-existing)
+    --================================--
+    -- Fiber to MGT mapping
+    --================================--    
+
+    constant CFG_MGT_NUM_CHANNELS : integer := 68;
+    constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS; 
+
+    -- this record is used in fiber to MGT map (holding tx and rx MGT index)
+    type t_fiber_to_mgt_link is record
+        tx      : integer range 0 to CFG_MGT_NUM_CHANNELS; -- MGT TX index (#CFG_BOARD_MAX_LINKS means disconnected/non-existing)
+        rx      : integer range 0 to CFG_MGT_NUM_CHANNELS; -- MGT RX index (#CFG_BOARD_MAX_LINKS means disconnected/non-existing)
+        tx_inv  : boolean; -- indicates whether or not the TX is inverted on the board (this is used by software to invert the respective channels)
+        rx_inv  : boolean; -- indicates whether or not the RX is inverted on the board (this is used by software to invert the respective channels)
     end record;
-    
-    -- this array is meant to hold mapping from CXP fiber index to GTH TX and RX indexes
-    type t_cxp_fiber_to_gth_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_cxp_fiber_to_gth_link;
+
+    -- this array is meant to hold a mapping from fiber index to MGT TX and RX indices
+    type t_fiber_to_mgt_link_map is array (0 to CFG_BOARD_MAX_LINKS) of t_fiber_to_mgt_link;
 
     -- defines the GTH TX and RX index for each index of the CXP and MP fiber
     -- CXP0: fibers 0-11
@@ -179,94 +198,102 @@ package board_config_package is
     -- MP2 RX: fibers 60-71
     -- DUMMY: fiber 72 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
     -- note that GTH channel #68 is used as a placeholder for fiber links that are not connected to the FPGA
-    constant CFG_CXP_FIBER_TO_GTH_MAP : t_cxp_fiber_to_gth_link_map := (
+    constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
         --=== CXP0 ===--
-        (1, 2), -- fiber 0
-        (3, 0), -- fiber 1
-        (5, 4), -- fiber 2
-        (0, 3), -- fiber 3
-        (2, 5), -- fiber 4
-        (4, 1), -- fiber 5
-        (10, 7), -- fiber 6
-        (8, 9), -- fiber 7
-        (6, 10), -- fiber 8
-        (11, 6), -- fiber 9
-        (9, 8), -- fiber 10
-        (7, 11), -- fiber 11
-        --=== CXP1 ===--        
-        (13, 15), -- fiber 12
-        (15, 12), -- fiber 13
-        (17, 16), -- fiber 14
-        (12, 14), -- fiber 15 
-        (14, 18), -- fiber 16
-        (16, 13), -- fiber 17
-        (22, 19), -- fiber 18
-        (20, 23), -- fiber 19
-        (18, 20), -- fiber 20
-        (23, 17), -- fiber 21
-        (21, 21), -- fiber 22
-        (19, 22), -- fiber 23
-        --=== CXP2 ===--        
-        (25, 27), -- fiber 24
-        (27, 24), -- fiber 25
-        (29, 28), -- fiber 26
-        (24, 26), -- fiber 27
-        (26, 30), -- fiber 28
-        (28, 25), -- fiber 29
-        (34, 31), -- fiber 30
-        (32, 35), -- fiber 31
-        (30, 32), -- fiber 32
-        (35, 29), -- fiber 33
-        (33, 33), -- fiber 34
-        (31, 34), -- fiber 35
+        (1,        2,        false, false), -- fiber 0
+        (3,        0,        false, false), -- fiber 1
+        (5,        4,        false, false), -- fiber 2
+        (0,        3,        false, false), -- fiber 3
+        (2,        5,        false, false), -- fiber 4
+        (4,        1,        false, false), -- fiber 5
+        (10,       7,        false, false), -- fiber 6
+        (8,        9,        false, false), -- fiber 7
+        (6,        10,       false, false), -- fiber 8
+        (11,       6,        false, false), -- fiber 9
+        (9,        8,        false, false), -- fiber 10
+        (7,        11,       false, true ), -- fiber 11 -- RX inverted
+        --=== CXP1 ===--          
+        (13,       15,       false, false), -- fiber 12
+        (15,       12,       false, false), -- fiber 13
+        (17,       16,       false, false), -- fiber 14
+        (12,       14,       false, false), -- fiber 15 
+        (14,       18,       false, false), -- fiber 16
+        (16,       13,       false, false), -- fiber 17
+        (22,       19,       false, false), -- fiber 18
+        (20,       23,       false, false), -- fiber 19
+        (18,       20,       false, false), -- fiber 20
+        (23,       17,       false, false), -- fiber 21
+        (21,       21,       false, false), -- fiber 22
+        (19,       22,       false, false), -- fiber 23
+        --=== CXP2 ===--          
+        (25,       27,       false, false), -- fiber 24
+        (27,       24,       false, false), -- fiber 25
+        (29,       28,       false, false), -- fiber 26
+        (24,       26,       false, false), -- fiber 27
+        (26,       30,       false, false), -- fiber 28
+        (28,       25,       false, false), -- fiber 29
+        (34,       31,       false, false), -- fiber 30
+        (32,       35,       false, false), -- fiber 31
+        (30,       32,       false, false), -- fiber 32
+        (35,       29,       false, false), -- fiber 33
+        (33,       33,       false, false), -- fiber 34
+        (31,       34,       false, false), -- fiber 35
         --=== no TX / MP0 RX ===--
-        (68, 68), -- fiber 36 -- RX NULL (not connected)
-        (68, 66), -- fiber 37
-        (68, 64), -- fiber 38
-        (68, 65), -- fiber 39
-        (68, 62), -- fiber 40
-        (68, 63), -- fiber 41
-        (68, 61), -- fiber 42
-        (68, 60), -- fiber 43
-        (68, 59), -- fiber 44
-        (68, 58), -- fiber 45
-        (68, 57), -- fiber 46
-        (68, 56), -- fiber 47
-        --=== MP TX / MP1 RX ===--
-        (59, 54), -- fiber 48 
-        (56, 55), -- fiber 49
-        (63, 52), -- fiber 50
-        (52, 53), -- fiber 51
-        (62, 50), -- fiber 52
-        (53, 51), -- fiber 53
-        (61, 49), -- fiber 54
-        (54, 48), -- fiber 55
-        (60, 47), -- fiber 56
-        (55, 46), -- fiber 57
-        (58, 45), -- fiber 58
-        (57, 44), -- fiber 59
+        (MGT_NULL, MGT_NULL, false, false), -- fiber 36 -- RX NULL (not connected)
+        (MGT_NULL, 66,       false, false), -- fiber 37
+        (MGT_NULL, 64,       false, false), -- fiber 38
+        (MGT_NULL, 65,       false, false), -- fiber 39
+        (MGT_NULL, 62,       false, false), -- fiber 40
+        (MGT_NULL, 63,       false, false), -- fiber 41
+        (MGT_NULL, 61,       false, false), -- fiber 42
+        (MGT_NULL, 60,       false, false), -- fiber 43
+        (MGT_NULL, 59,       false, false), -- fiber 44
+        (MGT_NULL, 58,       false, false), -- fiber 45
+        (MGT_NULL, 57,       false, false), -- fiber 46
+        (MGT_NULL, 56,       false, false), -- fiber 47
+        --=== MP TX / MP1 RX ===-                  -
+        (59,       54,       false, false), -- fiber 48 
+        (56,       55,       false, false), -- fiber 49
+        (63,       52,       false, false), -- fiber 50
+        (52,       53,       false, false), -- fiber 51
+        (62,       50,       false, false), -- fiber 52
+        (53,       51,       false, false), -- fiber 53
+        (61,       49,       false, false), -- fiber 54
+        (54,       48,       false, false), -- fiber 55
+        (60,       47,       false, false), -- fiber 56
+        (55,       46,       false, false), -- fiber 57
+        (58,       45,       false, false), -- fiber 58
+        (57,       44,       false, false), -- fiber 59
         --=== no TX / MP2 RX ===--
-        (68, 68),  -- fiber 60 -- RX NULL (not connected)
-        (68, 68), -- fiber 61 -- RX NULL (not connected)
-        (68, 43), -- fiber 62
-        (68, 68), -- fiber 63 -- RX NULL (not connected)
-        (68, 42), -- fiber 64 
-        (68, 68), -- fiber 65 -- RX NULL (not connected)
-        (68, 40), -- fiber 66
-        (67, 36), -- fiber 67 -- RX inverted
-        (68, 41), -- fiber 68 
-        (68, 37), -- fiber 69 -- RX inverted
-        (68, 38), -- fiber 70
-        (68, 39), -- fiber 71        
+        (MGT_NULL, MGT_NULL, false, false), -- fiber 60 -- RX NULL (not connected)
+        (MGT_NULL, MGT_NULL, false, false), -- fiber 61 -- RX NULL (not connected)
+        (MGT_NULL, 43,       false, false), -- fiber 62
+        (MGT_NULL, MGT_NULL, false, false), -- fiber 63 -- RX NULL (not connected)
+        (MGT_NULL, 42,       false, false), -- fiber 64 
+        (MGT_NULL, MGT_NULL, false, false), -- fiber 65 -- RX NULL (not connected)
+        (MGT_NULL, 40,       false, false), -- fiber 66
+        (67,       36,       false, true ), -- fiber 67 -- RX inverted
+        (MGT_NULL, 41,       false, false), -- fiber 68 
+        (MGT_NULL, 37,       false, true ), -- fiber 69 -- RX inverted
+        (MGT_NULL, 38,       false, false), -- fiber 70
+        (MGT_NULL, 39,       false, false), -- fiber 71        
         --=== DUMMY channel - use for unconnected channels ===--
-        (68, 68) -- fiber 72        
+        (MGT_NULL, MGT_NULL) -- fiber 72        
     );
+
+    --================================--
+    -- MGT configuration
+    --================================--    
+
+    constant CFG_ASYNC_REFCLK_200_FREQ      : integer := 200_000_000;
+    constant CFG_ASYNC_REFCLK_156p25_FREQ   : integer := 156_250_000;
+    constant CFG_LHC_REFCLK_FREQ    : integer := C_TTC_CLK_FREQUENCY * 4;
     
     -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors
     type t_mgt_config_arr is array (0 to 1) of t_mgt_config;
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false, is_master => true, ibert_inst => true),   
-        (link_type => MGT_LPGBT, use_refclk_01 => 1, use_qpll => false, use_qpll_01 => 0, tx_bus_width => 32, tx_multilane_phalign => true, rx_use_buf => false, is_master => false, ibert_inst => true)   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0,  is_master => false, ibert_inst => true),   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0,  is_master => false, ibert_inst => true)   
     );    
     
 end board_config_package;
