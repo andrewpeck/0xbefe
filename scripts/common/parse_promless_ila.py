@@ -54,8 +54,8 @@ def main():
     numErrors = 0
     for bidx in range(len(bytes)):
         if bitfileBytes[bidx] != bytes[bidx]:
-            # print(hexPadded(bytes[bidx], 1))
-            print("ERROR: mismatch at index %d, expected %s (from the bitfile), but found %s in the ILA" % (bidx, hexPadded(bitfileBytes[bidx], 1), hexPadded(bytes[bidx], 1)))
+            # print(hex_padded(bytes[bidx], 1))
+            print("ERROR: mismatch at index %d, expected %s (from the bitfile), but found %s in the ILA" % (bidx, hex_padded(bitfileBytes[bidx], 1), hex_padded(bytes[bidx], 1)))
             numErrors += 1
             # return
 

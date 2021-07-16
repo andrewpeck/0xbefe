@@ -3,13 +3,13 @@ from common.utils import *
 from common.fw_utils import *
 import time
 
-def main():
+def init_csc_backend():
 
-    parseXML()
+    parse_xml()
 
-    fw_flavor = readReg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
+    fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     if fw_flavor != 1:
-        printRed("The board is not running CSC firmware (flavor = %s). Exiting.." % fw_flavor.to_string(False))
+        print_red("The board is not running CSC firmware (flavor = %s). Exiting.." % fw_flavor.to_string(False))
         return
 
     befe_print_fw_info()
@@ -27,9 +27,9 @@ def main():
 
     time.sleep(0.1)
     print("Resetting user logic")
-    writeReg("CSC_FED.SYSTEM.CTRL.GLOBAL_RESET", 1)
+    write_reg("BEFE.CSC_FED.CSC_SYSTEM.CTRL.GLOBAL_RESET", 1)
     time.sleep(0.3)
-    writeReg("CSC_FED.SYSTEM.CTRL.LINK_RESET", 1)
+    write_reg("BEFE.CSC_FED.CSC_SYSTEM.CTRL.LINK_RESET", 1)
 
     print("DONE")
 

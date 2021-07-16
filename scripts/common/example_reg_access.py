@@ -6,15 +6,20 @@ import struct
 
 def main():
 
-    parseXML()
+    parse_xml()
 
     #Example of writing a register
-    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+    write_reg('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET', 1)
 
     #Example of reading a register
-    result = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH0.GBT0_READY')))
-    print("OH0 GBT0 ready = %d" % result)
+    result = read_reg('BEFE.SYSTEM.CTRL.BOARD_ID')
+    print("Board ID: 0x%x" % result)
 
+    # if you write or read from a particular register many times, you can improve the performance by looking up the XML node first and then reusing it in writeReg and readReg functions
+    # if you just pass a string to writeReg or readReg like above, the XML node is looked up internally each time
+    board_id_reg = get_node('BEFE.SYSTEM.CTRL.BOARD_ID')
+    write_reg(board_id_reg, 0xbefe)
+    board_id = read_reg(link_reset_reg)
 
 if __name__ == '__main__':
     main()

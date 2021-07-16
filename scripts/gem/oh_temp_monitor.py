@@ -18,7 +18,7 @@ def main():
         print('Usage: temperature_monitor.py <oh_mask> [out_file]')
         return
     else:
-        ohMask = parseInt(sys.argv[1])
+        ohMask = parse_int(sys.argv[1])
         for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
@@ -26,14 +26,14 @@ def main():
             out_file_name = sys.argv[2]
             out_file = open(out_file_name, "w")
 
-    parseXML()
+    parse_xml()
 
     iter = 0
     while(True):
         temps = "%d\t" % iter
         for oh in range(12):
             if oh in ohList:
-                tempRaw = parseInt(readReg(getNode('GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % oh)))
+                tempRaw = read_reg(get_node('GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % oh))
                 temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
                 temps += "%f\t" % temp
             else:
@@ -50,13 +50,13 @@ def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
 
 def checkStatus(ohList):
-    rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))
-    criticalError = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR')))
+    rxReady       = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
+    criticalError = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
     statusGood = True
     for i in ohList:
         if not check_bit(rxReady, i):
-            printRed("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
+            print_red("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
             statusGood = False
 
     return statusGood
@@ -67,7 +67,7 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
 def heading(string):
     print Colors.BLUE
@@ -78,11 +78,11 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 

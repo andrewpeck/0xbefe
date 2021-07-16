@@ -65,13 +65,13 @@ def main():
         print('  program-fpga:   Program OH FPGA with a bitfile or an MCS file. Requires a parameter "bit" or "mcs" and a filename')
         return
     else:
-        ohMask = parseInt(sys.argv[1])
+        ohMask = parse_int(sys.argv[1])
         for i in range(0, 12):
             if check_bit(ohMask, i):
                 ohList.append(i)
         instructions = sys.argv[2]
 
-    parseXML()
+    parse_xml()
     initJtagRegAddrs()
 
 #    readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
@@ -79,12 +79,12 @@ def main():
 #    return
 
 #    subheading('Reseting the SCA')
-#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
-    writeReg(getNode('GEM_AMC.TTC.GENERATOR.ENABLE'), 0x1)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
+#    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
+    write_reg(get_node('GEM_AMC.TTC.GENERATOR.ENABLE'), 0x1)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
     subheading('Disabling monitoring')
-#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+#    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
     sleep(0.1)
 
     gpio_dir = 0xff0fe0
@@ -99,7 +99,7 @@ def main():
     subheading('Read GPIO = %s' % hex(readData[0]))
     sleep(0.1)
 
-    num_iter = parseInt(sys.argv[2])
+    num_iter = parse_int(sys.argv[2])
     hr_fail = 0
     program_fail = 0
 
@@ -114,7 +114,7 @@ def main():
         subheading('Read GPIO = %s' % hex(readData[0]))
         fpga_done = (readData[0] >> 30) & 1
         if (fpga_done != 0):
-            printRed('FPGA DONE is high, hard reset failed')
+            print_red('FPGA DONE is high, hard reset failed')
             hr_fail += 1
         sleep(0.01)
 
@@ -127,14 +127,14 @@ def main():
         sleep(0.01)
 
         subheading('Executing PROMless programming')
-        writeReg(getNode('GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
+        write_reg(get_node('GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
         sleep(0.1)
 
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
         subheading('Read GPIO = %s' % hex(readData[0]))
         fpga_done = (readData[0] >> 30) & 1
         if (fpga_done != 1):
-            printRed('FPGA DONE is low, programming failed')
+            print_red('FPGA DONE is low, programming failed')
             program_fail += 1
 
         sleep(0.1)
@@ -150,21 +150,21 @@ def main():
         if not checkStatus(ohList):
             exit()
 
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
 
     if instructions == 'r':
         subheading('Reseting the SCA')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
         checkStatus(ohList)
     elif instructions == 'hh':
         subheading('Disabling monitoring')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
         sleep(0.01)
         subheading('Asserting FPGA Hard Reset (and keeping it in reset)')
         sendScaCommand(ohList, 0x2, 0x10, 0x4, 0x0, False)
     elif instructions == 'h':
         subheading('Issuing FPGA Hard Reset')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.OH_FPGA_HARD_RESET'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.OH_FPGA_HARD_RESET'), 0x1)
     elif instructions == 'fpga-id':
         enableJtag(ohMask)
 
@@ -178,7 +178,7 @@ def main():
                     errors += 1
 
         totalTime = clock() - timeStart
-        printCyan('Num errors = ' + str(errors) + ', time took = ' + str(totalTime))
+        print_cyan('Num errors = ' + str(errors) + ', time took = ' + str(totalTime))
 
         disableJtag()
 
@@ -198,8 +198,8 @@ def main():
                 volt1 = ((adc2[ohIdx] >> 6) & 0x3FF) * 3.0 / 1024.0
                 volt2 = ((adc3[ohIdx] >> 6) & 0x3FF) * 3.0 / 1024.0
 
-                #printCyan('adc1 = ' + hex(adc1) + ', adc2 = ' + hex(adc2) + ', adc3 = ' + hex(adc3))
-                printCyan(('=== OH #%d ===' % oh) + 'Core temp = ' + str(coreTemp) + ', voltage #1 = ' + str(volt1) + ', voltage #2 = ' + str(volt2))
+                #print_cyan('adc1 = ' + hex(adc1) + ', adc2 = ' + hex(adc2) + ', adc3 = ' + hex(adc3))
+                print_cyan(('=== OH #%d ===' % oh) + 'Core temp = ' + str(coreTemp) + ', voltage #1 = ' + str(volt1) + ', voltage #2 = ' + str(volt2))
                 ohIdx += 1
 
             sleep(0.5)
@@ -337,9 +337,9 @@ def main():
 
         # enter optimized mode that executes JTAG_GO on every TDO shift and doesn't update the LENGTH with every JTAG_GO
         sleep(0.001)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x1)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x1)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x1)
 
         cnt = 0
         for i in range(1, numWords - 1):
@@ -353,9 +353,9 @@ def main():
 
         # exit the optimized mode and send the last word (also exit the FSM to IDLE)
         sleep(0.01)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
         tms = 0b011 << 31 #go back to idle and don't enter DR shift again
         wReg(ADDR_JTAG_LENGTH, 34)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
@@ -394,34 +394,34 @@ def main():
         disableJtag()
 
         totalTime = clock() - timeStart
-        printCyan('time took to program = ' + str(totalTime))
+        print_cyan('time took to program = ' + str(totalTime))
 
     elif instructions == 'test1':
         timeStart = clock()
-        nn = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
+        nn = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
         for i in range(0,1000000):
             #print(str(i))
-            #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_CHANNEL'), 0x02)
-            #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_COMMAND'), 0x10)
-            #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_LENGTH'), 0x4)
-            #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_DATA'), 0x0)
+            #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_CHANNEL'), 0x02)
+            #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_COMMAND'), 0x10)
+            #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_LENGTH'), 0x4)
+            #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_DATA'), 0x0)
 
-            #readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI'))
+            #read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI'))
             wReg(ADDR_JTAG_TMS, 0x00000000)
 
             #sleep(0.01)
             #print('execute')
-            #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_EXECUTE'), 0x1)
+            #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD_EXECUTE'), 0x1)
         totalTime = clock() - timeStart
-        printCyan('time took = ' + str(totalTime))
+        print_cyan('time took = ' + str(totalTime))
 
     elif instructions == 'test2':
         timeStart = clock()
-        nn = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
+        nn = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI')
         for i in range(0,10000):
             print(str(i))
             sleep(0.001)
-            writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.FPGA_HARD_RESET'), 0x1)
+            write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.FPGA_HARD_RESET'), 0x1)
 
     elif instructions == 'compare-mcs-bit':
         if len(sys.argv) < 5:
@@ -464,7 +464,7 @@ def main():
             bitWordsReversed.append(BitReverseTable256[word & 0xff] << 24 | BitReverseTable256[(word >> 8) & 0xff] << 16 | BitReverseTable256[(word >> 16) & 0xff] << 8 | BitReverseTable256[(word >> 24) & 0xff])
 
         totalTime = clock() - timeStart
-        printCyan('time took to program = ' + str(totalTime))
+        print_cyan('time took to program = ' + str(totalTime))
 
         #bitBytes.fromfile(f, 30)
         f.close()
@@ -487,10 +487,10 @@ def main():
             print('Usage: sca.py gpio-set-direction <direction-mask>')
             print('direction-mask is a 32 bit number where each bit represents a GPIO channel -- if a given bit is high it means that this GPIO channel will be set to OUTPUT mode, and otherwise it will be set to INPUT mode')
             return
-        directionMask = parseInt(sys.argv[3])
+        directionMask = parse_int(sys.argv[3])
 
         subheading('Disabling monitoring')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
         sleep(0.01)
         subheading('Setting the GPIO direction mask to ' + hex(directionMask))
         sendScaCommand(ohList, 0x2, 0x20, 0x4, directionMask, False)
@@ -499,16 +499,16 @@ def main():
             print('Usage: sca.py gpio-set-output <output-data>')
             print('output-data is a 32 bit number representing the 32 GPIO channels state')
             return
-        outputData = parseInt(sys.argv[3])
+        outputData = parse_int(sys.argv[3])
 
         subheading('Disabling monitoring')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
         sleep(0.01)
         subheading('Setting the GPIO output to ' + hex(outputData))
         sendScaCommand(ohList, 0x2, 0x10, 0x4, outputData, False)
     elif instructions == 'gpio-read-input':
         subheading('Disabling monitoring')
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
         sleep(0.01)
         subheading('Reading the GPIO input')
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
@@ -523,22 +523,22 @@ def initJtagRegAddrs():
     global ADDR_JTAG_TMS
     global ADDR_JTAG_TDO
     global ADDR_JTAG_TDI
-    ADDR_JTAG_LENGTH = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS').real_address
-    ADDR_JTAG_TMS = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS').real_address
-    ADDR_JTAG_TDO = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO').real_address
-    #ADDR_JTAG_TDI = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI').real_address
+    ADDR_JTAG_LENGTH = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS').address
+    ADDR_JTAG_TMS = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS').address
+    ADDR_JTAG_TDO = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO').address
+    #ADDR_JTAG_TDI = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI').address
 
 # freqDiv -- JTAG frequency expressed as a divider of 20MHz, so e.g. a value of 2 would give 10MHz, value of 10 would give 2MHz
 def enableJtag(ohMask, freqDiv=None):
     subheading('Disabling SCA ADC monitoring')
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
     sleep(0.01)
     subheading('Enable JTAG module with mask ' + hex(ohMask))
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), ohMask)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), ohMask)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
 
     if freqDiv is not None:
         subheading('Setting JTAG CLK frequency to ' + str(20 / (freqDiv)) + 'MHz (divider value = ' + hex((freqDiv - 1) << 24) + ')')
@@ -551,9 +551,9 @@ def enableJtag(ohMask, freqDiv=None):
 
 def disableJtag():
     subheading('Disabling JTAG module')
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), 0x0)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), 0x0)
 #    subheading('Enabling SCA ADC monitoring')
-#    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)
+#    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0x0)
 
 
 # restoreIdle  -- if True then will restore to IDLE state before doing anything else
@@ -609,7 +609,7 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
 
     debugCyan('Setting command length = ' + str(len))
     fw_len = len if len < 128 else 0 # in firmware 0 means 128 bits
-    #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS'), fw_len)
+    #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS'), fw_len)
     wReg(ADDR_JTAG_LENGTH, fw_len)
 
     # ================= SENDING LENGTH COMMAND JUST FOR TEST!! ===================
@@ -620,46 +620,46 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
     #raw_input("press any key to send tms and tdo")
 
     debugCyan('Setting TMS 0 = ' + binary(tms & 0xffffffff, 32))
-    #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms0)
+    #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms0)
     wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
     debugCyan('Setting TDO 0 = ' + binary(tdo & 0xffffffff, 32))
-    #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo0)
+    #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo0)
     wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
     if len > 32:
         tms = tms >> 32
         debugCyan('Setting TMS 1 = ' + binary(tms & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms1)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms1)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
         #raw_input("press any key to send the last TDO")
 
         tdo = tdo >> 32
         debugCyan('Setting TDO 1 = ' + binary(tdo & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo1)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo1)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
     if len > 64:
         tms = tms >> 32
         debugCyan('Setting TMS 2 = ' + binary(tms & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms2)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms2)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
         tdo = tdo >> 32
         debugCyan('Setting TDO 2 = ' + binary(tdo & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo2)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo2)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
     if len > 96:
         tms = tms >> 32
         debugCyan('Setting TMS 3 = ' + binary(tms & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms3)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS'), tms3)
         wReg(ADDR_JTAG_TMS, tms & 0xffffffff)
 
         tdo = tdo >> 32
         debugCyan('Setting TDO 3 = ' + binary(tdo & 0xffffffff, 32))
-        #writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo3)
+        #write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO'), tdo3)
         wReg(ADDR_JTAG_TDO, tdo & 0xffffffff)
 
     # ================= SENDING JTAG GO COMMAND JUST FOR TEST!! ===================
@@ -676,28 +676,28 @@ def jtagCommand(restoreIdle, ir, irLen, dr, drLen, drReadOhList):
 
     for i in drReadOhList:
         debugCyan('Read TDI 0')
-        tdi = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i)))
-        #tdi0_fast = parseInt(rReg(parseInt(ADDR_JTAG_TDI)))
+        tdi = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i))
+        #tdi0_fast = parse_int(rReg(parse_int(ADDR_JTAG_TDI)))
         #print('normal tdi read = ' + hex(tdi0) + ', fast C tdi read = ' + hex(tdi0_fast) + ', parsed = ' + '{0:#010x}'.format(tdi0_fast))
         debug('tdi = ' + hex(tdi))
 
         if len > 32:
             debugCyan('Read TDI 1')
-            tdi1 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i)))
+            tdi1 = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i))
             tdi |= tdi1 << 32
             debug('tdi1 = ' + hex(tdi1))
             debug('tdi = ' + hex(tdi))
 
         if len > 64:
             debugCyan('Read TDI 2')
-            tdi2 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i)))
+            tdi2 = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i))
             tdi |= tdi2 << 64
             debug('tdi2 = ' + hex(tdi2))
             debug('tdi = ' + hex(tdi))
 
         if len > 96:
             debugCyan('Read TDI 3')
-            tdi3 = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i)))
+            tdi3 = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % i))
             tdi |= tdi3 << 96
             debug('tdi3 = ' + hex(tdi3))
             debug('tdi = ' + hex(tdi))
@@ -715,28 +715,28 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
 
     d = data
 
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
     reply = []
     if doRead:
         for i in ohList:
-            reply.append(parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i))))
+            reply.append(read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
     return reply
 
 def check_bit(byteval,idx):
     return ((byteval&(1<<idx))!=0);
 
 def checkStatus(ohList):
-    rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))
-    criticalError = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR')))
+    rxReady       = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
+    criticalError = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
     statusGood = True
     for i in ohList:
         if not check_bit(rxReady, i):
-            printRed("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
+            print_red("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
             statusGood = False
 
     return statusGood
@@ -747,7 +747,7 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
 def heading(string):
     print Colors.BLUE
@@ -758,11 +758,11 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 

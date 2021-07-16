@@ -294,15 +294,15 @@ def main():
     vhdlFile.close()
 
     if len(conflicting_qpll_ports) > 0:
-        printRed("ERROR, there are conflicting common QPLL0/QPLL1 paramters:")
+        print_red("ERROR, there are conflicting common QPLL0/QPLL1 paramters:")
         printSkipped(conflicting_qpll_props)
-        printRed("ERROR, there are conflicting common QPLL0/QPLL1 ports:")
+        print_red("ERROR, there are conflicting common QPLL0/QPLL1 ports:")
         printSkipped(conflicting_qpll_ports)
         print("Would have updated these properties:")
         printSkipped(updated_props)
         print("Would have updated these ports:")
         printSkipped(updated_ports)
-        printRed("FILE NOT UPDATED")
+        print_red("FILE NOT UPDATED")
         return
 
     vhdlOutFile = open(outFName, "w")

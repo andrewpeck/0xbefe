@@ -32,7 +32,7 @@ def main():
 
         # empty event in both paths (this shouldn't happen in 904 when it's self triggering, but hmm, whatever)
         if (len(cfedWords) == 8 and len(dduWords) == 6):
-            printCyan("\nEmpty event hmm\n")
+            print_cyan("\nEmpty event hmm\n")
             numEvents += 1
             continue
 
@@ -40,13 +40,13 @@ def main():
         #forgive this error if CSC_FED event size is 1023, because in this particular firmware the spy fifo was only 1023 deep, so it will chop off very big events
         #also in this firmware CSC_FED is including DMB lone words (empty events), which DDU skips, so forgive that error too
         if (len(cfedWords) - 1 != len(dduWords)) and (len(cfedWords) < 1023):
-            printRed("\n\nEvent length doesn't match! CSC FED has %d words and DDU has %d words\n\n" % (len(cfedWords), len(dduWords)))
+            print_red("\n\nEvent length doesn't match! CSC FED has %d words and DDU has %d words\n\n" % (len(cfedWords), len(dduWords)))
             dumpEvents(cfedWords[4:-3], dduWords[3:-3])
             return
 
         for i in range(4, len(cfedWords) - 3):
             if (cfedWords[i] != dduWords[i - 1]):
-                printRed("\n\nEvent #%d (L1A ID %d) do not match in word %d\n\n" % (numEvents, l1aId, i))
+                print_red("\n\nEvent #%d (L1A ID %d) do not match in word %d\n\n" % (numEvents, l1aId, i))
                 dumpEvents(cfedWords[4:-3], dduWords[3:-3])
                 return
 
@@ -55,7 +55,7 @@ def main():
     # heading("CSC FED event")
     # numWords = 0
     # for w in cfedWords[4:-3]:
-    #     print(hexPadded64(w))
+    #     print(hex_padded64(w))
     #     numWords += 1
     #
     # print("Num words = %d" % numWords)
@@ -63,7 +63,7 @@ def main():
     # heading("DDU event")
     # numWords = 0
     # for w in dduWords[3:-3]:
-    #     print(hexPadded64(w))
+    #     print(hex_padded64(w))
     #     numWords += 1
     #
     # print("Num words = %d" % numWords)
@@ -102,17 +102,17 @@ def dumpEvents(cfedEvent, dduEvent):
     line = ""
     for i in range(0, length):
         if (i < cfedLen):
-            line = hexPadded64(cfedEvent[i])
+            line = hex_padded64(cfedEvent[i])
         else:
             line = "                  "
 
         line += "  ----  "
 
         if (i < dduLen):
-            line += hexPadded64(dduEvent[i])
+            line += hex_padded64(dduEvent[i])
 
         if (i < cfedLen) and (i < dduLen) and (cfedEvent[i] != dduEvent[i]):
-            printRed(line)
+            print_red(line)
         else:
             print(line)
 

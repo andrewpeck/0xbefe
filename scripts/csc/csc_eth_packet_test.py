@@ -54,15 +54,15 @@ def main():
 
     if len(sys.argv) > 2:
         if "none" not in sys.argv[2]:
-            localDaqEventNum = parseInt(sys.argv[2])
+            localDaqEventNum = parse_int(sys.argv[2])
 
     if len(sys.argv) > 3:
-        localDaqNumOfEvents = parseInt(sys.argv[3])
+        localDaqNumOfEvents = parse_int(sys.argv[3])
 
     if len(sys.argv) > 4:
         logFilename = sys.argv[4]
 
-    parseXML()
+    parse_xml()
     initRegAddrs()
 
     if localDaqFilename is None:
@@ -100,13 +100,13 @@ def main():
             largest_size = size
             largest_size_idx = events_read
 
-    printCyan("Smallest event size (excluding empty events): %d bytes (event #%d)" % (smallest_size * 8, smallest_size_idx))
-    printCyan("Largest event size: %d bytes (event #%d)" % (largest_size * 8, largest_size_idx))
+    print_cyan("Smallest event size (excluding empty events): %d bytes (event #%d)" % (smallest_size * 8, smallest_size_idx))
+    print_cyan("Largest event size: %d bytes (event #%d)" % (largest_size * 8, largest_size_idx))
 
     heading("Starting to send the events out!")
-    writeReg(getNode('CSC_FED.TEST.CTRL.MODULE_RESET'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.CTRL.MODULE_RESET'), 0x1)
     sleep(0.1)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
 
     logFile = None
     if logFilename is not None:
@@ -124,7 +124,7 @@ def main():
                 end = len(event)
                 last_fragment = True
             if i > 0:
-                printCyan("Split event is being sent! i = %d, end = %d, event length = %d" % (i, end, len(event)))
+                print_cyan("Split event is being sent! i = %d, end = %d, event length = %d" % (i, end, len(event)))
             event_fragment = event[i:end]
             #make sure the FIFO is empty and there's no active transmission before pushing in new data
             while i == 0 and rReg(REG_EMPTY_BUSY) != 2:
@@ -149,10 +149,10 @@ def initRegAddrs():
     global REG_START_TRANSMIT
     global REG_EMPTY_BUSY
     global REG_MANUAL_READ
-    REG_PUSH_GBE_DATA = getNode('%s.GBE_TEST.PUSH_GBE_DATA' % REG_PREFIX).real_address
-    REG_START_TRANSMIT = getNode('%s.GBE_TEST.START_TRANSMIT' % REG_PREFIX).real_address
-    REG_EMPTY_BUSY = getNode('%s.GBE_TEST.BUSY' % REG_PREFIX).real_address
-    REG_MANUAL_READ = getNode('%s.GBE_TEST.MANUAL_READ' % REG_PREFIX).real_address
+    REG_PUSH_GBE_DATA = get_node('%s.GBE_TEST.PUSH_GBE_DATA' % REG_PREFIX).address
+    REG_START_TRANSMIT = get_node('%s.GBE_TEST.START_TRANSMIT' % REG_PREFIX).address
+    REG_EMPTY_BUSY = get_node('%s.GBE_TEST.BUSY' % REG_PREFIX).address
+    REG_MANUAL_READ = get_node('%s.GBE_TEST.MANUAL_READ' % REG_PREFIX).address
 
 # this function pushes an ETH frame with the provided payload to the CTP7 and sends it out
 # note that the payload can be provided as either an array of 64 bit words (default), or an array of 16bit words (only used for fake packet testing)
@@ -160,7 +160,7 @@ def sendStandardEthPacket(payload_words64, ethType = 0x0800, payload_words16 = N
 
     heading("Sending an ethernet packet")
 
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
 
     s = "" # eth frame as char vector, to be used for crc
 
@@ -197,7 +197,7 @@ def sendStandardEthPacket(payload_words64, ethType = 0x0800, payload_words16 = N
         for word16 in payload_words16:
             s += pushGbeWord16(word16)
     else:
-        printRed("No payload provided to the sendEthPacket() function! exiting..")
+        print_red("No payload provided to the sendEthPacket() function! exiting..")
         exit(1)
 
     crc = zlib.crc32(s) & 0xffffffff
@@ -211,7 +211,7 @@ def sendStandardEthPacket(payload_words64, ethType = 0x0800, payload_words16 = N
     pushGbeWord16(0x3f7fd)
 
     ########## SEND!! ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
     heading("DONE")
 
 # DDU doesn't send the ethernet header at all, and also appends a 16bit packet counter just before the CRC -- that's what this function will do.
@@ -303,24 +303,24 @@ def pushGbeWord16(word16, logFile = None, verbose = False):
     if verbose:
         print('pushing ' + hex(word16))
     if logFile is not None:
-        logFile.write("%s\n" % hexPadded(word16, 2))
+        logFile.write("%s\n" % hex_padded(word16, 2))
     return chr(word16 & 0xff) + chr((word16 >> 8) & 0xff)
 
 def readBackTest(expected_words16):
     read_words16 = []
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.MANUAL_READ_ENABLE'), 1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.MANUAL_READ_ENABLE'), 1)
     while (rReg(REG_EMPTY_BUSY) & 0x2) == 0:
-        # read_words16.append(parseInt(readReg(getNode('CSC_FED.TEST.GBE_TEST.MANUAL_READ'))))
+        # read_words16.append(read_reg(get_node('CSC_FED.TEST.GBE_TEST.MANUAL_READ')))
         read_words16.append(rReg(REG_MANUAL_READ))
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.MANUAL_READ_ENABLE'), 0)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.MANUAL_READ_ENABLE'), 0)
 
     if len(read_words16) != len(expected_words16):
-        printRed("readback and expected word count doesn't match. Expected %d words, read %d words" % (len(expected_words16), len(read_words16)))
+        print_red("readback and expected word count doesn't match. Expected %d words, read %d words" % (len(expected_words16), len(read_words16)))
         return False
 
     for i in range(0, len(read_words16)):
         if read_words16[i] != expected_words16[i]:
-            printRed("readback word #%d did not match the expected word. Expected %s, but read %s" % (i, hexPadded(expected_words16[i], 2), hexPadded(read_words16[i], 2)))
+            print_red("readback word #%d did not match the expected word. Expected %s, but read %s" % (i, hex_padded(expected_words16[i], 2), hex_padded(read_words16[i], 2)))
             return False
 
     return True
@@ -331,15 +331,15 @@ def sendAutoNegAckPacket():
     words16_2 = [0x195bc, 0xb5b5] * 10000
     # words16 = [0x3fefe] * 100
 
-    writeReg(getNode('GEM_AMC.GEM_TESTS.GBE_TEST.ENABLE'), 0x1)
-    pushNode = getNode('GEM_AMC.GEM_TESTS.GBE_TEST.PUSH_GBE_DATA')
-    transmitNode = getNode('GEM_AMC.GEM_TESTS.GBE_TEST.START_TRANSMIT')
+    write_reg(get_node('GEM_AMC.GEM_TESTS.GBE_TEST.ENABLE'), 0x1)
+    pushNode = get_node('GEM_AMC.GEM_TESTS.GBE_TEST.PUSH_GBE_DATA')
+    transmitNode = get_node('GEM_AMC.GEM_TESTS.GBE_TEST.START_TRANSMIT')
     for i in range(100000):
         # for word in words16_1:
-        #     writeReg(pushNode, word)
+        #     write_reg(pushNode, word)
         for word in words16_2:
-            writeReg(pushNode, word)
-        writeReg(transmitNode, 0x1)
+            write_reg(pushNode, word)
+        write_reg(transmitNode, 0x1)
 
     print("Auto neg test packet sent")
 
@@ -362,7 +362,7 @@ def sendDummyEmptyDduPacket():
     packetPayload = dduHeader + dduTrailer + padding + packet_cnt
 
 
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
 
     for word in preamble:
         pushGbeWord16(word)
@@ -384,48 +384,48 @@ def sendDummyEmptyDduPacket():
     print("Calculated CRC: " + hex(calcCrc))
 
 
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
     heading("DONE")
 
 def sendDummyEthPacketOld():
     heading("Sending a dummy ethernet packet")
 
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
 
     ########## preamble and SOF ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x155FB)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x5555)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x5555)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0xD555)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x155FB)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x5555)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x5555)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0xD555)
 
     ########## source MAC ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1500)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1417)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x9e80)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1500)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1417)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x9e80)
 
     ########## destination MAC ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1500)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1417)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x9e80)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1500)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x1417)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x9e80)
 
     ########## ETH type ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x0008)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x0008)
 
     ########## Payload ##########
     for i in range(0, 23):
-        writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x0000)
+        write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x0000)
 
     ########## CRC ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0xabb8)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x962d)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0xabb8)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x962d)
 
     ########## EOF and carrier extend ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x3f7fd)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.PUSH_GBE_DATA'), 0x3f7fd)
 
 
 
     ########## SEND!! ##########
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
+    write_reg(get_node('CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
     heading("DONE")
 
 if __name__ == '__main__':

@@ -21,21 +21,21 @@ PHASE_UNITS_PS = 1.85963 # 18.6012 when using my phasemon, and 1.859630739 when 
 
 def main():
 
-    parseXML()
+    parse_xml()
 
     heading("Collecting phase data")
     f = open("phase.csv", "w")
 
-    lastSampleCnt = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER')))
+    lastSampleCnt = read_reg(get_node('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
     phaseArr = []
     for i in range(NUM_READS):
-        phaseRaw = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE')))
+        phaseRaw = read_reg(get_node('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE'))
         phasePs = phaseRaw * PHASE_UNITS_PS
         phaseArr.append(phasePs)
         f.write("%f\n" % phasePs)
         sampleCnt = lastSampleCnt
         while sampleCnt == lastSampleCnt:
-            sampleCnt = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER')))
+            sampleCnt = read_reg(get_node('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
             sleep(0.0001)
         lastSampleCnt = sampleCnt
         if i % 1000 == 0:
@@ -54,7 +54,7 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
 def heading(string):
     print Colors.BLUE
@@ -65,11 +65,11 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 

@@ -69,9 +69,9 @@ def main():
         err = checkEventErrors(evt)
         if len(err) > 0:
             errors.append(["Global event #%d (file %d, local event #%d)" % (evtNum, fileIdx, idx)] + err)
-            printRed("Error in event #%d (file %d, local event #%d)" % (evtNum, fileIdx, idx))
+            print_red("Error in event #%d (file %d, local event #%d)" % (evtNum, fileIdx, idx))
             for e in err:
-                printRed(e)
+                print_red(e)
             dumpEventsNumpy(evt.words, None)
 
         # statistics
@@ -82,15 +82,15 @@ def main():
             maxWords = evt.words.size
             maxWordsEvtNum = evtNum
         if evt.words.size > 10000:
-            printRed("Size of this event is larger than 10000: %d" % evt.words.size)
+            print_red("Size of this event is larger than 10000: %d" % evt.words.size)
             if idx > 0:
-                printRed("Dumping previous event:")
+                print_red("Dumping previous event:")
                 dumpEventsNumpy(events[idx-1].words, None)
             else:
-                printRed("Previous event is not available")
-            printRed("Dumping the big event:")
+                print_red("Previous event is not available")
+            print_red("Dumping the big event:")
             dumpEventsNumpy(evt.words, None)
-            printRed("Exiting due to the above error")
+            print_red("Exiting due to the above error")
             return
 
         for dmb in evt.dmbs:
@@ -111,14 +111,14 @@ def main():
     print("===================================================================")
 
     if (len(errors) > 0):
-        printRed("===============================================================")
-        printRed("======================= ERRORS ================================")
-        printRed("===============================================================")
+        print_red("===============================================================")
+        print_red("======================= ERRORS ================================")
+        print_red("===============================================================")
 
         for err in errors:
-            printRed(err[0])
+            print_red(err[0])
             for i in range(1, len(err)):
-                printRed("    %s" % err[i])
+                print_red("    %s" % err[i])
 
 
     print("===============================================================")

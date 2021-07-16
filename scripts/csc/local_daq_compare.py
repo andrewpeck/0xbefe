@@ -29,7 +29,7 @@ def main():
 
         # check event size first
         if (len(dduWords1) != len(dduWords2)):
-            printRed("Length mismatch in event #%d (length1 = %d bytes, length2 = %d bytes)" % (numEvents, len(dduWords1) * 8, len(dduWords2) * 8))
+            print_red("Length mismatch in event #%d (length1 = %d bytes, length2 = %d bytes)" % (numEvents, len(dduWords1) * 8, len(dduWords2) * 8))
             dumpEvents(dduWords1, dduWords2)
             ldaqFile1.close()
             ldaqFile2.close()
@@ -37,13 +37,13 @@ def main():
         else:
             for i in range(0, len(dduWords1)):
                 if dduWords1[i] != dduWords2[i]:
-                    printRed("Mismatch in event #%d" % numEvents)
+                    print_red("Mismatch in event #%d" % numEvents)
                     dumpEvents(dduWords1, dduWords2)
                     ldaqFile1.close()
                     ldaqFile2.close()
                     return
 
-        printCyan("Event #%d matches (length = %d bytes)" % (numEvents, len(dduWords1) * 8))
+        print_cyan("Event #%d matches (length = %d bytes)" % (numEvents, len(dduWords1) * 8))
 
         numEvents += 1
 

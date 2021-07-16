@@ -95,13 +95,13 @@ def main():
         command = sys.argv[3]
 
     if ohSelect > 11:
-        printRed("The given OH index (%d) is out of range (must be 0-11)" % ohSelect)
+        print_red("The given OH index (%d) is out of range (must be 0-11)" % ohSelect)
         return
     if gbtSelect > 7:
-        printRed("The given GBT index (%d) is out of range (must be 0-2)" % gbtSelect)
+        print_red("The given GBT index (%d) is out of range (must be 0-2)" % gbtSelect)
         return
 
-    parseXML()
+    parse_xml()
 
     initGbtRegAddrs()
 
@@ -112,18 +112,18 @@ def main():
     if (checkGbtReady(ohSelect, gbtSelect) == 1):
         selectGbt(ohSelect, gbtSelect)
     else:
-        printRed("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
+        print_red("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
         return
 
     if command == "charge-pump-current-scan":
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
+        write_reg(get_node("GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
         sleep(0.1)
         for curr in range(15, 0, -1):
             wReg(ADDR_IC_ADDR, 35)
             wReg(ADDR_IC_WRITE_DATA, (curr << 4) + 2)
             wReg(ADDR_IC_EXEC_WRITE, 1)
             sleep(0.1)
-            wasNotReady = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (ohSelect, gbtSelect))))
+            wasNotReady = read_reg(get_node("GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (ohSelect, gbtSelect)))
             color = Colors.GREEN if wasNotReady == 0 else Colors.RED
             statusText = "GOOD" if wasNotReady == 0 else "BAD"
             print(color + "Charge pump current = %d  ------ GBT status = %s" % (curr, statusText) + Colors.ENDC)
@@ -138,10 +138,10 @@ def main():
         subheading('Configuring OH%d GBT%d' % (ohSelect, gbtSelect))
         filename = sys.argv[4]
         if filename[-3:] != "txt":
-            printRed("Seems like the file is not a txt file, please provide a txt file generated with the GBT programmer software")
+            print_red("Seems like the file is not a txt file, please provide a txt file generated with the GBT programmer software")
             return
         if not os.path.isfile(filename):
-            printRed("Can't find the file %s" % filename)
+            print_red("Can't find the file %s" % filename)
             return
 
         timeStart = clock()
@@ -152,13 +152,13 @@ def main():
         print('time took = ' + str(totalTime) + 's')
 
         if (command == 'v3b-phase-scan'):
-            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parseInt(sys.argv[5])
-            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parseInt(sys.argv[6])
+            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parse_int(sys.argv[5])
+            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parse_int(sys.argv[6])
             phaseScan(False, V3B_GBT_ELINK_TO_VFAT, ohSelect, gbtSelect, regs, numScTrans, numDaqPackets)
 
         if (command == 'ge21-phase-scan'):
-            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parseInt(sys.argv[5])
-            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parseInt(sys.argv[6])
+            numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 6 else parse_int(sys.argv[5])
+            numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 7 else parse_int(sys.argv[6])
             phaseScan(False, GE21_GBT_ELINK_TO_VFAT, ohSelect, gbtSelect, regs, numScTrans, numDaqPackets)
 
         if (command == 'ge21-fpga-phase-scan'):
@@ -168,7 +168,7 @@ def main():
                 timePerPhase = int(sys.argv[5])
 
             # prep
-            writeReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
+            write_reg(get_node('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
 
             # print the result table header
             tableColWidth = 13
@@ -180,7 +180,7 @@ def main():
 
             # start the scan
             for phase in range(0, 15):
-                writeReg(getNode('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+                write_reg(get_node('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
 
                 # set phase on all elinks
                 for elink in GE21_GBT_ELINK_TO_FPGA[gbtSelect]:
@@ -194,16 +194,16 @@ def main():
 
                 # reset the PRBS tester, and give some time to accumulate statistics
                 sleep(0.001)
-                writeReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
-                writeReg(getNode('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
+                write_reg(get_node('GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
+                write_reg(get_node('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
                 sleep(timePerPhase)
 
                 # check all elinks for errors
                 result = ("%d" % phase).ljust(tableColWidth)
                 for elink in GE21_GBT_ELINK_TO_FPGA[gbtSelect]:
-                    prbsLocked = parseInt(readReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.PRBS_LOCKED' % (gbtSelect, elink))))
-                    megaWordCnt = parseInt(readReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink))))
-                    errorCnt = parseInt(readReg(getNode('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink))))
+                    prbsLocked = read_reg(get_node('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.PRBS_LOCKED' % (gbtSelect, elink)))
+                    megaWordCnt = read_reg(get_node('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink)))
+                    errorCnt = read_reg(get_node('GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink)))
 
                     color = Colors.GREEN if errorCnt == 0 else Colors.RED
                     res = ('%d' % errorCnt).ljust(tableColWidth)
@@ -218,7 +218,7 @@ def main():
 
                 print(result)
 
-            writeReg(getNode('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+            write_reg(get_node('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
 
         if (command == 'ge21-program-phases'):
             initVfatRegAddrs()
@@ -238,12 +238,12 @@ def main():
                     vfat = GE21_GBT_ELINK_TO_VFAT[gbtSelect][elink]
                     # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
                     sleep(0.1)
-                    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+                    write_reg(get_node('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
                     sleep(0.001)
                     cfgRunGood = 1
-                    cfgAddr = getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).real_address
+                    cfgAddr = get_node('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
                     for i in range(10000):
-                        #ret = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+                        #ret = read_reg(get_node('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
                         ret = rReg(cfgAddr)
                         #if (ret != '0x00000000' and ret != '0x00000001'):
                         if (ret != 0 and ret != 1):
@@ -252,8 +252,8 @@ def main():
                             break
                     #sleep(0.3)
                     #sleep(0.5)
-                    linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-                    syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+                    linkGood = read_reg(get_node('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat)))
+                    syncErrCnt = read_reg(get_node('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat)))
                     color = Colors.GREEN
                     prefix = 'COMMUNICATION GOOD on elink %d VFAT%d: ' % (elink, vfat)
                     if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
@@ -262,8 +262,8 @@ def main():
                     print color, prefix, 'Phase = %d, LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
 
     elif (command == 'me0-phase-scan'):
-        numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 5 else parseInt(sys.argv[4])
-        numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 6 else parseInt(sys.argv[5])
+        numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(sys.argv) < 5 else parse_int(sys.argv[4])
+        numDaqPackets = PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS if len(sys.argv) < 6 else parse_int(sys.argv[5])
         phaseScan(True, ME0_ELINK_TO_VFAT, ohSelect, gbtSelect, [], numScTrans, numDaqPackets)
 
     elif command == 'destroy':
@@ -271,7 +271,7 @@ def main():
         destroyConfig()
 
     else:
-        printRed("Unrecognized command '%s'" % command)
+        print_red("Unrecognized command '%s'" % command)
         return
 
     print("")
@@ -279,20 +279,20 @@ def main():
 
 def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowControlTransactions, numDaqPackets):
     if isLpGbt:
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
     else:
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
 
     # setup the TTC generator for a DAQ test
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    genEn = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE")))
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
-    calpulseGap = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP")))
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
-    l1aCnt = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT")))
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), numDaqPackets)
-    l1aGap = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP")))
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    genEn = read_reg(get_node("GEM_AMC.TTC.GENERATOR.ENABLE"))
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    calpulseGap = read_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"))
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
+    l1aCnt = read_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"))
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), numDaqPackets)
+    l1aGap = read_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"))
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
 
     # start the scan
     initVfatRegAddrs()
@@ -305,14 +305,14 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
 
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
-            writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+            write_reg(get_node('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
             sleep(0.001)
 
             # check slow control to the VFAT
             cfgRunGood = 1
-            cfgAddr = getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).real_address
+            cfgAddr = get_node('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
             for i in range(numSlowControlTransactions):
-                #ret = readReg(getNode('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+                #ret = read_reg(get_node('GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
                 ret = rReg(cfgAddr)
                 #if (ret != '0x00000000' and ret != '0x00000001'):
                 if (ret != 0 and ret != 1):
@@ -320,8 +320,8 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
                     break
 
             # check sync status
-            linkGood = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-            syncErrCnt = parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+            linkGood = read_reg(get_node('GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat)))
+            syncErrCnt = read_reg(get_node('GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat)))
 
             # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
             daqCrcErrCnt = -1
@@ -330,13 +330,13 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
                     wReg(cfgAddr, 0) # set the VFAT to sleep mode
                 else:
                     wReg(cfgAddr, 1) # set the VFAT to run mode
-                    writeReg(getNode("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
-                    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    write_reg(get_node("GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+                    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
                     genRunning = 1
                     while genRunning == 1:
-                        genRunning = parseInt(readReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING")))
-                    daqCrcErrCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat))))
-                    daqEvtCnt = parseInt(readReg(getNode("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat))))
+                        genRunning = read_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING"))
+                    daqCrcErrCnt = read_reg(get_node("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
+                    daqEvtCnt = read_reg(get_node("GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
                     if daqEvtCnt == 0:
                         daqCrcErrCnt = 999
 
@@ -357,15 +357,15 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, bestPhase)
 
     # restore the TTC generator settings
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.ENABLE"), genEn)
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), calpulseGap)
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
-    writeReg(getNode("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.ENABLE"), genEn)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), calpulseGap)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), l1aCnt)
+    write_reg(get_node("GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1aGap)
 
     # reset the links
     sleep(0.1)
-    writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+    write_reg(get_node('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
 
 def setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase):
     # set phase
@@ -420,7 +420,7 @@ def downloadConfig(ohIdx, gbtIdx, filename):
     f = open(filename, 'r')
 
     #for now we'll operate with 8 bit words only
-    writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
+    write_reg(get_node("GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
 
     ret = []
 
@@ -438,7 +438,7 @@ def downloadConfig(ohIdx, gbtIdx, filename):
 
     print("Wrote %d registers to OH%d GBT%d" % (lines, ohIdx, gbtIdx))
     if lines < 366:
-        printRed("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain 366 registers")
+        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain 366 registers")
 
     f.close()
 
@@ -456,32 +456,32 @@ def initGbtRegAddrs():
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
-    ADDR_IC_ADDR = getNode('GEM_AMC.SLOW_CONTROL.IC.ADDRESS').real_address
-    ADDR_IC_WRITE_DATA = getNode('GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').real_address
-    ADDR_IC_EXEC_WRITE = getNode('GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').real_address
-    ADDR_IC_EXEC_READ = getNode('GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').real_address
+    ADDR_IC_ADDR = get_node('GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
+    ADDR_IC_WRITE_DATA = get_node('GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
+    ADDR_IC_EXEC_WRITE = get_node('GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
+    ADDR_IC_EXEC_READ = get_node('GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
 
 def initVfatRegAddrs():
     global ADDR_LINK_RESET
-    ADDR_LINK_RESET = getNode('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET').real_address
+    ADDR_LINK_RESET = get_node('GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET').address
 
 def selectGbt(ohIdx, gbtIdx):
-    station = parseInt(readReg(getNode('GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION')))
+    station = read_reg(get_node('GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION'))
     numGbtsPerOh = 3 if station == 1 else 8 if station == 0 else 2
     linkIdx = ohIdx * numGbtsPerOh + gbtIdx
 
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
+    write_reg(get_node('GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
     return 0
 
 def checkGbtReady(ohIdx, gbtIdx):
-    return parseInt(readReg(getNode('GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx))))
+    return read_reg(get_node('GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
 
 # def checkVfatCommunication(ohIdx, vfatIdx):
 
 def signal_handler(sig, frame):
     print("Exiting..")
-    writeReg(getNode('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+    write_reg(get_node('GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
     sys.exit(0)
 
 def check_bit(byteval,idx):
@@ -493,7 +493,7 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
 def heading(string):
     print Colors.BLUE
@@ -504,11 +504,11 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 

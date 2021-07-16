@@ -135,14 +135,14 @@ def main():
             evt1 = events1[idx1]
             evt2 = events2[idx2]
             if (evt1.l1Id != evt2.l1Id or evt1.bxId != evt2.bxId):
-                printRed("Script error: after matching IDs were found, they still seem to be different hmmm. L1ID1 = %d, L1ID2 = %d, BXID1 = %d, BXID2 = %d" % (evt1.l1Id, evt2.l1Id, evt1.bxId, evt2.bxId))
+                print_red("Script error: after matching IDs were found, they still seem to be different hmmm. L1ID1 = %d, L1ID2 = %d, BXID1 = %d, BXID2 = %d" % (evt1.l1Id, evt2.l1Id, evt1.bxId, evt2.bxId))
                 return
 
             print("Checking event %d, L1 ID = %d, BX ID = %d. Num skipped events in file1 = %d, file2 = %d" % (eventsChecked, evt1.l1Id, evt1.bxId, skippedEvents1, skippedEvents2))
 
             if len(evt1.dmbs) != len(evt2.dmbs):
                 err = "Event #%d: The number of DMBs don't match. Expected %d, but found %d in file 2" % (eventsChecked, len(evt1.dmbs), len(evt2.dmbs))
-                printRed(err)
+                print_red(err)
                 errors.append(err)
                 dmbNumberMismatches += 1
                 if EXIT_ON_FIRST_ERROR:
@@ -154,7 +154,7 @@ def main():
                         smallerSize = evt2.dmbs[i].words.size
                     mismatches = (evt1.dmbs[i].words[0:smallerSize] != evt2.dmbs[i].words[0:smallerSize])
                     if ((evt1.dmbs[i].words.size != evt2.dmbs[i].words.size) or mismatches.any()):
-                        printRed("DMB words don't match")
+                        print_red("DMB words don't match")
                         dumpEventsNumpy(evt1.dmbs[i].words, evt2.dmbs[i].words)
                         if EXIT_ON_FIRST_ERROR:
                             return
@@ -168,7 +168,7 @@ def main():
                                 word16_1 = (firstMismatch64_1 >> (16 * j)) & 0xffff
                                 word16_2 = (firstMismatch64_2 >> (16 * j)) & 0xffff
                                 if word16_1 != word16_2:
-                                    firstMismatchStr = hexPadded(word16_1, 2, True) + " ---- " + hexPadded(word16_2, 2, True)
+                                    firstMismatchStr = hex_padded(word16_1, 2, True) + " ---- " + hex_padded(word16_2, 2, True)
                                     break
                         errors.append("Event #%d: Crate %d DMB %d, first mismatched word = %s" % (eventsChecked, evt1.dmbs[i].crateId, evt1.dmbs[i].dmbId, firstMismatchStr))
 
@@ -177,9 +177,9 @@ def main():
     print("Total number of events where the number of DMBs didn't match: %d" % dmbNumberMismatches)
     print("Total number of DMB blocks with size or data mismatches: %d" % mismatchedDmbBlocks)
     if (len(errors) > 0):
-        printRed("Errors found:")
+        print_red("Errors found:")
         for error in errors:
-            printRed("      %s" % error)
+            print_red("      %s" % error)
 
 
 
@@ -226,7 +226,7 @@ def main():
 
             if syncing and l1Id > events2[idx2].l1Id:
                 while idx2 < len(events2) and events2[idx2].l1Id < l1Id:
-                    # printCyan("Syncing the two files (skipping L1 ID %d on file 2, because we need to start at L1 ID %d)" % (events2[idx2].l1Id, l1Id))
+                    # print_cyan("Syncing the two files (skipping L1 ID %d on file 2, because we need to start at L1 ID %d)" % (events2[idx2].l1Id, l1Id))
                     idx2 += 1
                     skipped_events_syncing2 += 1
                 # syncing = False
@@ -237,16 +237,16 @@ def main():
             event2 = events2[idx2]
             if (l1Id != event2.l1Id):
                 if syncing and idx1 < 1000 and l1Id < event2.l1Id:
-                    # printCyan("Syncing the two files (skipping L1 ID %d on file 1, because we need to start at L1 ID %d)" % (l1Id, event2.l1Id))
+                    # print_cyan("Syncing the two files (skipping L1 ID %d on file 1, because we need to start at L1 ID %d)" % (l1Id, event2.l1Id))
                     skipped_events_syncing1 += 1
                     continue
                 else:
-                    printRed("L1 IDs don't match! expected %d, but found %d in file 2" % (l1Id, event2.l1Id))
+                    print_red("L1 IDs don't match! expected %d, but found %d in file 2" % (l1Id, event2.l1Id))
                     continue
             # syncing = False
             idx2 += 1
             if (len(dmbs1) != len(event2.dmbs)):
-                printRed("The number of DMBs don't match. Expected %d, but found %d in file 2" % (len(dmbs1), len(event2.dmbs)))
+                print_red("The number of DMBs don't match. Expected %d, but found %d in file 2" % (len(dmbs1), len(event2.dmbs)))
                 dmb_number_mismatches += 1
             for i in range(0, len(dmbs1)):
                 dmb_blocks_checked += 1
@@ -255,7 +255,7 @@ def main():
                     smaller_size = event2.dmbs[i].words.size
                 mismatches = (dmbs1[i].words[0:smaller_size] != event2.dmbs[i].words[0:smaller_size])
                 if ((dmbs1[i].words.size != event2.dmbs[i].words.size) or mismatches.any()):
-                    printRed("DMB words don't match")
+                    print_red("DMB words don't match")
                     dumpEventsNumpy(dmbs1[i].words, event2.dmbs[i].words)
                     mismatched_dmb_blocks += 1
                     firstMismatchStr = "none"
@@ -267,16 +267,16 @@ def main():
                             word16_1 = (firstMismatch64_1 >> (16*j)) & 0xffff
                             word16_2 = (firstMismatch64_2 >> (16*j)) & 0xffff
                             if word16_1 != word16_2:
-                                firstMismatchStr = hexPadded(word16_1, 2, True) + " ---- " + hexPadded(word16_2, 2, True)
+                                firstMismatchStr = hex_padded(word16_1, 2, True) + " ---- " + hex_padded(word16_2, 2, True)
                                 break
                     mismatched_dmb_errs.append("Crate %d DMB %d, event %d, first mismatched word = %s" % (dmbs1[i].crateId, dmbs1[i].dmbId, idx1, firstMismatchStr))
                     # return
 
     print("Total number of events skipped due to syncing on file1 = %d, file2 = %d" % (skipped_events_syncing1, skipped_events_syncing2))
     if (mismatched_dmb_blocks > 0):
-        printRed("Total mismatched DMB words = %d out of %d checked" % (mismatched_dmb_blocks, dmb_blocks_checked))
+        print_red("Total mismatched DMB words = %d out of %d checked" % (mismatched_dmb_blocks, dmb_blocks_checked))
         for dmbId in mismatched_dmb_errs:
-            printRed("      %s" % dmbId)
+            print_red("      %s" % dmbId)
     else:
         print("Total mismatched DMB words = %d out of %d checked" % (mismatched_dmb_blocks, dmb_blocks_checked))
 

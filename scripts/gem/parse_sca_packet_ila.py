@@ -123,7 +123,7 @@ def decodeScaPacket(bits):
     print("got %d words, and the bit_idx after parsing the message = %d (should be = 0)" % (len(words), bit_idx))
     print("")
     # for i in range(len(words)):
-    #     print("%d: %s" % (i, hexPadded(words[i], 1)))
+    #     print("%d: %s" % (i, hex_padded(words[i], 1)))
     # return
 
     data_length = 0
@@ -151,13 +151,13 @@ def decodeScaPacket(bits):
         else:
             comment = "????????????????????????????"
 
-        print("%s   <<<< %s" % (hexPadded(words[i], 1), comment))
+        print("%s   <<<< %s" % (hex_padded(words[i], 1), comment))
 
 
 def printWithColor(string, color):
     print color + string + Colors.ENDC
 
-def hexPadded(number, numBytes):
+def hex_padded(number, numBytes):
     if number is None:
         return 'None'
     else:

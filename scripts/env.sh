@@ -17,7 +17,7 @@ else
     ADDR_TBL_FILE="gem_amc.xml"
     if [ $STATION == "csc" ]; then
         PROJECT="csc"
-	ADDR_TBL_FILE="csc_fed.xml"
+	  ADDR_TBL_FILE="csc_fed.xml"
     fi
     ADDR_TBL=$SCRIPT_DIR/../address_table/${PROJECT}/generated/${STATION}_${BOARD}/${ADDR_TBL_FILE}
 

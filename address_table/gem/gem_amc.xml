@@ -151,7 +151,8 @@
   <node id="RELEASE" address="0x30">
     <node id="GEM_STATION" address="0x0" mask="0x00000003" permission="r"
           description="GEM station that this firmware was compiled for (0 means ME0, 1 means GE1/1, 2 means GE2/1)"
-          fw_signal="std_logic_vector(to_unsigned(CFG_GEM_STATION, 2))"/>
+          fw_signal="std_logic_vector(to_unsigned(CFG_GEM_STATION, 2))"
+          fw_enum="['ME0', 'GE1/1', 'GE2/1']"/>
     <node id="OH_VERSION" address="0x0" mask="0x0000000c" permission="r"
           description="Version of the OH supported by this firmware build."
           fw_signal="std_logic_vector(to_unsigned(CFG_OH_VERSION, 2))"/>

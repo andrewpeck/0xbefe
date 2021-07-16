@@ -62,18 +62,18 @@ def main():
 
 def c2Mapping():
     heading("C2 cable mapping test...")
-    parseXML()
+    parse_xml()
 
     for oh in range(4):
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 0)
-        writeReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT"), oh)
-        writeReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET"), 1)
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 1)
+        write_reg(get_node("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 0)
+        write_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT"), oh)
+        write_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET"), 1)
+        write_reg(get_node("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 1)
         sleep(0.1)
         for gbt in range(3):
-            locked = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % gbt)))
-            wordCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % gbt)))
-            errCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % gbt)))
+            locked = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % gbt))
+            wordCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % gbt))
+            errCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % gbt))
             # make sure there are no errors
             if (locked == 0) or (wordCnt < 3) or (errCnt > 0):
                 print("ERROR: loopback counters are showing a problem on OH %d GBT %d before MGT reset. Locked = %d, mega word cnt = %d, err cnt = %d" % (oh, gbt, locked, wordCnt, errCnt))
@@ -82,11 +82,11 @@ def c2Mapping():
             # reset the TX MGT and check if we see errors on the expected channel
             linkNum = (oh * 3) + gbt
             txMgtChan = MGT_TX_CHAN_CXP0[linkNum]
-            writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET.TX_RESET" % txMgtChan), 1)
+            write_reg(get_node("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET.TX_RESET" % txMgtChan), 1)
             sleep(0.1)
-            locked = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % gbt)))
-            wordCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % gbt)))
-            errCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % gbt)))
+            locked = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % gbt))
+            wordCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % gbt))
+            errCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % gbt))
             # make sure there are some errors on the expected channel
             if (locked == 0) or (wordCnt < 3) or (errCnt == 0):
                 print("ERROR: loopback counters are not showing errors after TX MGT reset on OH %d GBT %d. Locked = %d, mega word cnt = %d, err cnt = %d" % (oh, gbt, locked, wordCnt, errCnt))
@@ -192,7 +192,7 @@ def c6Mapping(txCableNum, rxCableNum):
         print("Invalid combination of TX and RX cable numbers.. You can only test 1-1, 1-2, and 2-2 combinations")
         exit()
 
-    parseXML()
+    parse_xml()
 
     for i in range(len(txChannels)):
         tx = txChannels[i]
@@ -200,15 +200,15 @@ def c6Mapping(txCableNum, rxCableNum):
         rxOh = rx / 3
         rxGbt = rx % 3
 
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 0)
-        writeReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT"), rxOh)
-        writeReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET"), 1)
-        writeReg(getNode("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 1)
+        write_reg(get_node("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 0)
+        write_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT"), rxOh)
+        write_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET"), 1)
+        write_reg(get_node("GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN"), 1)
         sleep(0.1)
 
-        locked = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % rxGbt)))
-        wordCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % rxGbt)))
-        errCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % rxGbt)))
+        locked = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % rxGbt))
+        wordCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % rxGbt))
+        errCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % rxGbt))
         # make sure there are no errors
         if (locked == 0) or (wordCnt < 3) or (errCnt > 0):
             print("ERROR: loopback counters are showing a problem on OH %d GBT %d before MGT reset. Locked = %d, mega word cnt = %d, err cnt = %d" % (rxOh, rxGbt, locked, wordCnt, errCnt))
@@ -216,11 +216,11 @@ def c6Mapping(txCableNum, rxCableNum):
             exit()
         # reset the TX MGT and check if we see errors on the expected channel
         txMgtChan = MGT_TX_CHAN_CXP0[tx]
-        writeReg(getNode("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET.TX_RESET" % txMgtChan), 1)
+        write_reg(get_node("GEM_AMC.OPTICAL_LINKS.MGT_CHANNEL_%d.RESET.TX_RESET" % txMgtChan), 1)
         sleep(0.1)
-        locked = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % rxGbt)))
-        wordCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % rxGbt)))
-        errCnt = parseInt(readReg(getNode("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % rxGbt)))
+        locked = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.PRBS_LOCKED" % rxGbt))
+        wordCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.MEGA_WORD_CNT" % rxGbt))
+        errCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_0.ERROR_CNT" % rxGbt))
         # make sure there are some errors on the expected channel
         if (locked == 0) or (wordCnt < 3) or (errCnt == 0):
             print("ERROR: loopback counters are not showing errors after TX MGT reset on OH %d GBT %d. Locked = %d, mega word cnt = %d, err cnt = %d" % (rxOh, rxGbt, locked, wordCnt, errCnt))
@@ -290,7 +290,7 @@ def readCxpRxPower(cxpIdx, numIter=1):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
 def heading(string):
     print Colors.BLUE
@@ -301,15 +301,15 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 
-def printGreen(string):
+def print_green(string):
     print Colors.GREEN
     print string, Colors.ENDC
 

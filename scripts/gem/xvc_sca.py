@@ -90,7 +90,7 @@ class jtag_sca:
     verbose = 0
 
     def __init__(self):
-        parseXML()
+        parse_xml()
 
     def setVerbosity(self, verbosity):
         self.verbose = verbosity
@@ -107,25 +107,25 @@ class jtag_sca:
 
     def init_fw(self):
         # pass
-        # writeReg(getNode('GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET'), 1)
+        # write_reg(get_node('GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET'), 1)
         # sleep(0.1)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
         sleep(0.1)
 
     def initJtagRegAddrs(self, oh):
-        self.addr_jtag_length = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS').real_address
-        self.addr_jtag_tms = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS').real_address
-        self.addr_jtag_tdo = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO').real_address
-        self.addr_jtag_tdi = getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % oh).real_address
+        self.addr_jtag_length = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS').address
+        self.addr_jtag_tms = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS').address
+        self.addr_jtag_tdo = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO').address
+        self.addr_jtag_tdi = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % oh).address
 
     # freqDiv -- JTAG frequency expressed as a divider of 20MHz, so e.g. a value of 2 would give 10MHz, value of 10 would give 2MHz
     def enableJtag(self, ohMask, freqDiv=None):
         print('Enable JTAG module with mask ' + hex(ohMask))
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), ohMask)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.ENABLE_MASK'), ohMask)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.SHIFT_MSB'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.EXEC_ON_EVERY_TDO'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.NO_SCA_LENGTH_UPDATE'), 0x0)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.CTRL.EXPERT.SHIFT_TDO_ASYNC'), 0x0)
 
         if freqDiv is not None:
             print('Setting JTAG CLK frequency to ' + str(20 / (freqDiv)) + 'MHz (divider value = ' + hex((freqDiv - 1) << 24) + ')')
@@ -141,20 +141,20 @@ class jtag_sca:
 
         d = data
 
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
+        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
         reply = []
         if doRead:
             for i in ohList:
-                reply.append(parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i))))
+                reply.append(read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
         return reply
 
     def checkStatus(self, oh):
-        rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))
-        criticalError = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR')))
+        rxReady       = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
+        criticalError = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
         if not check_bit(rxReady, oh):
             print("OH #%d is not ready: RX ready = %d, critical error = %d" % (oh, (rxReady >> oh) & 0x1, (criticalError >> oh) & 0x1))
@@ -172,7 +172,7 @@ class jtag_sca:
         for i in range(len_words):
             wReg(self.addr_jtag_tms, tms & 0xffffffff)
             wReg(self.addr_jtag_tdo, tdo & 0xffffffff)
-            tdi_word = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % self.oh))) # TODO: use rReg
+            tdi_word = read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI_OH%d' % self.oh)) # TODO: use rReg
             print("TDI word: %s" % hex(tdi_word))
             tdi |= tdi_word << (i * 32)
             tms = tms >> 32

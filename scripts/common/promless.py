@@ -9,20 +9,16 @@ def bytesToWord(bytes, idx):
     return (bytes[idx + 3] << 24) | (bytes[idx + 2] << 16) | (bytes[idx + 1] << 8) | (bytes[idx])
     # return (bytes[idx + 0] << 24) | (bytes[idx + 1] << 16) | (bytes[idx + 2] << 8) | (bytes[idx + 3])
 
-def main():
+def promless_load(bitfile_name):
 
-    if len(sys.argv) < 2:
-        print("Usage: promless_load.py <frontend_bitfile>")
-        return
+    parse_xml()
 
-    parseXML()
-
-    fname = sys.argv[1]
+    fname = bitfile_name
     if not path.exists(fname):
         print("Could not find %s" % fname)
         return
 
-    writeReg(getNode("GEM_AMC.PROMLESS.RESET_ADDR"), 1)
+    write_reg(get_node("GEM_AMC.PROMLESS.RESET_ADDR"), 1)
 
     print("Opening file %s" % fname)
     f = open(fname, "rb")
@@ -46,24 +42,28 @@ def main():
     print("Got %d bytes (%d words):" % (len(bytes), numWords))
 
     print("Writing...")
-    wDataAddr = getNode("GEM_AMC.PROMLESS.WRITE_DATA").real_address
+    wDataAddr = get_node("GEM_AMC.PROMLESS.WRITE_DATA").address
     for i in xrange(numWords):
         bidx = i * 4
         word = bytesToWord(bytes, bidx)
         wReg(wDataAddr, word)
 
-    writeReg(getNode("GEM_AMC.PROMLESS.FIRMWARE_SIZE"), len(bytes))
-    writeReg(getNode("GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    write_reg(get_node("GEM_AMC.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    write_reg(get_node("GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
 
     print("Verifying...")
-    rDataAddr = getNode("GEM_AMC.PROMLESS.READ_DATA").real_address
+    rDataAddr = get_node("GEM_AMC.PROMLESS.READ_DATA").address
     for i in xrange(numWords):
         wordReadback = rReg(rDataAddr)
         bidx = i * 4
         wordExpect = bytesToWord(bytes, bidx)
         if wordReadback != wordExpect:
-            printRed("ERROR: word %d is corrupted, readback value = %s, expected value = %s" % (i, hex(wordReadback), hex(wordExpect)))
+            print_red("ERROR: word %d is corrupted, readback value = %s, expected value = %s" % (i, hex(wordReadback), hex(wordExpect)))
             return
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) < 2:
+        print("Usage: promless_load.py <frontend_bitfile>")
+        return
+
+    promless_load(sys.argv[1])
