@@ -5,6 +5,7 @@ from common.promless import *
 from gem.gbt import *
 from gem.gem_utils import *
 import time
+from os import path
 
 def init_gem_frontend():
 
@@ -19,6 +20,8 @@ def init_gem_frontend():
             for gbt in range(num_gbts):
                 print("Configuring GBT%d" % gbt)
                 gbt_config = CONFIG_GE21_OH_GBT_CONFIGS[gbt][oh]
+                if not path.exists(gbt_config):
+                    printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_GE*_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt(oh, gbt, "config", gbt_config)
 
         print("Resetting SCAs")

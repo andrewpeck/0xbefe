@@ -11,11 +11,9 @@ def bytesToWord(bytes, idx):
 
 def promless_load(bitfile_name):
 
-    parse_xml()
-
     fname = bitfile_name
     if not path.exists(fname):
-        print("Could not find %s" % fname)
+        printRed("Could not find %s" % fname)
         return
 
     write_reg(get_node("BEFE.PROMLESS.RESET_ADDR"), 1)
@@ -70,6 +68,7 @@ def promless_load(bitfile_name):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: promless_load.py <frontend_bitfile>")
-        return
+        exit()
 
+    parse_xml()
     promless_load(sys.argv[1])

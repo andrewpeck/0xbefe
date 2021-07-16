@@ -34,4 +34,4 @@ def init_csc_backend():
     print("DONE")
 
 if __name__ == '__main__':
-    main()
+    init_csc_backend()

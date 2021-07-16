@@ -169,17 +169,6 @@ class RegVal(int):
     def __str__(self):
         return self.to_string()
 
-def main():
-    parse_xml()
-    print('Example:')
-    random_node = nodes["BEFE.SYSTEM.CTRL.BOARD_ID"]
-    #print str(random_node.__class__.__name__)
-    print('Node: ' + random_node.name)
-    print('Parent: ' + random_node.parent.name)
-    kids = []
-    get_all_children(random_node, kids)
-    print(len(kids), kids.name)
-
 def parse_xml():
     if regInitExists:
         regInit(DEVICE)
@@ -209,7 +198,7 @@ def parse_xml():
 
     root = tree.getroot()
     vars = {}
-    make_tree((root, '', 0x0, nodes, None, vars, False)
+    make_tree(root, '', 0x0, nodes, None, vars, False)
     t2 = time.time()
     print("Parsing done, took %fs. Total num register nodes: %d" % ((t2 - t1), len(nodes)))
 
@@ -217,7 +206,7 @@ def parse_xml():
 def find_first_set_bit_pos(n):
     return int(math.log(n & -n, 2))
 
-def make_tree((node, baseName, baseAddress, nodes, parentNode, vars, isGenerated):
+def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated):
 
     if node.get('id') is None or (node.get('ignore') is not None and eval(node.get('ignore')) == True):
         return
@@ -228,7 +217,7 @@ def make_tree((node, baseName, baseAddress, nodes, parentNode, vars, isGenerated
         generateIdxVar = node.get('generate_idx_var')
         for i in range(0, generateSize):
             vars[generateIdxVar] = i
-            make_tree((node, baseName, baseAddress + generateAddressStep * i, nodes, parentNode, vars, True)
+            make_tree(node, baseName, baseAddress + generateAddressStep * i, nodes, parentNode, vars, True)
         return
     newNode = Node()
     name = baseName
@@ -269,7 +258,7 @@ def make_tree((node, baseName, baseAddress, nodes, parentNode, vars, isGenerated
         newNode.parent = parentNode
         newNode.level = parentNode.level + 1
     for child in node:
-        make_tree((child, name, address, nodes, newNode, vars, False)
+        make_tree(child, name, address, nodes, newNode, vars, False)
 
 
 def get_all_children(node, kids=[]):
@@ -394,4 +383,5 @@ def tab_pad(s, maxlen):
     return s + "\t" * int((8 * maxlen - len(s) - 1) / 8 + 1)
 
 if __name__ == '__main__':
-    main()
+    #parse_xml()
+    pass

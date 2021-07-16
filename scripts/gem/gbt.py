@@ -231,7 +231,7 @@ def gbt(oh_idx, gbt_idx, command, command_args):
                     if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
                         color = Colors.RED
                         prefix = 'COMMUNICATION BAD on elink %d VFAT%d: ' % (elink, vfat)
-                    print color, prefix, 'Phase = %d, LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC
+                    print(color + prefix + 'Phase = %d, LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, linkGood, syncErrCnt, cfgRunGood) + Colors.ENDC)
 
     elif (command == 'me0-phase-scan'):
         numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(command_args) < 1 else parse_int(command_args[0])
@@ -321,7 +321,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
                 goodPhases.append(False)
             else:
                 goodPhases.append(True)
-            print color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt), Colors.ENDC
+            print(color + prefix + 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt) + Colors.ENDC)
 
         # select the best phase for this elink
         bestPhase = getBestPhase(goodPhases)
@@ -473,7 +473,7 @@ if __name__ == '__main__':
         print('  ge21-program-phases <elink_0_phase> <elink_1_phase> <elink_2_phase> <elink_3_phase> etc... :   Programs the provided GBTX sampling phases to as many elinks as the numbers provided (can also include wide-bus elinks)')
         print('  me0-phase-scan [num_slow_control] [num_daq_packets]:   Performs an elink phase scan while checking the VFAT communication for each phase (used with ME0 GEB). Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.' % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  charge-pump-current-scan:   Scans the CDR phase detector charge pump current from highest to the lowest that still works')
-        return
+        exit()
 
     oh_idx = int(sys.argv[1])
     gbt_idx = int(sys.argv[2])
@@ -482,4 +482,4 @@ if __name__ == '__main__':
 
     parse_xml()
 
-    gbt(oh_idx, gbt_idx, command, command_args):
+    gbt(oh_idx, gbt_idx, command, command_args)

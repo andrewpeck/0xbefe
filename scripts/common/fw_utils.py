@@ -315,8 +315,8 @@ def befe_print_fw_info():
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         flavor_str = "CSC (%d DMBs)" % num_dmbs
 
-    version_str = "v%s.%s.%s" % fw_major.to_string(False), fw_minor.to_string(False), fw_build.to_string(False)
-    heading("BEFE %s v%s.%s.%s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, version_str, board_type.to_string(False), date_str, time_str, fw_git_sha))
+    version_str = "v%s.%s.%s" % (fw_major.to_string(False), fw_minor.to_string(False), fw_build.to_string(False))
+    heading("BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, version_str, board_type.to_string(False), date_str, time_str, fw_git_sha))
 
     return {"fw_flavor": fw_flavor, "fw_flavor_str": fw_flavor.to_string(False), "board_type": board_type, "fw_major": fw_major, "fw_minor": fw_minor, "fw_build": fw_build, "fw_version_str": version_str, "fw_date": date_str, "fw_time": time_str, "fw_git_sha": fw_git_sha}
 

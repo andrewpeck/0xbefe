@@ -5,6 +5,7 @@ from common.promless import *
 from gem.gbt import *
 from gem.init_frontend import *
 import time
+from os import path
 
 def init_gem_backend():
 
@@ -41,6 +42,9 @@ def init_gem_backend():
     if gem_station == 1 or gem_station == 2:
         print("Loading %s OH bitfile to the PROMLESS RAM" % gem_station.to_string(False))
         oh_bitfile = CONFIG_GE21_OH_BITFILE if gem_station == 2 else CONFIG_GE11_OH_BITFILE if gem_station == 1 else None
+        if not path.exists(oh_bitfile):
+            printRed("OH bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_GE*_OH_BITFILE constant in your befe_config.py file" % oh_bitfile)
+            return
         promless_load(oh_bitfile)
 
     print("Initializing frontend..")
