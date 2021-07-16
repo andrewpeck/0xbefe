@@ -157,6 +157,7 @@ package board_config_package is
     --================================--    
 
     constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+    constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
 
     -- this record is used in fiber to MGT map (holding tx and rx MGT index)
     type t_fiber_to_mgt_link is record
@@ -174,8 +175,8 @@ package board_config_package is
     -- QSFP-1 (quad 232): fibers 4-7
     -- QSFP-2 (quad 229): fibers 8-11
     -- QSFP-3 (quad 228): fibers 12-15
-    -- DUMMY: fiber 16 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
-    -- note that GTH channel #16 is used as a placeholder for fiber links that are not connected to the FPGA
+    -- DUMMY: fiber CFG_BOARD_MAX_LINKS - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
+    -- note that MGT channel #CFG_MGT_NUM_CHANNELS is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
         --=== QSFP-3 ===--
         (0, 0, false, false),   -- fiber 12
@@ -198,7 +199,7 @@ package board_config_package is
         (14, 14, false, false), -- fiber 2
         (15, 15, false, false), -- fiber 3
         --=== DUMMY channel - use for unconnected channels ===--
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false)  -- dummy fiber
+        (MGT_NULL, MGT_NULL, false, false)  -- dummy fiber
     );
     
     --================================--
@@ -276,10 +277,10 @@ package board_config_package is
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 8,  is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 8,  is_master => false, ibert_inst => false),        
                                                                 
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false)
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false)
         
 --        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_GBTX, qpll_idx => 12, is_master => false, ibert_inst => false),        
 --        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, ibert_inst => false),        
@@ -303,10 +304,10 @@ package board_config_package is
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 8,  is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 8,  is_master => false, ibert_inst => false),        
 
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false)
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false)
 
 --        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_GBTX, qpll_idx => 12, is_master => false, ibert_inst => false),        
 --        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, ibert_inst => false),        
@@ -330,10 +331,10 @@ package board_config_package is
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,  qpll_idx => 8,  is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,  qpll_idx => 8,  is_master => false, ibert_inst => false),        
 
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,        qpll_idx => 12, is_master => false, ibert_inst => false)
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, is_master => true,  ibert_inst => true),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBE, qpll_inst_type => QPLL_NULL,    qpll_idx => 12, is_master => false, ibert_inst => false)
                                                                   
 --        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT, qpll_idx => 12, is_master => false, ibert_inst => false),        
 --        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,  qpll_idx => 12, is_master => false, ibert_inst => false),        

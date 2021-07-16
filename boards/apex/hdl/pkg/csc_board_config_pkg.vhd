@@ -90,6 +90,7 @@ package board_config_package is
     --================================--    
 
     constant CFG_MGT_NUM_CHANNELS : integer := 8;
+    constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
     -- this record is used in fiber to MGT map (holding tx and rx MGT index)
     type t_fiber_to_mgt_link is record
@@ -119,14 +120,14 @@ package board_config_package is
         (6, 7, false, true ),   -- fiber 11 ! RX inverted
 
         --=== dummy ===--
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
         
 --        --=== Quad 129 ===--
 --        (0, 0, false, true ),   -- fiber 0  ! RX inverted
@@ -149,7 +150,7 @@ package board_config_package is
 --        (15, 14, true,  false), -- fiber 14               ! TX inverted
 --        (14, 15, false, false), -- fiber 15
         --=== DUMMY channel - use for unconnected channels ===--
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false)  -- dummy fiber
+        (MGT_NULL, MGT_NULL, false, false)  -- dummy fiber
     );
     
     --================================--

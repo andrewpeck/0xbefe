@@ -19,6 +19,9 @@ use work.common_pkg.all;
 use work.mgt_pkg.all;
 
 entity clk_bufs is
+    generic(
+        g_SYSCLK100_SYNTH_B_OUT_SEL : integer range 1 to 5 := 5 -- selects which synth_b output should be used as system 100MHz clock 
+    );
     port (
         qsfp_refclk0_p_i            : in  std_logic_vector(3 downto 0);
         qsfp_refclk0_n_i            : in  std_logic_vector(3 downto 0);
@@ -27,9 +30,6 @@ entity clk_bufs is
 
         pcie_refclk0_p_i            : in  std_logic;
         pcie_refclk0_n_i            : in  std_logic;
-
-        sysclk_100_p_i              : in  std_logic;
-        sysclk_100_n_i              : in  std_logic;
         
         qsfp_refclk0_o              : out std_logic_vector(3 downto 0);
         qsfp_refclk1_o              : out std_logic_vector(3 downto 0);
@@ -40,6 +40,10 @@ entity clk_bufs is
         
         pcie_refclk0_o              : out std_logic;
         pcie_refclk0_div2_o         : out std_logic;
+
+        synth_b_out_p_i             : in  std_logic_vector(4 downto 0);
+        synth_b_out_n_i             : in  std_logic_vector(4 downto 0);
+        synth_b_clks_o              : out std_logic_vector(4 downto 0);
         
         sysclk_100_o                : out std_logic
     );
@@ -59,8 +63,9 @@ architecture clk_bufs_arch of clk_bufs is
         );
     end component freq_meter;
 
+    signal synth_b_clks_tmp         : std_logic_vector(4 downto 0);
+    signal synth_b_clks             : std_logic_vector(4 downto 0);
     signal sysclk100                : std_logic;
-    signal sysclk100_bufg           : std_logic;
 
     -- per quad refclks
     signal qsfp_refclk0             : std_logic_vector(3 downto 0);
@@ -144,7 +149,7 @@ begin
             N     => 4
         )
         port map(
-            ref_clk => sysclk100_bufg,
+            ref_clk => sysclk100,
             f       => qsfp_refclk0_div2,
             freq    => qsfp_refclk0_div2_freq
         );
@@ -155,7 +160,7 @@ begin
             N     => 4
         )
         port map(
-            ref_clk => sysclk100_bufg,
+            ref_clk => sysclk100,
             f       => qsfp_refclk1_div2,
             freq    => qsfp_refclk1_div2_freq
         );
@@ -192,20 +197,25 @@ begin
     -- Sysclk
     --================================--
     
-    i_sysclk100_buf : IBUFDS
-        port map(
-            O  => sysclk100,
-            I  => sysclk_100_p_i,
-            IB => sysclk_100_n_i
-        );
-   
-    i_sysclk100_bufg : BUFG
-        port map(
-            O => sysclk100_bufg,
-            I => sysclk100
-        );
+    g_synth_b_clks : for i in 0 to 4 generate
+        
+        i_synth_b_clk_buf : IBUFDS
+            port map(
+                O  => synth_b_clks_tmp(i),
+                I  => synth_b_out_p_i(i),
+                IB => synth_b_out_n_i(i)
+            );
+       
+        i_synth_b_clk_bufg : BUFG
+            port map(
+                O => synth_b_clks(i),
+                I => synth_b_clks_tmp(i)
+            );        
+        
+    end generate;
     
-    sysclk_100_o <= sysclk100_bufg;
-
+    synth_b_clks_o <= synth_b_clks;
+    sysclk100 <= synth_b_clks(g_SYSCLK100_SYNTH_B_OUT_SEL - 1);
+    sysclk_100_o <= sysclk100;
 
 end clk_bufs_arch;

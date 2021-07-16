@@ -63,15 +63,10 @@ entity gem_cvp13 is
         usbc_trig_i         : in  std_logic;
         
         -- Other
-        progclk_b5_p_i      : in  std_logic;
-        progclk_b5_n_i      : in  std_logic;
-        
-        i2c_master_en_b_o   : out std_logic; -- FPGA is the I2C master when this is set to 0
-        
-        -- DIMM0
-        dimm0_refclk_p_i    : in  std_logic;
-        dimm0_refclk_n_i    : in  std_logic
+        synth_b_out_p_i     : in  std_logic_vector(4 downto 0);
+        synth_b_out_n_i     : in  std_logic_vector(4 downto 0);
 
+        i2c_master_en_b_o   : out std_logic -- FPGA is the I2C master when this is set to 0        
     );
 end gem_cvp13;
 
@@ -146,12 +141,15 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal ipb_sys_mosi_arr     : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     
     -- other
+    signal synth_b_clks         : std_logic_vector(4 downto 0);
     signal clk100               : std_logic;
+    signal clk100_led           : std_logic;
 
     -- debug
     signal tst_bx_cnt           : unsigned(11 downto 0) := (others => '0');
     signal tst_bx_cnt_max       : std_logic_vector(11 downto 0) := x"00f";
     signal tst_trig_cnt         : unsigned(31 downto 0) := (others => '0');
+    signal leds_tmp             : std_logic_vector(4 downto 0) := (others => '0');
 
     -------------------- MGTs mapped to GEM links ---------------------------------
     
@@ -175,7 +173,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal gem_gt_gbt_ctrl_arr      : t_mgt_ctrl_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
 
-    -- Spy readout link
+    -------------------- Spy / LDAQ readout link ---------------------------------
     signal spy_usrclk               : std_logic;
     signal spy_rx_data              : t_mgt_16b_rx_data;
     signal spy_tx_data              : t_mgt_16b_tx_data;
@@ -204,6 +202,9 @@ begin
     --================================--
     
     i_clk_bufs : entity work.clk_bufs
+        generic map (
+            g_SYSCLK100_SYNTH_B_OUT_SEL => 2
+        )
         port map(
             qsfp_refclk0_p_i         => qsfp_refclk0_p_i,
             qsfp_refclk0_n_i         => qsfp_refclk0_n_i,
@@ -211,8 +212,6 @@ begin
             qsfp_refclk1_n_i         => qsfp_refclk1_n_i,
             pcie_refclk0_p_i         => pcie_refclk0_p_i,
             pcie_refclk0_n_i         => pcie_refclk0_n_i,
-            sysclk_100_p_i           => progclk_b5_p_i,
-            sysclk_100_n_i           => progclk_b5_n_i,
             
             qsfp_refclk0_o           => open,
             qsfp_refclk1_o           => open,
@@ -223,6 +222,10 @@ begin
             
             pcie_refclk0_o           => pcie_refclk0,
             pcie_refclk0_div2_o      => pcie_refclk0_div2,
+
+            synth_b_out_p_i          => synth_b_out_p_i,
+            synth_b_out_n_i          => synth_b_out_n_i,
+            synth_b_clks_o           => synth_b_clks,
 
             sysclk_100_o             => clk100
         );
@@ -256,7 +259,7 @@ begin
             pcie_link_up_o      => pcie_link_up,
             
             status_leds_o       => leds_o,
-            led_i               => ttc_clks.clk_160,
+            led_i               => clk100_led,
 
             ipb_reset_o         => ipb_reset,
             ipb_clk_i           => ipb_clk,
@@ -449,7 +452,7 @@ begin
 
     -- spy link mapping
     g_spy_link : if CFG_USE_SPY_LINK generate
-        spy_usrclk                  <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
+        spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
         spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdata(15 downto 0);
         spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyteisaligned;
         spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyterealign;
@@ -522,5 +525,38 @@ begin
             probe0 => usbc_trig_i,
             probe1 => std_logic_vector(tst_bx_cnt)
         );
+
+    ---------------------------------------------------------------------------------
+    -- TEST clk output to LEDs (need to disconnect the LEDs from the PCIe module
+--    leds_o <= leds_tmp(4 downto 1);
+    
+    g_test : for i in 0 to 4 generate
+        process(synth_b_clks(i))
+            variable cntdown : integer := 100_000_000;
+        begin
+            if rising_edge(synth_b_clks(i)) then
+                if cntdown = 0 then
+                    cntdown := 100_000_000;
+                    leds_tmp(i) <= not leds_tmp(i);
+                else
+                    cntdown := cntdown - 1;
+                end if;
+            end if;
+        end process;    
+    end generate;
+
+    process(clk100)
+        variable cntdown : integer := 100_000_000;
+    begin
+        if rising_edge(clk100) then
+            if cntdown = 0 then
+                cntdown := 100_000_000;
+                clk100_led <= not clk100_led;
+            else
+                cntdown := cntdown - 1;
+            end if;
+        end if;
+    end process;    
+    ---------------------------------------------------------------------------------
         
 end gem_cvp13_arch;

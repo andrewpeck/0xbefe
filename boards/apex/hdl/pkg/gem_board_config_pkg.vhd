@@ -171,6 +171,7 @@ package board_config_package is
     --================================--    
 
     constant CFG_MGT_NUM_CHANNELS : integer := 12;--CFG_BOARD_MAX_LINKS;
+    constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
     -- this record is used in fiber to MGT map (holding tx and rx MGT index)
     type t_fiber_to_mgt_link is record
@@ -205,10 +206,10 @@ package board_config_package is
         (11, 11, true,  true ), -- fiber 7  ! RX inverted ! TX inverted
 
         --=== dummy ===--
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
+        (MGT_NULL, MGT_NULL, false, false),
         
 --        --=== Quad 129 ===--
 --        (0,  0,  false, true ), -- fiber 0  ! RX inverted
@@ -231,7 +232,7 @@ package board_config_package is
 --        (15, 14, true,  false), -- fiber 14               ! TX inverted
 --        (14, 15, false, false), -- fiber 15
         --=== DUMMY channel - use for unconnected channels ===--
-        (CFG_MGT_NUM_CHANNELS, CFG_MGT_NUM_CHANNELS, false, false)  -- dummy fiber
+        (MGT_NULL, MGT_NULL, false, false)  -- dummy fiber
     );
     
     --================================--
@@ -294,7 +295,7 @@ package board_config_package is
     
     
     constant CFG_MGT_LINK_CONFIG_GE11 : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_GBE_156,     qpll_idx => 0, is_master => true,  ibert_inst => true),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),     
@@ -316,7 +317,7 @@ package board_config_package is
     );
 
     constant CFG_MGT_LINK_CONFIG_GE21 : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_GBE_156,     qpll_idx => 0, is_master => true,  ibert_inst => true),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,  qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => false),     
@@ -338,7 +339,7 @@ package board_config_package is
     );
 
     constant CFG_MGT_LINK_CONFIG_ME0 : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_DMB_GBE_156,  qpll_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156,      qpll_idx => 0, is_master => true,  ibert_inst => true),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,         qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,         qpll_idx => 0, is_master => false, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,         qpll_idx => 0, is_master => false, ibert_inst => false),     
