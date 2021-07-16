@@ -2,11 +2,11 @@ from common.rw_reg import *
 from common.utils import *
 from common.fw_utils import *
 from common.promless import *
+from gem.gbt import *
+from gem.init_frontend import *
 import time
 
 def init_gem_backend():
-
-    parse_xml()
 
     fw_info = befe_print_fw_info()
 
@@ -26,12 +26,16 @@ def init_gem_backend():
     befe_print_link_status(links, MgtTxRx.RX)
 
     time.sleep(0.1)
+
+    print("Use TCDS: %r" % CONFIG_USE_TCDS)
+    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 0 if CONFIG_USE_TCDS else 1)
+
     print("Resetting user logic")
     write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET", 1)
     time.sleep(0.3)
     write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
 
-    gem_station = readReg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     print("GEM station: %s" % gem_station.to_string(False))
 
     if gem_station == 1 or gem_station == 2:
@@ -39,9 +43,12 @@ def init_gem_backend():
         oh_bitfile = CONFIG_GE21_OH_BITFILE if gem_station == 2 else CONFIG_GE11_OH_BITFILE if gem_station == 1 else None
         promless_load(oh_bitfile)
 
-        
+    print("Initializing frontend..")
+    init_gem_frontend()
 
-    print("DONE")
+    print("")
+    print("=========== DONE ===========")
 
 if __name__ == '__main__':
-    main()
+    parse_xml()
+    init_gem_backend()

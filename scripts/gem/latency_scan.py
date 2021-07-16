@@ -52,28 +52,28 @@ if __name__ == '__main__':
     print_cyan("Scanning VFAT%i. Min latency = %i, max latency = %i, latency step = %i, min L1As per latency = %i" % (vfat, min_latency, max_latency, latency_step, l1a_cnt_min))
     print_red("NOTE: you have to configurue the selected VFAT ***before*** this scan. This scan only changes the latency setting on the VFAT.")
 
-    addrL1aCnt = get_node("GEM_AMC.TTC.CMD_COUNTERS.L1A").address
+    addrL1aCnt = get_node("BEFE.GEM_AMC.TTC.CMD_COUNTERS.L1A").address
 
     print_cyan("Configuring the CTP7...")
 
-    write_reg(get_node("GEM_AMC.TTC.CTRL.L1A_ENABLE"), 0)
-    write_reg(get_node("GEM_AMC.TTC.CTRL.CNT_RESET"), 1)
+    write_reg(get_node("BEFE.GEM_AMC.TTC.CTRL.L1A_ENABLE"), 0)
+    write_reg(get_node("BEFE.GEM_AMC.TTC.CTRL.CNT_RESET"), 1)
 
-    write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE"), 0)
-    write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.RESET"), 1)
-    write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.OH_SELECT"), 0)
-    write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 1)
+    write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE"), 0)
+    write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.RESET"), 1)
+    write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.OH_SELECT"), 0)
+    write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 1)
 
     l1aCounts = {}
     hitCounts = {}
 
     for lat in range(min_latency, max_latency + 1, latency_step):
         printYellow("Setting latency = %i" % lat)
-        write_reg(get_node("GEM_AMC.OH.OH0.GEB.VFAT%i.CFG_LATENCY" % vfat), lat)
-        write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.RESET"), 1)
-        write_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE"), 1)
-        write_reg(get_node("GEM_AMC.TTC.CTRL.CNT_RESET"), 1)
-        write_reg(get_node("GEM_AMC.TTC.CTRL.L1A_ENABLE"), 1)
+        write_reg(get_node("BEFE.GEM_AMC.OH.OH0.GEB.VFAT%i.CFG_LATENCY" % vfat), lat)
+        write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.RESET"), 1)
+        write_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE"), 1)
+        write_reg(get_node("BEFE.GEM_AMC.TTC.CTRL.CNT_RESET"), 1)
+        write_reg(get_node("BEFE.GEM_AMC.TTC.CTRL.L1A_ENABLE"), 1)
 
         l1aCnt = 0
 
@@ -81,11 +81,11 @@ if __name__ == '__main__':
             l1aCnt = rReg(addrL1aCnt)
             time.sleep(0.00005)
 
-        write_reg(get_node("GEM_AMC.TTC.CTRL.L1A_ENABLE"), 0)
+        write_reg(get_node("BEFE.GEM_AMC.TTC.CTRL.L1A_ENABLE"), 0)
         l1aCnt = rReg(addrL1aCnt)
 
-        hitCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%i.CHANNEL_FIRE_COUNT" % vfat))
-        evtCnt = read_reg(get_node("GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%i.GOOD_EVENTS_COUNT" % vfat))
+        hitCnt = read_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%i.CHANNEL_FIRE_COUNT" % vfat))
+        evtCnt = read_reg(get_node("BEFE.GEM_AMC.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%i.GOOD_EVENTS_COUNT" % vfat))
 
         if (evtCnt != l1aCnt):
             print_red("Good event count is not equal to L1A count!!! Good evt cnt = %i, l1a cnt = %i" % (evtCnt, l1aCnt))

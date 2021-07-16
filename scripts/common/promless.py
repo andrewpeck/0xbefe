@@ -18,7 +18,7 @@ def promless_load(bitfile_name):
         print("Could not find %s" % fname)
         return
 
-    write_reg(get_node("GEM_AMC.PROMLESS.RESET_ADDR"), 1)
+    write_reg(get_node("BEFE.PROMLESS.RESET_ADDR"), 1)
 
     print("Opening file %s" % fname)
     f = open(fname, "rb")
@@ -42,17 +42,23 @@ def promless_load(bitfile_name):
     print("Got %d bytes (%d words):" % (len(bytes), numWords))
 
     print("Writing...")
-    wDataAddr = get_node("GEM_AMC.PROMLESS.WRITE_DATA").address
+    wDataAddr = get_node("BEFE.PROMLESS.WRITE_DATA").address
     for i in xrange(numWords):
         bidx = i * 4
         word = bytesToWord(bytes, bidx)
         wReg(wDataAddr, word)
 
-    write_reg(get_node("GEM_AMC.PROMLESS.FIRMWARE_SIZE"), len(bytes))
-    write_reg(get_node("GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    write_reg(get_node("BEFE.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
+    if fw_flavor.to_string(False) == "GEM_AMC":
+        write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    elif fw_flavor.to_string(False) == "CSC_FED":
+        write_reg(get_node("BEFE.CSC_FED.CSC_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
+    else:
+        printRed("Unknown firmware flavor (%s), firmware size is not set in the promless loader (normally BEFE.GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE or BEFE.CSC_FED.CSC_SYSTEM.PROMLESS.FIRMWARE_SIZE)" % fw_flavor.to_string(False))
 
     print("Verifying...")
-    rDataAddr = get_node("GEM_AMC.PROMLESS.READ_DATA").address
+    rDataAddr = get_node("BEFE.PROMLESS.READ_DATA").address
     for i in xrange(numWords):
         wordReadback = rReg(rDataAddr)
         bidx = i * 4

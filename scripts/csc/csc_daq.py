@@ -70,29 +70,29 @@ def main():
 
     if useCscTtcEncoding:
         heading("Configuring TTC with CSC encoding")
-        write_reg(get_node('CSC_FED.TTC.CONFIG.CMD_BC0'), 0x4)
-        write_reg(get_node('CSC_FED.TTC.CONFIG.CMD_EC0'), 0x2)
-        write_reg(get_node('CSC_FED.TTC.CONFIG.CMD_RESYNC'), 0xc)
-        write_reg(get_node('CSC_FED.TTC.CONFIG.CMD_OC0'), 0x8)
-        write_reg(get_node('CSC_FED.TTC.CONFIG.CMD_HARD_RESET'), 0x10)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_BC0'), 0x4)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_EC0'), 0x2)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_RESYNC'), 0xc)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_OC0'), 0x8)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_HARD_RESET'), 0x10)
 
     heading("Resetting and starting DAQ")
-    write_reg(get_node('CSC_FED.TTC.CTRL.MODULE_RESET'), 0x1)
-    write_reg(get_node('CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x0)
-    write_reg(get_node('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x0)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), useLocalL1a)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), inputMask)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignoreAmc13)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freezeOnError)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), waitForResync)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.SPY.SPY_PRESCALE'), 0x1)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.RESET'), 0x1)
-    write_reg(get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE'), 0x0)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x1)
-    write_reg(get_node('CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x1)
-    write_reg(get_node('CSC_FED.DAQ.CONTROL.RESET'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.MODULE_RESET'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.TEST.GBE_TEST.ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), useLocalL1a)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), inputMask)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignoreAmc13)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freezeOnError)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), waitForResync)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_PRESCALE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x0)
 
     signal.signal(signal.SIGINT, exitHandler) #register SIGINT to gracefully exit
     RAW_FILE = None
@@ -105,11 +105,11 @@ def main():
 
     numEvents = 0
     numEventsSentToSpy = 0
-    daqEmptyNode = get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY')
-    daqDataNode = get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.DATA')
-    daqLastEventDisableNode = get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE')
-    spyEventsSentNode = get_node('CSC_FED.DAQ.STATUS.SPY.SPY_EVENTS_SENT')
-    ttsStateNode = get_node('CSC_FED.DAQ.STATUS.TTS_STATE')
+    daqEmptyNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY')
+    daqDataNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DATA')
+    daqLastEventDisableNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE')
+    spyEventsSentNode = get_node('BEFE.CSC_FED.DAQ.STATUS.SPY.SPY_EVENTS_SENT')
+    ttsStateNode = get_node('BEFE.CSC_FED.DAQ.STATUS.TTS_STATE')
     empty = 0
     data = 0
     ttsState = 0
@@ -158,13 +158,13 @@ def exitHandler(signal, frame):
 def initDaqRegAddrs():
     global ADDR_DAQ_EMPTY
     global ADDR_DAQ_DATA
-    ADDR_DAQ_EMPTY = get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY').address
-    ADDR_DAQ_EMPTY = get_node('CSC_FED.DAQ.LAST_EVENT_FIFO.DATA').address
+    ADDR_DAQ_EMPTY = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY').address
+    ADDR_DAQ_EMPTY = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DATA').address
 
 
 def dumpDaqRegs():
-    dump_regs("CSC_FED.LINKS", True, "Link Registers")
-    dump_regs("CSC_FED.DAQ", True, "DAQ Registers")
+    dump_regs("BEFE.CSC_FED.LINKS", True, "Link Registers")
+    dump_regs("BEFE.CSC_FED.DAQ", True, "DAQ Registers")
 
 #---------------------------- utils ------------------------------------------------
 

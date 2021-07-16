@@ -172,7 +172,7 @@ class RegVal(int):
 def main():
     parse_xml()
     print('Example:')
-    random_node = nodes["GEM_AMC.GEM_SYSTEM.BOARD_ID"]
+    random_node = nodes["BEFE.SYSTEM.CTRL.BOARD_ID"]
     #print str(random_node.__class__.__name__)
     print('Node: ' + random_node.name)
     print('Parent: ' + random_node.parent.name)

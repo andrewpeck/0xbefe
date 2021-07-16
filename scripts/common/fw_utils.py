@@ -3,6 +3,12 @@ from common.utils import *
 import common.tables.tableformatter as tf
 from enum import Enum
 
+try:
+    imp.find_module('colorama')
+    from colorama import Back
+except:
+    pass
+
 class MgtTxRx(Enum):
     TX = 0
     RX = 1
@@ -58,9 +64,15 @@ class Mgt:
         phalign_done = read_reg("BEFE.MGTS.MGT%d.STATUS.%s_PHALIGN_DONE" % (self.idx, self.txrx.name)).to_string(False)
         pll_type = str(self.pll)
         pll_locked = self.pll.get_locked().to_string(False)
-        refclk_freq = read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK%d_FREQ" % (self.idx, self.pll.refclk01)).to_string(False)
+        refclk_freq = read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK%d_FREQ" % (self.idx, self.pll.refclk01))
+        refclk_freq_config = read_reg("BEFE.MGTS.MGT%d.CONFIG.%s_REFCLK_FREQ" % (self.idx, self.txrx.name))
+        refclk_freq_str = refclk_freq.to_string(hex=False, use_color=False)
+        if (refclk_freq < refclk_freq_config - refclk_freq_config * 0.0001) or (refclk_freq > refclk_freq_config + refclk_freq_config * 0.0001):
+            refclk_freq_str = color_string(refclk_freq_str, Colors.RED)
+        else:
+            refclk_freq_str = color_string(refclk_freq_str, Colors.GREEN)
 
-        return ["%d" % self.idx, self.type.to_string(False), reset_done, phalign_done, pll_type + " #%d" % self.pll.idx, pll_locked, refclk_freq]
+        return ["%d" % self.idx, self.type.to_string(False), reset_done, phalign_done, pll_type + " #%d" % self.pll.idx, pll_locked, refclk_freq_str]
 
     def config(self, invert, tx_diff_ctrl=0x18, tx_pre_cursor=0, tx_post_cursor=0):
         polarity = 1 if invert else 0
@@ -253,7 +265,7 @@ def befe_config_links():
     gbt_rx_invert = False
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     if flavor == 0: # GEM
-        gem_station = read_reg("GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+        gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
         if gem_station == 1:
             gbt_tx_invert = True
         elif gem_station == 2:
@@ -294,10 +306,10 @@ def befe_print_fw_info():
     time_str = "%02x:" % ((fw_time & 0x00ff0000) >> 16) + "%02x:" % ((fw_time & 0x0000ff00) >> 8) + "%02x:" % (fw_time & 0xff)
     flavor_str = "UNKNOWN FLAVOR"
     if fw_flavor == 0:
-        gem_station = read_reg("GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+        gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
         flavor_str = "GE1/1" if gem_station == 1 else "GE2/1" if gem_station == 2 else "ME0" if gem_station == 0 else "UNKNOWN GEM STATION"
-        oh_version = read_reg("GEM_AMC.GEM_SYSTEM.RELEASE.OH_VERSION")
-        num_ohs = read_reg("GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+        oh_version = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_VERSION")
+        num_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         flavor_str += " (%d OHv%d)" % (num_ohs, oh_version)
     elif fw_flavor == 1:
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")

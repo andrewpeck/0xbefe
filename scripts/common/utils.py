@@ -20,6 +20,9 @@ def check_bit(byteval, idx):
 def print_color(msg, color):
     print(color + msg + Colors.ENDC)
 
+def color_string(msg, color):
+    return color + msg + Colors.ENDC
+
 def heading(msg):
     print_color('\n>>>>>>> ' + str(msg).upper() + ' <<<<<<<', Colors.BLUE)
 

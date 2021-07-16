@@ -962,31 +962,31 @@
           description="If this is set to 1 it means that the backend is receiving valid GBT frames from this GBT link"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_ready"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 0" sw_enum="['NOT_READY', 'READY']"/>
 
     <node id="GBT${GBT}_WAS_NOT_READY" address="0x0" mask="0x00000002" permission="r"
           description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_had_not_ready"
-          sw_monitor_warn_value="0"/>
+          sw_val_warn="self == 1"/>
 
     <node id="GBT${GBT}_RX_HAD_OVERFLOW" address="0x0" mask="0x00000004" permission="r"
           description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_ovf"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000008" permission="r"
           description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_unf"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
           description="Number of FEC errors corrected by the GBT decoder"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_correction_cnt"
-          sw_monitor_warn_value="0"/>
+          sw_val_warn="self > 0"/>
 
     <node id="GBT${GBT}_TX_PHASE" address="0x0" mask="0x0007f000" permission="rw"
           description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
@@ -997,7 +997,7 @@
           description="This flag is latched high if the GBT RX header lock has been lost, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_header_had_unlock"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_RX_NUM_BITSLIPS" address="0x0" mask="0x0ff00000" permission="r"
           description="Number of bitslips done on the RX data before achieving header lock"
@@ -1008,7 +1008,8 @@
           description="This is set to 1 when the GBT TX core is ready (gearbox is aligned)"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_tx_ready"
-          sw_monitor_error_value="0"/>
+          sw_monitor_error_value="0"
+          sw_val_bad="self == 0"/>
 
     <node id="VFAT_MASK" address="0x8" mask="0x00ffffff" permission="rw"
           description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
@@ -1021,18 +1022,18 @@
       <node id="LINK_GOOD" address="0x0" mask="0x00000001" permission="r"
             description="This flag is set high after detecting 10 consecutive good sync verify replies and set bad after 100 bad ones in a row (sync verify is done once per orbit). This flag can only go high if the initial sync procedure and RX bitslipping was done successfully"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_good"
-            sw_monitor_error_value="0"/>
+            sw_val_bad="self == 0"/>
       <node id="SYNC_ERR_CNT" address="0x0" mask="0x000000f0" permission="r"
             description="This counter counts the total number of times that VFAT3 didn't reply to sync_verify command correctly. This counter doesn't roll over, and is reset on link reset."
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_error_cnt"
-            sw_monitor_error_value="0"/>
+            sw_val_warn="self > 0"/>
       <node id="DAQ_EVENT_CNT" address="0x0" mask="0x00ffff00" permission="r"
             description="This counter counts the number of DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_event_cnt"/>
       <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0xff000000" permission="r"
             description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (this counter stops at max value)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
-            sw_monitor_warn_value="100"/>
+            sw_val_warn="self > 0"/>
 
     </node>
 
