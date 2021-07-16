@@ -669,12 +669,35 @@ begin
         end generate;
 
         --================================--
-        -- GbE TX DMB RX QPLL with 156.25MHz refclk
+        -- DMB QPLL0 and GbE QPLL1 with 156.25MHz refclk
         --================================--
 
         g_qpll_dmb_gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_DMB_GBE_156 generate
             
             i_qpll_dmb_gbe_156 : entity work.gty_qpll0_dmb_qpll1_gbe_156p25
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
+        -- GbE QPLL1 with 156.25MHz refclk
+        --================================--
+
+        g_qpll_gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_GBE_156 generate
+            
+            i_qpll_gbe_156 : entity work.gty_qpll_gbe_156p25
                 generic map(
                     g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
                     g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
