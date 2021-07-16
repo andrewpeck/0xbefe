@@ -9,8 +9,8 @@
 ]>
 <node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
   &ADDRESS_TABLE_MGTS;
-  &ADDRESS_TABLE_TTC;
   <node id="CSC_FED">
+    &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_CSC_FED;
   </node>
 </node>

@@ -15,8 +15,8 @@
 <node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
   &ADDRESS_TABLE_SYSTEM;
   &ADDRESS_TABLE_MGTS;
-  &ADDRESS_TABLE_TTC;
   <node id="GEM_AMC">
+    &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
   </node>
 </node>
