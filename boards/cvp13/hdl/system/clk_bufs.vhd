@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
+--
 -- Create Date:    2020-06-04
 -- Module Name:    CLK_BUFS
--- Description:    Clock buffers 
+-- Description:    Clock buffers
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -20,7 +20,7 @@ use work.mgt_pkg.all;
 
 entity clk_bufs is
     generic(
-        g_SYSCLK100_SYNTH_B_OUT_SEL : integer range 1 to 5 := 5 -- selects which synth_b output should be used as system 100MHz clock 
+        g_SYSCLK100_SYNTH_B_OUT_SEL : integer range 1 to 5 -- selects which synth_b output should be used as system 100MHz clock
     );
     port (
         qsfp_refclk0_p_i            : in  std_logic_vector(3 downto 0);
@@ -30,21 +30,21 @@ entity clk_bufs is
 
         pcie_refclk0_p_i            : in  std_logic;
         pcie_refclk0_n_i            : in  std_logic;
-        
+
         qsfp_refclk0_o              : out std_logic_vector(3 downto 0);
         qsfp_refclk1_o              : out std_logic_vector(3 downto 0);
         qsfp_refclk0_div2_o         : out std_logic_vector(3 downto 0);
         qsfp_refclk1_div2_o         : out std_logic_vector(3 downto 0);
-        
+
         qsfp_mgt_refclks_o          : out t_mgt_refclks_arr(15 downto 0);
-        
+
         pcie_refclk0_o              : out std_logic;
         pcie_refclk0_div2_o         : out std_logic;
 
         synth_b_out_p_i             : in  std_logic_vector(4 downto 0);
         synth_b_out_n_i             : in  std_logic_vector(4 downto 0);
         synth_b_clks_o              : out std_logic_vector(4 downto 0);
-        
+
         sysclk_100_o                : out std_logic
     );
 end clk_bufs;
@@ -115,7 +115,7 @@ begin
                 CLRMASK => '0',
                 DIV     => "000",
                 I       => qsfp_refclk0_div2_tmp(i)
-            );    
+            );
 
         i_qsfp_refclk1_div2_bufg : BUFG_GT
             port map(
@@ -126,7 +126,7 @@ begin
                 CLRMASK => '0',
                 DIV     => "000",
                 I       => qsfp_refclk1_div2_tmp(i)
-            );    
+            );
 
         g_channel : for chan in 0 to 3 generate
             qsfp_mgt_refclks_o(i * 4 + chan).gtrefclk0 <= qsfp_refclk0(i);
@@ -196,24 +196,24 @@ begin
     --================================--
     -- Sysclk
     --================================--
-    
+
     g_synth_b_clks : for i in 0 to 4 generate
-        
+
         i_synth_b_clk_buf : IBUFDS
             port map(
                 O  => synth_b_clks_tmp(i),
                 I  => synth_b_out_p_i(i),
                 IB => synth_b_out_n_i(i)
             );
-       
+
         i_synth_b_clk_bufg : BUFG
             port map(
                 O => synth_b_clks(i),
                 I => synth_b_clks_tmp(i)
-            );        
-        
+            );
+
     end generate;
-    
+
     synth_b_clks_o <= synth_b_clks;
     sysclk100 <= synth_b_clks(g_SYSCLK100_SYNTH_B_OUT_SEL - 1);
     sysclk_100_o <= sysclk100;
