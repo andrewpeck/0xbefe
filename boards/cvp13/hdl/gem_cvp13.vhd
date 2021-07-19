@@ -203,7 +203,7 @@ begin
     
     i_clk_bufs : entity work.clk_bufs
         generic map (
-            g_SYSCLK100_SYNTH_B_OUT_SEL => 2
+            g_SYSCLK100_SYNTH_B_OUT_SEL => 5
         )
         port map(
             qsfp_refclk0_p_i         => qsfp_refclk0_p_i,
