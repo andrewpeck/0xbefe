@@ -149,8 +149,8 @@ package board_config_package is
     
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL);
     
-    constant CFG_USE_SPY_LINK : boolean := false;
-    constant CFG_SPY_LINK : integer := 3;
+    constant CFG_USE_SPY_LINK : boolean := true;
+    constant CFG_SPY_LINK : integer := 12;
     
     --================================--
     -- Fiber to MGT mapping
