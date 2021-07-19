@@ -18,7 +18,6 @@ set_property IOSTANDARD LVCMOS18 [get_ports reset_b_i]
 set_property PACKAGE_PIN AV22 [get_ports synth_b_out_p_i[4]]
 set_property PACKAGE_PIN AV21 [get_ports synth_b_out_n_i[4]]
 set_property IOSTANDARD DIFF_SSTL18_I [get_ports {synth_b_out_p_i[4]}]
-create_clock -period 10.000 -name sysclk100 [get_ports {synth_b_out_p_i[4]}]
 
 # SI5341B out1, can be used as a free running system clock
 set_property PACKAGE_PIN G30  [get_ports synth_b_out_p_i[0]]
@@ -47,6 +46,9 @@ set_property PACKAGE_PIN BB32 [get_ports synth_b_out_n_i[3]]
 set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_p_i[3]]
 set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[3]]
 set_property ODT RTT_48 [get_ports synth_b_out_p_i[3]]
+
+#sysclk
+create_clock -period 10.000 -name sysclk100 [get_ports {synth_b_out_p_i[2]}]
 
 ##############################################
 ##################  LEDs  ####################
