@@ -9,7 +9,7 @@
       fw_bus_reset_signal="ipb_reset_i"
       fw_master_bus_signal="ipb_mosi_i"
       fw_slave_bus_signal="ipb_miso_o"
-      fw_reg_addr_msb="12"
+      fw_reg_addr_msb="16"
       fw_reg_addr_lsb="0">
 
   <node id="CTRL" address="0x0"
