@@ -13,7 +13,7 @@ package ipb_addr_decode is
         daq              : integer;
         ttc              : integer;
         trigger          : integer;
-        sbit_me0      : integer;
+        sbit_me0         : integer;
         system           : integer;
         test             : integer;
         slow_control     : integer;
@@ -21,7 +21,7 @@ package ipb_addr_decode is
         none             : integer;
     end record;
 
-    constant C_NUM_IPB_SLAVES : integer := 25;
+    constant C_NUM_IPB_SLAVES : integer := 26;
 
     -- IPbus slave index definition
     constant C_IPB_SLV : t_ipb_slv := (
@@ -35,8 +35,9 @@ package ipb_addr_decode is
         test => 22,
         slow_control => 23,
         config_blaster => 24,
-        none => 25,
-        sbit_me0 => 26
+        sbit_me0 => 25,
+        none => 26
+        
     );
 
     function ipb_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer;
