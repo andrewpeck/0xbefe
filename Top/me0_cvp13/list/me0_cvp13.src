@@ -11,7 +11,7 @@ common/hdl/common_xilinx_ultrascale.src
 gem/hdl/gem.src
 
 # Trigger Source
-gem/hdl/trigger_me0.src
+gem/hdl/sbit_me0.src
 
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
@@ -26,6 +26,7 @@ gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
+
 
 
 #dummy promless just to keep compiler happy
