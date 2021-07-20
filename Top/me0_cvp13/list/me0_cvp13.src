@@ -11,7 +11,7 @@ common/hdl/common_xilinx_ultrascale.src
 gem/hdl/gem.src
 
 # Trigger Source
-gem/hdl/trigger_me0.src
+gem/hdl/sbit_me0.src
 
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
