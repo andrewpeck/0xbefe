@@ -13,6 +13,10 @@ gem/hdl/gem.src
 # Trigger Source
 gem/hdl/sbit_me0.src
 
+# Pkg for Clusterizer
+gem/hdl/oh_fe/pkg/ipbus_pkg.vhd 93
+gem/hdl/oh_fe/pkg/types_pkg.vhd 93
+
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
 
@@ -26,6 +30,7 @@ gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
+
 
 
 #dummy promless just to keep compiler happy
