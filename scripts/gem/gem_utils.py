@@ -9,10 +9,10 @@ except:
     pass
 
 def print_oh_status():
-    max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.NUM_OF_OH")
-    gbts_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.NUM_OF_GBTS_PER_OH")
-    vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.NUM_VFATS_PER_OH")
-    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.GEM_STATION")
+    max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    gbts_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+    vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
 
     cols = ["OH"]
     if gem_station != 0:
@@ -22,7 +22,7 @@ def print_oh_status():
         cols.append("GBT%d" % gbt)
 
     for vfat in range(vfats_per_oh):
-        cols.append("VFAT%d" % gbt)
+        cols.append("VFAT%d" % vfat)
 
     rows = []
     for oh in range(max_ohs):
@@ -30,7 +30,7 @@ def print_oh_status():
 
         # OH FPGA FW check
         #read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
-        oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_VER")
+        oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
         row.append(color_string("NO COMMUNICATION", Colors.RED) if oh_fw_version == 0xdeaddead else str(oh_fw_version))
 
         for gbt in range(gbts_per_oh):
@@ -70,7 +70,7 @@ def print_oh_status():
                 elif daq_crc_err_cnt > 0:
                     status = color_string("DAQ CRC ERRORS", Colors.RED)
 
-                cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat))
+                cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat), False)
                 if cfg_run == 0xdeaddead:
                     if "GOOD" in status:
                         status = color_string("NO COMM", Colors.RED)

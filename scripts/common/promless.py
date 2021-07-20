@@ -41,7 +41,7 @@ def promless_load(bitfile_name):
 
     print("Writing...")
     wDataAddr = get_node("BEFE.PROMLESS.WRITE_DATA").address
-    for i in xrange(numWords):
+    for i in range(numWords):
         bidx = i * 4
         word = bytesToWord(bytes, bidx)
         wReg(wDataAddr, word)
@@ -57,7 +57,7 @@ def promless_load(bitfile_name):
 
     print("Verifying...")
     rDataAddr = get_node("BEFE.PROMLESS.READ_DATA").address
-    for i in xrange(numWords):
+    for i in range(numWords):
         wordReadback = rReg(rDataAddr)
         bidx = i * 4
         wordExpect = bytesToWord(bytes, bidx)

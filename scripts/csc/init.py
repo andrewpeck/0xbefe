@@ -20,12 +20,13 @@ def init_csc_backend():
     print("Configuring and resetting all links")
     links = befe_config_links()
 
+    time.sleep(0.1)
+
     heading("TX link status")
     befe_print_link_status(links, MgtTxRx.TX)
     heading("RX link status")
     befe_print_link_status(links, MgtTxRx.RX)
 
-    time.sleep(0.1)
     print("Resetting user logic")
     write_reg("BEFE.CSC_FED.CSC_SYSTEM.CTRL.GLOBAL_RESET", 1)
     time.sleep(0.3)

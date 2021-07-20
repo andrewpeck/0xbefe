@@ -63,7 +63,7 @@ PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS = 10000
 PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS = 1000000
 PHASE_SCAN_L1A_GAP = 40 # 1MHz
 
-def gbt(oh_idx, gbt_idx, command, command_args):
+def gbt_command(oh_idx, gbt_idx, command, command_args):
 
     ohSelect = oh_idx
     gbtSelect = gbt_idx
@@ -110,7 +110,7 @@ def gbt(oh_idx, gbt_idx, command, command_args):
         subheading('Configuring OH%d GBT%d' % (ohSelect, gbtSelect))
         filename = command_args[0]
         if filename[-3:] != "txt":
-            print_red("Seems like the file is not a txt file, please provide a txt file generated with the GBT programmer software")
+            print_red("Seems like the file %s is not a txt file, please provide a txt file generated with the GBT programmer software" % filename)
             return
         if not os.path.isfile(filename):
             print_red("Can't find the file %s" % filename)
@@ -482,4 +482,4 @@ if __name__ == '__main__':
 
     parse_xml()
 
-    gbt(oh_idx, gbt_idx, command, command_args)
+    gbt_command(oh_idx, gbt_idx, command, command_args)

@@ -48,7 +48,7 @@ set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[3]]
 set_property ODT RTT_48 [get_ports synth_b_out_p_i[3]]
 
 #sysclk
-create_clock -period 10.000 -name sysclk100 [get_ports {synth_b_out_p_i[2]}]
+create_clock -period 10.000 -name sysclk100 [get_ports {synth_b_out_p_i[1]}]
 
 ##############################################
 ##################  LEDs  ####################
@@ -193,6 +193,3 @@ create_clock -period 10.000 -name pcie_refclk_100 [get_ports {pcie_refclk0_p_i}]
 #set_property PACKAGE_PIN BF5  [get_ports pcie_7x_mgt_txp[15]] # PCIE_TX_P_15
 #set_property PACKAGE_PIN BF4  [get_ports pcie_7x_mgt_txn[15]] # PCIE_TX_N_15
 
-# temporary
-set_property -dict {IOSTANDARD DIFF_SSTL12 ODT RTT_48 PACKAGE_PIN AY18} [get_ports dimm0_refclk_p_i]
-set_property -dict {IOSTANDARD DIFF_SSTL12} [get_ports dimm0_refclk_n_i]
