@@ -51,20 +51,27 @@ if not path.exists(bitfile):
 ######## configure clocks ########
 heading("Configuring %s clock synthesizers" % top_bot)
 print("Configuring sync clocks with 160.32MHz...")
-sync_clk_proc = subprocess.Popen("%s/clock/clock_sync/clock_sync_160 %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, top_bot), shell=True, executable="/bin/bash")
+sync_clk_proc = subprocess.Popen("cd %s/clock/clock_sync && %s/clock/clock_sync/clock_sync_160 %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot), shell=True, executable="/bin/bash")
 while sync_clk_proc.poll() is None:
     time.sleep(0.1)
 
 print("Configuring async clocks with 156.25MHz...")
-sync_clk_proc = subprocess.Popen("%s/clock/clock_async/clock_async_156M %s/clock/clock_async/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, top_bot), shell=True, executable="/bin/bash")
-while sync_clk_proc.poll() is None:
+async_clk_proc = subprocess.Popen("cd %s/clock/clock_async && %s/clock/clock_async/clock_async_156M %s/clock/clock_async/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot), shell=True, executable="/bin/bash")
+while async_clk_proc.poll() is None:
     time.sleep(0.1)
 
 ######## program FPGA ########
 heading("Programming %s FPGA with %s firmware" % (top_bot, flavor))
-program_proc = subprocess.Popen("%s/fw_program_bot.sh %s" % (x2o_sw_dir, bitfile), shell=True, executable="/bin/bash")
+program_proc = subprocess.Popen("cd %s && %s/fw_program_%s.sh %s" % (x2o_sw_dir, x2o_sw_dir, top_bot, bitfile), shell=True, executable="/bin/bash")
 while program_proc.poll() is None:
     time.sleep(1)
+
+######## reset C2C ########
+heading("Resetting C2C")
+c2c_reset_proc = subprocess.Popen("cd %s && %s/c2c_reset_%s.sh" % (x2o_sw_dir, x2o_sw_dir, top_bot), shell=True, executable="/bin/bash")
+while c2c_reset_proc.poll() is None:
+    time.sleep(0.1)
+time.sleep(0.5)
 
 ######## check reg access ########
 heading("Checking register access and firmware version")
