@@ -219,7 +219,7 @@ begin
      for oh in 0 to g_NUM_OF_OHs - 1 generate
         each_vfat:
         for I in 0 to 5 generate
-        vfat_sbits_strip_mapped(((oh+1)*(I+1)) - 1) <= vfat_sbits_arr(oh)(I);
+        vfat_sbits_strip_mapped(I + (oh*6)) <= vfat_sbits_arr(oh)(I);
         end generate; 
      end generate; 
       cluster_packer_inst : entity work.cluster_packer
