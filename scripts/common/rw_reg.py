@@ -343,7 +343,7 @@ def read_reg_cache(reg):
 def display_reg(reg, option=None):
     val = read_reg(reg, False)
     str_val = val.to_string(hex=True, hex_padded32=True)
-    return hex32(reg.address).rstrip('L') + ' ' + reg.permission + '\t' + tab_pad(reg.name, 7) + str_val
+    return hex32(reg.address).rstrip('L') + ' ' + reg.permission + '\t' + tab_pad(reg.name, 10) + str_val
 
 def write_reg(reg, value):
     if isinstance(reg, str):

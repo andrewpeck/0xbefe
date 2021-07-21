@@ -31,12 +31,13 @@ def print_oh_status():
     for oh in range(max_ohs):
         row = [oh]
 
-        # OH FPGA FW check
+        ### OH FPGA FW ###
         if gem_station != 0:
             #read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
             oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
             row.append(color_string("NO COMMUNICATION", Colors.RED) if oh_fw_version == 0xdeaddead else str(oh_fw_version))
 
+        ### GBTs ###
         status_block = ""
         first = True
         for gbt in range(gbts_per_oh):
@@ -66,15 +67,17 @@ def print_oh_status():
 
         row.append(status_block)
 
+        ### SCA ###
         if gem_station in [1, 2]:
             sca_ready = (read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY") >> oh) & 1
             not_ready_cnt = read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.NOT_READY_CNT_OH%d" % oh)
             sca_status = color_string("READY", Colors.GREEN) if sca_ready == 1 else color_string("NOT_READY", Colors.RED)
-            if not_ready_cnt > 0:
+            if sca_ready == 1 and not_ready_cnt > 0:
                 sca_status += "\n" + color_string("(HAD UNLOCKS)", Colors.YELLOW)
 
             row.append(sca_status)
 
+        ### VFATs ###
         for vfat_block in range(0, vfats_per_oh, num_vfats_per_col):
             vfat_block_status = ""
             first = True

@@ -17,9 +17,11 @@ class MgtPll:
     is_qpll = None
     qpll01 = None
     idx = None
+    mgt = None
     refclk01 = None
 
     def __init__(self, mgt):
+        self.mgt = mgt
         self.is_qpll = read_reg("BEFE.MGTS.MGT%d.CONFIG.%s_USE_QPLL" % (mgt.idx, mgt.txrx.name))
         if self.is_qpll == 1:
             self.qpll01 = read_reg("BEFE.MGTS.MGT%d.CONFIG.%s_QPLL_01" % (mgt.idx, mgt.txrx.name))
@@ -30,8 +32,9 @@ class MgtPll:
             self.refclk01 = read_reg("BEFE.MGTS.MGT%d.CONFIG.CPLL_REFCLK_01" % self.idx)
 
     def get_locked(self):
+        # use the MGT index here, because the QPLL lock status is mapped to MGT channels in the firmware
         if self.is_qpll == 1:
-            return read_reg("BEFE.MGTS.MGT%d.STATUS.QPLL%d_LOCKED" % (self.idx, self.qpll01))
+            return read_reg("BEFE.MGTS.MGT%d.STATUS.QPLL%d_LOCKED" % (self.mgt.idx, self.qpll01))
         else:
             return read_reg("BEFE.MGTS.MGT%d.STATUS.CPLL_LOCKED" % self.idx)
 
@@ -209,13 +212,46 @@ def befe_get_all_links():
     tx_usage = ["NONE"] * num_links
     rx_usage = ["NONE"] * num_links
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
-    if flavor == 0: # GEM
-        pass
-    elif flavor == 1:
+
+    ############### GEM ###############
+    if flavor.to_string() == "GEM_AMC": # GEM
+        ### OH links ###
+        num_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+        num_gbts = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+        for oh in range(num_ohs):
+            # GBT links
+            for gbt in range(num_gbts):
+                tx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_TX" % (oh, gbt))
+                rx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_RX" % (oh, gbt))
+                gbt_label = color_string("OH%d GBT%d" % (oh, gbt), Colors.GREEN)
+                if tx_link < num_links:
+                    tx_usage[tx_link] = gbt_label
+                if rx_link < num_links:
+                    rx_usage[rx_link] = gbt_label
+
+        ### trigger TX links ###
+        use_trig_tx = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.USE_TRIG_TX_LINKS")
+        num_trig_tx = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_TRIG_TX_LINKS")
+        for trig_tx in range(num_trig_tx):
+            tx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.TRIG_TX_LINK_CONFIG.TX%d_LINK" % trig_tx)
+            if tx_link < num_links:
+                tx_usage[tx_link] = color_string("TRIG TX%d" % trig_tx, Colors.GREEN)
+
+        ### Local DAQ ###
+        use_ldaq_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.USE_LOCAL_DAQ_LINK")
+        if use_ldaq_link != 0:
+            ldaq_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.LOCAL_DAQ_LINK")
+            if ldaq_link < num_links:
+                tx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
+                rx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
+
+    ############### CSC ###############
+    elif flavor.to_string() == "CSC_FED":
+        ### DMB links ###
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         for i in range(num_dmbs):
             dmb_type = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.DMB_LINK_CONFIG.DMB%d.TYPE" % i)
-            dmb_label = "DMB%d (%s)" % (i, dmb_type)
+            dmb_label = color_string("DMB%d (%s)" % (i, dmb_type), Colors.GREEN)
             tx_link = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.DMB_LINK_CONFIG.DMB%d.TX_LINK" % i)
             if tx_link < num_links:
                 tx_usage[tx_link] = dmb_label
@@ -224,13 +260,14 @@ def befe_get_all_links():
                 rx_link = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.DMB_LINK_CONFIG.DMB%d.RX%d_LINK" % (i, j))
                 if rx_link < num_links:
                     rx_usage[rx_link] = dmb_label
-        # local DAQ link
+
+        ### Local DAQ link ###
         use_ldaq_link = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.USE_LOCAL_DAQ_LINK")
         if use_ldaq_link != 0:
             ldaq_link = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.LOCAL_DAQ_LINK")
             if ldaq_link < num_links:
-                tx_usage[ldaq_link] = "LDAQ"
-                rx_usage[ldaq_link] = "LDAQ"
+                tx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
+                rx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
     else:
         print_red("Unknown firmware flavor %s" % str(flavor))
 
