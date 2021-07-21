@@ -29,3 +29,4 @@ gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner.v
 gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner_tmr.vhd 93
 gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
 
+gem/hdl/oh_fe/utils/clock_strobe.vhd
