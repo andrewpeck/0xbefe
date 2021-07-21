@@ -22,8 +22,8 @@ use work.cluster_pkg.all;
 entity sbit_me0 is
     generic(
         g_NUM_OF_OHs         : integer;
-        g_NUM_VFATS_PER_OH   : integer;
-        g_IPB_CLK_PERIOD_NS  : integer
+        g_NUM_VFATS_PER_OH   : integer
+--        g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
         -- reset
@@ -209,10 +209,10 @@ begin
 ---------------------------------------------------------------------------------
     cluster_packer_me0 : if (true) generate
 
-    attribute DONT_TOUCH                  : string;
-    attribute DONT_TOUCH of me0_clusters      : signal is "true";
-    attribute DONT_TOUCH of me0_cluster_count : signal is "true";
-    attribute DONT_TOUCH of me0_overflow      : signal is "true";
+--    attribute DONT_TOUCH                  : string;
+--    attribute DONT_TOUCH of me0_clusters      : signal is "true";
+--    attribute DONT_TOUCH of me0_cluster_count : signal is "true";
+--    attribute DONT_TOUCH of me0_overflow      : signal is "true";
 
     begin
      each_oh:
@@ -273,4 +273,4 @@ begin
 
     --==== Registers end ============================================================================
         
-end trigger_me0_arch;
+end sbit_me0_arch;
