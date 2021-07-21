@@ -33,11 +33,7 @@ def init_gem_frontend():
 
 
         print("Sending a hard-reset")
-        ttc_gen_en = read_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE")
-        write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 1)
-        write_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN", 1)
-        write_reg("BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET", 1)
-        write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", ttc_gen_en)
+        gem_hard_reset()
 
     print("Setting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
@@ -54,7 +50,7 @@ def init_gem_frontend():
 
     time.sleep(0.3)
     print("Frontend status:")
-    print_oh_status()
+    gem_print_status()
 
     print("Frontend initialization done")
 

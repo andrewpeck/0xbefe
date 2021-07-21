@@ -1,30 +1,14 @@
 #!/usr/bin/env python
 
 from common.rw_reg import *
+from common.utils import *
+import gem.gem_utils as gem
 from time import *
 import array
 import struct
 import sys
 
-#VFAT DEFAULTS
-
-ADDR_JTAG_LENGTH = None
-ADDR_JTAG_TMS = None
-ADDR_JTAG_TDO = None
-ADDR_JTAG_TDI = None
-
 SCAN_RANGE = 18
-
-class Colors:
-    WHITE   = '\033[97m'
-    CYAN    = '\033[96m'
-    MAGENTA = '\033[95m'
-    BLUE    = '\033[94m'
-    YELLOW  = '\033[93m'
-    GREEN   = '\033[92m'
-    RED     = '\033[91m'
-    ENDC    = '\033[0m'
-
 
 def configureVfatForPulsing(vfatN, ohN):
 
@@ -193,9 +177,8 @@ def main():
         verbose = 1
 
     parse_xml()
-    initJtagRegAddrs()
 
-    addrSbitMonReset = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.RESET' % ohN)
+    addrSbitMonReset = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.RESET' % ohN)
     write_reg(get_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), ohN)
 
     ##################
@@ -204,35 +187,17 @@ def main():
 
     for vfatN in range (vfatNMin, vfatNMax+1):
 
-        print ("")
-        print ("####################################################################################################")
-        print ("Scanning VFAT %i" % vfatN)
-        print ("####################################################################################################")
-        print ("")
+        print("")
+        print("####################################################################################################")
+        print("Scanning VFAT %i" % vfatN)
+        print("####################################################################################################")
+        print("")
 
-        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
-        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), 0x1<<ohN)
-        write_reg(get_node('GEM_AMC.TTC.GENERATOR.ENABLE'), 0x1)
-        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
-#        write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
-
-        gpio_dir = 0xff0fe0
-        gpio_default_out = 0x60
-        gpio_hr_out = 0xff0fe0
-
-        ohList=[ohN]
-
-        sendScaCommand(ohList, 0x2, 0x20, 0x4, gpio_dir, False)
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+        gem.gem_hard_reset()
+        sleep(0.3)
+        gem.gem_link_reset()
         sleep(0.1)
-
-        sendScaCommand(ohList, 0x2, 0x10, 0x4, gpio_hr_out, False)
-        sleep(0.01)
-
-        sendScaCommand(ohList, 0x2, 0x10, 0x4, gpio_default_out, False)
-        sleep(0.01)
-
-        write_reg(get_node('GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
-        sleep(0.15)
 
         ##################
         #
@@ -240,7 +205,7 @@ def main():
 
         addrCluster = [0]*8
         for i in range(8):
-            addrCluster[i] = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.CLUSTER%i' % (ohN, i))
+            addrCluster[i] = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.CLUSTER%i' % (ohN, i))
 
         configureVfatForPulsing(vfatN, ohN)
 
@@ -248,7 +213,7 @@ def main():
 
         write_reg(get_node("BEFE.GEM_AMC.OH.OH%i.FPGA.TRIG.CTRL.ALIGNED_COUNT_TO_READY" % ohN), 0xfff)
 
-        sot_reg          = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.TIMING.SOT_TAP_DELAY_VFAT%s' % (ohN, vfatN))
+        sot_reg          = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.TIMING.SOT_TAP_DELAY_VFAT%s' % (ohN, vfatN))
         sot_dly_original = read_reg(sot_reg)
 
         for sot_dly in range(2):
@@ -260,25 +225,26 @@ def main():
                 dly_offset = 0
 
             write_reg(sot_reg, dly_offset)
+            sleep(0.0001) # otherwise too fast on CVP13 :)
             sot_rdy = read_reg(get_node("BEFE.GEM_AMC.OH.OH%i.FPGA.TRIG.CTRL.SBIT_SOT_READY" % ohN))
-            sleep (0.1)
+            sleep(0.1)
             if (not (sot_rdy >> vfatN)&0x1):
-                print ("Sot not ready... cannot scan")
+                print("Sot not ready... cannot scan")
                 sys.exit()
 
             for ibit in range(8):
 
                 #   Set the SoT delay to 0 (min)
-                tap_dly_reg      = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.TIMING.TAP_DELAY_VFAT%i_BIT%i' % (ohN, vfatN, ibit))
+                tap_dly_reg      = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.TIMING.TAP_DELAY_VFAT%i_BIT%i' % (ohN, vfatN, ibit))
                 tap_dly_original = read_reg(tap_dly_reg)
 
-#                sbit_monitor_cluster_reg = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.CLUSTER0' % (ohN))
-#                sbit_monitor_reset_reg   = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.RESET' % (ohN))
+#                sbit_monitor_cluster_reg = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.CLUSTER0' % (ohN))
+#                sbit_monitor_reset_reg   = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.RESET' % (ohN))
 
-                sbit_hitmap_msb_reg = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.VFAT%d_MSB' % (ohN, vfatN))
-                sbit_hitmap_lsb_reg = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.VFAT%d_LSB' % (ohN, vfatN))
-                sbit_hitmap_reset_reg = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.RESET' % (ohN))
-                sbit_hitmap_ack_reg = get_node('GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.ACQUIRE' % (ohN))
+                sbit_hitmap_msb_reg = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.VFAT%d_MSB' % (ohN, vfatN))
+                sbit_hitmap_lsb_reg = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.VFAT%d_LSB' % (ohN, vfatN))
+                sbit_hitmap_reset_reg = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.RESET' % (ohN))
+                sbit_hitmap_ack_reg = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_HITMAP.ACQUIRE' % (ohN))
 
 
                 write_reg(get_node("BEFE.GEM_AMC.OH.OH%i.FPGA.TRIG.CTRL.TU_MASK.VFAT%i_TU_MASK" % (ohN, vfatN)), 0xff ^ (1 << (ibit)))
@@ -312,7 +278,7 @@ def main():
 
                                 write_reg(sbit_hitmap_ack_reg, 0)
 
-                                hit_map = (readReg(sbit_hitmap_msb_reg) << 32) + readReg(sbit_hitmap_lsb_reg)
+                                hit_map = (read_reg(sbit_hitmap_msb_reg) << 32) + read_reg(sbit_hitmap_lsb_reg)
                                 hit_map_expected = 1 << trigger_channel
 
                                 err = hit_map_expected != hit_map;
@@ -321,13 +287,13 @@ def main():
 
                                 if (hit_map != 0):
                                     if (err):
-                                        if (verbose): print ("FAIL:"),
+                                        if (verbose): print("FAIL:"),
                                     else:
-                                        if (verbose): print ("PASS:"),
+                                        if (verbose): print("PASS:"),
 
-                                    if (verbose): print ("ibit=%d, delay=%3i, slice=%i, ch_expect = %2d, hitmap=%s" % (ibit, delay-dly_offset,islice,  trigger_channel, hex(hit_map)))
+                                    if (verbose): print("ibit=%d, delay=%3i, slice=%i, ch_expect = %2d, hitmap=%s" % (ibit, delay-dly_offset,islice,  trigger_channel, hex(hit_map)))
                                 else:
-                                    if (verbose): print ("FAIL: no cluster found");
+                                    if (verbose): print("FAIL: no cluster found");
 
                             write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
                             write_reg(get_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.VFAT_CHANNELS.CHANNEL%i"%(ohN,vfatN,strip)), 0x4000) # disable calpulse and mask
@@ -346,7 +312,7 @@ def main():
             text = "%2X" % (abs(dly-SCAN_RANGE) % 16)
             line = line + text
 
-        print (line)
+        print(line)
 
         for ibit in range(8):
 
@@ -406,13 +372,13 @@ def main():
                     line = line + Colors.RED + "x "
 
             line = line + Colors.ENDC
-            print line
+            print(line)
 
         ################################################################################
         # Printout Summary
         ################################################################################
 
-        print ("min center = %i" % min_center)
+        print("min center = %i" % min_center)
 
         best_sot_tap_delay = 99
         if (min_center - SCAN_RANGE < 0):
@@ -420,44 +386,14 @@ def main():
         else:
             best_sot_tap_delay = min_center
 
-        print ("sot :           best_dly=% 2d" % ( best_sot_tap_delay))
+        print("sot :           best_dly=% 2d" % ( best_sot_tap_delay))
         for ibit in range(8):
             best_tap_delay [ibit] = ngood_center[ibit] - min_center
-            print ("bit%i: center=% 2d best_dly=% 2d width=% 2d (%f ns)" % (ibit, ngood_center[ibit]-SCAN_RANGE, best_tap_delay[ibit], ngood_width[ibit], ngood_width[ibit]*78./1000))
+            print("bit%i: center=% 2d best_dly=% 2d width=% 2d (%f ns)" % (ibit, ngood_center[ibit]-SCAN_RANGE, best_tap_delay[ibit], ngood_width[ibit], ngood_width[ibit]*78./1000))
 
 
     print("")
     print("bye now..")
-
-def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
-    #print('fake send: channel ' + hex(sca_channel) + ', command ' + hex(sca_command) + ', length ' + hex(data_length) + ', data ' + hex(data) + ', doRead ' + str(doRead))
-    #return
-
-    d = data
-
-    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-    write_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
-    reply = []
-    if doRead:
-        for i in ohList:
-            reply.append(read_reg(get_node('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
-    return reply
-
-def initJtagRegAddrs():
-    global ADDR_JTAG_LENGTH
-    global ADDR_JTAG_TMS
-    global ADDR_JTAG_TDO
-    global ADDR_JTAG_TDI
-    ADDR_JTAG_LENGTH = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.NUM_BITS').address
-    ADDR_JTAG_TMS = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TMS').address
-    ADDR_JTAG_TDO = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDO').address
-    #ADDR_JTAG_TDI = get_node('GEM_AMC.SLOW_CONTROL.SCA.JTAG.TDI').address
-
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
 
 def debug(string):
     if DEBUG:
@@ -466,35 +402,6 @@ def debug(string):
 def debugCyan(string):
     if DEBUG:
         print_cyan('DEBUG: ' + string)
-
-def heading(string):
-    print (Colors.BLUE)
-    print ('\n>>>>>>> '+str(string).upper()+' <<<<<<<')
-    print (Colors.ENDC)
-
-def subheading(string):
-    print (Colors.YELLOW)
-    print ('---- '+str(string)+' ----',Colors.ENDC)
-
-def print_cyan(string):
-    print (Colors.CYAN)
-    print (string, Colors.ENDC)
-
-def print_red(string):
-    print (Colors.RED)
-    print (string, Colors.ENDC)
-
-def hex(number):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0x}".format(number)
-
-def binary(number, length):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0{1}b}".format(number, length + 2)
 
 if __name__ == '__main__':
     main()

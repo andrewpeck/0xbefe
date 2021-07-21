@@ -10,7 +10,7 @@ class Prompt(Cmd):
         if len(arglist)==1:
             node = get_node(args)
             if node is not None:
-                print(node.output())
+                node.print_info()
             else:
                 print('Node not found: ' + args)
 

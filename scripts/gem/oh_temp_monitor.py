@@ -69,34 +69,5 @@ def debugCyan(string):
     if DEBUG:
         print_cyan('DEBUG: ' + string)
 
-def heading(string):
-    print Colors.BLUE
-    print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC
-
-def subheading(string):
-    print Colors.YELLOW
-    print '---- '+str(string)+' ----',Colors.ENDC
-
-def print_cyan(string):
-    print Colors.CYAN
-    print string, Colors.ENDC
-
-def print_red(string):
-    print Colors.RED
-    print string, Colors.ENDC
-
-def hex(number):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0x}".format(number)
-
-def binary(number, length):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0{1}b}".format(number, length + 2)
-
 if __name__ == '__main__':
     main()

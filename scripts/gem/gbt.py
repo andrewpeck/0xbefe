@@ -94,7 +94,7 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
             wReg(ADDR_IC_ADDR, 35)
             wReg(ADDR_IC_WRITE_DATA, (curr << 4) + 2)
             wReg(ADDR_IC_EXEC_WRITE, 1)
-            sleep(0.1)
+            sleep(0.3)
             wasNotReady = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (ohSelect, gbtSelect)))
             color = Colors.GREEN if wasNotReady == 0 else Colors.RED
             statusText = "GOOD" if wasNotReady == 0 else "BAD"

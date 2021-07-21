@@ -57,6 +57,10 @@ class Node:
     isModule = False
     parent = None
     level = 0
+    fw_signal = None
+    fw_write_pulse_signal = None
+    fw_read_pulse_signal = None
+    fw_default = None
     sw_enum = None
     sw_val_good = None
     sw_val_bad = None
@@ -74,15 +78,23 @@ class Node:
     def get_vhdl_name(self):
         return self.name.replace(TOP_NODE_NAME + '.', '').replace('.', '_')
 
-    def output(self):
+    def print_info(self):
         print('Name: ' + self.name)
         print('Description: ' + self.description)
         print('Local Address: ' + '{0:#010x}'.format(self.local_address))
         print('Address: ' + '{0:#010x}'.format(self.address))
         print('Permission: ' + self.permission)
-        print('Mask: ' + '{0:#010x}'.format(self.mask))
-        print('Module: ' + self.isModule)
+        print('Mask: ' + hex32(self.mask))
+        print('Module: %r' % self.isModule)
         print('Parent: ' + self.parent.name)
+        if self.fw_signal is not None:
+            print("Firmware signal: %s" % self.fw_signal)
+        if self.fw_write_pulse_signal is not None:
+            print("Firmware write pulse signal: %s" % self.fw_write_pulse_signal)
+        if self.fw_read_pulse_signal is not None:
+            print("Firmware read pulse signal: %s" % self.fw_read_pulse_signal)
+        if self.fw_default is not None:
+            print("Firmware default: %s" % self.fw_default)
 
 class RegVal(int):
     reg = None
@@ -247,6 +259,14 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
     if newNode.mask is not None:
         newNode.mask_start_bit_pos = find_first_set_bit_pos(newNode.mask)
     newNode.isModule = node.get('fw_is_module') is not None and node.get('fw_is_module') == 'true'
+    if node.get('fw_signal') is not None:
+        newNode.fw_signal = substitute_vars(node.get('fw_signal'), vars)
+    if node.get('fw_default') is not None:
+        newNode.fw_default = substitute_vars(node.get('fw_default'), vars)
+    if node.get('fw_write_pulse_signal') is not None:
+        newNode.fw_write_pulse_signal = substitute_vars(node.get('fw_write_pulse_signal'), vars)
+    if node.get('fw_read_pulse_signal') is not None:
+        newNode.fw_read_pulse_signal = substitute_vars(node.get('fw_read_pulse_signal'), vars)
     if node.get('sw_enum') is not None:
         newNode.sw_enum = eval(node.get('sw_enum'))
     if node.get('sw_val_good') is not None:

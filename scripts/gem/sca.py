@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from common.rw_reg import *
+from common.utils import *
 from time import *
 import array
 import struct
@@ -8,16 +9,6 @@ import struct
 SLEEP_BETWEEN_COMMANDS = 0.1
 DEBUG = False
 CTP7HOSTNAME = "eagle34"
-
-class Colors:
-    WHITE   = '\033[97m'
-    CYAN    = '\033[96m'
-    MAGENTA = '\033[95m'
-    BLUE    = '\033[94m'
-    YELLOW  = '\033[93m'
-    GREEN   = '\033[92m'
-    RED     = '\033[91m'
-    ENDC    = '\033[0m'
 
 class Virtex6Instructions:
     FPGA_ID     = 0x3C9
@@ -74,13 +65,19 @@ def main():
     if len(sys.argv) < 3:
         print('Usage: sca.py <oh_mask> <instructions>')
         print('instructions:')
-        print('  r:               SCA reset will be done')
-        print('  h:               FPGA hard reset will be done')
-        print('  hh:              FPGA hard reset will be asserted and held')
-        print('  fpga-id-virtex6: Virtex6 FPGA ID will be read through JTAG')
-        print('  fpga-id-artix7:  Artix7 FPGA ID will be read through JTAG')
-        print('  sysmon:          Read FPGA sysmon data repeatedly')
-        print('  program-fpga:    Program OH FPGA with a bitfile or an MCS file. Requires a parameter "bit" or "mcs" and a filename')
+        print('  r:                  SCA reset will be done')
+        print('  h:                  FPGA hard reset will be done')
+        print('  hh:                 FPGA hard reset will be asserted and held')
+        print('  fpga-id-virtex6:    Virtex6 FPGA ID will be read through JTAG')
+        print('  fpga-id-artix7:     Artix7 FPGA ID will be read through JTAG')
+        print('  sysmon:             Read FPGA sysmon data repeatedly')
+        print('  program-fpga:       Program OH FPGA with a bitfile or an MCS file. Requires a parameter "bit" or "mcs" and a filename')
+        print('  adc-read:           Reads all ADC channels')
+        print('  adc-readv1:         Reads all ADC channels on v1 SCA chip (these chips should no longer be used in GEMs)')
+        print('  compare-mcs-bit:    Compares an MCS file with a bitstream file (requires two more args: <mcs_filename> <bit_filename>)')
+        print('  gpio-set-direction: Sets the GPIO direction, requires an additional argument <direction-mask> which is a 32 bit number where each bit represents a GPIO channel -- if a given bit is high it means that this GPIO channel will be set to OUTPUT mode, and otherwise it will be set to INPUT mode')
+        print('  gpio-set-output:    Sets the GPIO output, requires an additional argument <output-data>, which is a 32 bit number representing the 32 GPIO channels state')
+        print('  gpio-read-input:    Reads the GPIO input')
         return
     else:
         ohMask = parse_int(sys.argv[1])
@@ -732,35 +729,6 @@ def debug(string):
 def debugCyan(string):
     if DEBUG:
         print_cyan('DEBUG: ' + string)
-
-def heading(string):
-    print Colors.BLUE
-    print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC
-
-def subheading(string):
-    print Colors.YELLOW
-    print '---- '+str(string)+' ----',Colors.ENDC
-
-def print_cyan(string):
-    print Colors.CYAN
-    print string, Colors.ENDC
-
-def print_red(string):
-    print Colors.RED
-    print string, Colors.ENDC
-
-def hex(number):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0x}".format(number)
-
-def binary(number, length):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0{1}b}".format(number, length + 2)
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,7 @@
 from common.rw_reg import *
 from common.utils import *
 import common.tables.tableformatter as tf
+import sys
 
 try:
     imp.find_module('colorama')
@@ -8,7 +9,7 @@ try:
 except:
     print("Note: if you install python36-colorama package, the table row background will be colored in an alternating way, making them more readable")
 
-def print_oh_status():
+def gem_print_status():
     max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
     gbts_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
     vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
@@ -72,7 +73,7 @@ def print_oh_status():
             sca_ready = (read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY") >> oh) & 1
             not_ready_cnt = read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.NOT_READY_CNT_OH%d" % oh)
             sca_status = color_string("READY", Colors.GREEN) if sca_ready == 1 else color_string("NOT_READY", Colors.RED)
-            if sca_ready == 1 and not_ready_cnt > 0:
+            if sca_ready == 1 and not_ready_cnt > 2:
                 sca_status += "\n" + color_string("(HAD UNLOCKS)", Colors.YELLOW)
 
             row.append(sca_status)
@@ -112,3 +113,27 @@ def print_oh_status():
         rows.append(row)
 
     print(tf.generate_table(rows, cols, grid_style=FULL_TABLE_GRID_STYLE))
+
+def gem_hard_reset():
+    ttc_gen_en = read_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE")
+    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 1)
+    write_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN", 0xffffffff)
+    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET", 1)
+    if ttc_gen_en != 1:
+        write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", ttc_gen_en)
+
+def gem_link_reset():
+    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        parse_xml()
+        if sys.argv[1] == "status":
+            gem_print_status()
+        elif sys.argv[1] == "hard-reset":
+            gem_hard_reset()
+    else:
+        print("gem_utils.py <command>")
+        print("commands:")
+        print("   * status: prints the GEM frontend status")
+        print("   * hard-reset: sends a TTC hard reset")
