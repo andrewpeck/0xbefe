@@ -218,8 +218,8 @@ begin
      each_oh:
      for oh in 0 to g_NUM_OF_OHs - 1 generate
         each_vfat:
-        for I in 0 to 23 generate
-        vfat_sbits_strip_mapped(I) <= vfat_sbits_arr(oh)(I);
+        for I in 0 to 5 generate
+        vfat_sbits_strip_mapped(((oh+1)*(I+1)) - 1) <= vfat_sbits_arr(oh)(I);
         end generate; 
      end generate; 
       cluster_packer_inst : entity work.cluster_packer
@@ -231,16 +231,14 @@ begin
           STATION        => 0
           )
         port map (
-          clk_40   => ttc_clk_i.clk_40,
+          reset => reset_i,
+          clk_40 => ttc_clk_i.clk_40,
           clk_fast => ttc_clk_i.clk_160,
-          reset    => reset_i,
-
           sbits_i => vfat_sbits_strip_mapped,
-
           cluster_count_o => me0_cluster_count,
-          clusters_o      => me0_clusters,
-          clusters_ena_o  => open,
-          overflow_o      => me0_overflow
+          clusters_o => me0_clusters,
+          clusters_ena_o => open,
+          overflow_o => me0_overflow
           );   
      end generate;
  --------------------------------------------------------------------------------
