@@ -15,6 +15,7 @@ Major firmware updates:
 * APEX migrated to the new Florida C2C framework (2 lanes at 3.125Gb/s, not using aurora IP)
 * Trigger cluster format updated to use the eta/phi "address"
 * Clock constraints reworked
+* Compatible with vivado 2021.1 (required for CVP13)
 
 Major software updates:
 * gem_env.sh is now called env.sh, it requires an additional parameter, which is board_idx (refers to FPGA index in APEX)
