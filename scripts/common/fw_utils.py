@@ -60,10 +60,10 @@ class Mgt:
         self.type = read_reg("BEFE.MGTS.MGT%d.CONFIG.LINK_TYPE" % self.idx)
 
     def get_status(self):
-        reset_done = read_reg("BEFE.MGTS.MGT%d.STATUS.%s_RESET_DONE" % (self.idx, self.txrx.name)).to_string(False)
-        phalign_done = read_reg("BEFE.MGTS.MGT%d.STATUS.%s_PHALIGN_DONE" % (self.idx, self.txrx.name)).to_string(False)
+        reset_done = read_reg("BEFE.MGTS.MGT%d.STATUS.%s_RESET_DONE" % (self.idx, self.txrx.name))
+        phalign_done = read_reg("BEFE.MGTS.MGT%d.STATUS.%s_PHALIGN_DONE" % (self.idx, self.txrx.name))
         pll_type = str(self.pll)
-        pll_locked = self.pll.get_locked().to_string(False)
+        pll_locked = self.pll.get_locked()
         refclk_freq = read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK%d_FREQ" % (self.idx, self.pll.refclk01))
         refclk_freq_config = read_reg("BEFE.MGTS.MGT%d.CONFIG.%s_REFCLK_FREQ" % (self.idx, self.txrx.name))
         refclk_freq_str = refclk_freq.to_string(hex=False, use_color=False)
@@ -72,7 +72,7 @@ class Mgt:
         else:
             refclk_freq_str = color_string(refclk_freq_str, Colors.GREEN)
 
-        return ["%d" % self.idx, self.type.to_string(False), reset_done, phalign_done, pll_type + " #%d" % self.pll.idx, pll_locked, refclk_freq_str]
+        return ["%d" % self.idx, self.type, reset_done, phalign_done, pll_type + " #%d" % self.pll.idx, pll_locked, refclk_freq_str]
 
     def config(self, invert, tx_diff_ctrl=0x18, tx_pre_cursor=0, tx_post_cursor=0):
         polarity = 1 if invert else 0
@@ -215,7 +215,7 @@ def befe_get_all_links():
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         for i in range(num_dmbs):
             dmb_type = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.DMB_LINK_CONFIG.DMB%d.TYPE" % i)
-            dmb_label = "DMB%d (%s)" % (i, dmb_type.to_string(False))
+            dmb_label = "DMB%d (%s)" % (i, dmb_type)
             tx_link = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.DMB_LINK_CONFIG.DMB%d.TX_LINK" % i)
             if tx_link < num_links:
                 tx_usage[tx_link] = dmb_label
@@ -250,7 +250,7 @@ def befe_print_link_status(links, txrx=None):
         status = link.get_status() if txrx is None else link.get_txrx_status(txrx)
         rows.append(status)
 
-    print(tf.generate_table(rows, cols, grid_style=DEFAULT_TABLE_GRID_STYLE))
+    print(tf.generate_table(rows, cols, grid_style=DEFAULT_TABLE_GRID_STYLE)) # FULL_TABLE_GRID_STYLE
 
 def befe_reset_all_plls():
     num_mgts = read_reg("BEFE.SYSTEM.RELEASE.NUM_MGTS")
@@ -275,9 +275,9 @@ def befe_config_links():
     for link in links:
         tx_invert = False
         rx_invert = False
-        if link.tx_mgt is not None and "GBTX" in link.tx_mgt.type.to_string(False):
+        if link.tx_mgt is not None and "GBTX" in link.tx_mgt.type.to_string():
             tx_invert = gbt_tx_invert
-        if link.rx_mgt is not None and "GBTX" in link.rx_mgt.type.to_string(False):
+        if link.rx_mgt is not None and "GBTX" in link.rx_mgt.type.to_string():
             rx_invert = gbt_rx_invert
 
         if flavor == 0 and tx_invert:
@@ -295,15 +295,11 @@ def befe_config_links():
 def befe_print_fw_info():
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     board_type = read_reg("BEFE.SYSTEM.RELEASE.BOARD_TYPE")
-    fw_major = read_reg("BEFE.SYSTEM.RELEASE.MAJOR")
-    fw_minor = read_reg("BEFE.SYSTEM.RELEASE.MINOR")
-    fw_build = read_reg("BEFE.SYSTEM.RELEASE.BUILD")
+    fw_version = read_reg("BEFE.SYSTEM.RELEASE.VERSION").to_string(use_color=False)
     fw_date = read_reg("BEFE.SYSTEM.RELEASE.DATE")
     fw_time = read_reg("BEFE.SYSTEM.RELEASE.TIME")
     fw_git_sha = read_reg("BEFE.SYSTEM.RELEASE.GIT_SHA")
 
-    date_str = "%02x." % ((fw_date & 0xff000000) >> 24) + "%02x." % ((fw_date & 0x00ff0000) >> 16) + "%04x" % (fw_date & 0xffff)
-    time_str = "%02x:" % ((fw_time & 0x00ff0000) >> 16) + "%02x:" % ((fw_time & 0x0000ff00) >> 8) + "%02x:" % (fw_time & 0xff)
     flavor_str = "UNKNOWN FLAVOR"
     if fw_flavor == 0:
         gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
@@ -315,10 +311,9 @@ def befe_print_fw_info():
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         flavor_str = "CSC (%d DMBs)" % num_dmbs
 
-    version_str = "v%s.%s.%s" % (fw_major.to_string(False), fw_minor.to_string(False), fw_build.to_string(False))
-    heading("BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, version_str, board_type.to_string(False), date_str, time_str, fw_git_sha))
+    heading("BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, fw_version, board_type, fw_date, fw_time, fw_git_sha))
 
-    return {"fw_flavor": fw_flavor, "fw_flavor_str": fw_flavor.to_string(False), "board_type": board_type, "fw_major": fw_major, "fw_minor": fw_minor, "fw_build": fw_build, "fw_version_str": version_str, "fw_date": date_str, "fw_time": time_str, "fw_git_sha": fw_git_sha}
+    return {"fw_flavor": fw_flavor, "fw_flavor_str": fw_flavor.to_string(), "board_type": board_type.to_string(), "fw_version": fw_version, "fw_date": fw_date, "fw_time": fw_time, "fw_git_sha": fw_git_sha}
 
 if __name__ == '__main__':
     parse_xml()

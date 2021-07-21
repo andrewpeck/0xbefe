@@ -9,7 +9,7 @@ def init_csc_backend():
 
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     if fw_flavor != 1:
-        print_red("The board is not running CSC firmware (flavor = %s). Exiting.." % fw_flavor.to_string(False))
+        print_red("The board is not running CSC firmware (flavor = %s). Exiting.." % fw_flavor)
         return
 
     befe_print_fw_info()

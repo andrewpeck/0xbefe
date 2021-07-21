@@ -6,7 +6,7 @@ try:
     imp.find_module('colorama')
     from colorama import Back
 except:
-    pass
+    print("Note: if you install python36-colorama package, the table row background will be colored in an alternating way, making them more readable")
 
 def print_oh_status():
     max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
@@ -16,28 +16,33 @@ def print_oh_status():
 
     cols = ["OH"]
     if gem_station != 0:
-        cols.append("OH FPGA fw")
+        cols.append("OH FPGA fw version")
 
-    for gbt in range(gbts_per_oh):
-        cols.append("GBT%d" % gbt)
+    cols.append("GBTs %d-%d" % (0, gbts_per_oh))
 
-    for vfat in range(vfats_per_oh):
-        cols.append("VFAT%d" % vfat)
+    if gem_station in [1, 2]:
+        cols.append("SCA")
+
+    num_vfats_per_col = 4
+    for vfat in range(0, vfats_per_oh, num_vfats_per_col):
+        cols.append("VFATs %d-%d" % (vfat, vfat + num_vfats_per_col - 1))
 
     rows = []
     for oh in range(max_ohs):
         row = [oh]
 
         # OH FPGA FW check
-        #read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
-        oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
-        row.append(color_string("NO COMMUNICATION", Colors.RED) if oh_fw_version == 0xdeaddead else str(oh_fw_version))
+        if gem_station != 0:
+            #read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
+            oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
+            row.append(color_string("NO COMMUNICATION", Colors.RED) if oh_fw_version == 0xdeaddead else str(oh_fw_version))
 
+        status_block = ""
+        first = True
         for gbt in range(gbts_per_oh):
             ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
-            status = ready.to_string(False)
+            status = "%d: " % gbt + ready.to_string()
             if ready == 1:
-                status = ready.to_string(False)
                 was_not_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (oh, gbt))
                 had_ovf = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HAD_OVERFLOW" % (oh, gbt))
                 had_unf = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HAD_UNDERFLOW" % (oh, gbt))
@@ -46,43 +51,61 @@ def print_oh_status():
                 tx_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_TX_READY" % (oh, gbt))
 
                 if was_not_ready == 1:
-                    status += color_string(" (HAD UNLOCK)", Colors.RED)
+                    status += "\n" + color_string("(HAD UNLOCK)", Colors.RED)
                 elif had_header_unlock == 1:
-                    status += color_string(" (HAD HEADER UNLOCK)", Colors.RED)
+                    status += "\n" + color_string("(HAD HEADER UNLOCK)", Colors.RED)
                 elif had_ovf == 1 or had_unf == 1:
-                    status += color_string(" (HAD FIFO OVF/UNF)", Colors.RED)
+                    status += "\n" + color_string("(HAD FIFO OVF/UNF)", Colors.RED)
                 elif fec_err_cnt > 0:
-                    status += color_string(" (FEC ERR CNT = %d)" % fec_err_cnt, Colors.YELLOW)
+                    status += "\n" + color_string("(FEC ERR CNT = %d)" % fec_err_cnt, Colors.YELLOW)
                 elif tx_ready == 0:
-                    status += color_string(" (TX NOT READY)", Colors.RED)
+                    status += "\n" + color_string("(TX NOT READY)", Colors.RED)
 
-            row.append(status)
+            status_block = status if first else status_block + "\n" + status
+            first = False
 
-        for vfat in range(vfats_per_oh):
-            link_good = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh, vfat))
-            status = color_string("GOOD", Colors.GREEN) if link_good == 1 else color_string("LINK BAD", Colors.RED)
-            if link_good == 1:
-                sync_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh, vfat))
-                daq_crc_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh, vfat))
+        row.append(status_block)
 
-                if sync_err_cnt > 0:
-                    status = color_string("SYNC ERRORS", Colors.RED)
-                elif daq_crc_err_cnt > 0:
-                    status = color_string("DAQ CRC ERRORS", Colors.RED)
+        if gem_station in [1, 2]:
+            sca_ready = (read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY") >> oh) & 1
+            not_ready_cnt = read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.NOT_READY_CNT_OH%d" % oh)
+            sca_status = color_string("READY", Colors.GREEN) if sca_ready == 1 else color_string("NOT_READY", Colors.RED)
+            if not_ready_cnt > 0:
+                sca_status += "\n" + color_string("(HAD UNLOCKS)", Colors.YELLOW)
 
-                cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat), False)
-                if cfg_run == 0xdeaddead:
-                    if "GOOD" in status:
-                        status = color_string("NO COMM", Colors.RED)
-                elif cfg_run == 1:
-                    status += color_string(" (RUN)", colors.GREEN)
-                elif cfg_run == 0:
-                    status += color_string(" (SLEEP)", colors.GREEN)
-                else:
-                    status += color_string(" (UNKNOWN RUN MODE = %s)" % str(cfg_run), colors.RED)
+            row.append(sca_status)
 
-            row.append(status)
+        for vfat_block in range(0, vfats_per_oh, num_vfats_per_col):
+            vfat_block_status = ""
+            first = True
+            for vfat in range(vfat_block, vfat_block + num_vfats_per_col):
+                link_good = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh, vfat))
+                status = "%d: " % vfat + color_string("GOOD", Colors.GREEN) if link_good == 1 else "%d: " % vfat + color_string("LINK BAD", Colors.RED)
+                if link_good == 1:
+                    sync_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh, vfat))
+                    daq_crc_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh, vfat))
+
+                    if sync_err_cnt > 0:
+                        status = "%d: " % vfat + color_string("SYNC ERRORS", Colors.RED)
+                    elif daq_crc_err_cnt > 0:
+                        status = "%d: " % vfat + color_string("DAQ CRC ERRORS", Colors.YELLOW)
+
+                    cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat), False)
+                    if cfg_run == 0xdeaddead:
+                        if "GOOD" in status:
+                            status = "%d: " % vfat + color_string("NO COMM", Colors.RED)
+                    elif cfg_run == 1:
+                        status += color_string(" (RUN)", Colors.GREEN)
+                    elif cfg_run == 0:
+                        status += color_string(" (SLEEP)", Colors.GREEN)
+                    else:
+                        status += color_string(" (UNKNOWN RUN MODE = %s)" % str(cfg_run), colors.RED)
+
+                vfat_block_status = status if first else vfat_block_status + "\n" + status
+                first = False
+
+            row.append(vfat_block_status)
 
         rows.append(row)
 
-    print(tf.generate_table(rows, cols, grid_style=DEFAULT_TABLE_GRID_STYLE))
+    print(tf.generate_table(rows, cols, grid_style=FULL_TABLE_GRID_STYLE))

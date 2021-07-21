@@ -10,7 +10,7 @@ from os import path
 def init_gem_frontend():
 
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
-    print("GEM station: %s" % gem_station.to_string(False))
+    print("GEM station: %s" % gem_station)
 
     if gem_station == 1 or gem_station == 2:
         # configure GBTs
@@ -44,6 +44,10 @@ def init_gem_frontend():
     hdlc_addr = CONFIG_ME0_VFAT_HDLC_ADDRESSES if gem_station == 0 else CONFIG_GE11_VFAT_HDLC_ADDRESSES if gem_station == 1 else CONFIG_GE21_VFAT_HDLC_ADDRESSES if gem_station == 2 else None
     for vfat in range(vfats_per_oh):
         write_reg("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, hdlc_addr[vfat])
+
+    print("Sending a link reset (also issues a SYNC command to the VFATs)")
+    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+    time.sleep(0.1)
 
     print("Sending a command to VFATs to exit slow-control-only mode in case they are in this mode")
     write_reg("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE", 0)

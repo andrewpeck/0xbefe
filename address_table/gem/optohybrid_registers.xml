@@ -306,16 +306,22 @@
               fw_signal="usr_access"/>
 
         <node id="HOG" address="0x23" description = "">
-            <node id="GLOBAL_DATE" permission="r" address="0x0" description="HOG Global Date"    fw_signal="GLOBAL_DATE"/>
-            <node id="GLOBAL_TIME" permission="r" address="0x1" description="HOG Global Time"    fw_signal="GLOBAL_TIME"/>
-            <node id="GLOBAL_VER"  permission="r" address="0x2" description="HOG Global Version" fw_signal="GLOBAL_VER"/>
+            <node id="GLOBAL_DATE" permission="r" address="0x0" description="HOG Global Date"    fw_signal="GLOBAL_DATE"
+                  sw_to_string="'%02x.%02x.%04x' % (((self &amp; 0xff000000) >> 24), ((self &amp; 0x00ff0000) >> 16), (self &amp; 0xffff))"/>
+            <node id="GLOBAL_TIME" permission="r" address="0x1" description="HOG Global Time"    fw_signal="GLOBAL_TIME"
+                  sw_to_string="'%02x:%02x:%02x' % (((self &amp; 0x00ff0000) >> 16), ((self &amp; 0x0000ff00) >> 8), (self &amp; 0xff))"/>
+            <node id="GLOBAL_VER"  permission="r" address="0x2" description="HOG Global Version" fw_signal="GLOBAL_VER"
+                  sw_to_string="'v%d.%d.%d' % ((self >> 24), ((self >> 16) &amp; 0xff), (self &amp; 0xffff)) if self != 0 else 'LOCAL_BUILD'" sw_val_warn="self == 0" sw_val_good="self != 0"/>
             <node id="GLOBAL_SHA"  permission="r" address="0x3" description="HOG Global SHA"     fw_signal="GLOBAL_SHA"/>
             <node id="TOP_SHA"     permission="r" address="0x4" description="HOG Top SHA"        fw_signal="TOP_SHA"/>
-            <node id="TOP_VER"     permission="r" address="0x5" description="HOG Top Version"    fw_signal="TOP_VER"/>
+            <node id="TOP_VER"     permission="r" address="0x5" description="HOG Top Version"    fw_signal="TOP_VER"
+                  sw_to_string="'v%d.%d.%d' % ((self >> 24), ((self >> 16) &amp; 0xff), (self &amp; 0xffff)) if self != 0 else 'LOCAL_BUILD'" sw_val_warn="self == 0" sw_val_good="self != 0"/>
             <node id="HOG_SHA"     permission="r" address="0x6" description="HOG SHA"            fw_signal="HOG_SHA"/>
-            <node id="HOG_VER"     permission="r" address="0x7" description="HOG Version"        fw_signal="HOG_VER"/>
+            <node id="HOG_VER"     permission="r" address="0x7" description="HOG Version"        fw_signal="HOG_VER"
+                  sw_to_string="'v%d.%d.%d' % ((self >> 24), ((self >> 16) &amp; 0xff), (self &amp; 0xffff)) if self != 0 else 'LOCAL_BUILD'" sw_val_warn="self == 0" sw_val_good="self != 0"/>
             <node id="OH_SHA"      permission="r" address="0x8" description="OH SHA"             fw_signal="OPTOHYBRID_SHA"/>
-            <node id="OH_VER"      permission="r" address="0x9" description="OH Version"         fw_signal="OPTOHYBRID_VER"/>
+            <node id="OH_VER"      permission="r" address="0x9" description="OH Version"         fw_signal="OPTOHYBRID_VER"
+                  sw_to_string="'v%d.%d.%d' % ((self >> 24), ((self >> 16) &amp; 0xff), (self &amp; 0xffff)) if self != 0 else 'LOCAL_BUILD'" sw_val_warn="self == 0" sw_val_good="self != 0"/>
             <node id="FLAVOUR"     permission="r" address="0xa" description="Flavor"             fw_signal="std_logic_vector(to_unsigned(FLAVOUR,32))"/>
         </node> <!--HOG-->
 

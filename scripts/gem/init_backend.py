@@ -37,10 +37,10 @@ def init_gem_backend():
     write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
 
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
-    print("GEM station: %s" % gem_station.to_string(False))
+    print("GEM station: %s" % gem_station)
 
     if gem_station == 1 or gem_station == 2:
-        print("Loading %s OH bitfile to the PROMLESS RAM" % gem_station.to_string(False))
+        print("Loading %s OH bitfile to the PROMLESS RAM" % gem_station)
         oh_bitfile = CONFIG_GE21_OH_BITFILE if gem_station == 2 else CONFIG_GE11_OH_BITFILE if gem_station == 1 else None
         if not path.exists(oh_bitfile):
             print_red("OH bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_GE*_OH_BITFILE constant in your befe_config.py file" % oh_bitfile)

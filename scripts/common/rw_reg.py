@@ -63,6 +63,7 @@ class Node:
     sw_val_warn = None
     sw_val_neutral = None
     sw_units = None
+    sw_to_string = None
 
     def __init__(self):
         self.children = []
@@ -100,7 +101,7 @@ class RegVal(int):
         elif self.reg.sw_val_bad is not None:
             return Colors.GREEN
 
-    def to_string(self, hex=True, hex_padded32=True, use_color=True, bool_use_yesno=True):
+    def to_string(self, hex=False, hex_padded32=True, use_color=True, bool_use_yesno=True):
         if self == 0xdeaddead:
             if use_color:
                 return Colors.RED + "Bus Error" + Colors.ENDC
@@ -114,7 +115,13 @@ class RegVal(int):
             else:
                 val = "0x%x" % self
 
-        if self.reg.sw_enum is not None:
+        if self.reg.sw_to_string is not None:
+            to_string_eval = eval(self.reg.sw_to_string)
+            if hex:
+                val += " (%s)" % to_string_eval
+            else:
+                val = to_string_eval
+        elif self.reg.sw_enum is not None:
             enum_val = "UNKNOWN" if self >= len(self.reg.sw_enum) else self.reg.sw_enum[self]
             if hex:
                 val += " (%s)" % enum_val
@@ -252,6 +259,8 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
         newNode.sw_val_neutral = substitute_vars(node.get('sw_val_neutral'), vars)
     if node.get('sw_units') is not None:
         newNode.sw_units = node.get('sw_units')
+    if node.get('sw_to_string') is not None:
+        newNode.sw_to_string = substitute_vars(node.get('sw_to_string'), vars)
     nodes[newNode.name] = newNode
     if parentNode is not None:
         parentNode.add_child(newNode)
@@ -333,7 +342,7 @@ def read_reg_cache(reg):
 
 def display_reg(reg, option=None):
     val = read_reg(reg, False)
-    str_val = str(val)
+    str_val = val.to_string(hex=True, hex_padded32=True)
     return hex32(reg.address).rstrip('L') + ' ' + reg.permission + '\t' + tab_pad(reg.name, 7) + str_val
 
 def write_reg(reg, value):

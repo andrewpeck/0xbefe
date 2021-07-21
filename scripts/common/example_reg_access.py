@@ -1,11 +1,10 @@
 #!/bin/env python
 from common.rw_reg import *
 from time import *
-import array
-import struct
 
 def main():
 
+    # the parse_xml() call is only needed once, before any write_reg() or read_reg() functions are called
     parse_xml()
 
     #Example of writing a register
