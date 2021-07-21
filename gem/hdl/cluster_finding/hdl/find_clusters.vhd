@@ -279,6 +279,34 @@ begin
 
   begin
 
+    checker : for I in 0 to NUM_FOUND_CLUSTERS generate
+      -- just some simple sanity checking for the simulator
+
+      -- make sure that every higher numbered cluster is worse or equal quality
+      worseloop : for J in I+1 to NUM_FOUND_CLUSTERS-1 generate
+
+        -- pragma translate_off
+        -- check vpf sorting
+        assert clusters(I).vpf >= clusters(J).vpf report
+          "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & ";  " &
+          "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters(J).vpf)
+          severity error;
+
+        -- for equal vpf, use the greater partition (lower eta)
+        prt_sort_check : if (clusters(I).vpf = '1' and (clusters(I).vpf = clusters(J).vpf)) generate
+          assert clusters(I).prt >= clusters(J).prt report
+            "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & " " &
+            "prt(" & integer'image(I) & ") = " & integer'image(to_integer(unsigned(clusters(I).prt))) & ";  " &
+            "prt(" & integer'image(J) & ") = " & integer'image(to_integer(unsigned(clusters(J).prt))) & " " &
+            "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters(J).vpf)
+            severity error;
+        end generate;
+        -- pragma translate_on
+
+      end generate;
+
+    end generate;
+
     wrapup : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
@@ -286,7 +314,6 @@ begin
       process (clock) is
       begin
         if (rising_edge(clock)) then
-          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
           data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
         end if;
       end process;
@@ -325,7 +352,7 @@ begin
       generic map (
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
-        COMP_HIGH => 1 + MXPRTB,
+        COMP_HIGH => 1 + MXPRTB-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
         COMP_LOW  => 0,
         INFO_BITS => 1
         )
@@ -333,8 +360,8 @@ begin
         CLK       => clock,
         RST       => '0',
         CLR       => '0',
-        I_SORT    => '1',
-        I_UP      => '1',
+        I_SORT    => '1',               -- set to 0 and the module won't sort
+        I_UP      => '0',               -- set to 0 to prefer the highest number on the lowest input
         I_DATA    => data_i,
         O_DATA    => data_o,
         O_SORT    => open,
