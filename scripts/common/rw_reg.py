@@ -8,15 +8,6 @@ import time
 from collections import OrderedDict
 from common.utils import *
 
-try:
-    imp.find_module('befe_config')
-    from befe_config import *
-except ImportError:
-    print_red("befe_config.py not found")
-    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
-    print_red("In most cases the example config without modifications will work as a starting point")
-    exit(1)
-
 print('Loading shared library: librwreg.so')
 lib = CDLL("librwreg.so")
 rReg = lib.getReg
@@ -40,10 +31,10 @@ val_cache = {}
 
 boardType = os.environ.get('BOARD_TYPE')
 boardIdx = int(os.environ.get('BOARD_IDX'))
-DEVICE = CONFIG_RWREG[boardType][boardIdx]['DEVICE']
+DEVICE = get_config("CONFIG_RWREG")[boardType][boardIdx]['DEVICE']
 if sys.version_info[0] == 3:
-    DEVICE = CONFIG_RWREG[boardType][boardIdx]['DEVICE'].encode()
-BASE_ADDR = CONFIG_RWREG[boardType][boardIdx]['BASE_ADDR']
+    DEVICE = get_config("CONFIG_RWREG")[boardType][boardIdx]['DEVICE'].encode()
+BASE_ADDR = get_config("CONFIG_RWREG")[boardType][boardIdx]['BASE_ADDR']
 
 class Node:
     name = ''
@@ -97,21 +88,34 @@ class Node:
             print("Firmware default: %s" % self.fw_default)
 
 class RegVal(int):
+    STATE_NEUTRAL = "NEUTRAL"
+    STATE_GOOD = Colors.GREEN
+    STATE_WARN = Colors.YELLOW
+    STATE_BAD = Colors.RED
+
     reg = None
 
-    def get_color(self):
+    # returns the state of the value based on sw_val_neutral, sw_val_bad, sw_val_good, and sw_val_warn attributes
+    # neutral takes precedence above all others (can be a handy way to ignore the value when some configs indicate it's not relevant)
+    # the rest are treated in this order: bad, warn, good (so if the value is determined bad or warn, it won't check the good expression)
+    # note that if only sw_val_good is defined (sw_val_bad is not defined) and sw_val_good evaluates to False, BAD is returned (opposite of GOOD)
+    # same goes if only sw_val_bad is defined (and sw_val_good is not defined) -- if sw_val_bad evals to False, GOOD is returned
+    # if both sw_val_bad and sw_val_good are defined and both evaluate to False, NEUTRAL is returned
+    def get_state(self):
         if self.reg.sw_val_neutral is not None and eval(self.reg.sw_val_neutral):
-            return None
+            return self.STATE_NEUTRAL
         elif self.reg.sw_val_bad is not None and eval(self.reg.sw_val_bad):
-            return Colors.RED
+            return self.STATE_BAD
         elif self.reg.sw_val_warn is not None and eval(self.reg.sw_val_warn):
-            return Colors.YELLOW
+            return self.STATE_WARN
         elif self.reg.sw_val_good is not None and eval(self.reg.sw_val_good):
-            return Colors.GREEN
-        elif self.reg.sw_val_good is not None:
-            return Colors.RED
-        elif self.reg.sw_val_bad is not None:
-            return Colors.GREEN
+            return self.STATE_GOOD
+        elif self.reg.sw_val_good is not None and self.reg.sw_val_bad is None:
+            return self.STATE_BAD
+        elif self.reg.sw_val_bad is not None and self.reg.sw_val_good is None:
+            return self.STATE_GOOD
+        else:
+            return self.STATE_NEUTRAL
 
     def to_string(self, hex=False, hex_padded32=True, use_color=True, bool_use_yesno=True):
         if self == 0xdeaddead:
@@ -179,8 +183,8 @@ class RegVal(int):
             val = "%d" % self
 
         if use_color:
-            col = self.get_color()
-            if col is not None:
+            col = self.get_state()
+            if col is not None and col != self.STATE_NEUTRAL:
                 val = col + val + Colors.ENDC
 
         return val
@@ -399,6 +403,24 @@ def complete_reg(string):
         for n in possibleNodes:
             completions.append(n.name)
     return completions
+
+def dump_regs(pattern, only_dump_bad_values=True, caption=None, caption_color=Colors.CYAN):
+    if caption is not None:
+        totalWidth = 100
+        if len(caption) + 6 > totalWidth:
+            totalWidth = len(caption) + 6
+        print(caption_color + "=" * totalWidth + Colors.ENDC)
+        padding1Size = int(((totalWidth - 2 - len(caption)) / 2))
+        padding2Size = padding1Size if padding1Size * 2 + len(caption) == totalWidth - 2 else padding1Size + 1
+        print(caption_color + "%s %s %s" % ("=" * padding1Size, caption, "=" * padding2Size) + Colors.ENDC)
+        print(caption_color + "=" * totalWidth + Colors.ENDC)
+
+    nodes = get_nodes_containing(pattern)
+    for node in nodes:
+        if node.permission is not None and 'r' in node.permission:
+            val = read_reg(node)
+            if not only_dump_bad_values or val.get_state() not in [RegVal.BAD, RegVal.WARN]:
+                print(val.to_string(hex=True))
 
 def substitute_vars(string, vars):
     if string is None:

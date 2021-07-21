@@ -46,6 +46,27 @@ CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": 
 
 CONFIG_USE_TCDS = False
 
+# CVP13 specific
+CONFIG_CVP13_GE11_BITFILE = BEFE_SCRIPTS_DIR + "/resources/cvp13_ge11.bit"
+CONFIG_CVP13_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/cvp13_ge21.bit"
+CONFIG_CVP13_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/cvp13_me0.bit"
+CONFIG_CVP13_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/cvp13_csc.bit"
+
+CONFIG_CVP13_PCIE_CONFIG = BEFE_SCRIPTS_DIR + "/resources/cvp13_pcie_config"
+
+# vivado or vivado lab tools can be used to program CVP13
+CONFIG_VIVADO_DIR = "/opt/Xilinx/Vivado/2021.1" #this can also be a path to vivado lab tools e.g. "/opt/Xilinx/Vivado_Lab/2020.2"
+CONFIG_VIVADO_HW_SERVER = "localhost:3121"
+
+# X2O specific
+CONFIG_X2O_SW_DIR = "/root/X2O-Zynq-software"
+
+# APEX specific
+CONFIG_APEX_GE11_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_ge11.bit"
+CONFIG_APEX_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_ge21.bit"
+CONFIG_APEX_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_me0.bit"
+CONFIG_APEX_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_csc.bit"
+
 # =================================================================================================
 #            GE1/1 configuration
 # =================================================================================================

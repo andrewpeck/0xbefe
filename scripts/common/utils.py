@@ -1,5 +1,14 @@
 import common.tables.tableformatter as tf
-from common.rw_reg import *
+import imp
+
+try:
+    imp.find_module('befe_config')
+    import befe_config as befe_config
+except ImportError:
+    print_red("befe_config.py not found")
+    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
+    print_red("In most cases the example config without modifications will work as a starting point")
+    exit(1)
 
 # bright colors:
 class Colors:
@@ -26,6 +35,9 @@ class Colors:
 
 FULL_TABLE_GRID_STYLE = tf.FancyGrid()
 DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
+
+def get_config(config_name):
+    return eval("befe_config." + config_name)
 
 def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
@@ -103,34 +115,3 @@ def parse_int(string):
         return int(string, 2)
     else:
         return int(string)
-
-def reg_nice_print(regNode, printIfOk=True):
-    val = read_reg(regNode)
-    color = None
-    if ((regNode.error_min_value is not None) and (val >= regNode.error_min_value)) or ((regNode.error_max_value is not None) and (val <= regNode.error_max_value)) or ((regNode.error_value is not None) and (val == regNode.error_value)):
-        color = Colors.RED
-    elif ((regNode.warn_min_value is not None) and (val >= regNode.warn_min_value)) or ((regNode.warn_max_value is not None) and (val <= regNode.warn_max_value)) or ((regNode.warn_value is not None) and (val == regNode.warn_value)):
-        color = Colors.YELLOW
-
-    s = "%-*s%s" % (90, regNode.name, hex_padded(val, 4, True))
-    if color is not None:
-        s = color + s + Colors.ENDC
-
-    if color is not None or printIfOk:
-        print(s)
-
-def dump_regs(pattern, printIfOk=True, caption=None, captionColor=Colors.CYAN):
-    if caption is not None:
-        totalWidth = 100
-        if len(caption) + 6 > totalWidth:
-            totalWidth = len(caption) + 6
-        print(captionColor + "=" * totalWidth + Colors.ENDC)
-        padding1Size = int(((totalWidth - 2 - len(caption)) / 2))
-        padding2Size = padding1Size if padding1Size * 2 + len(caption) == totalWidth - 2 else padding1Size + 1
-        print(captionColor + "%s %s %s" % ("=" * padding1Size, caption, "=" * padding2Size) + Colors.ENDC)
-        print(captionColor + "=" * totalWidth + Colors.ENDC)
-
-    nodes = get_nodes_containing(pattern)
-    for node in nodes:
-        if node.permission is not None and 'r' in node.permission:
-            reg_nice_print(node, printIfOk)

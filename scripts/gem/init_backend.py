@@ -28,8 +28,8 @@ def init_gem_backend():
     heading("RX link status")
     befe_print_link_status(links, MgtTxRx.RX)
 
-    print("Use TCDS: %r" % CONFIG_USE_TCDS)
-    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 0 if CONFIG_USE_TCDS else 1)
+    print("Use TCDS: %r" % get_config("CONFIG_USE_TCDS"))
+    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 0 if get_config("CONFIG_USE_TCDS") else 1)
 
     print("Resetting user logic")
     write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET", 1)
@@ -41,7 +41,7 @@ def init_gem_backend():
 
     if gem_station == 1 or gem_station == 2:
         print("Loading %s OH bitfile to the PROMLESS RAM" % gem_station)
-        oh_bitfile = CONFIG_GE21_OH_BITFILE if gem_station == 2 else CONFIG_GE11_OH_BITFILE if gem_station == 1 else None
+        oh_bitfile = get_config("CONFIG_GE21_OH_BITFILE") if gem_station == 2 else get_config("CONFIG_GE11_OH_BITFILE") if gem_station == 1 else None
         if not path.exists(oh_bitfile):
             print_red("OH bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_GE*_OH_BITFILE constant in your befe_config.py file" % oh_bitfile)
             return

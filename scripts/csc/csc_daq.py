@@ -163,8 +163,8 @@ def initDaqRegAddrs():
 
 
 def dumpDaqRegs():
-    dump_regs("BEFE.CSC_FED.LINKS", True, "Link Registers")
-    dump_regs("BEFE.CSC_FED.DAQ", True, "DAQ Registers")
+    dump_regs("BEFE.CSC_FED.LINKS", False, "Link Registers")
+    dump_regs("BEFE.CSC_FED.DAQ", False, "DAQ Registers")
 
 #---------------------------- utils ------------------------------------------------
 
