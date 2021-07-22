@@ -98,7 +98,7 @@ CONFIG_GE21_OH_GBT0_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/ge21_gbt0_config.t
 CONFIG_GE21_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/ge21_gbt1_config.txt"] * 16
 CONFIG_GE21_OH_GBT_CONFIGS = [CONFIG_GE21_OH_GBT0_CONFIGS, CONFIG_GE21_OH_GBT1_CONFIGS] # do not modify this line
 # VFAT HDLC addresses
-CONFIG_GE21_VFAT_HDLC_ADDRESSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+CONFIG_GE21_VFAT_HDLC_ADDRESSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] # replace with zeros if your setup has older GEBs and/or VFAT hybrids that don't support addressing
 
 # =================================================================================================
 #            ME0 configuration

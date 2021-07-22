@@ -67,7 +67,7 @@ Start the BWTK monitor GUI:
 /opt/bwtk/2019.3L/bin/bwmonitor-gui
 ```
 (update the version as needed)
-Select the card and click connect. Scroll down to the "Programmable Clocks (PLL)" section, select Si5341-A, right click and select "Write clock program", and select the ```cvp13_synth_a_gem.h``` file (found in boards/cvp13/resources/clock_configs directory of the 0xBEFE repo). Repeat the same procedure for the Si5341-B synthesizer, but select the ```cvp13_synth_b_gem.h``` file. You can now close the monitor-gui application.
+Select the card and click connect. Scroll down to the "Programmable Clocks (PLL)" section, select Si5341-A, right click and select "Write clock program", and select the ```cvp13_synth_a_gem.h``` file (found in boards/cvp13/resources/clock_configs directory of the 0xBEFE repo). Repeat the same procedure for the Si5341-B synthesizer, but select the ```cvp13_synth_b_156p25.h``` file. You can now close the monitor-gui application.
 
 Write the firmware bitstream to the flash (note: this takes awhile):
 ```
