@@ -3,29 +3,44 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.common_pkg.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 
 package gem_pkg is
 
     --======================--
-    --==      General     ==--
-    --======================-- 
-        
-    constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
-
-    --======================--
     --== Config Constants ==--
     --======================-- 
-    
+        
     -- DAQ
     constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"0";
 
     --=============--
     --==  VFAT3  ==--
     --=============--
+
+    constant VFAT3_SC0_WORD         : std_logic_vector(7 downto 0) := x"96";
+    constant VFAT3_SC1_WORD         : std_logic_vector(7 downto 0) := x"99";
+    constant VFAT3_SYNC_WORD        : std_logic_vector(7 downto 0) := x"17";
+    constant VFAT3_SYNC_VERIFY_WORD : std_logic_vector(7 downto 0) := x"e8";
+    constant VFAT3_RESYNC_WORD      : std_logic_vector(7 downto 0) := x"55";
+    constant VFAT3_L1A_WORD         : std_logic_vector(7 downto 0) := x"69";
+    constant VFAT3_L1A_EC0_WORD     : std_logic_vector(7 downto 0) := x"aa";
+    constant VFAT3_L1A_BC0_WORD     : std_logic_vector(7 downto 0) := x"c3";
+    constant VFAT3_EC0_WORD         : std_logic_vector(7 downto 0) := x"0f";
+    constant VFAT3_BC0_WORD         : std_logic_vector(7 downto 0) := x"33";
+    constant VFAT3_CALPULSE_WORD    : std_logic_vector(7 downto 0) := x"3c";
+    constant VFAT3_NORMAL_MODE_WORD : std_logic_vector(7 downto 0) := x"66";
+    constant VFAT3_SC_ONLY_WORD     : std_logic_vector(7 downto 0) := x"5a";
     
     type t_vfat3_elinks_arr is array(integer range<>) of t_std8_array(23 downto 0);   
-    type t_vfat3_sbits_arr is array(integer range<>) of t_std64_array(5 downto 0);
+    type t_vfat3_sbits_arr is array(integer range<>) of t_std64_array(23 downto 0);
+    
+    constant VFAT3_HDLC_ADDRESSES_GE11 : t_std4_array(23 downto 0) := (x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");
+    constant VFAT3_HDLC_ADDRESSES_GE21 : t_std4_array(23 downto 0) := (x"0", x"1", x"2", x"3", x"4", x"5", x"6", x"7", x"8", x"9", x"a", x"b", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");
+    constant VFAT3_HDLC_ADDRESSES_ME0  : t_std4_array(23 downto 0) := (x"4", x"3", x"a", x"9", x"1", x"3", x"7", x"9", x"1", x"5", x"7", x"b", x"4", x"5", x"a", x"b", x"2", x"6", x"8", x"c", x"2", x"6", x"8", x"c");
+
+    function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
+    constant VFAT3_HDLC_ADDRESSES : t_std4_array(23 downto 0) := get_vfat_hdlc_addresses(CFG_GEM_STATION); 
 
     --========================--
     --== SBit cluster data  ==--
@@ -146,11 +161,6 @@ package gem_pkg is
     --====================--
     --==     OH Link    ==--
     --====================--
-
-    type t_sync_fifo_status is record
-        had_ovf         : std_logic;
-        had_unf         : std_logic;
-    end record;
     
     type t_gt_status is record
         not_in_table    : std_logic;
@@ -163,31 +173,15 @@ package gem_pkg is
         trig0_rx_gt_status      : t_gt_status;     
         trig1_rx_gt_status      : t_gt_status;     
     end record;
-
-    type t_gbt_link_status is record
-        gbt_tx_ready                : std_logic;
-        gbt_tx_had_not_ready        : std_logic;
-        gbt_tx_gearbox_ready        : std_logic;
-        gbt_rx_sync_status          : t_sync_fifo_status;
-        gbt_rx_ready                : std_logic;
-        gbt_rx_had_not_ready        : std_logic;
-        gbt_rx_header_locked        : std_logic;
-        gbt_rx_header_had_unlock    : std_logic;
-        gbt_rx_gearbox_ready        : std_logic;
-        gbt_rx_correction_cnt       : std_logic_vector(7 downto 0);
-        gbt_rx_correction_flag      : std_logic;
-        gbt_rx_num_bitslips         : std_logic_vector(7 downto 0);
-    end record;
     
     type t_vfat_link_status is record
         sync_good               : std_logic;
         sync_error_cnt          : std_logic_vector(3 downto 0);
-        daq_event_cnt           : std_logic_vector(7 downto 0);
+        daq_event_cnt           : std_logic_vector(15 downto 0);
         daq_crc_err_cnt         : std_logic_vector(7 downto 0);
     end record;
     
     type t_trig_link_status_arr is array(integer range <>) of t_trig_link_status;    
-    type t_gbt_link_status_arr is array(integer range <>) of t_gbt_link_status;    
     type t_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status;    
     type t_oh_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status_arr(23 downto 0);    
 
@@ -275,5 +269,18 @@ package body gem_pkg is
         end loop;
         return ret;
     end function;  
+        
+    function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array is
+    begin
+        if gem_station = 0 then
+            return VFAT3_HDLC_ADDRESSES_ME0;
+        elsif gem_station = 1 then
+            return VFAT3_HDLC_ADDRESSES_GE11;
+        elsif gem_station = 2 then
+            return VFAT3_HDLC_ADDRESSES_GE21;
+        else -- hmm whatever, lets say GE1/1
+            return VFAT3_HDLC_ADDRESSES_GE11;  
+        end if;
+    end function get_vfat_hdlc_addresses;
         
 end gem_pkg;

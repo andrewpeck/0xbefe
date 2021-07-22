@@ -6,6 +6,8 @@ Top/ge21_ctp7/project_config.vhd
 # Common libs
 common/hdl/common.src
 common/hdl/common_xilinx_7.src
+common/hdl/gbt.src
+common/hdl/sca.src
 
 # GEM source
 gem/hdl/gem.src

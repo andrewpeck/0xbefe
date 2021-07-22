@@ -61,9 +61,9 @@ end gbt;
 
 architecture Behavioral of gbt is
 
-  signal ipb_slave_tmr_err : std_logic;
-  signal gbt_link_tmr_err : std_logic;
-  signal gbt_serdes_tmr_err   : std_logic;
+  signal ipb_slave_tmr_err  : std_logic;
+  signal gbt_link_tmr_err   : std_logic;
+  signal gbt_serdes_tmr_err : std_logic;
 
   signal gbt_tx_data : std_logic_vector(7 downto 0) := (others => '0');
   signal gbt_rx_data : std_logic_vector(7 downto 0) := (others => '0');
@@ -82,9 +82,12 @@ architecture Behavioral of gbt is
   signal bc0_gbt    : std_logic;
   signal resync_gbt : std_logic;
 
-  signal cnt_reset : std_logic;
+  signal reset, cnt_reset : std_logic;
+  signal tmr_cnt_reset    : std_logic;
+  signal tmr_err_inj      : std_logic;
 
-  signal tx_delay : std_logic_vector (4 downto 0);
+  attribute MAX_FANOUT          : string;
+  attribute MAX_FANOUT of reset : signal is "50";
 
   -- wishbone master
   signal ipb_mosi : ipb_wbus;
@@ -111,6 +114,13 @@ architecture Behavioral of gbt is
 
 begin
 
+  process (clocks.clk40)
+  begin
+    if (rising_edge(clocks.clk40)) then
+      reset <= reset_i;
+    end if;
+  end process;
+
   -- wishbone master
 
   ipb_mosi_o <= ipb_mosi;
@@ -119,7 +129,7 @@ begin
   process (clocks.clk40)
   begin
     if (rising_edge(clocks.clk40)) then
-      cnt_reset <= (reset_i or resync_gbt or resync_force);
+      cnt_reset <= (reset or resync_gbt or resync_force);
     end if;
   end process;
 
@@ -139,7 +149,7 @@ begin
   gbt_serdes : entity work.gbt_serdes
     port map(
       -- clocks and reset
-      rst_i     => reset_i,
+      rst_i     => reset,
       clk_1x    => clocks.clk40,        -- 40 MHz phase shiftable frame clock from GBT
       clk_4x    => clocks.clk160_0,     --
       clk_4x_90 => clocks.clk160_90,    --
@@ -170,7 +180,7 @@ begin
     port map(
       -- clock and reset
       clock   => clocks.clk40,          -- 40 MHz ttc fabric clock
-      reset_i => reset_i,
+      reset_i => reset,
 
       -- parallel data
       data_i => gbt_rx_data,
@@ -191,7 +201,8 @@ begin
       ready_o    => gbt_link_ready,
       error_o    => gbt_link_error,
 
-      tmr_err_o => gbt_link_tmr_err
+      tmr_err_inj_i => tmr_err_inj,
+      tmr_err_o     => gbt_link_tmr_err
 
       );
 
@@ -211,7 +222,8 @@ begin
            g_NUM_REGS             => REG_GBT_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_GBT_ADDRESS_MSB,
            g_ADDR_LOW_BIT         => REG_GBT_ADDRESS_LSB,
-           g_USE_INDIVIDUAL_ADDRS => true
+           g_USE_INDIVIDUAL_ADDRS => true,
+           g_IPB_CLK_PERIOD_NS    => 25
        )
        port map(
            ipb_reset_i            => ipb_reset_i,
@@ -238,8 +250,11 @@ begin
     regs_addresses(3)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"5";
     regs_addresses(4)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"6";
     regs_addresses(5)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"7";
-    regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"0";
-    regs_addresses(7)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"1";
+    regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '0' & x"8";
+    regs_addresses(7)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"0";
+    regs_addresses(8)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"1";
+    regs_addresses(9)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"2";
+    regs_addresses(10)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= '1' & x"3";
 
     -- Connect read signals
     regs_read_arr(0)(REG_GBT_TX_CNT_RESPONSE_SENT_MSB downto REG_GBT_TX_CNT_RESPONSE_SENT_LSB) <= cnt_ipb_response;
@@ -248,16 +263,18 @@ begin
     regs_read_arr(2)(REG_GBT_RX_RX_VALID_BIT) <= gbt_rxvalid_i;
     regs_read_arr(2)(REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB downto REG_GBT_RX_CNT_REQUEST_RECEIVED_LSB) <= cnt_ipb_request;
     regs_read_arr(3)(REG_GBT_RX_CNT_LINK_ERR_MSB downto REG_GBT_RX_CNT_LINK_ERR_LSB) <= cnt_link_err;
-    regs_read_arr(6)(REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB) <= gbt_link_tmr_err_cnt;
-    regs_read_arr(6)(REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB) <= gbt_serdes_tmr_err_cnt;
-    regs_read_arr(7)(REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(7)(REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB) <= gbt_link_tmr_err_cnt;
+    regs_read_arr(7)(REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB) <= gbt_serdes_tmr_err_cnt;
+    regs_read_arr(8)(REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
 
     -- Connect write signals
 
     -- Connect write pulse signals
-    l1a_force <= regs_write_pulse_arr(3);
-    bc0_force <= regs_write_pulse_arr(4);
-    resync_force <= regs_write_pulse_arr(5);
+    l1a_force <= regs_write_pulse_arr(4);
+    bc0_force <= regs_write_pulse_arr(5);
+    resync_force <= regs_write_pulse_arr(6);
+    tmr_cnt_reset <= regs_write_pulse_arr(9);
+    tmr_err_inj <= regs_write_pulse_arr(10);
 
     -- Connect write done signals
 
@@ -304,38 +321,41 @@ begin
     );
 
 
-    COUNTER_GBT_TMR_GBT_LINK_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_GBT_LINK_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_link_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => gbt_link_tmr_err_cnt
     );
 
 
-    COUNTER_GBT_TMR_GBT_SERDES_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_GBT_SERDES_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => gbt_serdes_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => gbt_serdes_tmr_err_cnt
     );
 
 
-    COUNTER_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter
+    COUNTER_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset_i,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ipb_slave_tmr_err_cnt
     );
 

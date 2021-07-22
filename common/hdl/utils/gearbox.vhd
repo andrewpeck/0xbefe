@@ -41,6 +41,7 @@ architecture gearbox_arch of gearbox is
 
     signal din      : std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
     signal dout     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+    signal reset    : std_logic;
 
 begin
 
@@ -49,6 +50,9 @@ begin
         din <= din_i;
         dout_o <= dout;
     end generate;
+    
+    -- sync reset on write clock
+    i_sync_reset : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => wr_clk_i, sync_o => reset);
     
     -- swap the word order (note: we have to take care whether it's gear down or gear up)
     g_high_word_first_wiring : if g_HIGH_WORD_FIRST generate
@@ -83,7 +87,7 @@ begin
             )
             port map(
                 sleep         => '0',
-                rst           => reset_i,
+                rst           => reset,
                 wr_clk        => wr_clk_i,
                 wr_en         => valid_i,
                 din           => din,

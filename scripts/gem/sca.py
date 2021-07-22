@@ -34,14 +34,31 @@ class Virtex6Instructions:
     ISC_PROGRAM = 0x3D1
     ISC_DISABLE = 0x3D6
 
+class Artix7Instructions:
+    FPGA_ID     = 0x9
+    USER_CODE   = 0x8
+    BYPASS      = 0x3f
+    CFG_IN      = 0x5
+    CFG_OUT     = 0x4
+    SHUTDN      = 0xd
+    JPROG       = 0xb
+    JSTART      = 0xc
+    ISC_NOOP    = 0x14
+    ISC_ENABLE  = 0x10
+    ISC_PROGRAM = 0x11
+    ISC_DISABLE = 0x16
+
+
+VIRTEX6_IR_LENGTH = 10
+ARTIX7_IR_LENGTH = 6
 
 ARTIX7_75T_FIRMWARE_SIZE = 3825768
 ARTIX7_75T_FPGA_ID = 0x49c0
+ARTIX7_200T_FPGA_ID = 0x13636093
 VIRTEX6_FIRMWARE_SIZE = 5464972
 VIRTEX6_FPGA_ID = 0x6424a093
 
 FIRMWARE_SIZE = ARTIX7_75T_FIRMWARE_SIZE
-FPGA_ID = ARTIX7_75T_FPGA_ID
 
 ADDR_JTAG_LENGTH = None
 ADDR_JTAG_TMS = None
@@ -57,12 +74,13 @@ def main():
     if len(sys.argv) < 3:
         print('Usage: sca.py <oh_mask> <instructions>')
         print('instructions:')
-        print('  r:        SCA reset will be done')
-        print('  h:        FPGA hard reset will be done')
-        print('  hh:       FPGA hard reset will be asserted and held')
-        print('  fpga-id:  FPGA ID will be read through JTAG')
-        print('  sysmon:   Read FPGA sysmon data repeatedly')
-        print('  program-fpga:   Program OH FPGA with a bitfile or an MCS file. Requires a parameter "bit" or "mcs" and a filename')
+        print('  r:               SCA reset will be done')
+        print('  h:               FPGA hard reset will be done')
+        print('  hh:              FPGA hard reset will be asserted and held')
+        print('  fpga-id-virtex6: Virtex6 FPGA ID will be read through JTAG')
+        print('  fpga-id-artix7:  Artix7 FPGA ID will be read through JTAG')
+        print('  sysmon:          Read FPGA sysmon data repeatedly')
+        print('  program-fpga:    Program OH FPGA with a bitfile or an MCS file. Requires a parameter "bit" or "mcs" and a filename')
         return
     else:
         ohMask = parseInt(sys.argv[1])
@@ -93,16 +111,24 @@ def main():
     elif instructions == 'h':
         subheading('Issuing FPGA Hard Reset')
         writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.OH_FPGA_HARD_RESET'), 0x1)
-    elif instructions == 'fpga-id':
+    elif 'fpga-id' in instructions:
         enableJtag(ohMask)
+
+        if 'virtex6' not in instructions and 'artix7' not in instructions:
+            print("ERROR: cannot determine the FPGA type, please include the fpga type in the instruction e.g. fpga-id-virtex6 or fpga-id-artix7")
+            return
+
+        ir = Virtex6Instructions.FPGA_ID if 'virtex6' in instructions else Artix7Instructions.FPGA_ID
+        irLen = VIRTEX6_IR_LENGTH if 'virtex6' in instructions else ARTIX7_IR_LENGTH
+        expectedId = VIRTEX6_FPGA_ID if 'virtex6' in instructions else ARTIX7_200T_FPGA_ID
 
         errors = 0
         timeStart = clock()
-        for i in range(0,1):
-            value = jtagCommand(True, Virtex6Instructions.FPGA_ID, 10, 0x0, 32, ohList)
+        for i in range(1):
+            value = jtagCommand(True, ir, irLen, 0x0, 32, ohList)
             for oh in ohList:
                 print(('OH #%d FPGA ID= ' % oh) + hex(value[oh]))
-                if value[oh] != FPGA_ID:
+                if value[oh] != expectedId:
                     errors += 1
 
         totalTime = clock() - timeStart

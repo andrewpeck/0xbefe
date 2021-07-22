@@ -20,7 +20,6 @@ use UNISIM.VComponents.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.common_pkg.all;
-use work.gem_pkg.all;
 use work.ipb_addr_decode.all;
 use work.registers.all;
 
@@ -30,7 +29,8 @@ use work.registers.all;
 
 entity ttc is
     generic(
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
         -- reset
@@ -46,6 +46,7 @@ entity ttc is
         ttc_data_n_i        : in  std_logic;
 
         -- TTC commands
+        local_l1a_req_i     : in  std_logic; -- this is an edge triggered async input, and can be used to request local L1As
         ttc_cmds_o          : out t_ttc_cmds;
     
         -- DAQ counters (L1A ID, Orbit ID, BX ID)
@@ -113,7 +114,7 @@ architecture ttc_arch of ttc is
     signal gen_single_resync        : std_logic;
     signal gen_single_ec0           : std_logic;
     signal gen_cyclic_l1a_gap       : std_logic_vector(15 downto 0);
-    signal gen_cyclic_l1a_cnt       : std_logic_vector(23 downto 0);
+    signal gen_cyclic_l1a_cnt       : std_logic_vector(31 downto 0);
     signal gen_cyclic_cal_l1a_gap   : std_logic_vector(11 downto 0);
     signal gen_cyclic_cal_prescale  : std_logic_vector(11 downto 0);
     signal gen_cyclic_l1a_start     : std_logic;
@@ -135,6 +136,10 @@ architecture ttc_arch of ttc is
     signal ttc_cmds_cnt_arr         : t_std32_array(C_NUM_OF_DECODED_TTC_CMDS - 1 downto 0);
     
     signal l1a_rate                 : std_logic_vector(31 downto 0); 
+
+    -- l1a request
+    signal l1a_req_sync             : std_logic;
+    signal l1a_req                  : std_logic;
 
     -- ttc mini spy
     signal ttc_spy_buffer           : std_logic_vector(31 downto 0) := (others => '1');
@@ -297,11 +302,22 @@ begin
             data_o      => l1a_cmd_real
         );
 
+    ------------- L1A request -------------
+    
+    i_l1a_req_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_req_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_sync);
+    i_l1a_req_oneshot : entity work.oneshot
+        port map(
+            reset_i   => reset,
+            clk_i     => ttc_clks_i.clk_40,
+            input_i   => l1a_req_sync,
+            oneshot_o => l1a_req
+        );
+    
     ------------- TTC generator -------------
 
     i_ttc_generator : entity work.ttc_generator
         port map(
-            reset_i              => reset_i or gen_reset,
+            reset_i              => reset or gen_reset,
             ttc_clks_i           => ttc_clks_i,
             ttc_cmds_o           => gen_ttc_cmds,
             single_hard_reset_i  => gen_single_hard_reset,
@@ -326,7 +342,7 @@ begin
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
     hard_reset_cmd <= hard_reset_cmd_real when gen_enable = '0' else gen_ttc_cmds.hard_reset;
     calpulse_cmd   <= calpulse_cmd_real when gen_enable = '0' and gen_enable_cal_only = '0' else gen_ttc_cmds.calpulse;
-    l1a_cmd        <= l1a_cmd_real when gen_enable = '0' else gen_ttc_cmds.l1a;
+    l1a_cmd        <= l1a_cmd_real or l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req;
 
     ------------- TTC counters -------------
     

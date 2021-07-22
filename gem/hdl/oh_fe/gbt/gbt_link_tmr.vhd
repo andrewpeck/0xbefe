@@ -44,7 +44,8 @@ entity gbt_link_tmr is
     error_o    : out std_logic;
     unstable_o : out std_logic;
 
-    tmr_err_o : out std_logic := '0'
+    tmr_err_inj_i : in  std_logic := '0';
+    tmr_err_o     : out std_logic := '0'
     );
 end gbt_link_tmr;
 
@@ -85,6 +86,7 @@ begin
   end generate NO_TMR;
 
   TMR : if (g_ENABLE_TMR = 1) generate
+
     signal resync_tmr   : std_logic_vector(2 downto 0);
     signal l1a_tmr      : std_logic_vector(2 downto 0);
     signal bc0_tmr      : std_logic_vector(2 downto 0);
@@ -99,7 +101,6 @@ begin
 
 
     attribute DONT_TOUCH : string;
-
     attribute DONT_TOUCH of resync_tmr   : signal is "true";
     attribute DONT_TOUCH of l1a_tmr      : signal is "true";
     attribute DONT_TOUCH of bc0_tmr      : signal is "true";
@@ -109,14 +110,14 @@ begin
     attribute DONT_TOUCH of ready_tmr    : signal is "true";
     attribute DONT_TOUCH of ipb_mosi_tmr : signal is "true";
     attribute DONT_TOUCH of data_tmr     : signal is "true";
+
   begin
 
     tmr_loop : for I in 0 to 2 generate
     begin
+
       gbt_link_inst : entity work.gbt_link
-        generic map(
-          g_TMR_INSTANCE => I
-          )
+        generic map(g_TMR_INSTANCE => I)
         port map(
 
           -- reset
@@ -152,7 +153,7 @@ begin
     majority_err (ipb_mosi_o.ipb_strobe, tmr_err(3), ipb_mosi_tmr(0).ipb_strobe, ipb_mosi_tmr(1).ipb_strobe, ipb_mosi_tmr(2).ipb_strobe);
     majority_err (ipb_mosi_o.ipb_addr, tmr_err(4), ipb_mosi_tmr(0).ipb_addr, ipb_mosi_tmr(1).ipb_addr, ipb_mosi_tmr(2).ipb_addr);
     majority_err (resync_o, tmr_err(5), resync_tmr(0), resync_tmr(1), resync_tmr(2));
-    majority_err (l1a_o, tmr_err(6), l1a_tmr(0), l1a_tmr(1), l1a_tmr(2));
+    majority_err (l1a_o, tmr_err(6), tmr_err_inj_i xor l1a_tmr(0), l1a_tmr(1), l1a_tmr(2));
     majority_err (bc0_o, tmr_err(7), bc0_tmr(0), bc0_tmr(1), bc0_tmr(2));
     majority_err (unstable_o, tmr_err(8), unstable_tmr(0), unstable_tmr(1), unstable_tmr(2));
     majority_err (error_o, tmr_err(9), error_tmr(0), error_tmr(1), error_tmr(2));

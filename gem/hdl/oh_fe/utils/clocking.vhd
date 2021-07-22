@@ -20,7 +20,10 @@ use work.ipbus_pkg.all;
 use work.registers.all;
 
 entity clocking is
+  generic (ASYNC_MODE : boolean := false);
   port(
+
+    async_clock_i : in std_logic;
 
     clock_p : in std_logic;
     clock_n : in std_logic;
@@ -40,6 +43,7 @@ architecture Behavioral of clocking is
       reset       : in  std_logic;
       clk_in1     : in  std_logic;
       clk40_o     : out std_logic;
+      clk80_o     : out std_logic;
       clk160_o    : out std_logic;
       clk160_90_o : out std_logic;
       clk200_o    : out std_logic;
@@ -47,33 +51,34 @@ architecture Behavioral of clocking is
       );
   end component;
 
-  signal sysclk    : std_logic;
-  signal clk40     : std_logic;
-  signal clk160_0  : std_logic;
-  signal clk160_90 : std_logic;
-  signal clk200    : std_logic;
-
+  signal sysclk      : std_logic;
   signal mmcm_locked : std_logic;
-
-  signal clock   : std_logic;
-  signal clock_i : std_logic;
+  signal clock_i     : std_logic;
 
 begin
 
   -- Input buffering
   --------------------------------------
-  clkin1_buf : IBUFGDS
-    port map (
-      O  => clock_i,
-      I  => clock_p,
-      IB => clock_n
-      );
+  sync_gen : if (not ASYNC_MODE) generate
 
-  sysclk_bufg : BUFG
-    port map (
-      I => clock_i,
-      O => sysclk
-      );
+    clkin1_buf : IBUFGDS
+      port map (
+        O  => clock_i,
+        I  => clock_p,
+        IB => clock_n
+        );
+
+    sysclk_bufg : BUFG
+      port map (
+        I => clock_i,
+        O => sysclk
+        );
+
+  end generate;
+
+  async_gen : if (ASYNC_MODE) generate
+    clock_i <= async_clock_i;
+  end generate;
 
   clocks_inst : clocks
     port map(
@@ -82,20 +87,17 @@ begin
 
       clk_in1 => clock_i,
 
-      clk40_o     => clk40,
-      clk160_o    => clk160_0,
-      clk160_90_o => clk160_90,
-      clk200_o    => clk200,
+      clk40_o     => clocks_o.clk40,
+      clk160_o    => clocks_o.clk160_0,
+      clk160_90_o => clocks_o.clk160_90,
+      clk200_o    => clocks_o.clk200,
+      clk80_o     => clocks_o.clk80,
 
       locked_o => mmcm_locked
       );
 
-  clocks_o.sysclk    <= sysclk;
-  clocks_o.locked    <= mmcm_locked;
-  clocks_o.clk40     <= clk40;
-  clocks_o.clk160_0  <= clk160_0;
-  clocks_o.clk160_90 <= clk160_90;
-  clocks_o.clk200    <= clk200;
+  clocks_o.sysclk <= sysclk;
+  clocks_o.locked <= mmcm_locked;
 
   mmcm_locked_o <= mmcm_locked;
 

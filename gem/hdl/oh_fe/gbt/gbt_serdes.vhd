@@ -84,6 +84,9 @@ architecture Behavioral of gbt_serdes is
 
   signal rst : std_logic := '0';
 
+  attribute MAX_FANOUT        : string;
+  attribute MAX_FANOUT of rst : signal is "10";
+
   signal sump_vector : std_logic_vector (5 downto 0);
 
 begin

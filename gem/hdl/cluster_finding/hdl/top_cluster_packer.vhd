@@ -6,6 +6,8 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
+-- latency = 6.5 bx as of 2021/06/02
+
 entity cluster_packer is
   generic (
     DEADTIME          : integer := 0;
@@ -13,9 +15,9 @@ entity cluster_packer is
     SPLIT_CLUSTERS    : integer := 0;
     INVERT_PARTITIONS : boolean := false;
 
-    NUM_VFATS           : integer := 0;
-    NUM_PARTITIONS      : integer := 0;
-    STATION             : integer := 0
+    NUM_VFATS      : integer := 0;
+    NUM_PARTITIONS : integer := 0;
+    STATION        : integer := 0
     );
   port(
 
@@ -28,7 +30,6 @@ entity cluster_packer is
 
     cluster_count_o : out std_logic_vector (10 downto 0);
     clusters_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    clusters_ena_o  : out std_logic;
     overflow_o      : out std_logic
     );
 end cluster_packer;
@@ -90,16 +91,6 @@ architecture behavioral of cluster_packer is
       cnts  : out std_logic_vector
       );
   end component;
-
-  component x_oneshot is
-    port (
-      d        : in  std_logic;
-      clk      : in  std_logic;
-      slowclk  : in  std_logic;
-      deadtime : in  std_logic_vector (3 downto 0);
-      q        : out std_logic
-      );
-  end component x_oneshot;
 
 begin
 
@@ -176,31 +167,34 @@ begin
   -- Oneshot
   --------------------------------------------------------------------------------
 
-  -- without the oneshot we can save 6.25 ns latency and make this transparent
   nos_gen : if (not ONESHOT) generate
     partitions_os <= partitions_i;
   end generate;
 
-  -- Optional oneshot to keep VFATs from re-firing the same channel
+  -- Optional zero-delay oneshot to keep VFATs from re-firing the same channel
   os_gen : if (ONESHOT) generate
     os_vfatloop : for ipartition in 0 to (NUM_PARTITIONS - 1) generate
       os_sbitloop : for isbit in 0 to (MXSBITS*PARTITION_WIDTH - 1) generate
-        sbit_oneshot : x_oneshot
+        sbit_oneshot : entity work.sbit_oneshot
+          generic map (DEADTIME => DEADTIME)
           port map (
-            d        => partitions_i(ipartition)(isbit),
-            q        => partitions_os(ipartition)(isbit),
-            deadtime => std_logic_vector(to_unsigned(DEADTIME, 4)),
-            clk      => clk_fast,
-            slowclk  => clk_40
+            d   => partitions_i(ipartition)(isbit),
+            q   => partitions_os(ipartition)(isbit),
+            clk => clk_40
             );
       end generate;
-
     end generate;
-
   end generate;
 
+  -- without the oneshot, just have a ff
   flatten_partitions : for iprt in 0 to NUM_PARTITIONS-1 generate
-    sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS) <= partitions_os(iprt);
+    process (clk_fast) is
+    begin
+      if (rising_edge(clk_fast)) then
+        sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
+          <= partitions_os(iprt);
+      end if;
+    end process;
   end generate;
 
   ----------------------------------------------------------------------------------
@@ -266,7 +260,7 @@ begin
       DELAY => OVERFLOW_LATENCY,
       WIDTH => 1)
     port map (
-      clock  => clk_fast,
+      clock     => clk_fast,
       data_i(0) => overflow,
       data_o(0) => overflow_o
       );
@@ -277,10 +271,10 @@ begin
 
   find_clusters_inst : entity work.find_clusters
     generic map (
-      MXSBITS                 => MXSBITS,
-      NUM_VFATS               => NUM_VFATS,
-      NUM_FOUND_CLUSTERS      => NUM_FOUND_CLUSTERS,
-      STATION                 => STATION
+      MXSBITS            => MXSBITS,
+      NUM_VFATS          => NUM_VFATS,
+      NUM_FOUND_CLUSTERS => NUM_FOUND_CLUSTERS,
+      STATION            => STATION
       )
     port map (
       clock      => clk_fast,
@@ -295,16 +289,15 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  process (clk_fast)
+  process (clk_40)
   begin
-    if (rising_edge(clk_fast)) then
+    if (rising_edge(clk_40)) then
       if (reset = '1') then
         clusters_o <= (others => NULL_CLUSTER);
       else
         clusters_o <= clusters;
       end if;
     end if;
-    clusters_ena_o <= cluster_latch;
   end process;
 
 end behavioral;

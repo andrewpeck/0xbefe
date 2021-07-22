@@ -64,6 +64,7 @@ architecture promless_arch of promless is
 
     signal qdr_write_data   : std_logic_vector(17 downto 0);
     signal qdr_read_data    : std_logic_vector(71 downto 0);
+    signal qdr_bw           : std_logic_vector(3 downto 0);
     
     -- slow control signals
     signal sc_write_addr    : std_logic_vector(18 downto 0);

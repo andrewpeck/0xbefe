@@ -20,7 +20,7 @@ set_max_delay -from [get_pins -hierarchical -filter { NAME =~  "*iserdes_a7.iser
 set_false_path -from [get_pins -hierarchical -filter { NAME =~  "*iserdes_a7.iserdes/CLK" }] -to [get_pins -hierarchical -filter { NAME =~  "*dru/data_in_delay_reg*/D" }]
 
 # nothing important comes from the CFGMCLK
-create_clock -period 10.0 -name CFGMCLK [get_pins control_inst/led_control_inst/startup/startup_gen_a7.startupe2_inst/CFGMCLK]
+create_clock -period 24.0 -name CFGMCLK [get_pins control_inst/led_control_inst/startup/startup_gen_a7.startupe2_inst/CFGMCLK]
 set_false_path -from [get_clocks CFGMCLK] -to [get_clocks *]
 set_false_path -from [get_clocks  *     ] -to [get_clocks CFGMCLK]
 

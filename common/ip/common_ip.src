@@ -1,0 +1,14 @@
+# -*- mode: TCL;-*-
+
+common/ip/ila_axi_ipbus_bridge/ila_axi_ipbus_bridge.xci
+common/ip/gt_rx_link_ila/gt_rx_link_ila.xci
+common/ip/gt_tx_link_ila/gt_tx_link_ila.xci
+common/ip/ila_gbt_mgt/ila_gbt_mgt.xci
+common/ip/ila_gbt/ila_gbt.xci
+common/ip/ila_lpgbt/ila_lpgbt.xci
+common/ip/ila_gem_loader/ila_gem_loader.xci
+common/ip/vio_gem_loader/vio_gem_loader.xci
+common/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
+common/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
+common/ip/ila_clk_phase_check/ila_clk_phase_check.xci
+common/ip/vio_ipb_bus_debug_select/vio_ipb_bus_debug_select.xci

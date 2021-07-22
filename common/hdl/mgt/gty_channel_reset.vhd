@@ -16,7 +16,6 @@ library unisim;
 use unisim.vcomponents.all;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 use work.mgt_pkg.all;
 
 entity gty_channel_reset is

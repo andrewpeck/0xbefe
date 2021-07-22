@@ -1,0 +1,23 @@
+# -*- mode: TCL;-*-
+
+# CSC Top
+csc/hdl/csc_fed.vhd
+
+# Pkg
+#gem/hdl/pkg/registers.vhd                  <-- use the generated version specific to the project
+csc/hdl/pkg/ttc_config_pkg.vhd
+csc/hdl/pkg/ipb_addr_decode.vhd
+csc/hdl/pkg/csc_pkg.vhd
+
+# DAQ
+#csc/hdl/daq/daq.vhd <-- use the generated version specific to the project
+csc/hdl/daq/input_processor.vhd
+csc/hdl/daq/gbe_tx_driver.vhd
+
+# System
+#csc/hdl/system/system_regs.vhd           <-- use the generated version specific to the project
+#csc/hdl/system/link_monitor.vhd          <-- use the generated version specific to the project
+
+# Tests
+#csc/hdl/tests/csc_tests.vhd              <-- use the generated version specific to the project
+csc/hdl/tests/eth_test.vhd

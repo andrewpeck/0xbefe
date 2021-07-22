@@ -47,9 +47,6 @@ end vfat3_tx_link;
 
 architecture vfat3_tx_link_arch of vfat3_tx_link is
 
-    constant VFAT3_SC0_WORD : std_logic_vector(7 downto 0) := x"96";
-    constant VFAT3_SC1_WORD : std_logic_vector(7 downto 0) := x"99";
-
     signal sc_data_encoded  : std_logic_vector(7 downto 0);
     
 begin

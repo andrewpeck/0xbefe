@@ -41,7 +41,7 @@ architecture Behavioral of counter_snap is
   constant max_count : unsigned (g_COUNTER_WIDTH - 1 downto 0) := (others => '1');
   signal count       : unsigned (g_COUNTER_WIDTH - 1 downto 0);
   signal reset       : std_logic;
-  signal count_copy  : std_logic_vector(g_COUNTER_WIDTH-1 downto 0);
+  signal count_copy  : std_logic_vector(g_COUNTER_WIDTH-1 downto 0) := (others => '0');
 
 begin
 
@@ -58,7 +58,8 @@ begin
   begin
     if (rising_edge(ref_clk_i)) then
       if (reset = '1') then
-        count <= (others => '0');
+        count      <= (others => '0');
+        -- Do NOT reset the count_copy; it needs to be stable across resets
       else
         if en_i = '1' and (count < max_count or g_ALLOW_ROLLOVER) then
           count <= count + g_INCREMENT_STEP;

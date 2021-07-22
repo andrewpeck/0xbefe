@@ -6,6 +6,8 @@ import array
 import struct
 from config_me0 import *
 
+ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12]
+
 def main():
 
     parseXML()
@@ -68,6 +70,13 @@ def main():
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.ADDRESS"), 0x12F)
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA"), 0x80)
                 writeReg(getNode("GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE"), 1)
+
+    sleep(0.1)
+    for vfat in range(0,24):
+        if config_param["hdlc_addr"]:
+            writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)), ME0_VFAT_HDLC_ADDRESSES[vfat])
+        else:
+            writeReg(getNode("GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)), 0)
 
     sleep(0.1)
     writeReg(getNode("GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1)

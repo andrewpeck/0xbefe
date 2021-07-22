@@ -18,7 +18,7 @@ use unisim.vcomponents.all;
 
 use work.common_pkg.all;
 use work.gem_pkg.all;
-use work.gem_board_config_package.all;
+use work.board_config_package.all;
 use work.ipb_addr_decode.all;
 use work.ipbus.all;
 use work.ttc_pkg.all;
@@ -34,6 +34,7 @@ entity gem_amc is
         g_NUM_TRIG_TX_LINKS  : integer;
         
         g_NUM_IPB_SLAVES     : integer;
+        g_IPB_CLK_PERIOD_NS  : integer; 
         g_DAQ_CLK_FREQ       : integer;
         g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
         
@@ -95,9 +96,9 @@ entity gem_amc is
         -- Board serial number
         board_id_i              : in std_logic_vector(15 downto 0);
       
-        -- GEM loader
-        to_gem_loader_o         : out t_to_gem_loader;
-        from_gem_loader_i       : in  t_from_gem_loader
+        -- PROMless
+        to_promless_o           : out t_to_promless;
+        from_promless_i         : in  t_from_promless
         
     );
 end gem_amc;
@@ -232,7 +233,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat_mask_arr                : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
     
     signal use_v3b_elink_mapping        : std_logic;
-    signal use_vfat_addressing          : std_logic;
+    signal vfat_hdlc_address_arr        : t_std4_array(23 downto 0);
 
     -- test module links
     signal test_gbt_wide_rx_data_arr    : t_gbt_wide_frame_array((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
@@ -243,8 +244,8 @@ architecture gem_amc_arch of gem_amc is
     signal loopback_gbt_test_en         : std_logic; 
     
     --== Other ==--
-    signal gemloader_stats              : t_gem_loader_stats;
-    signal gemloader_cfg                : t_gem_loader_cfg;
+    signal promless_stats               : t_promless_stats;
+    signal promless_cfg                 : t_promless_cfg;
     signal ipb_miso_arr                 : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
     
     --== Debug ==--
@@ -304,7 +305,8 @@ begin
 
     i_ttc : entity work.ttc
         generic map (
-            g_DISABLE_TTC_DATA => g_DISABLE_TTC_DATA
+            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i             => reset,
@@ -313,6 +315,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
+            local_l1a_req_i     => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -345,23 +348,24 @@ begin
     
     i_vfat3_slow_control : entity work.vfat3_slow_control
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs
+            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i          => reset or link_reset,
-            ttc_clk_i        => ttc_clocks_i,
-            ipb_clk_i        => ipb_clk_i,
-            ipb_mosi_i       => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
-            ipb_miso_o       => ipb_miso_arr(C_IPB_SLV.vfat3),
-            tx_data_o        => vfat3_sc_tx_data,
-            tx_rd_en_i       => vfat3_sc_tx_rd_en,
-            tx_empty_o       => vfat3_sc_tx_empty,
-            tx_oh_idx_o      => vfat3_sc_tx_oh_idx,
-            tx_vfat_idx_o    => vfat3_sc_tx_vfat_idx,
-            rx_data_en_i     => vfat3_sc_rx_data_en,
-            rx_data_i        => vfat3_sc_rx_data,
-            status_o         => vfat3_sc_status,
-            use_addressing_i => use_vfat_addressing
+            reset_i                 => reset or link_reset,
+            ttc_clk_i               => ttc_clocks_i,
+            ipb_clk_i               => ipb_clk_i,
+            ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.vfat3),
+            ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.vfat3),
+            tx_data_o               => vfat3_sc_tx_data,
+            tx_rd_en_i              => vfat3_sc_tx_rd_en,
+            tx_empty_o              => vfat3_sc_tx_empty,
+            tx_oh_idx_o             => vfat3_sc_tx_oh_idx,
+            tx_vfat_idx_o           => vfat3_sc_tx_vfat_idx,
+            rx_data_en_i            => vfat3_sc_rx_data_en,
+            rx_data_i               => vfat3_sc_rx_data,
+            status_o                => vfat3_sc_status,
+            vfat_hdlc_address_arr_i => vfat_hdlc_address_arr
         );
 
     --================================--
@@ -372,10 +376,11 @@ begin
 
         i_optohybrid_single : entity work.optohybrid
             generic map(
-                g_GEM_STATION   => g_GEM_STATION,
-                g_OH_VERSION    => CFG_OH_VERSION,
-                g_OH_IDX        => std_logic_vector(to_unsigned(i, 4)),
-                g_DEBUG         => CFG_DEBUG_OH and (i = 0)
+                g_GEM_STATION       => g_GEM_STATION,
+                g_OH_VERSION        => CFG_OH_VERSION,
+                g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                g_DEBUG             => CFG_DEBUG_OH and (i = 0)
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -431,10 +436,11 @@ begin
     ge_trigger : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
-            g_DEBUG => CFG_DEBUG_TRIGGER
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_TRIGGER
         )
         port map(
             reset_i            => reset or link_reset,
@@ -534,10 +540,11 @@ begin
 
     i_daq : entity work.daq
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
-            g_DAQ_CLK_FREQ => g_DAQ_CLK_FREQ,
-            g_INCLUDE_SPY_FIFO => false,
-            g_DEBUG => CFG_DEBUG_DAQ
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
+            g_INCLUDE_SPY_FIFO  => false,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_DEBUG             => CFG_DEBUG_DAQ
         )
         port map(
             reset_i                 => reset,
@@ -568,12 +575,13 @@ begin
     --================================--
 
     i_gem_system : entity work.gem_system_regs
-        generic map (
+        generic map(
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
-            g_FW_DATE => g_FW_DATE,
-            g_FW_TIME => g_FW_TIME,
-            g_FW_VER => g_FW_VER,
-            g_FW_SHA => g_FW_SHA
+            g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS,
+            g_FW_DATE            => g_FW_DATE,
+            g_FW_TIME            => g_FW_TIME,
+            g_FW_VER             => g_FW_VER,
+            g_FW_SHA             => g_FW_SHA
         )
         port map(
             ttc_clks_i                  => ttc_clocks_i,            
@@ -587,13 +595,13 @@ begin
             loopback_gbt_test_en_o      => loopback_gbt_test_en,
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
-            use_vfat_addressing_o       => use_vfat_addressing,
+            vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
             gbt_reset_o                 => manual_gbt_reset,
-            gemloader_stats_i           => gemloader_stats,
-            gemloader_cfg_o             => gemloader_cfg
+            promless_stats_i            => promless_stats,
+            promless_cfg_o              => promless_cfg
         );
 
     --===============================--
@@ -603,7 +611,8 @@ begin
     i_oh_link_registers : entity work.oh_link_regs
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
-            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH
+            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset,
@@ -629,6 +638,7 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
             g_DEBUG             => false
         )
         port map(
@@ -655,7 +665,8 @@ begin
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
-            g_GEM_STATION       => g_GEM_STATION
+            g_GEM_STATION       => g_GEM_STATION,
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                     => reset_i,
@@ -684,7 +695,8 @@ begin
                 RX_OPTIMIZATION     => 0,
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
-                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS
+                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS,
+                g_USE_RX_SYNC_FIFOS => false
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
@@ -721,7 +733,7 @@ begin
                 g_RX_RATE               => DATARATE_10G24,
                 g_RX_ENCODING           => FEC5,
                 g_RESET_MGT_ON_EVEN     => 0,
-                g_USE_RX_SYNC_FIFOS     => true,
+                g_USE_RX_SYNC_FIFOS     => false,
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
@@ -844,19 +856,19 @@ begin
 
     g_use_oh_fpga_loader : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_oh_fpga_loader : entity work.promless_fpga_loader
-                generic map (
-                    g_LOADER_CLK_80_MHZ => true
-                )
+            generic map(
+                g_LOADER_CLK_80_MHZ => true
+            )
             port map(
-                reset_i            => reset_i,
-                gbt_clk_i          => ttc_clocks_i.clk_40,
-                loader_clk_i       => ttc_clocks_i.clk_80,
-                to_gem_loader_o    => to_gem_loader_o,
-                from_gem_loader_i  => from_gem_loader_i,
-                elink_data_o       => promless_tx_data,
-                hard_reset_i       => ttc_cmd.hard_reset,
-                gem_loader_stats_o => gemloader_stats,
-                gem_loader_cfg_i   => gemloader_cfg
+                reset_i          => reset_i,
+                gbt_clk_i        => ttc_clocks_i.clk_40,
+                loader_clk_i     => ttc_clocks_i.clk_80,
+                to_promless_o    => to_promless_o,
+                from_promless_i  => from_promless_i,
+                elink_data_o     => promless_tx_data,
+                hard_reset_i     => ttc_cmd.hard_reset,
+                promless_stats_o => promless_stats,
+                promless_cfg_i   => promless_cfg
             );
     end generate;
         

@@ -49,9 +49,14 @@ entity control is
 
     --== TTC ==--
 
-    clocks : in clocks_t;
     ttc_i  : in ttc_t;
+
+    -- Clock and Reset
+    clocks        : in  clocks_t;
+    async_clock_o : out std_logic;
     reset  : in std_logic;
+
+    -- Wishbone
 
     ipb_mosi_i : in  ipb_wbus;
     ipb_miso_o : out ipb_rbus;
@@ -108,6 +113,8 @@ end control;
 
 architecture Behavioral of control is
 
+  signal tmr_cnt_reset     : std_logic;
+  signal tmr_err_inj       : std_logic;
   signal ttc_tmr_err       : std_logic;
   signal ipb_slave_tmr_err : std_logic;
 
@@ -169,13 +176,26 @@ architecture Behavioral of control is
 
   signal uptime : unsigned (19 downto 0);
 
-  --== SEM ==--
+  -- SEM
 
-  signal sem_correction : std_logic;
-  signal sem_critical   : std_logic;
-  signal sem_inject_strobe    : std_logic;
-  signal sem_inject_address   : std_logic_vector(39 downto 0);
-  --== Sbits ==--
+  signal sem_initialization : std_logic;
+  signal sem_classification : std_logic;
+  signal sem_observation    : std_logic;
+  signal sem_correction     : std_logic;
+  signal sem_uncorrectable  : std_logic;
+  signal sem_injection      : std_logic;
+  signal sem_essential      : std_logic;
+  signal sem_idle           : std_logic;
+
+  signal sem_inject_strobe       : std_logic;
+  signal sem_inject_address      : std_logic_vector(39 downto 0);
+  signal sem_critical_pulse      : std_logic;
+  signal sem_correction_pulse    : std_logic;
+  signal sem_uncorrectable_pulse : std_logic;
+  signal sem_essential_pulse     : std_logic;
+  signal sem_cnt_reset           : std_logic;
+
+  -- Sbits
 
   signal sbit_sel0 : std_logic_vector(4 downto 0);
   signal sbit_sel1 : std_logic_vector(4 downto 0);
@@ -230,7 +250,6 @@ architecture Behavioral of control is
 
   component led_control
     port(
-      mgts_ready           : in  std_logic;
       txfsm_done           : in  std_logic;
       pll_lock             : in  std_logic;
       clock                : in  std_logic;
@@ -243,8 +262,10 @@ architecture Behavioral of control is
       gbt_link_ready       : in  std_logic;
       gbt_request_received : in  std_logic;
       reset                : in  std_logic;
+      mgts_ready           : in  std_logic;
       cluster_count_i      : in  std_logic_vector(10 downto 0);
       cluster_rate         : out std_logic_vector(31 downto 0);
+      async_clock_o        : out std_logic;
       led_out              : out std_logic_vector(15 downto 0)
       );
   end component;
@@ -260,8 +281,9 @@ architecture Behavioral of control is
     signal regs_write_done_arr  : std_logic_vector(REG_CONTROL_NUM_REGS - 1 downto 0) := (others => '1');
     signal regs_writable_arr    : std_logic_vector(REG_CONTROL_NUM_REGS - 1 downto 0) := (others => '0');
     -- Connect counter signal declarations
-    signal cnt_sem_critical : std_logic_vector (15 downto 0) := (others => '0');
+    signal cnt_sem_uncorrectable : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_sem_correction : std_logic_vector (15 downto 0) := (others => '0');
+    signal cnt_sem_injection : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_bx0_lcl : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_bx0_rxd : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_l1a : std_logic_vector (23 downto 0) := (others => '0');
@@ -357,9 +379,10 @@ begin
     port map (
 
       -- clock
-      clock       => clocks.clk40,
-      mmcm_locked => mmcms_locked_i,
-      reset       => reset,
+      clock         => clocks.clk40,
+      mmcm_locked   => mmcms_locked_i,
+      reset         => reset,
+      async_clock_o => async_clock_o,
 
       -- mgt
       mgts_ready => mgts_ready,
@@ -477,7 +500,8 @@ begin
       bx0_sync_err => ttc_bx0_sync_err,
       bxn_sync_err => ttc_bxn_sync_err,
 
-      tmr_err_o => ttc_tmr_err
+      tmr_err_inj_i => tmr_err_inj,
+      tmr_err_o     => ttc_tmr_err
 
       );
 
@@ -487,17 +511,25 @@ begin
 
   sem_mon_inst : entity work.sem_mon
     port map(
-      clk_i            => clocks.clk40,
+      clk_i            => clocks.clk80,
+      sysclk_i         => clocks.clk40,
       heartbeat_o      => open,
-      initialization_o => open,
-      observation_o    => open,
-      correction_o     => sem_correction,
       inject_strobe    => sem_inject_strobe,
       inject_address   => sem_inject_address,
-      classification_o => open,
-      injection_o      => open,
-      essential_o      => open,
-      uncorrectable_o  => sem_critical
+
+      initialization_o => sem_initialization,
+      observation_o    => sem_observation,
+      correction_o     => sem_correction,
+      classification_o => sem_classification,
+      injection_o      => sem_injection,
+      idle_o           => sem_idle,
+
+      essential_o      => sem_essential,
+      uncorrectable_o  => sem_uncorrectable,
+
+      correction_pulse_o    => sem_correction_pulse,
+      uncorrectable_pulse_o => sem_uncorrectable_pulse,
+      essential_pulse_o     => sem_essential_pulse
       );
 
   --===============================================================================================
@@ -511,7 +543,8 @@ begin
            g_NUM_REGS             => REG_CONTROL_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_CONTROL_ADDRESS_MSB,
            g_ADDR_LOW_BIT         => REG_CONTROL_ADDRESS_LSB,
-           g_USE_INDIVIDUAL_ADDRS => true
+           g_USE_INDIVIDUAL_ADDRS => true,
+           g_IPB_CLK_PERIOD_NS    => 25
        )
        port map(
            ipb_reset_i            => reset,
@@ -553,11 +586,11 @@ begin
     regs_addresses(18)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"4";
     regs_addresses(19)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"5";
     regs_addresses(20)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"6";
-    regs_addresses(21)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"8";
+    regs_addresses(21)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"7";
     regs_addresses(22)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"9";
     regs_addresses(23)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"a";
-    regs_addresses(24)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"0";
-    regs_addresses(25)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"2";
+    regs_addresses(24)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"b";
+    regs_addresses(25)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"1";
     regs_addresses(26)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"3";
     regs_addresses(27)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"4";
     regs_addresses(28)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"5";
@@ -568,90 +601,105 @@ begin
     regs_addresses(33)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"a";
     regs_addresses(34)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"b";
     regs_addresses(35)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"c";
-    regs_addresses(36)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"0";
+    regs_addresses(36)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"d";
     regs_addresses(37)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"1";
     regs_addresses(38)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"2";
+    regs_addresses(39)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"3";
+    regs_addresses(40)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"4";
+    regs_addresses(41)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"5";
 
     -- Connect read signals
     regs_read_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= loopback;
-    regs_read_arr(1)(REG_CONTROL_SEM_CNT_SEM_CRITICAL_MSB downto REG_CONTROL_SEM_CNT_SEM_CRITICAL_LSB) <= cnt_sem_critical;
+    regs_read_arr(1)(REG_CONTROL_SEM_CNT_SEM_CRITICAL_MSB downto REG_CONTROL_SEM_CNT_SEM_CRITICAL_LSB) <= cnt_sem_uncorrectable;
     regs_read_arr(2)(REG_CONTROL_SEM_CNT_SEM_CORRECTION_MSB downto REG_CONTROL_SEM_CNT_SEM_CORRECTION_LSB) <= cnt_sem_correction;
     regs_read_arr(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB) <= sem_inject_address(31 downto 0);
     regs_read_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= sem_inject_address(39 downto 32);
-    regs_read_arr(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
-    regs_read_arr(7)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
-    regs_read_arr(8)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;
-    regs_read_arr(9)(REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB) <= ttc_bxn_counter;
-    regs_read_arr(10)(REG_CONTROL_TTC_BXN_SYNC_ERR_BIT) <= ttc_bxn_sync_err;
-    regs_read_arr(11)(REG_CONTROL_TTC_BX0_SYNC_ERR_BIT) <= ttc_bx0_sync_err;
-    regs_read_arr(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= ttc_bxn_offset;
-    regs_read_arr(13)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
-    regs_read_arr(14)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;
-    regs_read_arr(15)(REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB) <= cnt_bx0_sync_err;
-    regs_read_arr(16)(REG_CONTROL_SBITS_CLUSTER_RATE_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_LSB) <= cluster_rate;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= sbit_sel0;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= sbit_sel1;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= sbit_sel2;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= sbit_sel3;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= sbit_sel4;
-    regs_read_arr(17)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= sbit_sel5;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= sbit_sel6;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= sbit_sel7;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= sbit_mode0;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= sbit_mode1;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= sbit_mode2;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= sbit_mode3;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= sbit_mode4;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= sbit_mode5;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= sbit_mode6;
-    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= sbit_mode7;
-    regs_read_arr(20)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= cnt_snap_disable;
-    regs_read_arr(21)(REG_CONTROL_DNA_DNA_LSBS_MSB downto REG_CONTROL_DNA_DNA_LSBS_LSB) <= dna(31 downto 0);
-    regs_read_arr(22)(REG_CONTROL_DNA_DNA_MSBS_MSB downto REG_CONTROL_DNA_DNA_MSBS_LSB) <= dna(56 downto 32);
-    regs_read_arr(23)(REG_CONTROL_UPTIME_MSB downto REG_CONTROL_UPTIME_LSB) <= std_logic_vector(uptime);
-    regs_read_arr(24)(REG_CONTROL_USR_ACCESS_MSB downto REG_CONTROL_USR_ACCESS_LSB) <= usr_access;
-    regs_read_arr(25)(REG_CONTROL_HOG_GLOBAL_DATE_MSB downto REG_CONTROL_HOG_GLOBAL_DATE_LSB) <= GLOBAL_DATE;
-    regs_read_arr(26)(REG_CONTROL_HOG_GLOBAL_TIME_MSB downto REG_CONTROL_HOG_GLOBAL_TIME_LSB) <= GLOBAL_TIME;
-    regs_read_arr(27)(REG_CONTROL_HOG_GLOBAL_VER_MSB downto REG_CONTROL_HOG_GLOBAL_VER_LSB) <= GLOBAL_VER;
-    regs_read_arr(28)(REG_CONTROL_HOG_GLOBAL_SHA_MSB downto REG_CONTROL_HOG_GLOBAL_SHA_LSB) <= GLOBAL_SHA;
-    regs_read_arr(29)(REG_CONTROL_HOG_TOP_SHA_MSB downto REG_CONTROL_HOG_TOP_SHA_LSB) <= TOP_SHA;
-    regs_read_arr(30)(REG_CONTROL_HOG_TOP_VER_MSB downto REG_CONTROL_HOG_TOP_VER_LSB) <= TOP_VER;
-    regs_read_arr(31)(REG_CONTROL_HOG_HOG_SHA_MSB downto REG_CONTROL_HOG_HOG_SHA_LSB) <= HOG_SHA;
-    regs_read_arr(32)(REG_CONTROL_HOG_HOG_VER_MSB downto REG_CONTROL_HOG_HOG_VER_LSB) <= HOG_VER;
-    regs_read_arr(33)(REG_CONTROL_HOG_OH_SHA_MSB downto REG_CONTROL_HOG_OH_SHA_LSB) <= OPTOHYBRID_SHA;
-    regs_read_arr(34)(REG_CONTROL_HOG_OH_VER_MSB downto REG_CONTROL_HOG_OH_VER_LSB) <= OPTOHYBRID_VER;
-    regs_read_arr(35)(REG_CONTROL_HOG_FLAVOUR_MSB downto REG_CONTROL_HOG_FLAVOUR_LSB) <= std_logic_vector(to_unsigned(FLAVOUR,32));
-    regs_read_arr(36)(REG_CONTROL_TMR_TTC_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_TTC_TMR_ERR_CNT_LSB) <= ttc_tmr_err_cnt;
-    regs_read_arr(37)(REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_LSB) <= ipb_switch_tmr_err_cnt;
-    regs_read_arr(38)(REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(5)(REG_CONTROL_SEM_CNT_SEM_INJECTIONS_MSB downto REG_CONTROL_SEM_CNT_SEM_INJECTIONS_LSB) <= cnt_sem_injection;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_INITIALIZATION_BIT) <= sem_initialization;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_OBSERVATION_BIT) <= sem_observation;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_CORRECTION_BIT) <= sem_correction;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_CLASSIFICATION_BIT) <= sem_classification;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_INJECTION_BIT) <= sem_injection;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_ESSENTIAL_BIT) <= sem_essential;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_UNCORRECTABLE_BIT) <= sem_uncorrectable;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_IDLE_BIT) <= sem_idle;
+    regs_read_arr(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
+    regs_read_arr(9)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
+    regs_read_arr(10)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;
+    regs_read_arr(11)(REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB) <= ttc_bxn_counter;
+    regs_read_arr(12)(REG_CONTROL_TTC_BXN_SYNC_ERR_BIT) <= ttc_bxn_sync_err;
+    regs_read_arr(13)(REG_CONTROL_TTC_BX0_SYNC_ERR_BIT) <= ttc_bx0_sync_err;
+    regs_read_arr(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= ttc_bxn_offset;
+    regs_read_arr(15)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
+    regs_read_arr(16)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;
+    regs_read_arr(16)(REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB) <= cnt_bx0_sync_err;
+    regs_read_arr(17)(REG_CONTROL_SBITS_CLUSTER_RATE_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_LSB) <= cluster_rate;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= sbit_sel0;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= sbit_sel1;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= sbit_sel2;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= sbit_sel3;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= sbit_sel4;
+    regs_read_arr(18)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= sbit_sel5;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= sbit_sel6;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= sbit_sel7;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= sbit_mode0;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= sbit_mode1;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= sbit_mode2;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= sbit_mode3;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= sbit_mode4;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= sbit_mode5;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= sbit_mode6;
+    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= sbit_mode7;
+    regs_read_arr(21)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= cnt_snap_disable;
+    regs_read_arr(22)(REG_CONTROL_DNA_DNA_LSBS_MSB downto REG_CONTROL_DNA_DNA_LSBS_LSB) <= dna(31 downto 0);
+    regs_read_arr(23)(REG_CONTROL_DNA_DNA_MSBS_MSB downto REG_CONTROL_DNA_DNA_MSBS_LSB) <= dna(56 downto 32);
+    regs_read_arr(24)(REG_CONTROL_UPTIME_MSB downto REG_CONTROL_UPTIME_LSB) <= std_logic_vector(uptime);
+    regs_read_arr(25)(REG_CONTROL_USR_ACCESS_MSB downto REG_CONTROL_USR_ACCESS_LSB) <= usr_access;
+    regs_read_arr(26)(REG_CONTROL_HOG_GLOBAL_DATE_MSB downto REG_CONTROL_HOG_GLOBAL_DATE_LSB) <= GLOBAL_DATE;
+    regs_read_arr(27)(REG_CONTROL_HOG_GLOBAL_TIME_MSB downto REG_CONTROL_HOG_GLOBAL_TIME_LSB) <= GLOBAL_TIME;
+    regs_read_arr(28)(REG_CONTROL_HOG_GLOBAL_VER_MSB downto REG_CONTROL_HOG_GLOBAL_VER_LSB) <= GLOBAL_VER;
+    regs_read_arr(29)(REG_CONTROL_HOG_GLOBAL_SHA_MSB downto REG_CONTROL_HOG_GLOBAL_SHA_LSB) <= GLOBAL_SHA;
+    regs_read_arr(30)(REG_CONTROL_HOG_TOP_SHA_MSB downto REG_CONTROL_HOG_TOP_SHA_LSB) <= TOP_SHA;
+    regs_read_arr(31)(REG_CONTROL_HOG_TOP_VER_MSB downto REG_CONTROL_HOG_TOP_VER_LSB) <= TOP_VER;
+    regs_read_arr(32)(REG_CONTROL_HOG_HOG_SHA_MSB downto REG_CONTROL_HOG_HOG_SHA_LSB) <= HOG_SHA;
+    regs_read_arr(33)(REG_CONTROL_HOG_HOG_VER_MSB downto REG_CONTROL_HOG_HOG_VER_LSB) <= HOG_VER;
+    regs_read_arr(34)(REG_CONTROL_HOG_OH_SHA_MSB downto REG_CONTROL_HOG_OH_SHA_LSB) <= OPTOHYBRID_SHA;
+    regs_read_arr(35)(REG_CONTROL_HOG_OH_VER_MSB downto REG_CONTROL_HOG_OH_VER_LSB) <= OPTOHYBRID_VER;
+    regs_read_arr(36)(REG_CONTROL_HOG_FLAVOUR_MSB downto REG_CONTROL_HOG_FLAVOUR_LSB) <= std_logic_vector(to_unsigned(FLAVOUR,32));
+    regs_read_arr(37)(REG_CONTROL_TMR_TTC_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_TTC_TMR_ERR_CNT_LSB) <= ttc_tmr_err_cnt;
+    regs_read_arr(38)(REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_LSB) <= ipb_switch_tmr_err_cnt;
+    regs_read_arr(39)(REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
 
     -- Connect write signals
     loopback <= regs_write_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB);
     sem_inject_address(31 downto 0) <= regs_write_arr(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB);
     sem_inject_address(39 downto 32) <= regs_write_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB);
-    vfat_reset(11 downto 0) <= regs_write_arr(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB);
-    ttc_bxn_offset <= regs_write_arr(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB);
-    sbit_sel0 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB);
-    sbit_sel1 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB);
-    sbit_sel2 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB);
-    sbit_sel3 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB);
-    sbit_sel4 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB);
-    sbit_sel5 <= regs_write_arr(17)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB);
-    sbit_sel6 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB);
-    sbit_sel7 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB);
-    sbit_mode0 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB);
-    sbit_mode1 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB);
-    sbit_mode2 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB);
-    sbit_mode3 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB);
-    sbit_mode4 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB);
-    sbit_mode5 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB);
-    sbit_mode6 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB);
-    sbit_mode7 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB);
-    cnt_snap_disable <= regs_write_arr(20)(REG_CONTROL_CNT_SNAP_DISABLE_BIT);
+    vfat_reset(11 downto 0) <= regs_write_arr(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB);
+    ttc_bxn_offset <= regs_write_arr(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB);
+    sbit_sel0 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB);
+    sbit_sel1 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB);
+    sbit_sel2 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB);
+    sbit_sel3 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB);
+    sbit_sel4 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB);
+    sbit_sel5 <= regs_write_arr(18)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB);
+    sbit_sel6 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB);
+    sbit_sel7 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB);
+    sbit_mode0 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB);
+    sbit_mode1 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB);
+    sbit_mode2 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB);
+    sbit_mode3 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB);
+    sbit_mode4 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB);
+    sbit_mode5 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB);
+    sbit_mode6 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB);
+    sbit_mode7 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB);
+    cnt_snap_disable <= regs_write_arr(21)(REG_CONTROL_CNT_SNAP_DISABLE_BIT);
 
     -- Connect write pulse signals
     sem_inject_strobe <= regs_write_pulse_arr(3);
-    cnt_snap_pulse <= regs_write_pulse_arr(19);
+    sem_cnt_reset <= regs_write_pulse_arr(7);
+    cnt_snap_pulse <= regs_write_pulse_arr(20);
+    tmr_cnt_reset <= regs_write_pulse_arr(40);
+    tmr_err_inj <= regs_write_pulse_arr(41);
 
     -- Connect write done signals
 
@@ -665,10 +713,10 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
-        en_i      => sem_critical,
+        reset_i   => reset or sem_cnt_reset,
+        en_i      => sem_uncorrectable_pulse,
         snap_i    => cnt_snap,
-        count_o   => cnt_sem_critical
+        count_o   => cnt_sem_uncorrectable
     );
 
 
@@ -678,10 +726,23 @@ begin
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
-        en_i      => sem_correction,
+        reset_i   => reset or sem_cnt_reset,
+        en_i      => sem_correction_pulse,
         snap_i    => cnt_snap,
         count_o   => cnt_sem_correction
+    );
+
+
+    COUNTER_CONTROL_SEM_CNT_SEM_INJECTIONS : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset or sem_cnt_reset,
+        en_i      => sem_injection,
+        snap_i    => cnt_snap,
+        count_o   => cnt_sem_injection
     );
 
 
@@ -750,38 +811,41 @@ begin
     );
 
 
-    COUNTER_CONTROL_TMR_TTC_TMR_ERR_CNT : entity work.counter
+    COUNTER_CONTROL_TMR_TTC_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ttc_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ttc_tmr_err_cnt
     );
 
 
-    COUNTER_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT : entity work.counter
+    COUNTER_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_switch_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ipb_switch_tmr_err_cnt
     );
 
 
-    COUNTER_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter
+    COUNTER_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
     )
     port map (
         ref_clk_i => clocks.clk40,
-        reset_i   => reset,
+        reset_i   => reset or tmr_cnt_reset,
         en_i      => ipb_slave_tmr_err,
+        snap_i    => cnt_snap,
         count_o   => ipb_slave_tmr_err_cnt
     );
 
@@ -794,35 +858,35 @@ begin
     regs_defaults(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= REG_CONTROL_LOOPBACK_DATA_DEFAULT;
     regs_defaults(4)(REG_CONTROL_SEM_INJ_ADDR_LSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_LSBS_LSB) <= REG_CONTROL_SEM_INJ_ADDR_LSBS_DEFAULT;
     regs_defaults(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= REG_CONTROL_SEM_INJ_ADDR_MSBS_DEFAULT;
-    regs_defaults(6)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= REG_CONTROL_VFAT_RESET_DEFAULT;
-    regs_defaults(12)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= REG_CONTROL_TTC_BXN_OFFSET_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= REG_CONTROL_HDMI_SBIT_SEL0_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= REG_CONTROL_HDMI_SBIT_SEL1_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= REG_CONTROL_HDMI_SBIT_SEL2_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= REG_CONTROL_HDMI_SBIT_SEL3_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= REG_CONTROL_HDMI_SBIT_SEL4_DEFAULT;
-    regs_defaults(17)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= REG_CONTROL_HDMI_SBIT_SEL5_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= REG_CONTROL_HDMI_SBIT_SEL6_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= REG_CONTROL_HDMI_SBIT_SEL7_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= REG_CONTROL_HDMI_SBIT_MODE0_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= REG_CONTROL_HDMI_SBIT_MODE1_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= REG_CONTROL_HDMI_SBIT_MODE2_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= REG_CONTROL_HDMI_SBIT_MODE3_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= REG_CONTROL_HDMI_SBIT_MODE4_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= REG_CONTROL_HDMI_SBIT_MODE5_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= REG_CONTROL_HDMI_SBIT_MODE6_DEFAULT;
-    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= REG_CONTROL_HDMI_SBIT_MODE7_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= REG_CONTROL_CNT_SNAP_DISABLE_DEFAULT;
+    regs_defaults(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= REG_CONTROL_VFAT_RESET_DEFAULT;
+    regs_defaults(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= REG_CONTROL_TTC_BXN_OFFSET_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= REG_CONTROL_HDMI_SBIT_SEL0_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= REG_CONTROL_HDMI_SBIT_SEL1_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= REG_CONTROL_HDMI_SBIT_SEL2_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= REG_CONTROL_HDMI_SBIT_SEL3_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= REG_CONTROL_HDMI_SBIT_SEL4_DEFAULT;
+    regs_defaults(18)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= REG_CONTROL_HDMI_SBIT_SEL5_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= REG_CONTROL_HDMI_SBIT_SEL6_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= REG_CONTROL_HDMI_SBIT_SEL7_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= REG_CONTROL_HDMI_SBIT_MODE0_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= REG_CONTROL_HDMI_SBIT_MODE1_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= REG_CONTROL_HDMI_SBIT_MODE2_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= REG_CONTROL_HDMI_SBIT_MODE3_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= REG_CONTROL_HDMI_SBIT_MODE4_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= REG_CONTROL_HDMI_SBIT_MODE5_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= REG_CONTROL_HDMI_SBIT_MODE6_DEFAULT;
+    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= REG_CONTROL_HDMI_SBIT_MODE7_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= REG_CONTROL_CNT_SNAP_DISABLE_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
     regs_writable_arr(4) <= '1';
     regs_writable_arr(5) <= '1';
-    regs_writable_arr(6) <= '1';
-    regs_writable_arr(12) <= '1';
-    regs_writable_arr(17) <= '1';
+    regs_writable_arr(8) <= '1';
+    regs_writable_arr(14) <= '1';
     regs_writable_arr(18) <= '1';
-    regs_writable_arr(20) <= '1';
+    regs_writable_arr(19) <= '1';
+    regs_writable_arr(21) <= '1';
 
   --==== Registers end ============================================================================
 
