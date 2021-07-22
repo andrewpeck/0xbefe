@@ -36,12 +36,6 @@
     <node id="VFAT_SBITS_ARR" address="0x1" permission="r"
           description="Array of sbits (after masking) from VFATs of particular OH_IDX"
           fw_signal="vfat_sbits_arr(${OH_IDX})"/>
-    <node id="VFAT_TRIGGER_ARR" address="0x2" permission="r"
-          description="trigger per vfat (or of all unmasked sbits)"
-          fw_signal="vfat_trigger_arr(${OH_IDX})"/>
-    <node id="VFAT_TRIGGER_ARR" address="0x3" permission="r"
-          description="trigger per vfat (or of all unmasked sbits)"
-          fw_signal="vfat_trigger_cnt_arr(${OH_IDX})"/>
   </node>
 
   <node id="VFAT_SBITS_STRIP_MAPPED" address="0x10" mask="0xffffffff" permission="r"
