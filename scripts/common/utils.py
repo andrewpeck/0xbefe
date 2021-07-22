@@ -1,14 +1,4 @@
-import common.tables.tableformatter as tf
-import imp
-
-try:
-    imp.find_module('befe_config')
-    import befe_config as befe_config
-except ImportError:
-    print_red("befe_config.py not found")
-    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
-    print_red("In most cases the example config without modifications will work as a starting point")
-    exit(1)
+import sys
 
 # bright colors:
 class Colors:
@@ -31,6 +21,23 @@ class Colors:
 #     GREEN   = '\033[32m'
 #     RED     = '\033[31m'
 #     ENDC    = '\033[39m'
+
+# check python version (python3 is needed for the tables generators)
+if sys.version_info < (3, 6):
+    print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
+    exit()
+
+import common.tables.tableformatter as tf
+import imp
+
+try:
+    imp.find_module('befe_config')
+    import befe_config as befe_config
+except ImportError:
+    print_red("befe_config.py not found")
+    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
+    print_red("In most cases the example config without modifications will work as a starting point")
+    exit(1)
 
 
 FULL_TABLE_GRID_STYLE = tf.FancyGrid()

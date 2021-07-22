@@ -50,7 +50,7 @@ def gem_print_status():
                 had_unf = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HAD_UNDERFLOW" % (oh, gbt))
                 fec_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh, gbt))
                 had_header_unlock = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HEADER_HAD_UNLOCK" % (oh, gbt))
-                tx_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_TX_READY" % (oh, gbt))
+                tx_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_TX_READY" % (oh, gbt)) if gem_station != 0 or gbt % 2 == 0 else 1 # Odd GBT TX numbers are not used on ME0
 
                 if was_not_ready == 1:
                     status += "\n" + color_string("(HAD UNLOCK)", Colors.RED)

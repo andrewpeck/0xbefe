@@ -445,7 +445,7 @@ begin
         generic map(
             g_NUM_CHANNELS      => 1,
             g_LINE_RATE         => "25.78125",
-            q_REF_CLK_FREQ      => "322.265625",
+            q_REF_CLK_FREQ      => "156.25",
             g_MGT_TYPE          => "GTY",
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )

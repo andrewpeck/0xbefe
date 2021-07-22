@@ -4,4 +4,5 @@ generate_project:ge11_ctp7_devel:
       extends: .vars
       PROJECT_NAME: ge11_ctp7
       INTERMEDIATE_BUILD: "1"
-
+    tags:
+      - vivado_2020_2
