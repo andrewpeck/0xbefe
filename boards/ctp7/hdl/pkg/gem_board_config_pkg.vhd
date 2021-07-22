@@ -278,7 +278,7 @@ package board_config_package is
         (MGT_NULL, 38,       false, false), -- fiber 70
         (MGT_NULL, 39,       false, false), -- fiber 71        
         --=== DUMMY channel - use for unconnected channels ===--
-        (MGT_NULL, MGT_NULL) -- fiber 72        
+        (MGT_NULL, MGT_NULL, false, false) -- fiber 72        
     );
 
     --================================--

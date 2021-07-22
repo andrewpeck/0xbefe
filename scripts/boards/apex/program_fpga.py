@@ -50,15 +50,15 @@ if not path.exists(bitfile):
 
 ######## configure clocks ########
 heading("Configuring %s clock synthesizers" % top_bot)
-print("Configuring sync clocks with 160.32MHz...")
+subheading("Configuring sync clocks with 160.32MHz...")
 cmd = "cd %s/clock/clock_sync && %s/clock/clock_sync/clock_sync_160 %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
 print(cmd)
 sync_clk_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
 while sync_clk_proc.poll() is None:
     time.sleep(0.1)
 
-print("Configuring async clocks with 156.25MHz...")
-cmd = "cd %s/clock/clock_async && %s/clock/clock_async/clock_async_156M %s/clock/clock_async/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
+subheading("Configuring async clocks with 156.25MHz on GTYs and 250MHz on GTHs...")
+cmd = "cd %s/clock/clock_async && %s/clock/clock_async/clock_async_Y156_H250 %s/clock/clock_async/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
 print(cmd)
 async_clk_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
 while async_clk_proc.poll() is None:
