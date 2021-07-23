@@ -237,7 +237,7 @@ begin
           sbits_i => vfat_sbits_strip_mapped,
           cluster_count_o => me0_cluster_count,
           clusters_o => me0_clusters,
-          clusters_ena_o => open,
+          --clusters_ena_o => open,
           overflow_o => me0_overflow
           );   
      end generate;
