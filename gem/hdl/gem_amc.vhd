@@ -464,7 +464,9 @@ begin
         me0_cluster: entity work.sbit_me0
             generic map(
                 g_NUM_OF_OHs => g_NUM_OF_OHs,
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_NUM_VFATS_PER_OH => g_NUM_VFATS_PER_OH
+                
             )
         port map(
             reset_i => reset_i,
@@ -485,6 +487,7 @@ begin
                 g_NUM_OF_OHs => g_NUM_OF_OHs,
                 g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
                 g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG => CFG_DEBUG_TRIGGER
             )
             port map(

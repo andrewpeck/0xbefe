@@ -22,8 +22,8 @@ use work.cluster_pkg.all;
 entity sbit_me0 is
     generic(
         g_NUM_OF_OHs         : integer;
-        g_NUM_VFATS_PER_OH   : integer
---        g_IPB_CLK_PERIOD_NS  : integer
+        g_NUM_VFATS_PER_OH   : integer;
+        g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
         -- reset
