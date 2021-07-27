@@ -39,6 +39,7 @@ BASE_ADDR = get_config("CONFIG_RWREG")[boardType][boardIdx]['BASE_ADDR']
 
 class Node:
     name = ''
+    local_name = ''
     description = ''
     vhdlname = ''
     local_address = 0x0
@@ -244,6 +245,7 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
             make_tree(node, baseName, baseAddress + generateAddressStep * i, nodes, parentNode, vars, True)
         return
     newNode = Node()
+    newNode.local_name = substitute_vars(node.get('id'), vars)
     name = baseName
     if baseName != '':
         name += '.'

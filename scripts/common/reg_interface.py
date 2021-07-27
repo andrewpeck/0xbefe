@@ -40,6 +40,43 @@ class Prompt(Cmd):
     def complete_readGroup(self, text, line, begidx, endidx):
         return complete_reg(text)
 
+    def print_tree(self, reg, last_printed_reg=None):
+        if reg is None:
+            return
+        last_parent = None if last_printed_reg is None else last_printed_reg.parent
+        if last_parent is None or (reg.parent is not None and reg.parent != last_parent):
+            self.print_tree(reg.parent, last_parent)
+        # if print_parents and reg.parent is not None:
+        #     self.print_tree(reg.parent)
+
+        s = ""
+        for i in range(reg.level - 1):
+            s += "|  "
+        if reg.level > 0:
+            s += "├──"
+        s += reg.local_name
+        if reg.permission is not None and reg.permission != "":
+            s += " (%s)" % reg.permission
+            s = tab_pad(s, 7)
+            if 'r' in reg.permission:
+                s += read_reg(reg).to_string(hex=True)
+        print(s)
+
+    def do_readTree(self, args):
+        """Read all registers containing the RegName supplied. USAGE: read <RegName>"""
+        if args is None or args == "":
+            return
+
+        nodes = get_nodes_containing(args)
+        if nodes is not None:
+            last_printed_reg = None
+            for reg in nodes:
+                if reg.permission is not None and reg.permission != "":
+                    self.print_tree(reg, last_printed_reg)
+                    last_printed_reg = reg
+        else:
+            print(args + ' not found!')
+
     def do_read(self, args):
         """Read all registers containing the RegName supplied. USAGE: read <RegName>"""
         if args is None or args == "":
