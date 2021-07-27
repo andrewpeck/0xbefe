@@ -16,21 +16,8 @@ class Prompt(Cmd):
 
         else: print('Incorrect number of arguments.')
 
-    def do_read(self, args):
-        """Reads register. USAGE: read <register name>. OUTPUT <address> <mask> <permission> <name> <value>"""
-        reg = get_node(args)
-        if reg is not None:
-            if 'r' in str(reg.permission):
-                print(display_reg(reg))
-            elif reg.isModule: print('This is a module!')
-            else: print(hex(reg.address) + '\t' + reg.name + '\t' + 'No read permission!')
-        else:
-            print(args + ' not found!')
-
-
     def complete_read(self, text, line, begidx, endidx):
         return complete_reg(text)
-
 
     def do_write(self, args):
         """Writes register. USAGE: write <register name> <register value>"""
@@ -50,32 +37,25 @@ class Prompt(Cmd):
     def complete_write(self, text, line, begidx, endidx):
         return complete_reg(text)
 
-
-    def do_readGroup(self, args): #INEFFICIENT
-        """Read all registers below node in register tree. USAGE: readGroup <register/node name> """
-        node = get_node(args)
-        if node is not None:
-            print('NODE: ' + node.name)
-            kids = []
-            get_all_children(node, kids)
-            print(len(kids) + ' CHILDREN')
-            for reg in kids:
-                if 'r' in str(reg.permission): print(display_reg(reg))
-        else: print(args + ' not found!')
-
     def complete_readGroup(self, text, line, begidx, endidx):
         return complete_reg(text)
 
+    def do_read(self, args):
+        """Read all registers containing the RegName supplied. USAGE: read <RegName>"""
+        if args is None or args == "":
+            return
 
-    def do_readKW(self, args):
-        """Read all registers containing KeyWord. USAGE: readKW <KeyWord>"""
-        if get_nodes_containing(args) is not None and args!='':
-            for reg in get_nodes_containing(args):
+        nodes = get_nodes_containing(args)
+        if nodes is not None:
+            for reg in nodes:
                 if 'r' in str(reg.permission):
                     print(display_reg(reg))
-                elif reg.isModule: print(hex(reg.address).rstrip('L') + " " + reg.permission + '\t' + tab_pad(reg.name,7)) #,'Module!'
-                else: print(hex(reg.address).rstrip('L') + " " + reg.permission + '\t' + tab_pad(reg.name,7)) #,'No read permission!'
-        else: print(args + ' not found!')
+                elif reg.isModule:
+                    print(hex(reg.address).rstrip('L') + " " + reg.permission + '\t' + tab_pad(reg.name, 7)) #,'Module!'
+                else:
+                    print(hex(reg.address).rstrip('L') + " " + reg.permission + '\t' + tab_pad(reg.name, 7)) #,'No read permission!'
+        else:
+            print(args + ' not found!')
 
     def do_exit(self, args):
         """Exit program"""

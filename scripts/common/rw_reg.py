@@ -3,6 +3,7 @@ import sys, os, subprocess
 from ctypes import *
 import imp
 import sys
+import re
 import math
 import time
 from collections import OrderedDict
@@ -313,16 +314,20 @@ def get_node(nodeName):
 def get_node_from_address(nodeAddress):
     return next((nodes[nodename] for nodename in nodes if nodes[nodename].address == nodeAddress), None)
 
-def get_nodes_containing(nodeString):
-    nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename]
-    if len(nodelist):
-        return nodelist
+def get_nodes_containing(node_string):
+    if "*" in node_string: # use regexp if it contains wildcards
+        # escape dots, and replace * with .+ (match at least one random char)
+        node_string = node_string.replace(".", "\\.")
+        node_string = node_string.replace("*", ".+")
+        # add wildcards to the beginning and the end
+        node_string = ".*" + node_string + ".*"
+        # match
+        pattern = re.compile(node_string)
+        nodelist = [nodes[nodename] for nodename in nodes if pattern.match(nodename)]
+        # nodelist = [nodes[nodename] for nodename in nodes if re.match(node_string, nodename)]
     else:
-        return None
+        nodelist = [nodes[nodename] for nodename in nodes if node_string in nodename]
 
-#returns *readable* registers
-def get_regs_containing(nodeString):
-    nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename and nodes[nodename].permission is not None and 'r' in nodes[nodename].permission]
     if len(nodelist):
         return nodelist
     else:
