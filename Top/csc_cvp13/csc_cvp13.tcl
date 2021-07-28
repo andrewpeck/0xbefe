@@ -1,6 +1,6 @@
 #vivado
 
-set FPGA xcvu13p-figd2104-2-e
+set FPGA
 
 set DESIGN    "[file rootname [file tail [info script]]]"
 set PATH_REPO "[file normalize [file dirname [info script]]]/../../"
