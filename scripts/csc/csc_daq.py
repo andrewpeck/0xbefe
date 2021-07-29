@@ -27,42 +27,42 @@ RAW_FILE = None
 def main():
     global RAW_FILE
 
-    filename = raw_input("Filename (default = $HOME/csc_fed/data/run_<datetime>.raw): ")
+    filename = input("Filename (default = $HOME/csc/data/run_<datetime>.raw): ")
     if not filename:
-        filename = os.environ['HOME'] + "/csc_fed/data/run_" + datetime.datetime.now().strftime("%Y-%m-%d__%H_%M_%S") + ".raw"
+        filename = os.environ['HOME'] + "/csc/data/run_" + datetime.datetime.now().strftime("%Y-%m-%d__%H_%M_%S") + ".raw"
 
     inputMask = 0x1
-    inputMaskStr = raw_input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
+    inputMaskStr = input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
     if inputMaskStr:
         inputMask = parse_int(inputMaskStr)
 
     ignoreAmc13 = 0x1
-    ignoreAmc13Str = raw_input("Should we ignore AMC13 path? (default = yes)")
+    ignoreAmc13Str = input("Should we ignore AMC13 path? (default = yes)")
     if (ignoreAmc13Str == "no") or (ignoreAmc13Str == "n"):
         ignoreAmc13 = 0x0
 
     readoutToCtp7 = False
-    readoutToCtp7Str = raw_input("Should we readout locally to CTP7 SD card? (default = no)")
+    readoutToCtp7Str = input("Should we readout locally to the backend SD card? (default = no)")
     if (readoutToCtp7Str == "yes") or (readoutToCtp7Str == "y"):
         readoutToCtp7 = True
 
     waitForResync = 0x1
-    waitForResyncStr = raw_input("Should we keep the DAQ in reset until a resync? (default = yes)")
+    waitForResyncStr = input("Should we keep the DAQ in reset until a resync? (default = yes)")
     if (waitForResyncStr == "no") or (waitForResyncStr == "n"):
         waitForResync = 0x0
 
     freezeOnError = 0x0
-    freezeOnErrorStr = raw_input("Should the DAQ freeze on TTS error? (default = no)")
+    freezeOnErrorStr = input("Should the DAQ freeze on TTS error? (default = no)")
     if (freezeOnErrorStr == "yes") or (freezeOnErrorStr == "y"):
         freezeOnError = 0x1
 
     useCscTtcEncoding = False
-    useCscTtcEncodingStr = raw_input("Should we use CSC TTC encoding? (default = no)")
+    useCscTtcEncodingStr = input("Should we use CSC TTC encoding? (default = no)")
     if (useCscTtcEncodingStr == "yes") or (useCscTtcEncodingStr == "y"):
         useCscTtcEncoding = True
 
     useLocalL1a = 0
-    useLocalL1aStr = raw_input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = no)")
+    useLocalL1aStr = input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = no)")
     if (useLocalL1aStr == "yes") or (useLocalL1aStr == "y"):
         useLocalL1a = 1
 
@@ -151,7 +151,8 @@ def main():
 def exitHandler(signal, frame):
     global RAW_FILE
     print('Exiting...')
-    RAW_FILE.close()
+    if RAW_FILE is not None:
+        RAW_FILE.close()
     sys.exit(0)
 
 # initialize the daq register addresses to be used with faster wReg and rReg C bindings

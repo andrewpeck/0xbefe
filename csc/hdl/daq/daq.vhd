@@ -76,12 +76,13 @@ architecture Behavioral of daq is
 
     -- Reset
     signal reset_global         : std_logic := '1';
-    signal reset_daq_async      : std_logic := '1';
-    signal reset_daq_async_dly  : std_logic := '1';
+    signal reset_daq_tmp        : std_logic := '1';
+    signal reset_daq_extended   : std_logic := '1';
     signal reset_daq            : std_logic := '1';
+    signal reset_daq_40         : std_logic := '1';
     signal reset_daqlink        : std_logic := '1'; -- should only be done once at powerup
-    signal reset_pwrup          : std_logic := '1';
     signal reset_local          : std_logic := '1';
+    signal reset_local_sync     : std_logic := '1';
     signal reset_local_latched  : std_logic := '0';
     signal reset_daqlink_ipb    : std_logic := '0';
 
@@ -129,7 +130,8 @@ architecture Behavioral of daq is
     -- Resync
     signal resync_mode          : std_logic := '0'; -- when this signal is asserted it means that we received a resync and we're still processing the L1A fifo and holding TTS in BUSY
     signal resync_done          : std_logic := '0'; -- when this is asserted it means that L1As have been drained and we're ready to reset the DAQ and tell AMC13 that we're done
-    signal resync_done_delayed  : std_logic := '0';
+    signal resync_done_dly      : std_logic := '0';
+    signal resync_done_dly_40   : std_logic := '0';
 
     -- Error signals transfered to TTS clk domain
     signal tts_chmb_critical_tts_clk    : std_logic := '0'; -- tts_chmb_critical transfered to TTS clock domain
@@ -146,6 +148,7 @@ architecture Behavioral of daq is
     signal block_last_evt_fifo  : std_logic := '0'; -- if true, then events are not written to the last event fifo (could be useful to toggle this from software in order to know how many events are read exactly because sometimes you may miss empty=true)
     signal freeze_on_error      : std_logic := '0'; -- this is a debug feature which when turned on will start sending only IDLE words to all input processors as soon as TTS error is detected
     signal reset_till_resync    : std_logic := '0'; -- if this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run.
+    signal reset_till_resync_s  : std_logic := '0';
     
     -- DAQ counters
     signal cnt_sent_events      : unsigned(31 downto 0) := (others => '0');
@@ -283,7 +286,7 @@ begin
     --================================--
     
     daq_to_daqlink_o.reset <= '0'; -- will need to investigate this later
-    daq_to_daqlink_o.resync <= resync_done_delayed;
+    daq_to_daqlink_o.resync <= resync_done_dly_40;
     daq_to_daqlink_o.trig <= x"00";
     daq_to_daqlink_o.ttc_clk <= ttc_clks_i.clk_40;
     daq_to_daqlink_o.ttc_bc0 <= ttc_cmds_i.bc0;
@@ -301,79 +304,77 @@ begin
     daq_disper_err_cnt <= daqlink_to_daq_i.disperr_cnt;
     daq_notintable_err_cnt <= daqlink_to_daq_i.notintable_cnt;
     
-    i_resync_delay : entity work.synch
-        generic map(
-            N_STAGES => 4
-        )
-        port map(
-            async_i => resync_done,
-            clk_i   => ttc_clks_i.clk_40,
-            sync_o  => resync_done_delayed
-        );
-    
     --================================--
     -- Resets
     --================================--
 
-    i_reset_sync : entity work.synch
+    reset_daqlink <= reset_global or reset_daqlink_ipb;
+
+    i_reset_global_sync : entity work.synch
         generic map(
+            IS_RESET => true,
             N_STAGES => 3
         )
         port map(
             async_i => reset_i,
-            clk_i   => ttc_clks_i.clk_40,
+            clk_i   => daq_clk_i,
             sync_o  => reset_global
         );
     
-    reset_daq_async <= reset_pwrup or reset_global or reset_local or resync_done_delayed or reset_local_latched;
-    reset_daqlink <= reset_pwrup or reset_global or reset_daqlink_ipb;
-    
-    -- Reset after powerup
-    
-    process(ttc_clks_i.clk_40)
-        variable countdown : integer := 40_000_000; -- probably way too long, but ok for now (this is only used after powerup)
-    begin
-        if (rising_edge(ttc_clks_i.clk_40)) then
-            if (countdown > 0) then
-              reset_pwrup <= '1';
-              countdown := countdown - 1;
-            else
-              reset_pwrup <= '0';
-            end if;
-        end if;
-    end process;
-
-    -- delay and extend the reset pulse
-
-    i_rst_delay : entity work.synch
+    i_resync_done_delay : entity work.shift_reg
         generic map(
+            DEPTH           => 7,
+            TAP_DELAY_WIDTH => 3,
+            OUTPUT_REG      => false,
+            SUPPORT_RESET   => false
+        )
+        port map(
+            clk_i       => ttc_clks_i.clk_40,
+            reset_i     => '0',
+            tap_delay_i => "111",
+            data_i      => resync_done,
+            data_o      => resync_done_dly_40
+        );
+    
+    i_resync_done_sync : entity work.synch
+        generic map(
+            IS_RESET => true,
             N_STAGES => 4
         )
         port map(
-            async_i => reset_daq_async,
-            clk_i   => ttc_clks_i.clk_40,
-            sync_o  => reset_daq_async_dly
+            async_i => resync_done,
+            clk_i   => daq_clk_i,
+            sync_o  => resync_done_dly
         );
 
-    i_rst_extend : entity work.pulse_extend
+    i_reset_local_sync : entity work.synch
         generic map(
-            DELAY_CNT_LENGTH => 3
+            IS_RESET => true,
+            N_STAGES => 3
         )
         port map(
-            clk_i          => ttc_clks_i.clk_40,
-            rst_i          => '0',
-            pulse_length_i => "111",
-            pulse_i        => reset_daq_async_dly,
-            pulse_o        => reset_daq
+            async_i => reset_local,
+            clk_i   => daq_clk_i,
+            sync_o  => reset_local_sync
+        );
+        
+    i_reset_till_resync_sync : entity work.synch
+        generic map(
+            IS_RESET => false,
+            N_STAGES => 3
+        )
+        port map(
+            async_i => reset_till_resync,
+            clk_i   => daq_clk_i,
+            sync_o  => reset_till_resync_s
         );
 
     -- if reset_till_resync option is enabled, latch the user requested reset_local till a resync is received
-    
-    process(ttc_clks_i.clk_40)
+    process(daq_clk_i)
     begin
-        if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset_till_resync = '1') then
-                if (reset_local = '1') then
+        if (rising_edge(daq_clk_i)) then
+            if (reset_till_resync_s = '1') then
+                if (reset_local_sync = '1') then
                     reset_local_latched <= '1'; 
                 elsif (ttc_cmds_i.resync = '1') then
                     reset_local_latched  <= '0';
@@ -381,10 +382,48 @@ begin
                     reset_local_latched <= reset_local_latched;
                 end if;
             else
-                reset_local_latched <= '0';
+                reset_local_latched <= reset_local_sync;
             end if;
         end if;
     end process;
+
+    reset_daq_tmp <= reset_global or reset_local_latched or resync_done_dly;
+
+    i_reset_daq_extend : entity work.pulse_extend
+        generic map(
+            DELAY_CNT_LENGTH => 3
+        )
+        port map(
+            clk_i          => daq_clk_i,
+            rst_i          => '0',
+            pulse_length_i => "111",
+            pulse_i        => reset_daq_tmp,
+            pulse_o        => reset_daq_extended
+        );
+        
+    -- sync and delay to both daq_clk_i and ttc40 domains
+     
+    i_reset_daq_delay : entity work.synch
+        generic map(
+            IS_RESET => true,
+            N_STAGES => 4
+        )
+        port map(
+            async_i => reset_daq_extended,
+            clk_i   => daq_clk_i,
+            sync_o  => reset_daq
+        );
+
+    i_reset_daq_sync40 : entity work.synch
+        generic map(
+            IS_RESET => true,
+            N_STAGES => 4
+        )
+        port map(
+            async_i => reset_daq_extended,
+            clk_i   => ttc_clks_i.clk_40,
+            sync_o  => reset_daq_40
+        );
 
     --================================--
     -- Last event spy fifo
@@ -572,7 +611,7 @@ begin
         )
         port map(
             sleep         => '0',
-            rst           => reset_daq,
+            rst           => reset_daq_40,
             wr_clk        => ttc_clks_i.clk_40,
             wr_en         => l1afifo_wr_en,
             din           => l1afifo_din,
@@ -611,7 +650,7 @@ begin
     process(ttc_clks_i.clk_40)
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset_daq = '1') then
+            if (reset_daq_40 = '1') then
                 err_l1afifo_full <= '0';
                 l1afifo_wr_en <= '0';
                 l1a_gap_cntdown <= (others => '0');
@@ -648,7 +687,7 @@ begin
     )
     port map(
         ref_clk_i => ttc_clks_i.clk_40,
-        reset_i   => reset_daq,
+        reset_i   => reset_daq_40,
         en_i      => l1afifo_near_full,
         count_o   => l1afifo_near_full_cnt
     );
@@ -895,7 +934,7 @@ begin
     process (ttc_clks_i.clk_40)
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset_daq = '1') then
+            if (reset_daq_40 = '1') then
                 tts_critical_error <= '0';
                 tts_out_of_sync <= '0';
                 tts_warning <= '0';
@@ -930,7 +969,7 @@ begin
     )
     port map(
         ref_clk_i => ttc_clks_i.clk_40,
-        reset_i   => reset_daq,
+        reset_i   => reset_daq_40,
         en_i      => tts_warning,
         count_o   => tts_warning_cnt
     );
@@ -939,7 +978,7 @@ begin
     process(ttc_clks_i.clk_40)
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset_daq = '1') then
+            if (reset_daq_40 = '1') then
                 resync_mode <= '0';
                 resync_done <= '0';
             else

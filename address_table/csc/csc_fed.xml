@@ -358,6 +358,9 @@
                   description="Rate of 64bit words being sent out to the DAQLink in Hz (multiply by 64 to get bitrate)"
                   fw_signal="daq_word_rate"
                   sw_monitor_warn_min_threshold="40000"/> <!-- currently running DAQ at 50MHz, which is 3.2Gbs, so warning at 2.5Gbs (could increase to 80MHz to get 5Gbs) -->
+            <node id="L1A_REQUEST_EVN"  address="0xa"  mask="0x00ffffff" permission="r"
+                  description="Event number for which last L1A request was made (if BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN = 1)"
+                  fw_signal="std_logic_vector(l1a_req_evt_num)"/>
             <node id="SPY"  address="0x10" description="Spy path control registers">
                 <node id="SPY_WORD_RATE"  address="0x0"  mask="0xffffffff" permission="r"
                       description="Rate of 16bit words being sent out the spy path (including ethernet frame words). If this gets close to 1Gb/s, expect overflows."

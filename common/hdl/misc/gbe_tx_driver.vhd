@@ -67,6 +67,8 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
 
     type t_eth_state is (IDLE, PREAMBLE_SOF, HEADER, PAYLOAD, FILLER, PACKET_CNT, CRC, EOF);
     
+    signal reset                : std_logic;
+    
     signal state                : t_eth_state;
     signal word_idx             : integer range 0 to 16383 := 0;
     signal packet_idx           : unsigned(15 downto 0) := (others => '0');
@@ -93,6 +95,17 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
 
 begin
 
+    i_reset_sync : entity work.synch
+        generic map(
+            N_STAGES => 4,
+            IS_RESET => true
+        )
+        port map(
+            async_i => reset_i,
+            clk_i   => gbe_clk_i,
+            sync_o  => reset
+        );
+
     gbe_tx_data_o.txchardispmode <= (others => '0');
     gbe_tx_data_o.txchardispval <= (others => '0');
     gbe_tx_data_o.txcharisk <= charisk;
@@ -105,7 +118,7 @@ begin
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
+            if (reset = '1') then
                 state <= IDLE;
                 word_idx <= 0;
                 min_idle_cnt <= 0;
@@ -319,7 +332,7 @@ begin
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
+            if (reset = '1') then
                 packet_idx <= (others => '0');
             else
                 if (state = EOF) and (word_idx = 0) then
@@ -336,7 +349,7 @@ begin
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
+            if (reset = '1') then
                 word64 <= (others => '0');
                 evt_word_cnt <= (others => '0');
                 eoe_countdown <= (others => '0');     
@@ -409,7 +422,7 @@ begin
         )
         port map(
             clk_i   => gbe_clk_i,
-            reset_i => reset_i,
+            reset_i => reset,
             en_i    => not_idle,
             rate_o  => word_rate_o
         );
