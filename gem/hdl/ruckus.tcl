@@ -55,7 +55,7 @@ loadSource -path "$::DIR_PATH/trigger/trigger.vhd"
 loadSource -path "$::DIR_PATH/trigger/sbit_monitor.vhd"
 loadSource -path "$::DIR_PATH/trigger/trigger_input_processor.vhd"
 loadSource -path "$::DIR_PATH/trigger/trigger_output.vhd"
-#loadSource -path "$::DIR_PATH/trigger/trigger_me0.vhd"
+loadSource -path "$::DIR_PATH/trigger/sbit_me0.vhd"
 
 # Tests
 loadSource -path "$::DIR_PATH/tests/gem_tests.vhd"

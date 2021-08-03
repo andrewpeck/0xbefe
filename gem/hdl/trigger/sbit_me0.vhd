@@ -3,8 +3,8 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date:    2019-11-13
--- Module Name:    trigger_me0
--- Description:    This module handles everything related to ME0 VFAT3 sbit data  
+-- Module Name:    sbit_me0
+-- Description:    This module handles everything related to ME0 VFAT3 sbit data clusterization and mapping to legacy clusters
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
