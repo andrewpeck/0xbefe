@@ -135,6 +135,8 @@ architecture csc_apex_arch of csc_apex is
     -- resets 
    
     -- clocks
+    signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1              : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
     signal refclk0_fabric       : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
     signal refclk1_fabric       : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
     
@@ -351,12 +353,14 @@ begin
             reset_i              => '0',
             clk_stable_i         => axil_clk,
 
-            refclk0_p_i => gty_refclk0_p_i,
-            refclk0_n_i => gty_refclk0_n_i,
-            refclk1_p_i => gty_refclk1_p_i,
-            refclk1_n_i => gty_refclk1_n_i,
-            refclk0_fabric_o => refclk0_fabric,
-            refclk1_fabric_o => refclk1_fabric,
+            refclk0_p_i          => gty_refclk0_p_i,
+            refclk0_n_i          => gty_refclk0_n_i,
+            refclk1_p_i          => gty_refclk1_p_i,
+            refclk1_n_i          => gty_refclk1_n_i,
+            refclk0_fabric_o     => refclk0_fabric,
+            refclk1_fabric_o     => refclk1_fabric,
+            refclk0_o            => refclk0,
+            refclk1_o            => refclk1,
             
             ttc_clks_i           => ttc_clks,
             ttc_clks_locked_i    => ttc_clk_status.mmcm_locked,
@@ -401,7 +405,7 @@ begin
             ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
         );
 
-    slink_mgt_ref_clk <= refclk1_fabric(1);
+    slink_mgt_ref_clk <= refclk1(1);
 
     --================================--
     -- Board System registers

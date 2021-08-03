@@ -46,6 +46,8 @@ entity mgt_links_gty is
         refclk1_p_i             : in  std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
         refclk1_n_i             : in  std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
 
+        refclk0_o               : out std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+        refclk1_o               : out std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
         refclk0_fabric_o        : out std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
         refclk1_fabric_o        : out std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
         
@@ -201,6 +203,8 @@ begin
     
     refclk0_fabric_o <= refclk0_fabric;
     refclk1_fabric_o <= refclk1_fabric;
+    refclk0_o <= refclk0;
+    refclk1_o <= refclk1;
     
     --================================--
     -- MGT Channels
