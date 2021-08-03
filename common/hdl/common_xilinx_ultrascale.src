@@ -14,6 +14,7 @@ common/hdl/ttc/ttc_clocks_ultrascale.vhd
 
 # MGT
 common/hdl/mgt/mgt_links_gty.vhd
+common/hdl/mgt/refclk_bufs.vhd
 common/hdl/mgt/gty_channel_lpgbt.vhd
 common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd

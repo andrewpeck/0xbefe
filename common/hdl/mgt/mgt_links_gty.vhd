@@ -29,6 +29,8 @@ use work.board_config_package.all;
 
 entity mgt_links_gty is
     generic(
+        g_NUM_REFCLK0           : integer;
+        g_NUM_REFCLK1           : integer;
         g_NUM_CHANNELS          : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
         g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
@@ -39,11 +41,17 @@ entity mgt_links_gty is
         reset_i                 : in  std_logic;
         clk_stable_i            : in  std_logic;
         
+        refclk0_p_i             : in  std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+        refclk0_n_i             : in  std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+        refclk1_p_i             : in  std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+        refclk1_n_i             : in  std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+
+        refclk0_fabric_o        : out std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+        refclk1_fabric_o        : out std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+        
         ttc_clks_i              : in  t_ttc_clks;
         ttc_clks_locked_i       : in  std_logic;
         ttc_clks_reset_o        : out std_logic;
-        
-        channel_refclk_arr_i    : in  t_mgt_refclks_arr(g_NUM_CHANNELS-1 downto 0);
         
         status_arr_o            : out t_mgt_status_arr(g_NUM_CHANNELS-1 downto 0);
         ctrl_arr_i              : in  t_mgt_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
@@ -71,6 +79,11 @@ end mgt_links_gty;
 
 architecture mgt_links_gty_arch of mgt_links_gty is
 
+    attribute NUM_CHANNELS                  : integer;
+    attribute NUM_CHANNELS of mgt_links_gty : entity is g_NUM_CHANNELS;
+    attribute LINK_CONFIG                   : t_mgt_config_arr;
+    attribute LINK_CONFIG of mgt_links_gty  : entity is g_LINK_CONFIG;
+
     component ibert_insys_gty
         port(
             drpclk_o       : out std_logic;
@@ -91,6 +104,14 @@ architecture mgt_links_gty_arch of mgt_links_gty is
         );
     end component;
 
+    signal refclk0              : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1              : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+    signal refclk0_fabric       : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_fabric       : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+    signal refclk0_freq         : t_std32_array(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_freq         : t_std32_array(g_NUM_REFCLK1 - 1 downto 0);
+    
+    signal channel_refclk_arr   : t_mgt_refclks_arr(g_NUM_CHANNELS-1 downto 0);
     signal chan_clks_in_arr     : t_mgt_clk_in_arr(g_NUM_CHANNELS-1 downto 0);
     signal chan_clks_out_arr    : t_mgt_clk_out_arr(g_NUM_CHANNELS-1 downto 0);
 
@@ -154,14 +175,50 @@ begin
     master_txusrclk_o <= master_txusrclk;
     master_rxusrclk_o <= master_rxusrclk;
     
+    --================================--
+    -- Refclks
+    --================================--
+    
+    i_refclks : entity work.refclk_bufs
+        generic map(
+            g_NUM_REFCLK0         => g_NUM_REFCLK0,
+            g_NUM_REFCLK1         => g_NUM_REFCLK1,
+            g_FREQ_METER_CLK_FREQ => std_logic_vector(to_unsigned(1_000_000_000 / g_STABLE_CLK_PERIOD, 32))
+        )
+        port map(
+            refclk0_p_i      => refclk0_p_i,
+            refclk0_n_i      => refclk0_n_i,
+            refclk1_p_i      => refclk1_p_i,
+            refclk1_n_i      => refclk1_n_i,
+            refclk0_o        => refclk0,
+            refclk1_o        => refclk1,
+            refclk0_div2_o   => refclk0_fabric,
+            refclk1_div2_o   => refclk1_fabric,
+            freq_meter_clk_i => clk_stable_i,
+            refclk0_freq_o   => refclk0_freq,
+            refclk1_freq_o   => refclk1_freq
+        );    
+    
+    refclk0_fabric_o <= refclk0_fabric;
+    refclk1_fabric_o <= refclk1_fabric;
+    
+    --================================--
+    -- MGT Channels
+    --================================--
+    
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
 
         --================================--
         -- Common things for all MGT types
         --================================--
         
-        chan_clks_in_arr(chan).refclks <= channel_refclk_arr_i(chan);
-
+        channel_refclk_arr(chan).gtrefclk0 <= refclk0(g_LINK_CONFIG(chan).refclk0_idx);
+        channel_refclk_arr(chan).gtrefclk1 <= refclk1(g_LINK_CONFIG(chan).refclk1_idx);
+        channel_refclk_arr(chan).gtrefclk0_freq <= refclk0_freq(g_LINK_CONFIG(chan).refclk0_idx);
+        channel_refclk_arr(chan).gtrefclk1_freq <= refclk1_freq(g_LINK_CONFIG(chan).refclk1_idx);
+        
+        chan_clks_in_arr(chan).refclks <= channel_refclk_arr(chan); 
+        
         tx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).txusrclk2;
         rx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).rxusrclk2;
                 
@@ -864,7 +921,7 @@ begin
         )
         port map(
             clk_stable_i          => clk_stable_i,
-            channel_refclk_arr_i  => channel_refclk_arr_i,
+            channel_refclk_arr_i  => channel_refclk_arr,
             mgt_clks_arr_i        => chan_clks_in_arr,
             tx_reset_arr_o        => sc_tx_reset_arr,
             rx_reset_arr_o        => sc_rx_reset_arr,

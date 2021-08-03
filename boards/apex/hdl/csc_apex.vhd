@@ -135,15 +135,10 @@ architecture csc_apex_arch of csc_apex is
     -- resets 
    
     -- clocks
-    signal gty_refclk0          : std_logic_vector(2 downto 0);
-    signal gty_refclk1          : std_logic_vector(2 downto 0);
-    signal gty_refclk0_div2     : std_logic_vector(2 downto 0);
-    signal gty_refclk1_div2     : std_logic_vector(2 downto 0);
-    signal gty_refclk0_freq     : t_std32_array(2 downto 0);
-    signal gty_refclk1_freq     : t_std32_array(2 downto 0);
-
+    signal refclk0_fabric       : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_fabric       : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
+    
     -- qsfp mgts
-    signal mgt_refclks          : t_mgt_refclks_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
     signal mgt_master_txoutclk  : t_mgt_master_clks;
     signal mgt_master_txusrclk  : t_mgt_master_clks;
     signal mgt_master_rxusrclk  : t_mgt_master_clks;
@@ -325,55 +320,6 @@ begin
     --================================--
     -- Clocks
     --================================--
-    
-    i_clk_bufs : entity work.clk_bufs
-            generic map (
-                g_USE_GTH_CLKS => false,
-                g_FREQ_METER_CLK_FREQ => x"05f5e100" -- 100MHz
-            )
-        port map(
-            gth_refclk0_p_i    => (others => '0'),
-            gth_refclk0_n_i    => (others => '0'),
-            gth_refclk1_p_i    => (others => '0'),
-            gth_refclk1_n_i    => (others => '0'),
-            gty_refclk0_p_i    => gty_refclk0_p_i,
-            gty_refclk0_n_i    => gty_refclk0_n_i,
-            gty_refclk1_p_i    => gty_refclk1_p_i,
-            gty_refclk1_n_i    => gty_refclk1_n_i,
-            
-            gth_mgt_refclks_o  => open,
-            gty_mgt_refclks_o  => open,
-            
-            gth_refclk0_o      => open,
-            gth_refclk1_o      => open,
-            gth_refclk0_div2_o => open,
-            gth_refclk1_div2_o => open,
-            gty_refclk0_o      => gty_refclk0,
-            gty_refclk1_o      => gty_refclk1,
-            gty_refclk0_div2_o => gty_refclk0_div2,
-            gty_refclk1_div2_o => gty_refclk1_div2,
-
-            freq_meter_clk_i   => axil_clk,
-            gty_refclk0_freq_o => gty_refclk0_freq,
-            gty_refclk1_freq_o => gty_refclk1_freq,
-            gth_refclk0_freq_o => open,
-            gth_refclk1_freq_o => open
-        );
-    
-    -- GTY channel refclk wiring
-    g_mgt_quad_128_ref_clks: for i in 0 to 3 generate
-        mgt_refclks(i).gtrefclk0 <= gty_refclk0(0);
-        mgt_refclks(i).gtrefclk1 <= gty_refclk1(0);
-        mgt_refclks(i).gtrefclk0_freq <= gty_refclk0_freq(0);
-        mgt_refclks(i).gtrefclk1_freq <= gty_refclk1_freq(0);
-    end generate;
-    g_mgt_quad_130_ref_clks: for i in 4 to 7 generate
-        mgt_refclks(i).gtrefclk0 <= gty_refclk0(1);
-        mgt_refclks(i).gtrefclk1 <= gty_refclk1(1);
-        mgt_refclks(i).gtrefclk0_freq <= gty_refclk0_freq(1);
-        mgt_refclks(i).gtrefclk1_freq <= gty_refclk1_freq(1);
-    end generate;
-
 
     i_ttc_clks : entity work.ttc_clocks
         generic map(
@@ -394,6 +340,8 @@ begin
 
     i_mgts : entity work.mgt_links_gty
         generic map(
+            g_NUM_REFCLK0       => CFG_NUM_REFCLK0,
+            g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
             g_STABLE_CLK_PERIOD => 10,
@@ -402,19 +350,29 @@ begin
         port map(
             reset_i              => '0',
             clk_stable_i         => axil_clk,
+
+            refclk0_p_i => gty_refclk0_p_i,
+            refclk0_n_i => gty_refclk0_n_i,
+            refclk1_p_i => gty_refclk1_p_i,
+            refclk1_n_i => gty_refclk1_n_i,
+            refclk0_fabric_o => refclk0_fabric,
+            refclk1_fabric_o => refclk1_fabric,
+            
             ttc_clks_i           => ttc_clks,
             ttc_clks_locked_i    => ttc_clk_status.mmcm_locked,
             ttc_clks_reset_o     => open,
-            channel_refclk_arr_i => mgt_refclks,
+
             status_arr_o         => mgt_status_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             ctrl_arr_i           => mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             tx_data_arr_i        => mgt_tx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             rx_data_arr_o        => mgt_rx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             tx_usrclk_arr_o      => mgt_tx_usrclk_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             rx_usrclk_arr_o      => mgt_rx_usrclk_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
+            
             master_txoutclk_o    => mgt_master_txoutclk,
             master_txusrclk_o    => mgt_master_txusrclk,
             master_rxusrclk_o    => mgt_master_rxusrclk,
+            
             ipb_reset_i          => ipb_reset,
             ipb_clk_i            => ipb_clk,
             ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
@@ -443,7 +401,7 @@ begin
             ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
         );
 
-    slink_mgt_ref_clk <= gty_refclk1(1);
+    slink_mgt_ref_clk <= refclk1_fabric(1);
 
     --================================--
     -- Board System registers
