@@ -36,6 +36,7 @@ gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
+gem/hdl/trigger/generated/me0_cvp13/sbit_me0.vhd
 
 
 
