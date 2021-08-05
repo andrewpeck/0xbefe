@@ -5,7 +5,7 @@ if [ -z "$3" ]; then
     echo "    station: can be ge11, ge21, me0, or csc"
     echo "    board_name: can be cvp13, apex, apd1, ctp7"
     echo "    board_index: the index of the board or FPGA that you want to use (e.g. in APEX providing 0 means top FPGA, and 1 means bottom FPGA, this can also be used in systems with multiple CVP13 boards, see common/config.py)"
-    echo "e.g.: env_gem.sh me0 cvp13"
+    echo "e.g.: env_gem.sh me0 cvp13 0"
 else
 
     STATION=`echo "$1" | awk '{print tolower($0)}'`

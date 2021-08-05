@@ -12,7 +12,7 @@ def init_gem_frontend():
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     print("GEM station: %s" % gem_station)
 
-    if gem_station == 1 or gem_station == 2:
+    if gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
         # configure GBTs
         max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         num_gbts = 2 if gem_station == 2 else 3 if gem_station == 1 else None
@@ -31,9 +31,38 @@ def init_gem_frontend():
         print("Resetting SCAs")
         write_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET", 1)
 
-
         print("Sending a hard-reset")
         gem_hard_reset()
+
+    elif gem_station == 0: # ME0
+        max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+        num_gbts = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+
+        # Reset only master lpGBTs (automatically resets slave lpGBTs)
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                if gbt%2 != 0:
+                    continue
+                selectGbt(oh, gbt)
+                write_reg("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR", 0x70)
+                writeGbtRegAddrs(0x130, 0xA3)
+                sleep(0.1)
+                writeGbtRegAddrs(0x12F, 0x80)
+                sleep(0.1)
+
+        # configure lpGBTs
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+                if gbt_ready == 0:
+                    print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    continue
+                write_reg("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR", 0x70)
+                gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh]
+                print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
+                if not path.exists(gbt_config):
+                    printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
+                gbt_command(oh, gbt, "config", [gbt_config])
 
     print("Setting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")

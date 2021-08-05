@@ -10,6 +10,7 @@ import sys
 
 DEBUG = False
 
+ADDR_IC_READ_WRITE_LENGTH = None
 ADDR_IC_ADDR = None
 ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
@@ -389,17 +390,28 @@ def getBestPhase(goodPhases):
     return bestPhase
 
 def downloadConfig(ohIdx, gbtIdx, filename):
-    f = open(filename, 'r')
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    n_rw_reg = 0
+    if gem_station == 0:
+        n_rw_reg = (0x13C+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
 
     #for now we'll operate with 8 bit words only
     write_reg(get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
 
+    f = open(filename, 'r')
     ret = []
-
     lines = 0
     addr = 0
+
     for line in f:
-        value = int(line, 16)
+        if gem_station == 0: # ME0
+            value = int(line.split()[1],16)
+            if addr in range(0x0f0, 0x105): # I2C Masters
+                value = 0x00
+        elif gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
+            value = int(line, 16)
         wReg(ADDR_IC_ADDR, addr)
         wReg(ADDR_IC_WRITE_DATA, value)
         wReg(ADDR_IC_EXEC_WRITE, 1)
@@ -409,11 +421,10 @@ def downloadConfig(ohIdx, gbtIdx, filename):
         ret.append(value)
 
     print("Wrote %d registers to OH%d GBT%d" % (lines, ohIdx, gbtIdx))
-    if lines < 366:
-        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain 366 registers")
+    if lines < n_rw_reg:
+        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain %d registers"%(lines, n_rw_reg))
 
     f.close()
-
     return ret
 
 def destroyConfig():
@@ -424,10 +435,12 @@ def destroyConfig():
         sleep(0.000001) # writing is too fast for CVP13 :)
 
 def initGbtRegAddrs():
+    global ADDR_IC_READ_WRITE_LENGTH
     global ADDR_IC_ADDR
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
+    ADDR_IC_READ_WRITE_LENGTH = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH').address
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
@@ -448,6 +461,13 @@ def selectGbt(ohIdx, gbtIdx):
 
 def checkGbtReady(ohIdx, gbtIdx):
     return read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
+
+def writeGbtRegAddrs(reg, val):
+    write_reg(ADDR_IC_READ_WRITE_LENGTH, 1)
+    write_reg(ADDR_IC_ADDR, reg)
+    write_reg(ADDR_IC_WRITE_DATA, val)
+    write_reg(ADDR_IC_EXEC_WRITE, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
 
 def signal_handler(sig, frame):
     print("Exiting..")
