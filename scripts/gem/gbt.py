@@ -16,6 +16,12 @@ ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
 
+NODE_IC_READ_WRITE_LENGTH = None
+NODE_IC_ADDR = None
+NODE_IC_WRITE_DATA = None
+NODE_IC_EXEC_WRITE = None
+NODE_IC_EXEC_READ = None
+
 ADDR_LINK_RESET = None
 
 V3B_GBT0_ELINK_TO_VFAT = {0: 15, 1: 14, 2: 13, 3: 12, 6: 7, 8: 23}
@@ -440,11 +446,24 @@ def initGbtRegAddrs():
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
+
+    global NODE_IC_READ_WRITE_LENGTH
+    global NODE_IC_ADDR
+    global NODE_IC_WRITE_DATA
+    global NODE_IC_EXEC_WRITE
+    global NODE_IC_EXEC_READ
+
     ADDR_IC_READ_WRITE_LENGTH = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH').address
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
+
+    NODE_IC_READ_WRITE_LENGTH = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH')
+    NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
+    NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
+    NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
+    NODE_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ')
 
 def initVfatRegAddrs():
     global ADDR_LINK_RESET
@@ -463,10 +482,10 @@ def checkGbtReady(ohIdx, gbtIdx):
     return read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
 
 def writeGbtRegAddrs(reg, val):
-    write_reg(ADDR_IC_READ_WRITE_LENGTH, 1)
-    write_reg(ADDR_IC_ADDR, reg)
-    write_reg(ADDR_IC_WRITE_DATA, val)
-    write_reg(ADDR_IC_EXEC_WRITE, 1)
+    write_reg(NODE_IC_READ_WRITE_LENGTH, 1)
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_WRITE_DATA, val)
+    write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
 
 def signal_handler(sig, frame):
