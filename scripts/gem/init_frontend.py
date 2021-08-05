@@ -37,6 +37,7 @@ def init_gem_frontend():
     elif gem_station == 0: # ME0
         max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         num_gbts = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+        initGbtRegAddrs()
 
         # Reset only master lpGBTs (automatically resets slave lpGBTs)
         for oh in range(max_ohs):
