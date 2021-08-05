@@ -50,7 +50,8 @@ def init_gem_frontend():
                 sleep(0.1)
                 writeGbtRegAddrs(0x12F, 0x80)
                 sleep(0.1)
-
+        sleep(1)
+        
         # configure lpGBTs
         for oh in range(max_ohs):
             for gbt in range(num_gbts):
