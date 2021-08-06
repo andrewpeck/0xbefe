@@ -4,4 +4,6 @@ generate_project:ge21_cvp13_devel:
       extends: .vars
       PROJECT_NAME: ge21_cvp13
       INTERMEDIATE_BUILD: "1"
-
+    tags:
+      - vivado_2021_1
+      - much_ram

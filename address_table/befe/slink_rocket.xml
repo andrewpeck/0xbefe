@@ -1,0 +1,74 @@
+<node id="SLINK"  address="0x00030000"
+      description="This module interacts with the slink rocket IP"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/slink_rocket/slink_rocket.vhd"
+      fw_user_clock_signal="clk_stable_100_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="11"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="TX_DIFF_CTRL" address="0x1" mask="0x0000001f" permission="rw"
+          description="Conrtols the differential swing amplitude, is directly wired to the TXDIFFCTRL port of the MGT, refer to the MGT manual for units."
+          fw_signal="txdiffctrl" fw_default="0b11000"/>
+    <node id="TX_PRE_CURSOR" address="0x1" mask="0x00001f00" permission="rw"
+          description="Directly wired to the TXPRECURSOR port of the MGT, refer to the MGT manual for units."
+          fw_signal="txprecursor" fw_default="0b00000"/>
+    <node id="TX_POST_CURSOR" address="0x1" mask="0x001f0000" permission="rw"
+          description="Directly wired to the TXPOSTCURSOR port of the MGT, refer to the MGT manual for units."
+          fw_signal="txpostcursor" fw_default="0b00000"/>
+  </node>
+
+  <node id="STATUS" address="0x100">
+    <node id="ADDR_SELECT" address="0x0" mask="0x0000ffff" permission="rw"
+          description="Address of the slink rocket IP status register to read"
+          fw_signal="status_addr" fw_default="0x0001"/>
+    <node id="DATA_WORD_0" address="0x1" mask="0xffffffff" permission="r"
+          description="bits [31:0] of the status word"
+          fw_signal="status_data(31 downto 0)"/>
+    <node id="DATA_WORD_1" address="0x2" mask="0xffffffff" permission="r"
+          description="bits [63:32] of the status word"
+          fw_signal="status_data(63 downto 32)"/>
+    <node id="QPLL_LOCK" address="0x3" mask="0x00000001" permission="r"
+          description="Backpressure"
+          fw_signal="qpll_lock"/>
+    <node id="LINK_UP" address="0x3" mask="0x00000002" permission="r"
+          description="Link up flag"
+          fw_signal="link_up"/>
+    <node id="BACKPRESSURE" address="0x3" mask="0x00000004" permission="r"
+          description="Backpressure"
+          fw_signal="backpressure"/>
+  </node>
+
+  <node id="GENERATOR" address="0x200">
+    <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
+          description="Enable the generator"
+          fw_signal="gen_enable" fw_default="0b0"/>
+    <node id="EVENT_GAP" address="0x1" mask="0xffffffff" permission="rw"
+          description="Number of clock cycles to wait between consecutive events"
+          fw_signal="gen_event_gap" fw_default="0x00ffffff"/>
+    <node id="DATA0" address="0x2" mask="0xffffffff" permission="rw"
+          description="Lowest 32bits of the FED payload"
+          fw_signal="gen_data_msg(31 downto 0)" fw_default="0xbefebefe"/>
+    <node id="DATA1" address="0x3" mask="0xffffffff" permission="rw"
+          description="Bits [63:32] of the FED payload"
+          fw_signal="gen_data_msg(63 downto 32)" fw_default="0xcafecafe"/>
+    <node id="DATA2" address="0x4" mask="0xffffffff" permission="rw"
+          description="Bits [95:64] of the FED payload"
+          fw_signal="gen_data_msg(95 downto 64)" fw_default="0xaaaaaaaa"/>
+    <node id="DATA3" address="0x5" mask="0xffffffff" permission="rw"
+          description="Highest 32bits of the FED payload"
+          fw_signal="gen_data_msg(127 downto 96)" fw_default="0xbeeeeeef"/>
+
+    <node id="EVENT_CNT" address="0x10" mask="0xffffffff" permission="r"
+          description="Lower 32 bits of the event number"
+          fw_signal="std_logic_vector(gen_evt_cnt(31 downto 0))"/>
+  </node>
+
+</node>

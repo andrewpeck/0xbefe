@@ -1,41 +1,41 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
-from text_histogram import histogram
+from common.text_histogram import histogram
 
-class Colors:            
-    WHITE   = '\033[97m' 
-    CYAN    = '\033[96m' 
-    MAGENTA = '\033[95m' 
-    BLUE    = '\033[94m' 
-    YELLOW  = '\033[93m' 
-    GREEN   = '\033[92m' 
-    RED     = '\033[91m' 
-    ENDC    = '\033[0m'  
+class Colors:
+    WHITE   = '\033[97m'
+    CYAN    = '\033[96m'
+    MAGENTA = '\033[95m'
+    BLUE    = '\033[94m'
+    YELLOW  = '\033[93m'
+    GREEN   = '\033[92m'
+    RED     = '\033[91m'
+    ENDC    = '\033[0m'
 
 NUM_READS = 10000
 PHASE_UNITS_PS = 1.85963 # 18.6012 when using my phasemon, and 1.859630739 when using the DMTD from TCDS
 
 def main():
 
-    parseXML()
+    parse_xml()
 
     heading("Collecting phase data")
     f = open("phase.csv", "w")
 
-    lastSampleCnt = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER')))
+    lastSampleCnt = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
     phaseArr = []
     for i in range(NUM_READS):
-        phaseRaw = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE')))
+        phaseRaw = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE'))
         phasePs = phaseRaw * PHASE_UNITS_PS
         phaseArr.append(phasePs)
         f.write("%f\n" % phasePs)
         sampleCnt = lastSampleCnt
         while sampleCnt == lastSampleCnt:
-            sampleCnt = parseInt(readReg(getNode('GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER')))
+            sampleCnt = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
             sleep(0.0001)
         lastSampleCnt = sampleCnt
         if i % 1000 == 0:
@@ -54,24 +54,24 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
+        print_cyan('DEBUG: ' + string)
 
-def heading(string):                                                                    
-    print Colors.BLUE                                                             
+def heading(string):
+    print Colors.BLUE
     print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC                   
-                                                      
-def subheading(string):                         
-    print Colors.YELLOW                                        
-    print '---- '+str(string)+' ----',Colors.ENDC                    
-                                                                     
-def printCyan(string):                                                
-    print Colors.CYAN                                    
-    print string, Colors.ENDC                                                                     
-                                                                      
-def printRed(string):                                                                                                                       
-    print Colors.RED                                                                                                                                                            
-    print string, Colors.ENDC                                           
+    print Colors.ENDC
+
+def subheading(string):
+    print Colors.YELLOW
+    print '---- '+str(string)+' ----',Colors.ENDC
+
+def print_cyan(string):
+    print Colors.CYAN
+    print string, Colors.ENDC
+
+def print_red(string):
+    print Colors.RED
+    print string, Colors.ENDC
 
 def hex(number):
     if number is None:

@@ -17,20 +17,14 @@ use work.common_pkg.all;
 use work.csc_pkg.all;
 use work.registers.all;
 use work.ttc_pkg.all;
+use work.board_config_package.all;
 
 entity system_regs is
     generic(
         g_NUM_OF_DMBs   : integer;
-        g_BOARD_TYPE    : std_logic_vector(3 downto 0);
         
         g_NUM_IPB_MON_SLAVES     : integer;
-        g_IPB_CLK_PERIOD_NS      : integer;
-        
-        -- Firmware version, date, time, git sha
-        g_FW_DATE            : std_logic_vector (31 downto 0);
-        g_FW_TIME            : std_logic_vector (31 downto 0);
-        g_FW_VER             : std_logic_vector (31 downto 0);
-        g_FW_SHA             : std_logic_vector (31 downto 0)            
+        g_IPB_CLK_PERIOD_NS      : integer
     );
     port(
         reset_i                     : in std_logic;
@@ -43,8 +37,6 @@ entity system_regs is
         ipb_miso_o                  : out ipb_rbus;
         ipb_mon_miso_arr_i          : in ipb_rbus_array(g_NUM_IPB_MON_SLAVES - 1 downto 0);
         
-        board_id_o                  : out std_logic_vector(15 downto 0);
-    
         global_reset_o              : out std_logic;
         gbt_reset_o                 : out std_logic;
         manual_ipbus_reset_o        : out std_logic;
@@ -58,10 +50,6 @@ end system_regs;
 architecture system_regs_arch of system_regs is
 
     signal reset_cnt                : std_logic := '0';
-    
-    signal board_type               : std_logic_vector(3 downto 0);
-    signal board_id                 : std_logic_vector(15 downto 0) := (others => '0');
-    signal num_of_dmbs              : std_logic_vector(7 downto 0);
     
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
@@ -83,11 +71,6 @@ architecture system_regs_arch of system_regs is
     ------ Register signals end ----------------------------------------------
     
 begin
-
-    --=== board type and configuration parameters ===--
-    board_type     <= g_BOARD_TYPE;
-    num_of_dmbs    <= std_logic_vector(to_unsigned(g_NUM_OF_DMBs, 8));
-    board_id_o <= board_id;
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;

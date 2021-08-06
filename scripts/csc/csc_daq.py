@@ -1,6 +1,6 @@
-from rw_reg import *
+from common.rw_reg import *
 from time import *
-from utils import *
+from common.utils import *
 import datetime
 import array
 import struct
@@ -8,7 +8,7 @@ import signal
 import sys
 import os
 
-DEBUG=False
+DEBUG = False
 
 class Colors:
     WHITE   = '\033[97m'
@@ -34,7 +34,7 @@ def main():
     inputMask = 0x1
     inputMaskStr = raw_input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
     if inputMaskStr:
-        inputMask = parseInt(inputMaskStr)
+        inputMask = parse_int(inputMaskStr)
 
     ignoreAmc13 = 0x1
     ignoreAmc13Str = raw_input("Should we ignore AMC13 path? (default = yes)")
@@ -66,33 +66,33 @@ def main():
     if (useLocalL1aStr == "yes") or (useLocalL1aStr == "y"):
         useLocalL1a = 1
 
-    parseXML()
+    parse_xml()
 
     if useCscTtcEncoding:
         heading("Configuring TTC with CSC encoding")
-        writeReg(getNode('CSC_FED.TTC.CONFIG.CMD_BC0'), 0x4)
-        writeReg(getNode('CSC_FED.TTC.CONFIG.CMD_EC0'), 0x2)
-        writeReg(getNode('CSC_FED.TTC.CONFIG.CMD_RESYNC'), 0xc)
-        writeReg(getNode('CSC_FED.TTC.CONFIG.CMD_OC0'), 0x8)
-        writeReg(getNode('CSC_FED.TTC.CONFIG.CMD_HARD_RESET'), 0x10)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_BC0'), 0x4)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_EC0'), 0x2)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_RESYNC'), 0xc)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_OC0'), 0x8)
+        write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_HARD_RESET'), 0x10)
 
     heading("Resetting and starting DAQ")
-    writeReg(getNode('CSC_FED.TTC.CTRL.MODULE_RESET'), 0x1)
-    writeReg(getNode('CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x0)
-    writeReg(getNode('CSC_FED.TEST.GBE_TEST.ENABLE'), 0x0)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), useLocalL1a)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), inputMask)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignoreAmc13)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freezeOnError)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), waitForResync)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.SPY.SPY_PRESCALE'), 0x1)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.RESET'), 0x1)
-    writeReg(getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE'), 0x0)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x1)
-    writeReg(getNode('CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x1)
-    writeReg(getNode('CSC_FED.DAQ.CONTROL.RESET'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.MODULE_RESET'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.TEST.GBE_TEST.ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), useLocalL1a)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), inputMask)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignoreAmc13)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freezeOnError)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), waitForResync)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_PRESCALE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE'), 0x0)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x1)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x0)
 
     signal.signal(signal.SIGINT, exitHandler) #register SIGINT to gracefully exit
     RAW_FILE = None
@@ -100,52 +100,52 @@ def main():
         RAW_FILE = open(filename, 'w')
 
     heading("Taking data!")
-    printCyan("Filename = " + filename)
-    printCyan("Press Ctrl+C to stop (gracefully)")
+    print_cyan("Filename = " + filename)
+    print_cyan("Press Ctrl+C to stop (gracefully)")
 
     numEvents = 0
     numEventsSentToSpy = 0
-    daqEmptyNode = getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY')
-    daqDataNode = getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.DATA')
-    daqLastEventDisableNode = getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE')
-    spyEventsSentNode = getNode('CSC_FED.DAQ.STATUS.SPY.SPY_EVENTS_SENT')
-    ttsStateNode = getNode('CSC_FED.DAQ.STATUS.TTS_STATE')
+    daqEmptyNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY')
+    daqDataNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DATA')
+    daqLastEventDisableNode = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DISABLE')
+    spyEventsSentNode = get_node('BEFE.CSC_FED.DAQ.STATUS.SPY.SPY_EVENTS_SENT')
+    ttsStateNode = get_node('BEFE.CSC_FED.DAQ.STATUS.TTS_STATE')
     empty = 0
     data = 0
     ttsState = 0
     evtSize = 0
     while True:
         if readoutToCtp7:
-            empty = parseInt(readReg(daqEmptyNode))
+            empty = read_reg(daqEmptyNode)
             if empty == 0:
                 RAW_FILE.write("======================== Event %i ========================\n" % numEvents)
                 numEvents += 1
                 evtSize = 0
                 #block last event fifo until you're finished reading the event in order to know the event boundaries
-                writeReg(daqLastEventDisableNode, 0x1)
+                write_reg(daqLastEventDisableNode, 0x1)
                 while empty == 0:
-                    data = (parseInt(readReg(daqDataNode)) << 32) + parseInt(readReg(daqDataNode))
-                    empty = parseInt(readReg(daqEmptyNode))
+                    data = (read_reg(daqDataNode) << 32) + readReg(daqDataNode)
+                    empty = readReg(daqEmptyNode)
                     evtSize += 1
-                    RAW_FILE.write(hexPadded64(data) + '\n')
-                writeReg(daqLastEventDisableNode, 0x0)
+                    RAW_FILE.write(hex_padded64(data) + '\n')
+                write_reg(daqLastEventDisableNode, 0x0)
                 RAW_FILE.write("==================== Num words = %i ====================\n" % evtSize)
                 RAW_FILE.write("========================================================\n")
 
-        numEventsSentToSpy = parseInt(readReg(spyEventsSentNode))
+        numEventsSentToSpy = read_reg(spyEventsSentNode)
         if (numEvents % 10 == 0) or (numEventsSentToSpy % 1000 == 0):
             sys.stdout.write("\rEvents read to CTP7: %i, events sent to spy: %i" % (numEvents, numEventsSentToSpy))
             sys.stdout.flush()
 
-        ttsState = parseInt(readReg(ttsStateNode))
+        ttsState = read_reg(ttsStateNode)
         if ttsState == 0xc:
-            printRed("TTS state = ERROR! Dumping regs and waiting for ready state...")
+            print_red("TTS state = ERROR! Dumping regs and waiting for ready state...")
             # if readoutToCtp7:
             #     RAW_FILE.close()
             dumpDaqRegs()
             print("")
             while ttsState == 0xc:
-                ttsState = parseInt(readReg(ttsStateNode))
+                ttsState = read_reg(ttsStateNode)
                 sleep(0.1)
 
 def exitHandler(signal, frame):
@@ -158,18 +158,15 @@ def exitHandler(signal, frame):
 def initDaqRegAddrs():
     global ADDR_DAQ_EMPTY
     global ADDR_DAQ_DATA
-    ADDR_DAQ_EMPTY = getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY').real_address
-    ADDR_DAQ_EMPTY = getNode('CSC_FED.DAQ.LAST_EVENT_FIFO.DATA').real_address
+    ADDR_DAQ_EMPTY = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.EMPTY').address
+    ADDR_DAQ_EMPTY = get_node('BEFE.CSC_FED.DAQ.LAST_EVENT_FIFO.DATA').address
 
 
 def dumpDaqRegs():
-    dumpRegs("CSC_FED.LINKS", True, "Link Registers")
-    dumpRegs("CSC_FED.DAQ", True, "DAQ Registers")
+    dump_regs("BEFE.CSC_FED.LINKS", False, "Link Registers")
+    dump_regs("BEFE.CSC_FED.DAQ", False, "DAQ Registers")
 
 #---------------------------- utils ------------------------------------------------
-
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
 
 def debug(string):
     if DEBUG:
@@ -177,52 +174,7 @@ def debug(string):
 
 def debugCyan(string):
     if DEBUG:
-        printCyan('DEBUG: ' + string)
-
-def heading(string):
-    print Colors.BLUE
-    print '\n>>>>>>> '+str(string).upper()+' <<<<<<<'
-    print Colors.ENDC
-
-def subheading(string):
-    print Colors.YELLOW
-    print '---- '+str(string)+' ----',Colors.ENDC
-
-def printCyan(string):
-    print Colors.CYAN
-    print string, Colors.ENDC
-
-def printRed(string):
-    print Colors.RED
-    print string, Colors.ENDC
-
-def hex(number):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0x}".format(number)
-
-def hexPadded64(number):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0{1}x}".format(number, 18)
-
-def binary(number, length):
-    if number is None:
-        return 'None'
-    else:
-        return "{0:#0{1}b}".format(number, length + 2)
-
-def parseInt(string):
-    if string is None:
-        return None
-    elif string.startswith('0x'):
-        return int(string, 16)
-    elif string.startswith('0b'):
-        return int(string, 2)
-    else:
-        return int(string)
+        print_cyan('DEBUG: ' + string)
 
 if __name__ == '__main__':
     main()

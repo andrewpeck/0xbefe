@@ -22,11 +22,15 @@ use work.mgt_pkg.all;
 
 entity gty_channel_lpgbt is
     generic(
-        g_REFCLK_01     : integer range 0 to 1 := 0;
-        g_QPLL_01       : integer range 0 to 1 := 0;
-        g_USE_QPLL      : boolean := FALSE; -- when set to true the QPLL is used for ref clock
-        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
-        g_RXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_CPLL_REFCLK_01    : integer range 0 to 1 := 0;
+        g_TX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for TX
+        g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
+        g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
+        g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
+        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
+        g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
+        g_RX_REFCLK_FREQ    : integer  -- TX refclk frequency
     );
     port(
         
@@ -60,6 +64,74 @@ end gty_channel_lpgbt;
 
 architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
 
+    -- selects the TX_CLK25_DIV and RX_CLK25_DIV based on the refclk frequency
+    function get_txrx_clk25_div(rx_refclk_freq : integer) return integer is
+    begin
+        if rx_refclk_freq <= 25_000_000 then
+            return 1;
+        elsif rx_refclk_freq <= 50_000_000 then
+            return 2;  
+        elsif rx_refclk_freq <= 75_000_000 then
+            return 3;  
+        elsif rx_refclk_freq <= 100_000_000 then
+            return 4;  
+        elsif rx_refclk_freq <= 125_000_000 then
+            return 5;  
+        elsif rx_refclk_freq <= 150_000_000 then
+            return 6;  
+        elsif rx_refclk_freq <= 175_000_000 then
+            return 7;  
+        elsif rx_refclk_freq <= 200_000_000 then
+            return 8;  
+        elsif rx_refclk_freq <= 225_000_000 then
+            return 9;  
+        elsif rx_refclk_freq <= 250_000_000 then
+            return 10;  
+        elsif rx_refclk_freq <= 275_000_000 then
+            return 11;  
+        elsif rx_refclk_freq <= 300_000_000 then
+            return 12;  
+        elsif rx_refclk_freq <= 325_000_000 then
+            return 13;  
+        elsif rx_refclk_freq <= 350_000_000 then
+            return 14;  
+        elsif rx_refclk_freq <= 375_000_000 then
+            return 15;  
+        elsif rx_refclk_freq <= 400_000_000 then
+            return 16;  
+        end if;
+    end function get_txrx_clk25_div;  
+    
+    -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
+    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    begin
+        if use_qpll then
+            if param_name = "PCIE_BUFG_DIV_CTRL" then
+                return "0011010100000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN12" then
+                return "10";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "10";
+            end if;
+        else
+            if param_name = "PCIE_BUFG_DIV_CTRL" then
+                return "0001000000000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN12" then
+                return "11";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "11";
+            end if;
+        end if;
+    end function get_slv_param;    
+
+
+    constant TX_CLK25_DIV               : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
+    constant RX_CLK25_DIV               : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
+    constant PCIE_BUFG_DIV_CTRL         : std_logic_vector(15 downto 0) := get_slv_param("PCIE_BUFG_DIV_CTRL", g_RX_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN12    : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN12", g_RX_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN3     : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL);
+
+
     -- clocking
     signal refclks          : std_logic_vector(1 downto 0);
     signal qpllclks         : std_logic_vector(1 downto 0);
@@ -69,6 +141,8 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
     signal txpllclksel      : std_logic_vector(1 downto 0);
     signal rxpllclksel      : std_logic_vector(1 downto 0);
     signal cpllpd           : std_logic;
+    signal cpllreset        : std_logic;
+    signal cplllocken       : std_logic;
 
     -- fake floating clock
     signal float_clk        : std_logic;
@@ -88,49 +162,71 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
     
 begin
 
+    -- CPLL clock selection
+    g_cpll_ref_clk0 : if g_CPLL_REFCLK_01 = 0 generate
+        refclks(0) <= clks_i.refclks.gtrefclk0;
+    end generate;
+    
+    g_cpll_ref_clk1 : if g_CPLL_REFCLK_01 = 1 generate
+        refclks(1) <= clks_i.refclks.gtrefclk1;
+    end generate;
+
     -- CPLL is used
-    g_cpll : if not g_USE_QPLL generate
-        
-        g_ref_clk0 : if g_REFCLK_01 = 0 generate
-            refclks(0) <= clks_i.refclks.gtrefclk0;
-        end generate;
-        
-        g_ref_clk1 : if g_REFCLK_01 = 1 generate
-            refclks(1) <= clks_i.refclks.gtrefclk1;
-        end generate;
-        
-        rxsysclksel <= "00";
-        txsysclksel <= "00";
-        rxpllclksel <= "00";
-        txpllclksel <= "00";
+    g_cpll_used : if (not g_TX_USE_QPLL) or (not g_RX_USE_QPLL) generate
+        cpllreset <= '0';
+        cplllocken <= '1';
         cpllpd <= cpllreset_i;
-                
+    end generate;
+
+    -- CPLL not used
+    g_cpll_not_used : if g_TX_USE_QPLL and g_RX_USE_QPLL generate
+        cpllpd <= '1';
+        cpllreset <= '1';
+        cplllocken <= '0';
     end generate;
 
     -- QPLL is used
-    g_qpll : if g_USE_QPLL generate
-        
-        g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpll0clk.qpllclk;
-            qpllrefclks(0) <= clks_i.qpll0clk.qpllrefclk;
-            rxsysclksel <= "10";
-            txsysclksel <= "10";
-            rxpllclksel <= "11";
-            txpllclksel <= "11";
-        end generate;
-        
-        g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpll1clk.qpllclk;
-            qpllrefclks(1) <= clks_i.qpll1clk.qpllrefclk;
-            rxsysclksel <= "11";
-            txsysclksel <= "11";
-            rxpllclksel <= "10";
-            txpllclksel <= "10";
-        end generate;
-        
-        refclks <= "00";
-        cpllpd <= '1';
-                
+    g_qpll_used : if g_TX_USE_QPLL or g_RX_USE_QPLL generate
+        qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+        qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
+        qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+        qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
+    end generate;
+
+    -- TX CPLL
+    g_tx_cpll : if not g_TX_USE_QPLL generate
+        txsysclksel <= "00";
+        txpllclksel <= "00";
+    end generate;
+
+    -- RX CPLL
+    g_rx_cpll : if not g_RX_USE_QPLL generate
+        rxsysclksel <= "00";
+        rxpllclksel <= "00";
+    end generate;
+
+    -- TX QPLL0
+    g_tx_qpll0 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 0 generate
+        txsysclksel <= "10";
+        txpllclksel <= "11";
+    end generate;
+
+    -- RX QPLL0
+    g_rx_qpll0 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 0 generate
+        rxsysclksel <= "10";
+        rxpllclksel <= "11";
+    end generate;
+
+    -- TX QPLL1
+    g_tx_qpll1 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 1 generate
+        txsysclksel <= "11";
+        txpllclksel <= "10";
+    end generate;
+
+    -- RX QPLL1
+    g_rx_qpll1 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 1 generate
+        rxsysclksel <= "11";
+        rxpllclksel <= "10";
     end generate;
 
     -- raw encoding 32 bit wide data bus
@@ -218,11 +314,11 @@ begin
             CPLL_CFG1                    => "0000000000101001",
             CPLL_CFG2                    => "0000001000000011",
             CPLL_CFG3                    => "0000000000000000",
-            CPLL_FBDIV                   => 4,
-            CPLL_FBDIV_45                => 4,
+            CPLL_FBDIV                   => 4, -- keep
+            CPLL_FBDIV_45                => 4, -- keep
             CPLL_INIT_CFG0               => "0000001010110010",
             CPLL_LOCK_CFG                => "0000000111101000",
-            CPLL_REFCLK_DIV              => 1,
+            CPLL_REFCLK_DIV              => 1, -- keep
             CTLE3_OCAP_EXT_CTRL          => "000",
             CTLE3_OCAP_EXT_EN            => '0',
             DDI_CTRL                     => "00",
@@ -301,10 +397,10 @@ begin
             PCIE3_CLK_COR_MIN_LAT        => "00000",
             PCIE3_CLK_COR_THRSH_TIMER    => "001000",
             PCIE_64B_DYN_CLKSW_DIS       => "FALSE",
-            PCIE_BUFG_DIV_CTRL           => "0001000000000000",
+            PCIE_BUFG_DIV_CTRL           => PCIE_BUFG_DIV_CTRL, -- keep
             PCIE_GEN4_64BIT_INT_EN       => "FALSE",
-            PCIE_PLL_SEL_MODE_GEN12      => "11",
-            PCIE_PLL_SEL_MODE_GEN3       => "11",
+            PCIE_PLL_SEL_MODE_GEN12      => PCIE_PLL_SEL_MODE_GEN12, -- keep
+            PCIE_PLL_SEL_MODE_GEN3       => PCIE_PLL_SEL_MODE_GEN3, -- keep
             PCIE_PLL_SEL_MODE_GEN4       => "10",
             PCIE_RXPCS_CFG_GEN3          => "0000101010100101",
             PCIE_RXPMA_CFG               => "0010100000001010",
@@ -455,7 +551,7 @@ begin
             RX_BIAS_CFG0                 => "0001001010110000",
             RX_BUFFER_CFG                => "000000",
             RX_CAPFF_SARC_ENB            => '0',
-            RX_CLK25_DIV                 => 13,
+            RX_CLK25_DIV                 => RX_CLK25_DIV, -- keep
             RX_CLKMUX_EN                 => '1',
             RX_CLK_SLIP_OVRD             => "00000",
             RX_CM_BUF_CFG                => "1010",
@@ -566,7 +662,7 @@ begin
             TXSYNC_MULTILANE             => '1',
             TXSYNC_OVRD                  => '0',
             TXSYNC_SKIP_DA               => '0',
-            TX_CLK25_DIV                 => 13,
+            TX_CLK25_DIV                 => TX_CLK25_DIV, -- keep
             TX_CLKMUX_EN                 => '1',
             TX_DATA_WIDTH                => 32,
             TX_DCC_LOOP_RST_CFG          => "0000000000000100",
@@ -752,13 +848,13 @@ begin
             CLKRSVD1             => '0',
             CPLLFREQLOCK         => '0',
             CPLLLOCKDETCLK       => clk_stable_i,
-            CPLLLOCKEN           => '1',
+            CPLLLOCKEN           => cplllocken,
             CPLLPD               => cpllpd,
             CPLLREFCLKSEL        => "001",
-            CPLLRESET            => '0',
+            CPLLRESET            => cpllreset,
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
-            DRPADDR              => drp_i.addr,
+            DRPADDR              => drp_i.addr(9 downto 0),
             DRPCLK               => drp_i.clk,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
@@ -799,7 +895,7 @@ begin
             RXAFECFOKEN          => '1',
             RXBUFRESET           => rx_slow_ctrl_i.rxbufreset,
             RXCDRFREQRESET       => '0',
-            RXCDRHOLD            => rx_init_i.rxcdrhold,
+            RXCDRHOLD            => '0',
             RXCDROVRDEN          => '0',
             RXCDRRESET           => '0',
             RXCHBONDEN           => '0',
@@ -810,8 +906,8 @@ begin
             RXCKCALRESET         => '0',
             RXCKCALSTART         => "0000000",
             RXCOMMADETEN         => '1',
-            RXDFEAGCHOLD         => rx_init_i.rxdfeagchold,
-            RXDFEAGCOVRDEN       => rx_init_i.rxdfeagcovrden,
+            RXDFEAGCHOLD         => '0',
+            RXDFEAGCOVRDEN       => '0',
             RXDFECFOKFCNUM       => "1101",
             RXDFECFOKFEN         => '0',
             RXDFECFOKFPULSE      => '0',
@@ -819,9 +915,9 @@ begin
             RXDFECFOKOVREN       => '0',
             RXDFEKHHOLD          => '0',
             RXDFEKHOVRDEN        => '0',
-            RXDFELFHOLD          => rx_init_i.rxdfelfhold,
-            RXDFELFOVRDEN        => rx_init_i.rxdfelfovrden,
-            RXDFELPMRESET        => rx_init_i.rxdfelpmreset,
+            RXDFELFHOLD          => '0',
+            RXDFELFOVRDEN        => '0',
+            RXDFELPMRESET        => '0',
             RXDFETAP10HOLD       => '0',
             RXDFETAP10OVRDEN     => '0',
             RXDFETAP11HOLD       => '0',
@@ -856,7 +952,7 @@ begin
             RXDFEVPOVRDEN        => '0',
             RXDFEXYDEN           => '1',
             RXDLYBYPASS          => '0',
-            RXDLYEN              => rx_init_i.rxdlyen,
+            RXDLYEN              => '0',
             RXDLYOVRDEN          => '0',
             RXDLYSRESET          => rx_init_i.rxdlysreset,
             RXELECIDLEMODE       => "11",
@@ -866,10 +962,10 @@ begin
             RXLPMEN              => rx_slow_ctrl_i.rxlpmen,
             RXLPMGCHOLD          => '0',
             RXLPMGCOVRDEN        => '0',
-            RXLPMHFHOLD          => rx_init_i.rxlpmhfhold,
-            RXLPMHFOVRDEN        => rx_init_i.rxlpmhfovrden,
-            RXLPMLFHOLD          => rx_init_i.rxlpmlfhold,
-            RXLPMLFKLOVRDEN      => rx_init_i.rxlpmlfklovrden,
+            RXLPMHFHOLD          => '0',
+            RXLPMHFOVRDEN        => '0',
+            RXLPMLFHOLD          => '0',
+            RXLPMLFKLOVRDEN      => '0',
             RXLPMOSHOLD          => '0',
             RXLPMOSOVRDEN        => '0',
             RXMCOMMAALIGNEN      => '0',

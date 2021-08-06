@@ -1,3 +1,6 @@
+import sys
+
+# bright colors:
 class Colors:
     WHITE   = '\033[97m'
     CYAN    = '\033[96m'
@@ -6,48 +9,92 @@ class Colors:
     YELLOW  = '\033[93m'
     GREEN   = '\033[92m'
     RED     = '\033[91m'
-    ENDC    = '\033[0m'
+    ENDC    = '\033[39m'
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+# normal colors:
+# class Colors:
+#     WHITE   = '\033[37m'
+#     CYAN    = '\033[36m'
+#     MAGENTA = '\033[35m'
+#     BLUE    = '\033[34m'
+#     YELLOW  = '\033[33m'
+#     GREEN   = '\033[32m'
+#     RED     = '\033[31m'
+#     ENDC    = '\033[39m'
 
-def printColor(msg, color):
-    print color, msg, Colors.ENDC
+# check python version (python3 is needed for the tables generators)
+if sys.version_info < (3, 6):
+    print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
+    exit()
+
+import common.tables.tableformatter as tf
+import imp
+
+try:
+    imp.find_module('befe_config')
+    import befe_config as befe_config
+except ImportError:
+    print_red("befe_config.py not found")
+    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
+    print_red("In most cases the example config without modifications will work as a starting point")
+    exit(1)
+
+
+FULL_TABLE_GRID_STYLE = tf.FancyGrid()
+DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
+
+def get_config(config_name):
+    return eval("befe_config." + config_name)
+
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
+
+def print_color(msg, color):
+    print(color + msg + Colors.ENDC)
+
+def color_string(msg, color):
+    return color + msg + Colors.ENDC
 
 def heading(msg):
-    printColor('\n>>>>>>> ' + str(msg).upper() + ' <<<<<<<', Colors.BLUE)
+    print_color('\n>>>>>>> ' + str(msg).upper() + ' <<<<<<<', Colors.BLUE)
 
 def subheading(msg):
-    printColor('---- ' + str(msg) + ' ----', Colors.YELLOW)
+    print_color('---- ' + str(msg) + ' ----', Colors.YELLOW)
 
-def printCyan(msg):
-    printColor(msg, Colors.CYAN)
+def print_cyan(msg):
+    print_color(msg, Colors.CYAN)
 
-def printRed(msg):
-    printColor(msg, Colors.RED)
+def print_red(msg):
+    print_color(msg, Colors.RED)
 
-def printGreen(msg):
-    printColor(msg, Colors.GREEN)
+def print_green(msg):
+    print_color(msg, Colors.GREEN)
 
-def printGreenRed(msg, controlValue, expectedValue):
+def print_green_red(msg, controlValue, expectedValue):
     col = Colors.GREEN
     if controlValue != expectedValue:
         col = Colors.RED
-    printColor(msg, col)
+    print_color(msg, col)
 
 def hex(number):
     if number is None:
         return 'None'
     else:
-        return "{0:#0x}".format(number)
+        return "0x%x" % number
 
-def hexPadded64(number):
+def hex32(number):
     if number is None:
         return 'None'
     else:
-        return "{0:#0{1}x}".format(number, 18)
+        return "0x%08x" % number
 
-def hexPadded(number, numBytes, include0x = True):
+def hex_padded64(number):
+    if number is None:
+        return 'None'
+    else:
+        return "0x%016x" % number
+
+def hex_padded(number, numBytes, include0x=True):
     if number is None:
         return 'None'
     else:
@@ -64,43 +111,14 @@ def binary(number, length):
     else:
         return "{0:#0{1}b}".format(number, length + 2)
 
-def parseInt(string):
+def parse_int(string):
     if string is None:
         return None
+    elif isinstance(string, int):
+        return string
     elif string.startswith('0x'):
         return int(string, 16)
     elif string.startswith('0b'):
         return int(string, 2)
     else:
         return int(string)
-
-def regNicePrint(regNode, printIfOk = True):
-    val = parseInt(readReg(regNode))
-    color = None
-    if ((regNode.error_min_value is not None) and (val >= regNode.error_min_value)) or ((regNode.error_max_value is not None) and (val <= regNode.error_max_value)) or ((regNode.error_value is not None) and (val == regNode.error_value)):
-        color = Colors.RED
-    elif ((regNode.warn_min_value is not None) and (val >= regNode.warn_min_value)) or ((regNode.warn_max_value is not None) and (val <= regNode.warn_max_value)) or ((regNode.warn_value is not None) and (val == regNode.warn_value)):
-        color = Colors.YELLOW
-
-    s = "%-*s%s" % (90, regNode.name, hexPadded(val, 4, True))
-    if color is not None:
-        s = color + s + Colors.ENDC
-
-    if color is not None or printIfOk:
-        print(s)
-
-def dumpRegs(pattern, printIfOk = True, caption = None, captionColor = Colors.CYAN):
-    if caption is not None:
-        totalWidth = 100
-        if len(caption) + 6 > totalWidth:
-            totalWidth = len(caption) + 6
-        print(captionColor + "=" * totalWidth + Colors.ENDC)
-        padding1Size = int(((totalWidth-2-len(caption)) / 2))
-        padding2Size = padding1Size if padding1Size * 2 + len(caption) == totalWidth - 2 else padding1Size + 1
-        print(captionColor + "%s %s %s" % ("=" * padding1Size, caption, "=" * padding2Size) + Colors.ENDC)
-        print(captionColor + "=" * totalWidth + Colors.ENDC)
-
-    nodes = getNodesContaining(pattern)
-    for node in nodes:
-        if node.permission is not None and 'r' in node.permission:
-            regNicePrint(node, printIfOk)

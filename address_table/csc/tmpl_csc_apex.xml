@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE node [
 <!ENTITY NUM_DMBS "2">
-<!ENTITY NUM_OPTICAL_LINKS "4">
-<!ENTITY ADDRESS_TABLE_TTC SYSTEM "../common/ttc.xml">
+<!ENTITY NUM_OPTICAL_LINKS "16">
+<!ENTITY NUM_MGTS "8">
+<!ENTITY ADDRESS_TABLE_SYSTEM SYSTEM "../befe/system.xml">
+<!ENTITY ADDRESS_TABLE_MGTS SYSTEM "../befe/mgts_generic.xml">
+<!ENTITY ADDRESS_TABLE_SLINK SYSTEM "../befe/slink_rocket.xml">
+<!ENTITY ADDRESS_TABLE_TTC SYSTEM "../befe/ttc.xml">
 <!ENTITY ADDRESS_TABLE_CSC_FED SYSTEM "csc_fed.xml">
-<!ENTITY ADDRESS_TABLE_LINKS SYSTEM "../boards/links_generic.xml">
-<!ENTITY ADDRESS_TABLE_SLINK SYSTEM "../boards/slink_rocket.xml">
 ]>
-<node id="CSC_FED" xmlns:xi="http://www.w3.org/2001/XInclude">
-  &ADDRESS_TABLE_TTC;
-  &ADDRESS_TABLE_CSC_FED;
-  &ADDRESS_TABLE_LINKS;
+<node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
+  &ADDRESS_TABLE_SYSTEM;
+  &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_SLINK;
+  <node id="CSC_FED">
+    &ADDRESS_TABLE_TTC;
+    &ADDRESS_TABLE_CSC_FED;
+  </node>
 </node>

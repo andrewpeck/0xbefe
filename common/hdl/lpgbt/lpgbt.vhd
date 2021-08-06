@@ -127,7 +127,7 @@ begin
         gen_skip_even_tx : if (not g_SKIP_ODD_TX) or (i mod 2 = 0) generate
 
             --------- Resets ---------
-            tx_gb_reset(i) <= (not (mgt_status_arr_i(i).tx_reset_done and mgt_status_arr_i(i).tx_cpll_locked)) or reset_tx_i;
+            tx_gb_reset(i) <= (not (mgt_status_arr_i(i).tx_reset_done and mgt_status_arr_i(i).tx_pll_locked)) or reset_tx_i;
             tx_dp_reset(i) <= not tx_gb_ready(i);
 
             --------- Status ---------
@@ -210,7 +210,7 @@ begin
         
         gen_use_rx_sync_fifos : if g_USE_RX_SYNC_FIFOS generate
         
-            rx_sync_reset(i) <= reset_i or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_cpll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
+            rx_sync_reset(i) <= reset_i or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
             rx_mgt_clk_sync(i) <= rx_word_common_clk_i;
         
             i_rx_sync_fifo : entity work.gearbox
@@ -267,7 +267,7 @@ begin
     g_gbt_rx_link : for i in 0 to g_NUM_LINKS - 1 generate
 
         --------- Resets ---------
-        rx_fa_reset(i) <= (not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_cpll_locked)) or reset_rx_i;
+        rx_fa_reset(i) <= (not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked)) or reset_rx_i;
         rx_gb_reset(i) <= not (rx_header_locked(i) and rx_sync_valid(i));
         rx_dp_reset(i) <= not rx_gb_ready(i);
 

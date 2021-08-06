@@ -1,21 +1,23 @@
 #!/bin/bash
 
-if [ -z "$2" ]; then
-    echo "Usage: source env.sh <station> <board_name>"
+if [ -z "$3" ]; then
+    echo "Usage: source env.sh <station> <board_name> <board_index>"
     echo "    station: can be ge11, ge21, me0, or csc"
     echo "    board_name: can be cvp13, apex, apd1, ctp7"
-    echo "e.g.: env_gem.sh me0 cvp13"
+    echo "    board_index: the index of the board or FPGA that you want to use (e.g. in APEX providing 0 means top FPGA, and 1 means bottom FPGA, this can also be used in systems with multiple CVP13 boards, see common/config.py)"
+    echo "e.g.: env_gem.sh me0 cvp13 0"
 else
 
     STATION=`echo "$1" | awk '{print tolower($0)}'`
     BOARD=`echo "$2" | awk '{print tolower($0)}'`
+    BOARD_IDX=$3
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     LIBRWREG_FILE="$SCRIPT_DIR/boards/$BOARD/rwreg/librwreg.so"
     PROJECT="gem"
     ADDR_TBL_FILE="gem_amc.xml"
     if [ $STATION == "csc" ]; then
         PROJECT="csc"
-	ADDR_TBL_FILE="csc_fed.xml"
+	      ADDR_TBL_FILE="csc_fed.xml"
     fi
     ADDR_TBL=$SCRIPT_DIR/../address_table/${PROJECT}/generated/${STATION}_${BOARD}/${ADDR_TBL_FILE}
 
@@ -32,9 +34,11 @@ else
     else
         echo "Setting up environment for $STATION on $BOARD"
         export LD_LIBRARY_PATH=$SCRIPT_DIR/boards/$BOARD/rwreg:$LD_LIBRARY_PATH
-        export PYTHONPATH=$SCRIPT_DIR/common:$SCRIPT_DIR/boards/$BOARD:$SCRIPT_DIR/gem:$PYTHONPATH
+        export PYTHONPATH=$SCRIPT_DIR
         export ADDRESS_TABLE=$ADDR_TBL
         export BOARD_TYPE=$BOARD
+        export BOARD_IDX
+        export BEFE_FLAVOR=$STATION
         echo "0xBEFE GEM environment setup done!"
     fi
 

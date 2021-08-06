@@ -1,5 +1,5 @@
 import struct
-from utils import *
+from common.utils import *
 import numpy as np
 import time
 import os
@@ -118,7 +118,7 @@ class DmbEvent:
         pass
 
     def printDmbInfo(self):
-        print ("Crate %d DMB %d" % (self.crateId, self.dmbId))
+        print("Crate %d DMB %d" % (self.crateId, self.dmbId))
 
 class AlctEvent:
 
@@ -226,7 +226,7 @@ def unpackFile(localDaqFilename, removeEmptyEvents = False, removeDmbs = []):
         start = eoe + 3
         i += 1
         if (i % 1000 == 0):
-            print "%d events unpacked (out of %d)" % (i, eoes[0].size)
+            print("%d events unpacked (out of %d)" % (i, eoes[0].size))
 
 
     # for i in range(0, 20):
@@ -234,9 +234,9 @@ def unpackFile(localDaqFilename, removeEmptyEvents = False, removeDmbs = []):
     #     for dmb in events[i].dmbs:
     #         dmb.printDmbInfo()
 
-    print "=============== DONE ==============="
-    print "read %d bytes" % (raw.size * 8)
-    print "unpacked %d events" % len(events)
+    print("=============== DONE ===============")
+    print("read %d bytes" % (raw.size * 8))
+    print("unpacked %d events" % len(events))
 
     return events
 
@@ -260,7 +260,7 @@ def checkEventErrors(event):
 
         #check that the DMB trailer words have the correct DDU codes
         if dmb.words[dmb.words.size - 2] & 0xf000f000f000f000 != 0xf000f000f000f000 or dmb.words[dmb.words.size - 1] & 0xf000f000f000f000 != 0xe000e000e000e000:
-            errors.append("DMB (crate %d dmb %d) trailer words don't have the correct DDU codes, suspect that it's misaligned with 64bit boundaries: trailer1 = %s, trailer2 = %s" % (dmb.crateId, dmb.dmbId, hexPadded64(dmb.words[dmb.words.size - 2]), hexPadded64(dmb.words[dmb.words.size - 1])))
+            errors.append("DMB (crate %d dmb %d) trailer words don't have the correct DDU codes, suspect that it's misaligned with 64bit boundaries: trailer1 = %s, trailer2 = %s" % (dmb.crateId, dmb.dmbId, hex_padded64(dmb.words[dmb.words.size - 2]), hex_padded64(dmb.words[dmb.words.size - 1])))
 
 
         # TODO: check L1 ID consistency of ALCT and TMB
@@ -311,21 +311,21 @@ def dumpEvents(cfedEvent, dduEvent):
 
     line = ""
     for i in range(0, length):
-        line = hexPadded(i*8, 2) + ":   "
+        line = hex_padded(i*8, 2) + ":   "
         if (i < cfedLen):
-            # line = hexPadded(cfedEvent[i], 8, False)
-            line += hexPadded((cfedEvent[i] >> 48) & 0xffff, 2, False) + " " + hexPadded((cfedEvent[i] >> 32) & 0xffff, 2, False) + " " + hexPadded((cfedEvent[i] >> 16) & 0xffff, 2, False) + " " + hexPadded(cfedEvent[i] & 0xffff, 2, False)
+            # line = hex_padded(cfedEvent[i], 8, False)
+            line += hex_padded((cfedEvent[i] >> 48) & 0xffff, 2, False) + " " + hex_padded((cfedEvent[i] >> 32) & 0xffff, 2, False) + " " + hex_padded((cfedEvent[i] >> 16) & 0xffff, 2, False) + " " + hex_padded(cfedEvent[i] & 0xffff, 2, False)
         else:
             line = "                  "
 
         line += "  ----  "
 
         if (i < dduLen):
-            # line += hexPadded(dduEvent[i], 8, False)
-            line += hexPadded((dduEvent[i] >> 48) & 0xffff, 2, False) + " " + hexPadded((dduEvent[i] >> 32) & 0xffff, 2, False) + " " + hexPadded((dduEvent[i] >> 16) & 0xffff, 2, False) + " " + hexPadded(dduEvent[i] & 0xffff, 2, False)
+            # line += hex_padded(dduEvent[i], 8, False)
+            line += hex_padded((dduEvent[i] >> 48) & 0xffff, 2, False) + " " + hex_padded((dduEvent[i] >> 32) & 0xffff, 2, False) + " " + hex_padded((dduEvent[i] >> 16) & 0xffff, 2, False) + " " + hex_padded(dduEvent[i] & 0xffff, 2, False)
 
         if (i < cfedLen) and (i < dduLen) and (cfedEvent[i] != dduEvent[i]):
-            printRed(line)
+            print_red(line)
         else:
             print(line)
 
@@ -351,9 +351,9 @@ def dumpEventsNumpy(words1, words2, annotateWords1 = True, maxSize = 5000):
     cfebWordCnt = 0
     dmbTrail2Idx = None
     for i in range(0, length):
-        line = hexPadded(i*8, 2) + ":   "
+        line = hex_padded(i*8, 2) + ":   "
         if (i < len1):
-            line += hexPadded((int(words1[i]) >> 48) & 0xffff, 2, False) + " " + hexPadded((int(words1[i]) >> 32) & 0xffff, 2, False) + " " + hexPadded((int(words1[i]) >> 16) & 0xffff, 2, False) + " " + hexPadded(int(words1[i]) & 0xffff, 2, False)
+            line += hex_padded((int(words1[i]) >> 48) & 0xffff, 2, False) + " " + hex_padded((int(words1[i]) >> 32) & 0xffff, 2, False) + " " + hex_padded((int(words1[i]) >> 16) & 0xffff, 2, False) + " " + hex_padded(int(words1[i]) & 0xffff, 2, False)
             if annotateWords1:
                 if  (int(words1[i]) & 0xf000f000f000f000) == 0xa000a000a000a000:
                     dmbHead2Idx = i
@@ -384,7 +384,7 @@ def dumpEventsNumpy(words1, words2, annotateWords1 = True, maxSize = 5000):
             line += "  ----  "
 
             if (i < len2):
-                line += hexPadded((int(words2[i]) >> 48) & 0xffff, 2, False) + " " + hexPadded((int(words2[i]) >> 32) & 0xffff, 2, False) + " " + hexPadded((int(words2[i]) >> 16) & 0xffff, 2, False) + " " + hexPadded(int(words2[i]) & 0xffff, 2, False)
+                line += hex_padded((int(words2[i]) >> 48) & 0xffff, 2, False) + " " + hex_padded((int(words2[i]) >> 32) & 0xffff, 2, False) + " " + hex_padded((int(words2[i]) >> 16) & 0xffff, 2, False) + " " + hex_padded(int(words2[i]) & 0xffff, 2, False)
 
         if annotateWords1:
             if dmbHead2Idx == i:
@@ -403,14 +403,14 @@ def dumpEventsNumpy(words1, words2, annotateWords1 = True, maxSize = 5000):
                 line += "   <=== CFEB SAMPLE %d TRAILER" % int(cfebWordCnt / 25)
 
         if words2 is not None and (i < len1) and (i < len2) and (words1[i] != words2[i]):
-            printRed(line)
+            print_red(line)
         else:
             print(line)
 
 def printRawWords(words64):
     i = 0
     for word in words64:
-        print "%d\t: %s" % (i, hexPadded64(word))
+        print("%d\t: %s" % (i, hex_padded64(word)))
         i += 1
 
 #given a local daq raw file pattern, which can include a * for the part number (last number in the filename), this returns all available filenames

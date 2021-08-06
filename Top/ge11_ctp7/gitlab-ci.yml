@@ -3,4 +3,5 @@ generate_project:ge11_ctp7:
     variables:
       extends: .vars
       PROJECT_NAME: ge11_ctp7
-
+    tags:
+      - vivado_2020_2

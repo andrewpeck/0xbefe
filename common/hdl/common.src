@@ -39,6 +39,7 @@ common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
 common/hdl/utils/crc16_usb.vhd
 common/hdl/utils/crc32_gbe.vhd
 common/hdl/utils/cross_domain_pulse.vhd
+common/hdl/utils/freq_meter.sv
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project
@@ -55,6 +56,11 @@ common/hdl/mgt/mgt_phalign_multi_auto.vhd
 # Misc
 common/hdl/misc/promless_fpga_loader.vhd
 #common/hdl/misc/promless_bram.vhd            <-- use the generated version specific to the project
+common/hdl/misc/gbe_tx_driver.vhd
+#common/hdl/misc/board_system.vhd             <-- use the generated version specific to the project
+
+# Tests
+common/hdl/tests/eth_test.vhd
 
 # IP
 common/ip/common_ip.src

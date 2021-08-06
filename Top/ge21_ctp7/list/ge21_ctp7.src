@@ -19,6 +19,7 @@ boards/ctp7/hdl/gem_ctp7.src
 gem/hdl/pkg/generated/ge21_ctp7/registers.vhd
 #common/hdl/mgt/generated/ge21_ctp7/mgt_slow_control.vhd
 common/hdl/ttc/generated/ge21_ctp7/ttc.vhd
+common/hdl/misc/generated/ge21_ctp7/board_system.vhd
 gem/hdl/misc/generated/ge21_ctp7/gem_system_regs.vhd
 gem/hdl/tests/generated/ge21_ctp7/gem_tests.vhd
 gem/hdl/oh/generated/ge21_ctp7/oh_link_regs.vhd

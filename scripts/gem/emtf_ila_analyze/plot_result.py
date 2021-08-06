@@ -22,7 +22,7 @@ class Colors:
 def printWithColor(string, color):
     print(color + string + Colors.ENDC)
 
-def hexPadded(number, numBytes):
+def hex_padded(number, numBytes):
     if number is None:
         return 'None'
     else:

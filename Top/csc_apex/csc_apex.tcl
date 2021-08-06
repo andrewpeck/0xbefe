@@ -20,6 +20,8 @@ source $PATH_REPO/Hog/Tcl/create_project.tcl
 
 set_property default_lib work [current_project]
 set_property top csc_apex [current_fileset]
+set_property verilog_define C2C_3P125G [current_fileset]
+set_property file_type {Verilog Header} [get_files $PATH_REPO/boards/apex/hdl/c2c/mgt/c2c_gth_example_wrapper_functions.v]
 
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs impl_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]

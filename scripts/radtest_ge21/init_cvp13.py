@@ -1,6 +1,6 @@
 import subprocess
 from time import *
-from rw_reg import *
+from common.rw_reg import *
 
 class Colors:
     WHITE   = '\033[97m'
@@ -36,9 +36,9 @@ def main():
     subprocess.call(["python", BEFE_ROOT + "/scripts/boards/cvp13/cvp13_init_ge21.py"])
 
     myprint("Testing communication to CVP13")
-    parseXML()
+    parse_xml()
 
-    boardId = parseInt(readReg(getNode("GEM_AMC.GEM_SYSTEM.BOARD_ID")))
+    boardId = read_reg(get_node("BEFE.SYSTEM.CTRL.BOARD_ID"))
     if boardId == 0xbefe:
         myprint("Communication to CVP13 is GOOD")
     else:
@@ -50,7 +50,7 @@ def main():
     myprint("Uploading the OH firmware to CVP13 RAM")
     subprocess.call(["python", BEFE_ROOT + "/scripts/common/promless_load.py", OH_FW_BITFILE])
 
-def myprint(msg, isError = False):
+def myprint(msg, isError=False):
     col = Colors.RED if isError else Colors.GREEN
     print(col + "===> " + msg + Colors.ENDC)
 

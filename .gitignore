@@ -20,6 +20,8 @@ cxl_error.log
 **/ip_custom/*/src/*/*
 !**/ip_custom/*/src/*/*.xci
 
+/scripts/befe_config.py
+
 *.so
 
 /boards/*/bd/*

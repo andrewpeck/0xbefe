@@ -22,13 +22,7 @@ use work.board_config_package.all;
 entity gem_system_regs is
 generic(
     g_NUM_IPB_MON_SLAVES     : integer;
-    g_IPB_CLK_PERIOD_NS      : integer;
-    
-    -- Firmware version, date, time, git sha
-    g_FW_DATE            : std_logic_vector (31 downto 0);
-    g_FW_TIME            : std_logic_vector (31 downto 0);
-    g_FW_VER             : std_logic_vector (31 downto 0);
-    g_FW_SHA             : std_logic_vector (31 downto 0)
+    g_IPB_CLK_PERIOD_NS      : integer
 );
 port(
     
@@ -43,8 +37,6 @@ port(
     ipb_miso_o                  : out ipb_rbus;
     ipb_mon_miso_arr_i          : in ipb_rbus_array(g_NUM_IPB_MON_SLAVES - 1 downto 0);
     
-    board_id_o                  : out std_logic_vector(15 downto 0);
-
     loopback_gbt_test_en_o      : out std_logic;
     use_v3b_elink_mapping_o     : out std_logic;
     vfat_hdlc_address_arr_o     : out t_std4_array(23 downto 0);
@@ -63,11 +55,6 @@ end gem_system_regs;
 architecture gem_system_regs_arch of gem_system_regs is
 
     signal reset_cnt                : std_logic := '0';
-    
-    signal board_id                 : std_logic_vector(15 downto 0) := (others => '0');
-    signal gem_station              : integer range 0 to 2;
-    signal num_of_oh                : std_logic_vector(4 downto 0);
-    signal board_type               : std_logic_vector(3 downto 0);
     
     signal loopback_gbt_test_en     : std_logic;
     
@@ -97,12 +84,6 @@ architecture gem_system_regs_arch of gem_system_regs is
     
 begin
 
-    --=== board type and configuration parameters ===--
-    board_type     <= CFG_BOARD_TYPE;
-    num_of_oh      <= std_logic_vector(to_unsigned(CFG_NUM_OF_OHs, 5));
-    gem_station    <= CFG_GEM_STATION;
-    board_id_o     <= board_id;
-            
     --=== Tests === --
     loopback_gbt_test_en_o <= loopback_gbt_test_en; 
     

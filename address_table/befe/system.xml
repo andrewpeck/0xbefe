@@ -1,0 +1,72 @@
+<!-- Optical links module -->
+<node id="SYSTEM"  address="0x00000000"
+      description="This module contains counters and control registers of all the optical links on the board (regardless of link rate or what they connect to)"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/misc/board_system.vhd"
+      fw_user_clock_signal="ipb_clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
+          description="User programmable board ID that gets embedded in the DAQ data stream"
+          fw_signal="board_id" fw_default="0xbefe"/>
+  </node>
+
+  <node id="RELEASE" address="0x50">
+    <node id="VERSION" address="0x0" permission="r"
+          description="Firmware release version"
+          fw_signal="g_FW_VER"
+          sw_to_string="'v%d.%d.%d' % ((self >> 24), ((self >> 16) &amp; 0xff), (self &amp; 0xffff)) if self != 0 else 'LOCAL_BUILD'"
+          sw_val_warn="self == 0" sw_val_good="self != 0"/>
+    <node id="DATE" address="0x1" permission="r"
+          description="Firmware release date (read as hex, format: ddmmyyyy)"
+          fw_signal="g_FW_DATE"
+          sw_to_string="'%02x.%02x.%04x' % (((self &amp; 0xff000000) >> 24), ((self &amp; 0x00ff0000) >> 16), (self &amp; 0xffff))"/>
+    <node id="TIME" address="0x2" permission="r"
+          description="Firmware release time (read as hex, format: 00HHMMSS)"
+          fw_signal="g_FW_TIME"
+          sw_to_string="'%02x:%02x:%02x' % (((self &amp; 0x00ff0000) >> 16), ((self &amp; 0x0000ff00) >> 8), (self &amp; 0xff))"/>
+    <node id="GIT_SHA" address="0x3" permission="r"
+          description="Firmware release git commit hash"
+          fw_signal="g_FW_SHA"/>
+    <node id="FW_FLAVOR" address="0x4" mask="0x0000000f" permission="r"
+          description="Firmware flavor: 0 = GEM_AMC, 1 = CSC_FED"
+          sw_enum="['GEM_AMC', 'CSC_FED']"
+          fw_signal="CFG_FW_FLAVOR"/>
+    <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
+          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O"
+          sw_enum="['GLIB', 'CTP7', 'CVP13', 'APEX', 'X2O']"
+          fw_signal="CFG_BOARD_TYPE"/>
+    <node id="NUM_LINKS" address="0x4" mask="0x0000ff00" permission="r"
+          description="The number of logic optical links that this board has."
+          fw_signal="std_logic_vector(to_unsigned(CFG_BOARD_MAX_LINKS, 8))"/>
+    <node id="NUM_MGTS" address="0x4" mask="0x00ff0000" permission="r"
+          description="The number of MGTs that are intantiated in this firmware."
+          fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
+  </node>
+
+  <node id="LINK_CONFIG" address="0x1000">
+    <node id="LINK${LINK}" address="0x0"
+          description="Link ${LINK} settings. Link number is logical link number that generally goes in sequence with the transceiver placement on the board and natural fiber numbers in the transceiver. For more details on link numbering on any specific board, please refer to the 0xBEFE repository doc directory."
+          generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000001" generate_idx_var="LINK">
+      <node id="TX_MGT_IDX" address="0x0" mask="0x000000ff" permission="r"
+            description="TX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).tx, 8))"/>
+      <node id="RX_MGT_IDX" address="0x0" mask="0x0000ff00" permission="r"
+            description="RX MGT index"
+            fw_signal="std_logic_vector(to_unsigned(CFG_FIBER_TO_MGT_MAP(${LINK}).rx, 8))"/>
+      <node id="TX_INVERTED" address="0x0" mask="0x00010000" permission="r"
+            description="If this is 1 it means that this TX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).tx_inv else '0'"/>
+      <node id="RX_INVERTED" address="0x0" mask="0x00020000" permission="r"
+            description="If this is 1 it means that this RX channel is inverted on the board, so software should compensate for that by setting the opposite polarity on the corresponding MGT channel."
+            fw_signal="'1' when CFG_FIBER_TO_MGT_MAP(${LINK}).rx_inv else '0'"/>
+    </node>
+  </node>
+
+</node> <!-- End of system module -->

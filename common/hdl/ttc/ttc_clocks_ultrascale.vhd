@@ -5,7 +5,8 @@
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: TTC_CLOCKS
 -- Project Name: GEM_AMC
--- Description: Given a jitter cleaned TTC clock (160MHz, or 320MHz coming from MGT ref, depending on the station), this module generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks.
+-- Description: Given a jitter cleaned TTC clock (160MHz), this module generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks.
+--              There's also an option to accept the same TXPROGDIVCLK (when g_TXPROGDIVCLK_USED is set to true), which is the same frequency as the MGT user clocks, which are 120MHz for GBTX and 320MHz for LpGBT
 --              This version doesn't implement phase alignment with external reference
 -- 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,12 +66,12 @@ architecture ttc_clocks_arch of ttc_clocks is
     begin
         if is_lpgbt_loopback then
             return 3.0;
-        elsif gem_station = 0 then
-            return 3.0;
-        elsif not is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
+        elsif not is_txprogdivclk then
             return 6.0;
         elsif is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
             return 8.0;
+        elsif is_txprogdivclk and gem_station = 0 then
+            return 3.0;
         else -- hmm whatever, lets say 6.0
             return 6.0;  
         end if;
@@ -80,12 +81,12 @@ architecture ttc_clocks_arch of ttc_clocks is
     begin
         if is_lpgbt_loopback then
             return 3.125;
-        elsif gem_station = 0 then
-            return 3.125;
-        elsif not is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
+        elsif not is_txprogdivclk then
             return 6.25;
         elsif is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
             return 8.33;
+        elsif is_txprogdivclk and gem_station = 0 then
+            return 3.125;
         else -- hmm whatever, lets say 6.25
             return 6.25;  
         end if;
@@ -95,12 +96,12 @@ architecture ttc_clocks_arch of ttc_clocks is
     begin
         if is_lpgbt_loopback then
             return x"131c74c0"; -- 320.632
-        elsif gem_station = 0 then
-            return x"131c74c0"; -- 320.632
-        elsif not is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
+        elsif not is_txprogdivclk then
             return x"098e3a60"; -- 160.316MHz
         elsif is_txprogdivclk and ((gem_station = 1) or (gem_station = 2)) then
             return x"072aabc8"; -- 120.237MHz
+        elsif is_txprogdivclk and gem_station = 0 then
+            return x"131c74c0"; -- 320.632
         else -- hmm whatever, lets say 160
             return x"098e3a60";  -- 160.316MHz
         end if;

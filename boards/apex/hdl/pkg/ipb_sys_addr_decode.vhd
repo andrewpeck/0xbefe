@@ -15,20 +15,22 @@ use work.ipbus.all;
 package ipb_sys_addr_decode is
 
     type t_ipb_sys_slv is record
+        system          : integer;
         mgt             : integer;
         promless        : integer;
         slink           : integer;
         none            : integer;
     end record;
 
-    constant C_NUM_IPB_SYS_SLAVES : integer := 3;
+    constant C_NUM_IPB_SYS_SLAVES : integer := 4;
 
     -- IPbus slave index definition
     constant C_IPB_SYS_SLV : t_ipb_sys_slv := (
-        mgt => 0,
-        promless => 1,
-        slink => 2,
-        none => 3
+        system => 0,
+        mgt => 1,
+        promless => 2,
+        slink => 3,
+        none => C_NUM_IPB_SYS_SLAVES
     );
 
     function ipb_sys_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer;
@@ -41,9 +43,10 @@ package body ipb_sys_addr_decode is
 		variable sel : integer;
 	begin
   
-        if    std_match(addr, "--------00000000----------------") then sel := C_IPB_SYS_SLV.mgt;
-        elsif std_match(addr, "--------00000001----------------") then sel := C_IPB_SYS_SLV.promless;
-        elsif std_match(addr, "--------00000010----------------") then sel := C_IPB_SYS_SLV.slink;
+        if    std_match(addr, "--------00000000----------------") then sel := C_IPB_SYS_SLV.system;
+        elsif std_match(addr, "--------00000001----------------") then sel := C_IPB_SYS_SLV.mgt;
+        elsif std_match(addr, "--------00000010----------------") then sel := C_IPB_SYS_SLV.promless;
+        elsif std_match(addr, "--------00000011----------------") then sel := C_IPB_SYS_SLV.slink;
         else sel := C_IPB_SYS_SLV.none;
         end if;
 

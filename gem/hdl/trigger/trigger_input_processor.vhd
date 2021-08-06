@@ -17,29 +17,32 @@ use work.gem_pkg.all;
 use work.ttc_pkg.all;
 
 entity trigger_input_processor is
-port(
-    reset_i             : in std_logic;
-    reset_cnt_i         : in std_logic;
-    clk_i               : in std_logic;
-    sbit_clusters_i     : in t_oh_clusters;
-    link_status_i       : in t_oh_sbit_links;
-    masked_i            : in std_logic;
-    
-    -- this flag is asserted whenever there are any valid sbit clusters
-    trigger_o           : out std_logic;
-    num_valid_clusters_o: out std_logic_vector(3 downto 0);
-    
-    -- counters
-    sbit_overflow_cnt_o : out std_logic_vector(31 downto 0);
-    missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
-    link_overflow_cnt_o : out std_logic_vector(31 downto 0);
-    link_underflow_cnt_o: out std_logic_vector(31 downto 0);
-    cluster_cnt_rate_o  : out t_std32_array(8 downto 0);
-    cluster_cnt_o       : out t_std32_array(8 downto 0);
-    trigger_rate_o      : out std_logic_vector(31 downto 0);
-    trigger_cnt_o       : out std_logic_vector(31 downto 0)
-    
-);
+    generic(
+        g_GEM_STATION       : integer
+    );
+    port(
+        reset_i             : in std_logic;
+        reset_cnt_i         : in std_logic;
+        clk_i               : in std_logic;
+        sbit_clusters_i     : in t_oh_clusters;
+        link_status_i       : in t_oh_sbit_links;
+        masked_i            : in std_logic;
+        
+        -- this flag is asserted whenever there are any valid sbit clusters
+        trigger_o           : out std_logic;
+        num_valid_clusters_o: out std_logic_vector(3 downto 0);
+        
+        -- counters
+        sbit_overflow_cnt_o : out std_logic_vector(31 downto 0);
+        missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
+        link_overflow_cnt_o : out std_logic_vector(31 downto 0);
+        link_underflow_cnt_o: out std_logic_vector(31 downto 0);
+        cluster_cnt_rate_o  : out t_std32_array(8 downto 0);
+        cluster_cnt_o       : out t_std32_array(8 downto 0);
+        trigger_rate_o      : out std_logic_vector(31 downto 0);
+        trigger_cnt_o       : out std_logic_vector(31 downto 0)
+        
+    );
 end trigger_input_processor;
 
 architecture trigger_input_processor_arch of trigger_input_processor is
@@ -56,7 +59,12 @@ begin
 
     g_valid_clusters:
     for i in 0 to 7 generate
-        valid_clusters(i) <= '0' when sbit_clusters_i(i).address(10 downto 9) = "11" else '1';
+        g_ge11 : if g_GEM_STATION = 2 generate
+            valid_clusters(i) <= '0' when sbit_clusters_i(i).address(8 downto 0) = "111111111" else '1';
+        end generate;   
+        g_ge21 : if g_GEM_STATION /= 2 generate
+            valid_clusters(i) <= '0' when sbit_clusters_i(i).address(7 downto 0) = x"ff" else '1';
+        end generate;   
     end generate;
     
     num_valid_cls <= count_ones(valid_clusters);

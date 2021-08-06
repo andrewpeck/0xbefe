@@ -93,29 +93,49 @@ architecture arch_imp of axi_ipbus_bridge is
         );
     end component ila_axi_ipbus_bridge;
 
-    signal transaction_cnt      : unsigned(15 downto 0) := (others => '0');
+    component ila_axi_ipbus_bridge_ipbclk
+        port(
+            clk    : in std_logic;
+            probe0 : in std_logic_vector(31 downto 0);
+            probe1 : in std_logic_vector(31 downto 0);
+            probe2 : in std_logic;
+            probe3 : in std_logic;
+            probe4 : in std_logic_vector(31 downto 0);
+            probe5 : in std_logic;
+            probe6 : in std_logic
+        );
+    end component;
 
-    signal axil_m2s             : t_axi_lite_m2s;
-    signal axil_s2m             : t_axi_lite_s2m := AXI_LITE_S2M_NULL;
-    signal axi_word_araddr      : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
-    signal axi_word_awaddr      : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
+    signal transaction_cnt          : unsigned(15 downto 0) := (others => '0');
+
+    signal axil_m2s                 : t_axi_lite_m2s;
+    signal axil_s2m                 : t_axi_lite_s2m := AXI_LITE_S2M_NULL;
+    signal axi_word_araddr          : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
+    signal axi_word_awaddr          : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
 
     type t_axi_ipb_state is (IDLE, WRITE, READ, WAIT_FOR_WRITE_ACK, WAIT_FOR_READ_ACK, AXI_READ_HANDSHAKE, AXI_WRITE_HANDSHAKE);
     
-    signal ipb_reset            : std_logic;
-    signal ipb_state            : t_axi_ipb_state;
-    signal ipb_sys_transact     : std_logic;
-    signal ipb_timer            : unsigned(23 downto 0) := (others => '0');
-    signal ipb_usr_mosi         : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_miso         : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_slv_select   : integer range 0 to C_NUM_IPB_SLAVES := 0;
-    signal ipb_sys_mosi         : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
-    signal ipb_sys_miso         : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
-    signal ipb_sys_slv_select   : integer range 0 to C_NUM_IPB_SYS_SLAVES := 0;
+    signal ipb_reset                : std_logic;
+    signal ipb_state                : t_axi_ipb_state;
+    signal ipb_sys_transact         : std_logic;
+    signal ipb_timer                : unsigned(23 downto 0) := (others => '0');
+    signal ipb_usr_mosi             : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_miso             : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+    signal ipb_usr_slv_select       : integer range 0 to C_NUM_IPB_SLAVES := 0;
+    signal ipb_sys_mosi             : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+    signal ipb_sys_miso             : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+    signal ipb_sys_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+    signal ipb_sys_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
+    signal ipb_sys_slv_select       : integer range 0 to C_NUM_IPB_SYS_SLAVES := 0;
 
-    signal dbg_bus_select       : std_logic_vector(5 downto 0);
-    signal dbg_ipb_usr_mosi     : ipb_wbus;
-    signal dbg_ipb_usr_miso     : ipb_rbus;
+    signal dbg_bus_select           : std_logic_vector(5 downto 0);
+    signal dbg_bus_select_ipbclk    : std_logic_vector(5 downto 0);
+    signal dbg_ipb_usr_mosi         : ipb_wbus;
+    signal dbg_ipb_usr_miso         : ipb_rbus;
+    signal dbg_ipb_usr_mosi_ipbclk  : ipb_wbus;
+    signal dbg_ipb_usr_miso_ipbclk  : ipb_rbus;
 
 begin
     -- I/O Connections assignments
@@ -131,6 +151,11 @@ begin
 
     read_active_o <= '1' when ipb_state = READ else '0';
     write_active_o <= '1' when ipb_state = WRITE else '0';
+
+    ipb_usr_mosi_o <= ipb_usr_mosi_ipbclk;
+    ipb_usr_miso_ipbclk <= ipb_usr_miso_i;  
+    ipb_sys_mosi_o <= ipb_sys_mosi_ipbclk;
+    ipb_sys_miso_ipbclk <= ipb_sys_miso_i;  
 
       -- main FSM
     process(axi_aclk_i)
@@ -338,10 +363,10 @@ begin
     
     -- CDC is not used
     gen_ipbclk_sync : if not g_IPB_CLK_ASYNC generate
-        ipb_usr_mosi_o <= ipb_usr_mosi;
-        ipb_sys_mosi_o <= ipb_sys_mosi;
-        ipb_usr_miso <= ipb_usr_miso_i;
-        ipb_sys_miso <= ipb_sys_miso_i;
+        ipb_usr_mosi_ipbclk <= ipb_usr_mosi;
+        ipb_sys_mosi_ipbclk <= ipb_sys_mosi;
+        ipb_usr_miso <= ipb_usr_miso_ipbclk;
+        ipb_sys_miso <= ipb_sys_miso_ipbclk;
     end generate;
 
     -- CDC is used
@@ -363,11 +388,11 @@ begin
                     src_send => ipb_usr_mosi(i).ipb_strobe,
                     src_rcv  => open,
                     dest_clk => ipb_clk_i,
-                    dest_req => ipb_usr_mosi_o(i).ipb_strobe,
-                    dest_ack => ipb_usr_miso_i(i).ipb_ack,
-                    dest_out(64) => ipb_usr_mosi_o(i).ipb_write,
-                    dest_out(63 downto 32) => ipb_usr_mosi_o(i).ipb_addr,
-                    dest_out(31 downto 0) => ipb_usr_mosi_o(i).ipb_wdata
+                    dest_req => ipb_usr_mosi_ipbclk(i).ipb_strobe,
+                    dest_ack => ipb_usr_miso_ipbclk(i).ipb_ack,
+                    dest_out(64) => ipb_usr_mosi_ipbclk(i).ipb_write,
+                    dest_out(63 downto 32) => ipb_usr_mosi_ipbclk(i).ipb_addr,
+                    dest_out(31 downto 0) => ipb_usr_mosi_ipbclk(i).ipb_wdata
                 );
             
             i_cdc_usr_miso : xpm_cdc_handshake
@@ -379,8 +404,8 @@ begin
                 )
                 port map(
                     src_clk  => ipb_clk_i,
-                    src_in   => ipb_usr_miso_i(i).ipb_err & ipb_usr_miso_i(i).ipb_rdata,
-                    src_send => ipb_usr_miso_i(i).ipb_ack,
+                    src_in   => ipb_usr_miso_ipbclk(i).ipb_err & ipb_usr_miso_ipbclk(i).ipb_rdata,
+                    src_send => ipb_usr_miso_ipbclk(i).ipb_ack,
                     src_rcv  => open,
                     dest_clk => axi_aclk_i,
                     dest_req => ipb_usr_miso(i).ipb_ack,
@@ -407,11 +432,11 @@ begin
                     src_send => ipb_sys_mosi(i).ipb_strobe,
                     src_rcv  => open,
                     dest_clk => ipb_clk_i,
-                    dest_req => ipb_sys_mosi_o(i).ipb_strobe,
-                    dest_ack => ipb_sys_miso_i(i).ipb_ack,
-                    dest_out(64) => ipb_sys_mosi_o(i).ipb_write,
-                    dest_out(63 downto 32) => ipb_sys_mosi_o(i).ipb_addr,
-                    dest_out(31 downto 0) => ipb_sys_mosi_o(i).ipb_wdata
+                    dest_req => ipb_sys_mosi_ipbclk(i).ipb_strobe,
+                    dest_ack => ipb_sys_miso_ipbclk(i).ipb_ack,
+                    dest_out(64) => ipb_sys_mosi_ipbclk(i).ipb_write,
+                    dest_out(63 downto 32) => ipb_sys_mosi_ipbclk(i).ipb_addr,
+                    dest_out(31 downto 0) => ipb_sys_mosi_ipbclk(i).ipb_wdata
                 );
             
             i_cdc_sys_miso : xpm_cdc_handshake
@@ -423,8 +448,8 @@ begin
                 )
                 port map(
                     src_clk  => ipb_clk_i,
-                    src_in   => ipb_sys_miso_i(i).ipb_err & ipb_sys_miso_i(i).ipb_rdata,
-                    src_send => ipb_sys_miso_i(i).ipb_ack,
+                    src_in   => ipb_sys_miso_ipbclk(i).ipb_err & ipb_sys_miso_ipbclk(i).ipb_rdata,
+                    src_send => ipb_sys_miso_ipbclk(i).ipb_ack,
                     src_rcv  => open,
                     dest_clk => axi_aclk_i,
                     dest_req => ipb_sys_miso(i).ipb_ack,
@@ -484,6 +509,35 @@ begin
                 probe28 => dbg_ipb_usr_miso.ipb_err,
                 probe29 => std_logic_vector(to_unsigned(ipb_usr_slv_select, 8))
             );
+        
+        i_dbg_slv_select_cdc : xpm_cdc_array_single
+            generic map(
+                DEST_SYNC_FF   => 4,
+                SRC_INPUT_REG  => 1,
+                WIDTH          => 6
+            )
+            port map(
+                src_clk  => axi_aclk_i,
+                src_in   => dbg_bus_select,
+                dest_clk => ipb_clk_i,
+                dest_out => dbg_bus_select_ipbclk
+            );
+        
+        dbg_ipb_usr_mosi_ipbclk <= ipb_usr_mosi_ipbclk(to_integer(unsigned(dbg_bus_select_ipbclk)));
+        dbg_ipb_usr_miso_ipbclk <= ipb_usr_miso_ipbclk(to_integer(unsigned(dbg_bus_select_ipbclk)));
+            
+        i_ila_axi_ipbus_bridge_ipbclk: ila_axi_ipbus_bridge_ipbclk
+            port map(
+                clk    => ipb_clk_i,
+                probe0 => dbg_ipb_usr_mosi_ipbclk.ipb_addr,
+                probe1 => dbg_ipb_usr_mosi_ipbclk.ipb_wdata,
+                probe2 => dbg_ipb_usr_mosi_ipbclk.ipb_strobe,
+                probe3 => dbg_ipb_usr_mosi_ipbclk.ipb_write,
+                probe4 => dbg_ipb_usr_miso_ipbclk.ipb_rdata,
+                probe5 => dbg_ipb_usr_miso_ipbclk.ipb_ack,
+                probe6 => dbg_ipb_usr_miso_ipbclk.ipb_err
+            );
+            
     end generate;
 
 end arch_imp;

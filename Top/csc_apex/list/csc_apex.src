@@ -12,6 +12,7 @@ common/hdl/gbt.src
 csc/hdl/csc.src
 
 # CSC APEX source
+boards/apex/hdl/apex_common.src
 boards/apex/hdl/csc_apex.src
 
 # sources with generated registers
@@ -19,6 +20,7 @@ csc/hdl/pkg/generated/csc_apex/registers.vhd
 common/hdl/mgt/generated/csc_apex/mgt_slow_control.vhd
 common/hdl/ttc/generated/csc_apex/ttc.vhd
 common/hdl/misc/generated/csc_apex/promless_bram.vhd
+common/hdl/misc/generated/csc_apex/board_system.vhd
 csc/hdl/system/generated/csc_apex/system_regs.vhd
 csc/hdl/system/generated/csc_apex/link_monitor.vhd
 csc/hdl/tests/generated/csc_apex/csc_tests.vhd
@@ -32,5 +34,6 @@ csc/ip/csc_common_ip.src
 
 # CVP13 IP
 boards/apex/ip/apex_ip.src
+boards/apex/ip/apex_ip_rev2.src
 boards/apex/bd/apex_bd.src
 

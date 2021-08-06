@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from utils import *
+from common.utils import *
 import signal
 import sys
 import os
@@ -8,7 +8,6 @@ import fnmatch
 import struct
 import zlib
 import math
-import analyze_events
 from enum import Enum
 
 def main():

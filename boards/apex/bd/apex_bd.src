@@ -4,3 +4,4 @@
 boards/apex/bd/apex_blk.bd
 boards/apex/hdl/bd/bd_utils.v
 boards/apex/hdl/bd/bram_delay.v
+boards/apex/hdl/bd/c2c_reset_fsm.v

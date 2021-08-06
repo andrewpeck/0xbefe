@@ -18,10 +18,20 @@ create_clock -name qsfp2_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[1]}]
 create_clock -name qsfp1_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[2]}]
 create_clock -name qsfp0_refclk0 -period 6.250 [get_ports {qsfp_refclk0_p_i[3]}]
 
-create_clock -name qsfp3_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[0]}]
-create_clock -name qsfp2_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[1]}]
-create_clock -name qsfp1_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[2]}]
-create_clock -name qsfp0_refclk1 -period 3.125 [get_ports {qsfp_refclk1_p_i[3]}]
+create_clock -name qsfp3_refclk1 -period 6.400 [get_ports {qsfp_refclk1_p_i[0]}]
+create_clock -name qsfp2_refclk1 -period 6.400 [get_ports {qsfp_refclk1_p_i[1]}]
+create_clock -name qsfp1_refclk1 -period 6.400 [get_ports {qsfp_refclk1_p_i[2]}]
+create_clock -name qsfp0_refclk1 -period 6.400 [get_ports {qsfp_refclk1_p_i[3]}]
+
+set_clock_groups -group [get_clocks qsfp3_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp2_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp1_refclk0] -asynchronous
+set_clock_groups -group [get_clocks qsfp0_refclk0] -asynchronous
+
+set_clock_groups -group [get_clocks qsfp3_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp2_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp1_refclk1] -asynchronous
+set_clock_groups -group [get_clocks qsfp0_refclk1] -asynchronous
 
 ##############################################
 ################  Location  ##################
@@ -52,56 +62,56 @@ set_property LOC GTYE4_CHANNEL_X1Y55 [get_cells {i_mgts/g_channels[15].g_chan_*/
 ##############################################
 
 # QSFP0 (GBTX)
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[0].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[1].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[2].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[3].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 # QSFP1 (GBTX)
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[4].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[4].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[4].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[5].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[5].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[5].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[6].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[6].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[6].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[7].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[7].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[7].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 # QSFP2 (GBTX)
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[8].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[8].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[8].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[9].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[9].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[9].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[10].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[10].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[10].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[11].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 6.250 [get_pins -hier -filter {name=~*i_mgts/g_channels[11].g_chan_*/i_gty_channel*TXOUTCLK}]
 create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[11].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-# QSFP3 (GBTX)
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[12].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[12].g_chan_*/i_gty_channel*RXOUTCLK}]
+# QSFP3 (GbE)
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[12].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[12].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[13].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[13].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[13].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[13].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[14].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[14].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[14].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[14].g_chan_*/i_gty_channel*RXOUTCLK}]
 
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[15].g_chan_*/i_gty_channel*TXOUTCLK}]
-create_clock -period 3.125 [get_pins -hier -filter {name=~*i_mgts/g_channels[15].g_chan_*/i_gty_channel*RXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[15].g_chan_*/i_gty_channel*TXOUTCLK}]
+create_clock -period 16.000 [get_pins -hier -filter {name=~*i_mgts/g_channels[15].g_chan_*/i_gty_channel*RXOUTCLK}]
 
 
 ##############################################

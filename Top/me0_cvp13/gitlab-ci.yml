@@ -3,4 +3,6 @@ generate_project:me0_cvp13:
     variables:
       extends: .vars
       PROJECT_NAME: me0_cvp13
-
+    tags:
+      - vivado_2021_1
+      - much_ram

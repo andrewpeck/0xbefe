@@ -5,7 +5,8 @@
 -- Create Date:    2021-03-09
 -- Module Name:    GTY_CHANNEL_DMB
 -- Description:    This is a wrapper for a single GTY channel that can be used with DMB and ODMB boards: it's an 8b10b encoded 1.6Gb/s link with elastic buffers.
---                 User data bus width is 16 bits, the refclk has to be 200MHz (only one refclk is used based on g_REFCLK_01 generic), user clocks are 80MHz 
+--                 User data bus width is 16 bits, user clocks are 80MHz
+--                 In CPLL mode the refclk has to be 200MHz (only one refclk is used based on g_REFCLK_01 generic) 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- expected refclk is 160MHz
@@ -22,11 +23,15 @@ use work.mgt_pkg.all;
 
 entity gty_channel_dmb is
     generic(
-        g_REFCLK_01     : integer range 0 to 1 := 0;
-        g_QPLL_01       : integer range 0 to 1 := 0;
-        g_USE_QPLL      : boolean := FALSE; -- when set to true the QPLL is used for ref clock
-        g_TXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
-        g_RXOUTCLKSEL   : std_logic_vector(2 downto 0) := "010"  -- recovered clock by default
+        g_CPLL_REFCLK_01    : integer range 0 to 1 := 0;
+        g_TX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for TX
+        g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
+        g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
+        g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
+        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- from PMA (same frequency as the user clocks)
+        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
+        g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
+        g_RX_REFCLK_FREQ    : integer  -- TX refclk frequency
     );
     port(
         
@@ -60,6 +65,138 @@ end gty_channel_dmb;
 
 architecture gty_channel_dmb_arch of gty_channel_dmb is
 
+    -- selects the TX_CLK25_DIV and RX_CLK25_DIV based on the refclk frequency
+    function get_txrx_clk25_div(rx_refclk_freq : integer) return integer is
+    begin
+        if rx_refclk_freq <= 25_000_000 then
+            return 1;
+        elsif rx_refclk_freq <= 50_000_000 then
+            return 2;  
+        elsif rx_refclk_freq <= 75_000_000 then
+            return 3;  
+        elsif rx_refclk_freq <= 100_000_000 then
+            return 4;  
+        elsif rx_refclk_freq <= 125_000_000 then
+            return 5;  
+        elsif rx_refclk_freq <= 150_000_000 then
+            return 6;  
+        elsif rx_refclk_freq <= 175_000_000 then
+            return 7;  
+        elsif rx_refclk_freq <= 200_000_000 then
+            return 8;  
+        elsif rx_refclk_freq <= 225_000_000 then
+            return 9;  
+        elsif rx_refclk_freq <= 250_000_000 then
+            return 10;  
+        elsif rx_refclk_freq <= 275_000_000 then
+            return 11;  
+        elsif rx_refclk_freq <= 300_000_000 then
+            return 12;  
+        elsif rx_refclk_freq <= 325_000_000 then
+            return 13;  
+        elsif rx_refclk_freq <= 350_000_000 then
+            return 14;  
+        elsif rx_refclk_freq <= 375_000_000 then
+            return 15;  
+        elsif rx_refclk_freq <= 400_000_000 then
+            return 16;  
+        end if;
+    end function get_txrx_clk25_div;  
+    
+    -- selects various integer parameters based on if we're using a CPLL or a QPLL
+    function get_int_param(param_name : string; use_qpll : boolean) return integer is
+    begin
+        if use_qpll then
+            if param_name = "RXOUT_DIV" then
+                return 8;
+            elsif param_name = "TXOUT_DIV" then
+                return 8;
+            elsif param_name = "PREIQ_FREQ_BST" then
+                return 1;
+            elsif param_name = "TX_PI_BIASSET" then
+                return 1;
+            end if;
+        else
+            if param_name = "RXOUT_DIV" then
+                return 4;
+            elsif param_name = "TXOUT_DIV" then
+                return 4;
+            elsif param_name = "PREIQ_FREQ_BST" then
+                return 0;
+            elsif param_name = "TX_PI_BIASSET" then
+                return 0;
+            end if;
+        end if;
+    end function get_int_param;    
+
+    -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
+    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    begin
+        if use_qpll then
+            if param_name = "CH_HSPMUX" then
+                return "0100000001000000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "10";
+            elsif param_name = "RTX_BUF_CML_CTRL" then
+                return "100";
+            elsif param_name = "RXCDR_CFG2" then
+                return "0000001000111001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1000111001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001000111001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000000100000010";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000001010100";
+            elsif param_name = "TXPI_CFG0" then
+                return "0000000100000000";
+            elsif param_name = "TXPI_CFG1" then
+                return "0001000000000000";
+            end if;
+        else
+            if param_name = "CH_HSPMUX" then
+                return "0010000000100000";
+            elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
+                return "11";
+            elsif param_name = "RTX_BUF_CML_CTRL" then
+                return "011";
+            elsif param_name = "RXCDR_CFG2" then
+                return "0000001001001001";
+            elsif param_name = "RXCDR_CFG2_GEN2" then
+                return "1001001001";
+            elsif param_name = "RXCDR_CFG2_GEN3" then
+                return "0000001001001001";
+            elsif param_name = "RXPI_CFG0" then
+                return "0000001100000001";
+            elsif param_name = "RXPI_CFG1" then
+                return "0000000011111100";
+            elsif param_name = "TXPI_CFG0" then
+                return "0000001100000000";
+            elsif param_name = "TXPI_CFG1" then
+                return "0111010101010101";
+            end if;
+        end if;
+    end function get_slv_param;
+    
+    constant TX_CLK25_DIV           : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
+    constant RX_CLK25_DIV           : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
+    constant CH_HSPMUX              : std_logic_vector(15 downto 0) := get_slv_param("CH_HSPMUX", g_RX_USE_QPLL);
+    constant PCIE_PLL_SEL_MODE_GEN3 : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL);
+    constant RTX_BUF_CML_CTRL       : std_logic_vector(2 downto 0) := get_slv_param("RTX_BUF_CML_CTRL", g_RX_USE_QPLL);
+    constant RXCDR_CFG2             : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN2        : std_logic_vector(9 downto 0) := get_slv_param("RXCDR_CFG2_GEN2", g_RX_USE_QPLL);
+    constant RXCDR_CFG2_GEN3        : std_logic_vector(15 downto 0) := get_slv_param("RXCDR_CFG2_GEN3", g_RX_USE_QPLL);
+    constant RXPI_CFG0              : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG0", g_RX_USE_QPLL);
+    constant RXPI_CFG1              : std_logic_vector(15 downto 0) := get_slv_param("RXPI_CFG1", g_RX_USE_QPLL);
+    constant TXPI_CFG0              : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG0", g_RX_USE_QPLL);
+    constant TXPI_CFG1              : std_logic_vector(15 downto 0) := get_slv_param("TXPI_CFG1", g_RX_USE_QPLL);
+    constant RXOUT_DIV              : integer := get_int_param("RXOUT_DIV", g_RX_USE_QPLL);
+    constant TXOUT_DIV              : integer := get_int_param("TXOUT_DIV", g_RX_USE_QPLL);
+    constant PREIQ_FREQ_BST         : integer := get_int_param("PREIQ_FREQ_BST", g_RX_USE_QPLL);
+    constant TX_PI_BIASSET          : integer := get_int_param("TX_PI_BIASSET", g_RX_USE_QPLL);
+
+
     -- clocking
     signal refclks          : std_logic_vector(1 downto 0);
     signal qpllclks         : std_logic_vector(1 downto 0);
@@ -69,6 +206,8 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
     signal txpllclksel      : std_logic_vector(1 downto 0);
     signal rxpllclksel      : std_logic_vector(1 downto 0);
     signal cpllpd           : std_logic;
+    signal cpllreset        : std_logic;
+    signal cplllocken       : std_logic;
 
     -- fake floating clock
     signal float_clk        : std_logic;
@@ -88,49 +227,71 @@ architecture gty_channel_dmb_arch of gty_channel_dmb is
     
 begin
 
+    -- CPLL clock selection
+    g_cpll_ref_clk0 : if g_CPLL_REFCLK_01 = 0 generate
+        refclks(0) <= clks_i.refclks.gtrefclk0;
+    end generate;
+    
+    g_cpll_ref_clk1 : if g_CPLL_REFCLK_01 = 1 generate
+        refclks(1) <= clks_i.refclks.gtrefclk1;
+    end generate;
+
     -- CPLL is used
-    g_cpll : if not g_USE_QPLL generate
-        
-        g_ref_clk0 : if g_REFCLK_01 = 0 generate
-            refclks(0) <= clks_i.refclks.gtrefclk0;
-        end generate;
-        
-        g_ref_clk1 : if g_REFCLK_01 = 1 generate
-            refclks(1) <= clks_i.refclks.gtrefclk1;
-        end generate;
-        
-        rxsysclksel <= "00";
-        txsysclksel <= "00";
-        rxpllclksel <= "00";
-        txpllclksel <= "00";
+    g_cpll_used : if (not g_TX_USE_QPLL) or (not g_RX_USE_QPLL) generate
+        cpllreset <= '0';
+        cplllocken <= '1';
         cpllpd <= cpllreset_i;
-                
+    end generate;
+
+    -- CPLL not used
+    g_cpll_not_used : if g_TX_USE_QPLL and g_RX_USE_QPLL generate
+        cpllpd <= '1';
+        cpllreset <= '1';
+        cplllocken <= '0';
     end generate;
 
     -- QPLL is used
-    g_qpll : if g_USE_QPLL generate
-        
-        g_qpll0 : if g_QPLL_01 = 0 generate
-            qpllclks(0) <= clks_i.qpll0clk.qpllclk;
-            qpllrefclks(0) <= clks_i.qpll0clk.qpllrefclk;
-            rxsysclksel <= "10";
-            txsysclksel <= "10";
-            rxpllclksel <= "11";
-            txpllclksel <= "11";
-        end generate;
-        
-        g_qpll1 : if g_QPLL_01 = 1 generate
-            qpllclks(1) <= clks_i.qpll1clk.qpllclk;
-            qpllrefclks(1) <= clks_i.qpll1clk.qpllrefclk;
-            rxsysclksel <= "11";
-            txsysclksel <= "11";
-            rxpllclksel <= "10";
-            txpllclksel <= "10";
-        end generate;
-        
-        refclks <= "00";
-        cpllpd <= '1';
-                
+    g_qpll_used : if g_TX_USE_QPLL or g_RX_USE_QPLL generate
+        qpllclks(0) <= clks_i.qpllclks.qpllclk(0);
+        qpllrefclks(0) <= clks_i.qpllclks.qpllrefclk(0);
+        qpllclks(1) <= clks_i.qpllclks.qpllclk(1);
+        qpllrefclks(1) <= clks_i.qpllclks.qpllrefclk(1);
+    end generate;
+
+    -- TX CPLL
+    g_tx_cpll : if not g_TX_USE_QPLL generate
+        txsysclksel <= "00";
+        txpllclksel <= "00";
+    end generate;
+
+    -- RX CPLL
+    g_rx_cpll : if not g_RX_USE_QPLL generate
+        rxsysclksel <= "00";
+        rxpllclksel <= "00";
+    end generate;
+
+    -- TX QPLL0
+    g_tx_qpll0 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 0 generate
+        txsysclksel <= "10";
+        txpllclksel <= "11";
+    end generate;
+
+    -- RX QPLL0
+    g_rx_qpll0 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 0 generate
+        rxsysclksel <= "10";
+        rxpllclksel <= "11";
+    end generate;
+
+    -- TX QPLL1
+    g_tx_qpll1 : if g_TX_USE_QPLL and g_TX_QPLL_01 = 1 generate
+        txsysclksel <= "11";
+        txpllclksel <= "10";
+    end generate;
+
+    -- RX QPLL1
+    g_rx_qpll1 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 1 generate
+        rxsysclksel <= "11";
+        rxpllclksel <= "10";
     end generate;
 
     -- 8b10b encoding 16bit wide data bus
@@ -161,9 +322,9 @@ begin
             ACJTAG_DEBUG_MODE            => '0',
             ACJTAG_MODE                  => '0',
             ACJTAG_RESET                 => '0',
-            ADAPT_CFG0                   => x"0000",
-            ADAPT_CFG1                   => x"F81C",
-            ADAPT_CFG2                   => x"0000",
+            ADAPT_CFG0                   => "0000000000000000",
+            ADAPT_CFG1                   => "1111100000011100",
+            ADAPT_CFG2                   => "0000000000000000",
             ALIGN_COMMA_DOUBLE           => "FALSE",
             ALIGN_COMMA_ENABLE           => "1111111111",
             ALIGN_COMMA_WORD             => 2,
@@ -193,7 +354,7 @@ begin
             CHAN_BOND_SEQ_2_ENABLE       => "1111",
             CHAN_BOND_SEQ_2_USE          => "FALSE",
             CHAN_BOND_SEQ_LEN            => 1,
-            CH_HSPMUX                    => x"2020",
+            CH_HSPMUX                    => CH_HSPMUX, -- keep
             CKCAL1_CFG_0                 => "1100000011000000",
             CKCAL1_CFG_1                 => "0001000011000000",
             CKCAL1_CFG_2                 => "0010000000001000",
@@ -205,8 +366,8 @@ begin
             CKCAL2_CFG_4                 => "0000000000000000",
             CLK_CORRECT_USE              => "TRUE",
             CLK_COR_KEEP_IDLE            => "FALSE",
-            CLK_COR_MAX_LAT              => 33, --14,
-            CLK_COR_MIN_LAT              => 30, --11,
+            CLK_COR_MAX_LAT              => 33, -- keep (was 14),
+            CLK_COR_MIN_LAT              => 30, -- keep (was 11),
             CLK_COR_PRECEDENCE           => "TRUE",
             CLK_COR_REPEAT_WAIT          => 0,
             CLK_COR_SEQ_1_1              => "0110111100",
@@ -221,14 +382,14 @@ begin
             CLK_COR_SEQ_2_ENABLE         => "1111",
             CLK_COR_SEQ_2_USE            => "FALSE",
             CLK_COR_SEQ_LEN              => 2,
-            CPLL_CFG0                    => x"0FFA",
-            CPLL_CFG1                    => x"0029",
-            CPLL_CFG2                    => x"0202",
-            CPLL_CFG3                    => x"0000",
-            CPLL_FBDIV                   => 4,
-            CPLL_FBDIV_45                => 4,
-            CPLL_INIT_CFG0               => x"02B2",
-            CPLL_LOCK_CFG                => x"01E8",
+            CPLL_CFG0                    => "0000000111111010",
+            CPLL_CFG1                    => "0000000000101011",
+            CPLL_CFG2                    => "0000000000000010",
+            CPLL_CFG3                    => "0000000000000000",
+            CPLL_FBDIV                   => 2,
+            CPLL_FBDIV_45                => 5,
+            CPLL_INIT_CFG0               => "0000001010110010",
+            CPLL_LOCK_CFG                => "0000000111101000",
             CPLL_REFCLK_DIV              => 1,
             CTLE3_OCAP_EXT_CTRL          => "000",
             CTLE3_OCAP_EXT_EN            => '0',
@@ -239,43 +400,43 @@ begin
             DEC_VALID_COMMA_ONLY         => "FALSE",
             DELAY_ELEC                   => '0',
             DMONITOR_CFG0                => "0000000000",
-            DMONITOR_CFG1                => x"00",
+            DMONITOR_CFG1                => "00000000",
             ES_CLK_PHASE_SEL             => '0',
             ES_CONTROL                   => "000000",
             ES_ERRDET_EN                 => "FALSE",
             ES_EYE_SCAN_EN               => "FALSE",
-            ES_HORZ_OFFSET               => x"000",
+            ES_HORZ_OFFSET               => "000000000000",
             ES_PRESCALE                  => "00000",
-            ES_QUALIFIER0                => x"0000",
-            ES_QUALIFIER1                => x"0000",
-            ES_QUALIFIER2                => x"0000",
-            ES_QUALIFIER3                => x"0000",
-            ES_QUALIFIER4                => x"0000",
-            ES_QUALIFIER5                => x"0000",
-            ES_QUALIFIER6                => x"0000",
-            ES_QUALIFIER7                => x"0000",
-            ES_QUALIFIER8                => x"0000",
-            ES_QUALIFIER9                => x"0000",
-            ES_QUAL_MASK0                => x"0000",
-            ES_QUAL_MASK1                => x"0000",
-            ES_QUAL_MASK2                => x"0000",
-            ES_QUAL_MASK3                => x"0000",
-            ES_QUAL_MASK4                => x"0000",
-            ES_QUAL_MASK5                => x"0000",
-            ES_QUAL_MASK6                => x"0000",
-            ES_QUAL_MASK7                => x"0000",
-            ES_QUAL_MASK8                => x"0000",
-            ES_QUAL_MASK9                => x"0000",
-            ES_SDATA_MASK0               => x"0000",
-            ES_SDATA_MASK1               => x"0000",
-            ES_SDATA_MASK2               => x"0000",
-            ES_SDATA_MASK3               => x"0000",
-            ES_SDATA_MASK4               => x"0000",
-            ES_SDATA_MASK5               => x"0000",
-            ES_SDATA_MASK6               => x"0000",
-            ES_SDATA_MASK7               => x"0000",
-            ES_SDATA_MASK8               => x"0000",
-            ES_SDATA_MASK9               => x"0000",
+            ES_QUALIFIER0                => "0000000000000000",
+            ES_QUALIFIER1                => "0000000000000000",
+            ES_QUALIFIER2                => "0000000000000000",
+            ES_QUALIFIER3                => "0000000000000000",
+            ES_QUALIFIER4                => "0000000000000000",
+            ES_QUALIFIER5                => "0000000000000000",
+            ES_QUALIFIER6                => "0000000000000000",
+            ES_QUALIFIER7                => "0000000000000000",
+            ES_QUALIFIER8                => "0000000000000000",
+            ES_QUALIFIER9                => "0000000000000000",
+            ES_QUAL_MASK0                => "0000000000000000",
+            ES_QUAL_MASK1                => "0000000000000000",
+            ES_QUAL_MASK2                => "0000000000000000",
+            ES_QUAL_MASK3                => "0000000000000000",
+            ES_QUAL_MASK4                => "0000000000000000",
+            ES_QUAL_MASK5                => "0000000000000000",
+            ES_QUAL_MASK6                => "0000000000000000",
+            ES_QUAL_MASK7                => "0000000000000000",
+            ES_QUAL_MASK8                => "0000000000000000",
+            ES_QUAL_MASK9                => "0000000000000000",
+            ES_SDATA_MASK0               => "0000000000000000",
+            ES_SDATA_MASK1               => "0000000000000000",
+            ES_SDATA_MASK2               => "0000000000000000",
+            ES_SDATA_MASK3               => "0000000000000000",
+            ES_SDATA_MASK4               => "0000000000000000",
+            ES_SDATA_MASK5               => "0000000000000000",
+            ES_SDATA_MASK6               => "0000000000000000",
+            ES_SDATA_MASK7               => "0000000000000000",
+            ES_SDATA_MASK8               => "0000000000000000",
+            ES_SDATA_MASK9               => "0000000000000000",
             EYESCAN_VP_RANGE             => 0,
             EYE_SCAN_SWAP_EN             => '0',
             FTS_DESKEW_SEQ_ENABLE        => "1111",
@@ -308,25 +469,25 @@ begin
             PCIE3_CLK_COR_MIN_LAT        => "00000",
             PCIE3_CLK_COR_THRSH_TIMER    => "001000",
             PCIE_64B_DYN_CLKSW_DIS       => "FALSE",
-            PCIE_BUFG_DIV_CTRL           => x"1000",
+            PCIE_BUFG_DIV_CTRL           => "0001000000000000",
             PCIE_GEN4_64BIT_INT_EN       => "FALSE",
             PCIE_PLL_SEL_MODE_GEN12      => "00",
-            PCIE_PLL_SEL_MODE_GEN3       => "11",
+            PCIE_PLL_SEL_MODE_GEN3       => PCIE_PLL_SEL_MODE_GEN3, -- keep
             PCIE_PLL_SEL_MODE_GEN4       => "10",
-            PCIE_RXPCS_CFG_GEN3          => x"0AA5",
-            PCIE_RXPMA_CFG               => x"280A",
-            PCIE_TXPCS_CFG_GEN3          => x"24A4",
-            PCIE_TXPMA_CFG               => x"280A",
+            PCIE_RXPCS_CFG_GEN3          => "0000101010100101",
+            PCIE_RXPMA_CFG               => "0010100000001010",
+            PCIE_TXPCS_CFG_GEN3          => "0010010010100100",
+            PCIE_TXPMA_CFG               => "0010100000001010",
             PCS_PCIE_EN                  => "FALSE",
-            PCS_RSVD0                    => x"0000",
-            PD_TRANS_TIME_FROM_P2        => x"03C",
-            PD_TRANS_TIME_NONE_P2        => x"19",
-            PD_TRANS_TIME_TO_P2          => x"64",
-            PREIQ_FREQ_BST               => 0,
+            PCS_RSVD0                    => "0000000000000000",
+            PD_TRANS_TIME_FROM_P2        => "000000111100",
+            PD_TRANS_TIME_NONE_P2        => "00011001",
+            PD_TRANS_TIME_TO_P2          => "01100100",
+            PREIQ_FREQ_BST               => PREIQ_FREQ_BST, -- keep
             RATE_SW_USE_DRP              => '1',
             RCLK_SIPO_DLY_ENB            => '0',
             RCLK_SIPO_INV_EN             => '0',
-            RTX_BUF_CML_CTRL             => "011",
+            RTX_BUF_CML_CTRL             => RTX_BUF_CML_CTRL, -- keep
             RTX_BUF_TERM_CTRL            => "00",
             RXBUFRESET_TIME              => "00011",
             RXBUF_ADDR_MODE              => "FULL",
@@ -342,112 +503,112 @@ begin
             RXBUF_THRESH_UNDFLW          => 4,
             RXCDRFREQRESET_TIME          => "00001",
             RXCDRPHRESET_TIME            => "00001",
-            RXCDR_CFG0                   => x"0003",
-            RXCDR_CFG0_GEN3              => x"0003",
-            RXCDR_CFG1                   => x"0000",
-            RXCDR_CFG1_GEN3              => x"0000",
-            RXCDR_CFG2                   => x"0249",
-            RXCDR_CFG2_GEN2              => "1001001001",
-            RXCDR_CFG2_GEN3              => x"0249",
-            RXCDR_CFG2_GEN4              => x"0164",
-            RXCDR_CFG3                   => x"0012",
+            RXCDR_CFG0                   => "0000000000000011",
+            RXCDR_CFG0_GEN3              => "0000000000000011",
+            RXCDR_CFG1                   => "0000000000000000",
+            RXCDR_CFG1_GEN3              => "0000000000000000",
+            RXCDR_CFG2                   => RXCDR_CFG2, -- keep
+            RXCDR_CFG2_GEN2              => RXCDR_CFG2_GEN2, -- keep
+            RXCDR_CFG2_GEN3              => RXCDR_CFG2_GEN3, -- keep
+            RXCDR_CFG2_GEN4              => "0000000101100100",
+            RXCDR_CFG3                   => "0000000000010010",
             RXCDR_CFG3_GEN2              => "010010",
-            RXCDR_CFG3_GEN3              => x"0012",
-            RXCDR_CFG3_GEN4              => x"0012",
-            RXCDR_CFG4                   => x"5CF6",
-            RXCDR_CFG4_GEN3              => x"5CF6",
-            RXCDR_CFG5                   => x"B46B",
-            RXCDR_CFG5_GEN3              => x"146B",
+            RXCDR_CFG3_GEN3              => "0000000000010010",
+            RXCDR_CFG3_GEN4              => "0000000000010010",
+            RXCDR_CFG4                   => "0101110011110110",
+            RXCDR_CFG4_GEN3              => "0101110011110110",
+            RXCDR_CFG5                   => "1011010001101011",
+            RXCDR_CFG5_GEN3              => "0001010001101011",
             RXCDR_FR_RESET_ON_EIDLE      => '0',
             RXCDR_HOLD_DURING_EIDLE      => '0',
-            RXCDR_LOCK_CFG0              => x"2201",
-            RXCDR_LOCK_CFG1              => x"9FFF",
-            RXCDR_LOCK_CFG2              => x"0000",
-            RXCDR_LOCK_CFG3              => x"0000",
-            RXCDR_LOCK_CFG4              => x"0000",
+            RXCDR_LOCK_CFG0              => "0010001000000001",
+            RXCDR_LOCK_CFG1              => "1001111111111111",
+            RXCDR_LOCK_CFG2              => "0000000000000000",
+            RXCDR_LOCK_CFG3              => "0000000000000000",
+            RXCDR_LOCK_CFG4              => "0000000000000000",
             RXCDR_PH_RESET_ON_EIDLE      => '0',
-            RXCFOK_CFG0                  => x"0000",
-            RXCFOK_CFG1                  => x"8015",
-            RXCFOK_CFG2                  => x"02AE",
-            RXCKCAL1_IQ_LOOP_RST_CFG     => x"0000",
-            RXCKCAL1_I_LOOP_RST_CFG      => x"0000",
-            RXCKCAL1_Q_LOOP_RST_CFG      => x"0000",
-            RXCKCAL2_DX_LOOP_RST_CFG     => x"0000",
-            RXCKCAL2_D_LOOP_RST_CFG      => x"0000",
-            RXCKCAL2_S_LOOP_RST_CFG      => x"0000",
-            RXCKCAL2_X_LOOP_RST_CFG      => x"0000",
+            RXCFOK_CFG0                  => "0000000000000000",
+            RXCFOK_CFG1                  => "1000000000010101",
+            RXCFOK_CFG2                  => "0000001010101110",
+            RXCKCAL1_IQ_LOOP_RST_CFG     => "0000000000000000",
+            RXCKCAL1_I_LOOP_RST_CFG      => "0000000000000000",
+            RXCKCAL1_Q_LOOP_RST_CFG      => "0000000000000000",
+            RXCKCAL2_DX_LOOP_RST_CFG     => "0000000000000000",
+            RXCKCAL2_D_LOOP_RST_CFG      => "0000000000000000",
+            RXCKCAL2_S_LOOP_RST_CFG      => "0000000000000000",
+            RXCKCAL2_X_LOOP_RST_CFG      => "0000000000000000",
             RXDFELPMRESET_TIME           => "0001111",
-            RXDFELPM_KL_CFG0             => x"0000",
-            RXDFELPM_KL_CFG1             => x"A082",
-            RXDFELPM_KL_CFG2             => x"0100",
-            RXDFE_CFG0                   => x"0A00",
-            RXDFE_CFG1                   => x"0000",
-            RXDFE_GC_CFG0                => x"0000",
-            RXDFE_GC_CFG1                => x"8000",
-            RXDFE_GC_CFG2                => x"FFE0",
-            RXDFE_H2_CFG0                => x"0000",
-            RXDFE_H2_CFG1                => x"0002",
-            RXDFE_H3_CFG0                => x"0000",
-            RXDFE_H3_CFG1                => x"8002",
-            RXDFE_H4_CFG0                => x"0000",
-            RXDFE_H4_CFG1                => x"8002",
-            RXDFE_H5_CFG0                => x"0000",
-            RXDFE_H5_CFG1                => x"8002",
-            RXDFE_H6_CFG0                => x"0000",
-            RXDFE_H6_CFG1                => x"8002",
-            RXDFE_H7_CFG0                => x"0000",
-            RXDFE_H7_CFG1                => x"8002",
-            RXDFE_H8_CFG0                => x"0000",
-            RXDFE_H8_CFG1                => x"8002",
-            RXDFE_H9_CFG0                => x"0000",
-            RXDFE_H9_CFG1                => x"8002",
-            RXDFE_HA_CFG0                => x"0000",
-            RXDFE_HA_CFG1                => x"8002",
-            RXDFE_HB_CFG0                => x"0000",
-            RXDFE_HB_CFG1                => x"8002",
-            RXDFE_HC_CFG0                => x"0000",
-            RXDFE_HC_CFG1                => x"8002",
-            RXDFE_HD_CFG0                => x"0000",
-            RXDFE_HD_CFG1                => x"8002",
-            RXDFE_HE_CFG0                => x"0000",
-            RXDFE_HE_CFG1                => x"8002",
-            RXDFE_HF_CFG0                => x"0000",
-            RXDFE_HF_CFG1                => x"8002",
-            RXDFE_KH_CFG0                => x"8000",
-            RXDFE_KH_CFG1                => x"FE00",
-            RXDFE_KH_CFG2                => x"0200",
-            RXDFE_KH_CFG3                => x"4101",
-            RXDFE_OS_CFG0                => x"2000",
-            RXDFE_OS_CFG1                => x"8000",
-            RXDFE_UT_CFG0                => x"0000",
-            RXDFE_UT_CFG1                => x"0003",
-            RXDFE_UT_CFG2                => x"0000",
-            RXDFE_VP_CFG0                => x"0000",
-            RXDFE_VP_CFG1                => x"0033",
-            RXDLY_CFG                    => x"0010",
-            RXDLY_LCFG                   => x"0030",
+            RXDFELPM_KL_CFG0             => "0000000000000000",
+            RXDFELPM_KL_CFG1             => "1010000010000010",
+            RXDFELPM_KL_CFG2             => "0000000100000000",
+            RXDFE_CFG0                   => "0000101000000000",
+            RXDFE_CFG1                   => "0000000000000000",
+            RXDFE_GC_CFG0                => "0000000000000000",
+            RXDFE_GC_CFG1                => "1000000000000000",
+            RXDFE_GC_CFG2                => "1111111111100000",
+            RXDFE_H2_CFG0                => "0000000000000000",
+            RXDFE_H2_CFG1                => "0000000000000010",
+            RXDFE_H3_CFG0                => "0000000000000000",
+            RXDFE_H3_CFG1                => "1000000000000010",
+            RXDFE_H4_CFG0                => "0000000000000000",
+            RXDFE_H4_CFG1                => "1000000000000010",
+            RXDFE_H5_CFG0                => "0000000000000000",
+            RXDFE_H5_CFG1                => "1000000000000010",
+            RXDFE_H6_CFG0                => "0000000000000000",
+            RXDFE_H6_CFG1                => "1000000000000010",
+            RXDFE_H7_CFG0                => "0000000000000000",
+            RXDFE_H7_CFG1                => "1000000000000010",
+            RXDFE_H8_CFG0                => "0000000000000000",
+            RXDFE_H8_CFG1                => "1000000000000010",
+            RXDFE_H9_CFG0                => "0000000000000000",
+            RXDFE_H9_CFG1                => "1000000000000010",
+            RXDFE_HA_CFG0                => "0000000000000000",
+            RXDFE_HA_CFG1                => "1000000000000010",
+            RXDFE_HB_CFG0                => "0000000000000000",
+            RXDFE_HB_CFG1                => "1000000000000010",
+            RXDFE_HC_CFG0                => "0000000000000000",
+            RXDFE_HC_CFG1                => "1000000000000010",
+            RXDFE_HD_CFG0                => "0000000000000000",
+            RXDFE_HD_CFG1                => "1000000000000010",
+            RXDFE_HE_CFG0                => "0000000000000000",
+            RXDFE_HE_CFG1                => "1000000000000010",
+            RXDFE_HF_CFG0                => "0000000000000000",
+            RXDFE_HF_CFG1                => "1000000000000010",
+            RXDFE_KH_CFG0                => "1000000000000000",
+            RXDFE_KH_CFG1                => "1111111000000000",
+            RXDFE_KH_CFG2                => "0000001000000000",
+            RXDFE_KH_CFG3                => "0100000100000001",
+            RXDFE_OS_CFG0                => "0010000000000000",
+            RXDFE_OS_CFG1                => "1000000000000000",
+            RXDFE_UT_CFG0                => "0000000000000000",
+            RXDFE_UT_CFG1                => "0000000000000011",
+            RXDFE_UT_CFG2                => "0000000000000000",
+            RXDFE_VP_CFG0                => "0000000000000000",
+            RXDFE_VP_CFG1                => "0000000000110011",
+            RXDLY_CFG                    => "0000000000010000",
+            RXDLY_LCFG                   => "0000000000110000",
             RXELECIDLE_CFG               => "SIGCFG_4",
             RXGBOX_FIFO_INIT_RD_ADDR     => 4,
             RXGEARBOX_EN                 => "FALSE",
             RXISCANRESET_TIME            => "00001",
-            RXLPM_CFG                    => x"0000",
-            RXLPM_GC_CFG                 => x"F800",
-            RXLPM_KH_CFG0                => x"0000",
-            RXLPM_KH_CFG1                => x"A002",
-            RXLPM_OS_CFG0                => x"0000",
-            RXLPM_OS_CFG1                => x"8002",
+            RXLPM_CFG                    => "0000000000000000",
+            RXLPM_GC_CFG                 => "1111100000000000",
+            RXLPM_KH_CFG0                => "0000000000000000",
+            RXLPM_KH_CFG1                => "1010000000000010",
+            RXLPM_OS_CFG0                => "0000000000000000",
+            RXLPM_OS_CFG1                => "1000000000000010",
             RXOOB_CFG                    => "000000110",
             RXOOB_CLK_CFG                => "PMA",
             RXOSCALRESET_TIME            => "00011",
-            RXOUT_DIV                    => 4,
+            RXOUT_DIV                    => RXOUT_DIV, -- keep
             RXPCSRESET_TIME              => "00011",
-            RXPHBEACON_CFG               => x"0000",
-            RXPHDLY_CFG                  => x"2070",
-            RXPHSAMP_CFG                 => x"2100",
-            RXPHSLIP_CFG                 => x"9933",
+            RXPHBEACON_CFG               => "0000000000000000",
+            RXPHDLY_CFG                  => "0010000001110000",
+            RXPHSAMP_CFG                 => "0010000100000000",
+            RXPHSLIP_CFG                 => "1001100100110011",
             RXPH_MONITOR_SEL             => "00000",
-            RXPI_CFG0                    => x"0301",
-            RXPI_CFG1                    => "0000000011111100",
+            RXPI_CFG0                    => RXPI_CFG0, -- keep
+            RXPI_CFG1                    => RXPI_CFG1, -- keep
             RXPMACLK_SEL                 => "DATA",
             RXPMARESET_TIME              => "00011",
             RXPRBS_ERR_LOOPBACK          => '0',
@@ -457,12 +618,12 @@ begin
             RXSLIDE_MODE                 => "OFF",
             RXSYNC_MULTILANE             => '0',
             RXSYNC_OVRD                  => '0',
-            RXSYNC_SKIP_DA               => '1',
+            RXSYNC_SKIP_DA               => '0',
             RX_AFE_CM_EN                 => '0',
-            RX_BIAS_CFG0                 => x"12B0",
+            RX_BIAS_CFG0                 => "0001001010110000",
             RX_BUFFER_CFG                => "000000",
             RX_CAPFF_SARC_ENB            => '0',
-            RX_CLK25_DIV                 => 8,
+            RX_CLK25_DIV                 => RX_CLK25_DIV, -- keep
             RX_CLKMUX_EN                 => '1',
             RX_CLK_SLIP_OVRD             => "00000",
             RX_CM_BUF_CFG                => "1010",
@@ -496,9 +657,9 @@ begin
             RX_I2V_FILTER_EN             => '1',
             RX_INT_DATAWIDTH             => 0,
             RX_PMA_POWER_SAVE            => '0',
-            RX_PMA_RSV0                  => x"002F",
+            RX_PMA_RSV0                  => "0000000000101111",
             RX_PROGDIV_CFG               => 0.0,
-            RX_PROGDIV_RATE              => x"0001",
+            RX_PROGDIV_RATE              => "0000000000000001",
             RX_RESLOAD_CTRL              => "0000",
             RX_RESLOAD_OVRD              => '0',
             RX_SAMPLE_PERIOD             => "111",
@@ -536,13 +697,13 @@ begin
             TAPDLY_SET_TX                => "00",
             TERM_RCAL_CFG                => "100001000000010",
             TERM_RCAL_OVRD               => "001",
-            TRANS_TIME_RATE              => x"0E",
-            TST_RSV0                     => x"00",
-            TST_RSV1                     => x"00",
+            TRANS_TIME_RATE              => "00001110",
+            TST_RSV0                     => "00000000",
+            TST_RSV1                     => "00000000",
             TXBUF_EN                     => "TRUE",
             TXBUF_RESET_ON_RATE_CHANGE   => "TRUE",
-            TXDLY_CFG                    => x"8010",
-            TXDLY_LCFG                   => x"0030",
+            TXDLY_CFG                    => "1000000000010000",
+            TXDLY_LCFG                   => "0000000000110000",
             TXDRV_FREQBAND               => 0,
             TXFE_CFG0                    => "0000001111000010",
             TXFE_CFG1                    => "0110110000000000",
@@ -551,15 +712,15 @@ begin
             TXFIFO_ADDR_CFG              => "LOW",
             TXGBOX_FIFO_INIT_RD_ADDR     => 4,
             TXGEARBOX_EN                 => "FALSE",
-            TXOUT_DIV                    => 4,
+            TXOUT_DIV                    => TXOUT_DIV, -- keep
             TXPCSRESET_TIME              => "00011",
-            TXPHDLY_CFG0                 => x"6070",
-            TXPHDLY_CFG1                 => x"000F",
-            TXPH_CFG                     => x"0723",
-            TXPH_CFG2                    => x"0000",
+            TXPHDLY_CFG0                 => "0110000001110000",
+            TXPHDLY_CFG1                 => "0000000000001111",
+            TXPH_CFG                     => "0000011100100011",
+            TXPH_CFG2                    => "0000000000000000",
             TXPH_MONITOR_SEL             => "00000",
-            TXPI_CFG0                    => "0000001100000000",
-            TXPI_CFG1                    => "0111010101010101",
+            TXPI_CFG0                    => TXPI_CFG0, -- keep
+            TXPI_CFG1                    => TXPI_CFG1, -- keep
             TXPI_GRAY_SEL                => '0',
             TXPI_INVSTROBE_SEL           => '0',
             TXPI_PPM                     => '0',
@@ -573,10 +734,10 @@ begin
             TXSYNC_MULTILANE             => '0',
             TXSYNC_OVRD                  => '0',
             TXSYNC_SKIP_DA               => '0',
-            TX_CLK25_DIV                 => 8,
+            TX_CLK25_DIV                 => TX_CLK25_DIV, -- keep
             TX_CLKMUX_EN                 => '1',
             TX_DATA_WIDTH                => 20,
-            TX_DCC_LOOP_RST_CFG          => x"0004",
+            TX_DCC_LOOP_RST_CFG          => "0000000000000100",
             TX_DEEMPH0                   => "000000",
             TX_DEEMPH1                   => "000000",
             TX_DEEMPH2                   => "000000",
@@ -601,16 +762,16 @@ begin
             TX_MARGIN_LOW_2              => "1001000",
             TX_MARGIN_LOW_3              => "1000010",
             TX_MARGIN_LOW_4              => "1000000",
-            TX_PHICAL_CFG0               => x"0020",
-            TX_PHICAL_CFG1               => x"0040",
-            TX_PI_BIASSET                => 0,
+            TX_PHICAL_CFG0               => "0000000000100000",
+            TX_PHICAL_CFG1               => "0000000001000000",
+            TX_PI_BIASSET                => TX_PI_BIASSET, -- keep
             TX_PMADATA_OPT               => '0',
             TX_PMA_POWER_SAVE            => '0',
-            TX_PMA_RSV0                  => x"0000",
-            TX_PMA_RSV1                  => x"0000",
+            TX_PMA_RSV0                  => "0000000000000000",
+            TX_PMA_RSV1                  => "0000000000000000",
             TX_PROGCLK_SEL               => "PREPI",
             TX_PROGDIV_CFG               => 0.0,
-            TX_PROGDIV_RATE              => x"0001",
+            TX_PROGDIV_RATE              => "0000000000000001",
             TX_RXDETECT_CFG              => "00000000110010",
             TX_RXDETECT_REF              => 5,
             TX_SAMPLE_PERIOD             => "111",
@@ -759,13 +920,13 @@ begin
             CLKRSVD1             => '0',
             CPLLFREQLOCK         => '0',
             CPLLLOCKDETCLK       => clk_stable_i,
-            CPLLLOCKEN           => '1',
+            CPLLLOCKEN           => cplllocken,
             CPLLPD               => cpllpd,
             CPLLREFCLKSEL        => "001",
-            CPLLRESET            => '0',
+            CPLLRESET            => cpllreset,
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
-            DRPADDR              => drp_i.addr,
+            DRPADDR              => drp_i.addr(9 downto 0),
             DRPCLK               => drp_i.clk,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
@@ -806,7 +967,7 @@ begin
             RXAFECFOKEN          => '1',
             RXBUFRESET           => rx_slow_ctrl_i.rxbufreset,
             RXCDRFREQRESET       => '0',
-            RXCDRHOLD            => rx_init_i.rxcdrhold,
+            RXCDRHOLD            => '0',
             RXCDROVRDEN          => '0',
             RXCDRRESET           => '0',
             RXCHBONDEN           => '0',
@@ -817,8 +978,8 @@ begin
             RXCKCALRESET         => '0',
             RXCKCALSTART         => "0000000",
             RXCOMMADETEN         => '1',
-            RXDFEAGCHOLD         => rx_init_i.rxdfeagchold,
-            RXDFEAGCOVRDEN       => rx_init_i.rxdfeagcovrden,
+            RXDFEAGCHOLD         => '0',
+            RXDFEAGCOVRDEN       => '0',
             RXDFECFOKFCNUM       => "1101",
             RXDFECFOKFEN         => '0',
             RXDFECFOKFPULSE      => '0',
@@ -826,9 +987,9 @@ begin
             RXDFECFOKOVREN       => '0',
             RXDFEKHHOLD          => '0',
             RXDFEKHOVRDEN        => '0',
-            RXDFELFHOLD          => rx_init_i.rxdfelfhold,
-            RXDFELFOVRDEN        => rx_init_i.rxdfelfovrden,
-            RXDFELPMRESET        => rx_init_i.rxdfelpmreset,
+            RXDFELFHOLD          => '0',
+            RXDFELFOVRDEN        => '0',
+            RXDFELPMRESET        => '0',
             RXDFETAP10HOLD       => '0',
             RXDFETAP10OVRDEN     => '0',
             RXDFETAP11HOLD       => '0',
@@ -863,9 +1024,9 @@ begin
             RXDFEVPOVRDEN        => '0',
             RXDFEXYDEN           => '1',
             RXDLYBYPASS          => '1',
-            RXDLYEN              => rx_init_i.rxdlyen,
+            RXDLYEN              => '0',
             RXDLYOVRDEN          => '0',
-            RXDLYSRESET          => rx_init_i.rxdlysreset,
+            RXDLYSRESET          => '0',
             RXELECIDLEMODE       => "11",
             RXEQTRAINING         => '0',
             RXGEARBOXSLIP        => '0',
@@ -873,10 +1034,10 @@ begin
             RXLPMEN              => rx_slow_ctrl_i.rxlpmen,
             RXLPMGCHOLD          => '0',
             RXLPMGCOVRDEN        => '0',
-            RXLPMHFHOLD          => rx_init_i.rxlpmhfhold,
-            RXLPMHFOVRDEN        => rx_init_i.rxlpmhfovrden,
-            RXLPMLFHOLD          => rx_init_i.rxlpmlfhold,
-            RXLPMLFKLOVRDEN      => rx_init_i.rxlpmlfklovrden,
+            RXLPMHFHOLD          => '0',
+            RXLPMHFOVRDEN        => '0',
+            RXLPMLFHOLD          => '0',
+            RXLPMLFKLOVRDEN      => '0',
             RXLPMOSHOLD          => '0',
             RXLPMOSOVRDEN        => '0',
             RXMCOMMAALIGNEN      => '1',
@@ -889,24 +1050,24 @@ begin
             RXPCOMMAALIGNEN      => '1',
             RXPCSRESET           => '0',
             RXPD                 => rx_slow_ctrl_i.rxpd,
-            RXPHALIGN            => rx_init_i.rxphalign,
-            RXPHALIGNEN          => rx_init_i.rxphalignen,
+            RXPHALIGN            => '0',
+            RXPHALIGNEN          => '0',
             RXPHDLYPD            => '1',
-            RXPHDLYRESET         => rx_init_i.rxphdlyreset,
+            RXPHDLYRESET         => '0',
             RXPLLCLKSEL          => rxpllclksel,
             RXPMARESET           => '0',
             RXPOLARITY           => rx_slow_ctrl_i.rxpolarity,
             RXPRBSCNTRESET       => '0',
-            RXPRBSSEL            => "0000",
+            RXPRBSSEL            => '0' & rx_slow_ctrl_i.rxprbssel,
             RXPROGDIVRESET       => '0',
             RXRATE               => rx_slow_ctrl_i.rxrate,
             RXRATEMODE           => '0',
             RXSLIDE              => rx_fast_ctrl_i.rxslide,
             RXSLIPOUTCLK         => '0',
             RXSLIPPMA            => '0',
-            RXSYNCALLIN          => rx_init_i.rxsyncallin,
-            RXSYNCIN             => rx_init_i.rxsyncin,
-            RXSYNCMODE           => rx_init_i.rxsyncmode,
+            RXSYNCALLIN          => '0',
+            RXSYNCIN             => '0',
+            RXSYNCMODE           => '0',
             RXSYSCLKSEL          => rxsysclksel,
             RXTERMINATION        => '0',
             RXUSERRDY            => rx_init_i.rxuserrdy,
@@ -930,10 +1091,10 @@ begin
             TXDETECTRX           => '0',
             TXDIFFCTRL           => tx_slow_ctrl_i.txdiffctrl,
             TXDLYBYPASS          => '1',
-            TXDLYEN              => tx_init_i.txdlyen,
+            TXDLYEN              => '0',
             TXDLYHOLD            => '0',
             TXDLYOVRDEN          => '0',
-            TXDLYSRESET          => tx_init_i.txdlysreset,
+            TXDLYSRESET          => '0',
             TXDLYUPDOWN          => '0',
             TXELECIDLE           => '0',
             TXHEADER             => "000000",
@@ -951,12 +1112,12 @@ begin
             TXPCSRESET           => '0',
             TXPD                 => tx_slow_ctrl_i.txpd,
             TXPDELECIDLEMODE     => '0',
-            TXPHALIGN            => tx_init_i.txphalign,
-            TXPHALIGNEN          => tx_init_i.txphalignen,
+            TXPHALIGN            => '0',
+            TXPHALIGNEN          => '0',
             TXPHDLYPD            => '1',
-            TXPHDLYRESET         => tx_init_i.txphdlyreset,
+            TXPHDLYRESET         => '0',
             TXPHDLYTSTCLK        => '0',
-            TXPHINIT             => tx_init_i.txphinit,
+            TXPHINIT             => '0',
             TXPHOVRDEN           => '0',
             TXPIPPMEN            => '0',
             TXPIPPMOVRDEN        => '0',
@@ -969,16 +1130,16 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => "0000",
+            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
             TXPROGDIVRESET       => '0',
             TXRATE               => "000",
             TXRATEMODE           => '0',
             TXSEQUENCE           => "0000000",
             TXSWING              => '0',
-            TXSYNCALLIN          => tx_init_i.txsyncallin,
-            TXSYNCIN             => tx_init_i.txsyncin,
-            TXSYNCMODE           => tx_init_i.txsyncmode,
+            TXSYNCALLIN          => '0',
+            TXSYNCIN             => '0',
+            TXSYNCMODE           => '0',
             TXSYSCLKSEL          => txsysclksel,
             TXUSERRDY            => tx_init_i.txuserrdy,
             TXUSRCLK             => clks_i.txusrclk,

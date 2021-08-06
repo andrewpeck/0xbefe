@@ -67,7 +67,7 @@ Start the BWTK monitor GUI:
 /opt/bwtk/2019.3L/bin/bwmonitor-gui
 ```
 (update the version as needed)
-Select the card and click connect. Scroll down to the "Programmable Clocks (PLL)" section, select Si5341-A, right click and select "Write clock program", and select the ```cvp13_synth_a_gem.h``` file (found in boards/cvp13/resources/clock_configs directory of the 0xBEFE repo). Repeat the same procedure for the Si5341-B synthesizer, but select the ```cvp13_synth_b_gem.h``` file. You can now close the monitor-gui application.
+Select the card and click connect. Scroll down to the "Programmable Clocks (PLL)" section, select Si5341-A, right click and select "Write clock program", and select the ```cvp13_synth_a_gem.h``` file (found in boards/cvp13/resources/clock_configs directory of the 0xBEFE repo). Repeat the same procedure for the Si5341-B synthesizer, but select the ```cvp13_synth_b_156p25.h``` file. You can now close the monitor-gui application.
 
 Write the firmware bitstream to the flash (note: this takes awhile):
 ```
@@ -94,7 +94,7 @@ This repository contains low level hardware access software as well as python sc
 
 You can use the scripts directly from this repo, all you have to do is:
 1. Generate the XML address table file by running this command at the root of the repository: ```make update_me0_cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is only needed after cloning or updating the repository.
-1. Compile the rwreg library that is used for hardware access: ```scripts/boards/cvp13/rwreg && make```. This step is only needed after cloning or updating the repository.
+1. Compile the rwreg library that is used for hardware access: ```cd scripts/boards/cvp13/rwreg && make all```. This step is only needed after cloning or updating the repository.
 1. Set up the environment for your station and card combination: ```cd scripts && source env.sh me0 cvp13``` (replace me0 with ge21 or ge11 as appropriate). This step is needed for every new terminal that you want to use the scripts in.
 1. Initialize and configure the CVP13 firmware for the given station: ```cd scripts && python boards/cvp13/cvp13_init_me0.py```. This step is only needed after a CVP13 power cycle or CVP13 FPGA programming.
 1. Use the scripts e.g.:
@@ -139,7 +139,7 @@ Mapping to GE2/1 OHs is the following:
 | OH7 GBT0 |       |       |       | 3&10  |
 | OH7 GBT1 |       |       |       | 4&9   |
 
-Mapping to GE2/1 OHs is the following:
+Mapping to ME0 OHs is the following:
 |             | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
 |-------------|-------|-------|-------|-------|
 | OH0 GBT0 RX | 12    |       |       |       |

@@ -74,7 +74,7 @@ begin
     
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
     
-        g_master : if g_LINK_CONFIG(chan).tx_multilane_phalign and g_LINK_CONFIG(chan).is_master generate
+        g_master : if g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign and g_LINK_CONFIG(chan).is_master generate
             mgt_syncmode_arr_o(chan) <= '1';
             mgt_master_syncout <= mgt_syncout_arr_i(chan);
             i_sync_syncdone : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => mgt_syncdone_arr_i(chan), clk_i => clk_stable_i, sync_o  => mgt_master_syncdone);

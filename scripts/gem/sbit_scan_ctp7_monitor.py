@@ -1,5 +1,5 @@
-from rw_reg import *
-from vfat_config import *
+from common.rw_reg import *
+from gem.vfat_config import *
 from time import *
 
 QUICKTEST = True
@@ -53,8 +53,8 @@ def main():
     errorsFilePath = './'+resultFileName+'-errors.txt'
     f = open(resultFilePath, 'w')
     f_errors = open(errorsFilePath, 'w')
-    
-    parseXML()
+
+    parse_xml()
 
     if not SINGLEOH:
         for oh in range(0,NUM_OHs):
@@ -95,7 +95,7 @@ def main():
 
     f.close()
     f_errors.close()
-    
+
 
 def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     try:
@@ -106,19 +106,19 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         print 'Invalid input!'
         return
 
-   
-    REG_PATH = 'GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
+
+    REG_PATH = 'BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
 
     # Check for correct OH, good connection
     try:
-        oh_fw = parseInt(readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW')))
+        oh_fw = read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW'))
         print 'OH FW: ',hex(oh_fw)
-        if oh_fw < 1: 
+        if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
             return
     except ValueError as e:
-        printRed('Error connecting to OH'+str(optohybrid))
+        print_red('Error connecting to OH'+str(optohybrid))
         outfile.write('Error connecting to OH '+str(optohybrid)+'\n')
         errfile.write('Error connecting to OH '+str(optohybrid)+'\n')
         return
@@ -127,7 +127,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     # Check for VFAT present
     vfat_hexID = getVFATID(optohybrid,vfat_slot)
     if vfat_hexID == 0 or vfat_hexID == 0xdead:
-        printRed('No VFAT detected at this slot! '+str(hex(vfat_hexID)))
+        print_red('No VFAT detected at this slot! '+str(hex(vfat_hexID)))
         return
 
     # Clear all channels on all VFATs for V2A testing (no VFAT masking)
@@ -139,11 +139,11 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
     if not V2ATEST:
         heading('MASK VFATS')
         unmaskVFAT(optohybrid,vfat_slot)
-    
+
     # Set default VFAT values & Threshold,VCal,RunMode
     heading('SET VFAT SETTINGS')
     vfatWritten = setVFATRunMode(optohybrid,vfat_slot)
-    if not vfatWritten: printRed("Error Setting Default VFAT Values!")
+    if not vfatWritten: print_red("Error Setting Default VFAT Values!")
 
 
     # Configure T1 Controller
@@ -165,7 +165,7 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
 
     # Begin CalPulsing
     T1On(optohybrid)
-         
+
 
    # try:
     for strip in strips:
@@ -174,38 +174,38 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         sleep(0.1)
         # Identify SBit
         subheading('Cluster Info')
-        cluster_reg = getNode('GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.DEBUG_LAST_CLUSTER_7')
-        print 'T1 Status:',readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+        cluster_reg = get_node('BEFE.GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.DEBUG_LAST_CLUSTER_7')
+        print 'T1 Status:',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
         good_cluster_count = 0
         goodCluster = False
         for i in range(10000):
-            value = parseInt(str(readReg(cluster_reg)))
+            value = read_reg(cluster_reg)
             if value != 2047:
                 encodedSlot = cluster_to_vfat(value)
                 encodedSBit = cluster_to_vfat2_sbit(value)
                 encodedSize = cluster_to_size(value)
                 goodCluster = False
-                if parseInt(encodedSlot) == parseInt(vfat_slot) and parseInt(encodedSBit) == parseInt((strip-1)//16) and parseInt(encodedSize) == 6: 
+                if parse_int(encodedSlot) == parse_int(vfat_slot) and parse_int(encodedSBit) == parse_int((strip-1)//16) and parse_int(encodedSize) == 6:
                     good_cluster_count+=1
                     goodCluster = True
 
                 print Colors.CYAN,value, ' = ', '{0:#010x}'.format(value),' = ', '{0:#032b}'.format(value),Colors.ENDC
                 if goodCluster: print 'VFAT:',encodedSlot,'\t VFAT2 SBit:',encodedSBit,'\t Size:', encodedSize,'\n'
-                else: printRed('VFAT: '+str(encodedSlot)+'\t VFAT2 SBit: '+str(encodedSBit)+'\t Size: '+str(encodedSize)+'\n')
+                else: print_red('VFAT: '+str(encodedSlot)+'\t VFAT2 SBit: '+str(encodedSBit)+'\t Size: '+str(encodedSize)+'\n')
                 outfile.write('%s%03d%s%d\n' % ('Strip',strip,'\t Cluster: ',value))
                 outfile.write('%d%s%s%s%s\n' % (value, ' = ', '{0:#010x}'.format(value),' = ', '{0:#032b}'.format(value)))
                 outfile.write('%s%d%s%d%s%d%s\n' % ('VFAT:',encodedSlot,'\t VFAT2 SBit:',encodedSBit,'\t Size:',encodedSize,'\n'))
         if good_cluster_count==0:
-            printRed('VFAT:'+str(vfat_slot)+'\t Strip:'+str(strip)+'\t No good clusters!')
+            print_red('VFAT:'+str(vfat_slot)+'\t Strip:'+str(strip)+'\t No good clusters!')
             errfile.write('%s %s\t%s %s\t%s\n' % ('VFAT:',str(vfat_slot),'Strip:',str(strip),'No good clusters!'))
         outfile.write('\n')
         errfile.write('\n')
         # Mask Channel
-        print writeReg(getNode(REG_PATH + 'VFATChannels.ChanReg' + str(strip)), 0)
-    
+        print write_reg(get_node(REG_PATH + 'VFATChannels.ChanReg' + str(strip)), 0)
+
     # Stop CalPulses
     T1Off(optohybrid)
- 
+
 
 def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     try:
@@ -215,18 +215,18 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     except:
         print 'Invalid input!'
         return
-   
-    REG_PATH = 'GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
+
+    REG_PATH = 'BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
     # Check for correct OH, good connection
     try:
-        oh_fw = parseInt(readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW')))
+        oh_fw = read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW'))
         print 'OH FW: ',hex(oh_fw)
-        if oh_fw < 1: 
+        if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
             return
     except ValueError as e:
-        printRed('Error connecting to OH'+str(optohybrid))
+        print_red('Error connecting to OH'+str(optohybrid))
         outfile.write('Error connecting to OH '+str(optohybrid)+'\n')
         errfile.write('Error connecting to OH '+str(optohybrid)+'\n')
         return
@@ -234,7 +234,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     # Check for VFAT present
     vfat_hexID = getVFATID(optohybrid,vfat_slot)
     if vfat_hexID == 0 or vfat_hexID == 0xdead:
-        printRed('No VFAT detected at this slot! '+str(hex(vfat_hexID)))
+        print_red('No VFAT detected at this slot! '+str(hex(vfat_hexID)))
         return
     print 'VFAT ID:',hex(vfat_hexID)
 
@@ -255,8 +255,8 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
 
     # Make sure T1 Controller is OFF
     T1Off(optohybrid)
-    print 'T1 Monitor: ',readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
-    
+    print 'T1 Monitor: ',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+
 
     # Reset Trigger Counters
     heading('Reset trigger counters')
@@ -266,12 +266,12 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
     subheading('Verifying...')
     sleep(0.1)
     isReset,nSbits = verifyTCReset(optohybrid)
-    if not isReset: 
+    if not isReset:
         print 'Trigger Counter not reset! (%s)'%str(nSbits)
         outfile.write('Trigger Counter Reset did not clear Trigger Counts!\n')
-        outfile.write('%s%s = %d' % ('Triggers: ',nSbits,parseInt(nSbits)))
+        outfile.write('%s%s = %d' % ('Triggers: ',nSbits,parse_int(nSbits)))
         errfile.write('Trigger Counter Reset did not clear Trigger Counts!\n')
-        errfile.write('%s%s = %d\n' % ('Triggers: ',nSbits,parseInt(nSbits)))
+        errfile.write('%s%s = %d\n' % ('Triggers: ',nSbits,parse_int(nSbits)))
 
 
     # Configure T1 Controller
@@ -306,28 +306,28 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
 
             subheading('Sending Calpulses')
             # Send CalPulses
-            print writeReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.TOGGLE'),0xffffffff)
-                            
+            print write_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.TOGGLE'),0xffffffff)
+
 
             sleep(0.1)
-            print 'After sleep... T1 Status:',readReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+            print 'After sleep... T1 Status:',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
             # Verify Triggers
-            nSbits = readReg(getNode('GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.TRIGGER_CNT'))
-            try: 
-                parseInt(nSbits)
-                print 'SBits:',nSbits,'=',parseInt(nSbits)
+            nSbits = read_reg(get_node('BEFE.GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.TRIGGER_CNT'))
+            try:
+                parse_int(nSbits)
+                print 'SBits:',nSbits,'=',parse_int(nSbits)
             except: # bus error
                 print 'SBits:',nSbits
                 nSbits = -1
-                
-            ScanResults.append([strip,parseInt(nSbits)])
 
-            if parseInt(nSbits) != 4*NUM_PULSES: # Not sure why quadrupled
-                printRed( 'Strip '+str(strip)+'\t Expected:'+str(4*NUM_PULSES)+'\t Received:'+str(parseInt(nSbits)) )
+            ScanResults.append([strip,parse_int(nSbits)])
+
+            if parse_int(nSbits) != 4*NUM_PULSES: # Not sure why quadrupled
+                print_red( 'Strip '+str(strip)+'\t Expected:'+str(4*NUM_PULSES)+'\t Received:'+str(parse_int(nSbits)) )
             else:
-                printCyan('Strip '+str(strip)+'\t Expected:'+str(4*NUM_PULSES)+'\t Received:'+str(parseInt(nSbits)) )
+                print_cyan('Strip '+str(strip)+'\t Expected:'+str(4*NUM_PULSES)+'\t Received:'+str(parse_int(nSbits)) )
 
-    
+
             # Map Cluster
             if not QUICKTEST:
                 subheading('Cluster Info')
@@ -353,34 +353,34 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
         print '\n\n'
         outfile.write('\n\n')
 	# put VFAT to sleep mode
-	writeReg(getNode('GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.ContReg0'),0x36)
+	write_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.ContReg0'),0x36)
 
 
-# def cluster_to_vfat (cluster): 
+# def cluster_to_vfat (cluster):
 #     vfat_mapping =  [ 0, 8, 16, 1, 9, 17, 2, 10, 18, 3, 11, 19, 4, 12, 20, 5, 13, 21, 6, 14, 22, 7, 15, 23]
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         vfat_id = -1
-#     else: 
+#     else:
 #         natural_fat_id = (address)//64
 #         vfat_id = vfat_mapping[natural_fat_id]
 #     return vfat_id
 
 # def cluster_to_vfat2_sbit (cluster):
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         vfat2_sbit = -1
-#     else: 
+#     else:
 #         vfat3_sbit = (cluster&0x3f)
 #         vfat2_sbit = vfat3_sbit//8
 #     return vfat2_sbit
 
-# def cluster_to_size (cluster): 
+# def cluster_to_size (cluster):
 #     address = cluster & 0x7ff
-#     if (address > 1535): 
+#     if (address > 1535):
 #         size = -1
-#     else: 
-#         size = (cluster>>11)&0x7; 
+#     else:
+#         size = (cluster>>11)&0x7;
 #     return size
 
 
@@ -397,11 +397,11 @@ def subheading(string):
     print Colors.YELLOW
     print '---- '+str(string)+' ----',Colors.ENDC
 
-def printCyan(string):
+def print_cyan(string):
     print Colors.CYAN
     print string, Colors.ENDC
 
-def printRed(string):
+def print_red(string):
     print Colors.RED
     print string, Colors.ENDC
 

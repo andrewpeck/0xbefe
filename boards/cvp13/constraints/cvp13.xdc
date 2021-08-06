@@ -14,12 +14,41 @@ set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES [current_design]
 set_property PACKAGE_PIN AW21 [get_ports reset_b_i]
 set_property IOSTANDARD LVCMOS18 [get_ports reset_b_i]
 
-# SI5341B out5, used as free running system clock
-set_property PACKAGE_PIN AV22 [get_ports progclk_b5_p_i]
-set_property PACKAGE_PIN AV21 [get_ports progclk_b5_n_i]
-set_property IOSTANDARD DIFF_SSTL18_I [get_ports {progclk_b5_p_i}]
+# SI5341B out5, used as a free running system clock
+set_property PACKAGE_PIN AV22 [get_ports synth_b_out_p_i[4]]
+set_property PACKAGE_PIN AV21 [get_ports synth_b_out_n_i[4]]
+set_property IOSTANDARD DIFF_SSTL18_I [get_ports {synth_b_out_p_i[4]}]
 
-create_clock -period 10.000 -name sysclk100 [get_ports {progclk_b5_p_i}]
+# SI5341B out1, can be used as a free running system clock
+set_property PACKAGE_PIN G30  [get_ports synth_b_out_p_i[0]]
+set_property PACKAGE_PIN F30  [get_ports synth_b_out_n_i[0]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_p_i[0]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[0]]
+set_property ODT RTT_48 [get_ports synth_b_out_p_i[0]]
+
+# SI5341B out2, can be used as a free running system clock
+set_property PACKAGE_PIN G20  [get_ports synth_b_out_p_i[1]]
+set_property PACKAGE_PIN F19  [get_ports synth_b_out_n_i[1]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_p_i[1]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[1]]
+set_property ODT RTT_48 [get_ports synth_b_out_p_i[1]]
+
+# SI5341B out3, can be used as DIMM0 clk
+set_property PACKAGE_PIN AY18 [get_ports synth_b_out_p_i[2]]
+set_property PACKAGE_PIN AY17 [get_ports synth_b_out_n_i[2]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_p_i[2]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[2]]
+set_property ODT RTT_48 [get_ports synth_b_out_p_i[2]]
+
+# SI5341B out4, can be used as DIMM1 clk
+set_property PACKAGE_PIN BB31 [get_ports synth_b_out_p_i[3]]
+set_property PACKAGE_PIN BB32 [get_ports synth_b_out_n_i[3]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_p_i[3]]
+set_property IOSTANDARD DIFF_SSTL12_DCI [get_ports synth_b_out_n_i[3]]
+set_property ODT RTT_48 [get_ports synth_b_out_p_i[3]]
+
+#sysclk
+create_clock -period 10.000 -name sysclk100 [get_ports {synth_b_out_p_i[1]}]
 
 ##############################################
 ##################  LEDs  ####################
@@ -164,6 +193,3 @@ create_clock -period 10.000 -name pcie_refclk_100 [get_ports {pcie_refclk0_p_i}]
 #set_property PACKAGE_PIN BF5  [get_ports pcie_7x_mgt_txp[15]] # PCIE_TX_P_15
 #set_property PACKAGE_PIN BF4  [get_ports pcie_7x_mgt_txn[15]] # PCIE_TX_N_15
 
-# temporary
-set_property -dict {IOSTANDARD DIFF_SSTL12 ODT RTT_48 PACKAGE_PIN AY18} [get_ports dimm0_refclk_p_i]
-set_property -dict {IOSTANDARD DIFF_SSTL12} [get_ports dimm0_refclk_n_i]

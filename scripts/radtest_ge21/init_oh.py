@@ -1,6 +1,6 @@
 import subprocess
 from time import *
-from rw_reg import *
+from common.rw_reg import *
 import random
 
 class Colors:
@@ -21,20 +21,20 @@ TEST_REG_ITERATIONS = 1000
 
 def main():
 
-    parseXML()
+    parse_xml()
 
     myprint("Init")
-    writeReg(getNode('GEM_AMC.TTC.GENERATOR.ENABLE'), 1)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 1)
+    write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.ENABLE'), 1)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 1)
 
     myprint("Configuring GBT0")
     subprocess.call(["python", BEFE_ROOT + "/scripts/gem/gbt.py", "0", "0", "config", GBT0_CONFIG_FILE])
 
     myprint("Resetting SCA")
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
 
     myprint("Sending a hard reset")
-    writeReg(getNode('GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
+    write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
 
     sleep(0.3)
 
@@ -52,8 +52,8 @@ def main():
     for i in xrange(TEST_REG_ITERATIONS):
         prevVal = val
         val = random.randint(0, 0xffffffff)
-        writeReg(getNode('GEM_AMC.OH.OH0.FPGA.CONTROL.LOOPBACK.DATA'), val)
-        loopVal = parseInt(readReg(getNode('GEM_AMC.OH.OH0.FPGA.CONTROL.LOOPBACK.DATA')))
+        write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.LOOPBACK.DATA'), val)
+        loopVal = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.LOOPBACK.DATA'))
         if loopVal != val:
             myprint("ERROR while reading back OH register (iteration %d), expected to read %s, but received %s (value written during previous iteration is %s)" % (i, val, loopVal, prevVal))
             return
@@ -62,10 +62,10 @@ def main():
 
     myprint("DONE")
 
-    # writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
+    # write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
 
 def readDone():
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
     gpioDir = 0xff0fe0
     sendScaCommand([OH_NUM], 0x2, 0x20, 0x4, gpioDir, False)
     sleep(0.1)
@@ -79,15 +79,15 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
 
     d = data
 
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
     reply = []
     if doRead:
         for i in ohList:
-            reply.append(parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i))))
+            reply.append(read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
     return reply
 
 def hex(number):

@@ -4,15 +4,21 @@
 <!ENTITY NUM_OHS "1">
 <!ENTITY NUM_GBTS_PER_OH "3">
 <!ENTITY NUM_VFATS_PER_OH "24">
-<!ENTITY NUM_OPTICAL_LINKS "8">
-<!ENTITY ADDRESS_TABLE_TTC SYSTEM "../common/ttc.xml">
+<!ENTITY NUM_TRIG_TX_LINKS "8">
+<!ENTITY NUM_OPTICAL_LINKS "16">
+<!ENTITY NUM_MGTS "8">
+<!ENTITY ADDRESS_TABLE_SYSTEM SYSTEM "../befe/system.xml">
+<!ENTITY ADDRESS_TABLE_MGTS SYSTEM "../befe/mgts_generic.xml">
+<!ENTITY ADDRESS_TABLE_SLINK SYSTEM "../befe/slink_rocket.xml">
+<!ENTITY ADDRESS_TABLE_TTC SYSTEM "../befe/ttc.xml">
 <!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
-<!ENTITY ADDRESS_TABLE_LINKS SYSTEM "../boards/links_generic.xml">
-<!ENTITY ADDRESS_TABLE_SLINK SYSTEM "../boards/slink_rocket.xml">
 ]>
-<node id="GEM_AMC" xmlns:xi="http://www.w3.org/2001/XInclude">
-  &ADDRESS_TABLE_TTC;
-  &ADDRESS_TABLE_GEM_AMC;
-  &ADDRESS_TABLE_LINKS;
+<node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
+  &ADDRESS_TABLE_SYSTEM;
+  &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_SLINK;
+  <node id="GEM_AMC">
+    &ADDRESS_TABLE_TTC;
+    &ADDRESS_TABLE_GEM_AMC;
+  </node>
 </node>

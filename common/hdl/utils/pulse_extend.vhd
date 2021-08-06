@@ -41,7 +41,7 @@ architecture pulse_extend_arch of pulse_extend is
 --============================================================================
 -- Signal declarations
 --============================================================================
-  signal s_count_down_cnt : unsigned(DELAY_CNT_LENGTH-1 downto 0);
+  signal s_count_down_cnt : unsigned(DELAY_CNT_LENGTH-1 downto 0) := (others => '0');
 
 --============================================================================
 -- Architecture begin

@@ -1,5 +1,5 @@
-from utils import *
-from data_processing_utils import *
+from common.utils import *
+from csc.data_processing_utils import *
 import signal
 import sys
 import os
@@ -60,33 +60,33 @@ def main():
                 if words.size > i + 21:
                     # looks like a screwed up trailer, lets just abort here
                     if words[i+9] & 0xf000 != 0xa000:
-                        printRed("Corrupted FED trailer! Found the 8000 ffff 8000 8000 word, but the last trailer word does not start with 0xa!")
-                        printRed("Index of the top 16 bit word in the 8000 ffff 8000 8000 marker: %d" % i)
+                        print_red("Corrupted FED trailer! Found the 8000 ffff 8000 8000 word, but the last trailer word does not start with 0xa!")
+                        print_red("Index of the top 16 bit word in the 8000 ffff 8000 8000 marker: %d" % i)
                         return
                     # okay, this is our case of missing header from the next event
                     if words[i+13] & 0xf000 != 0x5000 or words[i+15] != 0x8000 or words[i+16] != 0x0001 or words[i+17] != 0x8000:
-                        printRed("Error detected in event #%d, word #%d" % (trailersChecked, i))
-                        printRed("Below is a dump of this occurance, starting at the trailer:")
+                        print_red("Error detected in event #%d, word #%d" % (trailersChecked, i))
+                        print_red("Below is a dump of this occurance, starting at the trailer:")
                         printWords16(words[i-2:i+62])
                         errors += 1
 
                         # search for the header
-                        printRed("Searching for the header")
+                        print_red("Searching for the header")
                         for j in xrange(i, words.size):
                             if words[j] & 0xf000 == 0x5000 and words[j+2] == 0x8000 and words[j+3] == 0x0001 and words[j+4] == 0x8000:
                                 numJunkWords = j - (i + 13)
                                 if numJunkWords < 0:
-                                    printRed("ERROR: number of junk words is negative: %d" % numJunkWords)
+                                    print_red("ERROR: number of junk words is negative: %d" % numJunkWords)
                                     return
-                                printRed("Found the header after %d junk words:" % numJunkWords)
+                                print_red("Found the header after %d junk words:" % numJunkWords)
                                 s = ""
                                 for jj in range(j-2-numJunkWords,j-2):
-                                    s += hexPadded(words[jj], 2) + " "
+                                    s += hex_padded(words[jj], 2) + " "
                                     wordsToDelete.append(jj)
                                     if jj != j-2-numJunkWords and words[jj] != 0xffff:
-                                        printRed("ERROR: The found junk word does not equal to 0xffff, which is expected: %s. Aborting." % hexPadded(words[jj], 2))
+                                        print_red("ERROR: The found junk word does not equal to 0xffff, which is expected: %s. Aborting." % hex_padded(words[jj], 2))
                                         return
-                                printRed(s)
+                                print_red(s)
                                 wordsSkipped += numJunkWords
                                 if numJunkWords < minWordsSkipped:
                                     minWordsSkipped = numJunkWords
@@ -105,8 +105,8 @@ def main():
         # for i in range(0, 10):
         #     s = ""
         #     for j in range(0, 4):
-        #         s += hexPadded(raw[i*4+j], 2) + " "
-        #     print s
+        #         s += hex_padded(raw[i*4+j], 2) + " "
+        #     print(s)
 
     print("Number of FED trailers checked: %d" % trailersChecked)
     print("Total number of errors found: %d" % errors)
@@ -120,8 +120,8 @@ def printWords16(words):
         s = ""
         # for j in reversed(range(0, 4)):
         for j in range(0, 4):
-            s += hexPadded(words[i*4+j], 2) + " "
-        print s
+            s += hex_padded(words[i*4+j], 2) + " "
+        print(s)
 
 if __name__ == '__main__':
     main()

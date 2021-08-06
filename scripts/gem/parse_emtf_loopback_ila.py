@@ -50,7 +50,7 @@ def printDecodedRxData(data, line_num):
         num_clusters_ly1 = (data >> 2) & 0xf
         num_clusters_ly2 = (data >> 6) & 0xf
         printWithColor("BX %d: normal mode, num clusters on layer 1: %d, layer 2: %d " % (line_num, num_clusters_ly1, num_clusters_ly2), Colors.RED)
-        print("%s" % hexPadded(data, 30))
+        print("%s" % hex_padded(data, 30))
         for layer in range(2):
             for cluster in range(8):
                 cluster_data = (data >> (layer * 112 + 10 + cluster * 14)) & 0x3fff
@@ -69,7 +69,7 @@ def printDecodedRxData(data, line_num):
 def printWithColor(string, color):
     print color + string + Colors.ENDC
 
-def hexPadded(number, numBytes):
+def hex_padded(number, numBytes):
     if number is None:
         return 'None'
     else:

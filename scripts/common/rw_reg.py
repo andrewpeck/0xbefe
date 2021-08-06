@@ -1,23 +1,26 @@
 import xml.etree.ElementTree as xml
 import sys, os, subprocess
 from ctypes import *
-from config import *
 import imp
 import sys
+import re
+import math
+import time
 from collections import OrderedDict
+from common.utils import *
 
 print('Loading shared library: librwreg.so')
 lib = CDLL("librwreg.so")
 rReg = lib.getReg
 rReg.restype = c_uint
-rReg.argtypes=[c_uint]
+rReg.argtypes = [c_uint]
 wReg = lib.putReg
 wReg.restype = c_uint
-wReg.argtypes=[c_uint,c_uint]
+wReg.argtypes = [c_uint, c_uint]
 regInitExists = False
 try:
     regInit = lib.rwreg_init
-    regInit.argtypes=[c_char_p]
+    regInit.argtypes = [c_char_p]
     regInitExists = True
 except:
     print("WARNING: rwreg_init() function does not exist.. if you're running on CTP7, you can safely ignore this warning.")
@@ -25,64 +28,181 @@ except:
 DEBUG = True
 ADDRESS_TABLE_DEFAULT = './address_table.xml'
 nodes = OrderedDict()
+val_cache = {}
 
 boardType = os.environ.get('BOARD_TYPE')
-DEVICE = CONFIG_RWREG[boardType]['DEVICE']
+boardIdx = int(os.environ.get('BOARD_IDX'))
+DEVICE = get_config("CONFIG_RWREG")[boardType][boardIdx]['DEVICE']
 if sys.version_info[0] == 3:
-    DEVICE = CONFIG_RWREG[boardType]['DEVICE'].encode()
-BASE_ADDR = CONFIG_RWREG[boardType]['BASE_ADDR']
+    DEVICE = get_config("CONFIG_RWREG")[boardType][boardIdx]['DEVICE'].encode()
+BASE_ADDR = get_config("CONFIG_RWREG")[boardType][boardIdx]['BASE_ADDR']
 
 class Node:
     name = ''
+    local_name = ''
     description = ''
     vhdlname = ''
+    local_address = 0x0
     address = 0x0
-    real_address = 0x0
     permission = ''
     mask = 0x0
+    mask_start_bit_pos = None
     isModule = False
     parent = None
     level = 0
-    warn_min_value = None
-    error_min_value = None
+    fw_signal = None
+    fw_write_pulse_signal = None
+    fw_read_pulse_signal = None
+    fw_default = None
+    sw_enum = None
+    sw_val_good = None
+    sw_val_bad = None
+    sw_val_warn = None
+    sw_val_neutral = None
+    sw_units = None
+    sw_to_string = None
 
     def __init__(self):
         self.children = []
 
-    def addChild(self, child):
+    def add_child(self, child):
         self.children.append(child)
 
-    def getVhdlName(self):
+    def get_vhdl_name(self):
         return self.name.replace(TOP_NODE_NAME + '.', '').replace('.', '_')
 
-    def output(self):
-        print('Name:',self.name)
-        print('Description:',self.description)
-        print('Address:','{0:#010x}'.format(self.address))
-        print('Permission:',self.permission)
-        print('Mask:','{0:#010x}'.format(self.mask))
-        print('Module:',self.isModule)
-        print('Parent:',self.parent.name)
+    def print_info(self):
+        print('Name: ' + self.name)
+        print('Description: ' + self.description)
+        print('Local Address: ' + '{0:#010x}'.format(self.local_address))
+        print('Address: ' + '{0:#010x}'.format(self.address))
+        print('Permission: ' + self.permission)
+        print('Mask: ' + hex32(self.mask))
+        print('Module: %r' % self.isModule)
+        print('Parent: ' + self.parent.name)
+        if self.fw_signal is not None:
+            print("Firmware signal: %s" % self.fw_signal)
+        if self.fw_write_pulse_signal is not None:
+            print("Firmware write pulse signal: %s" % self.fw_write_pulse_signal)
+        if self.fw_read_pulse_signal is not None:
+            print("Firmware read pulse signal: %s" % self.fw_read_pulse_signal)
+        if self.fw_default is not None:
+            print("Firmware default: %s" % self.fw_default)
 
-def main():
-    parseXML()
-    print('Example:')
-    random_node = nodes["GEM_AMC.GEM_SYSTEM.BOARD_ID"]
-    #print str(random_node.__class__.__name__)
-    print('Node:',random_node.name)
-    print('Parent:',random_node.parent.name)
-    kids = []
-    getAllChildren(random_node, kids)
-    print(len(kids), kids.name)
+class RegVal(int):
+    STATE_NEUTRAL = "NEUTRAL"
+    STATE_GOOD = Colors.GREEN
+    STATE_WARN = Colors.YELLOW
+    STATE_BAD = Colors.RED
 
-def parseXML():
+    reg = None
+
+    # returns the state of the value based on sw_val_neutral, sw_val_bad, sw_val_good, and sw_val_warn attributes
+    # neutral takes precedence above all others (can be a handy way to ignore the value when some configs indicate it's not relevant)
+    # the rest are treated in this order: bad, warn, good (so if the value is determined bad or warn, it won't check the good expression)
+    # note that if only sw_val_good is defined (sw_val_bad is not defined) and sw_val_good evaluates to False, BAD is returned (opposite of GOOD)
+    # same goes if only sw_val_bad is defined (and sw_val_good is not defined) -- if sw_val_bad evals to False, GOOD is returned
+    # if both sw_val_bad and sw_val_good are defined and both evaluate to False, NEUTRAL is returned
+    def get_state(self):
+        if self.reg.sw_val_neutral is not None and eval(self.reg.sw_val_neutral):
+            return self.STATE_NEUTRAL
+        elif self.reg.sw_val_bad is not None and eval(self.reg.sw_val_bad):
+            return self.STATE_BAD
+        elif self.reg.sw_val_warn is not None and eval(self.reg.sw_val_warn):
+            return self.STATE_WARN
+        elif self.reg.sw_val_good is not None and eval(self.reg.sw_val_good):
+            return self.STATE_GOOD
+        elif self.reg.sw_val_good is not None and self.reg.sw_val_bad is None:
+            return self.STATE_BAD
+        elif self.reg.sw_val_bad is not None and self.reg.sw_val_good is None:
+            return self.STATE_GOOD
+        else:
+            return self.STATE_NEUTRAL
+
+    def to_string(self, hex=False, hex_padded32=True, use_color=True, bool_use_yesno=True):
+        if self == 0xdeaddead:
+            if use_color:
+                return Colors.RED + "Bus Error" + Colors.ENDC
+            else:
+                return "Bus Error"
+
+        val = ""
+        if hex:
+            if hex_padded32:
+                val = "0x%08x" % self
+            else:
+                val = "0x%x" % self
+
+        if self.reg.sw_to_string is not None:
+            to_string_eval = eval(self.reg.sw_to_string)
+            if hex:
+                val += " (%s)" % to_string_eval
+            else:
+                val = to_string_eval
+        elif self.reg.sw_enum is not None:
+            enum_val = "UNKNOWN" if self >= len(self.reg.sw_enum) else self.reg.sw_enum[self]
+            if hex:
+                val += " (%s)" % enum_val
+            else:
+                val = enum_val
+        elif self.reg.sw_units is not None:
+            if len(self.reg.sw_units) == 0:
+                if hex:
+                    val += " (%d)" % self
+                else:
+                    val = "%d" % self
+            elif "bool" == self.reg.sw_units.lower():
+                if bool_use_yesno:
+                    bool_val = "NO" if self == 0 else "YES"
+                else:
+                    bool_val = "FALSE" if self == 0 else "TRUE"
+
+                if hex:
+                    val += " (%s)" % bool_val
+                else:
+                    val = bool_val
+            else:
+                modifier = self.reg.sw_units[0]
+                val_pretty = None
+                if modifier == "G":
+                    val_pretty = self / 1000000000.0
+                elif modifier == "M":
+                    val_pretty = self / 1000000.0
+                elif modifier == "K":
+                    val_pretty = self / 1000.0
+
+                if val_pretty is None:
+                    if hex:
+                        val += " (%d%s)" % (self, self.reg.sw_units)
+                    else:
+                        val = "%d%s" % (self, self.reg.sw_units)
+                else:
+                    if hex:
+                        val += " (%f%s)" % (val_pretty, self.reg.sw_units)
+                    else:
+                        val = "%f%s" % (val_pretty, self.reg.sw_units)
+        elif not hex:
+            val = "%d" % self
+
+        if use_color:
+            col = self.get_state()
+            if col is not None and col != self.STATE_NEUTRAL:
+                val = col + val + Colors.ENDC
+
+        return val
+
+    def __str__(self):
+        return self.to_string()
+
+def parse_xml():
     if regInitExists:
         regInit(DEVICE)
     addressTable = os.environ.get('ADDRESS_TABLE')
     if addressTable is None:
         print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
         addressTable = ADDRESS_TABLE_DEFAULT
-    print('Parsing',addressTable,'...')
+    print('Parsing ' + addressTable + '...')
+    t1 = time.time()
     tree = None
     lxmlExists = False
     try:
@@ -103,176 +223,187 @@ def parseXML():
 
     root = tree.getroot()
     vars = {}
-    makeTree(root,'',0x0,nodes,None,vars,False)
+    make_tree(root, '', 0x0, nodes, None, vars, False)
+    t2 = time.time()
+    print("Parsing done, took %fs. Total num register nodes: %d" % ((t2 - t1), len(nodes)))
 
-def makeTree(node,baseName,baseAddress,nodes,parentNode,vars,isGenerated):
+# returns the position of the first set bit
+def find_first_set_bit_pos(n):
+    return int(math.log(n & -n, 2))
+
+def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated):
 
     if node.get('id') is None or (node.get('ignore') is not None and eval(node.get('ignore')) == True):
         return
 
-    if (isGenerated == None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':
-        generateSize = parseInt(node.get('generate_size'))
-        generateAddressStep = parseInt(node.get('generate_address_step'))
+    if (isGenerated is None or isGenerated == False) and node.get('generate') is not None and node.get('generate') == 'true':
+        generateSize = parse_int(node.get('generate_size'))
+        generateAddressStep = parse_int(node.get('generate_address_step'))
         generateIdxVar = node.get('generate_idx_var')
         for i in range(0, generateSize):
             vars[generateIdxVar] = i
-            makeTree(node, baseName, baseAddress + generateAddressStep * i, nodes, parentNode, vars, True)
+            make_tree(node, baseName, baseAddress + generateAddressStep * i, nodes, parentNode, vars, True)
         return
     newNode = Node()
+    newNode.local_name = substitute_vars(node.get('id'), vars)
     name = baseName
-    if baseName != '': name += '.'
+    if baseName != '':
+        name += '.'
     name += node.get('id')
-    name = substituteVars(name, vars)
+    name = substitute_vars(name, vars)
     newNode.name = name
     if node.get('description') is not None:
         newNode.description = node.get('description')
     address = baseAddress
     if node.get('address') is not None:
-        address = baseAddress + parseInt(node.get('address'))
-    newNode.address = address
-    newNode.real_address = (address<<2) + BASE_ADDR
+        address = baseAddress + parse_int(node.get('address'))
+    newNode.local_address = address
+    newNode.address = (address << 2) + BASE_ADDR
     newNode.permission = node.get('permission')
-    newNode.mask = parseInt(node.get('mask'))
+    if newNode.permission is None:
+        newNode.permission = ""
+    newNode.mask = parse_int(node.get('mask'))
+    if newNode.mask is not None:
+        newNode.mask_start_bit_pos = find_first_set_bit_pos(newNode.mask)
     newNode.isModule = node.get('fw_is_module') is not None and node.get('fw_is_module') == 'true'
-    if node.get('sw_monitor_warn_min_threshold') is not None:
-        newNode.warn_min_value = node.get('sw_monitor_warn_min_threshold')
-    if node.get('sw_monitor_error_min_threshold') is not None:
-        newNode.error_min_value = node.get('sw_monitor_error_min_threshold')
+    if node.get('fw_signal') is not None:
+        newNode.fw_signal = substitute_vars(node.get('fw_signal'), vars)
+    if node.get('fw_default') is not None:
+        newNode.fw_default = substitute_vars(node.get('fw_default'), vars)
+    if node.get('fw_write_pulse_signal') is not None:
+        newNode.fw_write_pulse_signal = substitute_vars(node.get('fw_write_pulse_signal'), vars)
+    if node.get('fw_read_pulse_signal') is not None:
+        newNode.fw_read_pulse_signal = substitute_vars(node.get('fw_read_pulse_signal'), vars)
+    if node.get('sw_enum') is not None:
+        newNode.sw_enum = eval(node.get('sw_enum'))
+    if node.get('sw_val_good') is not None:
+        newNode.sw_val_good = substitute_vars(node.get('sw_val_good'), vars)
+    if node.get('sw_val_bad') is not None:
+        newNode.sw_val_bad = substitute_vars(node.get('sw_val_bad'), vars)
+    if node.get('sw_val_warn') is not None:
+        newNode.sw_val_warn = substitute_vars(node.get('sw_val_warn'), vars)
+    if node.get('sw_val_neutral') is not None:
+        newNode.sw_val_neutral = substitute_vars(node.get('sw_val_neutral'), vars)
+    if node.get('sw_units') is not None:
+        newNode.sw_units = node.get('sw_units')
+    if node.get('sw_to_string') is not None:
+        newNode.sw_to_string = substitute_vars(node.get('sw_to_string'), vars)
     nodes[newNode.name] = newNode
     if parentNode is not None:
-        parentNode.addChild(newNode)
+        parentNode.add_child(newNode)
         newNode.parent = parentNode
-        newNode.level = parentNode.level+1
+        newNode.level = parentNode.level + 1
     for child in node:
-        makeTree(child,name,address,nodes,newNode,vars,False)
+        make_tree(child, name, address, nodes, newNode, vars, False)
 
 
-def getAllChildren(node,kids=[]):
-    if node.children==[]:
+def get_all_children(node, kids=[]):
+    if node.children == []:
         kids.append(node)
         return kids
     else:
         for child in node.children:
-            getAllChildren(child,kids)
+            get_all_children(child, kids)
 
-def getNode(nodeName):
+def get_node(nodeName):
     thisnode = None
     if nodeName in nodes:
         thisnode = nodes[nodeName]
-    if (thisnode == None):
-        print (nodeName)
+    if (thisnode is None):
+        print_red("ERROR: %s does not exist" % nodeName)
     return thisnode
 
-def getNodeFromAddress(nodeAddress):
-    return next((nodes[nodename] for nodename in nodes if nodes[nodename].real_address == nodeAddress),None)
+def get_node_from_address(nodeAddress):
+    return next((nodes[nodename] for nodename in nodes if nodes[nodename].address == nodeAddress), None)
 
-def getNodesContaining(nodeString):
-    nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename]
-    if len(nodelist): return nodelist
-    else: return None
-
-#returns *readable* registers
-def getRegsContaining(nodeString):
-    nodelist = [nodes[nodename] for nodename in nodes if nodeString in nodename and nodes[nodename].permission is not None and 'r' in nodes[nodename].permission]
-    if len(nodelist): return nodelist
-    else: return None
-
-def readAddress(address):
-    output = rReg(address)
-    return '{0:#010x}'.format(parseInt(str(output)))
-
-def readRawAddress(raw_address):
-    try:
-        address = (parseInt(raw_address) << 2) + BASE_ADDR
-        return readAddress(address)
-    except:
-        return 'Error reading address. (rw_reg)'
-
-def mpeek(address):
-    try:
-        output = subprocess.check_output('mpeek '+str(address), stderr=subprocess.STDOUT , shell=True)
-        value = ''.join(s for s in output if s.isalnum())
-    except subprocess.CalledProcessError as e: value = parseError(int(str(e)[-1:]))
-    return value
-
-def mpoke(address,value):
-    try: output = subprocess.check_output('mpoke '+str(address)+' '+str(value), stderr=subprocess.STDOUT , shell=True)
-    except subprocess.CalledProcessError as e: return parseError(int(str(e)[-1:]))
-    return 'Done.'
-
-
-def readReg(reg):
-    address = reg.real_address
-    if 'r' not in reg.permission:
-        return 'No read permission!'
-    value = rReg(parseInt(address))
-    if parseInt(value) == 0xdeaddead:
-        return 'Bus Error'
-    if reg.mask is not None:
-        shift_amount=0
-        for bit in reversed('{0:b}'.format(reg.mask)):
-            if bit=='0': shift_amount+=1
-            else: break
-        final_value = (parseInt(str(reg.mask))&parseInt(value)) >> shift_amount
-    else: final_value = value
-    final_int =  parseInt(str(final_value))
-    return '{0:#010x}'.format(final_int)
-
-def displayReg(reg,option=None):
-    address = reg.real_address
-    if 'r' not in reg.permission:
-        return 'No read permission!'
-    value = rReg(parseInt(address))
-    if parseInt(value) == 0xdeaddead:
-        if option=='hexbin': return hex(address).rstrip('L')+' '+reg.permission+'\t'+tabPad(reg.name,7)+'Bus Error'
-        else: return hex(address).rstrip('L')+' '+reg.permission+'\t'+tabPad(reg.name,7)+'Bus Error'
-    if reg.mask is not None:
-        shift_amount=0
-        for bit in reversed('{0:b}'.format(reg.mask)):
-            if bit=='0': shift_amount+=1
-            else: break
-        final_value = (parseInt(str(reg.mask))&parseInt(value)) >> shift_amount
-    else: final_value = value
-    final_int =  parseInt(final_value)
-    if option=='hexbin': return hex(address).rstrip('L')+' '+reg.permission+'\t'+tabPad(reg.name,7)+'{0:#010x}'.format(final_int)+' = '+'{0:032b}'.format(final_int)
-    else: return hex(address).rstrip('L')+' '+reg.permission+'\t'+tabPad(reg.name,7)+'{0:#010x}'.format(final_int)
-
-def writeReg(reg, value):
-    address = reg.real_address
-    if 'w' not in reg.permission:
-        return 'No write permission!'
-    # Apply Mask if applicable
-    if reg.mask is not None:
-        shift_amount=0
-        for bit in reversed('{0:b}'.format(reg.mask)):
-            if bit=='0': shift_amount+=1
-            else: break
-        shifted_value = value << shift_amount
-        initial_value = readAddress(address)
-        try: initial_value = parseInt(initial_value)
-        except ValueError: return 'Error reading initial value: '+str(initial_value)
-        final_value = (shifted_value & reg.mask) | (initial_value & ~reg.mask)
-    else: final_value = value
-    output = wReg(parseInt(address),parseInt(final_value))
-    if output < 0:
-        return "Bus error"
+def get_nodes_containing(node_string):
+    if "*" in node_string: # use regexp if it contains wildcards
+        # escape dots, and replace * with .+ (match at least one random char)
+        node_string = node_string.replace(".", "\\.")
+        node_string = node_string.replace("*", ".+")
+        # add wildcards to the beginning and the end
+        node_string = ".*" + node_string + ".*"
+        # match
+        pattern = re.compile(node_string)
+        nodelist = [nodes[nodename] for nodename in nodes if pattern.match(nodename)]
+        # nodelist = [nodes[nodename] for nodename in nodes if re.match(node_string, nodename)]
     else:
-        return str('{0:#010x}'.format(final_value)).rstrip('L')+'('+str(value)+')\twritten to '+reg.name
+        nodelist = [nodes[nodename] for nodename in nodes if node_string in nodename]
 
-def isValid(address):
-    try: subprocess.check_output('mpeek '+str(address), stderr=subprocess.STDOUT , shell=True)
-    except subprocess.CalledProcessError as e: return False
-    return True
+    if len(nodelist):
+        return nodelist
+    else:
+        return None
+
+def read_address(address):
+    return rReg(address)
+
+# returns RegVal, which is a subclass of int, so it can be used as regular int, but also contains a reference to the node, and when converted to string returns a string with a green/red/yellow color if sw_val_good/sw_val_bad/sw_val_warn is defined, and if it's an enum it will also display the enum value
+def read_reg(reg, verbose=True):
+    if isinstance(reg, str):
+        reg = get_node(reg)
+    if 'r' not in reg.permission:
+        print_red("No read permission for register %s" % reg.name)
+        return RegVal(0xdeaddead, reg)
+    val = rReg(reg.address)
+    if val == 0xdeaddead:
+        if verbose:
+            print_red("Bus error while reading %s" % reg.name)
+    elif reg.mask is not None:
+        val = (val & reg.mask) >> reg.mask_start_bit_pos
+
+    val = RegVal(val)
+    val.reg = reg
+
+    return val
+
+# this method reads the register if it doesn't exist in cache, but all subsequent calls will return the cached value -- use very cautiously, if in doubt always use the readReg function instead!
+# this should only be used on regs that never change, like config regs
+# it's mostly intended to speed up sw_val_good/sw_val_bad/sw_val_warn evals that require looking up configuration values
+def read_reg_cache(reg):
+    if isinstance(reg, Node):
+        reg = reg.name
+    if reg not in val_cache:
+        val = read_reg(reg)
+        val_cache[reg] = val
+        return val
+
+    return val_cache[reg]
 
 
-def completeReg(string):
+def display_reg(reg, option=None):
+    val = read_reg(reg, False)
+    str_val = val.to_string(hex=True, hex_padded32=True)
+    return hex32(reg.address).rstrip('L') + ' ' + reg.permission + '\t' + tab_pad(reg.name, 10) + str_val
+
+def write_reg(reg, value):
+    if isinstance(reg, str):
+        reg = get_node(reg)
+    if 'w' not in reg.permission:
+        print_red("No write permission for register %s" % reg.name)
+        return -1
+
+    # Apply Mask if applicable
+    val32 = value
+    if reg.mask is not None:
+        val_shifted = value << reg.mask_start_bit_pos
+        val32 = rReg(reg.address)
+        val32 = (val32 & ~reg.mask) | (val_shifted & reg.mask)
+    ret = wReg(reg.address, val32)
+    if ret < 0:
+        print_red("Bus error while writing to %s" % reg.name)
+        return -1
+    return 0
+
+def complete_reg(string):
     possibleNodes = []
     completions = []
-    currentLevel = len([c for c in string if c=='.'])
+    currentLevel = len([c for c in string if c == '.'])
 
     possibleNodes = [nodes[nodename] for nodename in nodes if nodename.startswith(string) and nodes[nodename].level == currentLevel]
-    if len(possibleNodes)==1:
-        if possibleNodes[0].children == []: return [possibleNodes[0].name]
+    if len(possibleNodes) == 1:
+        if possibleNodes[0].children == []:
+            return [possibleNodes[0].name]
         for n in possibleNodes[0].children:
             completions.append(n.name)
     else:
@@ -280,28 +411,25 @@ def completeReg(string):
             completions.append(n.name)
     return completions
 
+def dump_regs(pattern, only_dump_bad_values=True, caption=None, caption_color=Colors.CYAN):
+    if caption is not None:
+        totalWidth = 100
+        if len(caption) + 6 > totalWidth:
+            totalWidth = len(caption) + 6
+        print(caption_color + "=" * totalWidth + Colors.ENDC)
+        padding1Size = int(((totalWidth - 2 - len(caption)) / 2))
+        padding2Size = padding1Size if padding1Size * 2 + len(caption) == totalWidth - 2 else padding1Size + 1
+        print(caption_color + "%s %s %s" % ("=" * padding1Size, caption, "=" * padding2Size) + Colors.ENDC)
+        print(caption_color + "=" * totalWidth + Colors.ENDC)
 
-def parseError(e):
-    if e==1:
-        return "Failed to parse address"
-    if e==2:
-        return "My Bus error"
-    else:
-        return "Unknown error: "+str(e)
+    nodes = get_nodes_containing(pattern)
+    for node in nodes:
+        if node.permission is not None and 'r' in node.permission:
+            val = read_reg(node)
+            if not only_dump_bad_values or val.get_state() not in [RegVal.BAD, RegVal.WARN]:
+                print(val.to_string(hex=True))
 
-def parseInt(s):
-    if s is None:
-        return None
-    string = str(s)
-    if string.startswith('0x'):
-        return int(string, 16)
-    elif string.startswith('0b'):
-        return int(string, 2)
-    else:
-        return int(string)
-
-
-def substituteVars(string, vars):
+def substitute_vars(string, vars):
     if string is None:
         return string
     ret = string
@@ -309,8 +437,9 @@ def substituteVars(string, vars):
         ret = ret.replace('${' + varKey + '}', str(vars[varKey]))
     return ret
 
-def tabPad(s,maxlen):
-    return s+"\t"*((8*maxlen-len(s)-1)/8+1)
+def tab_pad(s, maxlen):
+    return s + "\t" * int((8 * maxlen - len(s) - 1) / 8 + 1)
 
 if __name__ == '__main__':
-    main()
+    #parse_xml()
+    pass

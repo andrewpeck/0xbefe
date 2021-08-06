@@ -129,7 +129,7 @@
       fw_reg_addr_msb="16"
       fw_reg_addr_lsb="0">
 
-  <node id="CTRL" address="0x100">
+  <node id="CTRL" address="0x0">
     <node id="GLOBAL_RESET" address="0x0" permission="w"
           description="Global reset of the GEM logic (resets all modules)"
           fw_write_pulse_signal="global_reset_trig"
@@ -148,41 +148,149 @@
           sw_ctrl_configure_set="0x1"/>
   </node>
 
-  <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
-        description="Board ID that gets embedded in the AMC13 header"
-        fw_signal="board_id" fw_default="0xbefe"/>
-
-  <node id="RELEASE" address="0x3">
-    <node id="MAJOR" address="0x0" mask="0xff000000" permission="r"
-          description="Firmware release major version"
-          fw_signal="g_FW_VER(31 downto 24)"/>
-    <node id="MINOR" address="0x0" mask="0x00ff0000" permission="r"
-          description="Firmware release minor version"
-          fw_signal="g_FW_VER(23 downto 16)"/>
-    <node id="BUILD" address="0x0" mask="0x0000ffff" permission="r"
-          description="Firmware release build version"
-          fw_signal="g_FW_VER(15 downto 0)"/>
-    <node id="DATE" address="0x1" permission="r"
-          description="Firmware release date (read as hex, format: ddmmyyyy)"
-          fw_signal="g_FW_DATE"/>
-    <node id="TIME" address="0x2" permission="r"
-          description="Firmware release time (read as hex, format: 00HHMMSS)"
-          fw_signal="g_FW_TIME"/>
-    <node id="GIT_SHA" address="0x3" permission="r"
-          description="Firmware release git commit hash"
-          fw_signal="g_FW_SHA"/>
-    <node id="GEM_STATION" address="0x4" mask="0x00000003" permission="r"
+  <node id="RELEASE" address="0x30">
+    <node id="GEM_STATION" address="0x0" mask="0x00000003" permission="r"
           description="GEM station that this firmware was compiled for (0 means ME0, 1 means GE1/1, 2 means GE2/1)"
-          fw_signal="std_logic_vector(to_unsigned(gem_station, 2))"/>
-    <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
-          description="Board type: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = APd1"
-          fw_signal="board_type"/>
-    <node id="NUM_OF_OH" address="0x4" mask="0x00001f00" permission="r"
+          fw_signal="std_logic_vector(to_unsigned(CFG_GEM_STATION, 2))"
+          fw_enum="['ME0', 'GE1/1', 'GE2/1']"/>
+    <node id="OH_VERSION" address="0x0" mask="0x0000000c" permission="r"
+          description="Version of the OH supported by this firmware build."
+          fw_signal="std_logic_vector(to_unsigned(CFG_OH_VERSION, 2))"/>
+    <node id="NUM_OF_OH" address="0x0" mask="0x000003f0" permission="r"
           description="Number of supported optohybrids"
-          fw_signal="num_of_oh"/>
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_OF_OHs, 6))"/>
+    <node id="NUM_OF_GBTS_PER_OH" address="0x0" mask="0x0000f000" permission="r"
+          description="Number of GBTs per optohybrid"
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_GBTS_PER_OH, 4))"/>
+    <node id="NUM_VFATS_PER_OH" address="0x0" mask="0x001f0000" permission="r"
+          description="Number of VFATs per optohybrid"
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_VFATS_PER_OH, 5))"/>
+    <node id="USE_TRIG_TX_LINKS" address="0x0" mask="0x00000400" permission="r"
+          description="Indicates whether or not trigger TX links are supported by this firmware build"
+          fw_signal="'1' when CFG_USE_TRIG_TX_LINKS else '0'"/>
+    <node id="NUM_TRIG_TX_LINKS" address="0x0" mask="0x01e00000" permission="r"
+          description="Number of supported trigger TX links"
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX, 4))"/>
+    <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
+          description="Indicates whether or not local DAQ link is supported by this firmware build"
+          fw_signal="'1' when CFG_USE_SPY_LINK else '0'"/>
+    <node id="OH_LINK_CONFIG" address="0x5">
+      <node id="OH${OH_IDX}" address="0x0"
+            description="OH${OH_IDX} link numbers"
+            generate="true" generate_size="&NUM_OHS;" generate_address_step="0x00000005" generate_idx_var="OH_IDX">
+        <node id="GBT0_TX" address="0x0" mask="0x000000ff" permission="r"
+              description="OH${OH_IDX} GBT0 TX link number"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(0).tx, 8))"/>
+        <node id="GBT0_RX" address="0x0" mask="0x0000ff00" permission="r"
+              description="OH${OH_IDX} GBT0 RX link number"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(0).rx, 8))"/>
+        <node id="GBT1_TX" address="0x0" mask="0x00ff0000" permission="r"
+              description="OH${OH_IDX} GBT1 TX link number"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(1).tx, 8))"/>
+        <node id="GBT1_RX" address="0x0" mask="0xff000000" permission="r"
+              description="OH${OH_IDX} GBT1 RX link number"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(1).rx, 8))"/>
+        <node id="GBT2_TX" address="0x1" mask="0x000000ff" permission="r"
+              description="OH${OH_IDX} GBT2 TX link number" ignore="&STATION;==2"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(2).tx, 8))"/>
+        <node id="GBT2_RX" address="0x1" mask="0x0000ff00" permission="r"
+              description="OH${OH_IDX} GBT2 RX link number" ignore="&STATION;==2"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(2).rx, 8))"/>
+        <node id="GBT3_TX" address="0x1" mask="0x00ff0000" permission="r"
+              description="OH${OH_IDX} GBT3 TX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(3).tx, 8))"/>
+        <node id="GBT3_RX" address="0x1" mask="0xff000000" permission="r"
+              description="OH${OH_IDX} GBT3 RX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(3).rx, 8))"/>
+        <node id="GBT4_TX" address="0x2" mask="0x000000ff" permission="r"
+              description="OH${OH_IDX} GBT4 TX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(4).tx, 8))"/>
+        <node id="GBT4_RX" address="0x2" mask="0x0000ff00" permission="r"
+              description="OH${OH_IDX} GBT4 RX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(4).rx, 8))"/>
+        <node id="GBT5_TX" address="0x2" mask="0x00ff0000" permission="r"
+              description="OH${OH_IDX} GBT5 TX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(5).tx, 8))"/>
+        <node id="GBT5_RX" address="0x2" mask="0xff000000" permission="r"
+              description="OH${OH_IDX} GBT5 RX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(5).rx, 8))"/>
+        <node id="GBT6_TX" address="0x3" mask="0x000000ff" permission="r"
+              description="OH${OH_IDX} GBT6 TX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(6).tx, 8))"/>
+        <node id="GBT6_RX" address="0x3" mask="0x0000ff00" permission="r"
+              description="OH${OH_IDX} GBT6 RX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(6).rx, 8))"/>
+        <node id="GBT7_TX" address="0x3" mask="0x00ff0000" permission="r"
+              description="OH${OH_IDX} GBT7 TX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(7).tx, 8))"/>
+        <node id="GBT7_RX" address="0x3" mask="0xff000000" permission="r"
+              description="OH${OH_IDX} GBT7 RX link number" ignore="&STATION;!=0"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).gbt_links(7).rx, 8))"/>
+        <node id="TRIG_RX0" address="0x4" mask="0x000000ff" permission="r"
+              description="OH${OH_IDX} trigger RX0 link number" ignore="&STATION;!=1"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).trig_rx_links(0).rx, 8))"/>
+        <node id="TRIG_RX1" address="0x4" mask="0x0000ff00" permission="r"
+              description="OH${OH_IDX} trigger RX1 link number" ignore="&STATION;!=1"
+              fw_signal="std_logic_vector(to_unsigned(CFG_OH_LINK_CONFIG_ARR(${OH_IDX}).trig_rx_links(1).rx, 8))"/>
+      </node>
+    </node>
+    <node id="TRIG_TX_LINK_CONFIG" address="0x105">
+      <node id="TX0_LINK" address="0x0" mask="0x000000ff" permission="r"
+            description="Trigger TX link number 0 link number" ignore="0 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(0), 8))"/>
+      <node id="TX1_LINK" address="0x0" mask="0x0000ff00" permission="r"
+            description="Trigger TX link number 1 link number" ignore="1 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(1), 8))"/>
+      <node id="TX2_LINK" address="0x0" mask="0x00ff0000" permission="r"
+            description="Trigger TX link number 2 link number" ignore="2 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(2), 8))"/>
+      <node id="TX3_LINK" address="0x0" mask="0xff000000" permission="r"
+            description="Trigger TX link number 3 link number" ignore="3 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(3), 8))"/>
+      <node id="TX4_LINK" address="0x1" mask="0x000000ff" permission="r"
+            description="Trigger TX link number 4 link number" ignore="4 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(4), 8))"/>
+      <node id="TX5_LINK" address="0x1" mask="0x0000ff00" permission="r"
+            description="Trigger TX link number 5 link number" ignore="5 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(5), 8))"/>
+      <node id="TX6_LINK" address="0x1" mask="0x00ff0000" permission="r"
+            description="Trigger TX link number 6 link number" ignore="6 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(6), 8))"/>
+      <node id="TX7_LINK" address="0x1" mask="0xff000000" permission="r"
+            description="Trigger TX link number 7 link number" ignore="7 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(7), 8))"/>
+      <node id="TX8_LINK" address="0x2" mask="0x000000ff" permission="r"
+            description="Trigger TX link number 8 link number" ignore="8 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(8), 8))"/>
+      <node id="TX9_LINK" address="0x2" mask="0x0000ff00" permission="r"
+            description="Trigger TX link number 9 link number" ignore="9 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(9), 8))"/>
+      <node id="TX10_LINK" address="0x2" mask="0x00ff0000" permission="r"
+            description="Trigger TX link number 10 link number" ignore="10 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(10), 8))"/>
+      <node id="TX11_LINK" address="0x2" mask="0xff000000" permission="r"
+            description="Trigger TX link number 11 link number" ignore="11 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(11), 8))"/>
+      <node id="TX12_LINK" address="0x3" mask="0x000000ff" permission="r"
+            description="Trigger TX link number 12 link number" ignore="12 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(12), 8))"/>
+      <node id="TX13_LINK" address="0x3" mask="0x0000ff00" permission="r"
+            description="Trigger TX link number 13 link number" ignore="13 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(13), 8))"/>
+      <node id="TX14_LINK" address="0x3" mask="0x00ff0000" permission="r"
+            description="Trigger TX link number 14 link number" ignore="14 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(14), 8))"/>
+      <node id="TX15_LINK" address="0x3" mask="0xff000000" permission="r"
+            description="Trigger TX link number 15 link number" ignore="15 >= &NUM_TRIG_TX_LINKS;"
+            fw_signal="std_logic_vector(to_unsigned(CFG_TRIG_TX_LINK_CONFIG_ARR(15), 8))"/>
+    </node>
+
+    <node id="LOCAL_DAQ_LINK" address="0x115" mask="0x000000ff" permission="r"
+          description="Local DAQ link number"
+          fw_signal="std_logic_vector(to_unsigned(CFG_SPY_LINK, 8))"/>
   </node>
 
-  <node id="VFAT3" address="0x10">
+  <node id="VFAT3" address="0x150">
     <node id="SC_ONLY_MODE" address="0x1" mask="0x00000002" permission="rw"
           description="When this is set to 0 then comm port of VFAT3s will be set to normal mode, otherwise they will be set to slow-control-only mode. This setting is applied to all VFATs during link reset and whenever this value is changed."
           fw_signal="vfat3_sc_only_mode" fw_default="0b0"/>
@@ -393,6 +501,30 @@
     </node>
   </node>
 
+  <node id="GBE_TEST" address="0x3000">
+      <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
+            description="Enable this module, note that this will cause the GbE link to be disconnected from DAQ and only be connected to the test module where you'll be able to generate your own packets."
+            fw_signal="gbe_test_enable" fw_default="0b0"/>
+      <node id="PUSH_GBE_DATA" address="0x1" mask="0x0003ffff" permission="w"
+            description="Writing this register will push this word into a fifo which holds the packet to be transmitted uppon the start command. Note that bits [17:16] denote if the characters in bits [15:0] are K characters or not."
+            fw_signal="gbe_user_data" fw_write_pulse_signal="gbe_user_data_en" fw_default="0x0"/>
+      <node id="START_TRANSMIT" address="0x2" permission="w" mask="0x80000000"
+            description="Writing to this register will trigger sending of the packet that's in the fifo."
+            fw_write_pulse_signal="gbe_send_en"/>
+      <node id="BUSY" address="0x3" mask="0x00000001" permission="r"
+            description="This is 1 while a packet transmission is ongoing"
+            fw_signal="gbe_busy"/>
+      <node id="EMPTY" address="0x3" mask="0x00000002" permission="r"
+            description="This is 1 when the fifo is empty, and ready for a new packet push"
+            fw_signal="gbe_empty"/>
+      <node id="MANUAL_READ_ENABLE" address="0x4" mask="0x00000001" permission="rw"
+            description="If this is set high, manual reading of the FIFO is enabled"
+            fw_signal="gbe_manual_rd_enabled" fw_default="0b0"/>
+      <node id="MANUAL_READ" address="0x5" mask="0x0003ffff" permission="r"
+            description="If manual reading is enabled, reading this register will read the first word in the fifo (and consume it)"
+            fw_signal="gbe_manual_rd_data" fw_read_pulse_signal="gbe_manual_rd_en" fw_read_ready_signal="gbe_manual_rd_valid"/>
+  </node>
+
 </node>
 
 <!--DAQ module -->
@@ -467,6 +599,23 @@
     <node id="CALIBRATION_MODE_CHAN"       address="0x2"  mask="0x0000007f" permission="rw"
           description="Channel number for which data will be included in the calibration mode data format (see CALIBRATION_MODE_EN)"
           fw_signal="format_calib_chan" fw_default="0b0000000"/>
+    <node id="IGNORE_AMC13"         address="0x2" mask="0x00000100" permission="rw"
+          description="If this is set to 1 then there will be no data sent to AMC13, but events will still be built and sent to spy path ignoring AMC13 DAQLink state"
+          fw_signal="ignore_amc13" fw_default="0b0"/>
+    <node id="FREEZE_ON_ERROR"        address="0x2"  mask="0x00000200" permission="rw"
+          description="This is a debug feature which when turned on will start sending only IDLE words to all input processors and block L1As as soon as TTS error is detected. This gets reset with a DAQ module reset or a TTC resync."
+          fw_signal="freeze_on_error" fw_default="0x0"/>
+    <node id="RESET_TILL_RESYNC"        address="0x2"  mask="0x00000400" permission="rw"
+          description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
+          fw_signal="reset_till_resync" fw_default="0x0"/>
+    <node id="SPY"  address="0xf" description="Spy path control registers">
+        <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
+              description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."
+              fw_signal="spy_gbe_skip_headers" fw_default="0b0"/>
+        <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
+              description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
+              fw_signal="spy_prescale" fw_default="0x0001"/>
+    </node>
   </node>
 
   <node id="EXT_CONTROL"  address="0x40"
@@ -477,6 +626,18 @@
     <node id="RUN_PARAMS"     address="0x0"  mask="0x00ffffff" permission="rw"
           description="User settable run params that gets embedded into the AMC header"
           fw_signal="run_params" fw_default="0x000000"/>
+  </node>
+
+  <node id="LAST_EVENT_FIFO"  address="0x30" description="DAQ last event fifo (read 32 bits at a time). This is only filled by DAQ when empty.">
+      <node id="DISABLE"       address="0x0" mask="0x80000000" permission="rw"
+            description="If set to true, then events are not written to the last event fifo. It's not needed to toggle this for data integrity reasons because this fifo is only written with one full event when it's empty, but setting this to true while reading current event could be useful if you want to know how many events you are reading exactly (because sometimes you may miss empty=true between consecutive events and read two or more events in a row)"
+            fw_signal="block_last_evt_fifo" fw_default="0b0"/>
+      <node id="EMPTY"       address="0x0"  mask="0x00000001" permission="r"
+            description="Fifo is empty"
+            fw_signal="last_evt_fifo_empty"/>
+      <node id="DATA"     address="0x1"  mask="0xffffffff" permission="r"
+            description="32bits of last event data"
+            fw_signal="last_evt_fifo_dout" fw_read_pulse_signal="last_evt_fifo_rd_en" fw_read_ready_signal="last_evt_fifo_valid"/>
   </node>
 
   <node id="STATUS"  address="0x50"
@@ -528,6 +689,33 @@
     <node id="TTS_STATE"       address="0x0"  mask="0xf0000000" permission="r"
           description="Current TTS state (READY, BUSY, ERROR, WARN, OUT-OF-SYNC)"
           fw_signal="tts_state"/>
+    <node id="SPY"  address="0x10" description="Spy path control registers">
+        <node id="SPY_WORD_RATE"  address="0x0"  mask="0xffffffff" permission="r"
+              description="Rate of 16bit words being sent out the spy path (including ethernet frame words). If this gets close to 1Gb/s, expect overflows."
+              fw_signal="spy_word_rate"/>
+        <node id="SPY_EVENTS_SENT"  address="0x1"  mask="0xffffffff" permission="r"
+              description="Number of events sent out the spy path."
+              fw_signal="spy_evt_sent"/>
+        <node id="ERR_BIG_EVENT"  address="0x2"  mask="0x00000001" permission="r"
+              description="This flag gets latched if the spy received an event bigger than 50000 16bit words (100KBytes). This doesn't cause any data loss by itself, but means that something wrong is going on either at the frontend or the FED (CSC events shouldn't get that big)."
+              fw_signal="spy_err_evt_too_big"
+              sw_monitor_warn_value="1"/>
+        <node id="ERR_EOE_NOT_FOUND"  address="0x2"  mask="0x00000002" permission="r"
+              description="This flag gets latched if the spy doesn't find an end of event before the spy FIFO goes dry."
+              fw_signal="spy_err_eoe_not_found"
+              sw_monitor_error_value="1"/>
+        <node id="ERR_SPY_FIFO_HAD_OFLOW"  address="0x2"  mask="0x00000004" permission="r"
+              description="This flag gets latched if the spy fifo has an overflow."
+              fw_signal="err_spy_fifo_ovf"
+              sw_monitor_error_value="1"/>
+        <node id="SPY_FIFO_AFULL_CNT"  address="0x2"  mask="0xffff0000" permission="r"
+              description="Number of clocks the spy fifo spent being 75% full (full warning is set on 75% and reset at 50%)"
+              fw_signal="spy_fifo_afull_cnt"
+              sw_monitor_warn_min_threshold="100"/>
+        <node id="SPY_FIFO_IS_EMPTY"  address="0x2"  mask="0x00000008" permission="r"
+              description="Spy fifo is currently empty"
+              fw_signal="spy_fifo_empty"/>
+    </node>
   </node>
 
   <node id="EXT_STATUS"  address="0x80"
@@ -773,31 +961,31 @@
           description="If this is set to 1 it means that the backend is receiving valid GBT frames from this GBT link"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_ready"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 0" sw_enum="['NOT_READY', 'READY']"/>
 
     <node id="GBT${GBT}_WAS_NOT_READY" address="0x0" mask="0x00000002" permission="r"
           description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_had_not_ready"
-          sw_monitor_warn_value="0"/>
+          sw_val_warn="self == 1"/>
 
     <node id="GBT${GBT}_RX_HAD_OVERFLOW" address="0x0" mask="0x00000004" permission="r"
           description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_ovf"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000008" permission="r"
           description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_unf"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
           description="Number of FEC errors corrected by the GBT decoder"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_correction_cnt"
-          sw_monitor_warn_value="0"/>
+          sw_val_warn="self > 0"/>
 
     <node id="GBT${GBT}_TX_PHASE" address="0x0" mask="0x0007f000" permission="rw"
           description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
@@ -808,7 +996,7 @@
           description="This flag is latched high if the GBT RX header lock has been lost, and is reset with link reset"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_header_had_unlock"
-          sw_monitor_error_value="0"/>
+          sw_val_bad="self == 1"/>
 
     <node id="GBT${GBT}_RX_NUM_BITSLIPS" address="0x0" mask="0x0ff00000" permission="r"
           description="Number of bitslips done on the RX data before achieving header lock"
@@ -819,7 +1007,8 @@
           description="This is set to 1 when the GBT TX core is ready (gearbox is aligned)"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_tx_ready"
-          sw_monitor_error_value="0"/>
+          sw_monitor_error_value="0"
+          sw_val_bad="self == 0"/>
 
     <node id="VFAT_MASK" address="0x8" mask="0x00ffffff" permission="rw"
           description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
@@ -832,22 +1021,48 @@
       <node id="LINK_GOOD" address="0x0" mask="0x00000001" permission="r"
             description="This flag is set high after detecting 10 consecutive good sync verify replies and set bad after 100 bad ones in a row (sync verify is done once per orbit). This flag can only go high if the initial sync procedure and RX bitslipping was done successfully"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_good"
-            sw_monitor_error_value="0"/>
+            sw_val_bad="self == 0"/>
       <node id="SYNC_ERR_CNT" address="0x0" mask="0x000000f0" permission="r"
             description="This counter counts the total number of times that VFAT3 didn't reply to sync_verify command correctly. This counter doesn't roll over, and is reset on link reset."
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).sync_error_cnt"
-            sw_monitor_error_value="0"/>
+            sw_val_warn="self > 0"/>
       <node id="DAQ_EVENT_CNT" address="0x0" mask="0x00ffff00" permission="r"
             description="This counter counts the number of DAQ events received from this VFAT (note that this is an 8bit rolling counter)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_event_cnt"/>
       <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0xff000000" permission="r"
             description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (this counter stops at max value)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
-            sw_monitor_warn_value="100"/>
+            sw_val_warn="self > 0"/>
 
     </node>
 
   </node>
+
+  <node id="SPY" address="0xa" description="Spy readout link">
+      <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
+            description="Number of times that MGT elastic buffer has been in overflow"
+            fw_signal="spy_mgt_buf_ovf_sync"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
+            description="Number of times that MGT elastic buffer has been in underflow"
+            fw_signal="spy_mgt_buf_unf_sync"
+            sw_monitor_warn_min_threshold="1"/>
+      <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
+            description="Number of times that MGT has added a fake idle word to correct for clock drift"
+            fw_signal="spy_clk_corr_add_sync"/>
+      <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
+            description="Number of times that MGT has dropped an idle word to correct for clock drift"
+            fw_signal="spy_clk_corr_drop_sync"/>
+      <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
+            description="Number of not-in-table errors"
+            fw_signal="spy_not_in_table_sync"
+            sw_monitor_warn_min_threshold="1000"/>
+      <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
+            description="Number of disparity errors"
+            fw_signal="spy_disperr_sync"
+            sw_monitor_warn_min_threshold="1000"/>
+  </node>
+
 </node>
 
 <!--GEM slow control module -->

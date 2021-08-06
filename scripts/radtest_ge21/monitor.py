@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rw_reg import *
+from common.rw_reg import *
 from time import *
 import array
 import struct
@@ -21,24 +21,24 @@ def main():
     out_file = open(out_file_name, "w")
     out_file.write("FPGA_temperature\tSEM_critical_err_count\tSEM_single_bit_err_cnt\tADC_1.0V\tADC_1.0V_AVCC\tADC_1.2V_AVTT\tADC_1.8V\tADC_1.5V\tADC_2.5V\tADC_RSSI1\tADC_RSSI2\n")
 
-    parseXML()
+    parse_xml()
 
     iter = 0
     data = {}
     while(True):
         # read temperature
-        tempRaw = parseInt(readReg(getNode('GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)))
+        tempRaw = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM))
         temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
         print("FPGA temperature: %fC" % temp)
 
         # read SEM counters
-        sem_crit = parseInt(readReg(getNode('GEM_AMC.OH.OH%d.FPGA.CONTROL.SEM.CNT_SEM_CRITICAL' % OH_NUM)))
-        sem_corr = parseInt(readReg(getNode('GEM_AMC.OH.OH%d.FPGA.CONTROL.SEM.CNT_SEM_CORRECTION' % OH_NUM)))
+        sem_crit = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.SEM.CNT_SEM_CRITICAL' % OH_NUM))
+        sem_corr = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.SEM.CNT_SEM_CORRECTION' % OH_NUM))
         print("SEM single bit correction count: %d" % sem_corr)
         print("SEM double bit (critical) error count: %d" % sem_crit)
 
         # read the SCA ADCs
-        writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), OH_MASK)
         sleep(0.01)
         sendScaCommand([OH_NUM], 0x14, 0x60, 0x4, 0x00e00300, False) # setup current sources
         sleep(0.01)
@@ -50,10 +50,10 @@ def main():
         adc_2v5 = readScaAdc(OH_NUM, 5) * 0.004
 
         adc_rssi1_v = readScaAdc(OH_NUM, 6) / 1000.0
-        adc_rssi1_a = (((adc_rssi1_v / (RSSI_R2/(RSSI_R1+RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
+        adc_rssi1_a = (((adc_rssi1_v / (RSSI_R2 / (RSSI_R1 + RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
         adc_rssi1_ua = adc_rssi1_a * 1000000
         adc_rssi2_v = readScaAdc(OH_NUM, 7) / 1000.0
-        adc_rssi2_a = (((adc_rssi2_v / (RSSI_R2/(RSSI_R1+RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
+        adc_rssi2_a = (((adc_rssi2_v / (RSSI_R2 / (RSSI_R1 + RSSI_R2))) - RSSI_VCC) / RSSI_R1) * -1
         adc_rssi2_ua = adc_rssi2_a * 1000000
 
 
@@ -93,28 +93,28 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
 
     d = data
 
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-    writeReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
     reply = []
     if doRead:
         for i in ohList:
-            reply.append(parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i))))
+            reply.append(read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
     return reply
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
+def check_bit(byteval, idx):
+    return ((byteval & (1 << idx)) != 0)
 
 def checkStatus(ohList):
-    rxReady       = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY')))
-    criticalError = parseInt(readReg(getNode('GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR')))
+    rxReady       = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
+    criticalError = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
     statusGood = True
     for i in ohList:
         if not check_bit(rxReady, i):
-            printRed("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
+            print_red("OH #%d is not ready: RX ready = %d, critical error = %d" % (i, (rxReady >> i) & 0x1, (criticalError >> i) & 0x1))
             statusGood = False
 
     return statusGood
@@ -125,7 +125,7 @@ def hex(number):
     else:
         return "{0:#0x}".format(number)
 
-def myprint(msg, isError = False):
+def myprint(msg, isError=False):
     col = Colors.RED if isError else Colors.GREEN
     print(col + "===> " + msg + Colors.ENDC)
 

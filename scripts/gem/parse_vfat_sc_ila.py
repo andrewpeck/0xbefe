@@ -130,13 +130,13 @@ def main():
         else:
             comment = "????????????????????????????"
 
-        print("%s   <<<< %s" % (hexPadded(words[i], 1), comment))
+        print("%s   <<<< %s" % (hex_padded(words[i], 1), comment))
 
 
 def printWithColor(string, color):
     print color + string + Colors.ENDC
 
-def hexPadded(number, numBytes):
+def hex_padded(number, numBytes):
     if number is None:
         return 'None'
     else:
