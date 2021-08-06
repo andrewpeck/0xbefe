@@ -37,7 +37,7 @@ gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
 gem/hdl/trigger/generated/me0_cvp13/sbit_me0.vhd
-gem/hdl/trigger/generated/me0_cvp13/sbit_monitor.vhd
+#gem/hdl/trigger/generated/me0_cvp13/sbit_monitor.vhd
 
 
 #dummy promless just to keep compiler happy
