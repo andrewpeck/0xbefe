@@ -10,13 +10,11 @@ import sys
 
 DEBUG = False
 
-ADDR_IC_READ_WRITE_LENGTH = None
 ADDR_IC_ADDR = None
 ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
 
-NODE_IC_READ_WRITE_LENGTH = None
 NODE_IC_ADDR = None
 NODE_IC_WRITE_DATA = None
 NODE_IC_EXEC_WRITE = None
@@ -257,10 +255,6 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
     print("bye now..")
 
 def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowControlTransactions, numDaqPackets):
-    if isLpGbt:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
-    else:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
 
     # setup the TTC generator for a DAQ test
     write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -403,9 +397,6 @@ def downloadConfig(ohIdx, gbtIdx, filename):
     elif gem_station == 1 or gem_station == 2:
         n_rw_reg = 366
 
-    #for now we'll operate with 8 bit words only
-    write_reg(get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
-
     f = open(filename, 'r')
     ret = []
     lines = 0
@@ -441,25 +432,21 @@ def destroyConfig():
         sleep(0.000001) # writing is too fast for CVP13 :)
 
 def initGbtRegAddrs():
-    global ADDR_IC_READ_WRITE_LENGTH
     global ADDR_IC_ADDR
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
 
-    global NODE_IC_READ_WRITE_LENGTH
     global NODE_IC_ADDR
     global NODE_IC_WRITE_DATA
     global NODE_IC_EXEC_WRITE
     global NODE_IC_EXEC_READ
 
-    ADDR_IC_READ_WRITE_LENGTH = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH').address
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
 
-    NODE_IC_READ_WRITE_LENGTH = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH')
     NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
     NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
     NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
@@ -476,13 +463,20 @@ def selectGbt(ohIdx, gbtIdx):
 
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
+    if station == 0:
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+    else:
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+
+    #for now we'll operate with 8 bit words only
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH'), 1)
+
     return 0
 
 def checkGbtReady(ohIdx, gbtIdx):
     return read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
 
 def writeGbtRegAddrs(reg, val):
-    write_reg(NODE_IC_READ_WRITE_LENGTH, 1)
     write_reg(NODE_IC_ADDR, reg)
     write_reg(NODE_IC_WRITE_DATA, val)
     write_reg(NODE_IC_EXEC_WRITE, 1)
