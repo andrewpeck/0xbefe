@@ -208,7 +208,7 @@ architecture csc_apex_arch of csc_apex is
     
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink           : t_daq_to_daqlink;
-    signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', almost_full => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
+    signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', backpressure => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
 
     -------------------- PROMless ---------------------------------
     signal to_promless              : t_to_promless := (clk => '0', en => '0');
@@ -399,6 +399,10 @@ begin
             reset_i          => '0',
             clk_stable_100_i => clk_100,
             mgt_ref_clk_i    => slink_mgt_ref_clk,
+
+            daqlink_to_daq_o => daqlink_to_daq,
+            daq_to_daqlink_i => daq_to_daqlink,
+
             ipb_reset_i      => ipb_reset,
             ipb_clk_i        => ipb_clk,
             ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
@@ -438,6 +442,7 @@ begin
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQLINK_CLK_FREQ  => 100_000_000,
+            g_USE_SLINK_ROCKET  => true,
             g_DISABLE_TTC_DATA  => true
         )
         port map(

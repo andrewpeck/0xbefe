@@ -24,6 +24,8 @@ ADDR_DAQ_EMPTY = None
 ADDR_DAQ_DATA = None
 RAW_FILE = None
 
+STOP = False
+
 def main():
     global RAW_FILE
 
@@ -31,44 +33,49 @@ def main():
     if not filename:
         filename = os.environ['HOME'] + "/csc/data/run_" + datetime.datetime.now().strftime("%Y-%m-%d__%H_%M_%S") + ".raw"
 
-    inputMask = 0x1
-    inputMaskStr = input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
-    if inputMaskStr:
-        inputMask = parse_int(inputMaskStr)
+    input_enable_mask = 0x1
+    input_enable_mask_str = input("DAQ input enable bitmask as hex (default = 0x0001, meaning only the first input is enabled)")
+    if input_enable_mask_str:
+        input_enable_mask = parse_int(input_enable_mask_str)
 
-    ignoreAmc13 = 0x1
-    ignoreAmc13Str = input("Should we ignore AMC13 path? (default = yes)")
-    if (ignoreAmc13Str == "no") or (ignoreAmc13Str == "n"):
-        ignoreAmc13 = 0x0
+    ignore_amc13 = 0x1
+    ignore_amc13_str = input("Should we ignore AMC13 path? (default = yes)")
+    if (ignore_amc13_str == "no") or (ignore_amc13_str == "n"):
+        ignore_amc13 = 0x0
 
-    readoutToCtp7 = False
-    readoutToCtp7Str = input("Should we readout locally to the backend SD card? (default = no)")
-    if (readoutToCtp7Str == "yes") or (readoutToCtp7Str == "y"):
-        readoutToCtp7 = True
+    readout_locally = False
+    readout_locally_str = input("Should we readout locally to the backend SD card? (default = no)")
+    if (readout_locally_str == "yes") or (readout_locally_str == "y"):
+        readout_locally = True
 
-    waitForResync = 0x1
-    waitForResyncStr = input("Should we keep the DAQ in reset until a resync? (default = yes)")
-    if (waitForResyncStr == "no") or (waitForResyncStr == "n"):
-        waitForResync = 0x0
+    wait_for_resync = 0x0
+    wait_for_resync_str = input("Should we keep the DAQ in reset until a resync? (default = no)")
+    if (wait_for_resync_str == "yes") or (wait_for_resync_str == "y"):
+        wait_for_resync = 0x1
 
-    freezeOnError = 0x0
-    freezeOnErrorStr = input("Should the DAQ freeze on TTS error? (default = no)")
-    if (freezeOnErrorStr == "yes") or (freezeOnErrorStr == "y"):
-        freezeOnError = 0x1
+    freeze_on_error = 0x0
+    freeze_on_error_str = input("Should the DAQ freeze on TTS error? (default = no)")
+    if (freeze_on_error_str == "yes") or (freeze_on_error_str == "y"):
+        freeze_on_error = 0x1
 
-    useCscTtcEncoding = False
-    useCscTtcEncodingStr = input("Should we use CSC TTC encoding? (default = no)")
-    if (useCscTtcEncodingStr == "yes") or (useCscTtcEncodingStr == "y"):
+    use_csc_ttc_enc = False
+    use_csc_ttc_enc_str = input("Should we use CSC TTC encoding? (default = no)")
+    if (use_csc_ttc_enc_str == "yes") or (use_csc_ttc_enc_str == "y"):
         useCscTtcEncoding = True
 
-    useLocalL1a = 0
-    useLocalL1aStr = input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = no)")
-    if (useLocalL1aStr == "yes") or (useLocalL1aStr == "y"):
-        useLocalL1a = 1
+    use_local_l1a = 0
+    use_local_l1a_str = input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = yes)")
+    if (use_local_l1a_str == "no") or (use_local_l1a_str == "n"):
+        useLocalL1a = 0
 
+    signal.signal(signal.SIGINT, exitHandler) #register SIGINT to gracefully exit
+
+    daq_start(filename, input_enable_mask, ignore_amc13, readout_locally, wait_for_resync, freeze_on_error, use_csc_ttc_enc, use_local_l1a)
+
+def daq_start(filename, input_enable_mask, ignore_amc13, readout_locally, wait_for_resync, freeze_on_error, use_csc_ttc_enc, use_local_l1a):
     parse_xml()
 
-    if useCscTtcEncoding:
+    if use_csc_ttc_enc:
         heading("Configuring TTC with CSC encoding")
         write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_BC0'), 0x4)
         write_reg(get_node('BEFE.CSC_FED.TTC.CONFIG.CMD_EC0'), 0x2)
@@ -81,11 +88,11 @@ def main():
     write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x0)
     write_reg(get_node('BEFE.CSC_FED.TEST.GBE_TEST.ENABLE'), 0x0)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), useLocalL1a)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), inputMask)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignoreAmc13)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freezeOnError)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), waitForResync)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), use_local_l1a)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), input_enable_mask)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignore_amc13)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freeze_on_error)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), wait_for_resync)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_PRESCALE'), 0x1)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x1)
@@ -94,9 +101,8 @@ def main():
     write_reg(get_node('BEFE.CSC_FED.TTC.CTRL.L1A_ENABLE'), 0x1)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET'), 0x0)
 
-    signal.signal(signal.SIGINT, exitHandler) #register SIGINT to gracefully exit
     RAW_FILE = None
-    if readoutToCtp7:
+    if readout_locally:
         RAW_FILE = open(filename, 'w')
 
     heading("Taking data!")
@@ -114,8 +120,8 @@ def main():
     data = 0
     ttsState = 0
     evtSize = 0
-    while True:
-        if readoutToCtp7:
+    while True and not STOP:
+        if readout_locally:
             empty = read_reg(daqEmptyNode)
             if empty == 0:
                 RAW_FILE.write("======================== Event %i ========================\n" % numEvents)
@@ -147,6 +153,10 @@ def main():
             while ttsState == 0xc:
                 ttsState = read_reg(ttsStateNode)
                 sleep(0.1)
+
+def daq_stop():
+    global STOP
+    STOP = True
 
 def exitHandler(signal, frame):
     global RAW_FILE

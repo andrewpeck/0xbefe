@@ -247,6 +247,9 @@
             <node id="RUN_PARAMS"     address="0x2"  mask="0x00ffffff" permission="rw"
                   description="User settable run params that gets embedded into the AMC header"
                   fw_signal="run_params" fw_default="0x000000"/>
+            <node id="FED_ID"     address="0x3" permission="rw"
+                  description="FED ID, used in SlinkRocket header"
+                  fw_signal="fed_id" fw_default="0x0000033e"/>
             <node id="SPY"  address="0xf" description="Spy path control registers">
                 <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
                       description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."
@@ -269,12 +272,12 @@
                   description="This flag is 1 if DAQ clock is locked at this moment"
                   fw_signal="daq_clk_locked_i"
                   sw_monitor_error_value="0"/>
-            <node id="DAQ_LINK_AFULL"       address="0x0"  mask="0x00000008" permission="r"
+            <node id="DAQ_BACKPRESSURE"       address="0x0"  mask="0x00000008" permission="r"
                   description="This bit comes directly from DAQLink module, indicating
                                that its internal buffers are almost full. No events will be sent
                                when this bit is 1 (though events can still be built and
                                stored in the Input and Event FIFOs)"
-                  fw_signal="daq_almost_full"
+                  fw_signal="daq_backpressure"
                   sw_monitor_error_min_threshold="1"/>
             <node id="DAQ_OUTPUT_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00000010" permission="r"
                   description="This bit is set if DAQ output FIFO has ever been full (critical -- data loss)"
@@ -315,9 +318,9 @@
             <node id="DISPER_ERR"      address="0x1"  mask="0xffff0000" permission="r"
                   description="This counter is counting DAQLink GTX/GTH dispersion errors"
                   fw_signal="daq_disper_err_cnt"/>
-            <node id="L1AID"           address="0x2"  mask="0x00ffffff" permission="r"
+            <node id="L1AID"           address="0x2"  permission="r"
                   description="Current L1A ID (similar to event number, but this may be a bit ahead of that if we're still waiting for data for unprocessed L1As)"
-                  fw_signal="ttc_daq_cntrs_i.l1id"/>
+                  fw_signal="ttc_daq_cntrs_i.l1id(31 downto 0)"/>
             <node id="EVT_SENT"        address="0x3"  mask="0xffffffff" permission="r"
                   description="Number of events shipped out to DAQLink"
                   fw_signal="std_logic_vector(cnt_sent_events)"/>
@@ -347,9 +350,9 @@
                   description="Number of clocks DAQ output FIFO was near-full (asserted at 75%, deasserted at 50%)"
                   fw_signal="daqfifo_near_full_cnt"
                   sw_monitor_warn_min_threshold="100"/>
-            <node id="DAQ_ALMOST_FULL_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
+            <node id="DAQ_BACKPRESSURE_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
                   description="Number of clocks DAQLink has asserted almost-full flag"
-                  fw_signal="daqlink_afull_cnt"/>
+                  fw_signal="daqlink_bp_cnt"/>
             <node id="TTS_WARN_CNT"  address="0x8"  mask="0xffff0000" permission="r"
                   description="Number of clocks we reported TTS WARNING state"
                   fw_signal="tts_warning_cnt"

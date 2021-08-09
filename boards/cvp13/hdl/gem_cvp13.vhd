@@ -107,7 +107,10 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal reset_pwrup          : std_logic;
 
     -- qsfp mgts
-    signal mgt_refclks          : t_mgt_refclks_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0);
+    signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1              : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
+    signal refclk0_fabric       : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_fabric       : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
     signal mgt_master_txoutclk  : t_mgt_master_clks;
     signal mgt_master_txusrclk  : t_mgt_master_clks;
     signal mgt_master_rxusrclk  : t_mgt_master_clks;
@@ -182,7 +185,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
 
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink           : t_daq_to_daqlink;
-    signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', almost_full => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
+    signal daqlink_to_daq           : t_daqlink_to_daq := (ready => '0', backpressure => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
 
     -------------------- PROMless ---------------------------------
     signal to_promless              : t_to_promless := (clk => '0', en => '0');
@@ -207,19 +210,8 @@ begin
             g_SYSCLK100_SYNTH_B_OUT_SEL => 2
         )
         port map(
-            qsfp_refclk0_p_i         => qsfp_refclk0_p_i,
-            qsfp_refclk0_n_i         => qsfp_refclk0_n_i,
-            qsfp_refclk1_p_i         => qsfp_refclk1_p_i,
-            qsfp_refclk1_n_i         => qsfp_refclk1_n_i,
             pcie_refclk0_p_i         => pcie_refclk0_p_i,
             pcie_refclk0_n_i         => pcie_refclk0_n_i,
-
-            qsfp_refclk0_o           => open,
-            qsfp_refclk1_o           => open,
-            qsfp_refclk0_div2_o      => open,
-            qsfp_refclk1_div2_o      => open,
-
-            qsfp_mgt_refclks_o       => mgt_refclks,
 
             pcie_refclk0_o           => pcie_refclk0,
             pcie_refclk0_div2_o      => pcie_refclk0_div2,
@@ -276,6 +268,8 @@ begin
 
     i_mgts : entity work.mgt_links_gty
         generic map(
+            g_NUM_REFCLK0       => CFG_NUM_REFCLK0,
+            g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
             g_STABLE_CLK_PERIOD => 10,
@@ -284,10 +278,20 @@ begin
         port map(
             reset_i              => '0',
             clk_stable_i         => clk100,
+
+            refclk0_p_i          => qsfp_refclk0_p_i,
+            refclk0_n_i          => qsfp_refclk0_n_i,
+            refclk1_p_i          => qsfp_refclk1_p_i,
+            refclk1_n_i          => qsfp_refclk1_n_i,
+            refclk0_fabric_o     => refclk0_fabric,
+            refclk1_fabric_o     => refclk1_fabric,
+            refclk0_o            => refclk0,
+            refclk1_o            => refclk1,
+            
             ttc_clks_i           => ttc_clks,
             ttc_clks_locked_i    => ttc_clk_status.mmcm_locked,
             ttc_clks_reset_o     => open,
-            channel_refclk_arr_i => mgt_refclks,
+
             status_arr_o         => mgt_status_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             ctrl_arr_i           => mgt_ctrl_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),
             tx_data_arr_i        => mgt_tx_data_arr(CFG_MGT_NUM_CHANNELS - 1 downto 0),

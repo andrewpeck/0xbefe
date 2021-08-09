@@ -436,12 +436,12 @@ package common_pkg is
         event_valid     : std_logic;
         event_header    : std_logic;
         event_trailer   : std_logic;
-        event_data      : std_logic_vector(63 downto 0);
+        event_data      : std_logic_vector(127 downto 0);
     end record;
 
     type t_daqlink_to_daq is record
         ready           : std_logic;
-        almost_full     : std_logic;
+        backpressure    : std_logic;
         disperr_cnt     : std_logic_vector(15 downto 0);
         notintable_cnt  : std_logic_vector(15 downto 0);
     end record;

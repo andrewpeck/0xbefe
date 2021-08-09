@@ -47,6 +47,7 @@ entity ttc is
 
         -- TTC commands
         local_l1a_req_i     : in  std_logic; -- this is an edge triggered async input, and can be used to request local L1As
+        local_l1a_reset_i   : in  std_logic;
         ttc_cmds_o          : out t_ttc_cmds;
     
         -- DAQ counters (L1A ID, Orbit ID, BX ID)
@@ -121,8 +122,8 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_l1a_running   : std_logic;
 
     -- daq counters
-    signal l1id_cnt                 : std_logic_vector(23 downto 0);
-    signal orbit_cnt                : std_logic_vector(15 downto 0);
+    signal l1id_cnt                 : std_logic_vector(43 downto 0);
+    signal orbit_cnt                : std_logic_vector(31 downto 0);
     signal bx_cnt                   : std_logic_vector(11 downto 0);
 
     -- control and status
@@ -140,6 +141,7 @@ architecture ttc_arch of ttc is
     -- l1a request
     signal l1a_req_sync             : std_logic;
     signal l1a_req                  : std_logic;
+    signal l1a_req_reset            : std_logic;
 
     -- ttc mini spy
     signal ttc_spy_buffer           : std_logic_vector(31 downto 0) := (others => '1');
@@ -313,6 +315,8 @@ begin
             oneshot_o => l1a_req
         );
     
+    i_l1a_reset_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_reset_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_reset);
+    
     ------------- TTC generator -------------
 
     i_ttc_generator : entity work.ttc_generator
@@ -367,11 +371,11 @@ begin
     process(ttc_clks_i.clk_40) is
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset = '1') then
-                l1id_cnt <= x"000001";
+            if (reset = '1' or l1a_req_reset = '1') then
+                l1id_cnt <= x"00000000001";
             else
                 if (ec0_cmd = '1' or resync_cmd = '1') then
-                    l1id_cnt <= x"000001";
+                    l1id_cnt <= x"00000000001";
                 elsif (l1a_cmd = '1') then
                     l1id_cnt <= std_logic_vector(unsigned(l1id_cnt) + 1);
                 end if;

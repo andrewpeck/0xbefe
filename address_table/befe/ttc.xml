@@ -260,9 +260,9 @@
           fw_signal="ttc_cmds_cnt_arr(9)"/>
   </node>
 
-  <node id="L1A_ID" address="0x60" mask="0x00ffffff" permission="r"
+  <node id="L1A_ID" address="0x60" permission="r"
         description="L1A ID (increments with every L1A and resets with EC0), used by DAQ to tag event numbers"
-        fw_signal="l1id_cnt"/>
+        fw_signal="l1id_cnt(31 downto 0)"/>
 
   <node id="L1A_RATE" address="0x61" permission="r"
         description="L1A rate in Hz"

@@ -116,12 +116,12 @@ architecture Behavioral of daq is
     signal daq_event_header     : std_logic := '0';
     signal daq_event_trailer    : std_logic := '0';
     signal daq_ready            : std_logic := '0';
-    signal daq_almost_full      : std_logic := '0';
+    signal daq_backpressure     : std_logic := '0';
     signal dbg_daqlink_ignore   : std_logic := '0';
   
     signal daq_disper_err_cnt   : std_logic_vector(15 downto 0) := (others => '0');
     signal daq_notintable_err_cnt: std_logic_vector(15 downto 0) := (others => '0');
-    signal daqlink_afull_cnt    : std_logic_vector(15 downto 0) := (others => '0');
+    signal daqlink_bp_cnt       : std_logic_vector(15 downto 0) := (others => '0');
 
     -- DAQ Error Flags
     signal err_l1afifo_full     : std_logic := '0';
@@ -180,10 +180,10 @@ architecture Behavioral of daq is
     signal format_calib_chan    : std_logic_vector(6 downto 0);
         
     -- L1A FIFO
-    signal l1afifo_din              : std_logic_vector(51 downto 0) := (others => '0');
+    signal l1afifo_din              : std_logic_vector(87 downto 0) := (others => '0');
     signal l1afifo_wr_en            : std_logic := '0';
     signal l1afifo_rd_en            : std_logic := '0';
-    signal l1afifo_dout             : std_logic_vector(51 downto 0);
+    signal l1afifo_dout             : std_logic_vector(87 downto 0);
     signal l1afifo_full             : std_logic;
     signal l1afifo_overflow         : std_logic;
     signal l1afifo_empty            : std_logic;
@@ -314,7 +314,7 @@ architecture Behavioral of daq is
 --    attribute MARK_DEBUG of daq_event_header    : signal is "TRUE";
 --    attribute MARK_DEBUG of daq_event_trailer   : signal is "TRUE";
 --    attribute MARK_DEBUG of daq_ready           : signal is "TRUE";
---    attribute MARK_DEBUG of daq_almost_full     : signal is "TRUE";
+--    attribute MARK_DEBUG of daq_backpressure     : signal is "TRUE";
 --    
 --    attribute MARK_DEBUG of input_mask          : signal is "TRUE";
 --    attribute MARK_DEBUG of e_input_idx         : signal is "TRUE";
@@ -356,7 +356,7 @@ begin
     daq_to_daqlink_o.event_valid <= daqfifo_valid;
 
     daq_ready <= daqlink_to_daq_i.ready or dbg_daqlink_ignore;
-    daq_almost_full <= daqlink_to_daq_i.almost_full and not dbg_daqlink_ignore;
+    daq_backpressure <= daqlink_to_daq_i.backpressure and not dbg_daqlink_ignore;
     daq_disper_err_cnt <= daqlink_to_daq_i.disperr_cnt;
     daq_notintable_err_cnt <= daqlink_to_daq_i.notintable_cnt;
     
@@ -527,7 +527,7 @@ begin
             if (reset_daq = '1') then
                 err_daqfifo_full <= '0';
             else
-                daqfifo_rd_en <= (not daq_almost_full) and (not daqfifo_empty) and daq_ready;
+                daqfifo_rd_en <= (not daq_backpressure) and (not daqfifo_empty) and daq_ready;
                 if (daqfifo_full = '1') then
                     err_daqfifo_full <= '1';
                 end if; 
@@ -557,8 +557,8 @@ begin
     port map(
         ref_clk_i => daq_clk_i,
         reset_i   => reset_daq,
-        en_i      => daq_almost_full,
-        count_o   => daqlink_afull_cnt
+        en_i      => daq_backpressure,
+        count_o   => daqlink_bp_cnt
     );
 
     -- DAQ word rate
@@ -632,12 +632,12 @@ begin
             FIFO_MEMORY_TYPE    => "block",
             FIFO_WRITE_DEPTH    => CFG_DAQ_L1AFIFO_DEPTH,
             RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 52,
+            WRITE_DATA_WIDTH    => 88,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "170B", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 52,
+            READ_DATA_WIDTH     => 88,
             CDC_SYNC_STAGES     => 2,
             PROG_FULL_THRESH    => CFG_DAQ_L1AFIFO_PROG_FULL_SET,
             RD_DATA_COUNT_WIDTH => CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH,
@@ -987,9 +987,9 @@ begin
     process(daq_clk_i)
     
         -- event info
-        variable e_l1a_id                   : std_logic_vector(23 downto 0) := (others => '0');        
+        variable e_l1a_id                   : std_logic_vector(43 downto 0) := (others => '0');        
         variable e_bx_id                    : std_logic_vector(11 downto 0) := (others => '0');        
-        variable e_orbit_id                 : std_logic_vector(15 downto 0) := (others => '0');        
+        variable e_orbit_id                 : std_logic_vector(31 downto 0) := (others => '0');        
 
         -- event chamber info; TODO: convert these to signals (but would require additional state)
         variable e_chmb_l1a_id              : std_logic_vector(23 downto 0) := (others => '0');
@@ -1113,14 +1113,14 @@ begin
                         l1afifo_rd_en <= '1';
                         
                         -- fetch the L1A data
-                        e_l1a_id        := l1afifo_dout(51 downto 28);
-                        e_orbit_id      := l1afifo_dout(27 downto 12);
+                        e_l1a_id        := l1afifo_dout(87 downto 44);
+                        e_orbit_id      := l1afifo_dout(43 downto 12);
                         e_bx_id         := l1afifo_dout(11 downto 0);
 
                         -- send the data
                         daq_event_data <= x"00" & 
-                                          e_l1a_id &   -- L1A ID
-                                          e_bx_id &   -- BX ID
+                                          e_l1a_id(23 downto 0) &  -- L1A ID
+                                          e_bx_id &                -- BX ID
                                           x"fffff";
                         daq_event_header <= '1';
                         daq_event_trailer <= '0';
@@ -1142,7 +1142,7 @@ begin
                     daq_event_data <= C_DAQ_FORMAT_VERSION &
                                       run_type &
                                       run_params &
-                                      e_orbit_id & 
+                                      e_orbit_id(15 downto 0) & 
                                       board_sn_i;
                     daq_event_header <= '0';
                     daq_event_trailer <= '0';
@@ -1349,7 +1349,7 @@ begin
                                       "0" & -- GLIB OOS (different L1A IDs for different inputs)
                                       x"000000" &   -- Chamber error flag (hmm)
                                       -- GLIB status
-                                      daq_almost_full &
+                                      daq_backpressure &
                                       ttc_status_i.clk_status.mmcm_locked & 
                                       daq_clk_locked_i & 
                                       daq_ready &
@@ -1400,7 +1400,7 @@ begin
                 probe0 => std_logic_vector(daq_state),
                 probe1 => tts_state,
                 probe2 => daq_ready,
-                probe3 => daq_almost_full,
+                probe3 => daq_backpressure,
                 probe4 => daqfifo_valid,
                 probe5 => daqfifo_dout(63 downto 0),
                 probe6 => daqfifo_dout(65),

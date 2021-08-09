@@ -41,7 +41,7 @@ package board_config_package is
 
     constant CFG_DAQ_OUTPUT_DEPTH           : integer := 8192;
     constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 4045;
-    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 2730;
+    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 1365;
     constant CFG_DAQ_OUTPUT_DATA_CNT_WIDTH  : integer := 13;
 
     constant CFG_DAQ_L1AFIFO_DEPTH          : integer := 8192;
