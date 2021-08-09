@@ -194,10 +194,12 @@
         <node id="CONTROL"  address="0x0" description="DAQ Control">
             <node id="DAQ_ENABLE"         address="0x0" mask="0x00000001" permission="rw"
                   description="If this is set to 0, there will be no data sent to AMC13 and TTS state will always be READY (0x8)"
-                  fw_signal="daq_enable" fw_default="0b0"/>
-            <node id="IGNORE_AMC13"         address="0x0" mask="0x00000002" permission="rw"
-                  description="If this is set to 1 then there will be no data sent to AMC13, but events will still be built and sent to spy path ignoring AMC13 DAQLink state"
-                  fw_signal="ignore_amc13" fw_default="0b0"/>
+                  fw_signal="daq_enable" fw_default="0b0"
+                  sw_units="bool"/>
+            <node id="IGNORE_DAQLINK"    address="0x0" mask="0x00000002" permission="rw"
+                  description="If this is set to 1 then there will be no data sent to DAQLink (AMC13 / SlinkRocket), but events will still be built and sent to spy path ignoring the DAQLink state"
+                  fw_signal="ignore_daqlink" fw_default="0b0"
+                  sw_units="bool"/>
             <node id="DAQ_LINK_RESET"     address="0x0" mask="0x00000004" permission="rw"
                   description="Directly connected to DAQLink module reset port. BU is
                                advising against ever using it except for powerup, but it
@@ -211,12 +213,15 @@
                                When set to 1, it will be held in reset state until 0 is
                                explicitly written (this can be changed in the future if
                                necessary)"
-                  fw_signal="reset_local" fw_default="0b0"/>
+                  fw_signal="reset_local" fw_default="0b0"
+                  sw_units="bool"/>
             <node id="TTS_OVERRIDE"       address="0x0" mask="0x000000f0" permission="rw"
                   description="When not 0, it will override the GLIB TTS state with the
                                provided value (e.g. writing 0x8 will force GLIB to always be
                                in TTS READY state)"
-                  fw_signal="tts_override" fw_default="0x0"/>
+                  fw_signal="tts_override" fw_default="0x0"
+                  sw_val_good="self == 0" sw_val_warn="self != 0"
+                  sw_enum="['DISABLED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
             <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
                   description="This is a bitmask telling GLIB to enable certain inputs (least
                                significant bit is input 0). Only first is enabled by default"
@@ -226,21 +231,24 @@
                                inputs to report data before calling it timed-out  (if timeout
                                occurs a header and trailer for that chamber will still be
                                inserted and timeout flag will be set there, though no VFAT
-                               payload will be present). Units = clock cycles @ 25MHz
+                               payload will be present). Units = DAQ clock cycles
                                (current DAQLink clk frequency)"
                   fw_signal="dav_timeout" fw_default="0x3d090"/>
             <node id="FREEZE_ON_ERROR"        address="0x1"  mask="0x01000000" permission="rw"
                   description="This is a debug feature which when turned on will start sending only IDLE words to all input processors and block L1As as soon as TTS error is detected. This gets reset with a DAQ module reset or a TTC resync."
-                  fw_signal="freeze_on_error" fw_default="0x0"/>
+                  fw_signal="freeze_on_error" fw_default="0x0"
+                  sw_units="bool"/>
             <node id="RESET_TILL_RESYNC"        address="0x1"  mask="0x02000000" permission="rw"
                   description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
-                  fw_signal="reset_till_resync" fw_default="0x0"/>
+                  fw_signal="reset_till_resync" fw_default="0x0"
+                  sw_units="bool"/>
             <node id="L1A_REQUEST_EN"        address="0x1"  mask="0x04000000" permission="rw"
                   description="If this is set to 1, a local L1A will be generated (originating from the TTC module) whenever the DAQ module receives a new event from any input for which the L1A hasn't yet been requested.
                                This can be used in setups where a TCDS system is not available.
                                This works regardless if the TTC generator is used or not in the TTC module.
                                Note that this won't work with AMC13 readout (because AMC13 would not receive the L1A). This should work with DTH though (at least in the current state it doesn't require L1As to readout)"
-                  fw_signal="l1a_req_en" fw_default="0x0"/>
+                  fw_signal="l1a_req_en" fw_default="0x0"
+                  sw_units="bool"/>
             <node id="RUN_TYPE"       address="0x2"  mask="0x0f000000" permission="rw"
                   description="User settable run type that gets embedded into the AMC header"
                   fw_signal="run_type" fw_default="0x0"/>
@@ -253,13 +261,15 @@
             <node id="SPY"  address="0xf" description="Spy path control registers">
                 <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
                       description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."
-                      fw_signal="spy_gbe_skip_headers" fw_default="0b0"/>
+                      fw_signal="spy_gbe_skip_headers" fw_default="0b0"
+                      sw_units="bool"/>
                 <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
                       description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
                       fw_signal="spy_prescale" fw_default="0x0001"/>
                 <node id="SPY_SKIP_EMPTY_EVENTS"        address="0x0"  mask="0x00000002" permission="rw"
                       description="If this is set to 1, the spy path will not send empty events."
-                      fw_signal="spy_skip_empty_evts" fw_default="0b0"/>
+                      fw_signal="spy_skip_empty_evts" fw_default="0b0"
+                      sw_units="bool"/>
             </node>
         </node> <!-- end CONTROL -->
 
@@ -267,57 +277,78 @@
             <node id="DAQ_LINK_RDY"    address="0x0"  mask="0x00000001" permission="r"
                   description="When this is 1, it means that GLIB is in good communication
                                with AMC13. It must be 1 for GLIB to be able to send data."
-                  fw_signal="daq_ready"/>
+                  fw_signal="daq_ready"
+                  sw_val_neutral="read_reg('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+                  sw_val_bad="self == 0"
+                  sw_units="bool"/>
             <node id="DAQ_CLK_LOCKED"  address="0x0"  mask="0x00000002" permission="r"
                   description="This flag is 1 if DAQ clock is locked at this moment"
                   fw_signal="daq_clk_locked_i"
-                  sw_monitor_error_value="0"/>
+                  sw_val_bad="self == 0"
+                  sw_units="bool"/>
             <node id="DAQ_BACKPRESSURE"       address="0x0"  mask="0x00000008" permission="r"
                   description="This bit comes directly from DAQLink module, indicating
                                that its internal buffers are almost full. No events will be sent
                                when this bit is 1 (though events can still be built and
                                stored in the Input and Event FIFOs)"
                   fw_signal="daq_backpressure"
-                  sw_monitor_error_min_threshold="1"/>
+                  sw_val_neutral="read_reg('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+                  sw_val_good="self == 0"
+                  sw_val_warn="self == 1"
+                  sw_units="bool"
+                  />
             <node id="DAQ_OUTPUT_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00000010" permission="r"
                   description="This bit is set if DAQ output FIFO has ever been full (critical -- data loss)"
                   fw_signal="err_daqfifo_full"
-                  sw_monitor_error_min_threshold="1"/>
+                  sw_val_bad="self == 1"
+                  sw_units="bool"/>
             <node id="TTC_BC0_LOCKED"       address="0x0"  mask="0x00000020" permission="r"
                   description="This bit is set if BC0 is currently locked (last BC0 arrived at the expected time)"
                   fw_signal="ttc_status_i.bc0_status.locked"
-                  sw_monitor_error_value="0"/>
+                  sw_val_bad="self == 0"
+                  sw_units="bool"/>
             <node id="L1A_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00800000" permission="r"
                   description="This bit is latched whenever L1A FIFO overflow is asserted.
                                This means that one or more L1As were lost, so we are
                                out-of-sync: resync or reset is needed"
                   fw_signal="err_l1afifo_full"
-                  sw_monitor_error_value="1"/>
+                  sw_val_bad="self == 1"
+                  sw_units="bool"/>
             <node id="L1A_FIFO_IS_UNDERFLOW"       address="0x0"  mask="0x01000000" permission="r"
                   description="L1A FIFO is in underflow at this moment (this bit is not latched)"
                   fw_signal="l1afifo_underflow"
-                  sw_monitor_error_value="1"/>
+                  sw_val_bad="self == 1"
+                  sw_units="bool"/>
             <node id="L1A_FIFO_IS_FULL"       address="0x0"  mask="0x02000000" permission="r"
                   description="L1A FIFO is full at this moment (this bit is not latched)"
                   fw_signal="l1afifo_full"
-                  sw_monitor_error_value="1"/>
+                  sw_val_bad="self == 1"
+                  sw_units="bool"/>
             <node id="L1A_FIFO_IS_NEAR_FULL"       address="0x0"  mask="0x04000000" permission="r"
                   description="This bit gets asserted when L1A FIFO gets 75% full and deasserted when it gets down to 50%"
                   fw_signal="l1afifo_near_full"
-                  sw_monitor_warn_value="1"/>
+                  sw_val_good="self == 0"
+                  sw_val_warn="self == 1"
+                  sw_units="bool"/>
             <node id="L1A_FIFO_IS_EMPTY"       address="0x0"  mask="0x08000000" permission="r"
                   description="L1A FIFO is empty at this moment (this bit is not latched)"
-                  fw_signal="l1afifo_empty"/>
+                  fw_signal="l1afifo_empty"
+                  sw_units="bool"/>
             <node id="TTS_STATE"       address="0x0"  mask="0xf0000000" permission="r"
                   description="Current TTS state (READY, BUSY, ERROR, WARN, OUT-OF-SYNC)"
                   fw_signal="tts_state"
-                  sw_monitor_error_min_threshold="9" sw_monitor_error_max_threshold="7"/>
+                  sw_val_good="self == 8" sw_val_warn="self == 1"
+                  sw_enum="['DISCONNECTED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
             <node id="NOTINTABLE_ERR"  address="0x1"  mask="0x0000ffff" permission="r"
                   description="This counter is counting DAQLink GTX/GTH not-in-table errors"
-                  fw_signal="daq_notintable_err_cnt"/>
+                  fw_signal="daq_notintable_err_cnt"
+                  sw_val_neutral="read_reg('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+                  sw_val_bad="self != 0"/>
             <node id="DISPER_ERR"      address="0x1"  mask="0xffff0000" permission="r"
                   description="This counter is counting DAQLink GTX/GTH dispersion errors"
-                  fw_signal="daq_disper_err_cnt"/>
+                  fw_signal="daq_disper_err_cnt"
+                  sw_val_neutral="read_reg('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+                  sw_val_bad="self != 0"/>
             <node id="L1AID"           address="0x2"  permission="r"
                   description="Current L1A ID (similar to event number, but this may be a bit ahead of that if we're still waiting for data for unprocessed L1As)"
                   fw_signal="ttc_daq_cntrs_i.l1id(31 downto 0)"/>
@@ -330,7 +361,8 @@
                                DAV timeout setting). Units = clock cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)
                                (current DAQLink clk frequency)"
                   fw_signal="std_logic_vector(max_dav_timer)"
-                  sw_monitor_warn_min_threshold="11800"/>
+                  sw_val_good="self &lt; 11800"
+                  sw_val_warn="self &gt;= 11800"/>
             <node id="LAST_DAV_TIMER"  address="0x5"  mask="0x00ffffff" permission="r"
                   description="This indicates how DAQ had to wait for all inputs to report
                                data for the last event (mostly for debugging). Units = clock
@@ -345,48 +377,63 @@
             <node id="L1A_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0x0000ffff" permission="r"
                   description="Number of clocks L1A FIFO was near-full (asserted at 75%, deasserted at 50%)"
                   fw_signal="l1afifo_near_full_cnt"
-                  sw_monitor_warn_min_threshold="1"/>
+                  sw_val_good="self == 0"
+                  sw_val_warn="self &gt; 0"/>
             <node id="DAQ_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0xffff0000" permission="r"
                   description="Number of clocks DAQ output FIFO was near-full (asserted at 75%, deasserted at 50%)"
                   fw_signal="daqfifo_near_full_cnt"
-                  sw_monitor_warn_min_threshold="100"/>
+                  sw_val_good="self &lt;= 100"
+                  sw_val_warn="self &gt; 100"/>
             <node id="DAQ_BACKPRESSURE_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
                   description="Number of clocks DAQLink has asserted almost-full flag"
-                  fw_signal="daqlink_bp_cnt"/>
+                  fw_signal="daqlink_bp_cnt"
+                  sw_val_good="self &lt;= 100"
+                  sw_val_warn="self &gt; 100"/>
             <node id="TTS_WARN_CNT"  address="0x8"  mask="0xffff0000" permission="r"
                   description="Number of clocks we reported TTS WARNING state"
                   fw_signal="tts_warning_cnt"
-                  sw_monitor_warn_min_threshold="100"/>
+                  sw_val_good="self &lt;= 100"
+                  sw_val_warn="self &gt; 100"/>
             <node id="DAQ_WORD_RATE"  address="0x9"  mask="0xffffffff" permission="r"
                   description="Rate of 64bit words being sent out to the DAQLink in Hz (multiply by 64 to get bitrate)"
                   fw_signal="daq_word_rate"
-                  sw_monitor_warn_min_threshold="40000"/> <!-- currently running DAQ at 50MHz, which is 3.2Gbs, so warning at 2.5Gbs (could increase to 80MHz to get 5Gbs) -->
+                  sw_to_string="'%.2fMb/s' % ((float(self) * 64.0) / 1000000.0)"
+                  sw_val_good="self &lt;= 80000000"
+                  sw_val_warn="self &gt; 80000000"
+                  sw_val_bad="self &gt; 90000000"/> <!-- warn at 80%, bad at 90% (max is 6.4Gb/s with 100MHz clock that we're using) -->
             <node id="L1A_REQUEST_EVN"  address="0xa"  mask="0x00ffffff" permission="r"
                   description="Event number for which last L1A request was made (if BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN = 1)"
                   fw_signal="std_logic_vector(l1a_req_evt_num)"/>
             <node id="SPY"  address="0x10" description="Spy path control registers">
                 <node id="SPY_WORD_RATE"  address="0x0"  mask="0xffffffff" permission="r"
                       description="Rate of 16bit words being sent out the spy path (including ethernet frame words). If this gets close to 1Gb/s, expect overflows."
-                      fw_signal="spy_word_rate"/>
+                      fw_signal="spy_word_rate"
+                      sw_to_string="'%.2fMb/s' % ((float(self) * 16.0) / 1000000.0)"
+                      sw_val_good="self &lt;= 50000000"
+                      sw_val_warn="self &gt; 50000000"
+                      sw_val_bad="self &gt; 56250000"/> <!-- warn at 80%, bad at 90% (max is 1Gb/s with GbE) -->
                 <node id="SPY_EVENTS_SENT"  address="0x1"  mask="0xffffffff" permission="r"
                       description="Number of events sent out the spy path."
                       fw_signal="spy_evt_sent"/>
                 <node id="ERR_BIG_EVENT"  address="0x2"  mask="0x00000001" permission="r"
                       description="This flag gets latched if the spy received an event bigger than 50000 16bit words (100KBytes). This doesn't cause any data loss by itself, but means that something wrong is going on either at the frontend or the FED (CSC events shouldn't get that big)."
                       fw_signal="spy_err_evt_too_big"
-                      sw_monitor_warn_value="1"/>
+                      sw_val_good="self == 0"
+                      sw_val_warn="self == 1"/>
                 <node id="ERR_EOE_NOT_FOUND"  address="0x2"  mask="0x00000002" permission="r"
                       description="This flag gets latched if the spy doesn't find an end of event before the spy FIFO goes dry."
                       fw_signal="spy_err_eoe_not_found"
-                      sw_monitor_error_value="1"/>
+                      sw_val_good="self == 0"
+                      sw_val_warn="self == 1"/>
                 <node id="ERR_SPY_FIFO_HAD_OFLOW"  address="0x2"  mask="0x00000004" permission="r"
                       description="This flag gets latched if the spy fifo has an overflow."
                       fw_signal="err_spy_fifo_ovf"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="SPY_FIFO_AFULL_CNT"  address="0x2"  mask="0xffff0000" permission="r"
                       description="Number of clocks the spy fifo spent being 75% full (full warning is set on 75% and reset at 50%)"
                       fw_signal="spy_fifo_afull_cnt"
-                      sw_monitor_warn_min_threshold="100"/>
+                      sw_val_good="self &lt;= 100"
+                      sw_val_warn="self &gt; 100"/>
                 <node id="SPY_FIFO_IS_EMPTY"  address="0x2"  mask="0x00000008" permission="r"
                       description="Spy fifo is currently empty"
                       fw_signal="spy_fifo_empty"/>
@@ -455,7 +502,8 @@
                 <node id="TTS_STATE"           mask="0x0000f000" permission="r" address="0x0"
                       description="Input TTS state (gets integrated into global TTS state later)"
                       fw_signal="input_status_arr(${DMB_IDX}).tts_state"
-                      sw_monitor_error_min_threshold="9" sw_monitor_error_max_threshold="7"/>
+                      sw_val_good="self == 8" sw_val_warn="self == 1"
+                      sw_enum="['DISCONNECTED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
                 <node id="INPUT_FIFO_IS_UFLOW"    mask="0x01000000" permission="r" address="0x0"
                       description="Current status: Input FIFO is in underflow"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_underflow"

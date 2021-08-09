@@ -202,7 +202,7 @@ architecture Behavioral of daq is
     signal input_mask           : std_logic_vector(23 downto 0) := x"000000";
     signal run_type             : std_logic_vector(3 downto 0) := x"0"; -- run type (set by software and included in the AMC header)
     signal run_params           : std_logic_vector(23 downto 0) := x"000000"; -- optional run parameters (set by software and included in the AMC header)
-    signal ignore_amc13         : std_logic := '0'; -- when this is set to true, DAQLink status is ignored (useful for local spy-only data taking) 
+    signal ignore_daqlink       : std_logic := '0'; -- when this is set to true, DAQLink status is ignored (useful for local spy-only data taking) 
     signal block_last_evt_fifo  : std_logic := '0'; -- if true, then events are not written to the last event fifo (could be useful to toggle this from software in order to know how many events are read exactly because sometimes you may miss empty=true)
     signal freeze_on_error      : std_logic := '0'; -- this is a debug feature which when turned on will start sending only IDLE words to all input processors as soon as TTS error is detected
     signal reset_till_resync    : std_logic := '0'; -- if this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run.
@@ -616,7 +616,7 @@ begin
         );
     
     daqfifo_din <= daq_event_header & daq_event_trailer & daq_event_data;
-    daqfifo_wr_en <= daq_event_write_en and (not ignore_amc13);
+    daqfifo_wr_en <= daq_event_write_en and (not ignore_daqlink);
     
     -- daq fifo read logic
     process(daq_clk_i)
@@ -1072,7 +1072,7 @@ begin
                 end if;
                 
                 -- wait for all L1As to be processed and output buffer drained and then reset everything (resync_done triggers the reset_daq)
-                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = IDLE and (daqfifo_empty = '1' or ignore_amc13 = '1')) then
+                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = IDLE and (daqfifo_empty = '1' or ignore_daqlink = '1')) then
                     resync_done <= '1';
                 end if;
             end if;
@@ -1170,7 +1170,7 @@ begin
                     
                     -- have an L1A and data from all enabled inputs is ready (or these inputs have timed out)
                     if (l1afifo_empty = '0' and ((input_mask(g_NUM_OF_DMBs - 1 downto 0) and ((not chmb_evtfifos_empty) or dav_timeout_flags(g_NUM_OF_DMBs - 1 downto 0))) = input_mask(g_NUM_OF_DMBs - 1 downto 0))) then
-                        if (((daq_ready = '1' and daqfifo_near_full = '0') or (ignore_amc13 = '1')) and daq_enable = '1') then -- everybody ready?.... GO! :)
+                        if (((daq_ready = '1' and daqfifo_near_full = '0') or (ignore_daqlink = '1')) and daq_enable = '1') then -- everybody ready?.... GO! :)
                             -- start the DAQ state machine
                             daq_state <= DAQLINK_HEADER_1;
                             

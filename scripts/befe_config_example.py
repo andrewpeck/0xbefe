@@ -105,3 +105,17 @@ CONFIG_GE21_VFAT_HDLC_ADDRESSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] # repla
 # =================================================================================================
 
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12]
+
+# =================================================================================================
+#            DAQ configuration
+# =================================================================================================
+
+CONFIG_DAQ_INPUT_EN_MASK = 0x1   # enabled DAQ input channels
+CONFIG_DAQ_IGNORE_DAQLINK = 1    # ignore DAQlink (AMC13 / SlinkRocket) -- if set to 1 then only local DAQ readout is used
+CONFIG_DAQ_WAIT_FOR_RESYNC = 0   # keep DAQ in reset until the first resync
+CONFIG_DAQ_FREEZE_ON_ERROR = 0   # freeze DAQ if TTS error is set
+CONFIG_DAQ_GEN_LOCAL_L1A   = 1   # generate L1As locally based on incoming input data (use in setups where TCDS is not available)
+CONFIG_DAQ_FED_ID          = 830 # FED ID, sent to DAQLink
+CONFIG_DAQ_BOARD_ID        = 1   # Board ID, used in local DAQ (RUI ID in CSC)
+CONFIG_DAQ_SPY_PRESCALE    = 1   # prescale on the local DAQ path
+CONFIG_DAQ_SPY_SKIP_EMPTY  = 1   # skip empty events on the local DAQ path

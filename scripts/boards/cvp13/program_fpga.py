@@ -80,6 +80,7 @@ config_cmd = "cp %s %s" % (pcie_config, cvp13_dev_path + "/config")
 subprocess.Popen(config_cmd, shell=True, executable="/bin/bash")
 
 heading("Checking register access and firmware version")
+time.sleep(1.1)
 parse_xml()
 befe_print_fw_info()
 

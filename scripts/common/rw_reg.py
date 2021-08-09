@@ -178,9 +178,9 @@ class RegVal(int):
                         val = "%d%s" % (self, self.reg.sw_units)
                 else:
                     if hex:
-                        val += " (%f%s)" % (val_pretty, self.reg.sw_units)
+                        val += " (%.4f%s)" % (val_pretty, self.reg.sw_units)
                     else:
-                        val = "%f%s" % (val_pretty, self.reg.sw_units)
+                        val = "%.4f%s" % (val_pretty, self.reg.sw_units)
         elif not hex:
             val = "%d" % self
 

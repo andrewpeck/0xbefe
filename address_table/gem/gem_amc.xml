@@ -599,9 +599,9 @@
     <node id="CALIBRATION_MODE_CHAN"       address="0x2"  mask="0x0000007f" permission="rw"
           description="Channel number for which data will be included in the calibration mode data format (see CALIBRATION_MODE_EN)"
           fw_signal="format_calib_chan" fw_default="0b0000000"/>
-    <node id="IGNORE_AMC13"         address="0x2" mask="0x00000100" permission="rw"
-          description="If this is set to 1 then there will be no data sent to AMC13, but events will still be built and sent to spy path ignoring AMC13 DAQLink state"
-          fw_signal="ignore_amc13" fw_default="0b0"/>
+    <node id="IGNORE_DAQLINK" address="0x2" mask="0x00000100" permission="rw"
+          description="If this is set to 1 then there will be no data sent to DAQLink (AMC13 / SlinkRocket), but events will still be built and sent to spy path ignoring the DAQLink state"
+          fw_signal="ignore_daqlink" fw_default="0b0"/>
     <node id="FREEZE_ON_ERROR"        address="0x2"  mask="0x00000200" permission="rw"
           description="This is a debug feature which when turned on will start sending only IDLE words to all input processors and block L1As as soon as TTS error is detected. This gets reset with a DAQ module reset or a TTC resync."
           fw_signal="freeze_on_error" fw_default="0x0"/>

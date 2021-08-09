@@ -35,12 +35,16 @@
           description="Enable L1As (L1As are blocked if this is 0)"
           fw_signal="ttc_ctrl.l1a_enable" fw_default="0b1"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"
-          sw_val_warn="self == 0"/>
+          sw_val_good="self == 1"
+          sw_val_warn="self == 0"
+          sw_units="bool"/>
     <node id="CMD_ENABLE" address="0x4" mask="0x00000004" permission="rw"
           description="Enable TTC commands (all backplane TTC commands are blocked if this is set to 0)"
           fw_signal="ttc_ctrl.cmd_enable" fw_default="0b0"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"
-          sw_val_warn="self == 0"/>
+          sw_val_good="self == 1"
+          sw_val_warn="self == 0"
+          sw_units="bool"/>
     <node id="CALIBRATION_MODE" address="0x4" mask="0x00000002" permission="rw"
           description="Enables calibration mode when set to 1. In calibration mode the incoming L1A commands will trigger a calpulse signal to the frontend in addition to the L1A.
                        Note: the L1A delay below does not affect the calpulse timing, but it does shift the L1A that is sent to the frontend (typically the delay will be needed when using calibration mode)."
@@ -268,7 +272,11 @@
 
   <node id="L1A_RATE" address="0x61" permission="r"
         description="L1A rate in Hz"
-        fw_signal="l1a_rate" sw_units="Hz"/>
+        fw_signal="l1a_rate"
+        sw_units="KHz"
+        sw_val_good="self &lt;= 100000"
+        sw_val_warn="self &gt; 100000"
+        />
 
   <node id="TTC_SPY_BUFFER" address="0x62" permission="r"
         description="TTC Spy buffer -- this is filled with TTC commands (from LSB to MSB)
