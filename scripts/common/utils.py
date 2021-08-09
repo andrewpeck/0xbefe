@@ -9,6 +9,7 @@ class Colors:
     YELLOW  = '\033[93m'
     GREEN   = '\033[92m'
     RED     = '\033[91m'
+    ORANGE  = '\033[38;5;208m'
     ENDC    = '\033[39m'
 
 # normal colors:

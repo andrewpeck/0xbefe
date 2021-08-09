@@ -329,7 +329,7 @@ def befe_config_links():
 
     return links
 
-def befe_print_fw_info():
+def befe_get_fw_info():
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     board_type = read_reg("BEFE.SYSTEM.RELEASE.BOARD_TYPE")
     fw_version = read_reg("BEFE.SYSTEM.RELEASE.VERSION").to_string(use_color=False)
@@ -348,9 +348,14 @@ def befe_print_fw_info():
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         flavor_str = "CSC (%d DMBs)" % num_dmbs
 
-    heading("BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, fw_version, board_type, fw_date, fw_time, fw_git_sha))
+    description = "BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, fw_version, board_type, fw_date, fw_time, fw_git_sha)
 
-    return {"fw_flavor": fw_flavor, "fw_flavor_str": fw_flavor.to_string(), "board_type": board_type.to_string(), "fw_version": fw_version, "fw_date": fw_date, "fw_time": fw_time, "fw_git_sha": fw_git_sha}
+    return {"fw_flavor": fw_flavor, "fw_flavor_str": flavor_str, "board_type": board_type.to_string(), "fw_version": fw_version, "fw_date": fw_date, "fw_time": fw_time, "fw_git_sha": fw_git_sha, "description": description}
+
+def befe_print_fw_info():
+    fw_info = befe_get_fw_info()
+    heading(fw_info["description"])
+    return fw_info
 
 if __name__ == '__main__':
     parse_xml()

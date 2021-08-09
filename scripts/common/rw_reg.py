@@ -92,7 +92,7 @@ class Node:
 class RegVal(int):
     STATE_NEUTRAL = "NEUTRAL"
     STATE_GOOD = Colors.GREEN
-    STATE_WARN = Colors.YELLOW
+    STATE_WARN = Colors.ORANGE
     STATE_BAD = Colors.RED
 
     reg = None
