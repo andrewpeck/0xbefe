@@ -775,9 +775,6 @@ module c2c_gth_tux
   // In-System IBERT IP instance property dictionary is as follows:
   // CONFIG.C_GT_TYPE {GTH} CONFIG.C_GTS_USED {X0Y24 X0Y25} CONFIG.C_ENABLE_INPUT_PORTS {true}
 
-    assign drpclk_int = {2{hb_gtwiz_reset_clk_freerun_buf_int}};
-
-  
 `ifdef C2C_R1_UEC3 // for revision 1 KU15P module, using different MGTs
     c2c_gth_in_system_ibert_0_R1_UEC3
 `else

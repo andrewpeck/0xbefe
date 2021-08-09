@@ -135,8 +135,8 @@ package ttc_pkg is
     end record;
 
     type t_ttc_daq_cntrs is record
-        l1id  : std_logic_vector(23 downto 0);
-        orbit : std_logic_vector(15 downto 0);
+        l1id  : std_logic_vector(43 downto 0);
+        orbit : std_logic_vector(31 downto 0);
         bx    : std_logic_vector(11 downto 0);
     end record;
 

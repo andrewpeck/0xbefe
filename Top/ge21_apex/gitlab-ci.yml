@@ -3,4 +3,5 @@ generate_project:ge21_apex:
     variables:
       extends: .vars
       PROJECT_NAME: ge21_apex
-
+    tags:
+      - vivado_2021_1

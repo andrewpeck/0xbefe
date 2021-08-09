@@ -41,7 +41,7 @@ package board_config_package is
 
     constant CFG_DAQ_OUTPUT_DEPTH           : integer := 8192;
     constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 4045;
-    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 2730;
+    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 1365;
     constant CFG_DAQ_OUTPUT_DATA_CNT_WIDTH  : integer := 13;
 
     constant CFG_DAQ_L1AFIFO_DEPTH          : integer := 8192;
@@ -78,17 +78,19 @@ package board_config_package is
     constant CFG_NUM_DMBS           : integer := PRJ_CFG_NUM_DMBS;    -- total number of DMBs to instanciate
 
     constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr(0 to CFG_NUM_DMBS - 1) := (
-        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (0, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)),
-        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))
+        (dmb_type => DMB, num_fibers => 1, tx_fiber => 4, rx_fibers => (4, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)),
+        (dmb_type => DMB, num_fibers => 1, tx_fiber => 5, rx_fibers => (5, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))
     );
 
     constant CFG_USE_SPY_LINK : boolean := true;
-    constant CFG_SPY_LINK : integer := 2;
+    constant CFG_SPY_LINK : integer := 7;
     
     --================================--
     -- Fiber to MGT mapping
     --================================--    
 
+    constant CFG_NUM_REFCLK0      : integer := 3;
+    constant CFG_NUM_REFCLK1      : integer := 3; 
     constant CFG_MGT_NUM_CHANNELS : integer := 8;
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
@@ -114,10 +116,10 @@ package board_config_package is
         (0, 0, false, true ),   -- fiber 2  ! RX inverted
         (3, 2, false, true ),   -- fiber 3  ! RX inverted
         --=== Quad 130 ===--
-        (5, 4, false, false),   -- fiber 8
-        (7, 5, false, true ),   -- fiber 9  ! RX inverted
-        (4, 6, false, true ),   -- fiber 10 ! RX inverted
-        (6, 7, false, true ),   -- fiber 11 ! RX inverted
+        (5, 4, false, false),   -- fiber 4
+        (7, 5, false, true ),   -- fiber 5  ! RX inverted
+        (4, 6, false, true ),   -- fiber 6  ! RX inverted
+        (6, 7, false, true ),   -- fiber 7  ! RX inverted
 
         --=== dummy ===--
         (MGT_NULL, MGT_NULL, false, false),
@@ -208,19 +210,19 @@ package board_config_package is
         tx_multilane_phalign    => true, 
         rx_use_buf              => true
     );
-        
+       
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),
-                                                                                                                                                                 
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57_156,  qpll_idx => 4, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true)                
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57_156,  qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true),
+                        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 4, refclk0_idx => 1, refclk1_idx => 1, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4, refclk0_idx => 1, refclk1_idx => 1, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4, refclk0_idx => 1, refclk1_idx => 1, is_master => true,  ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4, refclk0_idx => 1, refclk1_idx => 1, is_master => false, ibert_inst => true)
     );
 
 end board_config_package;

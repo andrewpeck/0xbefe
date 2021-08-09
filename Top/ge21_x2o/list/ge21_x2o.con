@@ -1,0 +1,8 @@
+# -*- mode: TCL;-*-
+
+boards/x2o/constraints/vu13p.xdc
+boards/x2o/constraints/mgt_vu13p_ge21.xdc
+boards/x2o/constraints/slink.xdc
+boards/x2o/constraints/timing_gem.xdc
+boards/x2o/constraints/floorplan_gem_vu13p.xdc
+boards/x2o/constraints/c2c_vu13p_rev1.xdc

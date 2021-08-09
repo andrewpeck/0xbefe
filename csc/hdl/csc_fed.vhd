@@ -26,6 +26,7 @@ entity csc_fed is
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQLINK_CLK_FREQ   : integer;
+        g_USE_SLINK_ROCKET   : boolean;
         g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
     );
     port(
@@ -114,11 +115,11 @@ architecture csc_fed_arch of csc_fed is
     signal manual_ipbus_reset   : std_logic;
 
     --== TTC signals ==--
-    signal ttc_clocks           : t_ttc_clks;
     signal ttc_cmd              : t_ttc_cmds;
     signal ttc_counters         : t_ttc_daq_cntrs;
     signal ttc_status           : t_ttc_status;
     signal daq_l1a_request      : std_logic := '0';
+    signal daq_l1a_reset        : std_logic := '0';
 
     --== Spy path ==--
     signal spy_gbe_test_en      : std_logic;
@@ -186,6 +187,7 @@ begin
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
             local_l1a_req_i     => daq_l1a_request,
+            local_l1a_reset_i   => daq_l1a_reset,
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -204,6 +206,7 @@ begin
         generic map(
             g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
             g_DAQ_CLK_FREQ      => g_DAQLINK_CLK_FREQ,
+            g_IS_SLINK_ROCKET   => g_USE_SLINK_ROCKET,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
@@ -212,11 +215,12 @@ begin
             daq_clk_locked_i => daqlink_clk_locked_i,
             daq_to_daqlink_o => daq_to_daqlink_o,
             daqlink_to_daq_i => daqlink_to_daq_i,
-            ttc_clks_i       => ttc_clocks,
+            ttc_clks_i       => ttc_clocks_i,
             ttc_cmds_i       => ttc_cmd,
             ttc_daq_cntrs_i  => ttc_counters,
             ttc_status_i     => ttc_status,
             l1a_request_o    => daq_l1a_request,
+            l1a_reset_req_o  => daq_l1a_reset,
             input_clk_arr_i  => csc_dmb_rx_usrclk_arr_i,
             input_link_arr_i => csc_dmb_rx_data_arr_i,
             spy_clk_i        => csc_spy_usrclk_i,
@@ -269,7 +273,7 @@ begin
             clk_i                   => csc_dmb_rx_usrclk_arr_i(0),
 
             -- TTC
-            ttc_clks_i              => ttc_clocks,
+            ttc_clks_i              => ttc_clocks_i,
             ttc_cmds_i              => ttc_cmd,
         
             -- DMB links
@@ -299,7 +303,7 @@ begin
         )
         port map(
             reset_i           => reset,
-            ttc_clk_i         => ttc_clocks,
+            ttc_clk_i         => ttc_clocks_i,
             ttc_cmds_i        => ttc_cmd,
             gbe_clk_i         => csc_spy_usrclk_i,
             gbe_tx_data_o     => spy_gbe_test_data,

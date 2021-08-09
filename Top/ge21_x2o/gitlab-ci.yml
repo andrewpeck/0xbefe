@@ -1,0 +1,8 @@
+generate_project:ge21_x2o:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: ge21_x2o
+    tags:
+      - vivado_2021_1
+      - much_ram
