@@ -24,35 +24,13 @@
           description="Reset all the SBIT counters"
           fw_write_pulse_signal="sbit_test_reset_o"
           sw_ctrl_configure_set="0x1"/>
-    
   </node>
 
-  <node id="OH${OH_IDX}" address="0x100"
-        description="Trigger link for OH ${OH_IDX}"
-        generate="true" generate_size="&NUM_OHS;" generate_address_step="0x10" generate_idx_var="OH_IDX">
-    <node id="VFAT_SBIT_MASK_ARR" address="0x0" permission="r"
-          description="Control signal for array of sbits from VFATs of particular OH_IDX"
-          fw_signal="vfat_sbit_mask_arr(${OH_IDX})"/>
-    <node id="VFAT_SBITS_ARR" address="0x1" permission="r"
-          description="Array of sbits (after masking) from VFATs of particular OH_IDX"
-          fw_signal="vfat_sbits_arr(${OH_IDX})"/>
-  </node>
 
-  <node id="VFAT_SBITS_STRIP_MAPPED" address="0x10" mask="0xffffffff" permission="r"
-        description="Not sure of this"
-        fw_signal="vfat_sbits_strip_mapped"/>
-
-  <node id="ME0_CLUSTERS" address="0x11" mask="0xffffffff" permission="r"
-        description="output of sbit clusterizer for me0"
-        fw_signal="me0_clusters"/>
-
-  <node id="ME0_CLUSTER_COUNT" address="0x12" mask="0xffffffff" permission="r"
+  <node id="ME0_CLUSTER_COUNT" address="0x12" mask="0x000007ff" permission="r"
         description="output of sbit clusterizer for me0"
         fw_signal="me0_cluster_count"/>
 
-  <node id="ME0_OVERFLOW" address="0x13" mask="0xffffffff" permission="r"
-        description="output of sbit clusterizer for me0"
-        fw_signal="me0_overflow"/>
 
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
         description="Test register to display count of sbit from particular OH vfat sbit"
