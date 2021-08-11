@@ -172,8 +172,9 @@ class TopStatusItemBase:
     value_label = None
 
     def __init__(self, title, const_value=None):
-        self.name = title.lower().replace(" ", "_")
-        self.title_label = Label(text=title + ": ", dont_extend_width=True, style="bold cyan")
+        if title is not None:
+            self.name = title.lower().replace(" ", "_")
+            self.title_label = Label(text=title + ": ", dont_extend_width=True, style="bold cyan")
         if const_value is not None:
             self.value_label = Label(text=ANSI(const_value))
 
@@ -261,12 +262,53 @@ class TopStatusSection:
             title_labels.append(item.title_label)
             value_labels.append(item.value_label)
 
-        cont = VSplit([HSplit(title_labels), HSplit(value_labels)], height=height)
+        cont = VSplit([HSplit(title_labels), HSplit(value_labels)], height=height, width=D())
         self.container = Frame(title=self.title, body=cont)
 
     def update(self):
         for item in self.items.values():
             item.update()
+
+class TopTableStatusSection:
+    title = None
+    col_titles = None
+    row_items = None
+    container = None
+
+    def __init__(self, title, col_titles, row_items, height=D()):
+        self.title = title
+        self.col_titles
+        self.row_items = row_items
+
+        # add index column
+        cols = []
+        idx_col = [Label(text="Idx", dont_extend_width=True, style="bold cyan")]
+        for row_idx in range(len(row_items)):
+            idx_col.append(Label(text="%d" % row_idx, dont_extend_width=True, style="bold cyan"))
+        cols.append(idx_col)
+
+        # add value columns
+        for col_idx in range(len(col_titles)):
+            col = [Label(text=col_titles[col_idx], dont_extend_width=True, style="bold cyan")]
+            for row in row_items:
+                item = row[col_idx]
+                col.append(item.value_label)
+            cols.append(col)
+
+        # create column containers
+        col_conts = []
+        for col in cols:
+            col_cont = HSplit(col)
+            col_conts.append(col_cont)
+
+        # create the main container
+        cont = VSplit(col_conts, height=height, width=D(), padding=3, padding_char=" ")
+        self.container = Frame(title=self.title, body=cont)
+
+    def update(self):
+        for row in self.row_items:
+            for item in row:
+                item.update()
 
 class TopScreenMain(TopScreen):
 
@@ -403,9 +445,27 @@ class TopScreenDaq(TopScreen):
             ])
 
         # input section
+        num_inputs = 0
+        dmb_oh = ""
+        if self.is_csc:
+            num_inputs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
+            dmb_oh = "DMB"
+        elif self.is_gem:
+            num_inputs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+            dmb_oh = "OH"
+
+        col_titles = ["TTS State"]
+        rows = []
+        for input in range(num_inputs):
+            row = [
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.STATUS.TTS_STATE" % (self.gem_csc, dmb_oh, input)),
+            ]
+            rows.append(row)
+
+        self.sec_inputs = TopTableStatusSection("Inputs", col_titles, rows)
 
         col1 = [self.sec_config.container, self.sec_state.container]
-        col2 = [self.sec_state.container]
+        col2 = [self.sec_inputs.container]
         # col3 = [self.sec_ttc.container]
 
         self.container = VSplit([HSplit(col1), HSplit(col2)]) #, HSplit(col3)])
