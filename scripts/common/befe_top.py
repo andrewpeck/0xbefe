@@ -186,10 +186,11 @@ class TopStatusItem(TopStatusItemBase):
     value_format_str = None
     read_callback = None
 
-    def __init__(self, title, regs, read_callback=None, value_format_str=None, reg_val_bad=None, reg_val_good=None, reg_val_warn=None, reg_val_enum=None, is_progress_bar=False, progress_bar_range=100):
+    def __init__(self, title, regs, read_callback=None, read_callback_params=None, value_format_str=None, reg_val_bad=None, reg_val_good=None, reg_val_warn=None, reg_val_enum=None, is_progress_bar=False, progress_bar_range=100):
         super().__init__(title)
         self.value_format_str = value_format_str
         self.read_callback = read_callback
+        self.read_callback_params = read_callback_params
 
         def my_get_node(reg_name, idx):
             node = get_node(reg_name)
@@ -226,7 +227,7 @@ class TopStatusItem(TopStatusItemBase):
 
     def update(self):
         if self.read_callback is not None:
-            val = self.read_callback()
+            val = self.read_callback() if self.read_callback_params is None else self.read_callback(self.read_callback_params)
             if self.is_progress_bar:
                 val = int(val)
                 self.value_label._percentage = (val / self.progress_bar_range) * 100
@@ -362,6 +363,8 @@ class TopScreenMain(TopScreen):
 
 class TopScreenDaq(TopScreen):
 
+    dmb_oh = None
+
     def __init__(self, gem_csc, shortcut, shortcut_label):
         super().__init__(gem_csc, None, "DAQ", shortcut, shortcut_label)
 
@@ -374,6 +377,8 @@ class TopScreenDaq(TopScreen):
         self.cfg_board_id        = get_config("CONFIG_DAQ_BOARD_ID")
         self.cfg_spy_prescale    = get_config("CONFIG_DAQ_SPY_PRESCALE")
         self.cfg_spy_skip_empty  = get_config("CONFIG_DAQ_SPY_SKIP_EMPTY")
+
+        self.dmb_oh = "DMB" if self.is_csc else "OH" if self.is_gem else None
 
         self.init_container()
 
@@ -446,19 +451,25 @@ class TopScreenDaq(TopScreen):
 
         # input section
         num_inputs = 0
-        dmb_oh = ""
         if self.is_csc:
             num_inputs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
-            dmb_oh = "DMB"
         elif self.is_gem:
             num_inputs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-            dmb_oh = "OH"
+        else:
+            raise ValueError("It's not GEM nor CSC hmm")
 
-        col_titles = ["TTS State"]
+        col_titles = ["TTS State", "Status", "EvN", "Bitrate", "In Warn", "Evt Warn", "In FIFO", "Evt FIFO"]
         rows = []
         for input in range(num_inputs):
             row = [
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.STATUS.TTS_STATE" % (self.gem_csc, dmb_oh, input)),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.STATUS.TTS_STATE" % (self.gem_csc, self.dmb_oh, input)),
+                TopStatusItem(None, None, read_callback=self.get_input_status, read_callback_params={"idx": input}),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVN" % (self.gem_csc, self.dmb_oh, input)),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.DATA_WORD_RATE" % (self.gem_csc, self.dmb_oh, input)),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input)),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input)),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=16384),
+                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=4096),
             ]
             rows.append(row)
 
@@ -497,6 +508,29 @@ class TopScreenDaq(TopScreen):
             return color_string("%d EMPTY" % data_cnt, RegVal.STATE_GOOD)
         else:
             return color_string("%d" % data_cnt, RegVal.STATE_GOOD)
+
+    def get_input_status(self, params):
+        idx = params["idx"]
+
+        if (read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> idx) & 1 == 0:
+            return "DISABLED"
+
+        status = ""
+        if read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx)) == 1:
+            status += color_string("IN_OVF ", RegVal.STATE_BAD)
+        if read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_UFLOW" % (self.gem_csc, self.dmb_oh, idx)) == 1:
+            status += color_string("IN_UNF ", RegVal.STATE_BAD)
+        if read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx)) == 1:
+            status += color_string("EVT_OVF ", RegVal.STATE_BAD)
+        if read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx)) == 1:
+            status += color_string("SIZE_ERR ", RegVal.STATE_BAD)
+        if read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx)) == 1:
+            status += color_string("64BIT_ERR ", RegVal.STATE_BAD)
+
+        if len(status) == 0:
+            status = color_string("OK", RegVal.STATE_GOOD)
+
+        return status
 
 if __name__ == "__main__":
     parse_xml()

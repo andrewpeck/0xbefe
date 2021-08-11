@@ -220,7 +220,7 @@
                                provided value (e.g. writing 0x8 will force GLIB to always be
                                in TTS READY state)"
                   fw_signal="tts_override" fw_default="0x0"
-                  sw_val_good="self == 0" sw_val_warn="self != 0"
+                  sw_val_warn="self != 0"
                   sw_enum="['DISABLED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
             <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
                   description="This is a bitmask telling GLIB to enable certain inputs (least
@@ -293,7 +293,6 @@
                                stored in the Input and Event FIFOs)"
                   fw_signal="daq_backpressure"
                   sw_val_neutral="read_reg('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
-                  sw_val_good="self == 0"
                   sw_val_warn="self == 1"
                   sw_units="bool"
                   />
@@ -327,7 +326,6 @@
             <node id="L1A_FIFO_IS_NEAR_FULL"       address="0x0"  mask="0x04000000" permission="r"
                   description="This bit gets asserted when L1A FIFO gets 75% full and deasserted when it gets down to 50%"
                   fw_signal="l1afifo_near_full"
-                  sw_val_good="self == 0"
                   sw_val_warn="self == 1"
                   sw_units="bool"/>
             <node id="L1A_FIFO_IS_EMPTY"       address="0x0"  mask="0x08000000" permission="r"
@@ -361,7 +359,6 @@
                                DAV timeout setting). Units = clock cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)
                                (current DAQLink clk frequency)"
                   fw_signal="std_logic_vector(max_dav_timer)"
-                  sw_val_good="self &lt; 11800"
                   sw_val_warn="self &gt;= 11800"/>
             <node id="LAST_DAV_TIMER"  address="0x5"  mask="0x00ffffff" permission="r"
                   description="This indicates how DAQ had to wait for all inputs to report
@@ -377,22 +374,18 @@
             <node id="L1A_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0x0000ffff" permission="r"
                   description="Number of clocks L1A FIFO was near-full (asserted at 75%, deasserted at 50%)"
                   fw_signal="l1afifo_near_full_cnt"
-                  sw_val_good="self == 0"
                   sw_val_warn="self &gt; 0"/>
             <node id="DAQ_FIFO_NEAR_FULL_CNT"  address="0x7"  mask="0xffff0000" permission="r"
                   description="Number of clocks DAQ output FIFO was near-full (asserted at 75%, deasserted at 50%)"
                   fw_signal="daqfifo_near_full_cnt"
-                  sw_val_good="self &lt;= 100"
                   sw_val_warn="self &gt; 100"/>
             <node id="DAQ_BACKPRESSURE_CNT"  address="0x8"  mask="0x0000ffff" permission="r"
                   description="Number of clocks DAQLink has asserted almost-full flag"
                   fw_signal="daqlink_bp_cnt"
-                  sw_val_good="self &lt;= 100"
                   sw_val_warn="self &gt; 100"/>
             <node id="TTS_WARN_CNT"  address="0x8"  mask="0xffff0000" permission="r"
                   description="Number of clocks we reported TTS WARNING state"
                   fw_signal="tts_warning_cnt"
-                  sw_val_good="self &lt;= 100"
                   sw_val_warn="self &gt; 100"/>
             <node id="DAQ_WORD_RATE"  address="0x9"  mask="0xffffffff" permission="r"
                   description="Rate of 64bit words being sent out to the DAQLink in Hz (multiply by 64 to get bitrate)"
@@ -418,12 +411,10 @@
                 <node id="ERR_BIG_EVENT"  address="0x2"  mask="0x00000001" permission="r"
                       description="This flag gets latched if the spy received an event bigger than 50000 16bit words (100KBytes). This doesn't cause any data loss by itself, but means that something wrong is going on either at the frontend or the FED (CSC events shouldn't get that big)."
                       fw_signal="spy_err_evt_too_big"
-                      sw_val_good="self == 0"
                       sw_val_warn="self == 1"/>
                 <node id="ERR_EOE_NOT_FOUND"  address="0x2"  mask="0x00000002" permission="r"
                       description="This flag gets latched if the spy doesn't find an end of event before the spy FIFO goes dry."
                       fw_signal="spy_err_eoe_not_found"
-                      sw_val_good="self == 0"
                       sw_val_warn="self == 1"/>
                 <node id="ERR_SPY_FIFO_HAD_OFLOW"  address="0x2"  mask="0x00000004" permission="r"
                       description="This flag gets latched if the spy fifo has an overflow."
@@ -432,7 +423,6 @@
                 <node id="SPY_FIFO_AFULL_CNT"  address="0x2"  mask="0xffff0000" permission="r"
                       description="Number of clocks the spy fifo spent being 75% full (full warning is set on 75% and reset at 50%)"
                       fw_signal="spy_fifo_afull_cnt"
-                      sw_val_good="self &lt;= 100"
                       sw_val_warn="self &gt; 100"/>
                 <node id="SPY_FIFO_IS_EMPTY"  address="0x2"  mask="0x00000008" permission="r"
                       description="Spy fifo is currently empty"
@@ -466,7 +456,7 @@
                                    new data - this means data was lost.
                                    TTS ERROR is asserted when this bit is 1"
                       fw_signal="input_status_arr(${DMB_IDX}).err_infifo_full"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="INPUT_FIFO_HAD_UFLOW"   mask="0x00000200" permission="r" address="0x0"
                       description="Critical: Input FIFO underflow occurred.
                                    This bit is latched if Input FIFO underflow was ever
@@ -475,7 +465,7 @@
                                    might happen due to overflow or some other malfunction.
                                    TTS ERROR is asserted when this bit is 1"
                       fw_signal="input_status_arr(${DMB_IDX}).err_infifo_underflow"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="EVENT_FIFO_HAD_OFLOW"   mask="0x00000400" permission="r" address="0x0"
                       description="Critical: Event FIFO overflow occurred.
                                    This bit is latched if Event FIFO was ever full when trying to
@@ -484,7 +474,7 @@
                                    FIFO should overflow first.
                                    TTS ERROR is asserted when this bit is 1"
                       fw_signal="input_status_arr(${DMB_IDX}).err_evtfifo_full"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="EVT_SIZE_ERR"           mask="0x00000800" permission="r" address="0x0"
                       description="Critical: Event size overflow occurred.
                                    This bit is latched if there was an event containing more
@@ -494,43 +484,44 @@
                                    a stream of valid data.
                                    TTS ERROR is asserted when this bit is 1"
                       fw_signal="input_status_arr(${DMB_IDX}).err_event_too_big"
-                      sw_monitor_warn_value="1"/>
+                      sw_val_warn="self == 1"/>
                 <node id="EVT_64BIT_ALIGN_ERR"           mask="0x00000001" permission="r" address="0x0"
                       description="There was at least one event where the DMB trailer was not aligned to 64bit word boundaries."
                       fw_signal="input_status_arr(${DMB_IDX}).err_64bit_misaligned"
-                      sw_monitor_warn_value="1"/>
+                      sw_val_warn="self == 1"/>
                 <node id="TTS_STATE"           mask="0x0000f000" permission="r" address="0x0"
                       description="Input TTS state (gets integrated into global TTS state later)"
                       fw_signal="input_status_arr(${DMB_IDX}).tts_state"
+                      sw_val_neutral="(read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${DMB_IDX}) &amp; 1 == 0"
                       sw_val_good="self == 8" sw_val_warn="self == 1"
                       sw_enum="['DISCONNECTED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
                 <node id="INPUT_FIFO_IS_UFLOW"    mask="0x01000000" permission="r" address="0x0"
                       description="Current status: Input FIFO is in underflow"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_underflow"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="INPUT_FIFO_IS_FULL"     mask="0x02000000" permission="r" address="0x0"
                       description="Current status: Input FIFO is full"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_full"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="INPUT_FIFO_IS_AFULL"    mask="0x04000000" permission="r" address="0x0"
                       description="Current status: Input FIFO is near-full (asserted at 75% and deasserted at 50%)"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_near_full"
-                      sw_monitor_warn_value="1"/>
+                      sw_val_warn="self == 1"/>
                 <node id="INPUT_FIFO_IS_EMPTY"    mask="0x08000000" permission="r" address="0x0"
                       description="Current status: Input FIFO is empty"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_empty"/>
                 <node id="EVENT_FIFO_IS_UFLOW"    mask="0x10000000" permission="r" address="0x0"
                       description="Current status: Event FIFO is in underflow"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_underflow"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="EVENT_FIFO_IS_FULL"     mask="0x20000000" permission="r" address="0x0"
                       description="Current status: Event FIFO is full"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_full"
-                      sw_monitor_error_value="1"/>
+                      sw_val_bad="self == 1"/>
                 <node id="EVENT_FIFO_IS_AFULL"    mask="0x40000000" permission="r" address="0x0"
                       description="Current status: Event FIFO is near-full (asserted at 75% and deasserted at 50%)"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_near_full"
-                      sw_monitor_warn_value="1"/>
+                      sw_val_warn="self == 1"/>
                 <node id="EVENT_FIFO_IS_EMPTY"    mask="0x80000000" permission="r" address="0x0"
                       description="Current status: Event FIFO is empty"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_empty"/>
@@ -546,7 +537,10 @@
                                    some latency between building an event and sending it. In
                                    addition, event sending could stop due to DAQ FIFO being
                                    almost full or DAQLink not being ready."
-                      fw_signal="input_status_arr(${DMB_IDX}).eb_event_num"/>
+                      fw_signal="input_status_arr(${DMB_IDX}).eb_event_num"
+                      sw_val_neutral="(read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${DMB_IDX}) &amp; 1 == 0"
+                      sw_val_good="self &lt;= read_reg('BEFE.CSC_FED.DAQ.STATUS.L1AID') &lt; self + 100"
+                      sw_val_warn="read_reg('BEFE.CSC_FED.DAQ.STATUS.L1AID') >= self + 100"/>
                 <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00003fff" permission="r"
                       description="Current number of words in the Input FIFO (current depth is 4096)"
                       fw_signal="chamber_infifos(${DMB_IDX}).data_cnt"/>
@@ -556,15 +550,21 @@
                 <node id="INPUT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0x0000ffff" permission="r"
                       description="Number of times Input FIFO was near-full (asserted at 75%, deasserted at 50%)"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_near_full_cnt"
-                      sw_monitor_warn_min_threshold="100"/>
+                      sw_val_neutral="(read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${DMB_IDX}) &amp; 1 == 0"
+                      sw_val_warn="self > 100"/>
                 <node id="EVT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0xffff0000" permission="r"
                       description="Number of times Event FIFO was near-full (asserted at 75%, deasserted at 50%)"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_near_full_cnt"
-                      sw_monitor_warn_min_threshold="100"/>
+                      sw_val_neutral="(read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${DMB_IDX}) &amp; 1 == 0"
+                      sw_val_warn="self > 100"/>
                 <node id="DATA_WORD_RATE"  address="0x6"  mask="0x00007fff" permission="r"
                       description="Rate of valid 64bit data words being written to Input FIFO in Hz (multiply by 64 to get bitrate)"
                       fw_signal="input_status_arr(${DMB_IDX}).infifo_wr_rate"
-                      sw_monitor_warn_min_threshold="15625000"/>
+                      sw_to_string="'%.2fMb/s' % ((float(self) * 64.0) / 1000000.0)"
+                      sw_val_neutral="(read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${DMB_IDX}) &amp; 1 == 0"
+                      sw_val_good="self &lt;= 16000000"
+                      sw_val_warn="self &gt; 16000000"
+                      sw_val_bad="self &gt; 18000000"/> <!-- warn at 80%, bad at 90% (max is 1.28Gb/s for DMB) -->
                 <node id="EVT_RATE"  address="0x6"  mask="0xffff8000" permission="r"
                       description="Rate of events being written to Event FIFO in Hz"
                       fw_signal="input_status_arr(${DMB_IDX}).evtfifo_wr_rate"/>

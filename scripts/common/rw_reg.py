@@ -116,6 +116,8 @@ class RegVal(int):
             return self.STATE_BAD
         elif self.reg.sw_val_bad is not None and self.reg.sw_val_good is None:
             return self.STATE_GOOD
+        elif self.reg.sw_val_warn is not None and self.reg.sw_val_good is None:
+            return self.STATE_GOOD
         else:
             return self.STATE_NEUTRAL
 
