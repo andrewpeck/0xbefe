@@ -114,7 +114,6 @@ CONFIG_DAQ_INPUT_EN_MASK = 0x1   # enabled DAQ input channels
 CONFIG_DAQ_IGNORE_DAQLINK = 1    # ignore DAQlink (AMC13 / SlinkRocket) -- if set to 1 then only local DAQ readout is used
 CONFIG_DAQ_WAIT_FOR_RESYNC = 0   # keep DAQ in reset until the first resync
 CONFIG_DAQ_FREEZE_ON_ERROR = 0   # freeze DAQ if TTS error is set
-CONFIG_DAQ_GEN_LOCAL_L1A   = 1   # generate L1As locally based on incoming input data (use in setups where TCDS is not available)
 CONFIG_DAQ_FED_ID          = 830 # FED ID, sent to DAQLink
 CONFIG_DAQ_BOARD_ID        = 1   # Board ID, used in local DAQ (RUI ID in CSC)
 CONFIG_DAQ_SPY_PRESCALE    = 1   # prescale on the local DAQ path

@@ -35,14 +35,12 @@
           description="Enable L1As (L1As are blocked if this is 0)"
           fw_signal="ttc_ctrl.l1a_enable" fw_default="0b1"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"
-          sw_val_good="self == 1"
           sw_val_warn="self == 0"
           sw_units="bool"/>
     <node id="CMD_ENABLE" address="0x4" mask="0x00000004" permission="rw"
           description="Enable TTC commands (all backplane TTC commands are blocked if this is set to 0)"
           fw_signal="ttc_ctrl.cmd_enable" fw_default="0b0"
           sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x1" sw_ctrl_stop_set="0x0"
-          sw_val_good="self == 1"
           sw_val_warn="self == 0"
           sw_units="bool"/>
     <node id="CALIBRATION_MODE" address="0x4" mask="0x00000002" permission="rw"
@@ -274,7 +272,6 @@
         description="L1A rate in Hz"
         fw_signal="l1a_rate"
         sw_units="KHz"
-        sw_val_good="self &lt;= 100000"
         sw_val_warn="self &gt; 100000"
         />
 
