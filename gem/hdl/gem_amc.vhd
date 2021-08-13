@@ -499,6 +499,7 @@ begin
                 g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
                 g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                g_GEM_STATION       => g_GEM_STATION,
                 g_DEBUG => CFG_DEBUG_TRIGGER
             )
             port map(
