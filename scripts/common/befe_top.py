@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 """
-from pygments.lexers.html import HtmlLexer
+#from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app

@@ -1,5 +1,5 @@
 from common.utils import *
-from common.tables.prettytable import PrettyTable # if you want to use the prettytable instead of tableformatter (which is included in the common.utils)
+from prettytable import PrettyTable # if you want to use the prettytable instead of tableformatter (which is included in the common.utils)
 
 ################### prettytable ###################
 tbl = PrettyTable()

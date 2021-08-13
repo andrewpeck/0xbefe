@@ -1,6 +1,6 @@
 from common.rw_reg import *
 from common.utils import *
-import common.tables.tableformatter as tf
+import tableformatter as tf
 from enum import Enum
 
 try:
@@ -89,6 +89,9 @@ class Mgt:
         if include_pll_reset:
             self.pll.reset()
         write_reg("BEFE.MGTS.MGT%d.CTRL.%s_RESET" % (self.idx, self.txrx.name), 1)
+        if self.txrx.name.lower() == "rx":
+            write_reg("BEFE.MGTS.MGT%d.CTRL.RX_PRBS_CNT_RESET" % (self.idx), 1)
+
 
 class Link:
     idx = None

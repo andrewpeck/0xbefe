@@ -28,7 +28,7 @@ if sys.version_info < (3, 6):
     print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
     exit()
 
-import common.tables.tableformatter as tf
+import tableformatter as tf
 import imp
 
 try:

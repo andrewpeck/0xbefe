@@ -42,7 +42,7 @@ import textwrap
 from html import escape
 from html.parser import HTMLParser
 
-import common.tables.wcwidth as wcwidth
+import wcwidth as wcwidth
 
 # hrule styles
 FRAME = 0
