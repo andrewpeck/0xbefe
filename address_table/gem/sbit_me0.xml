@@ -40,7 +40,7 @@
         fw_signal="test_sbit0xe_count_me0"/>
   <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
         description="Test register to display count of sbit from particular OH vfat sbit"
-        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000002"/>
+        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000000"/>
   <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
         description="Test register to display count of sbit from particular OH vfat sbit"
         fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
