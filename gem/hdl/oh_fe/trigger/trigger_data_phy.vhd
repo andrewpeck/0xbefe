@@ -111,8 +111,8 @@ begin
     signal elink_packets : t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
   begin
 
-    -- copy onto 40MHz clock, make sure it is stable... there might be a better (lower latency way to do this but at
-    -- least this is safe)
+    -- copy onto 40MHz clock, make sure it is stable... there might be a better
+    -- (lower latency way to do this but at least this is safe)
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
