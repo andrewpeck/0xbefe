@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 6.5 bx as of 2021/06/02
+-- latency = 4.0 bx as of 2021/08/17
 
 entity cluster_packer is
   generic (
