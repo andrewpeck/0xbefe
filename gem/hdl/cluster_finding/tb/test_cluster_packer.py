@@ -146,13 +146,13 @@ def test_cluster_packer(station, oneshot, deadtime):
     parameters['DEADTIME'] = deadtime
     parameters['ONESHOT'] = oneshot
 
-    if (station==2):
+    if station == 2:
         parameters['NUM_VFATS'] = 12
     else:
         parameters['NUM_VFATS'] = 24
 
-    if (station==2):
-        parameters['NUM_PARTITIONS'] = 4
+    if station == 2:
+        parameters['NUM_PARTITIONS'] = 2
     else:
         parameters['NUM_PARTITIONS'] = 8
 
@@ -170,7 +170,9 @@ def test_cluster_packer(station, oneshot, deadtime):
         gui=0
     )
 
+
 #RUN=vsim -batch -do "set NumericStdNoWarnings 1; run 500000; quit -f"
 
+
 if __name__ == "__main__":
-    test_cluster_packer(1,True,12)
+    test_cluster_packer(2,True,12)
