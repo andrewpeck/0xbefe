@@ -168,8 +168,8 @@ architecture Behavioral of optohybrid_fw is
   signal led       : std_logic_vector (15 downto 0);
   signal ext_reset : std_logic_vector (11 downto 0);
 
-  signal adc_vp_int : std_logic;
-  signal adc_vn_int : std_logic;
+  signal adc_vp_int : std_logic := '1';
+  signal adc_vn_int : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- Wishbone
@@ -316,8 +316,10 @@ begin
   -- ADC
   --------------------------------------------------------------------------------
 
-  adc_vp_int <= if_then_else (GE11 = 1, adc_vp(0), '1');
-  adc_vn_int <= if_then_else (GE11 = 1, adc_vn(0), '0');
+  ge11_adc : if (GE11=1) generate
+    adc_vp_int <= adc_vp(0);
+    adc_vn_int <= adc_vn(0);
+  end generate;
 
   adc_inst : entity work.adc port map(
     clock_i => clocks.clk40,
