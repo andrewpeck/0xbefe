@@ -127,8 +127,8 @@ def test_cluster_packer(station, oneshot, deadtime):
         os.path.join(rtl_dir, f"sbit_oneshot.vhd"),
         os.path.join(rtl_dir, f"../../oh_fe/utils/clock_strobe.vhd"),
         os.path.join(rtl_dir, f"truncate_lsb.vhd"),
-        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
+        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd"),
         os.path.join(rtl_dir, f"top_cluster_packer.vhd")
