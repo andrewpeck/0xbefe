@@ -44,6 +44,7 @@ architecture behavioral of cluster_packer is
 
   signal latch_pulse_s0 : std_logic;
   signal latch_pulse_s1 : std_logic;
+  signal latch_pulse_s2 : std_logic;
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -112,6 +113,7 @@ begin
   begin
     if (rising_edge(clk_fast)) then
       latch_pulse_s1 <= latch_pulse_s0;
+      latch_pulse_s2 <= latch_pulse_s1;
     end if;
   end process;
 
@@ -163,6 +165,7 @@ begin
       partitions_i(7) <= sbits_i(23) & sbits_i(15) & sbits_i(7);
     end generate;
   end generate;
+
   --------------------------------------------------------------------------------
   -- Oneshot
   --------------------------------------------------------------------------------
@@ -281,7 +284,7 @@ begin
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => latch_pulse_s1,
+      latch_i    => latch_pulse_s2,
       latch_o    => cluster_latch
       );
 
