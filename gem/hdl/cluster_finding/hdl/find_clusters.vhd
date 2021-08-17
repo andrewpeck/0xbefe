@@ -309,12 +309,7 @@ begin
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
     begin
-      process (clock) is
-      begin
-        if (rising_edge(clock)) then
-          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
-        end if;
-      end process;
+      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
     end generate;
 
     unwrap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
