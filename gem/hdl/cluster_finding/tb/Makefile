@@ -1,5 +1,5 @@
 test:
-	TOPLEVEL_LANG=vhdl SIM=questa pytest -n 1
+	TOPLEVEL_LANG=vhdl SIM=questa pytest
 
 clean:
 	rm -rf sim_build

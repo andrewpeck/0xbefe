@@ -31,7 +31,7 @@ async def random_clusters(dut):
     nloops = 100
     nhits = 14
 
-    cocotb.fork(Clock(dut.clock, 20, units="ns").start())  # Create a clock
+    cocotb.fork(Clock(dut.clock, 40, units="ns").start())  # Create a clock
 
     STATION = dut.STATION.value
 
@@ -118,11 +118,8 @@ def test_find_clusters(station, num_found_clusters):
     vhdl_sources = [
         os.path.join(rtl_dir, f"truncate_lsb.vhd"),
         os.path.join(rtl_dir, f"cluster_pkg.vhd"),
-        #os.path.join(rtl_dir, f"poc_bitonic_sort_pkg.vhd"),
-        #os.path.join(rtl_dir, f"poc_bitonic_sort.vhd"),
-        #os.path.join(rtl_dir, f"bitonic_sort.vhd"),
-        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
+        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd")
     ]

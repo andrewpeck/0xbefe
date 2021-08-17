@@ -165,7 +165,7 @@ def test_cluster_packer(station, oneshot, deadtime):
         parameters=parameters,
         # sim_args = ["do cluster_packer_wave.do"],
         # extra_env = {"SIM": "questa"},
-        gui=1
+        gui=0
     )
 
 #RUN=vsim -batch -do "set NumericStdNoWarnings 1; run 500000; quit -f"
