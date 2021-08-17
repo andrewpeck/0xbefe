@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------
--- Company: TAMU
--- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
+-- Company: UCLA
+-- Engineer: Joseph Carlson (jecarlson30@gmail.com)
 -- 
 -- Create Date:    2019-11-13
 -- Module Name:    sbit_me0
@@ -217,11 +217,21 @@ begin
     begin
      each_oh:
      for oh in 0 to g_NUM_OF_OHs - 1 generate
-        each_vfat:
-        for I in 0 to 5 generate
-        vfat_sbits_strip_mapped(I + (oh*6)) <= vfat_sbits_arr(oh)(I);
-        end generate; 
-     end generate; 
+        
+	signal vfat_sbits_strip_mapped : sbits_array_t(24 -1 downto 0); 
+
+
+	begin
+	each_vfat:
+        for vfat in 0 to 23 generate
+
+		each_sbit:
+		for sbit in 0 to 63 generate
+        		vfat_sbits_strip_mapped(vfat)(sbit) <= vfat_sbits_arr(oh)(vfat)(sbit); --map onto self (t_vfat3_sbits_arr to sbits_array_t)
+
+        	end generate;
+	end generate; 
+    
       cluster_packer_inst : entity work.cluster_packer
         generic map (
           DEADTIME       => 0,
@@ -240,7 +250,8 @@ begin
           --clusters_ena_o => open,
           overflow_o => me0_overflow
           );   
-     end generate;
+      end generate;
+      end generate;
  --------------------------------------------------------------------------------
   -- Cluster mapping to ports
  --------------------------------------------------------------------------------
