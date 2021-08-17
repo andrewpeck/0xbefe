@@ -292,15 +292,6 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  process (clk_40)
-  begin
-    if (rising_edge(clk_40)) then
-      if (reset = '1') then
-        clusters_o <= (others => NULL_CLUSTER);
-      else
-        clusters_o <= clusters;
-      end if;
-    end if;
-  end process;
+  clusters_o <= clusters when reset='0' else (others => NULL_CLUSTER);
 
 end behavioral;
