@@ -1,8 +1,11 @@
 test:
-	TOPLEVEL_LANG=vhdl SIM=questa pytest
+	pytest -n 4
 
 clean:
 	rm -rf sim_build
 
+install:
+	pip install pytest pytest-xdist cocotb cocotb-test
+
 verbose:
-	TOPLEVEL_LANG=vhdl SIM=questa pytest -v -o log_cli=True
+	pytest -n 4 -v -o log_cli=True

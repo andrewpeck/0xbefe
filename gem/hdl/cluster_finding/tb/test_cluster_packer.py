@@ -156,6 +156,8 @@ def test_cluster_packer(station, oneshot, deadtime):
     else:
         parameters['NUM_PARTITIONS'] = 8
 
+    os.environ["SIM"] = "questa"
+
     run(
         verilog_sources=verilog_sources,
         vhdl_sources=vhdl_sources,

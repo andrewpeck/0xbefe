@@ -136,6 +136,8 @@ def test_find_clusters(station, num_found_clusters):
     else:
         parameters['NUM_VFATS'] = 24
 
+    os.environ["SIM"] = "questa"
+
     run(
         verilog_sources=verilog_sources,
         vhdl_sources=vhdl_sources,
