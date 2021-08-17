@@ -350,6 +350,7 @@ begin
 
     bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
+        REGSTAGES => 2,
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
         COMP_HIGH => 1 + MXPRTB-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
