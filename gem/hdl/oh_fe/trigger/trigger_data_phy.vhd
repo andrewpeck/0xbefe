@@ -298,12 +298,12 @@ begin
 
   begin
 
+    clusters <= clusters_i;
+
     cluster_loop : for I in 0 to 7 generate
       process (clocks.clk40)
       begin
         if (rising_edge(clocks.clk40)) then
-
-          clusters <= clusters_i;
 
           if (clusters(I).vpf = '1') then
             if (USE_NEW_FORMAT_WITH_OLD_OPTICS) then
@@ -339,6 +339,8 @@ begin
         bc0_i         => bc0_i,
         resync_i      => resync_i,
 
+        -- this reset must be aligned to the data
+        -- the phase of the data itself matters
         reset_i => reset_i,
 
         force_not_ready => '0',
