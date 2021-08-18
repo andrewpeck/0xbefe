@@ -111,8 +111,8 @@ begin
     signal elink_packets : t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
   begin
 
-    -- copy onto 40MHz clock, make sure it is stable... there might be a better (lower latency way to do this but at
-    -- least this is safe)
+    -- copy onto 40MHz clock, make sure it is stable... there might be a better
+    -- (lower latency way to do this but at least this is safe)
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
@@ -298,12 +298,12 @@ begin
 
   begin
 
+    clusters <= clusters_i;
+
     cluster_loop : for I in 0 to 7 generate
       process (clocks.clk40)
       begin
         if (rising_edge(clocks.clk40)) then
-
-          clusters <= clusters_i;
 
           if (clusters(I).vpf = '1') then
             if (USE_NEW_FORMAT_WITH_OLD_OPTICS) then
@@ -339,6 +339,8 @@ begin
         bc0_i         => bc0_i,
         resync_i      => resync_i,
 
+        -- this reset must be aligned to the data
+        -- the phase of the data itself matters
         reset_i => reset_i,
 
         force_not_ready => '0',

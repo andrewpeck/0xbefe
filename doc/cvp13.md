@@ -119,7 +119,7 @@ The QSFP transceivers are counted starting from the one closest to the PCIe conn
 
 QSFP transceivers are using a standard MTP12 interface (male on the transceiver side, female on the cable side). Each QSFP has 4 RX and 4 TX channels, where the RX are on fibers 1 to 4 and TX are going backwards from fiber 12 to 9, so matching TX/RX pairs are on fibers: 1&12, 2&11, 3&10, 4&9
 
-Mapping to ME0 OHs is the following:
+Mapping to GE2/1 OHs is the following:
 |          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
 |----------|-------|-------|-------|-------|
 | OH0 GBT0 | 1&12  |       |       |       |

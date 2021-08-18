@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 6.5 bx as of 2021/06/02
+-- latency = 4.0 bx as of 2021/08/17
 
 entity cluster_packer is
   generic (
@@ -44,6 +44,7 @@ architecture behavioral of cluster_packer is
 
   signal latch_pulse_s0 : std_logic;
   signal latch_pulse_s1 : std_logic;
+  signal latch_pulse_s2 : std_logic;
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -112,6 +113,7 @@ begin
   begin
     if (rising_edge(clk_fast)) then
       latch_pulse_s1 <= latch_pulse_s0;
+      latch_pulse_s2 <= latch_pulse_s1;
     end if;
   end process;
 
@@ -163,6 +165,7 @@ begin
       partitions_i(7) <= sbits_i(23) & sbits_i(15) & sbits_i(7);
     end generate;
   end generate;
+
   --------------------------------------------------------------------------------
   -- Oneshot
   --------------------------------------------------------------------------------
@@ -281,7 +284,7 @@ begin
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => latch_pulse_s1,
+      latch_i    => latch_pulse_s2,
       latch_o    => cluster_latch
       );
 
@@ -289,15 +292,6 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  process (clk_40)
-  begin
-    if (rising_edge(clk_40)) then
-      if (reset = '1') then
-        clusters_o <= (others => NULL_CLUSTER);
-      else
-        clusters_o <= clusters;
-      end if;
-    end if;
-  end process;
+  clusters_o <= clusters when reset='0' else (others => NULL_CLUSTER);
 
 end behavioral;

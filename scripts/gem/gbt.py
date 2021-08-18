@@ -15,6 +15,11 @@ ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
 
+NODE_IC_ADDR = None
+NODE_IC_WRITE_DATA = None
+NODE_IC_EXEC_WRITE = None
+NODE_IC_EXEC_READ = None
+
 ADDR_LINK_RESET = None
 
 V3B_GBT0_ELINK_TO_VFAT = {0: 15, 1: 14, 2: 13, 3: 12, 6: 7, 8: 23}
@@ -250,10 +255,6 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
     print("bye now..")
 
 def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowControlTransactions, numDaqPackets):
-    if isLpGbt:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
-    else:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
 
     # setup the TTC generator for a DAQ test
     write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -389,17 +390,25 @@ def getBestPhase(goodPhases):
     return bestPhase
 
 def downloadConfig(ohIdx, gbtIdx, filename):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    n_rw_reg = 0
+    if gem_station == 0:
+        n_rw_reg = (0x13C+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
     f = open(filename, 'r')
-
-    #for now we'll operate with 8 bit words only
-    write_reg(get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
-
     ret = []
-
     lines = 0
     addr = 0
+
     for line in f:
-        value = int(line, 16)
+        if gem_station == 0: # ME0
+            value = int(line.split()[1],16)
+            if addr in range(0x0f0, 0x105): # I2C Masters
+                value = 0x00
+        elif gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
+            value = int(line, 16)
         wReg(ADDR_IC_ADDR, addr)
         wReg(ADDR_IC_WRITE_DATA, value)
         wReg(ADDR_IC_EXEC_WRITE, 1)
@@ -409,11 +418,10 @@ def downloadConfig(ohIdx, gbtIdx, filename):
         ret.append(value)
 
     print("Wrote %d registers to OH%d GBT%d" % (lines, ohIdx, gbtIdx))
-    if lines < 366:
-        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain 366 registers")
+    if lines < n_rw_reg:
+        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain %d registers"%(lines, n_rw_reg))
 
     f.close()
-
     return ret
 
 def destroyConfig():
@@ -428,10 +436,21 @@ def initGbtRegAddrs():
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
+
+    global NODE_IC_ADDR
+    global NODE_IC_WRITE_DATA
+    global NODE_IC_EXEC_WRITE
+    global NODE_IC_EXEC_READ
+
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
+
+    NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
+    NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
+    NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
+    NODE_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ')
 
 def initVfatRegAddrs():
     global ADDR_LINK_RESET
@@ -444,10 +463,24 @@ def selectGbt(ohIdx, gbtIdx):
 
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
+    if station == 0:
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+    else:
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+
+    #for now we'll operate with 8 bit words only
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH'), 1)
+
     return 0
 
 def checkGbtReady(ohIdx, gbtIdx):
     return read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
+
+def writeGbtRegAddrs(reg, val):
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_WRITE_DATA, val)
+    write_reg(NODE_IC_EXEC_WRITE, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
 
 def signal_handler(sig, frame):
     print("Exiting..")

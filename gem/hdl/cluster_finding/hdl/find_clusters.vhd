@@ -28,7 +28,6 @@ entity find_clusters is
 end find_clusters;
 
 architecture behavioral of find_clusters is
-  signal clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
   function if_then_else (bool : boolean; a : integer; b : integer) return integer is
   begin
@@ -133,7 +132,6 @@ architecture behavioral of find_clusters is
 
   signal clusters_s1  : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0) := (others => NULL_CLUSTER);
   signal latch_out_s1 : std_logic_vector (NUM_ENCODERS-1 downto 0)           := (others => '0');
-  signal latch        : std_logic;
 
 begin
 
@@ -311,12 +309,7 @@ begin
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
     begin
-      process (clock) is
-      begin
-        if (rising_edge(clock)) then
-          data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
-        end if;
-      end process;
+      data_i (hi downto lo) <= clusters_s1(I).cnt & clusters_s1(I).adr & clusters_s1(I).vpf & clusters_s1(I).prt;
     end generate;
 
     unwrap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
@@ -334,22 +327,16 @@ begin
       constant cnt_hi : integer := lo+1+MXPRTB+MXADRB+MXCNTB-1;
     begin
 
-      process (clock) is
-      begin
-        if (rising_edge(clock)) then
-          if (latch = '1') then
-            clusters(I).cnt <= data_o (cnt_hi downto cnt_lo);
-            clusters(I).adr <= data_o (adr_hi downto adr_lo);
-            clusters(I).prt <= data_o (prt_hi downto prt_lo);
-            clusters(I).vpf <= data_o (vpf_lo);
-          end if;
-        end if;
-      end process;
+      clusters_o(I).cnt <= data_o (cnt_hi downto cnt_lo);
+      clusters_o(I).adr <= data_o (adr_hi downto adr_lo);
+      clusters_o(I).prt <= data_o (prt_hi downto prt_lo);
+      clusters_o(I).vpf <= data_o (vpf_lo);
 
     end generate;
 
     bitonic_sort_inst : entity work.Bitonic_Sorter
       generic map (
+        REGSTAGES => 2,
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
         COMP_HIGH => 1 + MXPRTB-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
@@ -367,11 +354,8 @@ begin
         O_SORT    => open,
         O_UP      => open,
         I_INFO(0) => latch_out_s1(0),
-        O_INFO(0) => latch
+        O_INFO(0) => latch_o
         );
-
-    latch_o    <= latch;
-    clusters_o <= clusters;
 
   end generate;
 

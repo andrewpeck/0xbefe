@@ -127,8 +127,8 @@ def test_cluster_packer(station, oneshot, deadtime):
         os.path.join(rtl_dir, f"sbit_oneshot.vhd"),
         os.path.join(rtl_dir, f"../../oh_fe/utils/clock_strobe.vhd"),
         os.path.join(rtl_dir, f"truncate_lsb.vhd"),
-        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
+        os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd"),
         os.path.join(rtl_dir, f"top_cluster_packer.vhd")
@@ -146,15 +146,17 @@ def test_cluster_packer(station, oneshot, deadtime):
     parameters['DEADTIME'] = deadtime
     parameters['ONESHOT'] = oneshot
 
-    if (station==2):
+    if station == 2:
         parameters['NUM_VFATS'] = 12
     else:
         parameters['NUM_VFATS'] = 24
 
-    if (station==2):
-        parameters['NUM_PARTITIONS'] = 4
+    if station == 2:
+        parameters['NUM_PARTITIONS'] = 2
     else:
         parameters['NUM_PARTITIONS'] = 8
+
+    os.environ["SIM"] = "questa"
 
     run(
         verilog_sources=verilog_sources,
@@ -165,10 +167,12 @@ def test_cluster_packer(station, oneshot, deadtime):
         parameters=parameters,
         # sim_args = ["do cluster_packer_wave.do"],
         # extra_env = {"SIM": "questa"},
-        gui=1
+        gui=0
     )
+
 
 #RUN=vsim -batch -do "set NumericStdNoWarnings 1; run 500000; quit -f"
 
+
 if __name__ == "__main__":
-    test_cluster_packer(1,True,12)
+    test_cluster_packer(2,True,12)
