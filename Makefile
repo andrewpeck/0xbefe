@@ -1,3 +1,5 @@
+SHELL = /bin/bash
+
 .PHONY = all clean
 
 ifdef version
@@ -22,8 +24,68 @@ else
 TIMECMD = time -p
 endif
 
+PROJECT_LIST = $(patsubst %/,%,$(patsubst Top/%,%,$(dir $(dir $(shell find Top/ -name hog.conf)))))
+CREATE_LIST = $(addprefix create_,$(PROJECT_LIST))
+IMPL_LIST = $(addprefix impl_,$(PROJECT_LIST))
+OPEN_LIST = $(addprefix open_,$(PROJECT_LIST))
+UPDATE_LIST = $(addprefix update_,$(PROJECT_LIST))
+
 list:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+$(CREATE_LIST):
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@echo Creating Project $(patsubst create_%,%,$@)                                       $(COLORIZE)
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
+
+$(IMPL_LIST):
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@echo Launching Hog Workflow $(patsubst impl_%,%,$@) with njobs = $(NJOBS)             $(COLORIZE)
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@time Hog/LaunchWorkflow.sh $(patsubst impl_%,%,$@) -njobs $(NJOBS)                    $(COLORIZE)
+
+$(UPDATE_LIST): config
+
+	@{ \
+		set -e; \
+			\
+		`# OPTOHYBRID ` ; \
+		if [[ $@ == *"oh_"* ]]; then \
+			if [[ $@ == *"ge21"* ]] ; then \
+				system="ge21" ; \
+			elif [[ $@ == *"ge11"* ]] ; then \
+				system="ge11" ; \
+			else \
+				system="unknown" ; \
+			fi ; \
+			\
+			mkdir -p address_table/gem/generated/oh_$$system/; \
+			cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_$$system/optohybrid_registers.xml; \
+			python scripts/boards/optohybrid/update_xml.py -s $$system -x address_table/gem/generated/oh_$$system/optohybrid_registers.xml; \
+			cd regtools && python generate_registers.py -p generated/oh_$$system/ oh; \
+			\
+		`# BACKEND ` ; \
+			\
+		else \
+			`# GEM ` ; \
+			if [[ $@ == *"me0"* ]] || [[ $@ == *"ge21"* ]] || [[ $@ == *"ge11"* ]] ; then \
+				system="gem_amc"; \
+			`# CSC ` ; \
+			elif [[ $@ == *"csc"* ]]; then \
+				system="csc_fed"; \
+			`# unknown` ; \
+			else \
+				system="unknown"; \
+			fi ; \
+			\
+			cd address_table/gem && python generate_xml.py && cd - ;\
+			cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$system && cd - ;\
+		fi ; \
+	}
+
+$(OPEN_LIST):
+	vivado Projects/$(patsubst open_%,%,$@)/$(patsubst open_%,%,$@).xpr &
 
 init:
 	git submodule update --init --recursive
@@ -41,8 +103,6 @@ clean_ip:
 clean_projects: clean_bd clean_ip
 	rm -rf Projects/
 
-all:  update create synth impl
-
 config: gitconfig
 
 gitconfig:
@@ -52,87 +112,21 @@ gitconfig:
 # Update from XML
 ################################################################################
 
-#### CVP13 ####
-update_ge11_cvp13: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge11_cvp13/ gem_amc
-
-update_ge21_cvp13: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge21_cvp13/ gem_amc
-
-update_me0_cvp13: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/me0_cvp13/ gem_amc
-
-update_csc_cvp13: config
-	@cd address_table/csc && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/csc_cvp13/ csc_fed
-
-update_cvp13_all: update_ge11_cvp13 update_ge21_cvp13 update_me0_cvp13 update_csc_cvp13
-
-#### CTP7 ####
-update_ge11_ctp7: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge11_ctp7/ gem_amc
-
-update_ge21_ctp7: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge21_ctp7/ gem_amc
-
-update_me0_ctp7: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/me0_ctp7/ gem_amc
-
-update_csc_ctp7: config
-	@cd address_table/csc && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/csc_ctp7/ csc_fed
-
+update_cvp13: update_ge21_cvp13 update_me0_cvp13 update_csc_cvp13
 update_ctp7: update_ge11_ctp7 update_ge21_ctp7 update_me0_ctp7 update_csc_ctp7
+update_apex: update_ge21_apex update_me0_apex update_csc_apex
 
-#### APEX ####
-update_ge11_apex: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge11_apex/ gem_amc
-
-update_ge21_apex: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/ge21_apex/ gem_amc
-
-update_me0_apex: config
-	@cd address_table/gem && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/me0_apex/ gem_amc
-
-update_csc_apex: config
-	@cd address_table/csc && python generate_xml.py
-	@cd regtools && python generate_registers.py -p generated/csc_apex/ csc_fed
-
-update_apex: update_ge11_apex update_ge21_apex update_me0_apex update_csc_apex
-
-#### Optohybrid ####
-
-update_oh_base:
-	@cd regtools && python generate_registers.py oh && cd -
-
-update_oh_ge21:
-	@mkdir -p address_table/gem/generated/oh_ge21/
-	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge21/optohybrid_registers.xml
-	@python scripts/boards/optohybrid/update_xml.py -s ge21 -x address_table/gem/generated/oh_ge21/optohybrid_registers.xml
-	@cd regtools && python generate_registers.py -p generated/oh_ge21/ oh
-
-update_oh_ge11:
-	@mkdir -p address_table/gem/generated/oh_ge11/
-	@cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_ge11/optohybrid_registers.xml
-	@python scripts/boards/optohybrid/update_xml.py -s ge11 -l long -x address_table/gem/generated/oh_ge11/optohybrid_registers.xml
-	@cd regtools && python generate_registers.py -p generated/oh_ge11/ oh
-
-#### shortcuts ####
 update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
 update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex
 update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex
 update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex
 
 update: update_ge11 update_ge21 update_me0 update_csc
+
+update_oh_base:
+	@cd regtools && python generate_registers.py oh && cd -
+
+update_oh: update_oh_base update_oh_ge21.200 update_oh_ge21.75 update_oh_ge11
 
 ################################################################################
 # Create
@@ -162,20 +156,5 @@ ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex
 me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex
 csc: impl_csc_cvp13 impl_csc_apex
 
-all: ge11 ge21 me0 csc
-
-################################################################################
-# Generics
-################################################################################
-
-create_%: #update_%
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@echo Creating Project $(patsubst create_%,%,$@)                                       $(COLORIZE)
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
-
-impl_%: #create_% synth_%
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@echo Launching Hog Workflow $(patsubst impl_%,%,$@) with njobs = $(NJOBS)             $(COLORIZE)
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchWorkflow.sh $(patsubst impl_%,%,$@) -njobs $(NJOBS)                    $(COLORIZE)
+all:  update create synth impl
+#all: ge11 ge21 me0 csc
