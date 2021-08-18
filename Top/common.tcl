@@ -2,7 +2,6 @@ proc update_project_makefile {name} {
 
     upvar env env
 
-    set DESIGN    "[file rootname [file tail [info script]]]"
     set PATH_REPO "[file normalize [file dirname [info script]]]/../../"
 
     if { [string first PlanAhead [version]] != 0 } {
