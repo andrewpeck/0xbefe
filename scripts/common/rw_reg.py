@@ -180,9 +180,9 @@ class RegVal(int):
                         val = "%d%s" % (self, self.reg.sw_units)
                 else:
                     if hex:
-                        val += " (%.4f%s)" % (val_pretty, self.reg.sw_units)
+                        val += " (%.3f%s)" % (val_pretty, self.reg.sw_units)
                     else:
-                        val = "%.4f%s" % (val_pretty, self.reg.sw_units)
+                        val = "%.3f%s" % (val_pretty, self.reg.sw_units)
         elif not hex:
             val = "%d" % self
 
