@@ -1596,6 +1596,7 @@ begin
                         daq_event_write_en <= '1';
                         spy_fifo_wr_en <= '0';                        
                         
+                        daq_state <= SR_TRAILER_2;
 
                     ----==== send the second half of the SlinkRocket trailer ====----
                     elsif (daq_state = SR_TRAILER_2) then
