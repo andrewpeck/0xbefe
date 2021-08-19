@@ -97,7 +97,7 @@ architecture sbit_me0_arch of sbit_me0 is
     end;
     
     
-    signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal me0_clusters      : sbit_cluster_array_t (7 downto 0);
     signal me0_cluster_count : std_logic_vector(10 downto 0);
     signal me0_overflow      : std_logic;
         
