@@ -63,7 +63,7 @@ def main():
     if (use_csc_ttc_enc_str == "yes") or (use_csc_ttc_enc_str == "y"):
         useCscTtcEncoding = True
 
-    use_local_l1a = 0
+    use_local_l1a = 1
     use_local_l1a_str = input("Should we use local L1A generation based on DAQ data (use when TCDS is not available)? (default = yes)")
     if (use_local_l1a_str == "no") or (use_local_l1a_str == "n"):
         useLocalL1a = 0
@@ -90,7 +90,7 @@ def daq_start(filename, input_enable_mask, ignore_amc13, readout_locally, wait_f
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.DAQ_ENABLE'), 0x0)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.L1A_REQUEST_EN'), use_local_l1a)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK'), input_enable_mask)
-    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_AMC13'), ignore_amc13)
+    write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.IGNORE_DAQLINK'), ignore_amc13)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.FREEZE_ON_ERROR'), freeze_on_error)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.RESET_TILL_RESYNC'), wait_for_resync)
     write_reg(get_node('BEFE.CSC_FED.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS'), 0x1)
