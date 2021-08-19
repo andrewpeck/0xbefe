@@ -30,8 +30,28 @@ from prompt_toolkit.widgets import (
     TextArea,
 )
 
-from common.rw_reg import *
-import common.fw_utils as befe
+import sys
+import asyncio
+
+from utils import *
+
+# remote
+if len(sys.argv) > 1:
+    hostname = sys.argv[1]
+    heading("Connecting to %s" % hostname)
+    import rpyc
+    conn = rpyc.classic.connect(hostname)
+    rw = conn.modules["common.rw_reg"]
+    befe = conn.modules["common.fw_utils"]
+
+# local
+else:
+    heading("Running locally")
+    import common.rw_reg as rw
+    import common.fw_utils as befe
+
+
+SLEEP_BETWEEN_UPDATES = 0.001 # time to sleep between each item update to give time for the UI to do other things so it doesn't feel so sluggish
 
 class TopScreen:
 
@@ -68,9 +88,9 @@ class TopScreen:
     def screen_sel(self, event=None):
         self.app.screen_sel(self.screen_idx)
 
-    def update(self):
+    async def update(self):
         for sec in self.sections:
-            sec.update()
+            await sec.update()
 
     # should return a float to show, and also an element to focus
     def action(self):
@@ -93,6 +113,7 @@ class BefeTopApp(Application):
     screen_idx = 0
     screen_sel_buttons = []
     floats = []
+    update_task = None
 
     lbl_screen = None
     top_layout = None
@@ -184,8 +205,12 @@ class BefeTopApp(Application):
             }
         )
 
-    def update_contents(self, app):
-        self.top_screens[self.screen_idx].update()
+    def do_refresh(self, app):
+        if self.update_task is None or self.update_task.done():
+            self.update_task = self.create_background_task(self.update_contents())
+
+    async def update_contents(self):
+        await self.top_screens[self.screen_idx].update()
 
     def __init__(self, top_screens):
         self.top_screens = top_screens
@@ -198,8 +223,9 @@ class BefeTopApp(Application):
                         style=self.top_style,
                         mouse_support=True,
                         full_screen=True,
-                        # on_invalidate=self.update_contents,
-                        before_render=self.update_contents
+                        refresh_interval=1,
+                        # before_render=self.do_refresh
+                        after_render=self.do_refresh
                     )
 
 class TopStatusItemBase:
@@ -229,7 +255,7 @@ class TopStatusItem(TopStatusItemBase):
         self.read_callback_params = read_callback_params
 
         def my_get_node(reg_name, idx):
-            node = get_node(reg_name)
+            node = rw.get_node(reg_name)
             if reg_val_bad is not None:
                 node.sw_val_bad = reg_val_bad[idx] if isinstance(reg_val_bad, list) else reg_val_bad
             if reg_val_good is not None:
@@ -271,7 +297,7 @@ class TopStatusItem(TopStatusItemBase):
             else:
                 self.value_label.text = ANSI(val)
         elif self.value_format_str is None:
-            val = read_reg(self.regs[0], verbose=False)
+            val = rw.read_reg(self.regs[0], verbose=False)
             if self.is_progress_bar:
                 self.value_label._percentage = (val / self.progress_bar_range) * 100
                 self.value_label.label.text = "%d" % val
@@ -280,7 +306,7 @@ class TopStatusItem(TopStatusItemBase):
         else:
             vals = []
             for reg in self.regs:
-                vals.append(read_reg(reg, verbose=False))
+                vals.append(rw.read_reg(reg, verbose=False))
             val_str = self.value_format_str % tuple(vals)
             self.value_label.text = ANSI(val_str)
 
@@ -319,6 +345,8 @@ class TopSection:
         title_labels = []
         value_labels = []
         for item in items:
+            if item.name in self.items:
+                item.name += "_1"
             self.items[item.name] = item
             title_labels.append(item.title_label)
             value_labels.append(item.value_label)
@@ -334,9 +362,10 @@ class TopSection:
                                         cont
                                     ])
 
-    def update(self):
+    async def update(self):
         for item in self.items.values():
             item.update()
+            await asyncio.sleep(SLEEP_BETWEEN_UPDATES) #give some time for the UI to do other things between the updates of each item
 
 class TopTableSection:
     title = None
@@ -374,10 +403,11 @@ class TopTableSection:
         cont = VSplit(col_conts, height=height, width=D(), padding=3, padding_char=" ")
         self.container = Frame(title=self.title, body=cont)
 
-    def update(self):
+    async def update(self):
         for row in self.row_items:
             for item in row:
                 item.update()
+                await asyncio.sleep(SLEEP_BETWEEN_UPDATES) #give some time for the UI to do other things between the updates of each item
 
 class TopScreenMain(TopScreen):
 
@@ -433,7 +463,7 @@ class TopScreenMain(TopScreen):
 class TopScreenDaq(TopScreen):
 
     dmb_oh = None
-    state = color_string("Initial", RegVal.STATE_BAD)
+    state = color_string("Initial", rw.RegVal.STATE_BAD)
 
     def __init__(self, gem_csc, shortcut, shortcut_label):
         super().__init__(gem_csc, None, "DAQ", shortcut, shortcut_label)
@@ -526,9 +556,9 @@ class TopScreenDaq(TopScreen):
         # input section
         num_inputs = 0
         if self.is_csc:
-            num_inputs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS", verbose=False)
+            num_inputs = rw.read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS", verbose=False)
         elif self.is_gem:
-            num_inputs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH", verbose=False)
+            num_inputs = rw.read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH", verbose=False)
         else:
             raise ValueError("It's not GEM nor CSC hmm")
 
@@ -592,52 +622,52 @@ class TopScreenDaq(TopScreen):
             self.app.remove_floats()
 
         def btn_config_handler():
-            write_reg('BEFE.%s.TTC.CTRL.MODULE_RESET' % self.gem_csc, 0x1)
-            write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x0)
-            write_reg('BEFE.%s.TEST.GBE_TEST.ENABLE' % self.gem_csc, 0x0)
-            write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.TTC.CTRL.MODULE_RESET' % self.gem_csc, 0x1)
+            rw.write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.TEST.GBE_TEST.ENABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x0)
 
             if use_tcds.get_value():
-                write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 1)
-                write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 0)
+                rw.write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 1)
+                rw.write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 0)
                 if self.is_csc:
-                    write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 0)
+                    rw.write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 0)
             else:
-                write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 0)
-                write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 1)
+                rw.write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 0)
+                rw.write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 1)
                 if self.is_csc:
-                    write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 1)
+                    rw.write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 1)
 
-            write_reg('BEFE.SYSTEM.CTRL.BOARD_ID', board_id.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.INPUT_ENABLE_MASK' % self.gem_csc, input_mask.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.IGNORE_DAQLINK' % self.gem_csc, ignore_daqlink.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.FREEZE_ON_ERROR' % self.gem_csc, freeze_on_error.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.RESET_TILL_RESYNC' % self.gem_csc, wait_for_resync.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS' % self.gem_csc, ldaq_skip_empty.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_PRESCALE' % self.gem_csc, ldaq_prescale.get_int_value())
-            write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x1)
-            write_reg('BEFE.%s.DAQ.LAST_EVENT_FIFO.DISABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.SYSTEM.CTRL.BOARD_ID', board_id.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.INPUT_ENABLE_MASK' % self.gem_csc, input_mask.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.IGNORE_DAQLINK' % self.gem_csc, ignore_daqlink.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.FREEZE_ON_ERROR' % self.gem_csc, freeze_on_error.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET_TILL_RESYNC' % self.gem_csc, wait_for_resync.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS' % self.gem_csc, ldaq_skip_empty.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_PRESCALE' % self.gem_csc, ldaq_prescale.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x1)
+            rw.write_reg('BEFE.%s.DAQ.LAST_EVENT_FIFO.DISABLE' % self.gem_csc, 0x0)
 
-            self.state = color_string("Configured", RegVal.STATE_WARN)
+            self.state = color_string("Configured", rw.RegVal.STATE_WARN)
             self.app.remove_floats()
 
         def btn_start_handler():
             if "Configured" not in self.state:
                 btn_config_handler()
 
-            write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x1)
-            write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x1)
-            write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x1)
-            write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x1)
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x1)
+            rw.write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x1)
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x0)
 
-            self.state = color_string("Running", RegVal.STATE_GOOD)
+            self.state = color_string("Running", rw.RegVal.STATE_GOOD)
             self.app.remove_floats()
 
         def btn_stop_handler():
-            write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x0)
-            write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x0)
+            rw.write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x0)
 
-            self.state = color_string("Configured", RegVal.STATE_WARN)
+            self.state = color_string("Configured", rw.RegVal.STATE_WARN)
             self.app.remove_floats()
 
         btn_cancel = Button(text="Cancel", handler=btn_cancel_handler)
@@ -654,91 +684,91 @@ class TopScreenDaq(TopScreen):
         return Float(content=dialog), btn_cancel
 
     # def action_configure(self):
-    #     self.state = color_string("Configured", RegVal.STATE_WARN)
+    #     self.state = color_string("Configured", rw.RegVal.STATE_WARN)
     #
     # def action_start(self):
     #     if "Configured" not in self.state:
     #         action_configure()
-    #     self.state = color_string("Running", RegVal.STATE_GOOD)
+    #     self.state = color_string("Running", rw.RegVal.STATE_GOOD)
     #
     # def action_stop(self):
-    #     self.state = color_string("Configured", RegVal.STATE_WARN)
+    #     self.state = color_string("Configured", rw.RegVal.STATE_WARN)
 
     def get_state(self):
         return self.state
 
     def get_ldaq_state(self):
-        big_evt = read_reg("BEFE.%s.DAQ.STATUS.SPY.ERR_BIG_EVENT" % self.gem_csc, verbose=False)
-        eoe_not_found = read_reg("BEFE.%s.DAQ.STATUS.SPY.ERR_EOE_NOT_FOUND" % self.gem_csc, verbose=False)
+        big_evt = rw.read_reg("BEFE.%s.DAQ.STATUS.SPY.ERR_BIG_EVENT" % self.gem_csc, verbose=False)
+        eoe_not_found = rw.read_reg("BEFE.%s.DAQ.STATUS.SPY.ERR_EOE_NOT_FOUND" % self.gem_csc, verbose=False)
         if 0xdeaddead in [big_evt, eoe_not_found]:
-            return color_string("BUS_ERROR", RegVal.STATE_BAD)
+            return color_string("BUS_ERROR", rw.RegVal.STATE_BAD)
 
         status = ""
         if big_evt == 1:
-            status += color_string("EVENT_TOO_BIG", RegVal.STATE_BAD) + " "
+            status += color_string("EVENT_TOO_BIG", rw.RegVal.STATE_BAD) + " "
         if eoe_not_found == 1:
-            status += color_string("EOE_NOT_FOUND", RegVal.STATE_BAD) + " "
+            status += color_string("EOE_NOT_FOUND", rw.RegVal.STATE_BAD) + " "
         if len(status) == 0:
-            status = color_string("NORMAL", RegVal.STATE_GOOD)
+            status = color_string("NORMAL", rw.RegVal.STATE_GOOD)
         return status
 
     def get_l1a_fifo_state(self):
-        data_cnt = read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_DATA_CNT" % self.gem_csc, verbose=False)
-        unf = read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_UNDERFLOW" % self.gem_csc, verbose=False)
-        full = read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_FULL" % self.gem_csc, verbose=False)
-        afull = read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_NEAR_FULL" % self.gem_csc, verbose=False)
-        empty = read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_EMPTY" % self.gem_csc, verbose=False)
+        data_cnt = rw.read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_DATA_CNT" % self.gem_csc, verbose=False)
+        unf = rw.read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_UNDERFLOW" % self.gem_csc, verbose=False)
+        full = rw.read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_FULL" % self.gem_csc, verbose=False)
+        afull = rw.read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_NEAR_FULL" % self.gem_csc, verbose=False)
+        empty = rw.read_reg("BEFE.%s.DAQ.STATUS.L1A_FIFO_IS_EMPTY" % self.gem_csc, verbose=False)
 
         if 0xdeaddead in [data_cnt, unf, full, afull, empty]:
-            return color_string("BUS_ERROR", RegVal.STATE_BAD)
+            return color_string("BUS_ERROR", rw.RegVal.STATE_BAD)
 
         if unf == 1:
-            return color_string("%d UNDERFLOW" % data_cnt, RegVal.STATE_BAD)
+            return color_string("%d UNDERFLOW" % data_cnt, rw.RegVal.STATE_BAD)
         elif full == 1:
-            return color_string("%d FULL" % data_cnt, RegVal.STATE_BAD)
+            return color_string("%d FULL" % data_cnt, rw.RegVal.STATE_BAD)
         elif afull == 1:
-            return color_string("%d NEAR FULL" % data_cnt, RegVal.STATE_WARN)
+            return color_string("%d NEAR FULL" % data_cnt, rw.RegVal.STATE_WARN)
         elif empty == 1:
-            return color_string("%d EMPTY" % data_cnt, RegVal.STATE_GOOD)
+            return color_string("%d EMPTY" % data_cnt, rw.RegVal.STATE_GOOD)
         else:
-            return color_string("%d" % data_cnt, RegVal.STATE_GOOD)
+            return color_string("%d" % data_cnt, rw.RegVal.STATE_GOOD)
 
     def get_input_status(self, params):
         idx = params["idx"]
 
-        in_mask = read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK', verbose=False)
-        in_ovf = read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        in_unf = read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_UFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        evt_ovf = read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        evt_size_err = read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        evt_64b_err = read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        in_mask = rw.read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK', verbose=False)
+        in_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        in_unf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_UFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        evt_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        evt_size_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        evt_64b_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
 
         if 0xdeaddead in [in_mask, in_ovf, in_unf, evt_ovf, evt_size_err, evt_64b_err]:
-            return color_string("BUS_ERROR", RegVal.STATE_BAD)
+            return color_string("BUS_ERROR", rw.RegVal.STATE_BAD)
 
         if (in_mask >> idx) & 1 == 0:
             return "DISABLED"
 
         status = ""
         if in_ovf == 1:
-            status += color_string("IN_OVF ", RegVal.STATE_BAD)
+            status += color_string("IN_OVF ", rw.RegVal.STATE_BAD)
         if in_unf == 1:
-            status += color_string("IN_UNF ", RegVal.STATE_BAD)
+            status += color_string("IN_UNF ", rw.RegVal.STATE_BAD)
         if evt_ovf == 1:
-            status += color_string("EVT_OVF ", RegVal.STATE_BAD)
+            status += color_string("EVT_OVF ", rw.RegVal.STATE_BAD)
         if evt_size_err == 1:
-            status += color_string("SIZE_ERR ", RegVal.STATE_BAD)
+            status += color_string("SIZE_ERR ", rw.RegVal.STATE_BAD)
         if evt_64b_err == 1:
-            status += color_string("64BIT_ERR ", RegVal.STATE_BAD)
+            status += color_string("64BIT_ERR ", rw.RegVal.STATE_BAD)
 
         if len(status) == 0:
-            status = color_string("OK", RegVal.STATE_GOOD)
+            status = color_string("OK", rw.RegVal.STATE_GOOD)
 
         return status
 
 if __name__ == "__main__":
-    parse_xml()
-    fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
+    rw.parse_xml()
+    fw_flavor = rw.read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     if fw_flavor == 0xdeaddead:
         exit()
 

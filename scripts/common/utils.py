@@ -35,9 +35,9 @@ try:
     imp.find_module('befe_config')
     import befe_config as befe_config
 except ImportError:
-    print_red("befe_config.py not found")
-    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
-    print_red("In most cases the example config without modifications will work as a starting point")
+    print(Colors.RED + "befe_config.py not found" + Colors.ENDC)
+    print(Colors.RED + "Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup" + Colors.ENDC)
+    print(Colors.RED + "In most cases the example config without modifications will work as a starting point" + Colors.ENDC)
     exit(1)
 
 
