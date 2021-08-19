@@ -7,7 +7,7 @@ package cluster_pkg is
 
   constant NUM_ENCODERS        : integer := 4;
   constant NUM_CYCLES          : integer := 4;                          -- number of clocks (4 for 160MHz, 5 for 200MHz)
-  constant NUM_FOUND_CLUSTERS  : integer := 8; --fixed for 3.2GB/s link      --NUM_ENCODERS * NUM_CYCLES;  -- 16
+  constant NUM_FOUND_CLUSTERS  : integer := NUM_ENCODERS * NUM_CYCLES;  -- 16
   constant NUM_OUTPUT_CLUSTERS : integer := 10;
 
   -- FIXME: these numbers are different for ge21 and ge11 and me0
