@@ -54,16 +54,19 @@ $(UPDATE_LIST): config
 		if [[ $@ == *"oh_"* ]]; then \
 			if [[ $@ == *"ge21"* ]] ; then \
 				system="ge21" ; \
+				type="" ; \
 			elif [[ $@ == *"ge11"* ]] ; then \
 				system="ge11" ; \
+				type="-l long" ; \
 			else \
 				system="unknown" ; \
+				type="" ; \
 			fi ; \
 			\
-			mkdir -p address_table/gem/generated/oh_$$system/; \
-			cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_$$system/optohybrid_registers.xml; \
-			python scripts/boards/optohybrid/update_xml.py -s $$system -x address_table/gem/generated/oh_$$system/optohybrid_registers.xml; \
-			cd regtools && python generate_registers.py -p generated/oh_$$system/ oh; \
+			mkdir -p address_table/gem/generated/oh_$$system/ && \
+			cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_$$system/optohybrid_registers.xml && \
+			python scripts/boards/optohybrid/update_xml.py -s $$system $$type -x address_table/gem/generated/oh_$$system/optohybrid_registers.xml && \
+			cd regtools && python generate_registers.py -p generated/oh_$$system/ oh \
 			\
 		`# BACKEND ` ; \
 			\
