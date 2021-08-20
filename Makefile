@@ -73,17 +73,19 @@ $(UPDATE_LIST): config
 		else \
 			`# GEM ` ; \
 			if [[ $@ == *"me0"* ]] || [[ $@ == *"ge21"* ]] || [[ $@ == *"ge11"* ]] ; then \
-				system="gem_amc"; \
+				system="gem"; \
+				module="gem_amc"; \
 			`# CSC ` ; \
 			elif [[ $@ == *"csc"* ]]; then \
-				system="csc_fed"; \
+				system="csc"; \
+				module="csc_fed"; \
 			`# unknown` ; \
 			else \
 				system="unknown"; \
 			fi ; \
 			\
-			cd address_table/gem && python generate_xml.py && cd - ;\
-			cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$system && cd - ;\
+			cd address_table/$$system && python generate_xml.py ; cd - ;\
+			cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$module ; cd - ;\
 		fi ; \
 	}
 
