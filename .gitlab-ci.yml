@@ -1,7 +1,7 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: 'fbd5b46'
+      ref: '4b63155'
     - local: '/Top/ge21_cvp13/gitlab-ci.yml'
     - local: '/Top/me0_cvp13/gitlab-ci.yml'
     - local: '/Top/ge21_apex/gitlab-ci.yml'
