@@ -63,7 +63,7 @@ architecture sbit_me0_arch of sbit_me0 is
 
     -- trigger signals
     signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking
-    signal vfat_trigger_arr     : t_std6_array(g_NUM_OF_OHs - 1 downto 0); -- trigger per vfat (or of all unmasked sbits)
+    signal vfat_trigger_arr     : t_std24_array(g_NUM_OF_OHs - 1 downto 0); -- trigger per vfat (or of all unmasked sbits)
 
     signal vfat_sbits_strip_mapped : sbits_array_t(24 -1 downto 0);
 
@@ -148,7 +148,7 @@ begin
 
     g_oh_counters: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
-        g_vfat_counters: for vfat in 0 to 5 generate
+        g_vfat_counters: for vfat in 0 to 23 generate
 
             i_vfat_trigger_cnt : entity work.counter
                 generic map(
@@ -216,34 +216,35 @@ begin
         each_oh:
  for oh in 0 to g_NUM_OF_OHs - 1 generate
 
-            signal vfat_sbits_strip_mapped : sbits_array_t(24 -1 downto 0);
+            signal vfat_sbits_type_change : sbits_array_t(24 -1 downto 0);
 
 
         begin
             each_vfat: for vfat in 0 to 23 generate
 
                 each_sbit: for sbit in 0 to 63 generate
-                    vfat_sbits_strip_mapped(vfat)(sbit) <= vfat_sbits_arr(oh)(vfat)(sbit); --map onto self (t_vfat3_sbits_arr to sbits_array_t)
+                    vfat_sbits_type_change(vfat)(sbit) <= vfat_sbits_arr(oh)(vfat)(sbit); --map onto self (t_vfat3_sbits_arr to sbits_array_t)
 
                 end generate;
             end generate;
 
             cluster_packer_inst : entity work.cluster_packer
                 generic map (
-                    DEADTIME       => 0,
-                    ONESHOT        => false,
-                    NUM_VFATS      => 24,
+                    DEADTIME => 0,
+                    ONESHOT => false,
+                    SPLIT_CLUSTERS => 0,
+                    INVERT_PARTITIONS => false,
+                    NUM_VFATS => 24,
                     NUM_PARTITIONS => 8,
-                    STATION        => 0
+                    STATION => 0
                 )
                 port map (
                     reset => reset_i,
                     clk_40 => ttc_clk_i.clk_40,
                     clk_fast => ttc_clk_i.clk_160,
-                    sbits_i => vfat_sbits_strip_mapped,
+                    sbits_i => vfat_sbits_type_change,
                     cluster_count_o => me0_cluster_count,
                     clusters_o => me0_clusters,
-                    --clusters_ena_o => open,
                     overflow_o => me0_overflow
                 );
         end generate;
