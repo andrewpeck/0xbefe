@@ -200,6 +200,7 @@ def main(system, boss):
     powerdown_adc()
     
     # Writing lpGBT configuration to text file
+    resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
     except FileExistsError: # skip if directory already exists

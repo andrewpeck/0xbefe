@@ -30,7 +30,7 @@ def check_fec_errors(gem, system, boss, path, opr, ohid, gbtid, runtime, vfat_li
     file_out.write("Checking FEC Errors for: \n" + path)
     fec_errors = 0
 
-    if opr in ["start", "run"]:
+    if system != "chc" and opr in ["start", "run"]:
         gem_utils.gem_link_reset()
     sleep(0.1)
 

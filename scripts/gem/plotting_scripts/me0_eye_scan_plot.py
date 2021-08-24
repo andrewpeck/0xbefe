@@ -73,9 +73,12 @@ if __name__ == "__main__":
             center = int((left+right)/2)
             eye_center.append(center)
         eye_center_avg = 0
+        n_center = 0
         for center in eye_center:
-            eye_center_avg += center
-        eye_center_avg = int(eye_center_avg/len(eye_center))
+            if center != -9999:
+                eye_center_avg += center
+                n_center += 1
+        eye_center_avg = int(eye_center_avg/n_center)
         if eye_center_avg>=len(y):
             eye_center_avg = eye_center_avg - len(y)
         shift = eye_center_avg - int(size/2)
