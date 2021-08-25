@@ -136,7 +136,7 @@ begin
     begin
         if rising_edge(ttc_clk_i.clk_40) then
             for oh in 0 to g_NUM_OF_OHs - 1 loop
-                for vfat in 0 to 5 loop
+                for vfat in 0 to 23 loop
                     vfat_sbits_arr(oh)(vfat) <= vfat3_sbits_arr_i(oh)(vfat) and not vfat_sbit_mask_arr(oh)(vfat);
                     vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
                 end loop;
@@ -148,7 +148,7 @@ begin
 
     g_oh_counters: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
-        g_vfat_counters: for vfat in 0 to 23 generate
+        g_vfat_counters: for vfat in 0 to 5 generate
 
             i_vfat_trigger_cnt : entity work.counter
                 generic map(
