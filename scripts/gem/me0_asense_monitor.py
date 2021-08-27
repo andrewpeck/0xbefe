@@ -4,7 +4,7 @@ import sys
 import argparse
 import csv
 import matplotlib.pyplot as plt
-import os
+import os, glob
 import datetime
 import numpy as np
 
@@ -22,7 +22,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, gbt, run_time_min, gain, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
 
     gbt = gbt_select%4
     init_adc(oh_ver)
@@ -41,7 +41,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gbt, run_time_min, gain, p
         latest_file = max(list_of_files, key=os.path.getctime)
         adc_calib_file = open(latest_file)
         adc_calib_results = adc_calib_file.readlines()[0].split()
-        adc_calib_results_array = np.array(adc_calib_results)
+        adc_calib_results_float = [float(a) for a in adc_calib_results]
+        adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
 
     resultDir = "results"
@@ -321,7 +322,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)    
         
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, gbt, args.minutes, gain, args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

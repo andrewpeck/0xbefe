@@ -4,7 +4,7 @@ import sys
 import argparse
 import csv
 import matplotlib.pyplot as plt
-import os
+import os, glob
 import datetime
 import numpy as np
 
@@ -40,7 +40,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
         latest_file = max(list_of_files, key=os.path.getctime)
         adc_calib_file = open(latest_file)
         adc_calib_results = adc_calib_file.readlines()[0].split()
-        adc_calib_results_array = np.array(adc_calib_results)
+        adc_calib_results_float = [float(a) for a in adc_calib_results]
+        adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
 
     resultDir = "results"
@@ -91,6 +92,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
                 Vin = get_vin(Vout, adc_calib_results_array)
             else:
                 Vin = Vout
+            print (Vin, Vout)
             rssi_current = rssi_current_conversion(Vin, gain, voltage, oh_ver) * 1e6 # in uA
             second = time() - start_time
             rssi.append(rssi_current)
@@ -99,7 +101,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
                 live_plot(ax, minutes, rssi)
 
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2f V =  %f (RSSI (uA))" % (second/60.0, 7, value, Vin, rssi_current))
+            print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
             t0 = time()
             
     file_out.close()

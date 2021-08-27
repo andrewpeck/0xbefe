@@ -4,7 +4,7 @@ import sys
 import argparse
 import csv
 import matplotlib.pyplot as plt
-import os
+import os, glob
 import datetime
 import math
 import numpy as np
@@ -45,7 +45,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
         latest_file = max(list_of_files, key=os.path.getctime)
         adc_calib_file = open(latest_file)
         adc_calib_results = adc_calib_file.readlines()[0].split()
-        adc_calib_results_array = np.array(adc_calib_results)
+        adc_calib_results_float = [float(a) for a in adc_calib_results]
+        adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
 
     resultDir = "results"
@@ -117,8 +118,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
             if plot:
                 live_plot(ax, minutes, T)
 
-            file.write(str(second/60.0) + "\t" + str(V_m) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2f V = %.2f (R (kOhm) = %.2f (T (C))" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
+            file.write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
+            print("time = %.2f min, \tch %X: 0x%03X = %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
             t0 = time()
     file.close()
 

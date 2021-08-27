@@ -74,7 +74,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
         Vin_range.append(Vin)
         Vout_range.append(Vout)
         print ("  DAC: %d,  Vin: %.4f V,  Vout: %.4f V"%(DAC, Vin, Vout))
-        filename_file.write("%d    %.4f    %.4f"%(DAC, Vin, Vout))
+        filename_file.write("%d    %.4f    %.4f\n"%(DAC, Vin, Vout))
 
     filename_file.close()
     writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  # Enables current DAC.
@@ -84,8 +84,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
 
     print ("\nFitting\n")
     filename_results_file = open(filename_results, "w")
-    fitData = np.polyfit(Vin, Vout, 5) # fit data to 5th degree polynomial
-    Vout_fit = poly5(Vin, *fitData)
+    fitData = np.polyfit(np.array(Vin_range), np.array(Vout_range), 5) # fit data to 5th degree polynomial
+    Vin_range_fit = np.linspace(0,1,1000)
+    Vout_range_fit = poly5(Vin_range_fit, *fitData)
     for m in fitData:
         filename_results_file.write("%.4f    "%m)
     filename_results_file.write("\n")
@@ -95,9 +96,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     fig, ax = plt.subplots()
     ax.set_xlabel("Vin (V)")
     ax.set_ylabel("Vout (V)")
-    ax.plot(Vin_range, Vout_range, "turquoise")
+    ax.plot(Vin_range, Vout_range, "turquoise", marker='o')
+    ax.plot(Vin_range_fit, Vout_range_fit, "red")
     plt.draw()
-    figure_name = foldername + "calibration_data_" + now + "_plot.pdf"
+    figure_name = foldername + "ME0_OH%d_GBT%d_calibration_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig.savefig(figure_name, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
