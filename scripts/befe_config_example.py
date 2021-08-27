@@ -24,13 +24,6 @@ CONFIG_RWREG_CTP7 = [
     }
 ]
 
-CONFIG_RWREG_APEX0 = [
-    {
-        'DEVICE': 'FPGA0',  # for APEX set this to either FPGA0 or FPGA1
-        'BASE_ADDR': 0
-    }
-]
-
 CONFIG_RWREG_APEX = [
     {
         'DEVICE': 'FPGA0',  # for APEX set this to either FPGA0 or FPGA1
@@ -42,7 +35,18 @@ CONFIG_RWREG_APEX = [
     }
 ]
 
-CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX}
+CONFIG_RWREG_X2O = [
+    {
+        'DEVICE': 'FPGA0',  # for APEX set this to either FPGA0 or FPGA1
+        'BASE_ADDR': 0
+    },
+    {
+        'DEVICE': 'FPGA1',  # for APEX set this to either FPGA0 or FPGA1
+        'BASE_ADDR': 0
+    }
+]
+
+CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX, "x2o": CONFIG_RWREG_X2O}
 
 CONFIG_USE_TCDS = False
 
