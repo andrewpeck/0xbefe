@@ -2,22 +2,22 @@
 
 module c2c_adapter
 (
-    input c2c_phy_clk,
+ input 		   c2c_phy_clk,
     
-    output reg [31:0] c2c_rx_data,
-    output reg        c2c_rx_valid,
+ output reg [31:0] c2c_rx_data,
+ output reg 	   c2c_rx_valid,
     
-    input [31:0] c2c_tx_tdata,
-    input        c2c_tx_tvalid,
-    input        do_cc,
-    output reg   link_reset,
+ input [31:0] 	   c2c_tx_tdata,
+ input 		   c2c_tx_tvalid,
+ input 		   do_cc,
+ output reg 	   link_reset,
     
-    input [31:0] mgt_rx_data,
-    input [ 3:0] mgt_rx_k,
-    input        rx_aligned,
+ input [31:0] 	   mgt_rx_data,
+ input [ 3:0] 	   mgt_rx_k,
+ input 		   rx_aligned,
     
-    output reg [31:0] mgt_tx_data,
-    output reg [ 3:0] mgt_tx_k
+ output reg [31:0] mgt_tx_data,
+ output reg [ 3:0] mgt_tx_k
 );
 
     // clock correction pattern    
@@ -45,66 +45,64 @@ module c2c_adapter
     begin
     
         // link reset logic
-        if (link_reset_cnt == 10'd0) link_reset = 1'b0;
-        else link_reset_cnt--;
-    
+        if (link_reset_cnt == 10'd0) 
+	  link_reset <= 1'b0;
+        else 
+	  link_reset_cnt<=link_reset_cnt-1'b1;
         // rx logic
         if (mgt_rx_data == lrst_d && mgt_rx_k == lrst_k) // link reset command from master
         begin
             // replace with invalid data
-            c2c_rx_data  = zero_d;
-            c2c_rx_valid = 1'b0;
-            link_reset_cnt = 10'd1000;
-            link_reset = 1'b1;
+            c2c_rx_data  <= zero_d;
+            c2c_rx_valid <= 1'b0;
+            link_reset_cnt <= 10'd1000;
+            link_reset <= 1'b1;
         end
         else
         if (mgt_rx_data == clkc_d && mgt_rx_k == clkc_k) // CC symbol
         begin
             // replace with invalid data
-            c2c_rx_data  = zero_d;
-            c2c_rx_valid = 1'b0;
+            c2c_rx_data  <= zero_d;
+            c2c_rx_valid <= 1'b0;
         end
         else
         begin
-            c2c_rx_data = mgt_rx_data;
-            c2c_rx_valid = rx_aligned;
-        end
-
-
-        
+            c2c_rx_data <= mgt_rx_data;
+            c2c_rx_valid <= rx_aligned;
+        end        
         // tx logic
         if (c2c_tx_tvalid == 1'b0)
         begin 
             if (do_cc_r) // CC needed
             begin
-                mgt_tx_data = clkc_d; 
-                mgt_tx_k = clkc_k;
-                do_cc_r = 1'b0;
+                mgt_tx_data <= clkc_d; 
+                mgt_tx_k <= clkc_k;
+                do_cc_r <= 1'b0;
             end
             else
             begin
                 // send invalid pattern
-                mgt_tx_data = zero_d; 
-                mgt_tx_k = zero_k;
+                mgt_tx_data <= zero_d; 
+                mgt_tx_k <= zero_k;
             end
         end
         else
         begin 
             if (do_cc_r && tx_can_cc) // CC needed and pattern can be interrupted
             begin
-                mgt_tx_data = clkc_d; 
-                mgt_tx_k = clkc_k;
-                do_cc_r = 1'b0;
+                mgt_tx_data <= clkc_d; 
+                mgt_tx_k <= clkc_k;
+                do_cc_r <= 1'b0;
             end
             else
             begin
                 // valid data that cannot be interrupted
-                mgt_tx_data = c2c_tx_tdata; 
-                mgt_tx_k = zero_k;
+                mgt_tx_data <= c2c_tx_tdata; 
+                mgt_tx_k <= zero_k;
             end
         end
         
-        if (do_cc) do_cc_r = 1'b1;
+        if (do_cc) do_cc_r <= 1'b1;
     end
 
 endmodule

@@ -13,8 +13,9 @@ parameter GT_CLK_DIVIDER= 3 )
 (
 
   // Differential reference clock inputs
-  input wire 	     c2c_mgt_clk_p,
-  input wire 	     c2c_mgt_clk_n,
+  input wire 	     gt_clk,
+  input wire 	     gt_clk_div2,
+ 
 
   // User-provided ports for reset helper block(s)
   output wire 	     c2c_channel_up,
@@ -422,18 +423,9 @@ parameter GT_CLK_DIVIDER= 3 )
   assign freerun_clk = mgtrefclk_odiv2;
   wire mgtrefclk_odiv2_b;
 
-  IBUFDS_GTE4 #(
-    .REFCLK_EN_TX_PATH  (1'b0),
-    .REFCLK_HROW_CK_SEL (2'b00),
-    .REFCLK_ICNTL_RX    (2'b00)
-  ) IBUFDS_GTE4_MGTREFCLK1_X0Y5_INST (
-    .I     (c2c_mgt_clk_p),
-    .IB    (c2c_mgt_clk_n),
-    .CEB   (1'b0),
-    .O     (mgtrefclk1_x0y5_int),
-    .ODIV2 (mgtrefclk_odiv2_b)
-  );
-
+   assign mgtrefclk1_x0y5_int = gt_clk;
+   assign mgtrefclk_odiv2_b = gt_clk_div2;
+   
    BUFG_GT mgtrefclk_bufg
    (
       .O       (mgtrefclk_odiv2),  // 1-bit output: Buffer
@@ -484,7 +476,7 @@ parameter GT_CLK_DIVIDER= 3 )
   // Synchronize the PRBS mismatch indicator the free-running clock domain, using a reset synchronizer with asynchronous
   // reset and synchronous removal
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_reset_synchronizer reset_synchronizer_prbs_match_all_inst (
+  c2c_mgt_reset_synchronizer reset_synchronizer_prbs_match_all_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .rst_in (prbs_error_any_async),
     .rst_out(prbs_error_any_sync)
@@ -495,7 +487,7 @@ parameter GT_CLK_DIVIDER= 3 )
   wire link_down_latched_reset_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_link_down_latched_reset_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_link_down_latched_reset_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (link_down_latched_reset_in || link_down_latched_reset_vio_int),
     .o_out  (link_down_latched_reset_sync)
@@ -541,7 +533,7 @@ parameter GT_CLK_DIVIDER= 3 )
   // or data connections. It also resets the receiver in the event of link loss in an attempt to regain link, so please
   // note the possibility that this behavior can have the effect of overriding or disturbing user-provided inputs that
   // destabilize the data stream. It is a demonstration only and can be modified to suit your system needs.
-  c2c_mgt_example_init example_init_inst (
+  c2c_mgt_init example_init_inst (
     .clk_freerun_in  (hb_gtwiz_reset_clk_freerun_buf_int),
     .reset_all_in    (hb_gtwiz_reset_all_int),
     .tx_init_done_in (gtwiz_reset_tx_done_int),
@@ -562,14 +554,14 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [1:0] gtpowergood_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_gtpowergood_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtpowergood_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (gtpowergood_int[0]),
     .o_out  (gtpowergood_vio_sync[0])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_gtpowergood_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtpowergood_1_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (gtpowergood_int[1]),
     .o_out  (gtpowergood_vio_sync[1])
@@ -579,14 +571,14 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [1:0] txpmaresetdone_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (txpmaresetdone_int[0]),
     .o_out  (txpmaresetdone_vio_sync[0])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_1_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (txpmaresetdone_int[1]),
     .o_out  (txpmaresetdone_vio_sync[1])
@@ -596,14 +588,14 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [1:0] rxpmaresetdone_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxpmaresetdone_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxpmaresetdone_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (rxpmaresetdone_int[0]),
     .o_out  (rxpmaresetdone_vio_sync[0])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxpmaresetdone_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxpmaresetdone_1_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (rxpmaresetdone_int[1]),
     .o_out  (rxpmaresetdone_vio_sync[1])
@@ -613,7 +605,7 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [0:0] gtwiz_reset_tx_done_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_gtwiz_reset_tx_done_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtwiz_reset_tx_done_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (gtwiz_reset_tx_done_int[0]),
     .o_out  (gtwiz_reset_tx_done_vio_sync[0])
@@ -623,7 +615,7 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [0:0] gtwiz_reset_rx_done_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_gtwiz_reset_rx_done_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtwiz_reset_rx_done_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (gtwiz_reset_rx_done_int[0]),
     .o_out  (gtwiz_reset_rx_done_vio_sync[0])
@@ -633,14 +625,14 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [1:0] rxprbserr_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbserr_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbserr_0_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (rxprbserr_int[0]),
     .o_out  (rxprbserr_vio_sync[0])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbserr_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbserr_1_inst (
     .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
     .i_in   (rxprbserr_int[1]),
     .o_out  (rxprbserr_vio_sync[1])
@@ -650,50 +642,50 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [7:0] txprbssel_vio_async;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_0_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[0]),
     .o_out  (txprbssel_int[0])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_1_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[1]),
     .o_out  (txprbssel_int[1])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_2_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_2_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[2]),
     .o_out  (txprbssel_int[2])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_3_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_3_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[3]),
     .o_out  (txprbssel_int[3])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_4_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_4_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[4]),
     .o_out  (txprbssel_int[4])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_5_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_5_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[5]),
     .o_out  (txprbssel_int[5])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_6_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_6_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[6]),
     .o_out  (txprbssel_int[6])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_txprbssel_7_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_7_inst (
     .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
     .i_in   (txprbssel_vio_async[7]),
     .o_out  (txprbssel_int[7])
@@ -703,125 +695,77 @@ parameter GT_CLK_DIVIDER= 3 )
   wire [7:0] rxprbssel_vio_async;
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_0_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_0_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[0]),
     .o_out  (rxprbssel_int[0])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_1_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_1_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[1]),
     .o_out  (rxprbssel_int[1])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_2_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_2_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[2]),
     .o_out  (rxprbssel_int[2])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_3_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_3_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[3]),
     .o_out  (rxprbssel_int[3])
   );
 
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_4_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_4_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[4]),
     .o_out  (rxprbssel_int[4])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_5_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_5_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[5]),
     .o_out  (rxprbssel_int[5])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_6_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_6_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[6]),
     .o_out  (rxprbssel_int[6])
   );
   (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_example_bit_synchronizer bit_synchronizer_vio_rxprbssel_7_inst (
+  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_7_inst (
     .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
     .i_in   (rxprbssel_vio_async[7]),
     .o_out  (rxprbssel_int[7])
   );
 
 
-  // Instantiate the VIO IP core for hardware bring-up and debug purposes, connecting relevant debug and analysis
-  // signals which have been enabled during Wizard IP customization. This initial set of connected signals is
-  // provided as a convenience and example, but more or fewer ports can be used as needed; simply re-customize and
-  // re-generate the VIO instance, then connect any exposed signals that are needed. Signals which are synchronous to
-  // clocks other than the free-running clock will require synchronization. For usage, refer to Vivado Design Suite
-  // User Guide: Programming and Debugging (UG908)
-  c2c_mgt_vio_0 c2c_mgt_vio_0_inst (
-    .clk (hb_gtwiz_reset_clk_freerun_buf_int)
-    ,.probe_in0 (link_status_out)
-    ,.probe_in1 (link_down_latched_out)
-    ,.probe_in2 (init_done_int)
-    ,.probe_in3 (init_retry_ctr_int)
-    ,.probe_in4 (gtpowergood_vio_sync)
-    ,.probe_in5 (txpmaresetdone_vio_sync)
-    ,.probe_in6 (rxpmaresetdone_vio_sync)
-    ,.probe_in7 (gtwiz_reset_tx_done_vio_sync)
-    ,.probe_in8 (gtwiz_reset_rx_done_vio_sync)
-    ,.probe_in9 (rxprbserr_vio_sync)
-    ,.probe_in10 (rxbyteisaligned_int)
-    
-    ,.probe_out0 (hb_gtwiz_reset_all_vio_int)
-    ,.probe_out1 (hb0_gtwiz_reset_tx_pll_and_datapath_int)
-    ,.probe_out2 (hb0_gtwiz_reset_tx_datapath_int)
-    ,.probe_out3 (hb_gtwiz_reset_rx_pll_and_datapath_vio_int)
-    ,.probe_out4 (hb_gtwiz_reset_rx_datapath_vio_int)
-    ,.probe_out5 (link_down_latched_reset_vio_int)
-    ,.probe_out6 (txprbssel_vio_async)
-    ,.probe_out7 (rxprbssel_vio_async)
-  );
+   assign hb_gtwiz_reset_all_vio_int = 1'b0;
+   assign hb0_gtwiz_reset_tx_pll_and_datapath_int = 1'b0;
+   assign hb0_gtwiz_reset_tx_datapath_int = 1'b0;
+   assign hb_gtwiz_reset_rx_pll_and_datapath_vio_int = 1'b0;
+   assign hb_gtwiz_reset_rx_datapath_vio_int =1'b0;
+   assign link_down_latched_reset_vio_int = 1'b0;
+   assign txprbssel_vio_async = 8'd0;
+   assign rxprbssel_vio_async = 8'd0;
+   
 
 
-  // ===================================================================================================================
-  // IN-SYSTEM IBERT FOR HARDWARE BRING-UP AND LINK ANALYSIS
-  // ===================================================================================================================
+   assign drpclk_int = {2{hb_gtwiz_reset_clk_freerun_buf_int}};
+   assign eyescanreset_int = 2'b00;
+   assign rxrate_int = 6'b000000;
+   assign txdiffctrl_int = {2{5'b11000}};
+   assign txprecursor_int = {2{5'b00000}};
+   assign txpostcursor_int = {2{5'b00000}};
+   assign rxlpmen_int = 2'b11;
 
-  // Instantiate the In-System IBERT IP core for hardware bring-up and link analysis purposes. For usage, refer to
-  // Vivado Design Suite User Guide: Programming and Debugging (UG908)
-  // In-System IBERT IP instance property dictionary is as follows:
-  // CONFIG.C_GT_TYPE {GTH} CONFIG.C_GTS_USED {X0Y24 X0Y25} CONFIG.C_ENABLE_INPUT_PORTS {true}
-  c2c_mgt_in_system_ibert_0 c2c_mgt_in_system_ibert_0_inst (
-    .drpclk_o       (drpclk_int),
-    .gt0_drpen_o    (drpen_int[0:0]),
-    .gt0_drpwe_o    (drpwe_int[0:0]),
-    .gt0_drpaddr_o  (drpaddr_int[9:0]),
-    .gt0_drpdi_o    (drpdi_int[15:0]),
-    .gt0_drprdy_i   (drprdy_int[0:0]),
-    .gt0_drpdo_i    (drpdo_int[15:0]),
-    .gt1_drpen_o    (drpen_int[1:1]),
-    .gt1_drpwe_o    (drpwe_int[1:1]),
-    .gt1_drpaddr_o  (drpaddr_int[19:10]),
-    .gt1_drpdi_o    (drpdi_int[31:16]),
-    .gt1_drprdy_i   (drprdy_int[1:1]),
-    .gt1_drpdo_i    (drpdo_int[31:16]),
-    .eyescanreset_o (eyescanreset_int),
-    .rxrate_o       (rxrate_int),
-    .txdiffctrl_o   (txdiffctrl_int),
-    .txprecursor_o  (txprecursor_int),
-    .txpostcursor_o (txpostcursor_int),
-    .rxlpmen_o      (rxlpmen_int),
-    .rxrate_i       ({2{3'b000}}),
-    .txdiffctrl_i   ({2{5'b11000}}),
-    .txprecursor_i  ({2{5'b00000}}),
-    .txpostcursor_i ({2{5'b00000}}),
-    .rxlpmen_i      ({2{1'b1}}),
-    .rxoutclk_i     ({2{hb0_gtwiz_userclk_rx_usrclk2_int}}),
-    .drpclk_i       ({2{hb_gtwiz_reset_clk_freerun_buf_int}}),
-    .clk            (hb_gtwiz_reset_clk_freerun_buf_int)
-  );
 
+   
 
    (* mark_debug *) wire [5 : 0] rxbufstatus_out;
    (* mark_debug *) wire [3 : 0] rxclkcorcnt_out;
@@ -832,7 +776,7 @@ parameter GT_CLK_DIVIDER= 3 )
   // Instantiate the example design wrapper, mapping its enabled ports to per-channel internal signals and example
   // resources as appropriate
   
-  c2c_mgt_example_wrapper example_wrapper_inst (
+  c2c_mgt_wrapper example_wrapper_inst (
     .gtyrxn_in                               (gt_rxn_in)
    ,.gtyrxp_in                               (gt_rxp_in)
    ,.gtytxn_out                              (gt_txn_out)
@@ -900,12 +844,18 @@ parameter GT_CLK_DIVIDER= 3 )
    ,.rxbufstatus_out                         (rxbufstatus_int)
    ,.rxclkcorcnt_out                         (rxclkcorcnt_int)
 );
-reg [7:0] cc_cnt; // clock correction counter
+   reg [9:0] cc_cnt = 10'd0; // clock correction counter
+   reg 	  local_do_cc;
+   
 always @(posedge gtwiz_userclk_tx_usrclk2_int)
-begin
-    cc_cnt<=cc_cnt+1'b1;
-end
-wire local_do_cc = (cc_cnt == 8'h0);
+  begin
+     if (cc_cnt==10'd1023)
+       local_do_cc <=1'b1;
+     else
+       local_do_cc <=1'b0;
+     cc_cnt<=cc_cnt+1'b1;
+  end
+
 
 
    c2c_adapter c2c_adapter_i
@@ -921,7 +871,7 @@ wire local_do_cc = (cc_cnt == 8'h0);
         .mgt_rx_k      (ch0_rxctrl0_int[3:0]),
         .rx_aligned    (ch0_rxbyteisaligned_int),        
         .mgt_tx_data   (hb1_gtwiz_userdata_tx_int),
-        .mgt_tx_k      (ch1_txctrl2_int)
+        .mgt_tx_k      (ch1_txctrl2_int[3:0])
     );
 
 assign c2c_tx_axis_tready      = 1'b1; // always ready

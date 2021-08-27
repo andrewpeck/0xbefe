@@ -230,7 +230,7 @@ architecture Behavioral of daq is
     signal l1afifo_prog_empty       : std_logic;
     signal l1afifo_prog_empty_wrclk : std_logic;
     signal l1afifo_near_full        : std_logic;
-    signal l1afifo_data_cnt         : std_logic_vector(12 downto 0);
+    signal l1afifo_data_cnt         : std_logic_vector(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH downto 0);
     signal l1afifo_near_full_cnt    : std_logic_vector(15 downto 0);
     signal l1a_gap_cntdown          : unsigned(7 downto 0) := (others => '0'); -- this is used to detect close L1As (meaning less than 1000ns apart)
     
@@ -245,7 +245,7 @@ architecture Behavioral of daq is
     signal daqfifo_prog_full        : std_logic;
     signal daqfifo_prog_empty       : std_logic;
     signal daqfifo_near_full        : std_logic;
-    signal daqfifo_data_cnt         : std_logic_vector(12 downto 0);
+    signal daqfifo_data_cnt         : std_logic_vector(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0);
     signal daqfifo_near_full_cnt    : std_logic_vector(15 downto 0);
             
     -- Last event spy fifo

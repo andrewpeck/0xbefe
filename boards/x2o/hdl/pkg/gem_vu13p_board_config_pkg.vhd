@@ -25,10 +25,10 @@ package board_config_package is
     
     ------------ Firmware flavor and board type  ------------
     constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"0"; -- 0 = GEM_AMC; 1 = CSC_FED
-    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"3"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
+    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"4"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
     
     ------------ Board specific constants ------------
-    constant CFG_BOARD_MAX_LINKS    : integer := 16;
+    constant CFG_BOARD_MAX_LINKS    : integer := 112;
 
     ------------ GEM specific constants ------------
     constant CFG_GEM_STATION        : integer range 0 to 2 := PRJ_CFG_GEM_STATION; -- Controlled by the project_config.vhd:  0 = ME0; 1 = GE1/1; 2 = GE2/1
@@ -100,7 +100,7 @@ package board_config_package is
         trig_rx_links   : t_link_arr(0 to 1); -- GE1/1 trigger RX links
     end record t_oh_link_config;
     
-    type t_oh_link_config_arr is array (0 to 7) of t_oh_link_config;
+    type t_oh_link_config_arr is array (0 to 47) of t_oh_link_config;
 
     constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
@@ -153,6 +153,15 @@ package board_config_package is
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
     );
     constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
+        (((64, 64), (65, 65), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((66, 66), (67, 67), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((68, 68), (69, 69), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((70, 70), (71, 71), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((72, 72), (73, 73), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((74, 74), (75, 75), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((76, 76), (77, 77), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+        (((78, 78), (79, 79), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+
         (((00, 00), (01, 01), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((02, 02), (03, 03), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((04, 04), (05, 05), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
@@ -185,14 +194,6 @@ package board_config_package is
         (((58, 58), (59, 59), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((60, 60), (61, 61), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((62, 62), (63, 63), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((64, 64), (65, 65), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((66, 66), (67, 67), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((68, 68), (69, 69), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((70, 70), (71, 71), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((72, 72), (73, 73), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((74, 74), (75, 75), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((76, 76), (77, 77), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-        (((78, 78), (79, 79), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((80, 80), (81, 81), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((82, 82), (83, 83), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
         (((84, 84), (85, 85), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
@@ -203,6 +204,9 @@ package board_config_package is
         (((94, 94), (95, 95), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
     );
     constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
+        (((64, 64), (TXRX_NULL, 65), (65, 66),  (TXRX_NULL, 67),  (66, 68),   (TXRX_NULL, 69),  (67, 70),  (TXRX_NULL, 71)), (LINK_NULL, LINK_NULL)),
+        (((72, 72), (TXRX_NULL, 73), (73, 74),  (TXRX_NULL, 75),  (74, 76),   (TXRX_NULL, 77),  (75, 78),  (TXRX_NULL, 79)), (LINK_NULL, LINK_NULL)),
+
         (((00, 00), (TXRX_NULL, 01), (01, 02),  (TXRX_NULL, 03),  (02, 04),   (TXRX_NULL, 05),  (03, 06),  (TXRX_NULL, 07)), (LINK_NULL, LINK_NULL)),
         (((08, 08), (TXRX_NULL, 09), (09, 10),  (TXRX_NULL, 11),  (10, 12),   (TXRX_NULL, 13),  (11, 14),  (TXRX_NULL, 15)), (LINK_NULL, LINK_NULL)),
         (((16, 16), (TXRX_NULL, 17), (17, 18),  (TXRX_NULL, 19),  (18, 20),   (TXRX_NULL, 21),  (19, 22),  (TXRX_NULL, 23)), (LINK_NULL, LINK_NULL)),
@@ -211,8 +215,6 @@ package board_config_package is
         (((40, 40), (TXRX_NULL, 41), (41, 42),  (TXRX_NULL, 43),  (42, 44),   (TXRX_NULL, 45),  (43, 46),  (TXRX_NULL, 47)), (LINK_NULL, LINK_NULL)),
         (((48, 48), (TXRX_NULL, 49), (49, 50),  (TXRX_NULL, 51),  (50, 52),   (TXRX_NULL, 53),  (51, 54),  (TXRX_NULL, 55)), (LINK_NULL, LINK_NULL)),
         (((56, 56), (TXRX_NULL, 57), (57, 58),  (TXRX_NULL, 59),  (58, 60),   (TXRX_NULL, 61),  (59, 62),  (TXRX_NULL, 63)), (LINK_NULL, LINK_NULL)),
-        (((64, 64), (TXRX_NULL, 65), (65, 66),  (TXRX_NULL, 67),  (66, 68),   (TXRX_NULL, 69),  (67, 70),  (TXRX_NULL, 71)), (LINK_NULL, LINK_NULL)),
-        (((72, 72), (TXRX_NULL, 73), (73, 74),  (TXRX_NULL, 75),  (74, 76),   (TXRX_NULL, 77),  (75, 78),  (TXRX_NULL, 79)), (LINK_NULL, LINK_NULL)),
         (((80, 80), (TXRX_NULL, 81), (81, 82),  (TXRX_NULL, 83),  (82, 84),   (TXRX_NULL, 85),  (83, 86),  (TXRX_NULL, 87)), (LINK_NULL, LINK_NULL)),
         (((88, 88), (TXRX_NULL, 89), (89, 90),  (TXRX_NULL, 91),  (90, 92),   (TXRX_NULL, 93),  (91, 94),  (TXRX_NULL, 95)), (LINK_NULL, LINK_NULL)),
         ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
@@ -269,7 +271,7 @@ package board_config_package is
 
     constant CFG_NUM_REFCLK0      : integer := 28;
     constant CFG_NUM_REFCLK1      : integer := 7; 
-    constant CFG_MGT_NUM_CHANNELS : integer := 12;--CFG_BOARD_MAX_LINKS;
+    constant CFG_MGT_NUM_CHANNELS : integer := 112;--CFG_BOARD_MAX_LINKS;
     
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
@@ -622,8 +624,8 @@ package board_config_package is
     );
     constant CFG_MGT_LINK_CONFIG_GE21 : t_mgt_config_arr := (
         ----------------------------- quad 120 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => true , ibert_inst => true ),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => true ),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
         ----------------------------- quad 121 -----------------------------
@@ -702,25 +704,25 @@ package board_config_package is
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 060, refclk0_idx => 15, refclk1_idx => 3, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 060, refclk0_idx => 15, refclk1_idx => 3, is_master => false, ibert_inst => false),
         ----------------------------- quad 224 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
         ----------------------------- quad 225 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => TRUE,  ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
         ----------------------------- quad 226 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
         ----------------------------- quad 227 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE),
         ----------------------------- quad 228 -----------------------------
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, ibert_inst => false),

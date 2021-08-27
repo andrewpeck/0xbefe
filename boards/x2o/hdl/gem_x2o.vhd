@@ -366,6 +366,7 @@ begin
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQ_CLK_FREQ      => 100_000_000,
+            g_IS_SLINK_ROCKET   => true,
             g_DISABLE_TTC_DATA  => true
         )
         port map(

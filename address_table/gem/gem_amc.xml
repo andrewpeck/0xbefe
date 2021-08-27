@@ -589,10 +589,6 @@
     <node id="DBG_FANOUT_INPUT"        address="0x1"  mask="0xf0000000" permission="rw"
           description="Selects the input to be faned out when the fanout feature is enabled (see DBG_FANOUT_ENABLE)."
           fw_signal="dbg_fanout_input" fw_default="0x0"/>
-    <node id="DBG_IGNORE_DAQLINK"        address="0x1"  mask="0x02000000" permission="rw"
-          description="This register when set to 1 will cause the DAQ module to ignore the DAQLink ready and DAQLink backpressure signals.
-                       It can be used for fake datarate testing without involving AMC13."
-          fw_signal="dbg_daqlink_ignore" fw_default="0b0"/>
     <node id="CALIBRATION_MODE_EN"       address="0x2"  mask="0x00000080" permission="rw"
           description="When set, this enables calibration mode data format, which strips the VFAT payload of most of the data, just leaving 8 bits per VFAT, where [4:0] is the VFAT position, [6:5] is EC, and bit 7 is the chanel information for the channel selected in CALIBRATION_MODE_CHAN (see below)"
           fw_signal="format_calib_mode" fw_default="0b0"/>
@@ -608,6 +604,9 @@
     <node id="RESET_TILL_RESYNC"        address="0x2"  mask="0x00000400" permission="rw"
           description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
           fw_signal="reset_till_resync" fw_default="0x0"/>
+    <node id="FED_ID"     address="0x3" permission="rw"
+          description="FED ID, used in SlinkRocket header"
+          fw_signal="fed_id" fw_default="0x0000033e"/>
     <node id="SPY"  address="0xf" description="Spy path control registers">
         <node id="SPY_SKIP_ETH_HEADER"        address="0x0"  mask="0x00000001" permission="rw"
               description="If this is true, then ethernet headers will be skipped just like in DDU, otherwise ethernet compliant packets will be constructed."

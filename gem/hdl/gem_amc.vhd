@@ -36,6 +36,7 @@ entity gem_amc is
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQ_CLK_FREQ       : integer;
+        g_IS_SLINK_ROCKET    : boolean;
         g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
     );
     port(
@@ -320,6 +321,7 @@ begin
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
             local_l1a_req_i     => '0',
+            local_l1a_reset_i   => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -532,6 +534,7 @@ begin
             g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO  => false,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_IS_SLINK_ROCKET   => g_IS_SLINK_ROCKET,
             g_DEBUG             => CFG_DEBUG_DAQ
         )
         port map(
