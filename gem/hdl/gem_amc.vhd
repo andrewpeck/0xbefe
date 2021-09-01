@@ -474,22 +474,24 @@ begin
         i_clusters : for i in 0 to g_NUM_OF_OHs - 1 generate
         me0_cluster: entity work.sbit_me0
             generic map(
-                g_NUM_OF_OHs => g_NUM_OF_OHs,
+                g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_NUM_VFATS_PER_OH => g_NUM_VFATS_PER_OH
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH
                 
             )
         port map(
-            reset_i => reset_i,
-            ttc_clk_i => ttc_clocks_i,
-            ttc_cmds_i => ttc_cmd,
-            vfat3_sbits_arr_i => me0_vfat3_sbits_arr,
-            ipb_reset_i => ipb_reset,
-            ipb_clk_i => ipb_clk_i,
-            ipb_mosi_i => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
+            reset_i             => reset_i,
+            ttc_clk_i           => ttc_clocks_i,
+            ttc_cmds_i          => ttc_cmd,
+            vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
+            ipb_reset_i         => ipb_reset,
+            ipb_clk_i           => ipb_clk_i,
+            ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
             me0_cluster_count_o => me0_cluster_count_o,
-            me0_clusters_o => me0_clusters_o(i),
-            ipb_miso_o => ipb_miso_arr(C_IPB_SLV.sbit_me0)
+            me0_clusters_o      => me0_clusters_o(i),
+            ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0),
+            l1a_me0             => ttc_cmd.l1a,
+            calpulse            => ttc_cmd.calpulse
         );
     end generate;
     
@@ -500,7 +502,7 @@ begin
                 g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_GEM_STATION       => g_GEM_STATION,
-                g_DEBUG => CFG_DEBUG_TRIGGER
+                g_DEBUG             => CFG_DEBUG_TRIGGER
             )
             port map(
                 reset_i            => reset or link_reset,

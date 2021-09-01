@@ -40,6 +40,9 @@ entity sbit_me0 is
         me0_cluster_count_o : out std_logic_vector(10 downto 0);
         me0_clusters_o      : out t_oh_clusters;
 
+	-- Trigger Signals
+	l1a_me0             : in std_logic;
+	calpulse_me0        : in std_logic;
 
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -51,6 +54,33 @@ entity sbit_me0 is
 end sbit_me0;
 
 architecture sbit_me0_arch of sbit_me0 is
+	
+    -- Components --
+    COMPONENT ila_sbit_me0
+
+    PORT (
+	clk : IN STD_LOGIC;
+
+
+
+	probe0 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe1 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe2 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe3 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe4 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe5 : IN STD_LOGIC_VECTOR(13 DOWNTO 0); 
+	probe6 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+	probe7 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+        probe8 : IN STD_LOGIC_VECTOR(63 DOWNTO 0); 
+	probe9 : IN STD_LOGIC_VECTOR(63 DOWNTO 0); 
+	probe10 : IN STD_LOGIC_VECTOR(63 DOWNTO 0); 
+	probe11 : IN STD_LOGIC_VECTOR(63 DOWNTO 0); 
+	probe12 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+	probe13 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+	probe14 : IN STD_LOGIC;
+	probe15 : IN STD_LOGIC
+    );
+    END COMPONENT  ;
 
     -- resets
     signal reset_global         : std_logic;
@@ -167,6 +197,30 @@ begin
     end generate;
 
     --== Debug me0 sbits ==--
+    me0_cluster_debug : ila_sbit_me0
+    PORT MAP (
+	clk => ttc_clk_i.clk_40,
+
+	probe0 => me0_clusters_o(0)(0).size & me0_clusters_o(0)(0).address, 
+	probe1 => me0_clusters_o(0)(1).size & me0_clusters_o(0)(1).address, 
+	probe2 => me0_clusters_o(0)(2).size & me0_clusters_o(0)(2).address, 
+	probe3 => me0_clusters_o(0)(3).size & me0_clusters_o(0)(3).address, 
+	probe4 => me0_clusters_o(0)(4).size & me0_clusters_o(0)(4).address, 
+	probe5 => me0_clusters_o(0)(5).size & me0_clusters_o(0)(5).address, 
+	probe6 => me0_clusters_o(0)(6).size & me0_clusters_o(0)(6).address,
+	probe7 => me0_clusters_o(0)(7).size & me0_clusters_o(0)(7).address,
+	probe8 => vfat_sbits_arr(0)(0),
+	probe9 => vfat_sbits_arr(0)(1),
+	probe10 => vfat_sbits_arr(0)(8),
+	probe11 => vfat_sbits_arr(0)(9),
+	probe12 => vfat_sbits_arr(0)(16),
+	probe13 => vfat_sbits_arr(0)(17),
+	probe14 => calpulse_me0,
+	probe15 => l1a_me0
+     );
+
+
+
     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i: for i in 0 to 7 generate
@@ -231,7 +285,7 @@ begin
             cluster_packer_inst : entity work.cluster_packer
                 generic map (
                     DEADTIME => 0,
-                    ONESHOT => false,
+                    ONESHOT => true,
                     SPLIT_CLUSTERS => 0,
                     INVERT_PARTITIONS => false,
                     NUM_VFATS => 24,
