@@ -415,6 +415,10 @@ begin
             reset_i          => gem_powerup_reset,
             clk_stable_100_i => clk_100,
             mgt_ref_clk_i    => slink_mgt_ref_clk,
+
+            daqlink_to_daq_o => daqlink_to_daq,
+            daq_to_daqlink_i => daq_to_daqlink,
+
             ipb_reset_i      => ipb_reset,
             ipb_clk_i        => ipb_clk,
             ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
@@ -423,6 +427,28 @@ begin
 
     slink_mgt_ref_clk <= refclk1(1);
 
+    --================================--
+    -- PROMless
+    --================================--
+
+    g_promless : if CFG_GEM_STATION /= 0 generate
+        i_promless : entity work.promless
+            generic map(
+                g_MAX_SIZE_BYTES   => 4_194_304, --4_718_592, -- max on KU15P is 36Mb (ge21.200 OH firmware with TMR does not fit), ideally we would like to have at least 8_388_608
+                g_MEMORY_PRIMITIVE => "ultra",
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+            )
+            port map(
+                reset_i         => '0',
+                to_promless_i   => to_promless,
+                from_promless_o => from_promless,
+                ipb_reset_i     => ipb_reset,
+                ipb_clk_i       => ipb_clk,
+                ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
+                ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
+            );
+    end generate;
+    
     --================================--
     -- Board System registers
     --================================--
@@ -459,6 +485,7 @@ begin
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQ_CLK_FREQ      => 100_000_000,
+            g_IS_SLINK_ROCKET   => true,
             g_DISABLE_TTC_DATA  => true
         )
         port map(

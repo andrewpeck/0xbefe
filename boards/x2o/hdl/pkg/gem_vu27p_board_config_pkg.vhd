@@ -189,9 +189,9 @@ package board_config_package is
     
     constant CFG_MGT_GBE : t_mgt_type_config := (
         link_type               => MGT_GBE,
-        cpll_refclk_01          => 1, 
-        qpll0_refclk_01         => 1,
-        qpll1_refclk_01         => 1,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 1,
@@ -205,9 +205,9 @@ package board_config_package is
 
     constant CFG_MGT_GBTX : t_mgt_type_config := (
         link_type               => MGT_GBTX,
-        cpll_refclk_01          => 0, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 1,
@@ -221,9 +221,9 @@ package board_config_package is
 
     constant CFG_MGT_LPGBT : t_mgt_type_config := (
         link_type               => MGT_LPGBT,
-        cpll_refclk_01          => 0, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 0,

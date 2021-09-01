@@ -2,7 +2,7 @@ from common.rw_reg import *
 from common.utils import *
 
 FPGA_TYPE = "VU27P"
-#FPGA_TYPE = "VU13P"
+# FPGA_TYPE = "VU13P"
 RESERVED_GTYS = [124, 125, 126, 127] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = RESERVED_GTYS
 RESERVED_REFCLK1 = [125]
@@ -567,6 +567,19 @@ def generate_loc_constraints():
         for quad_chan in range(4):
             quad_chan_loc = loc[quad_chan]
             print("set_property LOC GTYE4_CHANNEL_X%dY%d [get_cells {i_mgts/g_channels[%d].g_chan_*/i_gty_channel}]" % (quad_chan_loc[0], quad_chan_loc[1], chan))
+            chan += 1
+
+    print("")
+    print("###############################################################")
+    print("########################## IBERT LOC ##########################")
+    print("###############################################################")
+    print("")
+    chan = 0
+    for gty in GTYS:
+        loc = GTY_CHAN_LOC[gty]
+        for quad_chan in range(4):
+            quad_chan_loc = loc[quad_chan]
+            print("set_property -dict [list C_GTS_USED X%dY%d C_QUAD_NUMBER_0 16'd%d] [get_cells {i_mgts/g_channels[%d].g_insys_ibert.i_ibert/inst}]" % (quad_chan_loc[0], quad_chan_loc[1], gty, chan))
             chan += 1
 
 ###############################################################

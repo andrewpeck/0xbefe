@@ -431,9 +431,9 @@ package board_config_package is
     
     constant CFG_MGT_GBE : t_mgt_type_config := (
         link_type               => MGT_GBE,
-        cpll_refclk_01          => 1, 
-        qpll0_refclk_01         => 1,
-        qpll1_refclk_01         => 1,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 1,
@@ -447,9 +447,9 @@ package board_config_package is
 
     constant CFG_MGT_GBTX : t_mgt_type_config := (
         link_type               => MGT_GBTX,
-        cpll_refclk_01          => 0, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 1,
@@ -463,9 +463,9 @@ package board_config_package is
 
     constant CFG_MGT_LPGBT : t_mgt_type_config := (
         link_type               => MGT_LPGBT,
-        cpll_refclk_01          => 0, 
-        qpll0_refclk_01         => 0,
-        qpll1_refclk_01         => 0,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
         tx_use_qpll             => true, 
         rx_use_qpll             => true,
         tx_qpll_01              => 0,
@@ -766,15 +766,15 @@ package board_config_package is
     );
     constant CFG_MGT_LINK_CONFIG_ME0 : t_mgt_config_arr := (
         ----------------------------- quad 120 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => true , ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        ----------------------------- quad 121 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => true ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        ----------------------------- quad 121 -----------------------------                                                                                    
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
         ----------------------------- quad 122 -----------------------------
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
@@ -846,25 +846,25 @@ package board_config_package is
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 060, refclk0_idx => 15, refclk1_idx => 3, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 060, refclk0_idx => 15, refclk1_idx => 3, is_master => false, ibert_inst => false),
         ----------------------------- quad 224 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        ----------------------------- quad 225 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        ----------------------------- quad 226 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        ----------------------------- quad 227 -----------------------------
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 064, refclk0_idx => 16, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        ----------------------------- quad 225 -----------------------------                                                                                     
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => TRUE , ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 068, refclk0_idx => 17, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        ----------------------------- quad 226 -----------------------------                                                                                     
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 072, refclk0_idx => 18, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        ----------------------------- quad 227 -----------------------------                                                                                    
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
+        (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 076, refclk0_idx => 19, refclk1_idx => 4, is_master => false, ibert_inst => TRUE ),
         ----------------------------- quad 228 -----------------------------
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_LPGBT  , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_LPGBT    , qpll_inst_type => QPLL_NULL   , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, ibert_inst => false),

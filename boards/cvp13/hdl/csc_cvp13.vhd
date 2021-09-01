@@ -342,6 +342,7 @@ begin
 
     i_csc_fed : entity work.csc_fed
         generic map(
+            g_USE_SLINK_ROCKET  => true,
             g_NUM_OF_DMBs       => CFG_NUM_DMBS,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,

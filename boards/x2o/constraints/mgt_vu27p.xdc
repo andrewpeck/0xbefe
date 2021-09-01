@@ -51,3 +51,24 @@ set_property LOC GTYE4_CHANNEL_X1Y12 [get_cells {i_mgts/g_channels[12].g_chan_*/
 set_property LOC GTYE4_CHANNEL_X1Y13 [get_cells {i_mgts/g_channels[13].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y14 [get_cells {i_mgts/g_channels[14].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y15 [get_cells {i_mgts/g_channels[15].g_chan_*/i_gty_channel}]
+
+###############################################################
+########################## IBERT LOC ##########################
+###############################################################
+
+set_property -dict [list C_GTS_USED X1Y0 C_QUAD_NUMBER_0 16'd224] [get_cells {i_mgts/g_channels[0].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y1 C_QUAD_NUMBER_0 16'd224] [get_cells {i_mgts/g_channels[1].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y2 C_QUAD_NUMBER_0 16'd224] [get_cells {i_mgts/g_channels[2].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y3 C_QUAD_NUMBER_0 16'd224] [get_cells {i_mgts/g_channels[3].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y4 C_QUAD_NUMBER_0 16'd225] [get_cells {i_mgts/g_channels[4].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y5 C_QUAD_NUMBER_0 16'd225] [get_cells {i_mgts/g_channels[5].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y6 C_QUAD_NUMBER_0 16'd225] [get_cells {i_mgts/g_channels[6].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y7 C_QUAD_NUMBER_0 16'd225] [get_cells {i_mgts/g_channels[7].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y8 C_QUAD_NUMBER_0 16'd226] [get_cells {i_mgts/g_channels[8].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y9 C_QUAD_NUMBER_0 16'd226] [get_cells {i_mgts/g_channels[9].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y10 C_QUAD_NUMBER_0 16'd226] [get_cells {i_mgts/g_channels[10].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y11 C_QUAD_NUMBER_0 16'd226] [get_cells {i_mgts/g_channels[11].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y12 C_QUAD_NUMBER_0 16'd227] [get_cells {i_mgts/g_channels[12].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y13 C_QUAD_NUMBER_0 16'd227] [get_cells {i_mgts/g_channels[13].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y14 C_QUAD_NUMBER_0 16'd227] [get_cells {i_mgts/g_channels[14].g_insys_ibert.i_ibert/inst}]
+set_property -dict [list C_GTS_USED X1Y15 C_QUAD_NUMBER_0 16'd227] [get_cells {i_mgts/g_channels[15].g_insys_ibert.i_ibert/inst}]
