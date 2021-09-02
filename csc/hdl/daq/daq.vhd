@@ -1205,7 +1205,7 @@ begin
                 
                     l1afifo_rd_en <= '0';
                                                                     
-                    ----==== send the first AMC header ====----
+                    ----==== send the first AMC header (bottom half of SR header) ====----
                     if (daq_state = DAQLINK_HEADER_1) then
                         
                         -- L1A fifo is a first-word-fallthrough fifo, so no need to check for valid (not empty is the condition to get here anyway)
@@ -1242,7 +1242,7 @@ begin
                         end loop;
                         daq_not_empty_event <= or_reduce(e_chmb_not_empty_arr and e_dav_mask);
                         
-                    ----==== send the second AMC header ====----
+                    ----==== send the second AMC header (top half of SR header) ====----
                     elsif (daq_state = DAQLINK_HEADER_2) then
                     
                         -- calculate the DAV count (I know it's ugly...)
@@ -1581,8 +1581,25 @@ begin
 
                         daq_state <= SR_TRAILER_1;                        
 
-                    ----==== send the first half of the SlinkRocket trailer ====----
+                    ----==== send the bottom half of the SlinkRocket trailer ====----
                     elsif (daq_state = SR_TRAILER_1) then
+                    
+                        -- send the AMC trailer data
+                        daq_event_data <= e_orbit_id & -- orbit ID (32 bits)
+                                          x"0000" &    -- TODO: SR CRC
+                                          x"0000";     -- status (filled by the SR IP)
+                        daq_event_header <= '0';
+                        daq_event_trailer <= '1';
+                        daq_event_write_en <= '1';
+                        spy_fifo_wr_en <= '0';                        
+
+                        -- move to the next state
+                        e_word_count <= e_word_count + 1;
+
+                        daq_state <= SR_TRAILER_2;                        
+
+                    ----==== send the top half of the SlinkRocket trailer ====----
+                    elsif (daq_state = SR_TRAILER_2) then
                         
                         e_word128_count := "0" & std_logic_vector(e_word_count(19 downto 1)); -- number of 128bit words (divide the num 64bit words by 2)
                         
@@ -1591,20 +1608,6 @@ begin
                                           x"000000" &       -- reserved
                                           std_logic_vector(unsigned(e_word128_count) + 1) & -- including header and trailer (hense + 1)
                                           e_bx_id;
-                        daq_event_header <= '0';
-                        daq_event_trailer <= '1';
-                        daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';                        
-                        
-                        daq_state <= SR_TRAILER_2;
-
-                    ----==== send the second half of the SlinkRocket trailer ====----
-                    elsif (daq_state = SR_TRAILER_2) then
-                    
-                        -- send the AMC trailer data
-                        daq_event_data <= e_orbit_id & -- orbit ID (32 bits)
-                                          x"0000" &    -- TODO: SR CRC
-                                          x"0000";     -- status (filled by the SR IP)
                         daq_event_header <= '0';
                         daq_event_trailer <= '1';
                         daq_event_write_en <= '1';

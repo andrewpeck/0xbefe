@@ -1182,7 +1182,7 @@ begin
                         dav_timeout_flags(g_NUM_OF_OHs - 1 downto 0) <= chmb_evtfifos_empty and input_mask(g_NUM_OF_OHs - 1 downto 0);
                     end if;
                 
-                ----==== send the first AMC header ====----
+                ----==== send the first AMC header (bottom half of SR header) ====----
                 elsif (daq_state = x"1") then
                     
                     -- wait for the valid flag from the L1A FIFO and then populate the variables and AMC header
@@ -1219,7 +1219,7 @@ begin
                         
                     end if;
                     
-                ----==== send the second AMC header ====----
+                ----==== send the second AMC header (top half of SR header) ====----
                 elsif (daq_state = x"2") then
                 
                     -- calculate the DAV count (I know it's ugly...)
@@ -1496,8 +1496,24 @@ begin
 
                     daq_state <= x"a";                        
 
-                ----==== send the first half of the SlinkRocket trailer ====----
+                ----==== send the bottom half of the SlinkRocket trailer ====----
                 elsif (daq_state = x"a") then
+                
+                    -- send the AMC trailer data
+                    daq_event_data <= e_orbit_id & -- orbit ID (32 bits)
+                                      x"0000" &    -- TODO: SR CRC
+                                      x"0000";     -- status (filled by the SR IP)
+                    daq_event_header <= '0';
+                    daq_event_trailer <= '1';
+                    daq_event_write_en <= '1';
+
+                    -- move to the next state
+                    e_word_count <= e_word_count + 1;
+
+                    daq_state <= x"b";                        
+                    
+                ----==== send the top half of the SlinkRocket trailer ====----
+                elsif (daq_state = x"b") then
                     
                     e_word128_count := "0" & std_logic_vector(e_word_count(19 downto 1)); -- number of 128bit words (divide the num 64bit words by 2)
                     
@@ -1506,19 +1522,6 @@ begin
                                       x"000000" &       -- reserved
                                       std_logic_vector(unsigned(e_word128_count) + 1) & -- including header and trailer (hense + 1)
                                       e_bx_id;
-                    daq_event_header <= '0';
-                    daq_event_trailer <= '1';
-                    daq_event_write_en <= '1';
-                    
-                    daq_state <= x"b";
-
-                ----==== send the second half of the SlinkRocket trailer ====----
-                elsif (daq_state = x"b") then
-                
-                    -- send the AMC trailer data
-                    daq_event_data <= e_orbit_id & -- orbit ID (32 bits)
-                                      x"0000" &    -- TODO: SR CRC
-                                      x"0000";     -- status (filled by the SR IP)
                     daq_event_header <= '0';
                     daq_event_trailer <= '1';
                     daq_event_write_en <= '1';
