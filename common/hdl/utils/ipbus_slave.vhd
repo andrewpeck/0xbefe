@@ -191,7 +191,7 @@ begin
     i_read_ack_sync_ipb_clk: 
     entity work.synch
         generic map(
-            N_STAGES => 4
+            N_STAGES => 8
         )
         port map(
             async_i => regs_read_ack,
@@ -202,7 +202,7 @@ begin
     i_write_ack_sync_ipb_clk: 
     entity work.synch
         generic map(
-            N_STAGES => 4
+            N_STAGES => 8
         )
         port map(
             async_i => regs_write_ack,
@@ -213,7 +213,7 @@ begin
     i_write_strb_sync_usr_clk: 
     entity work.synch
         generic map(
-            N_STAGES => 4
+            N_STAGES => 8
         )
         port map(
             async_i => regs_write_strb,
@@ -224,7 +224,7 @@ begin
     i_read_strb_sync_usr_clk: 
     entity work.synch
         generic map(
-            N_STAGES => 4
+            N_STAGES => 8
         )
         port map(
             async_i => regs_read_strb,
@@ -235,7 +235,7 @@ begin
     i_ipb_reset_sync_usr_clk: 
     entity work.synch
         generic map(
-            N_STAGES => 4
+            N_STAGES => 8
         )
         port map(
             async_i => ipb_reset_i,
