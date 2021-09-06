@@ -129,6 +129,12 @@ architecture csc_cvp13_arch of csc_cvp13 is
     signal ttc_clks             : t_ttc_clks;
     signal ttc_clk_status       : t_ttc_clk_status;
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl;
+
+    -- external trigger
+    signal ext_trig             : std_logic;
+    signal ext_trig_en          : std_logic;
+    signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
+    signal ext_trig_cntdown     : unsigned(11 downto 0) := (others => '0');
     
     -- PCIe
     signal pcie_refclk0         : std_logic;
@@ -240,6 +246,9 @@ begin
             status_leds_o       => leds_o,
             led_i               => clk100_led,
 
+            daq_to_daqlink_i    => daq_to_daqlink,
+            daqlink_to_daq_o    => daqlink_to_daq,
+
             ipb_reset_o         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
@@ -328,12 +337,14 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i     => '0',
-            board_id_o  => board_id,
-            ipb_reset_i => ipb_reset,
-            ipb_clk_i   => ipb_clk,
-            ipb_mosi_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
-            ipb_miso_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+            reset_i             => '0',
+            board_id_o          => board_id,
+            ext_trig_en_o       => ext_trig_en,
+            ext_trig_deadtime_o => ext_trig_deadtime,
+            ipb_reset_i         => ipb_reset,
+            ipb_clk_i           => ipb_clk,
+            ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o          => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
         );
 
     --================================--
@@ -342,11 +353,11 @@ begin
 
     i_csc_fed : entity work.csc_fed
         generic map(
-            g_USE_SLINK_ROCKET  => true,
             g_NUM_OF_DMBs       => CFG_NUM_DMBS,
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQLINK_CLK_FREQ  => 100_000_000,
+            g_USE_SLINK_ROCKET  => true,
             g_DISABLE_TTC_DATA  => true
         )
         port map(
@@ -360,6 +371,7 @@ begin
             ttc_clk_ctrl_o          => ttc_clk_ctrl,
             ttc_data_p_i            => '1',
             ttc_data_n_i            => '0',
+            external_trigger_i      => ext_trig,
             
             -- DMB links
             csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
@@ -450,6 +462,30 @@ begin
         );
         
     -- copper input test
+
+    process(ttc_clks.clk_40)
+    begin
+        if rising_edge(ttc_clks.clk_40) then
+            if ext_trig_en = '0' then
+                ext_trig <= '0';
+                ext_trig_cntdown <= (others => '0');
+            else
+                
+                if usbc_trig_i = '1' and ext_trig_cntdown = x"000" then
+                    ext_trig <= '1';
+                    ext_trig_cntdown <= unsigned(ext_trig_deadtime);
+                else
+                    ext_trig <= '0';
+                    
+                    if ext_trig_cntdown /= x"000" then
+                        ext_trig_cntdown <= ext_trig_cntdown - 1;
+                    end if;
+                    
+                end if;
+
+            end if;
+        end if;
+    end process;
     
     process(ttc_clks.clk_40)
     begin
@@ -464,7 +500,7 @@ begin
                     tst_bx_cnt <= tst_bx_cnt + 1;
                 end if;
                 
-                if usbc_trig_i = '1' and tst_trig_cnt /= x"ffffffff" then
+                if ext_trig = '1' and tst_trig_cnt /= x"ffffffff" then
                     tst_trig_cnt <= tst_trig_cnt + 1;
                 end if;
             end if;

@@ -40,6 +40,7 @@ entity csc_fed is
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
         ttc_data_p_i            : in  std_logic;      -- TTC protocol backplane signals
         ttc_data_n_i            : in  std_logic;
+        external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
         
         -- DMB links
         csc_dmb_rx_usrclk_arr_i : in  std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
@@ -186,7 +187,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
-            local_l1a_req_i     => daq_l1a_request,
+            local_l1a_req_i     => daq_l1a_request or external_trigger_i,
             local_l1a_reset_i   => daq_l1a_reset,
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,

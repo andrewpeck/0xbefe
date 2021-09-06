@@ -343,12 +343,14 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i     => '0',
-            board_id_o  => board_id,
-            ipb_reset_i => ipb_reset,
-            ipb_clk_i   => ipb_clk,
-            ipb_mosi_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
-            ipb_miso_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+            reset_i             => '0',
+            board_id_o          => board_id,
+            ext_trig_en_o       => open,
+            ext_trig_deadtime_o => open,
+            ipb_reset_i         => ipb_reset,
+            ipb_clk_i           => ipb_clk,
+            ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o          => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
         );
 
     --================================--
@@ -378,6 +380,7 @@ begin
             ttc_clk_ctrl_o          => ttc_clk_ctrl,
             ttc_data_p_i            => '1',
             ttc_data_n_i            => '0',
+            external_trigger_i      => '0',
 
             gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
             gt_trig0_rx_data_arr_i  => gem_gt_trig0_rx_data_arr,

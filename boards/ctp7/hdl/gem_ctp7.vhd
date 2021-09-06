@@ -345,6 +345,7 @@ begin
     g_gem_logic : if not CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         i_gem : entity work.gem_amc
             generic map(
+                g_DISABLE_TTC_DATA   => false,
                 g_GEM_STATION        => CFG_GEM_STATION,
                 g_NUM_OF_OHs         => CFG_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH    => CFG_NUM_GBTS_PER_OH,
@@ -353,7 +354,8 @@ begin
                 g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX,
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS  => 10,
-                g_DAQ_CLK_FREQ       => 62_500_000 --50_000_000
+                g_DAQ_CLK_FREQ       => 62_500_000, --50_000_000
+                g_IS_SLINK_ROCKET    => false
             )
             port map(
                 reset_i                 => '0',
@@ -364,7 +366,7 @@ begin
                 ttc_clocks_i            => ttc_clocks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl,
-
+                external_trigger_i      => '0',
 
                 gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
                 gt_trig0_rx_data_arr_i  => gem_gt_trig0_rx_data_arr,
