@@ -259,6 +259,9 @@ architecture Behavioral of daq is
     signal spy_fifo_afull_cnt       : std_logic_vector(15 downto 0);
     
     signal spy_gbe_skip_headers     : std_logic;
+    signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
+    signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
+    signal spy_gbe_ethertype          : std_logic_vector(15 downto 0);    
     signal spy_prescale             : std_logic_vector(15 downto 0);
     
     signal spy_err_evt_too_big      : std_logic;
@@ -868,6 +871,9 @@ begin
             gbe_clk_i           => spy_clk_i,
             gbe_tx_data_o       => spy_link_o,
             skip_eth_header_i   => spy_gbe_skip_headers,
+            dest_mac_i          => spy_gbe_dest_mac,
+            source_mac_i        => spy_gbe_source_mac,
+            ether_type_i        => spy_gbe_ethertype,
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout,
             data_rd_en          => spy_fifo_rd_en,

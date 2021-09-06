@@ -614,6 +614,27 @@
         <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
               description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
               fw_signal="spy_prescale" fw_default="0x0001"/>
+        <node id="SPY_DEST_MAC_1"      address="0x1"  mask="0x0000ffff" permission="rw"
+              description="Destination MAC part 1 i.e. 16 bits that are sent out first"
+              fw_signal="spy_gbe_dest_mac(15 downto 0)" fw_default="0xbeef"/>
+        <node id="SPY_DEST_MAC_2"      address="0x1"  mask="0xffff0000" permission="rw"
+              description="Destination MAC part 2 i.e. 16 bits that are sent out second"
+              fw_signal="spy_gbe_dest_mac(31 downto 16)" fw_default="0xcafe"/>
+        <node id="SPY_DEST_MAC_3"      address="0x2"  mask="0x0000ffff" permission="rw"
+              description="Destination MAC part 3 -- 16 bits that are sent out last"
+              fw_signal="spy_gbe_dest_mac(47 downto 32)" fw_default="0xaaaa"/>
+        <node id="SPY_SOURCE_MAC_1"      address="0x2"  mask="0xffff0000" permission="rw"
+              description="Source MAC part 1 i.e. 16 bits that are sent out first"
+              fw_signal="spy_gbe_source_mac(15 downto 0)" fw_default="0xbefe"/>
+        <node id="SPY_SOURCE_MAC_2"      address="0x2"  mask="0x0000ffff" permission="rw"
+              description="Source MAC part 2 i.e. 16 bits that are sent out second"
+              fw_signal="spy_gbe_source_mac(31 downto 16)" fw_default="0xbefe"/>
+        <node id="SPY_SOURCE_MAC_3"      address="0x2"  mask="0xffff0000" permission="rw"
+              description="Source MAC part 3 -- 16 bits that are sent out last"
+              fw_signal="spy_gbe_source_mac(47 downto 32)" fw_default="0xbefe"/>
+        <node id="SPY_ETHERTYPE"      address="0x3"  mask="0x0000ffff" permission="rw"
+              description="Ethertype (should be set to jumbo)"
+              fw_signal="spy_gbe_ethertype" fw_default="0x7088"/>
     </node>
   </node>
 

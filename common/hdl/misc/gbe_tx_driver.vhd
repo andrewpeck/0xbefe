@@ -12,6 +12,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.common_pkg.all;
 
 entity gbe_tx_driver is
@@ -33,6 +36,9 @@ entity gbe_tx_driver is
         
         -- config
         skip_eth_header_i       : in  std_logic; -- if this is set high, the eth header will be skipped, just like in DDU, otherwise this will produce normal ETH frames of eth type 0x8870
+        dest_mac_i              : in  std_logic_vector(47 downto 0);
+        source_mac_i            : in  std_logic_vector(47 downto 0);
+        ether_type_i            : in  std_logic_vector(15 downto 0);
         
         -- control
         data_empty_i            : in  std_logic;
@@ -61,13 +67,15 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
 
     constant ETH_IDLE           : std_logic_vector(15 downto 0) := x"50BC";
     constant ETH_PREAMBLE_SOF   : t_std16_array(0 to 3) := (x"55FB", x"5555", x"5555", x"D555");
-    constant ETH_HEADER         : t_std16_array(0 to 6) := (x"CFED", x"CFED", x"CFED", x"9E80", x"1417", x"1500", x"7088");
+--    constant ETH_HEADER         : t_std16_array(0 to 6) := (x"CFED", x"CFED", x"CFED", x"9E80", x"1417", x"1500", x"7088");
     constant ETH_EOF            : t_std16_array(0 to 1) := (x"F7FD", x"C5BC");
     constant DDU_EOE_WORD64     : std_logic_vector(63 downto 0) := x"8000ffff80008000";
 
     type t_eth_state is (IDLE, PREAMBLE_SOF, HEADER, PAYLOAD, FILLER, PACKET_CNT, CRC, EOF);
     
     signal reset                : std_logic;
+    
+    signal eth_header           : t_std16_array(0 to 6) := (others => (others => '0'));
     
     signal state                : t_eth_state;
     signal word_idx             : integer range 0 to 16383 := 0;
@@ -105,6 +113,14 @@ begin
             clk_i   => gbe_clk_i,
             sync_o  => reset
         );
+
+    eth_header(0) <= dest_mac_i(15 downto 0);
+    eth_header(1) <= dest_mac_i(31 downto 16);
+    eth_header(2) <= dest_mac_i(47 downto 32);
+    eth_header(3) <= source_mac_i(15 downto 0);
+    eth_header(4) <= source_mac_i(31 downto 16);
+    eth_header(5) <= source_mac_i(47 downto 32);
+    eth_header(6) <= ether_type_i;
 
     gbe_tx_data_o.txchardispmode <= (others => '0');
     gbe_tx_data_o.txchardispval <= (others => '0');
@@ -191,10 +207,10 @@ begin
                         min_idle_cnt <= 0;
                         crc_reset <= '0';
                         crc_en <= '1';
-                        data <= ETH_HEADER(word_idx);
+                        data <= eth_header(word_idx);
                         charisk <= "00";
                         
-                        if (word_idx = ETH_HEADER'length - 1) then
+                        if (word_idx = eth_header'length - 1) then
                             word_idx <= 0;
                             data_rd_en <= '1';
                             state <= PAYLOAD;
