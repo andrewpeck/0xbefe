@@ -41,6 +41,7 @@ if len(sys.argv) > 1:
     heading("Connecting to %s" % hostname)
     import rpyc
     conn = rpyc.classic.connect(hostname)
+    conn._config["sync_request_timeout"] = 240
     rw = conn.modules["common.rw_reg"]
     befe = conn.modules["common.fw_utils"]
 
@@ -490,7 +491,9 @@ class TopScreenDaq(TopScreen):
         ignore_daqlink = TopStatusItem("Ignore DAQLink", "BEFE.%s.DAQ.CONTROL.IGNORE_DAQLINK" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_ignore_daqlink)
         wait_for_resync = TopStatusItem("Wait For Resync", "BEFE.%s.DAQ.CONTROL.RESET_TILL_RESYNC" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_wait_for_resync)
         freeze_on_error = TopStatusItem("Freeze on Error", "BEFE.%s.DAQ.CONTROL.FREEZE_ON_ERROR" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_freeze_on_error)
-        gen_local_l1a = TopStatusItem("Generate Internal L1A", "BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN" % self.gem_csc, reg_val_bad="self != %d" % int(not self.cfg_use_tcds))
+        if self.is_csc:
+            gen_local_l1a = TopStatusItem("Generate Internal L1A", "BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN" % self.gem_csc, reg_val_bad="self != %d" % int(not self.cfg_use_tcds))
+            spy_skip_empty = TopStatusItem("Local DAQ Skip Empty", "BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_spy_skip_empty)
         tts_override = TopStatusItem("TTS Override", "BEFE.%s.DAQ.CONTROL.TTS_OVERRIDE" % self.gem_csc)
         fed_id = TopStatusItem("FED ID", "BEFE.%s.DAQ.CONTROL.FED_ID" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_fed_id)
         board_id = TopStatusItem("RUI ID" if self.is_csc else "Board ID", "BEFE.SYSTEM.CTRL.BOARD_ID", reg_val_bad="self != %d" % self.cfg_board_id)
@@ -499,23 +502,15 @@ class TopScreenDaq(TopScreen):
         #                            reg_val_bad=["self != %d" % self.cfg_spy_prescale, "self != %d" % self.cfg_spy_skip_empty],
         #                            value_format_str="Prescale %s, %s")
         spy_prescale = TopStatusItem("Local DAQ Prescale", "BEFE.%s.DAQ.CONTROL.SPY.SPY_PRESCALE" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_spy_prescale)
-        spy_skip_empty = TopStatusItem("Local DAQ Skip Empty", "BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS" % self.gem_csc, reg_val_bad="self != %d" % self.cfg_spy_skip_empty)
 
-        self.sec_config = TopSection("Configuration", [
-                                                                state,
-                                                                input_en_mask,
-                                                                ignore_daqlink,
-                                                                wait_for_resync,
-                                                                freeze_on_error,
-                                                                gen_local_l1a,
-                                                                tts_override,
-                                                                fed_id,
-                                                                board_id,
-                                                                dav_timeout,
-                                                                # spy_config,
-                                                                spy_prescale,
-                                                                spy_skip_empty
-                                                            ], height=None)
+
+        config_items = []
+        if self.is_csc:
+            config_items = [state, input_en_mask, ignore_daqlink, wait_for_resync, freeze_on_error, gen_local_l1a, tts_override, fed_id, board_id, dav_timeout, spy_prescale, spy_skip_empty]
+        if self.is_gem:
+            config_items = [state, input_en_mask, ignore_daqlink, wait_for_resync, freeze_on_error, tts_override, fed_id, board_id, dav_timeout, spy_prescale]
+
+        self.sec_config = TopSection("Configuration", config_items, height=None)
 
         # state section
         self.sec_state = TopSection("State",
@@ -568,15 +563,27 @@ class TopScreenDaq(TopScreen):
         col_titles = ["TTS State", "Status", "EvN", "Bitrate", "In Warn", "Evt Warn", "In FIFO", "Evt FIFO"]
         rows = []
         for input in range(num_inputs):
+            si_tts_state = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.STATUS.TTS_STATE" % (self.gem_csc, self.dmb_oh, input))
+            si_input_status = TopStatusItem(None, None, read_callback=self.get_input_status, read_callback_params={"idx": input})
+            si_evn = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVN" % (self.gem_csc, self.dmb_oh, input))
+            if self.is_csc:
+                si_data_rate = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.DATA_WORD_RATE" % (self.gem_csc, self.dmb_oh, input))
+            elif self.is_gem:
+                si_data_rate = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.VFAT_BLOCK_RATE" % (self.gem_csc, self.dmb_oh, input))
+            si_infifo_warn_cnt = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input))
+            si_evtfifo_warn_cnt = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input))
+            si_infifo_data_cnt = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=16384)
+            si_evtfifo_data_cnt = TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=4096)
+
             row = [
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.STATUS.TTS_STATE" % (self.gem_csc, self.dmb_oh, input)),
-                TopStatusItem(None, None, read_callback=self.get_input_status, read_callback_params={"idx": input}),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVN" % (self.gem_csc, self.dmb_oh, input)),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.DATA_WORD_RATE" % (self.gem_csc, self.dmb_oh, input)),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input)),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_NEAR_FULL_CNT" % (self.gem_csc, self.dmb_oh, input)),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.INPUT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=16384),
-                TopStatusItem(None, "BEFE.%s.DAQ.%s%d.COUNTERS.EVT_FIFO_DATA_CNT" % (self.gem_csc, self.dmb_oh, input), is_progress_bar=True, progress_bar_range=4096),
+                si_tts_state,
+                si_input_status,
+                si_evn,
+                si_data_rate,
+                si_infifo_warn_cnt,
+                si_evtfifo_warn_cnt,
+                si_infifo_data_cnt,
+                si_evtfifo_data_cnt,
             ]
             rows.append(row)
 
@@ -624,17 +631,18 @@ class TopScreenDaq(TopScreen):
         def btn_config_handler():
             rw.write_reg('BEFE.%s.TTC.CTRL.MODULE_RESET' % self.gem_csc, 0x1)
             rw.write_reg('BEFE.%s.TTC.CTRL.L1A_ENABLE' % self.gem_csc, 0x0)
-            rw.write_reg('BEFE.%s.TEST.GBE_TEST.ENABLE' % self.gem_csc, 0x0)
+            if self.is_csc:
+                rw.write_reg('BEFE.%s.TEST.GBE_TEST.ENABLE' % self.gem_csc, 0x0)
             rw.write_reg('BEFE.%s.DAQ.CONTROL.DAQ_ENABLE' % self.gem_csc, 0x0)
 
             if use_tcds.get_value():
-                rw.write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 1)
-                rw.write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 0)
+                rw.write_reg('BEFE.%s.TTC.CTRL.CMD_ENABLE' % self.gem_csc, 1)
+                rw.write_reg('BEFE.%s.TTC.GENERATOR.ENABLE' % self.gem_csc, 0)
                 if self.is_csc:
                     rw.write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 0)
             else:
-                rw.write_reg('BEFE.CSC_FED.TTC.CTRL.CMD_ENABLE', 0)
-                rw.write_reg('BEFE.CSC_FED.TTC.GENERATOR.ENABLE', 1)
+                rw.write_reg('BEFE.%s.TTC.CTRL.CMD_ENABLE' % self.gem_csc, 0)
+                rw.write_reg('BEFE.%s.TTC.GENERATOR.ENABLE' % self.gem_csc, 1)
                 if self.is_csc:
                     rw.write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 1)
 
@@ -643,7 +651,8 @@ class TopScreenDaq(TopScreen):
             rw.write_reg('BEFE.%s.DAQ.CONTROL.IGNORE_DAQLINK' % self.gem_csc, ignore_daqlink.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.FREEZE_ON_ERROR' % self.gem_csc, freeze_on_error.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET_TILL_RESYNC' % self.gem_csc, wait_for_resync.get_int_value())
-            rw.write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS' % self.gem_csc, ldaq_skip_empty.get_int_value())
+            if self.is_csc:
+                rw.write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_SKIP_EMPTY_EVENTS' % self.gem_csc, ldaq_skip_empty.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.SPY.SPY_PRESCALE' % self.gem_csc, ldaq_prescale.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.RESET' % self.gem_csc, 0x1)
             rw.write_reg('BEFE.%s.DAQ.LAST_EVENT_FIFO.DISABLE' % self.gem_csc, 0x0)
@@ -736,12 +745,12 @@ class TopScreenDaq(TopScreen):
     def get_input_status(self, params):
         idx = params["idx"]
 
-        in_mask = rw.read_reg('BEFE.CSC_FED.DAQ.CONTROL.INPUT_ENABLE_MASK', verbose=False)
+        in_mask = rw.read_reg('BEFE.%s.DAQ.CONTROL.INPUT_ENABLE_MASK' % self.gem_csc, verbose=False)
         in_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         in_unf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_UFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         evt_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         evt_size_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        evt_64b_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        evt_64b_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False) if self.is_csc else 0
 
         if 0xdeaddead in [in_mask, in_ovf, in_unf, evt_ovf, evt_size_err, evt_64b_err]:
             return color_string("BUS_ERROR", rw.RegVal.STATE_BAD)

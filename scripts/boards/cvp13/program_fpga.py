@@ -29,6 +29,9 @@ elif flavor.lower() == "me0":
 elif flavor.lower() == "csc":
     bitfile = get_config("CONFIG_CVP13_CSC_BITFILE")
 
+heading("Unloading XDMA driver")
+subprocess.Popen("modprobe -r xdma", shell=True, executable="/bin/bash")
+
 vivado_dir = get_config("CONFIG_VIVADO_DIR")
 
 if not path.exists(bitfile):
@@ -78,6 +81,9 @@ print("Found CVP13 on this bus: %s" % cvp13_dev_path)
 print("Applying this config: %s" % pcie_config)
 config_cmd = "cp %s %s" % (pcie_config, cvp13_dev_path + "/config")
 subprocess.Popen(config_cmd, shell=True, executable="/bin/bash")
+
+heading("Loading XDMA driver")
+subprocess.Popen("modprobe xdma", shell=True, executable="/bin/bash")
 
 heading("Checking register access and firmware version")
 time.sleep(1.1)
