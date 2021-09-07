@@ -31,7 +31,9 @@
 
 #define DEVICE_NAME_DEFAULT "/dev/xdma0_c2h_0"
 #define OUT_FILE_DEFAULT "/tmp/cvp13_daq.dat"
-#define SIZE_DEFAULT (67108864)
+#define BUF_SIZE_DEFAULT (67108864)
+#define READ_SIZE_DEFAULT (2097152)
+#define WRITE_SIZE_DEFAULT (1048576)
 
 static volatile int keepRunning = 1;
 
@@ -53,7 +55,9 @@ int main(int argc, char *argv[])
   char *device = DEVICE_NAME_DEFAULT;
 	uint64_t address = 0;
 	char *ofname = OUT_FILE_DEFAULT;
-  uint64_t size = SIZE_DEFAULT;
+  uint64_t buf_size = BUF_SIZE_DEFAULT;
+  uint64_t read_size = READ_SIZE_DEFAULT;
+  uint64_t write_size = WRITE_SIZE_DEFAULT;
 
   ssize_t rc = 0;
 	size_t out_offset = 0;
@@ -66,6 +70,7 @@ int main(int argc, char *argv[])
 	int out_fd = -1;
 	int fpga_fd;
 	long total_time = 0;
+  double data_rate = 0.0;
 	float result;
 	float avg_time = 0;
 	int underflow = 0;
@@ -98,27 +103,36 @@ int main(int argc, char *argv[])
 
   printf("Output file created: %s\n", ofname);
 
-  posix_memalign((void **)&allocated, 4096 /*alignment */ , size + 4096);
+  posix_memalign((void **)&allocated, 4096 /*alignment */ , buf_size + 4096);
 	if (!allocated) {
-		fprintf(stderr, "OOM %lu.\n", size + 4096);
+		fprintf(stderr, "OOM %lu.\n", buf_size + 4096);
     cleanup(fpga_fd, out_fd, allocated);
 		return -ENOMEM;
 	}
 
-  printf("%d byte buffer allocated\n", size);
+  printf("%d byte buffer allocated\n", buf_size);
 
 	buffer = allocated;
 
+  clock_gettime(CLOCK_MONOTONIC, &ts_start);
   while (keepRunning) {
-    rc = read(fpga_fd, buffer, size);
+    rc = read(fpga_fd, buffer + bytes_in_buf, read_size);
     // ignore errors, because they can just come due to device not sending any data for some time
     if (rc >= 0) {
       bytes_in_buf += rc;
+      // printf("Received %d bytes\n", bytes_in_buf);
     }
 
-    if (bytes_in_buf > 32*1024*1024) {
-      rc = write(out_fd, buffer, size);
+    if (bytes_in_buf > write_size) {
+      rc = write(out_fd, buffer, bytes_in_buf);
       bytes_done += bytes_in_buf;
+      clock_gettime(CLOCK_MONOTONIC, &ts_end);
+      timespec_sub(&ts_end, &ts_start);
+      total_time += ts_end.tv_nsec;
+      data_rate = ((double)bytes_done / ((double)total_time / 1000000000.0)) / 1048576.0;
+      printf("Flushing to file %d bytes, total bytes readout is %d. Data_rate is %.2fMB/s\n", bytes_in_buf, bytes_done, total_time, data_rate);
+      clock_gettime(CLOCK_MONOTONIC, &ts_start);
+      // fflush(stdout);
       bytes_in_buf = 0;
     }
 

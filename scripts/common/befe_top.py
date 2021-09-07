@@ -293,14 +293,16 @@ class TopStatusItem(TopStatusItemBase):
             val = self.read_callback() if self.read_callback_params is None else self.read_callback(self.read_callback_params)
             if self.is_progress_bar:
                 val = int(val)
-                self.value_label._percentage = (val / self.progress_bar_range) * 100
+                val_percent = (val / self.progress_bar_range) * 100
+                self.value_label._percentage = val_percent if val_percent <= 100.0 else 100.0
                 self.value_label.label.text = "%d" % val
             else:
                 self.value_label.text = ANSI(val)
         elif self.value_format_str is None:
             val = rw.read_reg(self.regs[0], verbose=False)
             if self.is_progress_bar:
-                self.value_label._percentage = (val / self.progress_bar_range) * 100
+                val_percent = (val / self.progress_bar_range) * 100
+                self.value_label._percentage = val_percent if val_percent <= 100.0 else 100.0
                 self.value_label.label.text = "%d" % val
             else:
                 self.value_label.text = ANSI(val.to_string())
