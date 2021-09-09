@@ -49,7 +49,7 @@ entity pcie is
         
         -- IPbus
         ipb_reset_o             : out std_logic;
-        ipb_clk_i               : out std_logic;
+        ipb_clk_i               : in  std_logic;
         ipb_usr_miso_arr_i      : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
         ipb_usr_mosi_arr_o      : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
         ipb_sys_miso_arr_i      : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
@@ -72,8 +72,8 @@ architecture pcie_arch of pcie is
             pci_exp_rxn             : in  std_logic_vector(3 downto 0);
             axi_aclk                : out std_logic;
             axi_aresetn             : out std_logic;
-            usr_irq_req             : in  std_logic_vector(0 downto 0);
-            usr_irq_ack             : out std_logic_vector(0 downto 0);
+            usr_irq_req             : in  std_logic;
+            usr_irq_ack             : out std_logic;
             msi_enable              : out std_logic;
             msi_vector_width        : out std_logic_vector(2 downto 0);
             m_axil_awaddr           : out std_logic_vector(31 downto 0);
@@ -133,6 +133,34 @@ architecture pcie_arch of pcie is
         );
     end component;    
     
+    component ila_pcie_daq
+        port(
+            clk     : in std_logic;
+            probe0  : in std_logic;
+            probe1  : in std_logic;
+            probe2  : in std_logic_vector(127 downto 0);
+            probe3  : in std_logic;
+            probe4  : in std_logic;
+            probe5  : in std_logic;
+            probe6  : in std_logic;
+            probe7  : in std_logic;
+            probe8  : in std_logic;
+            probe9  : in std_logic_vector(127 downto 0);
+            probe10 : in std_logic;
+            probe11 : in std_logic_vector(19 downto 0);
+            probe12 : in std_logic;
+            probe13 : in std_logic_vector(19 downto 0);
+            probe14 : in std_logic_vector(19 downto 0);
+            probe15 : in std_logic_vector(19 downto 0);
+            probe16 : in std_logic_vector(31 downto 0);
+            probe17 : in std_logic;
+            probe18 : in std_logic_vector(127 downto 0);
+            probe19 : in std_logic;
+            probe20 : in std_logic_vector(15 downto 0);
+            probe21 : in std_logic
+        );
+    end component;    
+    
     -- pcie
     signal reset_sync_axi       : std_logic;
     signal qdma_soft_reset      : std_logic;
@@ -182,6 +210,7 @@ architecture pcie_arch of pcie is
     signal daq_cdc_data         : std_logic_vector(127 downto 0);
 
     signal daq_reset_axi_clk    : std_logic;
+    signal daq_valid_axi_clk    : std_logic;
     
     signal daq_buf_warn         : std_logic;
     signal daq_buf_ovf          : std_logic;
@@ -217,38 +246,6 @@ begin
     
     pcie_link_up_o <= pcie_link_up;
     pcie_phy_ready_o <= pcie_phy_ready;
-
-    --================================--
-    -- Reset
-    --================================--
-    
-    i_reset_sync_axi : entity work.synch
-        generic map(
-            N_STAGES => 3
-        )
-        port map(
-            async_i => reset_i,
-            clk_i   => axi_clk,
-            sync_o  => reset_sync_axi
-        );
-    
-    process(axi_clk)
-    begin
-        if (rising_edge(axi_clk)) then
-            if reset_sync_axi = '1' then
-                qdma_reset_cntdown <= 150;
-            end if;
-            
-            if qdma_reset_cntdown = 0 then
-                qdma_reset_cntdown <= 0;
-                qdma_soft_reset <= '0';
-            else
-                qdma_reset_cntdown <= qdma_reset_cntdown - 1;
-                qdma_soft_reset <= '1';
-            end if;
-            
-        end if;
-    end process;
     
     --================================--
     -- PCIe DMA module
@@ -267,7 +264,7 @@ begin
                                     
             axi_aclk                => axi_clk,
             axi_aresetn             => axi_reset_b,
-            usr_irq_req             => "0",
+            usr_irq_req             => '0',
             usr_irq_ack             => open,
             msi_enable              => open,
             msi_vector_width        => open,
@@ -352,7 +349,7 @@ begin
             almost_full   => open,
             wr_ack        => open,
             rd_clk        => axi_clk,
-            rd_en         => not daq_cdc_empty,
+            rd_en         => '1',
             dout          => daq_cdc_data,
             empty         => daq_cdc_empty,
             prog_empty    => open,
@@ -369,6 +366,7 @@ begin
 
     i_daq_cdc_ovf_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
     i_daqlink_reset_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daq_reset_axi_clk);
+    i_daqlink_valid_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daq_valid_axi_clk);
 
     i_daq_cdc_ovf_latch : entity work.latch
         port map(
@@ -389,7 +387,7 @@ begin
             USE_ADV_FEATURES    => "1403", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
             READ_DATA_WIDTH     => 128,
             WR_DATA_COUNT_WIDTH => 20,
-            PROG_FULL_THRESH    => 58982,
+            PROG_FULL_THRESH    => 471859,
             RD_DATA_COUNT_WIDTH => 20,
             PROG_EMPTY_THRESH   => 6553,
             DOUT_RESET_VALUE    => "0",
@@ -450,9 +448,8 @@ begin
                 pcie_wait_cnt <= (others => '0');
             else
                 if c2h_words_cntdown = x"00000" then
-                    if unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words and daq_buf_valid_cnt = c2h_packet_size_words then
+                    if unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words then
                         c2h_words_cntdown <= c2h_packet_size_words;
-                        daq_buf_valid_cnt <= (others => '0');
                         pcie_wait_cnt <= (others => '0');
                     else
                         c2h_words_cntdown <= (others => '0');
@@ -467,6 +464,10 @@ begin
                 
                 if daq_buf_valid = '1' and daq_buf_valid_cnt /= c2h_packet_size_words then
                     daq_buf_valid_cnt <= daq_buf_valid_cnt + 1;
+                elsif daq_buf_valid = '0' and daq_buf_valid_cnt = c2h_packet_size_words then
+                    daq_buf_valid_cnt <= (others => '0');
+                elsif daq_buf_valid = '1' and daq_buf_valid_cnt = c2h_packet_size_words then
+                    daq_buf_valid_cnt <= x"00001";
                 end if;
                 
                 if daq_buf_valid_cnt = c2h_packet_size_words - 1 then
@@ -617,7 +618,7 @@ begin
     -- DEBUG
     i_vio_pcie : vio_pcie
         port map(
-            clk       => pcie_sysclk_i,
+            clk       => axi_clk,
             probe_in0 => pcie_link_up,
             probe_in1 => pcie_width,
             probe_in2 => pcie_speed,
@@ -627,6 +628,33 @@ begin
             probe_in6 => pcie_err_nonfatal,
             probe_in7 => pcie_local_err,
             probe_in8 => pcie_local_err_valid
+        );
+
+    i_ila_daq : ila_pcie_daq
+        port map(
+            clk     => axi_clk,
+            probe0  => daq_cdc_ovf_axi_clk,
+            probe1  => daq_valid_axi_clk,     
+            probe2  => daq_cdc_data,          
+            probe3  => daq_cdc_empty,         
+            probe4  => daq_buf_valid,         
+            probe5  => daq_reset_axi_clk,     
+            probe6  => daq_buf_warn,          
+            probe7  => daq_buf_ovf,           
+            probe8  => daq_buf_rd_en,         
+            probe9  => daq_buf_dout,          
+            probe10 => daq_buf_empty,         
+            probe11 => daq_buf_rd_cnt,        
+            probe12 => daq_buf_valid,         
+            probe13 => std_logic_vector(c2h_packet_size_words), 
+            probe14 => std_logic_vector(c2h_words_cntdown),     
+            probe15 => std_logic_vector(daq_buf_valid_cnt),     
+            probe16 => std_logic_vector(pcie_wait_cnt),         
+            probe17 => axis_c2h.tlast,        
+            probe18 => axis_c2h.tdata,        
+            probe19 => axis_c2h.tvalid,       
+            probe20 => axis_c2h.tkeep,
+            probe21 => axis_c2h_ready     
         );
 
 end pcie_arch;

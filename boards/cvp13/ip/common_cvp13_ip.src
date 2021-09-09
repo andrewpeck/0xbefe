@@ -6,6 +6,7 @@ boards/cvp13/ip/pcie_xdma/pcie_xdma.xci
 boards/cvp13/ip/vio_qsfp_control/vio_qsfp_control.xci
 boards/cvp13/ip/vio_test/vio_test.xci
 boards/cvp13/ip/vio_pcie/vio_pcie.xci
+boards/cvp13/ip/ila_pcie_daq/ila_pcie_daq.xci
 
 # the following IPs are not really needed, they're just there for testing and experimentation
 #boards/cvp13/ip/axi_bram_ctrl_test/axi_bram_ctrl_test.xci
