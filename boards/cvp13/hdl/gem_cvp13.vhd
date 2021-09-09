@@ -154,7 +154,9 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal clk100               : std_logic;
     signal clk100_led           : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
-
+    signal pcie_packet_size     : std_logic_vector(23 downto 0);
+    signal pcie_packet_timeout  : std_logic_vector(31 downto 0);
+    
     -- debug
     signal tst_bx_cnt           : unsigned(11 downto 0) := (others => '0');
     signal tst_bx_cnt_max       : std_logic_vector(11 downto 0) := x"00f";
@@ -248,27 +250,30 @@ begin
 
     i_pcie : entity work.pcie
         port map(
-            reset_i             => '0', -- TODO: connect it to the FPGA reset
+            reset_i               => '0', -- TODO: connect it to the FPGA reset
+                                  
+            pcie_reset_b_i        => pcie_reset_b_i,
+            pcie_refclk_i         => pcie_refclk0,
+            pcie_sysclk_i         => pcie_refclk0_div2,
+                                  
+            pcie_phy_ready_o      => pcie_phy_ready,
+            pcie_link_up_o        => pcie_link_up,
+                                  
+            status_leds_o         => leds_o,
+            led_i                 => clk100_led,
+                                  
+            daq_to_daqlink_i      => daq_to_daqlink,
+            daqlink_to_daq_o      => daqlink_to_daq,
+                                  
+            pcie_packet_size_i    => pcie_packet_size,
+            pcie_packet_timeout_i => pcie_packet_timeout,
 
-            pcie_reset_b_i      => pcie_reset_b_i,
-            pcie_refclk_i       => pcie_refclk0,
-            pcie_sysclk_i       => pcie_refclk0_div2,
-
-            pcie_phy_ready_o    => pcie_phy_ready,
-            pcie_link_up_o      => pcie_link_up,
-
-            status_leds_o       => leds_o,
-            led_i               => clk100_led,
-
-            daq_to_daqlink_i    => daq_to_daqlink,
-            daqlink_to_daq_o    => daqlink_to_daq,
-
-            ipb_reset_o         => ipb_reset,
-            ipb_clk_i           => ipb_clk,
-            ipb_usr_miso_arr_i  => ipb_usr_miso_arr,
-            ipb_usr_mosi_arr_o  => ipb_usr_mosi_arr,
-            ipb_sys_miso_arr_i  => ipb_sys_miso_arr,
-            ipb_sys_mosi_arr_o  => ipb_sys_mosi_arr
+            ipb_reset_o           => ipb_reset,
+            ipb_clk_i             => ipb_clk,
+            ipb_usr_miso_arr_i    => ipb_usr_miso_arr,
+            ipb_usr_mosi_arr_o    => ipb_usr_mosi_arr,
+            ipb_sys_miso_arr_i    => ipb_sys_miso_arr,
+            ipb_sys_mosi_arr_o    => ipb_sys_mosi_arr
         );
 
     --================================--
@@ -351,14 +356,16 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i             => '0',
-            board_id_o          => board_id,
-            ext_trig_en_o       => ext_trig_en,
-            ext_trig_deadtime_o => ext_trig_deadtime,
-            ipb_reset_i         => ipb_reset,
-            ipb_clk_i           => ipb_clk,
-            ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
-            ipb_miso_o          => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+            reset_i               => '0',
+            board_id_o            => board_id,
+            ext_trig_en_o         => ext_trig_en,
+            ext_trig_deadtime_o   => ext_trig_deadtime,
+            pcie_packet_size_o    => pcie_packet_size,
+            pcie_packet_timeout_o => pcie_packet_timeout,
+            ipb_reset_i           => ipb_reset,
+            ipb_clk_i             => ipb_clk,
+            ipb_mosi_i            => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o            => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
         );
 
     --================================--
