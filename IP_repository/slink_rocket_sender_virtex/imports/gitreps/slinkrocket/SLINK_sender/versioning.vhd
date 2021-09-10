@@ -4,11 +4,15 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 
 package mydefs is
-	constant version : std_logic_vector(31 downto 0) := x"5E100300";
+	constant version : std_logic_vector(31 downto 0) := x"5E100301";
 	constant	FPGA_Brand: string	:= "XILINX";
 end package mydefs;
 
 -- version .......
+--*****************************************************************
+-- version "5E100301"	23/06/2021
+-- Fix problem when packet size < 128b < is the last packet contains only 64bit
+-- build_pckt_s.vhd
 --*****************************************************************
 -- version "5E100300"	14/07/2020
 -- Add support on Ultrascale
