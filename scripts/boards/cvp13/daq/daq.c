@@ -32,7 +32,7 @@
 #define DEVICE_NAME_DEFAULT "/dev/xdma0_c2h_0"
 #define OUT_FILE_DEFAULT "/tmp/cvp13_daq.dat"
 #define BUF_SIZE_DEFAULT (67108864)
-#define READ_SIZE_DEFAULT (2097152)
+#define READ_SIZE_DEFAULT (1048576)
 #define WRITE_SIZE_DEFAULT (1048576)
 
 static volatile int keepRunning = 1;

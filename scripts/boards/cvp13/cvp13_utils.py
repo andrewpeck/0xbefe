@@ -6,7 +6,10 @@ def detect_cvp13_cards():
     dirs = os.listdir(devices_dir)
     cvp13s = []
     for dir in dirs:
-        f = open(devices_dir + "/" + dir + "/device", "r")
+        device_file = devices_dir + "/" + dir + "/device"
+        if not os.path.isfile(device_file):
+            continue
+        f = open(device_file, "r")
         dev = f.read().replace("\n", "")
         f.close()
         if dev == "0xbefe":

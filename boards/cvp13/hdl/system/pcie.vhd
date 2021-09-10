@@ -371,7 +371,7 @@ begin
     
     i_crc : entity work.FED_fragment_CRC16_D128b
         port map ( 
-            clear_p  => crc_clear or reset,
+            clear_p  => crc_clear,
             clk      => fed_clk,
             enable   => crc_en,
             Data     => crc_data_in,
@@ -512,12 +512,15 @@ begin
             if daq_reset = '1' then
                 c2h_words_cntdown <= (others => '0');
                 daq_buf_valid_cnt <= (others => '0');
+                daq_buf_rd_en <= '0';
             else
                 if c2h_words_cntdown = x"00000" then
                     if (unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words) or (daq_flush = '1' and daq_buf_rd_cnt /= x"00000") then
                         c2h_words_cntdown <= c2h_packet_size_words;
+                        daq_buf_rd_en <= '0';
                     else
                         c2h_words_cntdown <= (others => '0');
+                        daq_buf_rd_en <= '0';
                     end if;
                 else
                     if axis_c2h_ready = '1' and daq_buf_empty = '0' then
