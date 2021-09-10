@@ -462,6 +462,7 @@ package common_pkg is
         buf_had_ovf     : std_logic;
         cdc_had_ovf     : std_logic;
         c2h_ready       : std_logic;
+        c2h_write_err   : std_logic;
     end record;
 
     --===============================--

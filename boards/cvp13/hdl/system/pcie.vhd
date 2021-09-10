@@ -206,21 +206,23 @@ architecture pcie_arch of pcie is
     signal c2h_status           : std_logic_vector(7 downto 0);
     signal h2c_status           : std_logic_vector(7 downto 0);
     
-    signal fed_clk          : std_logic;
-    signal fed_data         : std_logic_vector(127 downto 0);
-    signal fed_data_head    : std_logic;
-    signal fed_data_trail   : std_logic;
-    signal fed_data_we      : std_logic;
+    signal c2h_write_err        : std_logic;
     
-    signal fed_data_d       : std_logic_vector(127 downto 0);
-    signal fed_data_head_d  : std_logic;
-    signal fed_data_trail_d : std_logic;
-    signal fed_data_we_d    : std_logic;
-    
-    signal crc              : std_logic_vector(15 downto 0);
-    signal crc_data_in      : std_logic_vector(127 downto 0);
-    signal crc_clear        : std_logic;
-    signal crc_en           : std_logic;        
+    signal fed_clk              : std_logic;
+    signal fed_data             : std_logic_vector(127 downto 0);
+    signal fed_data_head        : std_logic;
+    signal fed_data_trail       : std_logic;
+    signal fed_data_we          : std_logic;
+                                
+    signal fed_data_d           : std_logic_vector(127 downto 0);
+    signal fed_data_head_d      : std_logic;
+    signal fed_data_trail_d     : std_logic;
+    signal fed_data_we_d        : std_logic;
+                                
+    signal crc                  : std_logic_vector(15 downto 0);
+    signal crc_data_in          : std_logic_vector(127 downto 0);
+    signal crc_clear            : std_logic;
+    signal crc_en               : std_logic;        
     
     signal daq_cdc_empty        : std_logic;
     signal daq_cdc_valid        : std_logic;
@@ -504,6 +506,7 @@ begin
     pcie_daq_status_o.cdc_had_ovf <= daq_cdc_ovf_latch;
     pcie_daq_status_o.buf_words <= daq_buf_rd_cnt;
     pcie_daq_status_o.c2h_ready <= axis_c2h_ready;
+    pcie_daq_status_o.c2h_write_err <= c2h_write_err;
     pcie_daq_status_o.word_size_bytes <= std_logic_vector(to_unsigned(AXI_STREAM_WORD_SIZE_BYTES, 7));
 
     process(axi_clk)
@@ -513,6 +516,7 @@ begin
                 c2h_words_cntdown <= (others => '0');
                 daq_buf_valid_cnt <= (others => '0');
                 daq_buf_rd_en <= '0';
+                c2h_write_err <= '0';
             else
                 if c2h_words_cntdown = x"00000" then
                     if (unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words) or (daq_flush = '1' and daq_buf_rd_cnt /= x"00000") then
@@ -549,6 +553,10 @@ begin
                 axis_c2h.tdata <= daq_buf_dout;
                 axis_c2h.tvalid <= daq_buf_valid;
                 axis_c2h.tkeep <= (others => daq_buf_valid);
+                
+                if axis_c2h_ready = '0' and axis_c2h.tvalid = '1' then
+                    c2h_write_err <= '1';
+                end if;
                 
             end if;
         end if;

@@ -42,7 +42,11 @@
           description="AXI stream FIFO is currently in overflow"
           fw_signal="pcie_daq_status.buf_ovf"
           sw_val_bad="self == 1"/>
-    <node id="WORD_SIZE_BYTES" address="0x0" mask="0x000007f0" permission="r"
+    <node id="C2H_WRITE_ERR" address="0x0" mask="0x00000010" permission="r"
+          description="This flag is set high if a write to C2H happened when the C2H_READY was low (can happen due to FIFO read latency)"
+          fw_signal="pcie_daq_status.c2h_write_err"
+          sw_val_bad="self == 1"/>
+    <node id="WORD_SIZE_BYTES" address="0x0" mask="0x00000fe0" permission="r"
           description="Word size in bytes"
           fw_signal="pcie_daq_status.word_size_bytes"
           sw_units="bytes"/>
