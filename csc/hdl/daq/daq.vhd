@@ -355,6 +355,7 @@ begin
     daq_to_daqlink_o.tts_state <= tts_state;
     daq_to_daqlink_o.event_clk <= daq_clk_i;
     daq_to_daqlink_o.event_valid <= daqfifo_valid;
+    daq_to_daqlink_o.daq_enabled <= daq_enable;
     
     g_amc13_daqlink: if not g_IS_SLINK_ROCKET generate
         daq_to_daqlink_o.reset <= '0'; -- will need to investigate this later

@@ -23,14 +23,6 @@
           description="Sets the minimum separation of consecutive external triggers in BX (any trigger that comes in earlier after last trigger than the set value will be discarded). Default is set to 400 to limit the rate to 100kHz"
           fw_signal="ext_trig_deadtime" fw_default="0x190"
           sw_units="BX"/>
-    <node id="PCIE_PACKET_SIZE" address="0x4" mask="0x00ffffff" permission="rw"
-          description="Sets the PCIe packet size in bytes for CVP13 DAQ -- this should match the read size in the DAQ application. Higher size should result in higher throughput."
-          fw_signal="pcie_packet_size" fw_default="0x800000"
-          sw_units="bytes"/>
-    <node id="PCIE_PACKET_TIMEOUT" address="0x5" permission="rw"
-          description="Sets the PCIe packet timeout in units of AXI clock cycles (250MHz) -- if the packet builder does not receive enough data to fill make PCIE_PACKET_SIZE packet in this time, it will send a shorter packet with the data available."
-          fw_signal="pcie_packet_timeout" fw_default="0x00800000"
-          sw_units="axi clocks"/>
   </node>
 
   <node id="RELEASE" address="0x50">

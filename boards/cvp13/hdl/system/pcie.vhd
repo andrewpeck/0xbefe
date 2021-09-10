@@ -43,9 +43,11 @@ entity pcie is
         -- DAQlink interface        
         daq_to_daqlink_i        : in  t_daq_to_daqlink;
         daqlink_to_daq_o        : out t_daqlink_to_daq;
-        pcie_packet_size_i      : in  std_logic_vector(23 downto 0);
-        pcie_packet_timeout_i   : in  std_logic_vector(31 downto 0);
         
+        -- PCIe DAQ control and status
+        axi_clk_o               : out std_logic;
+        pcie_daq_control_i      : in  t_pcie_daq_control;
+        pcie_daq_status_o       : out t_pcie_daq_status;
         
         -- IPbus
         ipb_reset_o             : out std_logic;
@@ -189,6 +191,8 @@ architecture pcie_arch of pcie is
     constant PCIE_LINK_LED_SEQ_HIGH         : std_logic_vector(7 downto 0) := x"7e";
     constant PCIE_LINK_LED_SEQ_LOW          : std_logic_vector(7 downto 0) := x"18";
         
+    constant AXI_STREAM_WORD_SIZE_BYTES     : integer := 16;
+        
     -- axi common
     signal axi_clk              : std_logic;
     signal axi_reset_b          : std_logic;
@@ -202,32 +206,48 @@ architecture pcie_arch of pcie is
     signal c2h_status           : std_logic_vector(7 downto 0);
     signal h2c_status           : std_logic_vector(7 downto 0);
     
+    signal fed_clk          : std_logic;
+    signal fed_data         : std_logic_vector(127 downto 0);
+    signal fed_data_head    : std_logic;
+    signal fed_data_trail   : std_logic;
+    signal fed_data_we      : std_logic;
+    
+    signal fed_data_d       : std_logic_vector(127 downto 0);
+    signal fed_data_head_d  : std_logic;
+    signal fed_data_trail_d : std_logic;
+    signal fed_data_we_d    : std_logic;
+    
+    signal crc              : std_logic_vector(15 downto 0);
+    signal crc_data_in      : std_logic_vector(127 downto 0);
+    signal crc_clear        : std_logic;
+    signal crc_en           : std_logic;        
+    
     signal daq_cdc_empty        : std_logic;
     signal daq_cdc_valid        : std_logic;
     signal daq_cdc_ovf          : std_logic;
     signal daq_cdc_ovf_axi_clk  : std_logic;
     signal daq_cdc_ovf_latch    : std_logic;
-    signal daq_cdc_data         : std_logic_vector(127 downto 0);
+    signal daq_cdc_data         : std_logic_vector(AXI_STREAM_WORD_SIZE_BYTES * 8 - 1 downto 0);
 
-    signal daq_reset_axi_clk    : std_logic;
-    signal daq_valid_axi_clk    : std_logic;
+    signal daq_reset            : std_logic;
+    signal daqlink_reset_axi_clk: std_logic;
+    signal daqlink_valid_axi_clk: std_logic;
+    signal daq_enabled_axi_clk  : std_logic;
+    signal daq_flush            : std_logic;
     
     signal daq_buf_warn         : std_logic;
     signal daq_buf_ovf          : std_logic;
     signal daq_buf_ovf_latch    : std_logic;
     signal daq_buf_rd_en        : std_logic;
-    signal daq_buf_dout         : std_logic_vector(127 downto 0);
+    signal daq_buf_dout         : std_logic_vector(AXI_STREAM_WORD_SIZE_BYTES * 8 - 1 downto 0);
     signal daq_buf_empty        : std_logic;
+    signal daq_buf_almost_empty : std_logic;
     signal daq_buf_rd_cnt       : std_logic_vector(19 downto 0);
     signal daq_buf_valid        : std_logic;
 
-    signal c2h_packet_size_bytes: std_logic_vector(23 downto 0);
     signal c2h_packet_size_words: unsigned(19 downto 0);
     signal c2h_words_cntdown    : unsigned(19 downto 0);
     signal daq_buf_valid_cnt    : unsigned(19 downto 0);
-
-    signal pcie_packet_timeout  : unsigned(31 downto 0);
-    signal pcie_wait_cnt        : unsigned(31 downto 0);
 
     -- axi lite    
     signal axil_m2s             : t_axi_lite_m2s;
@@ -246,6 +266,7 @@ begin
     
     pcie_link_up_o <= pcie_link_up;
     pcie_phy_ready_o <= pcie_phy_ready;
+    axi_clk_o <= axi_clk;
     
     --================================--
     -- PCIe DMA module
@@ -318,7 +339,45 @@ begin
     --================================--  
   
     axis_h2c_ready <= '1';
+    fed_clk <= daq_to_daqlink_i.event_clk;
+    
+    ---------- Calculate CRC ----------
         
+    process(fed_clk)
+    begin
+        if rising_edge(fed_clk) then
+            fed_data_d       <= daq_to_daqlink_i.event_data;
+            fed_data_head_d  <= daq_to_daqlink_i.event_header;
+            fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
+            fed_data_we_d    <= daq_to_daqlink_i.event_valid;
+            crc_clear      <= daq_to_daqlink_i.event_trailer or daq_to_daqlink_i.reset;
+            
+            -- substitute the CRC
+            if fed_data_trail_d = '1' then
+                fed_data(31 downto 16) <= crc;
+            else
+                fed_data(31 downto 16) <= fed_data_d(31 downto 16);
+            end if;
+            fed_data(127 downto 32) <= fed_data_d(127 downto 32);
+            fed_data(15 downto 0) <= fed_data_d(15 downto 0);
+            fed_data_head    <= fed_data_head_d;
+            fed_data_trail   <= fed_data_trail_d;
+            fed_data_we      <= fed_data_we_d;            
+        end if;
+    end process;
+    
+    crc_en <= daq_to_daqlink_i.event_valid;
+    crc_data_in <= daq_to_daqlink_i.event_data;
+    
+    i_crc : entity work.FED_fragment_CRC16_D128b
+        port map ( 
+            clear_p  => crc_clear or reset,
+            clk      => fed_clk,
+            enable   => crc_en,
+            Data     => crc_data_in,
+            CRC_out  => crc
+        );
+    
     -- CDC fifo between the DAQ clk and the AXI clk
     i_daq_cdc_fifo : xpm_fifo_async
         generic map(
@@ -330,7 +389,7 @@ begin
             FIFO_READ_LATENCY   => 1,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 128,
+            READ_DATA_WIDTH     => AXI_STREAM_WORD_SIZE_BYTES * 8,
             CDC_SYNC_STAGES     => 2,
             DOUT_RESET_VALUE    => "0",
             ECC_MODE            => "no_ecc"
@@ -338,9 +397,9 @@ begin
         port map(
             sleep         => '0',
             rst           => daq_to_daqlink_i.reset,
-            wr_clk        => daq_to_daqlink_i.event_clk,
-            wr_en         => daq_to_daqlink_i.event_valid,
-            din           => daq_to_daqlink_i.event_data,
+            wr_clk        => fed_clk,
+            wr_en         => fed_data_we,
+            din           => fed_data,
             full          => open,
             prog_full     => open,
             wr_data_count => open,
@@ -364,13 +423,16 @@ begin
             dbiterr       => open
         );    
 
-    i_daq_cdc_ovf_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
-    i_daqlink_reset_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daq_reset_axi_clk);
-    i_daqlink_valid_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daq_valid_axi_clk);
+    i_daq_cdc_ovf_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
+    i_daqlink_reset_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daqlink_reset_axi_clk);
+    i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
+    i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
+
+    daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;
 
     i_daq_cdc_ovf_latch : entity work.latch
         port map(
-            reset_i => daq_reset_axi_clk,
+            reset_i => daq_reset,
             clk_i   => axi_clk,
             input_i => daq_cdc_ovf_axi_clk,
             latch_o => daq_cdc_ovf_latch
@@ -380,12 +442,12 @@ begin
         generic map(
             FIFO_MEMORY_TYPE    => "ultra",
             FIFO_WRITE_DEPTH    => 524288,
-            WRITE_DATA_WIDTH    => 128,
+            WRITE_DATA_WIDTH    => AXI_STREAM_WORD_SIZE_BYTES * 8,
             READ_MODE           => "std",
             FIFO_READ_LATENCY   => 8,
             FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => "1403", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 128,
+            USE_ADV_FEATURES    => "1c03", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+            READ_DATA_WIDTH     => AXI_STREAM_WORD_SIZE_BYTES * 8,
             WR_DATA_COUNT_WIDTH => 20,
             PROG_FULL_THRESH    => 471859,
             RD_DATA_COUNT_WIDTH => 20,
@@ -395,7 +457,7 @@ begin
         )
         port map(
             sleep         => '0',
-            rst           => daq_reset_axi_clk,
+            rst           => daq_reset,
             wr_clk        => axi_clk,
             wr_en         => daq_cdc_valid,
             din           => daq_cdc_data,
@@ -413,7 +475,7 @@ begin
             rd_data_count => daq_buf_rd_cnt,
             underflow     => open,
             rd_rst_busy   => open,
-            almost_empty  => open,
+            almost_empty  => daq_buf_almost_empty,
             data_valid    => daq_buf_valid,
             injectsbiterr => '0',
             injectdbiterr => '0',
@@ -423,7 +485,7 @@ begin
     
     i_daq_buf_ovf_latch : entity work.latch
         port map(
-            reset_i => daq_reset_axi_clk,
+            reset_i => daq_reset,
             clk_i   => axi_clk,
             input_i => daq_buf_ovf,
             latch_o => daq_buf_ovf_latch
@@ -434,26 +496,28 @@ begin
     daqlink_to_daq_o.disperr_cnt <= (others => '0');
     daqlink_to_daq_o.notintable_cnt <= (others => '0');
 
-    c2h_packet_size_bytes <= pcie_packet_size_i;
-    c2h_packet_size_words <= unsigned(c2h_packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
+    c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
+    daq_flush <= (not daq_enabled_axi_clk) or pcie_daq_control_i.flush; 
 
-    pcie_packet_timeout <= unsigned(pcie_packet_timeout_i);
+    pcie_daq_status_o.buf_had_ovf <= daq_buf_ovf_latch;
+    pcie_daq_status_o.buf_ovf <= daq_buf_ovf;
+    pcie_daq_status_o.cdc_had_ovf <= daq_cdc_ovf_latch;
+    pcie_daq_status_o.buf_words <= daq_buf_rd_cnt;
+    pcie_daq_status_o.c2h_ready <= axis_c2h_ready;
+    pcie_daq_status_o.word_size_bytes <= std_logic_vector(to_unsigned(AXI_STREAM_WORD_SIZE_BYTES, 7));
 
     process(axi_clk)
     begin
         if rising_edge(axi_clk) then
-            if daq_reset_axi_clk = '1' then
+            if daq_reset = '1' then
                 c2h_words_cntdown <= (others => '0');
                 daq_buf_valid_cnt <= (others => '0');
-                pcie_wait_cnt <= (others => '0');
             else
                 if c2h_words_cntdown = x"00000" then
-                    if unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words then
+                    if (unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words) or (daq_flush = '1' and daq_buf_rd_cnt /= x"00000") then
                         c2h_words_cntdown <= c2h_packet_size_words;
-                        pcie_wait_cnt <= (others => '0');
                     else
                         c2h_words_cntdown <= (others => '0');
-                        pcie_wait_cnt <= pcie_wait_cnt + 1;
                     end if;
                 else
                     if axis_c2h_ready = '1' and daq_buf_empty = '0' then
@@ -470,7 +534,7 @@ begin
                     daq_buf_valid_cnt <= x"00001";
                 end if;
                 
-                if daq_buf_valid_cnt = c2h_packet_size_words - 1 then
+                if (daq_buf_valid_cnt = c2h_packet_size_words - 1) or (daq_flush = '1' and daq_buf_almost_empty = '1') then
                     axis_c2h.tlast <= '1';
                 else
                     axis_c2h.tlast <= '0';
@@ -483,6 +547,30 @@ begin
             end if;
         end if;
     end process;
+
+    i_words_sent_cnt : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH  => 44,
+            g_ALLOW_ROLLOVER => false
+        )
+        port map(
+            ref_clk_i => axi_clk,
+            reset_i   => daq_reset,
+            en_i      => axis_c2h.tvalid,
+            count_o   => pcie_daq_status_o.words_sent
+        );
+
+    i_word_rate : entity work.rate_counter
+        generic map(
+            g_CLK_FREQUENCY => std_logic_vector(to_unsigned(125_000_000, 32)),
+            g_COUNTER_WIDTH => 28
+        )
+        port map(
+            clk_i   => axi_clk,
+            reset_i => daq_reset,
+            en_i    => axis_c2h.tvalid,
+            rate_o  => pcie_daq_status_o.word_rate
+        );
 
     --================================--
     -- IPbus / wishbone bridge
@@ -634,11 +722,11 @@ begin
         port map(
             clk     => axi_clk,
             probe0  => daq_cdc_ovf_axi_clk,
-            probe1  => daq_valid_axi_clk,     
+            probe1  => daqlink_valid_axi_clk,     
             probe2  => daq_cdc_data,          
             probe3  => daq_cdc_empty,         
             probe4  => daq_buf_valid,         
-            probe5  => daq_reset_axi_clk,     
+            probe5  => daqlink_reset_axi_clk,     
             probe6  => daq_buf_warn,          
             probe7  => daq_buf_ovf,           
             probe8  => daq_buf_rd_en,         
@@ -649,7 +737,7 @@ begin
             probe13 => std_logic_vector(c2h_packet_size_words), 
             probe14 => std_logic_vector(c2h_words_cntdown),     
             probe15 => std_logic_vector(daq_buf_valid_cnt),     
-            probe16 => std_logic_vector(pcie_wait_cnt),         
+            probe16 => (others => '0'),         
             probe17 => axis_c2h.tlast,        
             probe18 => axis_c2h.tdata,        
             probe19 => axis_c2h.tvalid,       

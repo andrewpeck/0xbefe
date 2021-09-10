@@ -437,6 +437,7 @@ package common_pkg is
         event_header    : std_logic;
         event_trailer   : std_logic;
         event_data      : std_logic_vector(127 downto 0);
+        daq_enabled     : std_logic;
     end record;
 
     type t_daqlink_to_daq is record
@@ -444,6 +445,23 @@ package common_pkg is
         backpressure    : std_logic;
         disperr_cnt     : std_logic_vector(15 downto 0);
         notintable_cnt  : std_logic_vector(15 downto 0);
+    end record;
+
+    type t_pcie_daq_control is record
+        reset               : std_logic;
+        flush               : std_logic;
+        packet_size_bytes   : std_logic_vector(23 downto 0);
+    end record;
+
+    type t_pcie_daq_status is record
+        word_size_bytes : std_logic_vector(6 downto 0);
+        buf_words       : std_logic_vector(19 downto 0);
+        words_sent      : std_logic_vector(43 downto 0);
+        word_rate       : std_logic_vector(27 downto 0);
+        buf_ovf         : std_logic;
+        buf_had_ovf     : std_logic;
+        cdc_had_ovf     : std_logic;
+        c2h_ready       : std_logic;
     end record;
 
     --===============================--

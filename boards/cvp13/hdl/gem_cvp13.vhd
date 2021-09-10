@@ -141,6 +141,10 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal pcie_phy_ready       : std_logic;
     signal pcie_link_up         : std_logic;
 
+    signal axi_clk              : std_logic;
+    signal pcie_daq_control     : t_pcie_daq_control;
+    signal pcie_daq_status      : t_pcie_daq_status;
+        
     -- slow control
     signal ipb_reset            : std_logic;
     signal ipb_clk              : std_logic;
@@ -154,8 +158,6 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal clk100               : std_logic;
     signal clk100_led           : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
-    signal pcie_packet_size     : std_logic_vector(23 downto 0);
-    signal pcie_packet_timeout  : std_logic_vector(31 downto 0);
     
     -- debug
     signal tst_bx_cnt           : unsigned(11 downto 0) := (others => '0');
@@ -264,9 +266,10 @@ begin
                                   
             daq_to_daqlink_i      => daq_to_daqlink,
             daqlink_to_daq_o      => daqlink_to_daq,
-                                  
-            pcie_packet_size_i    => pcie_packet_size,
-            pcie_packet_timeout_i => pcie_packet_timeout,
+
+            axi_clk_o             => axi_clk,
+            pcie_daq_control_i    => pcie_daq_control,
+            pcie_daq_status_o     => pcie_daq_status,
 
             ipb_reset_o           => ipb_reset,
             ipb_clk_i             => ipb_clk,
@@ -274,6 +277,20 @@ begin
             ipb_usr_mosi_arr_o    => ipb_usr_mosi_arr,
             ipb_sys_miso_arr_i    => ipb_sys_miso_arr,
             ipb_sys_mosi_arr_o    => ipb_sys_mosi_arr
+        );
+
+    i_pcie_slow_control : entity work.pcie_slow_control
+        generic map(
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+        )
+        port map(
+            axi_clk            => axi_clk,
+            pcie_daq_control_o => pcie_daq_control,
+            pcie_daq_status_i  => pcie_daq_status,
+            ipb_clk_i          => ipb_clk,
+            ipb_reset_i        => ipb_reset,
+            ipb_mosi_i         => ipb_sys_mosi_arr(C_IPB_SYS_SLV.pcie),
+            ipb_miso_o         => ipb_sys_miso_arr(C_IPB_SYS_SLV.pcie)
         );
 
     --================================--
@@ -360,8 +377,6 @@ begin
             board_id_o            => board_id,
             ext_trig_en_o         => ext_trig_en,
             ext_trig_deadtime_o   => ext_trig_deadtime,
-            pcie_packet_size_o    => pcie_packet_size,
-            pcie_packet_timeout_o => pcie_packet_timeout,
             ipb_reset_i           => ipb_reset,
             ipb_clk_i             => ipb_clk,
             ipb_mosi_i            => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
