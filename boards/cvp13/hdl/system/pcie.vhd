@@ -526,6 +526,9 @@ begin
                     if axis_c2h_ready = '1' and daq_buf_empty = '0' then
                         daq_buf_rd_en <= '1';
                         c2h_words_cntdown <= c2h_words_cntdown - 1;
+                    else
+                        daq_buf_rd_en <= '0';
+                        c2h_words_cntdown <= c2h_words_cntdown;
                     end if;                    
                 end if;
                 
