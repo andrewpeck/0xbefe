@@ -342,7 +342,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 105;
+    constant REG_TRIG_NUM_REGS : integer := 106;
     constant REG_TRIG_ADDRESS_MSB : integer := 7;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"00";
@@ -517,6 +517,15 @@ package registers is
     constant REG_TRIG_CTRL_TU_MASK_VFAT11_TU_MASK_MSB    : integer := 31;
     constant REG_TRIG_CTRL_TU_MASK_VFAT11_TU_MASK_LSB     : integer := 24;
     constant REG_TRIG_CTRL_TU_MASK_VFAT11_TU_MASK_DEFAULT : std_logic_vector(31 downto 24) := x"00";
+
+    constant REG_TRIG_CTRL_SBIT_MAP_SEL_ADDR    : std_logic_vector(7 downto 0) := x"16";
+    constant REG_TRIG_CTRL_SBIT_MAP_SEL_MSB    : integer := 1;
+    constant REG_TRIG_CTRL_SBIT_MAP_SEL_LSB     : integer := 0;
+    constant REG_TRIG_CTRL_SBIT_MAP_SEL_DEFAULT : std_logic_vector(1 downto 0) := "00";
+
+    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_ADDR    : std_logic_vector(7 downto 0) := x"16";
+    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_BIT    : integer := 4;
+    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_DEFAULT : std_logic := '0';
 
     constant REG_TRIG_CNT_VFAT0_SBITS_ADDR    : std_logic_vector(7 downto 0) := x"18";
     constant REG_TRIG_CNT_VFAT0_SBITS_MSB    : integer := 31;
