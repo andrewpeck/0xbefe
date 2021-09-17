@@ -91,7 +91,6 @@ architecture Behavioral of sbits is
   signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
-  signal vfat_sbits              : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
@@ -217,8 +216,6 @@ begin
       strips_out  => vfat_sbits_strip_mapped
       );
 
-  vfat_sbits <= vfat_sbits_injected;
-
   --------------------------------------------------------------------------------
   -- S-bit injector
   --------------------------------------------------------------------------------
@@ -342,7 +339,7 @@ begin
           clk_fast => clocks.clk160_0,
           reset    => reset_i,
 
-          sbits_i => vfat_sbits,
+          sbits_i => vfat_sbits_injected,
 
           cluster_count_o => cluster_count(I),
           clusters_o      => clusters_tmr(I),
