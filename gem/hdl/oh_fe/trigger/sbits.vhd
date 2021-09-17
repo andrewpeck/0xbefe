@@ -303,6 +303,8 @@ begin
       of sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
     signal clusters      : sbit_cluster_array_array_t (2 downto 0);
+    signal clusters_rev  : sbit_cluster_array_array_t (2 downto 0);
+    signal clusters_norev: sbit_cluster_array_array_t (2 downto 0);
     signal cluster_count : t_std11_array (2 downto 0);
     signal overflow      : std_logic_vector (2 downto 0);
 
@@ -369,6 +371,31 @@ begin
       overflow_o      <= overflow(0);
       cluster_count_o <= cluster_count(0);
     end generate;
+
+    reverse_gen : for I in clusters_o'range generate
+
+      --------------------------------------------------------------------------------
+      -- Reversed
+      --------------------------------------------------------------------------------
+
+      clusters_rev(I).vpf <= clusters(I).vpf;
+      clusters_rev(I).cnt <= clusters(I).cnt;
+      clusters_rev(I).prt <= clusters(I).prt;
+    --new_address = 384 - (address + size)  (GE21)
+    --new_address = 191 - (address + size)  (GE11)
+      clusters_rev(I).adr <= MXSBITS*PARTITION_SIZE-1 -
+                           (to_integer(unsigned(clusters(I).adr)) +
+                            to_integer(unsigned(clusters(I).cnt)));
+
+      --------------------------------------------------------------------------------
+      -- Non-reversed
+      --------------------------------------------------------------------------------
+
+      clusters_norev(I) <= clusters(I);
+
+    end generate;
+
+    clusters_o <= clusters_rev when reverse_partitions='1' else clusters;
 
     process (clocks.clk40) is
     begin
