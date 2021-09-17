@@ -1,54 +1,100 @@
 * S-bit Cluster packer
 
-Trigger information in the Optohybrid comes from the VFAT's S-bits (Sector bits). These take the form of eight 320 MHz trigger links plus a 320 MHz synchronization pulse used to align the S-bits to the 40 MHz clock.
+Trigger information in the Optohybrid comes from the VFAT's S-bits (Sector
+bits). These take the form of eight 320 MHz trigger links plus a 320 MHz
+synchronization pulse used to align the S-bits to the 40 MHz clock.
 
-From 12 or 24 VFATs (GE21 vs. GE11), the S-bits links are deserialized into 768 or 1536 S-bits divided in 2 or 8 physical partitions.
+From 12 or 24 VFATs (GE21 vs. GE11), the S-bits links are deserialized into 768
+or 1536 S-bits divided in 2 or 8 physical partitions.
 
-The S-bits are passed into a module called the cluster packer, which uses a priority encoding scheme to find the coordinates of the S-bit clusters inside of the GEM chamber.
+The S-bits are passed into a module called the cluster packer, which uses a
+priority encoding scheme to find the coordinates of the S-bit clusters inside of
+the GEM chamber.
 
-All of the priority encoding logic operates at 160 MHz, so the number of bx consumed by the algorithm is 1/4 of the number of 160 MHz clocks.
+All of the priority encoding logic operates at 160 MHz, so the number of bx
+consumed by the algorithm is 1/4 of the number of 160 MHz clocks.
 
-As of 2020/06/26 the latency of this algorithm is 13 160Mhz clocks, or 81.25 ns (3.25 bx)
+For ME0, the layout of the chamber is the same as GE11 (8 partitions of 384
+strips / 192 s-bits each), and cluster finding is presently done the same
+between them.
+
+As of 2020/06/26 the latency of this algorithm is 13 160 MHz clocks, or 81.25 ns
+(3.25 bx)
 
 ** Cluster Packing Algorithm
 
-The cluster finding algorithm segments the chamber into different sections and finds up to 4 clusters in each one of those sections.
+The cluster finding algorithm segments the chamber into different sections and
+finds up to 4 clusters in each one of those sections. The number 4 is thanks to
+the fact that cluster finding operates at 160MHz, and finds 160/40=4 clusters
+per 40MHz clock tick.
 
-In GE1/1, the chamber is divided into 4 segments of 384 bits each. In GE2/1, the chamber is divded into 4 segments of 192 bits each. From each of these segments, 4 clusters are found every bunch crossing.
+In GE1/1, the chamber is divided into 4 segments of 384 bits each. In GE2/1, the
+chamber is divided into 4 segments of 192 bits each. From each of these segments,
+4 clusters are found every bunch crossing.
 
-In both cases, this results in 16 clusters maximum being found per bx, per chamber in either GE1/1 or GE2/1.
+In both cases, this results in 16 clusters maximum being found per bx, per
+chamber in either GE1/1 or GE2/1.
 
-A separate firmware block sorts the maximum 16 found clusters by their vpf (valid primary flag), and produces a list of 16 clusters where the valid clusters are first, and the invalid clusters are order later. The order in the chamber (by address) is preserved in the sorting process.
+A separate firmware block sorts the maximum 16 found clusters by their VPF
+(valid primary flag), and produces a list of 16 clusters where the valid
+clusters are first, and the invalid clusters are order later. Sorting prefers
+valid clusters to invalid ones, and for multiple valid clusters will prefer the
+ones with higher eta partitions.
 
 ** Description of the Cluster Packing Algorithm
 
 *** Valid Primary Flags & Counting
 
-This cycle assigns cluster primary flags and counts the sizes of each cluster. A cluster is defined as a continuous sequence of S-bits, which can be encoded together to save bandwidth.
+This cycle assigns cluster primary flags and counts the sizes of each cluster. A
+cluster is defined as a continuous sequence of S-bits, which can be encoded
+together to save bandwidth.
 
-In the chosen data format, the maximum size of a cluster is 7, meaning that the primary S-bit was active along with 7 additional neighbors, for a total cluster size of eight (encoded as primary + 7). A cluster size of 0 indicates that only 1 S-bit was active.
+In the chosen data format, the maximum size of a cluster is 7, meaning that the
+primary S-bit was active along with 7 additional neighbors, for a total cluster
+size of eight (encoded as primary + 7). A cluster size of 0 indicates that only
+1 S-bit was active.
 
-Due to limitations of the logic, if a cluster is longer than 8 S-bits, its tail will simply be truncated.
+Due to limitations of the logic, if a cluster is longer than 8 S-bits, its tail
+will simply be truncated.
 
-There is an optional, compile-time parameter that can change this behaviour so that the tail of a cluster could be split into a 2^{nd} cluster, with the limitation that after 16 S-bits it would be truncated again. By default this is disabled, due to the resource savings that are achieved.
+There is an optional, compile-time parameter that can change this behavior so
+that the tail of a cluster could be split into a 2^{nd} cluster, with the
+limitation that after 16 S-bits it would be truncated again. By default this is
+disabled, due to the resource savings that are achieved.
 
 In the firmware, two processes occur in parallel:
 
-1. A “valid primary flag” is created for each of the 768/1536 S-bits, which identifies the particular S-bit as being the primary (first) S-bit in a cluster. This is done by looking for a preceding 1 in position =n= and a 0 in the position =n-1=  (indicating that this S-bit was the start of a sequence).
-2. A count is derived for all pads, which is a 3-bit number following the scheme above.
+1. A "valid primary flag" is created for each of the 768/1536 S-bits, which
+   identifies the particular S-bit as being the primary (first) S-bit in a
+   cluster. This is done by looking for a preceding 1 in position =n= and a 0 in
+   the position =n-1= (indicating that this S-bit was the start of a sequence).
+2. A count is derived for all pads, which is a 3-bit number following the scheme
+   above.
 
 
 *** Priority Encoding and Truncation
 
-Large-scale priority encoding presents a challenge for a latency-constrained system. Finding a single cluster can be done efficiently through a multi-stage pipelined priority encoding tree. But finding subsequent clusters is very slow, because the entirety of the process must be pipelined:
+Large-scale priority encoding presents a challenge for a latency-constrained
+system. Finding a single cluster can be done efficiently through a multi-stage
+pipelined priority encoding tree. But finding subsequent clusters is very slow,
+because the entirety of the process must be pipelined:
 
-e.g. 3 clock cycles to find the first cluster, mask it off, 3 clock cycles to find the second cluster, mask it off, 3 clock cycles to find the 3^{rd}, etc. It should be apparent that in such a scheme the latency would be very large.
+e.g. 3 clock cycles to find the first cluster, mask it off, 3 clock cycles to
+find the second cluster, mask it off, 3 clock cycles to find the 3^{rd}, etc. It
+should be apparent that in such a scheme the latency would be very large.
 
-Fortunately a clever scheme was devised which allows for masking and encoding to occur as separate, parallel processes.
+Fortunately a clever scheme was devised which allows for masking and encoding to
+occur as separate, parallel processes.
 
-This exploits the fact that the twos complement of a number has an interesting relation to its least significant set bit (note that the twos_complement of =a = -a = ~a+1=).
+This exploits the fact that the twos complement of a number has an interesting
+relation to its least significant set bit (note that the twos_complement of =a =
+-a = ~a+1=).
 
-At each clock cycle, the least-significant 1 becomes 0, using a simple property of integers: subtracting 1 from a number will always affect the least-significant set 1-bit. Using just arithmetic, with this trick we can take some starting number, and generate a copy of it that has the least-significant 1 changed to a zero.
+At each clock cycle, the least-significant 1 becomes 0, using a simple property
+of integers: subtracting 1 from a number will always affect the
+least-significant set 1-bit. Using just arithmetic, with this trick we can take
+some starting number, and generate a copy of it that has the least-significant 1
+changed to a zero.
 
 e.g.
 
@@ -67,20 +113,45 @@ or as a one-line expression:
 c = a & ~(~a+1), or equivalently
 #+END_SRC
 
-But alas, the point: we can Zero out bits without knowing the position of the bit, So this so-called truncator can run independently of a priority encoder that is finding the position of the bit. This allows the cluster truncation to be the timing critical step (running at 160 MHz) while the larger amount of logic in the priority encoder can be pipelined, to run over 2 or 3 clock cycles, which adds an overall latency but still allows the priority encoding to be done quickly without the necessity of a pipelined feedback.
+But alas, the point: we can Zero out bits without knowing the position of the
+bit, So this so-called truncator can run independently of a priority encoder
+that is finding the position of the bit. This allows the cluster truncation to
+be the timing critical step (running at 160 MHz) while the larger amount of
+logic in the priority encoder can be pipelined, to run over 2 or 3 clock cycles,
+which adds an overall latency but still allows the priority encoding to be done
+quickly without the necessity of a pipelined feedback.
 
-Additionally, operating on such large amounts of data (758/1536 bits) is a significant processing hurdle. To simplify this, split the chamber into multiple parts, each of which is finding 4 clusters from that part of the chamber, with the results from the independent priority encoders merged at the end.
+Additionally, operating on such large amounts of data (758/1536 bits) is a
+significant processing hurdle. To simplify this, split the chamber into multiple
+parts, each of which is finding 4 clusters from that part of the chamber, with
+the results from the independent priority encoders merged at the end.
 
 *** Cluster Counter
 
-A submodule of the cluster packer produces a full 12 bit count of the number of clusters found in the chamber. This is accomplished with a multi-step pipelined adder tree that produces its result faster than the cluster packer. An SRL delay must be correctly programmed to align the adder results with the output of the cluster packer.
+A submodule of the cluster packer produces a full 12 bit count of the number of
+clusters found in the chamber. This is accomplished with a multi-step pipelined
+adder tree that produces its result faster than the cluster packer. An SRL delay
+must be correctly programmed to align the adder results with the output of the
+cluster packer.
 
-In another module of the Optohybrid firmware, the cluster count output is used in a rate counter. This module averages the cluster count over a compile-time programmable time window and produces an output in Hertz.
+In another module of the Optohybrid firmware, the cluster count output is used
+in a rate counter. This module averages the cluster count over a compile-time
+programmable time window and produces an output in Hertz.
 
 *** Oneshot
 
-Oneshots can trim the tails of S-bit pulses in order to prevent retriggering on the same S-bit in subsequent clock cycles. The S-bit will become active again for triggering after it goes low for 1 clock cycle. This is especially important if the monostable length of the VFAT is set to anything longer than one.
+Oneshots can trim the tails of S-bit pulses in order to prevent retriggering on
+the same S-bit in subsequent clock cycles. The S-bit will become active again
+for triggering after it goes low for 1 clock cycle. This is especially important
+if the monostable length of the VFAT is set to anything longer than one.
 
-An optional deadtime parameter can be controlled through the sys module to provide a 4-bit delay (0-15 bunch crossings) during which the S-bit cannot retrigger at all. This may be useful to supress afterpulsing which has been observed in the VFATs.
+An optional deadtime parameter can be controlled through the sys module to
+provide a 4-bit delay (0-15 bunch crossings) during which the S-bit cannot
+retrigger at all. This may be useful to supress afterpulsing which has been
+observed in the VFATs.
 
-n.b. that in VFAT v3 it has been observed that even with non-zero monostable pulse length, the S-bit will only fire once. i.e. the monostable multivibrator is only applied in the DAQ path and thus the monostable and deadtime has been disabled on v3. If it is renabled the overflow and cluster count should be delayed by 1 clock cycle to match the added delay of the oneshot.
+n.b. that in VFAT v3 it has been observed that even with non-zero monostable
+pulse length, the S-bit will only fire once. i.e. the monostable multivibrator
+is only applied in the DAQ path and thus the monostable and deadtime has been
+disabled on v3. If it is renabled the overflow and cluster count should be
+delayed by 1 clock cycle to match the added delay of the oneshot.
