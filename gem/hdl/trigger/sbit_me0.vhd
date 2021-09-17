@@ -41,8 +41,9 @@ entity sbit_me0 is
         me0_clusters_o      : out t_oh_clusters;
 
 	-- Trigger Signals
-	l1a_me0             : in std_logic;
-	calpulse_me0        : in std_logic;
+	--ttc_cmds_me0        : in t_ttc_cmds;
+	--l1a_me0             : in std_logic;
+	--calpulse_me0        : in std_logic;
 
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -95,8 +96,10 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking
     signal vfat_trigger_arr     : t_std24_array(g_NUM_OF_OHs - 1 downto 0); -- trigger per vfat (or of all unmasked sbits)
 
-    signal vfat_sbits_strip_mapped : sbits_array_t(24 -1 downto 0);
+    signal sbits_probe : sbits_t;
 
+    --signal l1a_me0         : std_logic;
+    --signal calpulse_me0    : std_logic;
 
     -- counters
     signal vfat_trigger_cnt_arr : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -201,22 +204,22 @@ begin
     PORT MAP (
 	clk => ttc_clk_i.clk_40,
 
-	probe0 => me0_clusters_o(0)(0).size & me0_clusters_o(0)(0).address, 
-	probe1 => me0_clusters_o(0)(1).size & me0_clusters_o(0)(1).address, 
-	probe2 => me0_clusters_o(0)(2).size & me0_clusters_o(0)(2).address, 
-	probe3 => me0_clusters_o(0)(3).size & me0_clusters_o(0)(3).address, 
-	probe4 => me0_clusters_o(0)(4).size & me0_clusters_o(0)(4).address, 
-	probe5 => me0_clusters_o(0)(5).size & me0_clusters_o(0)(5).address, 
-	probe6 => me0_clusters_o(0)(6).size & me0_clusters_o(0)(6).address,
-	probe7 => me0_clusters_o(0)(7).size & me0_clusters_o(0)(7).address,
-	probe8 => vfat_sbits_arr(0)(0),
+	probe0 => me0_clusters_o(0).size & me0_clusters_o(0).address, 
+	probe1 => me0_clusters_o(1).size & me0_clusters_o(1).address, 
+	probe2 => me0_clusters_o(2).size & me0_clusters_o(2).address, 
+	probe3 => me0_clusters_o(3).size & me0_clusters_o(3).address, 
+	probe4 => me0_clusters_o(4).size & me0_clusters_o(4).address, 
+	probe5 => me0_clusters_o(5).size & me0_clusters_o(5).address, 
+	probe6 => me0_clusters_o(6).size & me0_clusters_o(6).address,
+	probe7 => me0_clusters_o(7).size & me0_clusters_o(7).address,
+	probe8 => sbits_probe,
 	probe9 => vfat_sbits_arr(0)(1),
 	probe10 => vfat_sbits_arr(0)(8),
 	probe11 => vfat_sbits_arr(0)(9),
 	probe12 => vfat_sbits_arr(0)(16),
 	probe13 => vfat_sbits_arr(0)(17),
-	probe14 => calpulse_me0,
-	probe15 => l1a_me0
+	probe14 => ttc_cmds_i.calpulse,
+	probe15 => ttc_cmds_i.l1a
      );
 
 
@@ -281,6 +284,7 @@ begin
 
                 end generate;
             end generate;
+	    sbits_probe <= vfat_sbits_type_change(17);
 
             cluster_packer_inst : entity work.cluster_packer
                 generic map (
