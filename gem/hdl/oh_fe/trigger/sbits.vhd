@@ -302,14 +302,17 @@ begin
     type sbit_cluster_array_array_t is array(integer range<>)
       of sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    signal clusters      : sbit_cluster_array_array_t (2 downto 0);
-    signal clusters_rev  : sbit_cluster_array_array_t (2 downto 0);
-    signal clusters_norev: sbit_cluster_array_array_t (2 downto 0);
+    signal clusters_tmr : sbit_cluster_array_array_t (2 downto 0);
+
+    signal clusters       : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal clusters_rev   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal clusters_norev : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+
     signal cluster_count : t_std11_array (2 downto 0);
     signal overflow      : std_logic_vector (2 downto 0);
 
     attribute DONT_TOUCH                  : string;
-    attribute DONT_TOUCH of clusters      : signal is "true";
+    attribute DONT_TOUCH of clusters_tmr  : signal is "true";
     attribute DONT_TOUCH of cluster_count : signal is "true";
     attribute DONT_TOUCH of overflow      : signal is "true";
 
@@ -342,7 +345,7 @@ begin
           sbits_i => vfat_sbits,
 
           cluster_count_o => cluster_count(I),
-          clusters_o      => clusters(I),
+          clusters_o      => clusters_tmr(I),
           overflow_o      => overflow(I)
           );
     end generate;
@@ -357,17 +360,17 @@ begin
         signal err : std_logic_vector (3 downto 0) := (others => '0');
       begin
 
-        majority_err (clusters_o(I).adr, err(0), clusters(0)(I).adr, clusters(1)(I).adr, clusters(2)(I).adr);
-        majority_err (clusters_o(I).cnt, err(1), clusters(0)(I).cnt, clusters(1)(I).cnt, clusters(2)(I).cnt);
-        majority_err (clusters_o(I).prt, err(2), clusters(0)(I).prt, clusters(1)(I).prt, clusters(2)(I).prt);
-        majority_err (clusters_o(I).vpf, err(3), clusters(0)(I).vpf, clusters(1)(I).vpf, clusters(2)(I).vpf);
+        majority_err (clusters_o(I).adr, err(0), clusters_tmr(0)(I).adr, clusters_tmr(1)(I).adr, clusters_tmr(2)(I).adr);
+        majority_err (clusters_o(I).cnt, err(1), clusters_tmr(0)(I).cnt, clusters_tmr(1)(I).cnt, clusters_tmr(2)(I).cnt);
+        majority_err (clusters_o(I).prt, err(2), clusters_tmr(0)(I).prt, clusters_tmr(1)(I).prt, clusters_tmr(2)(I).prt);
+        majority_err (clusters_o(I).vpf, err(3), clusters_tmr(0)(I).vpf, clusters_tmr(1)(I).vpf, clusters_tmr(2)(I).vpf);
 
         cluster_tmr_err(2+I) <= or_reduce(err);
       end generate;
     end generate;
 
     notmr_gen : if (EN_TMR /= 1) generate
-      clusters_o      <= clusters(0);
+      clusters        <= clusters_tmr(0);
       overflow_o      <= overflow(0);
       cluster_count_o <= cluster_count(0);
     end generate;
@@ -381,11 +384,12 @@ begin
       clusters_rev(I).vpf <= clusters(I).vpf;
       clusters_rev(I).cnt <= clusters(I).cnt;
       clusters_rev(I).prt <= clusters(I).prt;
-    --new_address = 384 - (address + size)  (GE21)
-    --new_address = 191 - (address + size)  (GE11)
-      clusters_rev(I).adr <= MXSBITS*PARTITION_SIZE-1 -
-                           (to_integer(unsigned(clusters(I).adr)) +
-                            to_integer(unsigned(clusters(I).cnt)));
+      --new_address = 384 - (address + size)  (GE21)
+      --new_address = 191 - (address + size)  (GE11)
+      clusters_rev(I).adr <=
+        std_logic_vector(to_unsigned(MXSBITS*PARTITION_SIZE-1 -
+                                     (to_integer(unsigned(clusters(I).adr)) +
+                                      to_integer(unsigned(clusters(I).cnt))), clusters_rev(I).adr'length));
 
       --------------------------------------------------------------------------------
       -- Non-reversed
@@ -395,7 +399,7 @@ begin
 
     end generate;
 
-    clusters_o <= clusters_rev when reverse_partitions='1' else clusters;
+    clusters_o <= clusters_rev when reverse_partitions = '1' else clusters_norev;
 
     process (clocks.clk40) is
     begin
