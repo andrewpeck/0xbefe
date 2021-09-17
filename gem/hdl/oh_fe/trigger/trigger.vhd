@@ -77,7 +77,7 @@ architecture Behavioral of trigger is
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
   signal sbit_overflow   : std_logic;
-  signal sbit_clusters   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+  signal sbit_clusters, sbit_clusters_r   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
   signal frozen_clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
   signal valid_clusters  : std_logic_vector (NUM_FOUND_CLUSTERS downto 0);
 
@@ -330,6 +330,17 @@ begin
 
       );
 
+  -- make a copy to use for counters etc.. the other "fast" copy goes to the
+  -- trigger
+  process (clocks.clk40) is
+  begin
+    if (rising_edge(clocks.clk40)) then
+      sbit_clusters_r <= sbit_clusters;
+    end if;
+  end process;
+
+  sbit_clusters_o <= sbit_clusters;
+
   --------------------------------------------------------------------------------------------------------------------
   -- Sbit Monitor
   --------------------------------------------------------------------------------------------------------------------
@@ -342,12 +353,10 @@ begin
       reset_i           => (reset_i or reset_monitor),
       ttc_clk_i         => clocks.clk40,
       l1a_i             => ttc.l1a,
-      clusters_i        => sbit_clusters,
+      clusters_i        => sbit_clusters_r,
       frozen_clusters_o => frozen_clusters,
       l1a_delay_o       => sbitmon_l1a_delay
       );
-
-  sbit_clusters_o <= sbit_clusters;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Fixed latency trigger links
@@ -356,7 +365,7 @@ begin
   valid_clusters_or <= or_reduce (valid_clusters);
 
   validmap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
-    valid_clusters (I) <= sbit_clusters(I).vpf;
+    valid_clusters (I) <= sbit_clusters_r(I).vpf;
   end generate validmap;
 
   --===============================================================================================

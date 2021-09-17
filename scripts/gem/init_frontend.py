@@ -39,16 +39,16 @@ def init_gem_frontend():
         initGbtRegAddrs()
 
         # Reset only master lpGBTs (automatically resets slave lpGBTs)
-        for oh in range(max_ohs):
-            for gbt in range(num_gbts):
-                if gbt%2 != 0:
-                    continue
-                selectGbt(oh, gbt)
-                writeGbtRegAddrs(0x130, 0xA3)
-                sleep(0.1)
-                writeGbtRegAddrs(0x12F, 0x80)
-                sleep(0.1)
-        sleep(1)
+        #for oh in range(max_ohs):
+        #    for gbt in range(num_gbts):
+        #        if gbt%2 != 0:
+        #            continue
+        #        selectGbt(oh, gbt)
+        #        writeGbtRegAddrs(0x130, 0xA3)
+        #        sleep(0.1)
+        #        writeGbtRegAddrs(0x12F, 0x80)
+        #        sleep(0.1)
+        #sleep(1)
         
         # configure lpGBTs
         for oh in range(max_ohs):
