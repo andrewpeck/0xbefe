@@ -357,10 +357,10 @@ begin
         signal err : std_logic_vector (3 downto 0) := (others => '0');
       begin
 
-        majority_err (clusters_o(I).adr, err(0), clusters_tmr(0)(I).adr, clusters_tmr(1)(I).adr, clusters_tmr(2)(I).adr);
-        majority_err (clusters_o(I).cnt, err(1), clusters_tmr(0)(I).cnt, clusters_tmr(1)(I).cnt, clusters_tmr(2)(I).cnt);
-        majority_err (clusters_o(I).prt, err(2), clusters_tmr(0)(I).prt, clusters_tmr(1)(I).prt, clusters_tmr(2)(I).prt);
-        majority_err (clusters_o(I).vpf, err(3), clusters_tmr(0)(I).vpf, clusters_tmr(1)(I).vpf, clusters_tmr(2)(I).vpf);
+        majority_err (clusters(I).adr, err(0), clusters_tmr(0)(I).adr, clusters_tmr(1)(I).adr, clusters_tmr(2)(I).adr);
+        majority_err (clusters(I).cnt, err(1), clusters_tmr(0)(I).cnt, clusters_tmr(1)(I).cnt, clusters_tmr(2)(I).cnt);
+        majority_err (clusters(I).prt, err(2), clusters_tmr(0)(I).prt, clusters_tmr(1)(I).prt, clusters_tmr(2)(I).prt);
+        majority_err (clusters(I).vpf, err(3), clusters_tmr(0)(I).vpf, clusters_tmr(1)(I).vpf, clusters_tmr(2)(I).vpf);
 
         cluster_tmr_err(2+I) <= or_reduce(err);
       end generate;
