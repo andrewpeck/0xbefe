@@ -145,21 +145,13 @@ architecture pcie_arch of pcie is
             probe4  : in std_logic;
             probe5  : in std_logic;
             probe6  : in std_logic;
-            probe7  : in std_logic;
-            probe8  : in std_logic;
-            probe9  : in std_logic_vector(127 downto 0);
-            probe10 : in std_logic;
-            probe11 : in std_logic_vector(19 downto 0);
-            probe12 : in std_logic;
-            probe13 : in std_logic_vector(19 downto 0);
-            probe14 : in std_logic_vector(19 downto 0);
-            probe15 : in std_logic_vector(19 downto 0);
-            probe16 : in std_logic_vector(31 downto 0);
-            probe17 : in std_logic;
-            probe18 : in std_logic_vector(127 downto 0);
-            probe19 : in std_logic;
-            probe20 : in std_logic_vector(15 downto 0);
-            probe21 : in std_logic
+            probe7  : in std_logic_vector(19 downto 0);
+            probe8  : in std_logic_vector(19 downto 0);
+            probe9  : in std_logic;
+            probe10 : in std_logic_vector(127 downto 0);
+            probe11 : in std_logic;
+            probe12 : in std_logic_vector(15 downto 0);
+            probe13 : in std_logic
         );
     end component;    
     
@@ -190,8 +182,6 @@ architecture pcie_arch of pcie is
     constant PCIE_LINK_LED_SEQ_SEPARATOR    : std_logic_vector(15 downto 0) := x"5500";
     constant PCIE_LINK_LED_SEQ_HIGH         : std_logic_vector(7 downto 0) := x"7e";
     constant PCIE_LINK_LED_SEQ_LOW          : std_logic_vector(7 downto 0) := x"18";
-        
-    constant AXI_STREAM_WORD_SIZE_BYTES     : integer := 16;
         
     -- axi common
     signal axi_clk              : std_logic;
@@ -229,7 +219,8 @@ architecture pcie_arch of pcie is
     signal daq_cdc_ovf          : std_logic;
     signal daq_cdc_ovf_axi_clk  : std_logic;
     signal daq_cdc_ovf_latch    : std_logic;
-    signal daq_cdc_data         : std_logic_vector(AXI_STREAM_WORD_SIZE_BYTES * 8 - 1 downto 0);
+    signal daq_cdc_data         : std_logic_vector(127 downto 0);
+    signal daq_cdc_rd_en        : std_logic;
 
     signal daq_reset            : std_logic;
     signal daqlink_reset_axi_clk: std_logic;
@@ -237,19 +228,9 @@ architecture pcie_arch of pcie is
     signal daq_enabled_axi_clk  : std_logic;
     signal daq_flush            : std_logic;
     
-    signal daq_buf_warn         : std_logic;
-    signal daq_buf_ovf          : std_logic;
-    signal daq_buf_ovf_latch    : std_logic;
-    signal daq_buf_rd_en        : std_logic;
-    signal daq_buf_dout         : std_logic_vector(AXI_STREAM_WORD_SIZE_BYTES * 8 - 1 downto 0);
-    signal daq_buf_empty        : std_logic;
-    signal daq_buf_almost_empty : std_logic;
-    signal daq_buf_rd_cnt       : std_logic_vector(19 downto 0);
-    signal daq_buf_valid        : std_logic;
-
+    signal c2h_backpressure     : std_logic;
     signal c2h_packet_size_words: unsigned(19 downto 0);
     signal c2h_words_cntdown    : unsigned(19 downto 0);
-    signal daq_buf_valid_cnt    : unsigned(19 downto 0);
 
     -- axi lite    
     signal axil_m2s             : t_axi_lite_m2s;
@@ -344,6 +325,8 @@ begin
     fed_clk <= daq_to_daqlink_i.event_clk;
     
     ---------- Calculate CRC ----------
+
+    daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;        
         
     process(fed_clk)
     begin
@@ -352,7 +335,7 @@ begin
             fed_data_head_d  <= daq_to_daqlink_i.event_header;
             fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
             fed_data_we_d    <= daq_to_daqlink_i.event_valid;
-            crc_clear      <= daq_to_daqlink_i.event_trailer or daq_to_daqlink_i.reset;
+            crc_clear      <= daq_to_daqlink_i.event_trailer or daq_reset;
             
             -- substitute the CRC
             if fed_data_trail_d = '1' then
@@ -391,7 +374,7 @@ begin
             FIFO_READ_LATENCY   => 1,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => AXI_STREAM_WORD_SIZE_BYTES * 8,
+            READ_DATA_WIDTH     => 128,
             CDC_SYNC_STAGES     => 2,
             DOUT_RESET_VALUE    => "0",
             ECC_MODE            => "no_ecc"
@@ -410,7 +393,7 @@ begin
             almost_full   => open,
             wr_ack        => open,
             rd_clk        => axi_clk,
-            rd_en         => '1',
+            rd_en         => daq_cdc_rd_en,
             dout          => daq_cdc_data,
             empty         => daq_cdc_empty,
             prog_empty    => open,
@@ -430,7 +413,36 @@ begin
     i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
     i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
 
-    daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;
+    i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
+    i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => c2h_backpressure, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
+    daqlink_to_daq_o.disperr_cnt <= (others => '0');
+    daqlink_to_daq_o.notintable_cnt <= (others => '0');
+
+    c2h_backpressure <= not axis_c2h_ready and not daq_cdc_empty;
+    daq_cdc_rd_en <= not daq_cdc_empty and axis_c2h_ready;
+    axis_c2h.tdata <= daq_cdc_data(127 downto 0);
+    axis_c2h.tlast <= daq_cdc_valid and not or_reduce(std_logic_vector(c2h_words_cntdown));
+    axis_c2h.tvalid <= daq_cdc_valid;
+    axis_c2h.tkeep <= (others => daq_cdc_valid);
+    
+    c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
+    
+    process(axi_clk)
+    begin
+        if rising_edge(axi_clk) then
+            if daq_reset = '1' then
+                c2h_words_cntdown <= c2h_packet_size_words - 1;
+            else
+                if daq_cdc_valid = '1' then
+                    if c2h_words_cntdown = x"00000" then
+                        c2h_words_cntdown <= c2h_packet_size_words - 1;
+                    else
+                        c2h_words_cntdown <= c2h_words_cntdown - 1;
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
 
     i_daq_cdc_ovf_latch : entity work.latch
         port map(
@@ -439,128 +451,6 @@ begin
             input_i => daq_cdc_ovf_axi_clk,
             latch_o => daq_cdc_ovf_latch
         );
-
-    i_c2h_buffer : xpm_fifo_sync
-        generic map(
-            FIFO_MEMORY_TYPE    => "ultra",
-            FIFO_WRITE_DEPTH    => 524288,
-            WRITE_DATA_WIDTH    => AXI_STREAM_WORD_SIZE_BYTES * 8,
-            READ_MODE           => "std",
-            FIFO_READ_LATENCY   => 8,
-            FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => "1c03", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => AXI_STREAM_WORD_SIZE_BYTES * 8,
-            WR_DATA_COUNT_WIDTH => 20,
-            PROG_FULL_THRESH    => 471859,
-            RD_DATA_COUNT_WIDTH => 20,
-            PROG_EMPTY_THRESH   => 6553,
-            DOUT_RESET_VALUE    => "0",
-            ECC_MODE            => "no_ecc"
-        )
-        port map(
-            sleep         => '0',
-            rst           => daq_reset,
-            wr_clk        => axi_clk,
-            wr_en         => daq_cdc_valid,
-            din           => daq_cdc_data,
-            full          => open,
-            prog_full     => daq_buf_warn,
-            wr_data_count => open,
-            overflow      => daq_buf_ovf,
-            wr_rst_busy   => open,
-            almost_full   => open,
-            wr_ack        => open,
-            rd_en         => daq_buf_rd_en,
-            dout          => daq_buf_dout,
-            empty         => daq_buf_empty,
-            prog_empty    => open,
-            rd_data_count => daq_buf_rd_cnt,
-            underflow     => open,
-            rd_rst_busy   => open,
-            almost_empty  => daq_buf_almost_empty,
-            data_valid    => daq_buf_valid,
-            injectsbiterr => '0',
-            injectdbiterr => '0',
-            sbiterr       => open,
-            dbiterr       => open
-        );
-    
-    i_daq_buf_ovf_latch : entity work.latch
-        port map(
-            reset_i => daq_reset,
-            clk_i   => axi_clk,
-            input_i => daq_buf_ovf,
-            latch_o => daq_buf_ovf_latch
-        );
-    
-    i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
-    i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_buf_warn, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
-    daqlink_to_daq_o.disperr_cnt <= (others => '0');
-    daqlink_to_daq_o.notintable_cnt <= (others => '0');
-
-    c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
-    daq_flush <= (not daq_enabled_axi_clk) or pcie_daq_control_i.flush; 
-
-    pcie_daq_status_o.buf_had_ovf <= daq_buf_ovf_latch;
-    pcie_daq_status_o.buf_ovf <= daq_buf_ovf;
-    pcie_daq_status_o.cdc_had_ovf <= daq_cdc_ovf_latch;
-    pcie_daq_status_o.buf_words <= daq_buf_rd_cnt;
-    pcie_daq_status_o.c2h_ready <= axis_c2h_ready;
-    pcie_daq_status_o.c2h_write_err <= c2h_write_err;
-    pcie_daq_status_o.word_size_bytes <= std_logic_vector(to_unsigned(AXI_STREAM_WORD_SIZE_BYTES, 7));
-
-    process(axi_clk)
-    begin
-        if rising_edge(axi_clk) then
-            if daq_reset = '1' then
-                c2h_words_cntdown <= (others => '0');
-                daq_buf_valid_cnt <= (others => '0');
-                daq_buf_rd_en <= '0';
-                c2h_write_err <= '0';
-            else
-                if c2h_words_cntdown = x"00000" then
-                    if (unsigned(daq_buf_rd_cnt) >= c2h_packet_size_words) or (daq_flush = '1' and daq_buf_rd_cnt /= x"00000") then
-                        c2h_words_cntdown <= c2h_packet_size_words;
-                        daq_buf_rd_en <= '0';
-                    else
-                        c2h_words_cntdown <= (others => '0');
-                        daq_buf_rd_en <= '0';
-                    end if;
-                else
-                    if axis_c2h_ready = '1' and daq_buf_empty = '0' then
-                        daq_buf_rd_en <= '1';
-                        c2h_words_cntdown <= c2h_words_cntdown - 1;
-                    else
-                        daq_buf_rd_en <= '0';
-                        c2h_words_cntdown <= c2h_words_cntdown;
-                    end if;                    
-                end if;
-                
-                if daq_buf_valid = '1' and daq_buf_valid_cnt /= c2h_packet_size_words then
-                    daq_buf_valid_cnt <= daq_buf_valid_cnt + 1;
-                elsif daq_buf_valid = '0' and daq_buf_valid_cnt = c2h_packet_size_words then
-                    daq_buf_valid_cnt <= (others => '0');
-                elsif daq_buf_valid = '1' and daq_buf_valid_cnt = c2h_packet_size_words then
-                    daq_buf_valid_cnt <= x"00001";
-                end if;
-                
-                if (daq_buf_valid_cnt = c2h_packet_size_words - 1) or (daq_flush = '1' and daq_buf_almost_empty = '1') then
-                    axis_c2h.tlast <= '1';
-                else
-                    axis_c2h.tlast <= '0';
-                end if;
-                
-                axis_c2h.tdata <= daq_buf_dout;
-                axis_c2h.tvalid <= daq_buf_valid;
-                axis_c2h.tkeep <= (others => daq_buf_valid);
-                
-                if axis_c2h_ready = '0' and axis_c2h.tvalid = '1' then
-                    c2h_write_err <= '1';
-                end if;
-                
-            end if;
-        end if;
-    end process;
 
     i_words_sent_cnt : entity work.counter
         generic map(
@@ -732,6 +622,10 @@ begin
             probe_in8 => pcie_local_err_valid
         );
 
+--    signal daq_cdc_valid        : std_logic;
+--    signal daq_cdc_rd_en        : std_logic;
+
+
     i_ila_daq : ila_pcie_daq
         port map(
             clk     => axi_clk,
@@ -739,24 +633,16 @@ begin
             probe1  => daqlink_valid_axi_clk,     
             probe2  => daq_cdc_data,          
             probe3  => daq_cdc_empty,         
-            probe4  => daq_buf_valid,         
+            probe4  => daq_cdc_valid,         
             probe5  => daqlink_reset_axi_clk,     
-            probe6  => daq_buf_warn,          
-            probe7  => daq_buf_ovf,           
-            probe8  => daq_buf_rd_en,         
-            probe9  => daq_buf_dout,          
-            probe10 => daq_buf_empty,         
-            probe11 => daq_buf_rd_cnt,        
-            probe12 => daq_buf_valid,         
-            probe13 => std_logic_vector(c2h_packet_size_words), 
-            probe14 => std_logic_vector(c2h_words_cntdown),     
-            probe15 => std_logic_vector(daq_buf_valid_cnt),     
-            probe16 => (others => '0'),         
-            probe17 => axis_c2h.tlast,        
-            probe18 => axis_c2h.tdata,        
-            probe19 => axis_c2h.tvalid,       
-            probe20 => axis_c2h.tkeep,
-            probe21 => axis_c2h_ready     
+            probe6  => daq_cdc_rd_en,          
+            probe7  => std_logic_vector(c2h_packet_size_words), 
+            probe8  => std_logic_vector(c2h_words_cntdown),     
+            probe9  => axis_c2h.tlast,        
+            probe10 => axis_c2h.tdata,        
+            probe11 => axis_c2h.tvalid,       
+            probe12 => axis_c2h.tkeep,
+            probe13 => axis_c2h_ready     
         );
 
 end pcie_arch;

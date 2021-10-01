@@ -5,6 +5,7 @@
 boards/cvp13/ip/pcie_xdma/pcie_xdma.xci
 boards/cvp13/ip/vio_qsfp_control/vio_qsfp_control.xci
 boards/cvp13/ip/vio_test/vio_test.xci
+boards/cvp13/ip/ila_test/ila_test.xci
 boards/cvp13/ip/vio_pcie/vio_pcie.xci
 boards/cvp13/ip/ila_pcie_daq/ila_pcie_daq.xci
 
