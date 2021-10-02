@@ -1445,11 +1445,9 @@ begin
                 elsif (daq_state = x"7") then
 
                     daq_event_data <= dav_timeout_flags & -- Chamber timeout
-                                      -- Event status (hmm)
-                                      x"0" & "000" &
-                                      "0" & -- GLIB OOS (different L1A IDs for different inputs)
-                                      x"000000" &   -- Chamber error flag (hmm)
-                                      -- GLIB status
+                                      x"0" &
+                                      run_type & run_params &
+                                      -- BE status
                                       daq_backpressure &
                                       ttc_status_i.clk_status.mmcm_locked & 
                                       daq_clk_locked_i & 
