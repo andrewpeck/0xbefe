@@ -79,7 +79,11 @@ architecture sbit_me0_arch of sbit_me0 is
 	probe12 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
 	probe13 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
 	probe14 : IN STD_LOGIC;
-	probe15 : IN STD_LOGIC
+	probe15 : IN STD_LOGIC;
+	probe16 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	probe17 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	probe18 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	probe19 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
     );
     END COMPONENT  ;
 
@@ -129,6 +133,9 @@ architecture sbit_me0_arch of sbit_me0 is
         return std_logic_vector(to_unsigned(p*192+s, 11));
     end;
 
+
+
+    signal me0_clusters_probe_raw : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
     signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal me0_cluster_count : std_logic_vector(10 downto 0);
@@ -219,7 +226,11 @@ begin
 	probe12 => vfat_sbits_arr(0)(16),
 	probe13 => vfat_sbits_arr(0)(17),
 	probe14 => ttc_cmds_i.calpulse,
-	probe15 => ttc_cmds_i.l1a
+	probe15 => ttc_cmds_i.l1a,
+	probe16 => me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf, 
+	probe17 => me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf, 
+	probe18 => me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf, 
+	probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf 
      );
 
 
@@ -317,6 +328,7 @@ begin
         begin
             if (rising_edge(ttc_clk_i.clk_40)) then
 
+		me0_clusters_probe_raw <= me0_clusters;
                 me0_clusters <= me0_clusters;
 
                 if (me0_clusters(I).vpf = '1') then
