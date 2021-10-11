@@ -3,7 +3,7 @@ import sys, os, subprocess
 from collections import OrderedDict
 
 DEBUG = True
-ADDRESS_TABLE_TOP = "lpgbt_registers.xml"
+ADDRESS_TABLE_TOP = "./lpgbt_registers.xml"
 system = ""
 nodes = OrderedDict()
 reg_list_dryrun = {}

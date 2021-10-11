@@ -245,7 +245,7 @@ if __name__ == "__main__":
         sys.exit()
 
     if args.gbtid is None:
-        print(Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
     if int(args.gbtid) > 7:
         print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)

@@ -263,10 +263,11 @@ def terminate():
     sys.exit()   
 
 def check_gbt_link_ready(ohIdx, gbtIdx):
-    link_ready = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%s.GBT%s_READY" % (ohIdx, gbtIdx)))
-    if (link_ready!=1):
-        print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)  
-        terminate()
+    if system == "backend":
+        link_ready = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%s.GBT%s_READY" % (ohIdx, gbtIdx)))
+        if (link_ready!=1):
+            print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)  
+            terminate()
 
 def vfat_to_gbt_elink_gpio(vfat):
     gbt = VFAT_TO_GBT_ELINK_GPIO[vfat][0]
