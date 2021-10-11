@@ -1,4 +1,5 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+import gem.gem_utils as gem_utils
 from time import sleep, time
 import sys
 import argparse
