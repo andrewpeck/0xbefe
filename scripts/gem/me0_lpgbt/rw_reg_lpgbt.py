@@ -13,7 +13,6 @@ n_rw_reg = (0x13C+1) # number of registers in LPGBT rwf + rw block
 
 TOP_NODE_NAME = "LPGBT"
 
-gem_utils = None
 NODE_IC_GBTX_LINK_SELECT = None
 NODE_IC_GBTX_I2C_ADDRESS = None
 NODE_IC_READ_WRITE_LENGTH = None
@@ -192,9 +191,9 @@ def rw_initialize(station, system_val, boss=None, ohIdx=None, gbtIdx=None):
         gbt_rpi_chc = rpi_chc.rpi_chc()
         if boss is not None:
             config_initialize_chc(boss)    
-    elif system=="backend":
-        global gem_utils
+    elif system=="backend" or system=="dryrun":
         import gem.gem_utils as gem_utils
+        global gem_utils
         print("Parsing backend xml file...")
         gem_utils.initialize(station, system_val)
         print("Parsing complete...")
