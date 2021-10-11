@@ -1,5 +1,4 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
-import gem.gem_utils as gem_utils
 from time import sleep, time
 import sys
 import argparse
@@ -279,10 +278,7 @@ if __name__ == "__main__":
         check_rom_readback()
 
     # Check if GBT is READY
-    if args.system=="chc":
-        check_lpgbt_ready()
-    else:
-        gem_utils.check_gbt_link_ready(args.ohid, args.gbtid)
+    check_lpgbt_ready(args.ohid, args.gbtid)    
         
     try:
         main(args.system, boss, gbt, args.minutes, gain)

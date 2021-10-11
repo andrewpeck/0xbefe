@@ -393,13 +393,16 @@ def completeReg(string):
     return completions
 
 def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
-    if system!="dryrun":
+    if system == "chc":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==18):
             print ("lpGBT status is READY")
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
+    else:
+        if ohIdx is not None and gbtIdx is not None:
+            gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
     fuse_success = 1
