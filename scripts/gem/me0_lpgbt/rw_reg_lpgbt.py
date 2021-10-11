@@ -273,7 +273,7 @@ def mpoke(address, value):
         gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value)
         gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1)
         reg_list_dryrun[address] = value
-   elif system=="dryrun":
+    elif system=="dryrun":
         reg_list_dryrun[address] = value
     else:
         print(Colors.RED + "ERROR: Incorrect system" + Colors.ENDC)
