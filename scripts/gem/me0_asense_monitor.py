@@ -1,4 +1,4 @@
-import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
+from gem.me0_lpgbt.rw_reg_lpgbt import *
 from time import sleep, time
 import sys
 import argparse
@@ -108,28 +108,28 @@ def live_plot_temp(ax2, x, y1, y3, run_time_min, gbt):
 
 
 def init_adc():
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0)  # resets temp sensor
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0)  # enable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0)  # enable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0)  # enable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0)  # enable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0)  # vref enable
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
+    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
+    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0)  # resets temp sensor
+    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0)  # enable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0)  # enable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0)  # enable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0)  # enable dividers
+    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0)  # vref enable
+    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
     sleep(0.01)
 
 
 def powerdown_adc():
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0)  # disable ADC
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0)  # disable temp sensor
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0)  # disable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0)  # disable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0)  # disable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0)  # disable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0)  # disable dividers
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0)  # vref disable
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
+    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0)  # disable ADC
+    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0)  # disable temp sensor
+    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0)  # disable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0)  # disable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0)  # disable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0)  # disable dividers
+    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0)  # disable dividers
+    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0)  # vref disable
+    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
 
 
 def read_adc(channel, gain, system):
@@ -152,8 +152,8 @@ def read_adc(channel, gain, system):
     # 4"d14	        |  Temperature sensor (internal signal)
     # 4"d15	        |  VREF/2 (internal signal)
 
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
 
     gain_settings = {
         2: 0x00,
@@ -161,23 +161,23 @@ def read_adc(channel, gain, system):
         16: 0x10,
         32: 0x11
     }
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain], 0)
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain], 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
 
     done = 0
     while (done == 0):
         if system != "dryrun":
-            done = readReg(rw_reg_lpgbt.getNode("LPGBT.RO.ADC.ADCDONE"))
+            done = readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
         else:
             done = 1
 
-    val = readReg(rw_reg_lpgbt.getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (readReg(rw_reg_lpgbt.getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    val = readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+    val |= (readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
 
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
-    rw_reg_lpgbt.writeReg(rw_reg_lpgbt.getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
+    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
 
     return val
 
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = only boss")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = 0-7")
-    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
+    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for Asense ADCs: 2, 8, 16, 32")
     args = parser.parse_args()
 
@@ -270,18 +270,18 @@ if __name__ == "__main__":
     gain = int(args.gain)
 
     # Initialization 
-    rw_reg_lpgbt.rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        rw_reg_lpgbt.check_rom_readback()
+        check_rom_readback()
 
     # Check if GBT is READY
     if args.system=="chc":
-        rw_reg_lpgbt.check_lpgbt_ready()
+        check_lpgbt_ready()
     else:
-        rw_reg_lpgbt.gem_utils.check_gbt_link_ready(args.ohid, args.gbtid)
+        gem_utils.check_gbt_link_ready(args.ohid, args.gbtid)
         
     try:
         main(args.system, boss, gbt, args.minutes, gain)
