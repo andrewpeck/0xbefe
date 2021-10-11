@@ -278,11 +278,11 @@ if __name__ == "__main__":
         rw_reg_lpgbt.check_rom_readback()
 
     # Check if GBT is READY
-    if args.system=="backend":
-        rw_reg_lpgbt.gem_utils.check_gbt_link_ready(args.ohid, args.gbtid)
-    else:
+    if args.system=="chc":
         rw_reg_lpgbt.check_lpgbt_ready()
-
+    else:
+        rw_reg_lpgbt.gem_utils.check_gbt_link_ready(args.ohid, args.gbtid)
+        
     try:
         main(args.system, boss, gbt, args.minutes, gain)
     except KeyboardInterrupt:
