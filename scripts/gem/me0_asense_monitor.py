@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = only boss")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = 0-7")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for Asense ADCs: 2, 8, 16, 32")
     args = parser.parse_args()
@@ -247,9 +247,9 @@ if __name__ == "__main__":
     if args.gbtid is None:
         print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
-    if int(args.gbtid) > 7:
-        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        sys.exit()
+    #if int(args.gbtid) > 7:
+    #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+    #    sys.exit()
     gbt = int(args.gbtid)%4
 
     if args.system == "backend":

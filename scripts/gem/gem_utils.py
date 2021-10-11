@@ -290,8 +290,13 @@ def global_reset():
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 0x1)
 
 def get_backend_node(name):
+    node = None
     if system == "backend":
-        return get_node(name)
+        node = get_node(name)
+        if node is None:
+            print (Colors.RED + "ERROR: Invalid register: %s"%name + Colors.ENDC)
+            terminate()
+    return node
 
 def simple_read_backend_reg(node, error_value):
     output_value = 0
