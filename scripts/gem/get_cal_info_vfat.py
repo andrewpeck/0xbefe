@@ -158,7 +158,7 @@ def main(oh_select, id_type, write):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Retrieve VFAT calibration info from database.')
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
-    parser.add_argument("-g", "--gem", action="store", dest="gem", help="gem = ME0 or GE21 or GE11")
+    parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 or GE21 or GE11")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-w", "--write", action="store_true", dest="write", help="write calib data to file")
     parser.add_argument("-t", "--type", action="store", dest="type", help="type = hw_id or file")
