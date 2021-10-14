@@ -1,4 +1,4 @@
-import gem.gem_utils as gem_utils
+from gem.gem_utils import *
 from time import *
 import argparse
 import cx_Oracle
@@ -24,15 +24,15 @@ def checkEnvVars(): # check if environment variables set for DB access
         sys.exit()
     return name, conn
 
-def main(oh_select, id_type, write):
+def main(gem, oh_select, id_type, write):
 
     serialN = OrderedDict()
-    gem_utils.gem_link_reset()
+    gem_link_reset()
     sleep(0.1)
 
     for vfat in range(0,24):
-        register = gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID"%(oh_select, vfat))
-        serialN[vfat] = gem_utils.simple_read_backend_reg(register, -9999)
+        register = get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID"%(oh_select, vfat))
+        serialN[vfat] = simple_read_backend_reg(register, -9999)
     print("=" * 31)
     print("====== VFAT Chip Numbers ======")
     print("=" * 31)
@@ -135,16 +135,16 @@ def main(oh_select, id_type, write):
         except FileExistsError: # skip if directory already exists
             pass
         
-        calInfoFile = calDataDir + "/vfat_calib_info_vref.txt"%(oh_select)
+        calInfoFile = calDataDir + "/%s_OH%d_vfat_calib_info_vref.txt"%(gem, oh_select)
         vfatCalInfo_mod.to_csv(calInfoFile, sep = ";", columns = ["vfat", "vfat3_ser_num", "vref_adc"], index = False)
 
-        calInfoFile = calDataDir + "/vfat_calib_info_iref.txt"%(oh_select)
+        calInfoFile = calDataDir + "/%s_OH%d_vfat_calib_info_iref.txt"%(gem, oh_select)
         vfatCalInfo_mod.to_csv(calInfoFile, sep = ";", columns = ["vfat", "vfat3_ser_num", "iref"], index = False)
         
-        calInfoFile = calDataDir + "/vfat_calib_info_adc0.txt"%(oh_select)
+        calInfoFile = calDataDir + "/%s_OH%d_vfat_calib_info_adc0.txt"%(gem, oh_select)
         vfatCalInfo_mod.to_csv(calInfoFile, sep = ";", columns = ["vfat", "vfat3_ser_num", "adc0m", "adc0b"], index = False)
 
-        calInfoFile = calDataDir + "/vfat_calib_info_calDac.txt"%(oh_select)
+        calInfoFile = calDataDir + "/%s_OH%d_vfat_calib_info_calDac.txt"%(gem, oh_select)
         vfatCalInfo_mod.to_csv(calInfoFile, sep = ";", columns = ["vfat", "vfat3_ser_num", "cal_dacm", "cal_dacb"], index = False)
         #fileName = calDataDir + "/NominalValues_IREF.txt" 
         #vfatCalInfo_mod.to_csv(
@@ -191,13 +191,13 @@ if __name__ == '__main__':
         sys.exit()
 
     # Initialization
-    gem_utils.initialize(args.gem, args.system)
+    initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     try: 
-        main(int(args.ohid), args.type, args.write)
+        main(args.gem, int(args.ohid), args.type, args.write)
     except KeyboardInterrupt:
         print(Colors.YELLOW + "\nKeyboard Interrupt encountered" + Colors.ENDC)
-        rw_terminate()
+        terminate()
     
-    rw_terminate()
+    terminate()

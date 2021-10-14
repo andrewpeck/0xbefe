@@ -340,7 +340,7 @@ def lpgbt_write_fuse_file(fuse_file = "fuse.txt"):
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="LpGBT Fusing for ME0 Optohybrid")
+    parser = argparse.ArgumentParser(description="lpGBT Fusing for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
