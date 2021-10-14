@@ -19,7 +19,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
     global vfat_channel_trimming
 
     # Generic register list
-    vfat_register_config_file_path = "../resources/vfatConfig.txt"%oh_select
+    vfat_register_config_file_path = "../resources/vfatConfig.txt"
     if not os.path.isfile(vfat_register_config_file_path):
         print (Colors.YELLOW + "VFAT config text file not present in vfat_data/" + Colors.ENDC)
         sys.exit()

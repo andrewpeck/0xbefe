@@ -63,7 +63,7 @@ def main(gem, oh_select, id_type, write):
     if id_type=="hw_id":
         vfatList = serialN
     elif id_type=="file":
-        inFile = "../resources/vfatID.txt"%(oh_select)
+        inFile = "../resources/vfatID.txt"
         if not os.path.isfile(inFile):
             print (Colors.YELLOW + "Missing vfatID file for OH %d"%(oh_select) + Colors.ENDC)
             sys.exit()

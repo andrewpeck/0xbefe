@@ -266,9 +266,9 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
     gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
 
-    if lpgbt == "boss":
+    if gbt == "boss":
         config = config_boss
-    elif lpgbt == "sub":
+    elif gbt == "sub":
         config = config_sub
     
     # set phase
@@ -276,7 +276,7 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
     value = (config[addr] & 0x0f) | (phase << 4)
 
-    gem_utils.select_ic_link(oh_select, gbt_select)
+    select_ic_link(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
     
@@ -371,7 +371,7 @@ if __name__ == "__main__":
             sys.exit()
 
     # Initialization 
-    initialize(args.gem, args.system)
+    rw_initialize(args.gem, args.system)
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
@@ -391,13 +391,13 @@ if __name__ == "__main__":
         gbt_phase_scan(args.gem, args.system, int(args.ohid), args.daq_err, vfat_list, int(args.depth), bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+        rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        rw_terminate()
 
     # Termination
-    terminate()
+    rw_terminate()
 
 
 

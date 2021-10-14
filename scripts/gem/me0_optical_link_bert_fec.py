@@ -25,7 +25,7 @@ def check_fec_errors(gem, system, boss, path, opr, ohid, gbtid, runtime, vfat_li
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    file_out = open(dataDir+"%s_OH%d_GBT%d_optical_link_bert_fec_test_output_"%(gem,ohid,gbtid)+now+".txt", "w")
+    file_out = open(dataDir+"/%s_OH%d_GBT%d_optical_link_bert_fec_test_output_"%(gem,ohid,gbtid)+now+".txt", "w")
     print ("Checking FEC Errors for: " + path)
     file_out.write("Checking FEC Errors for: \n" + path)
     fec_errors = 0

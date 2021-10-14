@@ -105,8 +105,10 @@ def main(inFile, calFile, directoryName, oh):
     for DAC_reg in dacData.DAC_reg.unique(): # loop over dacs
         startTime = time()
         print(Colors.GREEN + "\nWorking on DAC: %s \n" % DAC_reg + Colors.ENDC)
-        dacFileName = directoryName + "/nominalValues_" + oh + "_" + DAC_reg + ".txt"
-        file = open(dacFileName, "w")
+
+        if DAC_reg not in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
+            dacFileName = directoryName + "/nominalValues_" + oh + "_" + DAC_reg + ".txt"
+            dac_nominal_file = open(dacFileName, "w")
         sel = dacData.DAC_reg == DAC_reg # select rows for specific DAC
         datareg = dacData[sel] # slice dataframe for specific DAC
         vfatCnt0 = 0 # Initialize vfat counter
@@ -127,7 +129,7 @@ def main(inFile, calFile, directoryName, oh):
             thr_pd = pd.DataFrame()
 
         for vfat in datareg.vfat.unique(): # loop over vfats
-            print(Colors.GREEN + "\nWorking on VFAT: %s\n" % vfat+ Colors.ENDC)
+            print(Colors.GREEN + "\n  Working on VFAT: %s\n" % vfat+ Colors.ENDC)
             sel2 = datareg.vfat == vfat # select rows for the current vfat
             datavfat = datareg[sel2].reset_index() # reset starting index of sliced dataframe to 0
             slopeTemp = np.array(calData.loc[calData["vfat"] == vfat].slope) # get slope for VFAT
@@ -158,26 +160,45 @@ def main(inFile, calFile, directoryName, oh):
             #    xdata = xdata / 1000 # convert to uA
             #    datavfat["value"] = datavfat["value"] / 1000
 
+            xlabel_plot = ""
+            if nominalDacValues[DAC_reg][1] == "uA":
+                xlabel_plot = "ADC0 ($\mu$A)"
+            else:
+                xlabel_plot = "ADC0 (%s)" % nominalDacValues[DAC_reg][1]
+
             if numVfats == 1:
                 ax.grid()
                 ax.errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
+                ax.set_xlabel(xlabel_plot)
+                ax.set_ylabel("DAC")
+                ax.set_title("VFAT%02d"%vfat)
             elif numVfats <= 3:
                 ax[vfatCnt0].grid()
                 ax[vfatCnt0].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
+                ax[vfatCnt0].set_xlabel(xlabel_plot)
+                ax[vfatCnt0].set_ylabel("DAC")
+                ax[vfatCnt0].set_title("VFAT%02d" % vfat)
             elif numVfats <= 6:
                 ax[int(vfatCnt0/3), vfatCnt0%3].grid()
                 ax[int(vfatCnt0/3), vfatCnt0%3].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
+                ax[int(vfatCnt0/3), vfatCnt0%3].set_xlabel(xlabel_plot)
+                ax[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("DAC")
+                ax[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d" % vfat)
             else:
                 ax[int(vfatCnt0/6), vfatCnt0%6].grid()
                 ax[int(vfatCnt0/6), vfatCnt0%6].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
+                ax[int(vfatCnt0/6), vfatCnt0%6].set_xlabel(xlabel_plot)
+                ax[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("DAC")
+                ax[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d" % vfat)
 
-            fitData = np.polyfit(xdata, ydata, 5) # fit data to 5th degree polynomial
+            if DAC_reg not in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:         
+                fitData = np.polyfit(xdata, ydata, 5) # fit data to 5th degree polynomial
 
-            datavfat2["DAC_point"] = pd.DataFrame(poly5(xdata, *fitData), columns=["DAC_point"]) # adds fitted data to dataframe
-            nml = nominalDacValues[DAC_reg][0] # store nominal DAC value
-            nominal_ADC0 = int(determine_nom(datavfat2, nml)) # find nominal value for specific vfat
-            if nominal_ADC0 > max(datavfat.DAC_point):
-                nominal_ADC0 = max(datavfat.DAC_point)
+                datavfat2["DAC_point"] = pd.DataFrame(poly5(xdata, *fitData), columns=["DAC_point"]) # adds fitted data to dataframe
+                nml = nominalDacValues[DAC_reg][0] # store nominal DAC value
+                nominal_ADC0 = int(determine_nom(datavfat2, nml)) # find nominal value for specific vfat
+                if nominal_ADC0 > max(datavfat.DAC_point):
+                    nominal_ADC0 = max(datavfat.DAC_point)
 
             # Only for CAL_DAC
             if cal_dac_derive and (DAC_reg=="CFG_CAL_DAC_V_HIGH" or DAC_reg=="CFG_CAL_DAC_V_LOW"):
@@ -191,37 +212,19 @@ def main(inFile, calFile, directoryName, oh):
                     vfat_cal_dac[vfat]["slope_low"] = 0
                     vfat_cal_dac[vfat]["intercept_low"] = np.mean(cal_dac_data_y)
 
-            xlabel_plot = ""
-            if nominalDacValues[DAC_reg][1] == "uA":
-                xlabel_plot = "ADC0 ($\mu$A)"
-            else:
-                xlabel_plot = "ADC0 (%s)" % nominalDacValues[DAC_reg][1]
-
             # Plot fit
-            if numVfats == 1:
-                ax.set_xlabel(xlabel_plot)
-                ax.set_ylabel("DAC")
-                ax.plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
-                ax.set_title("VFAT%02d" % vfat)
-            elif numVfats <= 3:
-                ax[vfatCnt0].set_xlabel(xlabel_plot)
-                ax[vfatCnt0].set_ylabel("DAC")
-                ax[vfatCnt0].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
-                ax[vfatCnt0].set_title("VFAT%02d" % vfat)
-            elif numVfats <= 6:
-                ax[int(vfatCnt0/3), vfatCnt0%3].set_xlabel(xlabel_plot)
-                ax[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("DAC")
-                ax[int(vfatCnt0/3), vfatCnt0%3].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
-                ax[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d" % vfat)
-            else:
-                ax[int(vfatCnt0/6), vfatCnt0%6].set_xlabel(xlabel_plot)
-                ax[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("DAC")
-                ax[int(vfatCnt0/6), vfatCnt0%6].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
-                ax[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d" % vfat)
+            if DAC_reg not in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
+                if numVfats == 1:
+                    ax.plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
+                elif numVfats <= 3:
+                    ax[vfatCnt0].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
+                elif numVfats <= 6:
+                    ax[int(vfatCnt0/3), vfatCnt0%3].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
+                else:
+                    ax[int(vfatCnt0/6), vfatCnt0%6].plot(xdata, poly5(xdata, *fitData), "r-", linewidth=3) # plot fit
+                dac_nominal_file.write("%s;%i;%i\n" % (DAC_reg, vfat, nominal_ADC0))
 
             vfatCnt0 += 1
-
-            file.write("%s;%i;%i\n" % (DAC_reg, vfat, nominal_ADC0))
 
         if DAC_reg == "CFG_THR_ARM_DAC":
             thr_pd.to_csv(thr_filename_out)
@@ -230,7 +233,8 @@ def main(inFile, calFile, directoryName, oh):
         fig.subplots_adjust(top=0.88) # adjust main title
         fig.tight_layout()
         plt.savefig(directoryName + "/DAC_summaryPlots_%s_%s.pdf"%(oh, DAC_reg))
-        file.close()
+        if DAC_reg not in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
+            dac_nominal_file.close()
         print("Total time to execute: %s s" % str(time() - startTime))
         plt.close()
 
@@ -254,7 +258,7 @@ if __name__ == "__main__":
         sys.exit()
 
     directoryName        = args.inFile.split(".txt")[0]
-    plot_filename_prefix = (directoryName.split("/"))[2]
+    plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
     print(Colors.GREEN + "\nDAC scan results stored in: %s" % directoryName + Colors.ENDC)
 

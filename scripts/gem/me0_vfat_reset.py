@@ -25,7 +25,7 @@ def vfat_reset(system, oh_select, vfat_list):
     gpio_outL_node = getNode("LPGBT.RWF.PIO.PIOOUTL")
 
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
         print ("VFAT#: %02d, lpGBT: %s, OH: %d, GBT: %d, GPIO: %d" %(vfat, gbt, oh_select, gbt_select, gpio))
         
         boss=0
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         print ("Using Rpi CHeeseCake for VFAT reset")
     elif args.system == "backend":
         print ("Using Backend for VFAT reset")
-   elif args.system == "dryrun":
+    elif args.system == "dryrun":
         print ("Dry Run - not actually doing vfat reset")
     else:
         print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         global gem_utils
     
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     # Running Phase Scan
@@ -154,13 +154,13 @@ if __name__ == "__main__":
         vfat_reset(args.system, int(args.ohid), vfat_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+        rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        rw_terminate()
 
     # Termination
-    terminate()
+    rw_terminate()
 
 
 

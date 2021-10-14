@@ -324,9 +324,9 @@ def find_phase_center(err_list):
 def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     gbt, gbt_select, rx_elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
 
-    if lpgbt == "boss":
+    if gbt == "boss":
         config = config_boss
-    elif lpgbt == "sub":
+    elif gbt == "sub":
         config = config_sub
 
     # set phase
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     cal_dac = 150 # should be 50 for voltage pulse mode
 
     # Initialization 
-    initialize(args.gem, args.system)
+    rw_initialize(args.gem, args.system)
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
@@ -445,13 +445,13 @@ if __name__ == "__main__":
         vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, nl1a, l1a_bxgap, set_cal_mode, cal_dac, bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+        rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        rw_terminate()
 
     # Termination
-    terminate()
+    rw_terminate()
 
 
 

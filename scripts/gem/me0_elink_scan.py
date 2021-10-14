@@ -129,7 +129,7 @@ if __name__ == "__main__":
         vfat_list.append(v_int)
 
     # Initialization 
-    initialize(args.gem, args.system)
+    rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     if not os.path.isfile(config_boss_filename):
@@ -148,13 +148,13 @@ if __name__ == "__main__":
         me0_elink_scan(args.system, int(args.ohid), vfat_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+        rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        rw_terminate()
 
     # Termination
-    terminate()
+    rw_terminate()
 
 
 

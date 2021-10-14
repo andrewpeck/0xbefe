@@ -323,7 +323,7 @@ if __name__ == "__main__":
         sys.exit()
 
     directoryName        = args.filename.split(".txt")[0]
-    plot_filename_prefix = (directoryName.split("/"))[2]
+    plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)
 

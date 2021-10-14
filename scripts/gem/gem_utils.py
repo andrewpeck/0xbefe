@@ -259,7 +259,7 @@ def initialize(station, system_val):
     #    hdlc_address_map = GE11_hdlc_address_map
 
 def terminate():
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sys.exit()   
 
 def check_gbt_link_ready(ohIdx, gbtIdx):
@@ -335,7 +335,7 @@ def read_backend_reg(node):
     
 def write_backend_reg(node, data):
     if system == "backend":
-        output = rw_reg.write_reg(node, data)
+        output = write_reg(node, data)
         if output==-1:
             print (Colors.YELLOW + "ERROR: Bus Error, Trying again" + Colors.ENDC)
             output = write_reg(node, data)
