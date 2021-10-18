@@ -130,6 +130,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl;
     
     -- external trigger
+    signal usbc_trig_sync       : std_logic;
     signal ext_trig             : std_logic;
     signal ext_trig_en          : std_logic;
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
@@ -553,6 +554,8 @@ begin
 
     -- copper input test
 
+    i_ext_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
+
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -561,7 +564,7 @@ begin
                 ext_trig_cntdown <= (others => '0');
             else
                 
-                if usbc_trig_i = '1' and ext_trig_cntdown = x"000" then
+                if usbc_trig_sync = '1' and ext_trig_cntdown = x"000" then
                     ext_trig <= '1';
                     ext_trig_cntdown <= unsigned(ext_trig_deadtime);
                 else
