@@ -36,6 +36,7 @@ package ttc_pkg is
         l1a        : std_logic;
         bc0        : std_logic;
         ec0        : std_logic;
+        oc0        : std_logic;
         resync     : std_logic;
         hard_reset : std_logic;
         start      : std_logic;
@@ -72,6 +73,8 @@ package ttc_pkg is
         lock_mon_target_phase   : std_logic_vector(15 downto 0); -- Phase lock monitor (used in phase alignment): the target phase between the TTC clock and the fabric clocks that is considered locked. The units are the same as in the phase monitor. NOTE: do not set this at or close to 0 or the maximum phase -- this could result in unreliable phase alignment, it should be placed at least 1ns away from the 0/max rollover point.
         lock_mon_tollerance     : std_logic_vector(15 downto 0); -- Phase lock monitor (used in phase alignment): this is the half-size of the lock window, or the number of phase units plus/minus the target (LOCKMON_TARGET_PHASE) where the phase is considered locked
     end record;    
+
+    type t_ttc_clk_ctrl_arr is array(integer range<>) of t_ttc_clk_ctrl;
 
     type t_ttc_ctrl is record
         clk_ctrl         : t_ttc_clk_ctrl;

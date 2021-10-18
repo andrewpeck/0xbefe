@@ -360,7 +360,7 @@ begin
     bc0_cmd        <= bc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.bc0;
     ec0_cmd        <= ec0_cmd_real when gen_enable = '0' else gen_ttc_cmds.ec0;
     resync_cmd     <= resync_cmd_real when gen_enable = '0' else gen_ttc_cmds.resync;
-    oc0_cmd        <= oc0_cmd_real when gen_enable = '0' else '0';
+    oc0_cmd        <= oc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.oc0;
     start_cmd      <= start_cmd_real when gen_enable = '0' else gen_ttc_cmds.start;
     stop_cmd       <= stop_cmd_real when gen_enable = '0' else gen_ttc_cmds.stop;
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
@@ -517,6 +517,7 @@ begin
     ttc_cmds_o.l1a        <= l1a_cmd;
     ttc_cmds_o.bc0        <= bc0_cmd;
     ttc_cmds_o.ec0        <= ec0_cmd;
+    ttc_cmds_o.oc0        <= oc0_cmd;
     ttc_cmds_o.resync     <= resync_cmd;
     ttc_cmds_o.hard_reset <= hard_reset_cmd;
     ttc_cmds_o.calpulse   <= calpulse_cmd;
