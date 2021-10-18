@@ -29,6 +29,7 @@ package board_config_package is
     
     ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
+    constant CFG_PCIE_USE_QDMA      : boolean := true;
 
     ------------ GEM specific constants ------------
     constant CFG_GEM_STATION        : integer range 0 to 2 := PRJ_CFG_GEM_STATION; -- Controlled by the project_config.vhd:  0 = ME0; 1 = GE1/1; 2 = GE2/1
@@ -149,8 +150,9 @@ package board_config_package is
     
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr := (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL);
     
+    type t_spy_link_config is array (0 to 3) of integer range 0 to CFG_BOARD_MAX_LINKS;
     constant CFG_USE_SPY_LINK : boolean := true;
-    constant CFG_SPY_LINK : integer := 12;
+    constant CFG_SPY_LINK : t_spy_link_config := (12, 12, 12, 12);
     
     --================================--
     -- Fiber to MGT mapping

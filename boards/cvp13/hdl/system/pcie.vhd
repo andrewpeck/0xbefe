@@ -25,6 +25,9 @@ use work.ipb_sys_addr_decode.all;
 use work.common_pkg.all;
 
 entity pcie is
+    generic(
+        g_USE_QDMA    : boolean -- QDMA will be used if set to true (does not support DAQ), if set to false XDMA with DAQ support will be used
+    );
     port (
         reset_i                 : in  std_logic;
         
@@ -61,7 +64,7 @@ end pcie;
 
 architecture pcie_arch of pcie is
 
-    -- 4x pcie gen2 with axi stream
+    -- XDMA: 4x pcie gen2 with axi stream
     component pcie_xdma
         port(
             sys_clk                 : in  std_logic;
@@ -120,6 +123,162 @@ architecture pcie_arch of pcie is
         );
     end component;
     
+    -- QDMA: 4x pcie gen2
+    component pcie_qdma
+        port(
+            sys_clk                : in  std_logic;
+            sys_clk_gt             : in  std_logic;
+            sys_rst_n              : in  std_logic;
+            user_lnk_up            : out std_logic;
+            pci_exp_txp            : out std_logic_vector(3 downto 0);
+            pci_exp_txn            : out std_logic_vector(3 downto 0);
+            pci_exp_rxp            : in  std_logic_vector(3 downto 0);
+            pci_exp_rxn            : in  std_logic_vector(3 downto 0);
+            axi_aclk               : out std_logic;
+            axi_aresetn            : out std_logic;
+            usr_irq_in_vld         : in  std_logic;
+            usr_irq_in_vec         : in  std_logic_vector(10 downto 0);
+            usr_irq_in_fnc         : in  std_logic_vector(7 downto 0);
+            usr_irq_out_ack        : out std_logic;
+            usr_irq_out_fail       : out std_logic;
+            tm_dsc_sts_vld         : out std_logic;
+            tm_dsc_sts_port_id     : out std_logic_vector(2 downto 0);
+            tm_dsc_sts_qen         : out std_logic;
+            tm_dsc_sts_byp         : out std_logic;
+            tm_dsc_sts_dir         : out std_logic;
+            tm_dsc_sts_mm          : out std_logic;
+            tm_dsc_sts_error       : out std_logic;
+            tm_dsc_sts_qid         : out std_logic_vector(10 downto 0);
+            tm_dsc_sts_avl         : out std_logic_vector(15 downto 0);
+            tm_dsc_sts_qinv        : out std_logic;
+            tm_dsc_sts_irq_arm     : out std_logic;
+            tm_dsc_sts_rdy         : in  std_logic;
+            tm_dsc_sts_pidx        : out std_logic_vector(15 downto 0);
+            dsc_crdt_in_crdt       : in  std_logic_vector(15 downto 0);
+            dsc_crdt_in_qid        : in  std_logic_vector(10 downto 0);
+            dsc_crdt_in_dir        : in  std_logic;
+            dsc_crdt_in_fence      : in  std_logic;
+            dsc_crdt_in_vld        : in  std_logic;
+            dsc_crdt_in_rdy        : out std_logic;
+            m_axi_awready          : in  std_logic;
+            m_axi_wready           : in  std_logic;
+            m_axi_bid              : in  std_logic_vector(3 downto 0);
+            m_axi_bresp            : in  std_logic_vector(1 downto 0);
+            m_axi_bvalid           : in  std_logic;
+            m_axi_arready          : in  std_logic;
+            m_axi_rid              : in  std_logic_vector(3 downto 0);
+            m_axi_rdata            : in  std_logic_vector(63 downto 0);
+            m_axi_rresp            : in  std_logic_vector(1 downto 0);
+            m_axi_rlast            : in  std_logic;
+            m_axi_rvalid           : in  std_logic;
+            m_axi_awid             : out std_logic_vector(3 downto 0);
+            m_axi_awaddr           : out std_logic_vector(63 downto 0);
+            m_axi_awuser           : out std_logic_vector(31 downto 0);
+            m_axi_awlen            : out std_logic_vector(7 downto 0);
+            m_axi_awsize           : out std_logic_vector(2 downto 0);
+            m_axi_awburst          : out std_logic_vector(1 downto 0);
+            m_axi_awprot           : out std_logic_vector(2 downto 0);
+            m_axi_awvalid          : out std_logic;
+            m_axi_awlock           : out std_logic;
+            m_axi_awcache          : out std_logic_vector(3 downto 0);
+            m_axi_wdata            : out std_logic_vector(63 downto 0);
+            m_axi_wuser            : out std_logic_vector(7 downto 0);
+            m_axi_wstrb            : out std_logic_vector(7 downto 0);
+            m_axi_wlast            : out std_logic;
+            m_axi_wvalid           : out std_logic;
+            m_axi_bready           : out std_logic;
+            m_axi_arid             : out std_logic_vector(3 downto 0);
+            m_axi_araddr           : out std_logic_vector(63 downto 0);
+            m_axi_aruser           : out std_logic_vector(31 downto 0);
+            m_axi_arlen            : out std_logic_vector(7 downto 0);
+            m_axi_arsize           : out std_logic_vector(2 downto 0);
+            m_axi_arburst          : out std_logic_vector(1 downto 0);
+            m_axi_arprot           : out std_logic_vector(2 downto 0);
+            m_axi_arvalid          : out std_logic;
+            m_axi_arlock           : out std_logic;
+            m_axi_arcache          : out std_logic_vector(3 downto 0);
+            m_axi_rready           : out std_logic;
+            m_axil_awaddr          : out std_logic_vector(31 downto 0);
+            m_axil_awuser          : out std_logic_vector(54 downto 0);
+            m_axil_awprot          : out std_logic_vector(2 downto 0);
+            m_axil_awvalid         : out std_logic;
+            m_axil_awready         : in  std_logic;
+            m_axil_wdata           : out std_logic_vector(31 downto 0);
+            m_axil_wstrb           : out std_logic_vector(3 downto 0);
+            m_axil_wvalid          : out std_logic;
+            m_axil_wready          : in  std_logic;
+            m_axil_bvalid          : in  std_logic;
+            m_axil_bresp           : in  std_logic_vector(1 downto 0);
+            m_axil_bready          : out std_logic;
+            m_axil_araddr          : out std_logic_vector(31 downto 0);
+            m_axil_aruser          : out std_logic_vector(54 downto 0);
+            m_axil_arprot          : out std_logic_vector(2 downto 0);
+            m_axil_arvalid         : out std_logic;
+            m_axil_arready         : in  std_logic;
+            m_axil_rdata           : in  std_logic_vector(31 downto 0);
+            m_axil_rresp           : in  std_logic_vector(1 downto 0);
+            m_axil_rvalid          : in  std_logic;
+            m_axil_rready          : out std_logic;
+            cfg_negotiated_width_o : out std_logic_vector(3 downto 0);
+            cfg_current_speed_o    : out std_logic_vector(2 downto 0);
+            cfg_ltssm_state_o      : out std_logic_vector(5 downto 0);
+            soft_reset_n           : in  std_logic;
+            phy_ready              : out std_logic;
+            qsts_out_op            : out std_logic_vector(7 downto 0);
+            qsts_out_data          : out std_logic_vector(63 downto 0);
+            qsts_out_port_id       : out std_logic_vector(2 downto 0);
+            qsts_out_qid           : out std_logic_vector(12 downto 0);
+            qsts_out_vld           : out std_logic;
+            qsts_out_rdy           : in  std_logic
+        );
+    end component;    
+    
+    -- 64 wide AXI-full test BRAM
+    component axi_bram_ctrl_test
+        port(
+            s_axi_aclk    : in  std_logic;
+            s_axi_aresetn : in  std_logic;
+            s_axi_awaddr  : in  std_logic_vector(18 downto 0);
+            s_axi_awlen   : in  std_logic_vector(7 downto 0);
+            s_axi_awsize  : in  std_logic_vector(2 downto 0);
+            s_axi_awburst : in  std_logic_vector(1 downto 0);
+            s_axi_awlock  : in  std_logic;
+            s_axi_awcache : in  std_logic_vector(3 downto 0);
+            s_axi_awprot  : in  std_logic_vector(2 downto 0);
+            s_axi_awvalid : in  std_logic;
+            s_axi_awready : out std_logic;
+            s_axi_wdata   : in  std_logic_vector(63 downto 0);
+            s_axi_wstrb   : in  std_logic_vector(7 downto 0);
+            s_axi_wlast   : in  std_logic;
+            s_axi_wvalid  : in  std_logic;
+            s_axi_wready  : out std_logic;
+            s_axi_bresp   : out std_logic_vector(1 downto 0);
+            s_axi_bvalid  : out std_logic;
+            s_axi_bready  : in  std_logic;
+            s_axi_araddr  : in  std_logic_vector(18 downto 0);
+            s_axi_arlen   : in  std_logic_vector(7 downto 0);
+            s_axi_arsize  : in  std_logic_vector(2 downto 0);
+            s_axi_arburst : in  std_logic_vector(1 downto 0);
+            s_axi_arlock  : in  std_logic;
+            s_axi_arcache : in  std_logic_vector(3 downto 0);
+            s_axi_arprot  : in  std_logic_vector(2 downto 0);
+            s_axi_arvalid : in  std_logic;
+            s_axi_arready : out std_logic;
+            s_axi_rdata   : out std_logic_vector(63 downto 0);
+            s_axi_rresp   : out std_logic_vector(1 downto 0);
+            s_axi_rlast   : out std_logic;
+            s_axi_rvalid  : out std_logic;
+            s_axi_rready  : in  std_logic;
+            bram_rst_a    : out std_logic;
+            bram_clk_a    : out std_logic;
+            bram_en_a     : out std_logic;
+            bram_we_a     : out std_logic_vector(7 downto 0);
+            bram_addr_a   : out std_logic_vector(18 downto 0);
+            bram_wrdata_a : out std_logic_vector(63 downto 0);
+            bram_rddata_a : in  std_logic_vector(63 downto 0)
+        );
+    end component;
+        
     component vio_pcie
         port(
             clk       : in std_logic;
@@ -240,6 +399,10 @@ architecture pcie_arch of pcie is
 
     signal ipb_read_active      : std_logic;
     signal ipb_write_active     : std_logic;
+
+    -- axi full (for test only)
+    signal axi_m2s              : t_axi_full_64_m2s;
+    signal axi_s2m              : t_axi_full_64_s2m := AXI_FULL_64_MISO_NULL;
     
 begin
 
@@ -252,229 +415,396 @@ begin
     axi_clk_o <= axi_clk;
     
     --================================--
-    -- PCIe DMA module
+    -- PCIe XDMA module
     --================================--
 
-    i_pcie_dma : pcie_xdma
-        port map(
-            sys_clk                 => pcie_sysclk_i,
-            sys_clk_gt              => pcie_refclk_i,
-            sys_rst_n               => pcie_reset_b_i,
-            user_lnk_up             => pcie_link_up,
-            pci_exp_txp             => pcie_serial_txp(3 downto 0),
-            pci_exp_txn             => pcie_serial_txn(3 downto 0),
-            pci_exp_rxp             => (others => '1'),
-            pci_exp_rxn             => (others => '0'),
-                                    
-            axi_aclk                => axi_clk,
-            axi_aresetn             => axi_reset_b,
-            usr_irq_req             => '0',
-            usr_irq_ack             => open,
-            msi_enable              => open,
-            msi_vector_width        => open,
-                                    
-            -- axi lite             
-            m_axil_awaddr           => axil_m2s.awaddr,
-            m_axil_awprot           => axil_m2s.awprot,
-            m_axil_awvalid          => axil_m2s.awvalid,
-            m_axil_awready          => axil_s2m.awready,
-            m_axil_wdata            => axil_m2s.wdata, 
-            m_axil_wstrb            => axil_m2s.wstrb, 
-            m_axil_wvalid           => axil_m2s.wvalid,
-            m_axil_wready           => axil_s2m.wready,
-            m_axil_bvalid           => axil_s2m.bvalid,
-            m_axil_bresp            => axil_s2m.bresp, 
-            m_axil_bready           => axil_m2s.bready,
-            m_axil_araddr           => axil_m2s.araddr,
-            m_axil_arprot           => axil_m2s.arprot, 
-            m_axil_arvalid          => axil_m2s.arvalid,
-            m_axil_arready          => axil_s2m.arready,
-            m_axil_rdata            => axil_s2m.rdata,  
-            m_axil_rresp            => axil_s2m.rresp,  
-            m_axil_rvalid           => axil_s2m.rvalid, 
-            m_axil_rready           => axil_m2s.rready, 
-                                    
-            s_axis_c2h_tdata_0      => axis_c2h.tdata,
-            s_axis_c2h_tlast_0      => axis_c2h.tlast,
-            s_axis_c2h_tvalid_0     => axis_c2h.tvalid,
-            s_axis_c2h_tready_0     => axis_c2h_ready,
-            s_axis_c2h_tkeep_0      => axis_c2h.tkeep,
-            m_axis_h2c_tdata_0      => axis_h2c.tdata,
-            m_axis_h2c_tlast_0      => axis_h2c.tlast,
-            m_axis_h2c_tvalid_0     => axis_h2c.tvalid,
-            m_axis_h2c_tready_0     => axis_h2c_ready,
-            m_axis_h2c_tkeep_0      => axis_h2c.tkeep,
-            c2h_sts_0               => c2h_status,
-            h2c_sts_0               => h2c_status,
-
-            cfg_negotiated_width_o  => pcie_width,
-            cfg_current_speed_o     => pcie_speed,
-            cfg_ltssm_state_o       => pcie_train_state,
-            cfg_err_cor_o           => pcie_err_cor,
-            cfg_err_fatal_o         => pcie_err_fatal,
-            cfg_err_nonfatal_o      => pcie_err_nonfatal,
-            cfg_local_error_o       => pcie_local_err,
-            cfg_local_error_valid_o => pcie_local_err_valid
-        );
+--    g_xdma : if not g_USE_QDMA generate
+--
+--        i_pcie_dma : pcie_xdma
+--            port map(
+--                sys_clk                 => pcie_sysclk_i,
+--                sys_clk_gt              => pcie_refclk_i,
+--                sys_rst_n               => pcie_reset_b_i,
+--                user_lnk_up             => pcie_link_up,
+--                pci_exp_txp             => pcie_serial_txp(3 downto 0),
+--                pci_exp_txn             => pcie_serial_txn(3 downto 0),
+--                pci_exp_rxp             => (others => '1'),
+--                pci_exp_rxn             => (others => '0'),
+--                                        
+--                axi_aclk                => axi_clk,
+--                axi_aresetn             => axi_reset_b,
+--                usr_irq_req             => '0',
+--                usr_irq_ack             => open,
+--                msi_enable              => open,
+--                msi_vector_width        => open,
+--                                        
+--                -- axi lite             
+--                m_axil_awaddr           => axil_m2s.awaddr,
+--                m_axil_awprot           => axil_m2s.awprot,
+--                m_axil_awvalid          => axil_m2s.awvalid,
+--                m_axil_awready          => axil_s2m.awready,
+--                m_axil_wdata            => axil_m2s.wdata, 
+--                m_axil_wstrb            => axil_m2s.wstrb, 
+--                m_axil_wvalid           => axil_m2s.wvalid,
+--                m_axil_wready           => axil_s2m.wready,
+--                m_axil_bvalid           => axil_s2m.bvalid,
+--                m_axil_bresp            => axil_s2m.bresp, 
+--                m_axil_bready           => axil_m2s.bready,
+--                m_axil_araddr           => axil_m2s.araddr,
+--                m_axil_arprot           => axil_m2s.arprot, 
+--                m_axil_arvalid          => axil_m2s.arvalid,
+--                m_axil_arready          => axil_s2m.arready,
+--                m_axil_rdata            => axil_s2m.rdata,  
+--                m_axil_rresp            => axil_s2m.rresp,  
+--                m_axil_rvalid           => axil_s2m.rvalid, 
+--                m_axil_rready           => axil_m2s.rready, 
+--                                        
+--                s_axis_c2h_tdata_0      => axis_c2h.tdata,
+--                s_axis_c2h_tlast_0      => axis_c2h.tlast,
+--                s_axis_c2h_tvalid_0     => axis_c2h.tvalid,
+--                s_axis_c2h_tready_0     => axis_c2h_ready,
+--                s_axis_c2h_tkeep_0      => axis_c2h.tkeep,
+--                m_axis_h2c_tdata_0      => axis_h2c.tdata,
+--                m_axis_h2c_tlast_0      => axis_h2c.tlast,
+--                m_axis_h2c_tvalid_0     => axis_h2c.tvalid,
+--                m_axis_h2c_tready_0     => axis_h2c_ready,
+--                m_axis_h2c_tkeep_0      => axis_h2c.tkeep,
+--                c2h_sts_0               => c2h_status,
+--                h2c_sts_0               => h2c_status,
+--    
+--                cfg_negotiated_width_o  => pcie_width,
+--                cfg_current_speed_o     => pcie_speed,
+--                cfg_ltssm_state_o       => pcie_train_state,
+--                cfg_err_cor_o           => pcie_err_cor,
+--                cfg_err_fatal_o         => pcie_err_fatal,
+--                cfg_err_nonfatal_o      => pcie_err_nonfatal,
+--                cfg_local_error_o       => pcie_local_err,
+--                cfg_local_error_valid_o => pcie_local_err_valid
+--            );
+--    
+--        --================================--
+--        -- AXI stream
+--        --================================--  
+--      
+--        axis_h2c_ready <= '1';
+--        fed_clk <= daq_to_daqlink_i.event_clk;
+--        
+--        ---------- Calculate CRC ----------
+--    
+--        daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;        
+--            
+--        process(fed_clk)
+--        begin
+--            if rising_edge(fed_clk) then
+--                fed_data_d       <= daq_to_daqlink_i.event_data;
+--                fed_data_head_d  <= daq_to_daqlink_i.event_header;
+--                fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
+--                fed_data_we_d    <= daq_to_daqlink_i.event_valid;
+--                crc_clear      <= daq_to_daqlink_i.event_trailer or daq_reset;
+--                
+--                -- substitute the CRC
+--                if fed_data_trail_d = '1' then
+--                    fed_data(31 downto 16) <= crc;
+--                else
+--                    fed_data(31 downto 16) <= fed_data_d(31 downto 16);
+--                end if;
+--                fed_data(127 downto 32) <= fed_data_d(127 downto 32);
+--                fed_data(15 downto 0) <= fed_data_d(15 downto 0);
+--                fed_data_head    <= fed_data_head_d;
+--                fed_data_trail   <= fed_data_trail_d;
+--                fed_data_we      <= fed_data_we_d;            
+--            end if;
+--        end process;
+--        
+--        crc_en <= daq_to_daqlink_i.event_valid;
+--        crc_data_in <= daq_to_daqlink_i.event_data;
+--        
+--        i_crc : entity work.FED_fragment_CRC16_D128b
+--            port map ( 
+--                clear_p  => crc_clear,
+--                clk      => fed_clk,
+--                enable   => crc_en,
+--                Data     => crc_data_in,
+--                CRC_out  => crc
+--            );
+--        
+--        -- CDC fifo between the DAQ clk and the AXI clk
+--        i_daq_cdc_fifo : xpm_fifo_async
+--            generic map(
+--                FIFO_MEMORY_TYPE    => "block",
+--                FIFO_WRITE_DEPTH    => 128,
+--                RELATED_CLOCKS      => 0,
+--                WRITE_DATA_WIDTH    => 128,
+--                READ_MODE           => "std",
+--                FIFO_READ_LATENCY   => 1,
+--                FULL_RESET_VALUE    => 0,
+--                USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+--                READ_DATA_WIDTH     => 128,
+--                CDC_SYNC_STAGES     => 2,
+--                DOUT_RESET_VALUE    => "0",
+--                ECC_MODE            => "no_ecc"
+--            )
+--            port map(
+--                sleep         => '0',
+--                rst           => daq_to_daqlink_i.reset,
+--                wr_clk        => fed_clk,
+--                wr_en         => fed_data_we,
+--                din           => fed_data,
+--                full          => open,
+--                prog_full     => open,
+--                wr_data_count => open,
+--                overflow      => daq_cdc_ovf,
+--                wr_rst_busy   => open,
+--                almost_full   => open,
+--                wr_ack        => open,
+--                rd_clk        => axi_clk,
+--                rd_en         => daq_cdc_rd_en,
+--                dout          => daq_cdc_data,
+--                empty         => daq_cdc_empty,
+--                prog_empty    => open,
+--                rd_data_count => open,
+--                underflow     => open,
+--                rd_rst_busy   => open,
+--                almost_empty  => open,
+--                data_valid    => daq_cdc_valid,
+--                injectsbiterr => '0',
+--                injectdbiterr => '0',
+--                sbiterr       => open,
+--                dbiterr       => open
+--            );    
+--    
+--        i_daq_cdc_ovf_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
+--        i_daqlink_reset_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daqlink_reset_axi_clk);
+--        i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
+--        i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
+--    
+--        i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
+--        i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => c2h_backpressure, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
+--        daqlink_to_daq_o.disperr_cnt <= (others => '0');
+--        daqlink_to_daq_o.notintable_cnt <= (others => '0');
+--    
+--        c2h_backpressure <= not axis_c2h_ready and not daq_cdc_empty;
+--        daq_cdc_rd_en <= not daq_cdc_empty and axis_c2h_ready;
+--        axis_c2h.tdata <= daq_cdc_data(127 downto 0);
+--        axis_c2h.tlast <= daq_cdc_valid and not or_reduce(std_logic_vector(c2h_words_cntdown));
+--        axis_c2h.tvalid <= daq_cdc_valid;
+--        axis_c2h.tkeep <= (others => daq_cdc_valid);
+--        
+--        c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
+--        
+--        process(axi_clk)
+--        begin
+--            if rising_edge(axi_clk) then
+--                if daq_reset = '1' then
+--                    c2h_words_cntdown <= c2h_packet_size_words - 1;
+--                else
+--                    if daq_cdc_valid = '1' then
+--                        if c2h_words_cntdown = x"00000" then
+--                            c2h_words_cntdown <= c2h_packet_size_words - 1;
+--                        else
+--                            c2h_words_cntdown <= c2h_words_cntdown - 1;
+--                        end if;
+--                    end if;
+--                end if;
+--            end if;
+--        end process;
+--    
+--        i_daq_cdc_ovf_latch : entity work.latch
+--            port map(
+--                reset_i => daq_reset,
+--                clk_i   => axi_clk,
+--                input_i => daq_cdc_ovf_axi_clk,
+--                latch_o => daq_cdc_ovf_latch
+--            );
+--    
+--        i_words_sent_cnt : entity work.counter
+--            generic map(
+--                g_COUNTER_WIDTH  => 44,
+--                g_ALLOW_ROLLOVER => false
+--            )
+--            port map(
+--                ref_clk_i => axi_clk,
+--                reset_i   => daq_reset,
+--                en_i      => axis_c2h.tvalid,
+--                count_o   => pcie_daq_status_o.words_sent
+--            );
+--    
+--        i_word_rate : entity work.rate_counter
+--            generic map(
+--                g_CLK_FREQUENCY => std_logic_vector(to_unsigned(125_000_000, 32)),
+--                g_COUNTER_WIDTH => 28
+--            )
+--            port map(
+--                clk_i   => axi_clk,
+--                reset_i => daq_reset,
+--                en_i    => axis_c2h.tvalid,
+--                rate_o  => pcie_daq_status_o.word_rate
+--            );
+--
+--    end generate;
 
     --================================--
-    -- AXI stream
-    --================================--  
-  
-    axis_h2c_ready <= '1';
-    fed_clk <= daq_to_daqlink_i.event_clk;
+    -- PCIe QDMA module
+    --================================--
+
+    g_qdma : if g_USE_QDMA generate
+
+        i_pcie_qdma : pcie_qdma
+            port map(
+                sys_clk                              => pcie_sysclk_i,
+                sys_clk_gt                           => pcie_refclk_i,
+                sys_rst_n                            => pcie_reset_b_i,
+                user_lnk_up                          => pcie_link_up,
+                pci_exp_txp                          => pcie_serial_txp(3 downto 0),
+                pci_exp_txn                          => pcie_serial_txn(3 downto 0),
+                pci_exp_rxp                          => (others => '1'),
+                pci_exp_rxn                          => (others => '0'),
+                axi_aclk                             => axi_clk,
+                axi_aresetn                          => axi_reset_b,
+                usr_irq_in_vld                       => '0',
+                usr_irq_in_vec                       => (others => '0'),
+                usr_irq_in_fnc                       => (others => '0'),
+                usr_irq_out_ack                      => open,
+                usr_irq_out_fail                     => open,
+                tm_dsc_sts_vld                       => open,
+                tm_dsc_sts_port_id                   => open,
+                tm_dsc_sts_qen                       => open,
+                tm_dsc_sts_byp                       => open,
+                tm_dsc_sts_dir                       => open,
+                tm_dsc_sts_mm                        => open,
+                tm_dsc_sts_error                     => open,
+                tm_dsc_sts_qid                       => open,
+                tm_dsc_sts_avl                       => open,
+                tm_dsc_sts_qinv                      => open,
+                tm_dsc_sts_irq_arm                   => open,
+                tm_dsc_sts_rdy                       => '1',
+                tm_dsc_sts_pidx                      => open,
+                dsc_crdt_in_crdt                     => (others => '0'),
+                dsc_crdt_in_qid                      => (others => '0'),
+                dsc_crdt_in_dir                      => '0',
+                dsc_crdt_in_fence                    => '0',
+                dsc_crdt_in_vld                      => '0',
+                dsc_crdt_in_rdy                      => open,
+                m_axi_awready                        => axi_s2m.awready,
+                m_axi_wready                         => axi_s2m.wready,
+                m_axi_bid                            => axi_s2m.bid,
+                m_axi_bresp                          => axi_s2m.bresp,
+                m_axi_bvalid                         => axi_s2m.bvalid,
+                m_axi_arready                        => axi_s2m.arready,
+                m_axi_rid                            => axi_s2m.rid,
+                m_axi_rdata                          => axi_s2m.rdata,
+                m_axi_rresp                          => axi_s2m.rresp,
+                m_axi_rlast                          => axi_s2m.rlast,
+                m_axi_rvalid                         => axi_s2m.rvalid,
+                m_axi_awid                           => axi_m2s.awid,
+                m_axi_awaddr                         => axi_m2s.awaddr,
+                m_axi_awuser                         => open,
+                m_axi_awlen                          => axi_m2s.awlen,
+                m_axi_awsize                         => axi_m2s.awsize,
+                m_axi_awburst                        => axi_m2s.awburst,
+                m_axi_awprot                         => axi_m2s.awprot,
+                m_axi_awvalid                        => axi_m2s.awvalid,
+                m_axi_awlock                         => axi_m2s.awlock,
+                m_axi_awcache                        => axi_m2s.awcache,
+                m_axi_wdata                          => axi_m2s.wdata,
+                m_axi_wuser                          => open,
+                m_axi_wstrb                          => axi_m2s.wstrb,
+                m_axi_wlast                          => axi_m2s.wlast,
+                m_axi_wvalid                         => axi_m2s.wvalid,
+                m_axi_bready                         => axi_m2s.bready,
+                m_axi_arid                           => axi_m2s.arid,
+                m_axi_araddr                         => axi_m2s.araddr,
+                m_axi_aruser                         => open,
+                m_axi_arlen                          => axi_m2s.arlen,
+                m_axi_arsize                         => axi_m2s.arsize,
+                m_axi_arburst                        => axi_m2s.arburst,
+                m_axi_arprot                         => axi_m2s.arprot,
+                m_axi_arvalid                        => axi_m2s.arvalid,
+                m_axi_arlock                         => axi_m2s.arlock,
+                m_axi_arcache                        => axi_m2s.arcache,
+                m_axi_rready                         => axi_m2s.rready,
+                m_axil_awaddr                        => axil_m2s.awaddr,
+                m_axil_awuser                        => open,
+                m_axil_awprot                        => axil_m2s.awprot,
+                m_axil_awvalid                       => axil_m2s.awvalid,
+                m_axil_awready                       => axil_s2m.awready,
+                m_axil_wdata                         => axil_m2s.wdata,
+                m_axil_wstrb                         => axil_m2s.wstrb,
+                m_axil_wvalid                        => axil_m2s.wvalid,
+                m_axil_wready                        => axil_s2m.wready,
+                m_axil_bvalid                        => axil_s2m.bvalid,
+                m_axil_bresp                         => axil_s2m.bresp,
+                m_axil_bready                        => axil_m2s.bready,
+                m_axil_araddr                        => axil_m2s.araddr,
+                m_axil_aruser                        => open,
+                m_axil_arprot                        => axil_m2s.arprot,
+                m_axil_arvalid                       => axil_m2s.arvalid,
+                m_axil_arready                       => axil_s2m.arready,
+                m_axil_rdata                         => axil_s2m.rdata,
+                m_axil_rresp                         => axil_s2m.rresp,
+                m_axil_rvalid                        => axil_s2m.rvalid,
+                m_axil_rready                        => axil_m2s.rready,
+                cfg_negotiated_width_o               => pcie_width,
+                cfg_current_speed_o                  => pcie_speed,
+                cfg_ltssm_state_o                    => pcie_train_state,
+                soft_reset_n                         => '1', --qdma_soft_reset,
+                phy_ready                            => pcie_phy_ready,
+                qsts_out_op                          => open,
+                qsts_out_data                        => open,
+                qsts_out_port_id                     => open,
+                qsts_out_qid                         => open,
+                qsts_out_vld                         => open,
+                qsts_out_rdy                         => '1'
+            );
     
-    ---------- Calculate CRC ----------
-
-    daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;        
+        i_axi_full_load : axi_bram_ctrl_test
+            port map(
+                s_axi_aclk    => axi_clk,
+                s_axi_aresetn => axi_reset_b,
+                s_axi_awaddr  => axi_m2s.awaddr(18 downto 0),
+                s_axi_awlen   => axi_m2s.awlen,
+                s_axi_awsize  => axi_m2s.awsize,
+                s_axi_awburst => axi_m2s.awburst,
+                s_axi_awlock  => axi_m2s.awlock,
+                s_axi_awcache => axi_m2s.awcache,
+                s_axi_awprot  => axi_m2s.awprot,
+                s_axi_awvalid => axi_m2s.awvalid,
+                s_axi_awready => axi_s2m.awready,
+                s_axi_wdata   => axi_m2s.wdata,
+                s_axi_wstrb   => axi_m2s.wstrb,
+                s_axi_wlast   => axi_m2s.wlast,
+                s_axi_wvalid  => axi_m2s.wvalid,
+                s_axi_wready  => axi_s2m.wready,
+                s_axi_bresp   => axi_s2m.bresp,
+                s_axi_bvalid  => axi_s2m.bvalid,
+                s_axi_bready  => axi_m2s.bready,
+                s_axi_araddr  => axi_m2s.araddr(18 downto 0),
+                s_axi_arlen   => axi_m2s.arlen,
+                s_axi_arsize  => axi_m2s.arsize,
+                s_axi_arburst => axi_m2s.arburst,
+                s_axi_arlock  => axi_m2s.arlock,
+                s_axi_arcache => axi_m2s.arcache,
+                s_axi_arprot  => axi_m2s.arprot,
+                s_axi_arvalid => axi_m2s.arvalid,
+                s_axi_arready => axi_s2m.arready,
+                s_axi_rdata   => axi_s2m.rdata,
+                s_axi_rresp   => axi_s2m.rresp,
+                s_axi_rlast   => axi_s2m.rlast,
+                s_axi_rvalid  => axi_s2m.rvalid,
+                s_axi_rready  => axi_m2s.rready,
+                bram_rst_a    => open,
+                bram_clk_a    => open,
+                bram_en_a     => open,
+                bram_we_a     => open,
+                bram_addr_a   => open,
+                bram_wrdata_a => open,
+                bram_rddata_a => x"cafecafecafecafe" --x"cafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafe"
+            );
         
-    process(fed_clk)
-    begin
-        if rising_edge(fed_clk) then
-            fed_data_d       <= daq_to_daqlink_i.event_data;
-            fed_data_head_d  <= daq_to_daqlink_i.event_header;
-            fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
-            fed_data_we_d    <= daq_to_daqlink_i.event_valid;
-            crc_clear      <= daq_to_daqlink_i.event_trailer or daq_reset;
-            
-            -- substitute the CRC
-            if fed_data_trail_d = '1' then
-                fed_data(31 downto 16) <= crc;
-            else
-                fed_data(31 downto 16) <= fed_data_d(31 downto 16);
-            end if;
-            fed_data(127 downto 32) <= fed_data_d(127 downto 32);
-            fed_data(15 downto 0) <= fed_data_d(15 downto 0);
-            fed_data_head    <= fed_data_head_d;
-            fed_data_trail   <= fed_data_trail_d;
-            fed_data_we      <= fed_data_we_d;            
-        end if;
-    end process;
-    
-    crc_en <= daq_to_daqlink_i.event_valid;
-    crc_data_in <= daq_to_daqlink_i.event_data;
-    
-    i_crc : entity work.FED_fragment_CRC16_D128b
-        port map ( 
-            clear_p  => crc_clear,
-            clk      => fed_clk,
-            enable   => crc_en,
-            Data     => crc_data_in,
-            CRC_out  => crc
-        );
-    
-    -- CDC fifo between the DAQ clk and the AXI clk
-    i_daq_cdc_fifo : xpm_fifo_async
-        generic map(
-            FIFO_MEMORY_TYPE    => "block",
-            FIFO_WRITE_DEPTH    => 128,
-            RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 128,
-            READ_MODE           => "std",
-            FIFO_READ_LATENCY   => 1,
-            FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 128,
-            CDC_SYNC_STAGES     => 2,
-            DOUT_RESET_VALUE    => "0",
-            ECC_MODE            => "no_ecc"
-        )
-        port map(
-            sleep         => '0',
-            rst           => daq_to_daqlink_i.reset,
-            wr_clk        => fed_clk,
-            wr_en         => fed_data_we,
-            din           => fed_data,
-            full          => open,
-            prog_full     => open,
-            wr_data_count => open,
-            overflow      => daq_cdc_ovf,
-            wr_rst_busy   => open,
-            almost_full   => open,
-            wr_ack        => open,
-            rd_clk        => axi_clk,
-            rd_en         => daq_cdc_rd_en,
-            dout          => daq_cdc_data,
-            empty         => daq_cdc_empty,
-            prog_empty    => open,
-            rd_data_count => open,
-            underflow     => open,
-            rd_rst_busy   => open,
-            almost_empty  => open,
-            data_valid    => daq_cdc_valid,
-            injectsbiterr => '0',
-            injectdbiterr => '0',
-            sbiterr       => open,
-            dbiterr       => open
-        );    
-
-    i_daq_cdc_ovf_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
-    i_daqlink_reset_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daqlink_reset_axi_clk);
-    i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
-    i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
-
-    i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
-    i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => c2h_backpressure, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
-    daqlink_to_daq_o.disperr_cnt <= (others => '0');
-    daqlink_to_daq_o.notintable_cnt <= (others => '0');
-
-    c2h_backpressure <= not axis_c2h_ready and not daq_cdc_empty;
-    daq_cdc_rd_en <= not daq_cdc_empty and axis_c2h_ready;
-    axis_c2h.tdata <= daq_cdc_data(127 downto 0);
-    axis_c2h.tlast <= daq_cdc_valid and not or_reduce(std_logic_vector(c2h_words_cntdown));
-    axis_c2h.tvalid <= daq_cdc_valid;
-    axis_c2h.tkeep <= (others => daq_cdc_valid);
-    
-    c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
-    
-    process(axi_clk)
-    begin
-        if rising_edge(axi_clk) then
-            if daq_reset = '1' then
-                c2h_words_cntdown <= c2h_packet_size_words - 1;
-            else
-                if daq_cdc_valid = '1' then
-                    if c2h_words_cntdown = x"00000" then
-                        c2h_words_cntdown <= c2h_packet_size_words - 1;
-                    else
-                        c2h_words_cntdown <= c2h_words_cntdown - 1;
-                    end if;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    i_daq_cdc_ovf_latch : entity work.latch
-        port map(
-            reset_i => daq_reset,
-            clk_i   => axi_clk,
-            input_i => daq_cdc_ovf_axi_clk,
-            latch_o => daq_cdc_ovf_latch
-        );
-
-    i_words_sent_cnt : entity work.counter
-        generic map(
-            g_COUNTER_WIDTH  => 44,
-            g_ALLOW_ROLLOVER => false
-        )
-        port map(
-            ref_clk_i => axi_clk,
-            reset_i   => daq_reset,
-            en_i      => axis_c2h.tvalid,
-            count_o   => pcie_daq_status_o.words_sent
-        );
-
-    i_word_rate : entity work.rate_counter
-        generic map(
-            g_CLK_FREQUENCY => std_logic_vector(to_unsigned(125_000_000, 32)),
-            g_COUNTER_WIDTH => 28
-        )
-        port map(
-            clk_i   => axi_clk,
-            reset_i => daq_reset,
-            en_i    => axis_c2h.tvalid,
-            rate_o  => pcie_daq_status_o.word_rate
-        );
+        daqlink_to_daq_o    <= DAQLINK_TO_DAQ_NULL;
+        pcie_daq_status_o   <= PCIE_DAQ_STATUS_NULL;
+        
+    end generate;
 
     --================================--
     -- IPbus / wishbone bridge

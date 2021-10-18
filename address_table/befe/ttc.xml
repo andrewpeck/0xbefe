@@ -294,6 +294,10 @@
           description="Enable TTC generator calpulse signal only. Having ENABLE = 0 and ENABLE_CALPULSE_ONLY = 1 will result in using all TTC commands from AMC13 except calpulse, which will be taken from the generator. This is a debugging feature used for synthetic tests which can emulate data coming from the VFATs. If the ENABLE is set to 1, then this register is ignored, and all TTC commands will be taken from the generator."
           fw_signal="gen_enable_cal_only" fw_default="0b0"
           sw_units="bool"/>
+    <node id="EXT_SYNC_RESET_EN" address="0x1" mask="0x00000008" permission="rw"
+          description="When this feature is enabled (set to 1), the first external trigger after a reset will trigger an additional reset of this module. This can be used to reset the generator module synchronously using an external trigger, and synchronize the BC0s on multiple cards."
+          fw_signal="gen_sync_reset_en" fw_default="0b0"
+          sw_units="bool"/>
     <node id="SINGLE_HARD_RESET" address="0x2" permission="w"
           description="Writing to this register will trigger a single hard-reset command to be sent"
           fw_write_pulse_signal="gen_single_hard_reset"/>

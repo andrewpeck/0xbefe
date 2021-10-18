@@ -251,6 +251,9 @@ begin
     --================================--
 
     i_pcie : entity work.pcie
+        generic map (
+            g_USE_QDMA => CFG_PCIE_USE_QDMA
+        )
         port map(
             reset_i               => '0', -- TODO: connect it to the FPGA reset
                                   
@@ -389,6 +392,7 @@ begin
 
     i_gem : entity work.gem_amc
         generic map(
+            g_SLR => 0,
             g_GEM_STATION       => CFG_GEM_STATION,
             g_NUM_OF_OHs        => CFG_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => CFG_NUM_GBTS_PER_OH,
@@ -509,21 +513,21 @@ begin
 
     -- spy link mapping
     g_spy_link : if CFG_USE_SPY_LINK generate
-        spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
-        spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdata(15 downto 0);
-        spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyteisaligned;
-        spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyterealign;
-        spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcommadet;
-        spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdisperr(1 downto 0);
-        spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxnotintable(1 downto 0);
-        spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxchariscomma(1 downto 0);
-        spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcharisk(1 downto 0);
-        spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx);
+        spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx);
+        spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxdata(15 downto 0);
+        spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxbyteisaligned;
+        spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxbyterealign;
+        spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxcommadet;
+        spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxdisperr(1 downto 0);
+        spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxnotintable(1 downto 0);
+        spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxchariscomma(1 downto 0);
+        spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxcharisk(1 downto 0);
+        spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
 
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
     end generate;
 
     -- spy link mapping

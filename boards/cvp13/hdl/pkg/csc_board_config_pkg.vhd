@@ -25,7 +25,8 @@ package board_config_package is
 
     ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
-
+    constant CFG_PCIE_USE_QDMA      : boolean := true;
+    
     ------------ DAQ configuration ------------
     constant CFG_DAQ_MAX_DMBS               : integer := 15; -- the number of DMBs that are supported by the DAQ module (the CFG_NUM_DMBS can be less than or equal to this number)
     

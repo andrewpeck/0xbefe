@@ -440,12 +440,18 @@ package common_pkg is
         daq_enabled     : std_logic;
     end record;
 
+    type t_daq_to_daqlink_arr is array(integer range <>) of t_daq_to_daqlink;
+
     type t_daqlink_to_daq is record
         ready           : std_logic;
         backpressure    : std_logic;
         disperr_cnt     : std_logic_vector(15 downto 0);
         notintable_cnt  : std_logic_vector(15 downto 0);
     end record;
+
+    constant DAQLINK_TO_DAQ_NULL : t_daqlink_to_daq := (ready => '0', backpressure => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
+    
+    type t_daqlink_to_daq_arr is array(integer range <>) of t_daqlink_to_daq;
 
     type t_pcie_daq_control is record
         reset               : std_logic;
@@ -465,6 +471,18 @@ package common_pkg is
         c2h_write_err   : std_logic;
     end record;
 
+    constant PCIE_DAQ_STATUS_NULL : t_pcie_daq_status := (
+        word_size_bytes => (others => '0'),
+        buf_words => (others => '0'),
+        words_sent => (others => '0'),
+        word_rate => (others => '0'),
+        buf_ovf => '0',
+        buf_had_ovf => '0',
+        cdc_had_ovf => '0',
+        c2h_ready => '0',
+        c2h_write_err => '0'
+    );
+
     --===============================--
     --== PROMless firmware loader ==--
     --===============================--
@@ -474,6 +492,10 @@ package common_pkg is
         en      : std_logic;
     end record;
 
+    constant TO_PROMLESS_NULL : t_to_promless := (clk => '0', en => '0');
+
+    type t_to_promless_arr is array(integer range <>) of t_to_promless;
+
     type t_from_promless is record
         ready   : std_logic;
         valid   : std_logic;
@@ -482,6 +504,10 @@ package common_pkg is
         last    : std_logic;
         error   : std_logic;
     end record;
+   
+    constant FROM_PROMLESS_NULL : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
+    
+    type t_from_promless_arr is array(integer range <>) of t_from_promless;
    
     type t_promless_stats is record
         load_request_cnt    : std_logic_vector(15 downto 0);

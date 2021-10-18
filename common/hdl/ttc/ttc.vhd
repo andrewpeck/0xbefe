@@ -110,6 +110,9 @@ architecture ttc_arch of ttc is
     signal gen_enable               : std_logic;
     signal gen_enable_cal_only      : std_logic; -- for synthetic tests, this will use only the calpulse signal from the generator while all the other commands will come from AMC13
     signal gen_reset                : std_logic;
+    signal gen_sync_reset_en        : std_logic;
+    signal gen_sync_reset           : std_logic := '0';
+    signal gen_sync_reset_done      : std_logic;
     signal gen_ttc_cmds             : t_ttc_cmds;
     signal gen_single_hard_reset    : std_logic;
     signal gen_single_resync        : std_logic;
@@ -321,7 +324,7 @@ begin
 
     i_ttc_generator : entity work.ttc_generator
         port map(
-            reset_i              => reset or gen_reset,
+            reset_i              => reset or gen_reset or gen_sync_reset,
             ttc_clks_i           => ttc_clks_i,
             ttc_cmds_o           => gen_ttc_cmds,
             single_hard_reset_i  => gen_single_hard_reset,
@@ -334,6 +337,23 @@ begin
             cyclic_l1a_start_i   => gen_cyclic_l1a_start,
             cyclic_l1a_running_o => gen_cyclic_l1a_running
         );
+
+    process(ttc_clks_i.clk_40)
+    begin
+        if rising_edge(ttc_clks_i.clk_40) then
+            if reset = '1' or gen_reset = '1' then
+                gen_sync_reset      <= '0';
+                gen_sync_reset_done <= '0';
+            else
+                if gen_sync_reset_en ='1' and gen_sync_reset_done = '0' and l1a_req = '1' then
+                    gen_sync_reset <= '1';
+                    gen_sync_reset_done <= '1';
+                else
+                    gen_sync_reset <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
 
     ------------- MUX between real and generated TTC commands -------------    
     
