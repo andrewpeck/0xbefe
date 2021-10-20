@@ -23,6 +23,7 @@ use work.ipbus.all;
 use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
 use work.board_config_package.all;
+use work.project_config.all;
 
 entity gem_cvp13 is
     generic(
@@ -61,6 +62,7 @@ entity gem_cvp13 is
         usbc_cc_i           : in  std_logic;
         usbc_clk_i          : in  std_logic;
         usbc_trig_i         : in  std_logic;
+        dimm2_dq5_trig_i    : in  std_logic;
 
         -- Other
         synth_b_out_p_i     : in  std_logic_vector(4 downto 0);
@@ -131,6 +133,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
     
     -- external trigger
     signal usbc_trig_sync       : std_logic;
+    signal dimm2_trig_sync      : std_logic;
     signal ext_trig             : std_logic;
     signal ext_trig_en          : std_logic;
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
@@ -253,6 +256,9 @@ begin
 
     i_pcie : entity work.pcie
         generic map (
+            g_NUM_USR_BLOCKS => 1,
+            g_USR_BLOCK_SEL_BIT_TOP => 25,
+            g_USR_BLOCK_SEL_BIT_BOT => 24,
             g_USE_QDMA => CFG_PCIE_USE_QDMA
         )
         port map(
@@ -396,6 +402,8 @@ begin
             g_SLR => 0,
             g_GEM_STATION       => CFG_GEM_STATION,
             g_NUM_OF_OHs        => CFG_NUM_OF_OHs,
+            g_OH_VERSION        => CFG_OH_VERSION,
+            g_GBT_WIDEBUS       => CFG_GBT_WIDEBUS,
             g_NUM_GBTS_PER_OH   => CFG_NUM_GBTS_PER_OH,
             g_NUM_VFATS_PER_OH  => CFG_NUM_VFATS_PER_OH,
             g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS,
@@ -554,7 +562,8 @@ begin
 
     -- copper input test
 
-    i_ext_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
+    i_usbc_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
+    i_dimm2_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => dimm2_dq5_trig_i, clk_i => ttc_clks.clk_40, sync_o => dimm2_trig_sync);
 
     process(ttc_clks.clk_40)
     begin
@@ -564,7 +573,7 @@ begin
                 ext_trig_cntdown <= (others => '0');
             else
                 
-                if usbc_trig_sync = '1' and ext_trig_cntdown = x"000" then
+                if dimm2_trig_sync = '1' and ext_trig_cntdown = x"000" then
                     ext_trig <= '1';
                     ext_trig_cntdown <= unsigned(ext_trig_deadtime);
                 else
@@ -611,7 +620,7 @@ begin
     i_ila_test : ila_test
         port map(
             clk    => ttc_clks.clk_40,
-            probe0 => usbc_trig_i,
+            probe0 => dimm2_trig_sync,
             probe1 => std_logic_vector(tst_bx_cnt)
         );
 

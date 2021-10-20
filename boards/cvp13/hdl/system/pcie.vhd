@@ -26,7 +26,10 @@ use work.common_pkg.all;
 
 entity pcie is
     generic(
-        g_USE_QDMA    : boolean -- QDMA will be used if set to true (does not support DAQ), if set to false XDMA with DAQ support will be used
+        g_USE_QDMA              : boolean; -- QDMA will be used if set to true (does not support DAQ), if set to false XDMA with DAQ support will be used
+        g_NUM_USR_BLOCKS        : integer; -- number of user blocks (more than one can be used e.g. where we have multiple GEM or CSC modules instantiated, used on devices with multiple SLRs)
+        g_USR_BLOCK_SEL_BIT_TOP : integer; -- top address bit used for user block selection
+        g_USR_BLOCK_SEL_BIT_BOT : integer  -- bottom address bit used for user block selection
     );
     port (
         reset_i                 : in  std_logic;
@@ -55,8 +58,8 @@ entity pcie is
         -- IPbus
         ipb_reset_o             : out std_logic;
         ipb_clk_i               : in  std_logic;
-        ipb_usr_miso_arr_i      : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-        ipb_usr_mosi_arr_o      : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
+        ipb_usr_miso_arr_i      : in  ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+        ipb_usr_mosi_arr_o      : out ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
         ipb_sys_miso_arr_i      : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
         ipb_sys_mosi_arr_o      : out ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0)
     );
@@ -812,6 +815,9 @@ begin
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
+            g_NUM_USR_BLOCKS => g_NUM_USR_BLOCKS,
+            g_USR_BLOCK_SEL_BIT_TOP => g_USR_BLOCK_SEL_BIT_TOP,
+            g_USR_BLOCK_SEL_BIT_BOT => g_USR_BLOCK_SEL_BIT_BOT,
             g_DEBUG => true,
             g_IPB_CLK_ASYNC => true,
             g_IPB_TIMEOUT => 15000

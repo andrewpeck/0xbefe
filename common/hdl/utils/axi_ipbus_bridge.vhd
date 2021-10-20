@@ -23,9 +23,12 @@ use work.ipb_sys_addr_decode.all;
 
 entity axi_ipbus_bridge is
     generic (
-        g_DEBUG         : boolean := false;
-        g_IPB_CLK_ASYNC : boolean := false;
-        g_IPB_TIMEOUT   : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
+        g_NUM_USR_BLOCKS        : integer := 1; -- number of user blocks (more than one can be used e.g. where we have multiple GEM or CSC modules instantiated, used on devices with multiple SLRs)
+        g_USR_BLOCK_SEL_BIT_TOP : integer := 25; -- top address bit used for user block selection
+        g_USR_BLOCK_SEL_BIT_BOT : integer := 24; -- bottom address bit used for user block selection
+        g_DEBUG                 : boolean := false;
+        g_IPB_CLK_ASYNC         : boolean := false;
+        g_IPB_TIMEOUT           : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
     );
     port (
         -- AXI4-Lite interface
@@ -40,8 +43,8 @@ entity axi_ipbus_bridge is
         ipb_sys_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
         ipb_sys_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);  
         -- Wishbone / IPbus USER interface
-        ipb_usr_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-        ipb_usr_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);  
+        ipb_usr_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+        ipb_usr_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);  
         -- Activity signals, can be used e.g. for LEDs to indicate slow control activity on the board
         read_active_o           : out std_logic;
         write_active_o          : out std_logic        
@@ -119,11 +122,11 @@ architecture arch_imp of axi_ipbus_bridge is
     signal ipb_state                : t_axi_ipb_state;
     signal ipb_sys_transact         : std_logic;
     signal ipb_timer                : unsigned(23 downto 0) := (others => '0');
-    signal ipb_usr_mosi             : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_miso             : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_slv_select       : integer range 0 to C_NUM_IPB_SLAVES := 0;
+    signal ipb_usr_mosi             : ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_miso             : ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_slv_select       : integer range 0 to C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS := 0;
     signal ipb_sys_mosi             : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_miso             : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
@@ -186,7 +189,11 @@ begin
                         -- axi read request
                         if (axil_m2s.arvalid = '1') then
                             axil_s2m.arready   <= '1';
-                            ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr);
+                            if g_NUM_USR_BLOCKS > 1 then
+                                ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr) + (g_NUM_USR_BLOCKS * to_integer(unsigned(axi_word_araddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                            else
+                                ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr);
+                            end if;
                             ipb_sys_slv_select <= ipb_sys_addr_sel(axi_word_araddr);
                             ipb_state          <= READ;
                             transaction_cnt    <= transaction_cnt + 1;
@@ -195,7 +202,11 @@ begin
                         elsif (axil_m2s.awvalid = '1' and axil_m2s.wvalid = '1') then
                             axil_s2m.awready    <= '1';
                             axil_s2m.wready     <= '1';
-                            ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr);
+                            if g_NUM_USR_BLOCKS > 1 then
+                                ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr) + (g_NUM_USR_BLOCKS * to_integer(unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                            else
+                                ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr);
+                            end if;
                             ipb_sys_slv_select  <= ipb_sys_addr_sel(axi_word_awaddr);
                             transaction_cnt     <= transaction_cnt + 1;
     
@@ -373,7 +384,7 @@ begin
     gen_ipbclk_async : if g_IPB_CLK_ASYNC generate
         
         -- user bus
-        gen_usr_bus : for i in 0 to C_NUM_IPB_SLAVES - 1 generate
+        gen_usr_bus : for i in 0 to C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 generate
 
             i_cdc_usr_mosi : xpm_cdc_handshake
                 generic map(
