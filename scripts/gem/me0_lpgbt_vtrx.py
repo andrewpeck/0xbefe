@@ -33,6 +33,7 @@ def i2cmaster_write(system, reg_addr, data):
     else:
         writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    sleep(0.01)
 
     # Writing multi byte data to I2CMaster 2
     if system == "backend":
@@ -43,6 +44,7 @@ def i2cmaster_write(system, reg_addr, data):
         writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), data, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    sleep(0.01)
 
     if system == "backend":
         mpoke(getNode("LPGBT.RW.I2C.I2CM2ADDRESS").address, vtrx_slave_addr)
@@ -50,6 +52,7 @@ def i2cmaster_write(system, reg_addr, data):
     else:
         writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    sleep(0.01)
 
     success=0
     t0 = time()
@@ -59,6 +62,7 @@ def i2cmaster_write(system, reg_addr, data):
             status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
+            sleep(0.01)
         if (status>>6) & 0x1:
             print (Colors.RED + "ERROR: Last transaction was not acknowledged by the I2C slave" + Colors.ENDC)
             rw_terminate()
@@ -85,7 +89,7 @@ def i2cmaster_write(system, reg_addr, data):
         writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
         writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
-
+    sleep(0.01)
 
 
 def i2cmaster_read(system, reg_addr):
@@ -95,13 +99,16 @@ def i2cmaster_read(system, reg_addr):
     control_register_data = nbytes<<2 | 0 # using 100 kHz
     writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    sleep(0.01)
 
     # Writing register address to I2CMaster 2
     writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    sleep(0.01)
 
     writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    sleep(0.01)
 
     success=0
     t0 = time()
@@ -111,6 +118,7 @@ def i2cmaster_read(system, reg_addr):
             status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
+            sleep(0.01)
         if (status>>6) & 0x1:
             print (Colors.RED + "ERROR: Last transaction was not acknowledged by the I2C slave" + Colors.ENDC)
             rw_terminate()
@@ -127,9 +135,11 @@ def i2cmaster_read(system, reg_addr):
     control_register_data = nbytes<<2 | 0 # using 100 kHz
     writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    sleep(0.01)
 
     writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xD, 0) # I2C_READ_MULTI
+    sleep(0.01)
     
     success=0
     t0 = time()
@@ -139,6 +149,7 @@ def i2cmaster_read(system, reg_addr):
             status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
+            sleep(0.01)
         if (status>>6) & 0x1:
             print (Colors.RED + "ERROR: Last transaction was not acknowledged by the I2C slave" + Colors.ENDC)
             rw_terminate()
@@ -161,6 +172,7 @@ def i2cmaster_read(system, reg_addr):
     writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
+    sleep(0.01)
     
 
 def main(system, boss, channel, enable, reg_list, data_list):
@@ -173,6 +185,7 @@ def main(system, boss, channel, enable, reg_list, data_list):
     if channel is not None and enable is not None:
         if system!="backend":
             enable_status = i2cmaster_read(system, enable_reg)
+            sleep(0.1)
         else:
             enable_status = 0x00
         for c in channel:
@@ -187,8 +200,10 @@ def main(system, boss, channel, enable, reg_list, data_list):
             enable_data = (enable_status & (~enable_mask)) | (en << enable_channel_bit)    
             enable_status = enable_data         
         i2cmaster_write(system, enable_reg, enable_data)
+        sleep(0.1)
         if system!="backend":
             enable_status = i2cmaster_read(system, enable_reg)
+            sleep(0.1)
         else:
             enable_status = 0x00
         print ("")
@@ -200,6 +215,7 @@ def main(system, boss, channel, enable, reg_list, data_list):
     print ("Initial Reading of VTRX+ registers: ")
     for reg in reg_list:
         data = i2cmaster_read(system, reg)
+        sleep(0.1)
     print ("")
     
     if len(data_list) == 0:
@@ -209,12 +225,14 @@ def main(system, boss, channel, enable, reg_list, data_list):
     print ("Writing to VTRX+ registers: ")
     for i, reg in enumerate(reg_list):
         i2cmaster_write(system, reg, data_list[i])
+        sleep(0.1)
     print ("")  
 
     # Reading registers
     print ("Final Reading of VTRX+ registers: ")
     for reg in reg_list:
         data = i2cmaster_read(system, reg)
+        sleep(0.1)
     print ("")
     
 
