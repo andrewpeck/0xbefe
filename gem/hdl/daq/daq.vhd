@@ -247,7 +247,7 @@ architecture Behavioral of daq is
     -- Spy path
     signal spy_fifo_wr_en           : std_logic;
     signal spy_fifo_rd_en           : std_logic;
-    signal spy_fifo_dout            : std_logic_vector(15 downto 0);
+    signal spy_fifo_dout            : std_logic_vector(16 downto 0);
     signal spy_fifo_ovf             : std_logic;
     signal spy_fifo_empty           : std_logic;
     signal spy_fifo_prog_full       : std_logic;
@@ -807,12 +807,12 @@ begin
             FIFO_MEMORY_TYPE    => "block",
             FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
             RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 64,
+            WRITE_DATA_WIDTH    => 68,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 1,
             USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 16,
+            READ_DATA_WIDTH     => 17,
             CDC_SYNC_STAGES     => 2,
             PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
             PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
@@ -824,7 +824,7 @@ begin
             rst           => reset_daq,
             wr_clk        => daq_clk_i,
             wr_en         => spy_fifo_wr_en and spy_prescale_keep_evt,
-            din           => daq_event_data,
+            din           => daq_event_trailer & daq_event_data(63 downto 48) & "0" & daq_event_data(47 downto 32) & "0" & daq_event_data(31 downto 16) & "0" & daq_event_data(15 downto 0),
             full          => open,
             prog_full     => spy_fifo_prog_full,
             wr_data_count => open,
@@ -860,12 +860,13 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS   => 3976,
-            g_MIN_PAYLOAD_WORDS   => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
-            g_MAX_EVT_WORDS       => 50000,
-            g_NUM_IDLES_SMALL_EVT => 2,
-            g_NUM_IDLES_BIG_EVT   => 7,
-            g_SMALL_EVT_MAX_WORDS => 24
+            g_MAX_PAYLOAD_WORDS    => 3976,
+            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
+            g_MAX_EVT_WORDS        => 50000,
+            g_NUM_IDLES_SMALL_EVT  => 2,
+            g_NUM_IDLES_BIG_EVT    => 7,
+            g_SMALL_EVT_MAX_WORDS  => 24,
+            g_USE_TRAILER_FLAG_EOE => true
         )
         port map(
             reset_i             => reset_daq,
@@ -876,7 +877,8 @@ begin
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
             data_empty_i        => spy_fifo_empty,
-            data_i              => spy_fifo_dout,
+            data_i              => spy_fifo_dout(15 downto 0),
+            data_trailer_i      => spy_fifo_dout(16),
             data_rd_en          => spy_fifo_rd_en,
             last_valid_word_i   => spy_fifo_aempty,
             err_event_too_big_o => spy_err_evt_too_big,
