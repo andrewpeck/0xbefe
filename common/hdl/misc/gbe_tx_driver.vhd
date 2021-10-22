@@ -443,13 +443,9 @@ begin
                     end if;
                     
                 else
-                    word64 <= (others => '0');
                     evt_cnt <= evt_cnt;
                     evt_word_cnt <= evt_word_cnt;
-                    eoe <= '0';
-                    eoe_countdown <= (others => '0');     
                     err_evt_too_big <= err_evt_too_big;  
-                    err_eoe_not_found <= err_eoe_not_found;                          
                 end if;
 
             end if;
