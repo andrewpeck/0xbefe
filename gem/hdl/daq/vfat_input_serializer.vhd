@@ -59,7 +59,7 @@ begin
     data_valid_o <= not buffer_empty_arr(vfat_idx);
     data_o <= std_logic_vector(to_unsigned(vfat_idx, 8)) & "0000000" & crc_err_arr(vfat_idx) & data_arr(vfat_idx);
     crc_err_o <= crc_err_arr(vfat_idx);
-    zero_packet_o <= not or_reduce(data_arr(vfat_idx) and x"00000000111111111111111111111111111111110000");
+    zero_packet_o <= not or_reduce(data_arr(vfat_idx) and x"00000000ffffffffffffffffffffffffffffffff0000");
     
     overflow_o <= or_reduce(buffer_ovf_arr);
     underflow_o <= or_reduce(buffer_unf_arr);
