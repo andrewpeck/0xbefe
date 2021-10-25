@@ -91,6 +91,8 @@ def test_truncate_lsb(width, segments):
     parameters['WIDTH'] = width
     parameters['SEGMENTS'] = segments
 
+    os.environ["SIM"] = "questa"
+
     run(
         vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
