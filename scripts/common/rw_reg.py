@@ -20,7 +20,7 @@ wReg.argtypes = [c_uint, c_uint]
 regInitExists = False
 try:
     regInit = lib.rwreg_init
-    regInit.argtypes = [c_char_p]
+    regInit.argtypes = [c_char_p, c_uint]
     regInitExists = True
 except:
     print("WARNING: rwreg_init() function does not exist.. if you're running on CTP7, you can safely ignore this warning.")
@@ -198,7 +198,7 @@ class RegVal(int):
 
 def parse_xml():
     if regInitExists:
-        regInit(DEVICE)
+        regInit(DEVICE, BASE_ADDR)
     addressTable = os.environ.get('ADDRESS_TABLE')
     if addressTable is None:
         print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
@@ -260,7 +260,7 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
     if node.get('address') is not None:
         address = baseAddress + parse_int(node.get('address'))
     newNode.local_address = address
-    newNode.address = (address << 2) + BASE_ADDR
+    newNode.address = (address << 2)
     newNode.permission = node.get('permission')
     if newNode.permission is None:
         newNode.permission = ""

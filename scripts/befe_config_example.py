@@ -14,6 +14,18 @@ CONFIG_RWREG_CVP13 = [
         'DEVICE': 'auto',
         #    'DEVICE'                        : '/sys/bus/pci/devices/0000:05:00.0/resource2', # for CVP13 set this to the BAR2 resource of appropriate bus e.g. /sys/bus/pci/devices/0000:05:00.0/resource2 (see lspci to find the correct bus). For other boards this parameter is not yet used
         'BASE_ADDR': 0
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x04000000
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x08000000
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x0c000000
     }
 ]
 
