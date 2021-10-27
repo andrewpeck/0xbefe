@@ -352,7 +352,7 @@ begin
                 g_USE_TRIG_TX_LINKS  => CFG_USE_TRIG_TX_LINKS,
                 g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX,
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
-                g_IPB_CLK_PERIOD_NS  => 10,
+                g_IPB_CLK_PERIOD_NS  => 20,
                 g_DAQ_CLK_FREQ       => 62_500_000 --50_000_000
             )
             port map(
