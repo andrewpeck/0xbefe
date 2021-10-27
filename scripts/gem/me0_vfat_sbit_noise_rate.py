@@ -37,6 +37,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
+    sbit_list.append("all")
     sbit_data = {}
     # Check ready and get nodes
     for vfat in vfat_list:
@@ -85,25 +86,36 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     for vfat in vfat_list:
         print ("VFAT: %02d"%vfat)
         initial_thr = read_backend_reg(dac_node[vfat])
+        vfat_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.ME0_VFAT%d_SBIT_RATE"%vfat) # S-bit counter for enitre VFAT
         
         # Looping over sbits
         for sbit in sbit_list:
-            print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
-            elink = int(sbit/8)
-            channel_list = []
-            for c in s_bit_channel_mapping[str(vfat)][str(elink)]:
-                if sbit == s_bit_channel_mapping[str(vfat)][str(elink)][c]:
-                    channel_list.append(int(c))
-            if len(channel_list)>2:
-                print (Colors.YELLOW + "Skipping S-bit %02d, more than 2 channels"%sbit + Colors.ENDC)
-                continue
-            elif len(channel_list)==1:
-                print (Colors.YELLOW + "S-bit %02d has 1 non-working channel"%sbit + Colors.ENDC)
-            elif len(channel_list)==0:
-                print (Colors.YELLOW + "Skipping S-bit %02d, missing both channels"%sbit + Colors.ENDC)
-                continue
-            write_backend_reg(vfat_sbit_select_node, vfat)
-            write_backend_reg(channel_sbit_select_node, sbit)
+            if sbit != "all":
+                print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
+                elink = int(sbit/8)
+                channel_list = []
+                for c in s_bit_channel_mapping[str(vfat)][str(elink)]:
+                    if sbit == s_bit_channel_mapping[str(vfat)][str(elink)][c]:
+                        channel_list.append(int(c))
+                if len(channel_list)>2:
+                    print (Colors.YELLOW + "Skipping S-bit %02d, more than 2 channels"%sbit + Colors.ENDC)
+                    continue
+                elif len(channel_list)==1:
+                    print (Colors.YELLOW + "S-bit %02d has 1 non-working channel"%sbit + Colors.ENDC)
+                elif len(channel_list)==0:
+                    print (Colors.YELLOW + "Skipping S-bit %02d, missing both channels"%sbit + Colors.ENDC)
+                    continue
+                write_backend_reg(vfat_sbit_select_node, vfat)
+                write_backend_reg(channel_sbit_select_node, sbit)
+
+                # Unmask channels for this sbit
+                for channel in channel_list:
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+            else:
+                print ("  VFAT: %02d, Sbit: All"%(vfat))
+                # Unmask channels for this vfat
+                for channel in range(0,128):
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
 
             # Unmask channels for this sbit
             for channel in channel_list:
@@ -116,15 +128,24 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 sleep(1e-3)
 
                 # Count hits in sbit in given time
-                write_backend_reg(reset_sbit_counter_node, 1)
+                if sbit != "all":
+                    write_backend_reg(reset_sbit_counter_node, 1)
                 sleep(runtime)
-                sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(channel_sbit_counter_node)
+                if sbit != "all":
+                    sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(channel_sbit_counter_node)
+                else:
+                    sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(vfat_counter_node) * runtime
                 sbit_data[vfat][sbit][thr]["time"] = runtime
-            # End of charge loop
+            # End of threshold loop
 
-            # Mask again the channels for this elink
-            for channel in channel_list:
-                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+            if sbit != "all":
+                # Mask again channels for this sbit
+                for channel in channel_list:
+                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+            else:
+                # Mask again channels for this vfat
+                for channel in range(0,128):
+                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
         # End of sbits loop
         write_backend_reg(dac_node[vfat], initial_thr)
