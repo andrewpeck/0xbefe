@@ -130,12 +130,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 # Count hits in sbit in given time
                 if sbit != "all":
                     write_backend_reg(reset_sbit_counter_node, 1)
-                else:
-                    global_reset()
-                sleep(runtime)
-                if sbit != "all":
+                    sleep(runtime)
                     sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(channel_sbit_counter_node)
                 else:
+                    global_reset()
+                    sleep(1.1)
                     sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(vfat_counter_node) * runtime
                 sbit_data[vfat][sbit][thr]["time"] = runtime
             # End of threshold loop
