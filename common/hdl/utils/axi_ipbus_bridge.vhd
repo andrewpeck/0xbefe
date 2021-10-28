@@ -162,6 +162,7 @@ begin
 
       -- main FSM
     process(axi_aclk_i)
+        variable usr_slv_offset : integer range 0 to g_NUM_USR_BLOCKS * C_NUM_IPB_SLAVES := 0;
     begin
         if (rising_edge(axi_aclk_i)) then
             -- reset  
@@ -174,7 +175,8 @@ begin
                 ipb_usr_slv_select <= 0;
                 ipb_sys_slv_select <= 0;
                 transaction_cnt    <= (others => '0');
-                ipb_sys_transact   <= '0'; 
+                ipb_sys_transact   <= '0';
+                usr_slv_offset     := 0;
             else
                 -- main state machine     
                 case ipb_state is
@@ -190,10 +192,11 @@ begin
                         if (axil_m2s.arvalid = '1') then
                             axil_s2m.arready   <= '1';
                             if g_NUM_USR_BLOCKS > 1 then
-                                ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr) + (g_NUM_USR_BLOCKS * to_integer(unsigned(axi_word_araddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                                usr_slv_offset := (C_NUM_IPB_SLAVES * to_integer(unsigned(axi_word_araddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
                             else
-                                ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr);
+                                usr_slv_offset := 0;
                             end if;
+                            ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr) + usr_slv_offset;
                             ipb_sys_slv_select <= ipb_sys_addr_sel(axi_word_araddr);
                             ipb_state          <= READ;
                             transaction_cnt    <= transaction_cnt + 1;
@@ -203,10 +206,11 @@ begin
                             axil_s2m.awready    <= '1';
                             axil_s2m.wready     <= '1';
                             if g_NUM_USR_BLOCKS > 1 then
-                                ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr) + (g_NUM_USR_BLOCKS * to_integer(unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                                usr_slv_offset := (C_NUM_IPB_SLAVES * to_integer(unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
                             else
-                                ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr);
+                                usr_slv_offset := 0;
                             end if;
+                            ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr) + usr_slv_offset;
                             ipb_sys_slv_select  <= ipb_sys_addr_sel(axi_word_awaddr);
                             transaction_cnt     <= transaction_cnt + 1;
     
@@ -224,7 +228,7 @@ begin
                             ipb_state <= WAIT_FOR_READ_ACK;
     
                         -- user address
-                        elsif (ipb_usr_slv_select /= C_IPB_SLV.none) then
+                        elsif (ipb_usr_slv_select - usr_slv_offset /= C_IPB_SLV.none) then
                             axil_s2m <= AXI_LITE_S2M_NULL;
                             ipb_sys_transact <= '0';
                             ipb_usr_mosi(ipb_usr_slv_select) <= (ipb_addr => axi_word_araddr, ipb_wdata => (others => '0'), ipb_strobe => '1', ipb_write => '0');
