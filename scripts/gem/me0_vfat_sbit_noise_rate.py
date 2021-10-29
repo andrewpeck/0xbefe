@@ -226,7 +226,7 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Step size can only be between 1 and 256" + Colors.ENDC)
         sys.exit()
 
-    sbit_list = range(0,64)
+    sbit_list = [i for i in range(0,64)]
     s_bit_channel_mapping = {}
     print ("")
     if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
