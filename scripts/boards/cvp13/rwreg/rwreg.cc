@@ -89,7 +89,7 @@ extern "C" void rwreg_init(char* sysfile, unsigned int base_address) {
     exit(1);
   }
   printf("RWREG: %s opened.\n", realSysfile);
-  map_base = mmap((void*) base_address, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_address);
   if(map_base == (void *) -1) {
     printf("ERROR: mmap failed\n");
     exit(1);
