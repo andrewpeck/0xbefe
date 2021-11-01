@@ -32,6 +32,16 @@
         fw_signal="me0_cluster_count"/>
 
 
+  <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x30" permission="r"
+	mask="0xffffffff"
+	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
+	fw_signal="vfat_trigger_rate_arr(0)(${VFAT_CNT_ID})"
+	generate="true"
+	generate_size="&NUM_VFATS_PER_OH;"
+	generate_address_step="0x1"
+	generate_idx_var="VFAT_CNT_ID"/>
+
+
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
         description="Test register to display count of sbit from particular OH vfat sbit"
         fw_signal="test_sbit0xs_count_me0"/>

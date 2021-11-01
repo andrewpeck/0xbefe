@@ -106,8 +106,8 @@ architecture sbit_me0_arch of sbit_me0 is
     --signal calpulse_me0    : std_logic;
 
     -- counters
-    signal vfat_trigger_cnt_arr : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
-
+    signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_trigger_rate_arr : t_vfat_trigger_rate_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- debug me0 sbits    
     signal sbit_test_reset_o            : std_logic := '0' ;
@@ -188,7 +188,7 @@ begin
 
     g_oh_counters: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
-        g_vfat_counters: for vfat in 0 to 5 generate
+        g_vfat_counters: for vfat in 0 to 23 generate
 
             i_vfat_trigger_cnt : entity work.counter
                 generic map(
@@ -201,6 +201,19 @@ begin
                     en_i      => vfat_trigger_arr(oh)(vfat),
                     count_o   => vfat_trigger_cnt_arr(oh)(vfat)
                 );
+
+	    i_vfat_trigger_rate : entity work.rate_counter
+		generic map(
+		    g_CLK_FREQUENCY => C_TTC_CLK_FREQUENCY_SLV,
+	            g_COUNTER_WIDTH => 32
+	        )
+	        port map(
+	            clk_i   => ttc_clk_i.clk_40,
+	            reset_i => reset,
+	            en_i    => vfat_trigger_arr(oh)(vfat),
+	            rate_o  => vfat_trigger_rate_arr(oh)(vfat)
+	        );
+
 
         end generate;
 
