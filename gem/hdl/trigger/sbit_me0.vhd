@@ -219,7 +219,7 @@ begin
         i_vfat_rate_count: entity work.rate_counter32_multi
             generic map(
                 g_CLK_FREQUENCY => g_CLK_FREQUENCY,
-                g_NUM_COUNTERS  => 32
+                g_NUM_COUNTERS  => 24
             )
             port map(
                 clk_i   => ttc_clk_i.clk_40,
