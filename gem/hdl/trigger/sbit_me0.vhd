@@ -108,11 +108,8 @@ architecture sbit_me0_arch of sbit_me0 is
     -- counters
     signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat_trigger_rate_arr : t_vfat_trigger_rate_arr(g_NUM_OF_OHs - 1 downto 0);
-
-    signal rate_count : unsigned(31 downto 0);
-    signal rate_timer : unsigned(31 downto 0);
-    constant max_rate_count : unsigned(31 downto 0):=(others => '1');
-    constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
+    
+   constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
 
     
     -- debug me0 sbits    
@@ -192,28 +189,6 @@ begin
     --== Counters ==--
 
     g_oh_counters: for oh in 0 to g_NUM_OF_OHs - 1 generate
-
-        -- rate counter for each vfat --
-        i_vfat_trigger_rate : process(ttc_clk_i.clk_40)
-        begin
-            if rising_edge(ttc_clk_i.clk_40) then
-                if reset = '1' then
-                    rate_count <= (others => '0');
-                    rate_timer <= (others => '0');
-                else
-                    if rate_timer < unsigned(g_CLK_FREQUENCY) then
-                        rate_timer <= rate_timer + 1;
-                        if vfat_trigger_arr(oh)(0) = '1' and rate_count < max_rate_count then
-                            rate_count <= rate_count + 1;
-                        end if;
-                    else
-                        rate_timer <= (others => '0');
-                        rate_count <= (others => '0');
-                        vfat_trigger_rate_arr(oh)(0) <= std_logic_vector(rate_count);
-                    end if;
-                end if;
-            end if;
-        end process;
 
         --- rate counter for each vfat OR of sbits ---
         i_vfat_rate_count: entity work.rate_counter32_multi
