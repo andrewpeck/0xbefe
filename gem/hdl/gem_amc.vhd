@@ -476,8 +476,8 @@ begin
             generic map(
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH
-                
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                g_DEBUG             => CFG_DEBUG_SBIT_ME0    
             )
         port map(
             reset_i             => reset_i,

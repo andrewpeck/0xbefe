@@ -23,7 +23,8 @@ entity sbit_me0 is
     generic(
         g_NUM_OF_OHs         : integer;
         g_NUM_VFATS_PER_OH   : integer;
-        g_IPB_CLK_PERIOD_NS  : integer
+        g_IPB_CLK_PERIOD_NS  : integer;
+	g_DEBUG              : boolean
     );
     port(
         -- reset
@@ -222,6 +223,8 @@ begin
 end generate;
 
 --== Debug me0 sbits ==--
+
+ila_enable : if g_DEBUG generate
 me0_cluster_debug : ila_sbit_me0
         PORT MAP (
             clk => ttc_clk_i.clk_40,
@@ -248,6 +251,7 @@ me0_cluster_debug : ila_sbit_me0
             probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
         );
 
+end generate;
 
 
     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
