@@ -39,25 +39,36 @@ def init_gem_frontend():
         initGbtRegAddrs()
 
         # Reset only master lpGBTs (automatically resets slave lpGBTs)
-        #for oh in range(max_ohs):
-        #    for gbt in range(num_gbts):
-        #        if gbt%2 != 0:
-        #            continue
-        #        selectGbt(oh, gbt)
-        #        writeGbtRegAddrs(0x130, 0xA3)
-        #        sleep(0.1)
-        #        writeGbtRegAddrs(0x12F, 0x80)
-        #        sleep(0.1)
-        #sleep(1)
+        for oh in range(max_ohs):
+            oh_ver_list = get_config("CONFIG_ME0_OH_VER")[oh]
+            for gbt in range(num_gbts):
+                oh_ver = oh_ver_list[gbt]
+                if gbt%2 != 0:
+                    continue
+                selectGbt(oh, gbt)
+                if oh_ver == 1:
+                    writeGbtRegAddrs(0x130, 0xA3)
+                elif oh_ver == 2:
+                    writeGbtRegAddrs(0x140, 0xA3)
+                sleep(0.1)
+                if oh_ver == 1:
+                    writeGbtRegAddrs(0x12F, 0x80)
+                elif oh_ver == 2:
+                    writeGbtRegAddrs(0x13F, 0x80)
+                sleep(0.1)
+        sleep(1)
         
         # configure lpGBTs
         for oh in range(max_ohs):
+            oh_ver_list = get_config("CONFIG_ME0_OH_VER")[oh]
             for gbt in range(num_gbts):
+                oh_ver = oh_ver_list[gbt]
                 gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh]
+                gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1]
                 print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
