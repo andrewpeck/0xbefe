@@ -1,19 +1,21 @@
 import xml.etree.ElementTree as xml
 import sys, os, subprocess
 from collections import OrderedDict
+from common.utils import *
 
 DEBUG = True
-ADDRESS_TABLE_TOP = "me0_lpgbt/lpgbt_registers.xml"
+ADDRESS_TABLE_TOP_V0 = "me0_lpgbt/lpgbt_registers_v0.xml"
+ADDRESS_TABLE_TOP_V1 = "me0_lpgbt/lpgbt_registers_v1.xml"
+ADDRESS_TABLE_TOP = ""
 system = ""
 nodes = OrderedDict()
 reg_list_dryrun = {}
-for i in range(462):
-    reg_list_dryrun[i] = 0x00
-n_rw_reg = (0x13C+1) # number of registers in LPGBT rwf + rw block
+n_rw_reg = -9999
 
 TOP_NODE_NAME = "LPGBT"
 
 NODE_IC_GBTX_LINK_SELECT = None
+NODE_IC_GBTX_OH_VER_SELECT = None
 NODE_IC_GBTX_I2C_ADDRESS = None
 NODE_IC_READ_WRITE_LENGTH = None
 NODE_IC_ADDR = None
@@ -178,19 +180,36 @@ def readRawAddress(raw_address):
 
 
 # Functions regarding reading/writing registers
-def rw_initialize(station, system_val, boss=None, ohIdx=None, gbtIdx=None):
-    print("Parsing lpGBT xml file...")
-    parseXML()
-    print("Parsing complete...")
+def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtIdx=None):
+    if oh_ver is not None:
+        print("Parsing lpGBT xml file...")
+        global ADDRESS_TABLE_TOP
+        if oh_ver == 1:
+            ADDRESS_TABLE_TOP = ADDRESS_TABLE_TOP_V0
+        elif oh_ver == 2:
+            ADDRESS_TABLE_TOP = ADDRESS_TABLE_TOP_V1
+        parseXML()
+        print("Parsing complete...")
 
     global system
     system = system_val
+    global reg_list_dryrun
+    global n_rw_reg
+    if oh_ver == 1:
+        for i in range(463):
+            reg_list_dryrun[i] = 0x00
+        n_rw_reg = (0x13C+1) # number of registers in LPGBT rwf + rw block
+    elif oh_ver == 2:
+        for i in range(494):
+            reg_list_dryrun[i] = 0x00
+        n_rw_reg = (0x14F+1) # number of registers in LPGBT rwf + rw block
+    
     if system=="chc":
         import gem.me0_lpgbt.rpi_chc as rpi_chc
         global gbt_rpi_chc
         gbt_rpi_chc = rpi_chc.rpi_chc()
-        if boss is not None:
-            config_initialize_chc(boss)    
+        if boss is not None and oh_ver is not None:
+            config_initialize_chc(oh_ver, boss)    
     elif system=="backend" or system=="dryrun":
         import gem.gem_utils as gem_utils
         global gem_utils
@@ -199,6 +218,7 @@ def rw_initialize(station, system_val, boss=None, ohIdx=None, gbtIdx=None):
         print("Parsing complete...")
 
         global NODE_IC_GBTX_LINK_SELECT
+        global NODE_IC_GBTX_OH_VER_SELECT
         global NODE_IC_GBTX_I2C_ADDRESS
         global NODE_IC_READ_WRITE_LENGTH
         global NODE_IC_ADDR
@@ -207,6 +227,7 @@ def rw_initialize(station, system_val, boss=None, ohIdx=None, gbtIdx=None):
         global NODE_IC_EXEC_READ
         global NODE_IC_READ_DATA
         NODE_IC_GBTX_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT")
+        NODE_IC_GBTX_OH_VER_SELECT = rw_reg.get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_OH_VER")
         NODE_IC_GBTX_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR")
         NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
         NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS")
@@ -218,8 +239,9 @@ def rw_initialize(station, system_val, boss=None, ohIdx=None, gbtIdx=None):
         if ohIdx is not None and gbtIdx is not None:
             select_ic_link(ohIdx, gbtIdx)
 
-def config_initialize_chc(boss):
+def config_initialize_chc(oh_ver, boss):
     initialize_success = 1
+    gbt_rpi_chc.set_lpgbt_address(oh_ver, boss)
     initialize_success *= gbt_rpi_chc.config_select(boss)
     if initialize_success:
         initialize_success *= gbt_rpi_chc.en_i2c_switch()
@@ -238,8 +260,26 @@ def select_ic_link(ohIdx, gbtIdx):
             rw_terminate()
         linkIdx = ohIdx * 8 + gbtIdx
         gem_utils.write_backend_reg(NODE_IC_GBTX_LINK_SELECT, linkIdx)
-        gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+        
+        oh_ver = get_oh_ver(ohIdx, gbtIdx)
+        write_backend_reg(NODE_IC_GBTX_OH_VER_SELECT, oh_ver)
+        if oh_ver == 1:
+            write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+        elif oh_ver == 2:
+            if gbtIdx%2 == 0:
+                write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+            else:
+                write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x71)   
         gem_utils.write_backend_reg(NODE_IC_READ_WRITE_LENGTH, 1)
+
+def get_oh_ver(ohIdx, gbtIdx)
+    ohIdx = int(ohIdx)
+    gbtIdx = int(gbtIdx)
+    if ohIdx not in range(0,2) or gbtIdx not in range(0,8):
+        print (Colors.RED + "ERROR: Invalid ohIdx or gbtIdx" + Colors.ENDC)
+        rw_terminate()
+    oh_ver = get_config("CONFIG_ME0_OH_VER")[ohIdx][gbtIdx]
+    return oh_ver
 
 def mpeek(address):
     if system=="chc":
@@ -393,6 +433,9 @@ def completeReg(string):
     return completions
 
 def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
+    if ohIdx is None or gbtIdx is None:
+        print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
+        rw_terminate()
     if system == "chc":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==18):
@@ -401,8 +444,7 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
     else:
-        if ohIdx is not None and gbtIdx is not None:
-            gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
+        gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
     fuse_success = 1
@@ -454,13 +496,51 @@ def rw_terminate():
         chc_terminate()
     sys.exit()
 
-def check_rom_readback():
-    romreg=readReg(getNode("LPGBT.RO.ROMREG"))
-    if (romreg != 0xA5):
-        print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
+def check_rom_readback(ohIdx=None, gbtIdx=None):
+    if ohIdx is None or gbtIdx is None:
+        print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
-    else:
-        print ("Successfully read from ROM. I2C communication OK")
+    romreg=readReg(getNode("LPGBT.RO.ROMREG"))
+    oh_ver = get_oh_ver(ohIdx, gbtIdx)
+    if oh_ver == 1:
+        if (romreg != 0xA5):
+            print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
+            rw_terminate()
+        else:
+            print ("Successfully read from ROM. I2C communication OK")
+    elif oh_ver == 2:
+        if (romreg != 0xA6):
+            print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA6) + Colors.ENDC)
+            rw_terminate()
+        else:
+            print ("Successfully read from ROM. I2C communication OK")
+
+def check_lpgbt_mode(boss = None, ohIdx=None, gbtIdx=None):
+    if ohIdx is None or gbtIdx is None:
+        print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
+        rw_terminate()
+    mode = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
+    i2c_addr = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.ASICCONTROLADR")) 
+    oh_ver = get_oh_ver(ohIdx, gbtIdx)
+     
+    if boss and mode!=11:
+        print (Colors.RED + "ERROR: lpGBT mode mismatch for boss, observed mode = %d, expected = 11"%mode + Colors.ENDC)
+        rw_terminate()
+    if not boss and mode!=9:
+        print (Colors.RED + "ERROR: lpGBT mode mismatch for sub, observed mode = %d, expected = 9"%mode + Colors.ENDC)
+        rw_terminate()
+
+    if oh_ver == 1:
+        if i2c_addr!=0x70:
+            print (Colors.RED + "ERROR: Incorrect lpGBT I2C address 0x%02X, expect 0x70"%i2c_addr + Colors.ENDC)
+            rw_terminate()
+    elif oh_ver == 2:
+        if boss and i2c_addr!=0x70:
+            print (Colors.RED + "ERROR: Incorrect lpGBT I2C address 0x%02X for boss, expect 0x70"%i2c_addr + Colors.ENDC)
+            rw_terminate()
+        if not boss and i2c_addr!=0x71:
+            print (Colors.RED + "ERROR: Incorrect lpGBT I2C address 0x%02X for sub, expect 0x71"%i2c_addr + Colors.ENDC)
+            rw_terminate()
 
 def parseError(e):
     if e==1:
@@ -505,60 +585,54 @@ def mask_to_lsb(mask):
                 return idx
             idx = idx+1
 
-def lpgbt_write_config_file(config_file = "config.txt"):
+def lpgbt_write_config_file(oh_ver, config_file = "config.txt"):
     f = open(config_file,"w+")
     for i in range (n_rw_reg):
         val =  mpeek(i)
-        if i in range(0x0f0, 0x105): # I2C Masters
-            val = 0x00
+        if status == 0:
+            if i <= 0x007: # CHIP ID and USER ID
+                val = 0x00
+            if oh_ver == 2:
+                if i in range(0xfc, 0x100): # CRC
+                    val = 0x00
+        if oh_ver == 1:
+            if i in range(0x0f0, 0x105): # I2C Masters
+                val = 0x00
+        elif oh_ver == 2:
+            if i in range(0x100, 0x115): # I2C Masters
+                val = 0x00
         write_string = "0x%03X  0x%02X\n" % (i, val)
         f.write(write_string)
     f.close()
 
-def lpgbt_dump_config(config_file = "Loopback_test.txt"):
-        #dump configuration to lpGBT - accepts .txt of .xml input
-        # Read configuration file
-        if(config_file[-4:] == ".xml"):
-            tree = ET.parse(config_file)
-            root = tree.getroot()
-            reg_config = []
-            for i in range(0,366):
-                reg_config.append([0,0]) # Value / Mask
-
-            for child in root:
-                name_signal = child.attrib["name"]
-                triplicated = child.attrib["triplicated"]
-                reg_value   = int(child[0].text)
-                if(triplicated in ["true", "True", "TRUE"]) : n=3
-                else                                        : n=1
-                for i in range(1,n+1):
-                    #print(name_signal)
-                    #print(triplicated)
-                    #print(reg_value)
-                    reg_addr = int(child[i].attrib["startAddress"])
-                    startbit = int(child[i].attrib["startBitIndex"])
-                    endbit   = int(child[i].attrib["lastBitIndex"])
-                    mask     = 2**(startbit+1) - 2**(endbit)
-                    reg_config[reg_addr][0] = reg_config[reg_addr][0] | (reg_value << startbit)
-                    reg_config[reg_addr][1] = reg_config[reg_addr][1] | mask
-
-            for reg_addr in range(0,len(reg_config)):
-                value = reg_config[reg_addr][0]
-                mask  = reg_config[reg_addr][1]
-                if(mask != 0):
-                    value = mpeek(reg_addr)
-                    value = (value & (~mask)) | value
-                    mpoke(reg_addr, value)
-        else:
-            input_file = open(config_file, "r")
-            for line in input_file.readlines():
-                reg_addr = int(line.split()[0],16)
-                value = int(line.split()[1],16)
-                if reg_addr in range(0x0f0, 0x105): # I2C Masters
-                    value = 0x00
-                mpoke(reg_addr, value)
-            input_file.close()
-        print("lpGBT Configuration Done")
+def lpgbt_dump_config(oh_ver, config_file = "Loopback_test.txt"):
+   input_file = open(config_file, "r")
+    for line in input_file.readlines():
+        reg_addr = int(line.split()[0],16)
+        value = int(line.split()[1],16)
+        if reg_addr <= 0x007: # CHIP ID and USER ID
+            continue
+        if oh_ver == 2:
+            if reg_addr in range(0xfc, 0x100): # CRC
+                continue
+        if oh_ver == 1:
+            if reg_addr in range(0x0f0, 0x105): # I2C Masters
+                value = 0x00
+        elif oh_ver == 2:
+            if reg_addr in range(0x100, 0x115): # I2C Masters
+                value = 0x00
+        mpoke(reg_addr, value)
+    input_file.close()
+    print("lpGBT Configuration Done")
+      
+def calculate_crc(protected_registers):
+    crc_registers = 4*[0]
+    protected_registers_as_bytes = array.array('B', protected_registers).tobytes()
+    crc = zlib.crc32(protected_registers_as_bytes) & 0xffffffff
+    crc_inverted = crc ^ 0xffffffff
+    for offset, value in enumerate(list(struct.pack("<I", crc_inverted))):
+        crc_registers[offset] = value
+    return crc_registers      
 
 if __name__ == "__main__":
     main()

@@ -156,7 +156,7 @@ def main(system, cap, r0, r1, r2, r3, count, boss):
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 Eye Scan")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dongle or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
