@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 
-def main(system, boss, gbt, run_time_min, gain):
+def main(system, oh_ver, boss, gbt, run_time_min, gain):
 
     init_adc()
     print("ADC Readings:")
@@ -204,8 +204,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Asense monitoring for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = only boss")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for Asense ADCs: 2, 8, 16, 32")
@@ -227,61 +226,50 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    boss = None
-    if args.lpgbt is None:
-        print(Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
-    elif (args.lpgbt == "boss"):
-        print("Using boss LPGBT")
-        boss = 1
-    elif (args.lpgbt == "sub"):
-        #print("Using sub LPGBT")
-        print (Colors.YELLOW + "Only boss allowed" + Colors.ENDC)
-        boss = 0
-    else:
-        print(Colors.YELLOW + "Please select boss" + Colors.ENDC)
-        sys.exit()
-    if boss is None:
-        sys.exit()
-
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
     if args.gbtid is None:
         print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
-    #if int(args.gbtid) > 7:
-    #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-    #    sys.exit()
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+        sys.exit()
     gbt = int(args.gbtid)%4
 
-    if args.system == "backend":
-        if args.ohid is None:
-            print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
+    boss = None
+    if int(args.gbtid)%2 == 0:
+        boss = 1
     else:
-        if args.ohid is not None:
-            print(Colors.YELLOW + "OHID only needed for backend" + Colors.ENDC)
-            sys.exit()
-
+        boss = 0
+    if not boss:
+        print (Colors.YELLOW + "Only boss lpGBT allowed" + Colors.ENDC)
+        sys.exit()
+        
     if args.gain not in ["2", "8", "16", "32"]:
         print(Colors.YELLOW + "Allowed values of gain = 2, 8, 16, 32" + Colors.ENDC)
         sys.exit()
     gain = int(args.gain)
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if GBT is READY
     check_lpgbt_ready(args.ohid, args.gbtid)    
         
     try:
-        main(args.system, boss, gbt, args.minutes, gain)
+        main(args.system, oh_ver, boss, gbt, args.minutes, gain)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

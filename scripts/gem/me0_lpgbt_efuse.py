@@ -10,7 +10,7 @@ for i in range(240):
     fuse_list[i] = 0x00
 n_rw_fuse = (0xEF+1) # number of registers in LPGBT rwf block
 
-def main(system, boss, fusing, input_config_file, input_vtrx, input_register, input_data, user_id, complete):
+def main(system, oh_ver, boss, fusing, input_config_file, input_vtrx, input_register, input_data, user_id, complete):
 
     # Fusing of registers
     if fusing == "input_file":
@@ -343,7 +343,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="lpGBT Fusing for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-f", "--fusing", action="store", dest="fusing", help="fusing = input_file, register, user_id")
     parser.add_argument("-i", "--input", action="store", dest="input_config_file", help="input_config_file = .txt file")
     parser.add_argument("-v", "--vtrx", action="store", default = "0", dest="vtrx", help="vtrx = 1 if you want to fuse settings to enable TX2 on startup, 0 by default")
@@ -365,21 +366,26 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
+        sys.exit()
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
+        sys.exit()
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+        sys.exit()
+
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
     boss = None
-    if args.lpgbt is None:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
-        sys.exit()
-    elif (args.lpgbt=="boss"):
-        print ("Fusing boss LPGBT")
-        boss=1
-    elif (args.lpgbt=="sub"):
-        print ("Fusing sub LPGBT")
-        boss=0
+    if int(args.gbtid)%2 == 0:
+        boss = 1
     else:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
-        sys.exit()
-    if boss is None:
-        sys.exit()
+        boss = 0
 
     args.vtrx = int(args.vtrx)
     if args.vtrx not in [0,1]:
@@ -482,19 +488,20 @@ if __name__ == "__main__":
             sys.exit()
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
-    # Check if lpGBT is READY 
-    check_lpgbt_ready()
+    # Check if GBT is READY
+    check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Fusing lpGBT
     try:
-        main(args.system, boss, args.fusing, args.input_config_file, args.vtrx, args.register, args.data, args.user_id, int(args.complete))
+        main(args.system, oh_ver, boss, args.fusing, args.input_config_file, args.vtrx, args.register, args.data, args.user_id, int(args.complete))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

@@ -4,7 +4,7 @@ import sys
 import argparse
 from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 
-def main(system, boss, input_config_file, reset_before_config, minimal, readback=0):
+def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, readback=0):
 
     # Set the PLLCONFIGDONE and DLLCONFIGDONE first to 0 is re-configuring using I2C
     if system=="chc" and not readback:
@@ -506,10 +506,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="lpGBT Configuration for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
-    parser.add_argument("-i", "--input", action="store", dest="input_config_file", help="input_config_file = .txt or .xml file")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
+    parser.add_argument("-i", "--input", action="store", dest="input_config_file", help="input_config_file = .txt file")
     parser.add_argument("-r", "--reset_before_config", action="store", dest="reset_before_config", default="0", help="reset_before_config = 1 or 0 (default)")
     parser.add_argument("-m", "--minimal", action="store", dest="minimal", default="0", help="minimal = Set 1 for a minimal configuration, 0 by default")
     args = parser.parse_args()
@@ -530,40 +529,27 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    boss = None
-    if args.lpgbt is None:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
-    elif (args.lpgbt=="boss"):
-        print ("Configuring LPGBT as boss")
-        boss=1
-    elif (args.lpgbt=="sub"):
-        print ("Configuring LPGBT as sub")
-        boss=0
-    else:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
-    if boss is None:
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
         sys.exit()
-        
-    if args.system == "backend":
-        if args.ohid is None:
-            print (Colors.YELLOW + "Need OHID for backend" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print (Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
-        #if int(args.gbtid) > 7:
-        #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        #    sys.exit()
-    else:
-        if args.ohid is not None or args.gbtid is not None:
-            print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
 
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
+    boss = None
+    if int(args.gbtid)%2 == 0:
+        boss = 1
+    else:
+        boss = 0
+    
     if args.system == "backend":
         if args.input_config_file is None or ".txt" not in args.input_config_file:
             print (Colors.YELLOW + "Need input .txt file to configure from backend" + Colors.ENDC)
@@ -580,21 +566,22 @@ if __name__ == "__main__":
         sys.exit()
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
-    # Check if lpGBT is READY if running through backend
-    if args.system != "chc":
+    # Check if GBT is READY
+    if args.system != "dryrun" and args.system != "chc":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT
     readback = 0
     try:
-        main(args.system, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
+        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
@@ -610,7 +597,7 @@ if __name__ == "__main__":
     readback = 1
     if (args.input_config_file is None and args.system!="backend"):
         try:
-            main(args.system, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
+            main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
         except KeyboardInterrupt:
             print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
             rw_terminate()

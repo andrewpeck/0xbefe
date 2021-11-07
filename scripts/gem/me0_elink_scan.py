@@ -36,6 +36,7 @@ def me0_elink_scan(system, oh_select, vfat_list):
             sleep(0.001)
 
             gbt, gbt_select, elink_old, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            oh_ver = get_oh_ver(oh_select, gbt_select)
             gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
             hwid_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
@@ -92,9 +93,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ME0 Elink Scan for each VFAT")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    #parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     args = parser.parse_args()
 

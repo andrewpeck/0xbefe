@@ -5,7 +5,7 @@ import argparse
 import random
 import datetime
 
-def check_fec_errors(gem, system, boss, path, opr, ohid, gbtid, runtime, vfat_list, verbose):
+def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, vfat_list, verbose):
 
     resultDir = "results"
     try:
@@ -206,9 +206,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ME0 Bit Error Ratio Test (BERT) using FEC Error Counters")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-p", "--path", action="store", dest="path", help="path = uplink, downlink")
     parser.add_argument("-r", "--opr", action="store", dest="opr", default="run", help="opr = start, run, read, stop (only run, read allowed for uplink)")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
@@ -230,42 +229,27 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    boss = None
-    if args.lpgbt is None:
-        print (Colors.YELLOW + "Please select boss/sub" + Colors.ENDC)
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
-    elif (args.lpgbt=="boss"):
-        print ("BERT for boss LPGBT")
-        boss=1
-    elif (args.lpgbt=="sub"):
-        print ("BERT for sub LPGBT")
-        boss=0
-    else:
-        print (Colors.YELLOW + "Please select boss/sub" + Colors.ENDC)
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
-    if boss is None:
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
         sys.exit()
-      
-    if args.system == "backend" or args.system == "dryrun":
-        if args.ohid is None:
-            print (Colors.YELLOW + "Need OHID for backend/dryrun" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print (Colors.YELLOW + "Need GBTID for backend/dryrun" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
-        #if int(args.gbtid) > 7:
-        #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        #    sys.exit()
-    else:
-        if args.ohid is not None or args.gbtid is not None:
-            print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
-        args.ohid = "-9999"
-        args.gbtid = "-9999"
 
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
+    boss = None
+    if int(args.gbtid)%2 == 0:
+        boss = 1
+    else:
+        boss = 0
+      
     if args.path not in ["uplink", "downlink"]:
         print (Colors.YELLOW + "Enter valid path" + Colors.ENDC)
         sys.exit()
@@ -318,18 +302,19 @@ if __name__ == "__main__":
             vfat_list.append(v_int)
         
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
-
-    # Check if lpGBT is READY
-    check_lpgbt_ready()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
+        
+    # Check if GBT is READY
+    check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        check_fec_errors(args.gem, args.system, boss, args.path, args.opr, int(args.ohid), int(args.gbtid), float(args.time), vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), int(args.gbtid), float(args.time), vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

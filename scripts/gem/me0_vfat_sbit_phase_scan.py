@@ -78,6 +78,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
     for vfat in vfat_list:
         gbt, gbt_select, elink_daq, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+        oh_ver = get_oh_ver(oh_select, gbt_select)
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
         link_good = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))
@@ -126,6 +127,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
         print ("Checking errors: ")
         for vfat in vfat_list:
             gbt, gbt_select, elink_daq, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            oh_ver = get_oh_ver(oh_select, gbt_select)
             # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
             sleep(0.1)
             gem_utils.gem_link_reset()
@@ -323,6 +325,7 @@ def find_phase_center(err_list):
 
 def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     gbt, gbt_select, rx_elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+    oh_ver = get_oh_ver(oh_select, gbt_select)
 
     if gbt == "boss":
         config = config_boss
@@ -336,8 +339,6 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
     select_ic_link(oh_select, gbt_select)
-    if system!= "dryrun" and system!= "backend":
-        check_rom_readback()
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
 
@@ -347,9 +348,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit Phase Scan")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     arser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0")
-    #parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")

@@ -19,13 +19,10 @@ def vfat_reset(system, oh_select, vfat_list):
     gpio_dirL_addr = 0x053
     gpio_outH_addr = 0x054
     gpio_outL_addr = 0x055
-    gpio_dirH_node = getNode("LPGBT.RWF.PIO.PIODIRH")
-    gpio_dirL_node = getNode("LPGBT.RWF.PIO.PIODIRL")
-    gpio_outH_node = getNode("LPGBT.RWF.PIO.PIOOUTH")
-    gpio_outL_node = getNode("LPGBT.RWF.PIO.PIOOUTL")
 
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+        oh_ver = get_oh_ver(oh_select, gbt_select)
         print ("VFAT#: %02d, lpGBT: %s, OH: %d, GBT: %d, GPIO: %d" %(vfat, gbt, oh_select, gbt_select, gpio))
         
         boss=0
@@ -35,11 +32,12 @@ def vfat_reset(system, oh_select, vfat_list):
         if system=="backend":
             select_ic_link(oh_select, gbt_select)
         elif system=="chc":
-            config_initialize_chc(boss)
-        check_lpgbt_ready()
+            config_initialize_chc(oh_ver, boss)
+        check_lpgbt_ready(oh_select, gbt_select)
                      
         if system!="dryrun" and system!="backend":
-            check_rom_readback()
+            check_rom_readback(oh_select, gbt_select)
+            check_lpgbt_mode(boss, oh_select, gbt_select)   
 
         # Set GPIO as output
         gpio_dirH_output = 0
@@ -50,12 +48,8 @@ def vfat_reset(system, oh_select, vfat_list):
         else:
             gpio_dirH_output = 0x02 | 0x04 | 0x08
             gpio_dirL_output = 0x00
-        if system=="backend":
-            mpoke(gpio_dirH_addr, gpio_dirH_output)
-            mpoke(gpio_dirL_addr, gpio_dirL_output)
-        else:
-            writeReg(gpio_dirH_node, gpio_dirH_output, 0)
-            writeReg(gpio_dirL_node, gpio_dirL_output, 0)
+        mpoke(gpio_dirH_addr, gpio_dirH_output)
+        mpoke(gpio_dirL_addr, gpio_dirL_output)
 
         print ("Set GPIO as output (including GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" %(gpio_dirH_addr, gpio_dirH_output))
         print ("Set GPIO as output, register: 0x%03X, value: 0x%02X" %(gpio_dirL_addr, gpio_dirL_output))
@@ -76,18 +70,12 @@ def vfat_reset(system, oh_select, vfat_list):
                 data_disable |= 0x80 # To keep GPIO LED on ASIAGO ON
 
         # Reset - 1
-        if system=="backend":
-            mpoke(gpio_out_addr, data_enable)
-        else:
-            writeReg(gpio_out_node, data_enable, 0)
+        mpoke(gpio_out_addr, data_enable)
         print ("Enable GPIO to reset (including GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" %(gpio_out_addr, data_enable))
         sleep(0.000001) 
             
         # Reset - 0
-        if system=="backend":
-            mpoke(gpio_out_addr, data_disable)
-        else:
-            writeReg(gpio_out_node, data_disable, 0)
+        mpoke(gpio_out_addr, data_disable)
         print ("Disable GPIO (except GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" %(gpio_out_addr, data_disable))
         sleep(0.000001) 
         
@@ -103,9 +91,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="VFAT RESET")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc, backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    #parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     args = parser.parse_args()
 
@@ -149,7 +136,7 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
-    # Running Phase Scan
+    # Running VFAT Reset
     try:
         vfat_reset(args.system, int(args.ohid), vfat_list)
     except KeyboardInterrupt:

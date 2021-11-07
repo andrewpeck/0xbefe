@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 
-def main(system, boss, run_time_min, gain, voltage, ver):
+def main(system, oh_ver, boss, run_time_min, gain, voltage, ver):
 
     init_adc()
     print("ADC Readings:")
@@ -175,9 +175,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RSSI Monitor for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = only boss")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--voltage", action="store", dest="voltage", default = "2.5", help="voltage = exact value of the 2.5V input voltage to OH")
     parser.add_argument("-z", "--ver", action="store", dest="ver", help="ver = OH version 1 or 2")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
@@ -200,40 +199,29 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    boss = None
-    if args.lpgbt is None:
-        print(Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
-    elif (args.lpgbt == "boss"):
-        print("Using boss LPGBT")
-        boss = 1
-    elif (args.lpgbt == "sub"):
-        #print("Using sub LPGBT")
-        print (Colors.YELLOW + "Only boss allowed" + Colors.ENDC)
-        boss = 0
-    else:
-        print(Colors.YELLOW + "Please select boss" + Colors.ENDC)
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
-    if boss is None:
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
         sys.exit()
 
-    if args.system == "backend":
-        if args.ohid is None:
-            print(Colors.YELLOW + "Need OHID for backend" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print(Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
-        #if int(args.gbtid) > 7:
-        #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        #    sys.exit()
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
+    boss = None
+    if int(args.gbtid)%2 == 0:
+        boss = 1
     else:
-        if args.ohid is not None or args.gbtid is not None:
-            print(Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
+        boss = 0
+    if not boss:
+        print(Colors.YELLOW + "Only boos lpGBT allowed" + Colors.ENDC)
+        sys.exit()
 
     if args.gain not in ["2", "8", "16", "32"]:
         print(Colors.YELLOW + "Allowed values of gain = 2, 8, 16, 32" + Colors.ENDC)
@@ -245,18 +233,19 @@ if __name__ == "__main__":
         sys.exit()
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
-
-    # Check if lpGBT is READY
-    check_lpgbt_ready()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
+        
+    # Check if GBT is READY
+    check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, boss, args.minutes, gain, float(args.voltage), int(args.ver))
+        main(args.system, oh_ver, boss, args.minutes, gain, float(args.voltage), int(args.ver))
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

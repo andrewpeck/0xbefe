@@ -203,6 +203,10 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         for i in range(494):
             reg_list_dryrun[i] = 0x00
         n_rw_reg = (0x14F+1) # number of registers in LPGBT rwf + rw block
+    else:
+        for i in range(500):  # set to some random high number if oh_ver not defined
+            reg_list_dryrun[i] = 0x00
+        n_rw_reg = 501
     
     if system=="chc":
         import gem.me0_lpgbt.rpi_chc as rpi_chc

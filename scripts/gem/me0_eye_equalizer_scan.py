@@ -6,7 +6,7 @@ import os
 import glob
 import argparse
 
-def main(system, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_res0, boss):
+def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_res0, boss):
 
     cntsel = count
     writeReg(getNode("LPGBT.RW.EOM.EOMENDOFCOUNTSEL"), cntsel, 0)
@@ -173,9 +173,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ME0 Eye vs Equalizer")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-c", "--count", action="store", dest="count", default="0x7", help="EOMendOfCountSel[3:0] in hex")
     parser.add_argument("-eqa", "--eq_attn", action="store", nargs="+", dest="eq_attn", default=["0x3"], help="EQAttenuation[1:0] (in hex) = See lpGBT manual Section 15.1.5 for options, default=[0x3]")
     parser.add_argument("-eqc", "--eq_cap", action="store", nargs="+", dest="eq_cap", default=["0x0"], help="EQCap[1:0] (in hex) = See lpGBT manual Section 15.1.5 for options, default=[0x0]")
@@ -188,7 +187,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for lpGBT eye scan")
     elif args.system == "backend":
-        #print ("Using Backend for checking configuration")
+        #print ("Using Backend for lpGBT eye scan")
         print (Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
         sys.exit()
     elif args.system == "dryrun":
@@ -197,45 +196,33 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
-    boss = None
-    if args.lpgbt is None:
-        print (Colors.YELLOW + "Please select boss" + Colors.ENDC)
-        sys.exit()
-    elif (args.lpgbt=="boss"):
-        print ("EYE for boss LPGBT")
-        boss=1
-    elif (args.lpgbt=="sub"):
-        #print ("EYE for sub LPGBT")
-        print (Colors.YELLOW + "EYE only for boss since sub is only TX mode" + Colors.ENDC)
-        boss=0
-        sys.exit()
-    else:
-        print (Colors.YELLOW + "Please select boss" + Colors.ENDC)
-        sys.exit()
-    if boss is None:
-        sys.exit()
-    
     if args.gem != "ME0":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
         
-    if args.system == "backend":
-        if args.ohid is None:
-            print (Colors.YELLOW + "Need OHID for backend" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print (Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
-        #if int(args.gbtid) > 7:
-        #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        #    sys.exit()
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
+        sys.exit()
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
+        sys.exit()
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+        sys.exit()
+
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
+    boss = None
+    if int(args.gbtid)%2 == 0:
+        boss = 1
     else:
-        if args.ohid is not None or args.gbtid is not None:
-            print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
+        boss = 0
+    if not boss:
+        print (Colors.YELLOW + "Only boss lpGBT allowed" + Colors.ENDC)
+        sys.exit()
 
     if int(args.count,16) > 15:
         print (Colors.YELLOW + "EOMendOfCountSel[3:0] can be max 4 bits" + Colors.ENDC)
@@ -267,18 +254,19 @@ if __name__ == "__main__":
             sys.exit()
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if lpGBT is READY
-    check_lpgbt_ready()
+    check_lpgbt_ready(args.ohid, args.gbtid) 
 
     try:
-        main(args.system, int(args.count,16), args.eq_attn, args.eq_cap, args.eq_res3, args.eq_res2, args.eq_res1, args.eq_res0, boss)
+        main(args.system, oh_ver, int(args.count,16), args.eq_attn, args.eq_cap, args.eq_res3, args.eq_res2, args.eq_res1, args.eq_res0, boss)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

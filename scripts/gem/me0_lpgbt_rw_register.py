@@ -3,7 +3,7 @@ from time import sleep, time
 import sys
 import argparse
 
-def main(system, boss, reg_list, data_list):
+def main(system, oh_ver, boss, reg_list, data_list):
 
     for i in range(0, len(reg_list)):
         r = reg_list[i]
@@ -41,9 +41,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="lpGBT R/W Registers for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number (only needed for backend)")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-r", "--reg", action="store", nargs="+", dest="reg", help="reg = register to read or write (in 0x format)")
     parser.add_argument("-d", "--data", action="store", nargs="+", dest="data", help="data = data to write to registers (in 0x format)") 
     args = parser.parse_args()
@@ -64,39 +63,26 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
+        sys.exit()
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+    
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
+        sys.exit()
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+        sys.exit()
+
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
     boss = None
-    if args.lpgbt is None:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
-        sys.exit()
-    elif (args.lpgbt=="boss"):
-        print ("Using boss LPGBT")
-        boss=1
-    elif (args.lpgbt=="sub"):
-        print ("Using sub LPGBT")
-        boss=0
+    if int(args.gbtid)%2 == 0:
+        boss = 1
     else:
-        print (Colors.YELLOW + "Please select boss or sub" + Colors.ENDC)
-        sys.exit()
-    if boss is None:
-        sys.exit()
-        
-    if args.system == "backend":
-        if args.ohid is None:
-            print (Colors.YELLOW + "Need OHID for backend" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print (Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
-            sys.exit()
-        #if int(args.ohid) > 1:
-        #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-        #    sys.exit()
-        #if int(args.gbtid) > 7:
-        #    print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-        #    sys.exit()
-    else:
-        if args.ohid is not None or args.gbtid is not None:
-            print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
+        boss = 0
     
     reg_list = []
     data_list = []
@@ -127,19 +113,21 @@ if __name__ == "__main__":
         sys.exit() 
 
     # Initialization 
-    rw_initialize(args.gem, args.system, boss, args.ohid, args.gbtid)
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback()
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
-    # Check if lpGBT is READY
-    #check_lpgbt_ready()
+    # Check if GBT is READY
+    if args.system != "dryrun" and args.system != "chc":
+        check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT
     try:
-        main(args.system, boss, reg_list, data_list)
+        main(args.system, oh_ver, boss, reg_list, data_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
