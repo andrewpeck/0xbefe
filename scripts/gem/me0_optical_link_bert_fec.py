@@ -100,10 +100,13 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     elif path == "downlink": # check FEC errors on lpGBT
         # Enable the counter
         if opr in ["start", "run"]:
-            writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
+            if oh_ver == 1:
+                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
+            elif oh_ver == 2:
+                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, 0)
     
         # start error counting loop
-        start_fec_errors = lpgbt_fec_error_counter()
+        start_fec_errors = lpgbt_fec_error_counter(oh_ver)
         if opr == "run":
             print ("Start Error Counting for time = %f minutes" % (runtime))
             file_out.write("Start Error Counting for time = %f minutes\n" % (runtime))
@@ -117,13 +120,13 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             while ((time()-t0)/60.0) < runtime:
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
-                    curr_fec_errors = lpgbt_fec_error_counter()
+                    curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     if verbose:
                         print ("Time passed: %f minutes, number of FEC errors accumulated = %d" % ((time()-t0)/60.0, curr_fec_errors))
                         file_out.write("Time passed: %f minutes, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, curr_fec_errors))
                     time_prev = time()
         
-        end_fec_errors = lpgbt_fec_error_counter()
+        end_fec_errors = lpgbt_fec_error_counter(oh_ver)
         end_fec_error_print = ""
         end_fec_error_write = ""
         if end_fec_errors==0:
@@ -149,7 +152,10 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         
         # Disable the counter
         if opr in ["run", "stop"]:
-            writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
+            if oh_ver == 1:
+                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
+            elif oh_ver == 2:
+                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
 
         if opr != "run":
             return
@@ -194,12 +200,19 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     file_out.write(result_string_write + "\n")
     file_out.close()
     
-def lpgbt_fec_error_counter():
-    error_counter_h = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
-    error_counter_l = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
-    error_counter = (error_counter_h << 8) | error_counter_l
+def lpgbt_fec_error_counter(oh_ver):
+    error_counter = 0
+    if oh_ver == 1:
+        error_counter_h = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
+        error_counter_l = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
+        error_counter = (error_counter_h << 8) | error_counter_l
+    elif oh_ver == 2:
+        error_counter_0 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
+        error_counter_1 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
+        error_counter_2 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
+        error_counter_3 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
+        error_counter = (error_counter_0 << 24) | (error_counter_1 << 16) | (error_counter_2 << 8) | error_counter_3
     return error_counter   
-       
        
 if __name__ == "__main__":
     # Parsing arguments

@@ -4,10 +4,14 @@ from time import sleep, time
 import sys
 import argparse
 
-config_boss_filename = "../resources/me0_boss_config.txt"
-config_sub_filename = "../resources/me0_sub_config.txt"
-config_boss = {}
-config_sub = {}
+config_boss_filename_v1 = ""
+config_sub_filename_v1 = ""
+config_boss_v1 = {}
+config_sub_v1 = {}
+config_boss_filename_v2 = ""
+config_sub_filename_v2 = ""
+config_boss_v2 = {}
+config_sub_v2 = {}
 
 def getConfig (filename):
     f = open(filename, "r")
@@ -67,14 +71,25 @@ def me0_elink_scan(system, oh_select, vfat_list):
 
 def setVfatRxEnable(system, oh_select, vfat, enable, elink):
     gbt, gbt_select, elink_old, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+    oh_ver = get_oh_ver(oh_select, gbt_select)
 
-    if lpgbt == "boss":
-        config = config_boss
-    elif lpgbt == "sub":
-        config = config_sub
+    if gbt == "boss":
+        if oh_ver == 1:
+            config = config_boss_v1
+        elif oh_ver == 2:
+            config = config_boss_v2
+    elif gbt == "sub":
+        if oh_ver == 1:
+            config = config_sub_v1
+        elif oh_ver == 2:
+            config = config_sub_v2
 
     # disable/enable channel
-    GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C4
+    GBT_ELINK_SAMPLE_ENABLE_BASE_REG = -9999
+    if oh_ver == 1:
+        GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C4
+    elif oh_ver == 2:
+        GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C8
     addr = GBT_ELINK_SAMPLE_ENABLE_BASE_REG + elink/4
     bit = 4 + elink%4
     mask = (1 << bit)
@@ -83,7 +98,7 @@ def setVfatRxEnable(system, oh_select, vfat, enable, elink):
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
     select_ic_link(oh_select, gbt_select)
     if system!= "dryrun" and system!= "backend":
-        check_rom_readback()
+        check_rom_readback(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
 
@@ -132,17 +147,29 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
-    if not os.path.isfile(config_boss_filename):
-        print (Colors.YELLOW + "Missing config file for boss: config_boss.txt" + Colors.ENDC)
+    config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
+    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
+    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    
+    if not os.path.isfile(config_boss_filename_v1):
+        print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_sub_filename_v1):
+        print (Colors.YELLOW + "Missing config file for sub for OH-v1" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_boss_filename_v2):
+        print (Colors.YELLOW + "Missing config file for boss for OH-v2" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_sub_filename_v2):
+        print (Colors.YELLOW + "Missing config file for sub for OH-v2" + Colors.ENDC)
         sys.exit()
     
-    if not os.path.isfile(config_sub_filename):
-        print (Colors.YELLOW + "Missing config file for sub: sub_boss.txt" + Colors.ENDC)
-        sys.exit()
+    config_boss_v1 = getConfig(config_boss_filename_v1)
+    config_sub_v1  = getConfig(config_sub_filename_v1)
+    config_boss_v2 = getConfig(config_boss_filename_v2)
+    config_sub_v2  = getConfig(config_sub_filename_v2)
 
-    config_boss = getConfig(config_boss_filename)
-    config_sub  = getConfig(config_sub_filename)
-    
     # Running Phase Scan
     try:
         me0_elink_scan(args.system, int(args.ohid), vfat_list)
@@ -157,5 +184,7 @@ if __name__ == "__main__":
     rw_terminate()
 
 
+
+../resources/me0_boss_config.txt
 
 

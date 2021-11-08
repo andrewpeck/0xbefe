@@ -6,10 +6,14 @@ import argparse
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
-config_boss_filename = "../resources/me0_boss_config.txt"
-config_sub_filename = "../resources/me0_sub_config.txt"
-config_boss = {}
-config_sub = {}
+config_boss_filename_v1 = ""
+config_sub_filename_v1 = ""
+config_boss_v1 = {}
+config_sub_v1 = {}
+config_boss_filename_v2 = ""
+config_sub_filename_v2 = ""
+config_boss_v2 = {}
+config_sub_v2 = {}
 
 def getConfig (filename):
     f = open(filename, "r")
@@ -270,12 +274,22 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     oh_ver = get_oh_ver(oh_select, gbt_select)
 
     if gbt == "boss":
-        config = config_boss
+        if oh_ver == 1:
+            config = config_boss_v1
+        elif oh_ver == 2:
+            config = config_boss_v2
     elif gbt == "sub":
-        config = config_sub
+        if oh_ver == 1:
+            config = config_sub_v1
+        elif oh_ver == 2:
+            config = config_sub_v2
     
     # set phase
-    GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
+    GBT_ELINK_SAMPLE_PHASE_BASE_REG = -9999
+    if oh_v == 1:
+        GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
+    elif oh_v == 2:
+        GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
     value = (config[addr] & 0x0f) | (phase << 4)
 
@@ -377,16 +391,28 @@ if __name__ == "__main__":
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
-    if not os.path.isfile(config_boss_filename):
-        print (Colors.YELLOW + "Missing config file for boss: config_boss.txt" + Colors.ENDC)
+    config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
+    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
+    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    
+    if not os.path.isfile(config_boss_filename_v1):
+        print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_sub_filename_v1):
+        print (Colors.YELLOW + "Missing config file for sub for OH-v1" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_boss_filename_v2):
+        print (Colors.YELLOW + "Missing config file for boss for OH-v2" + Colors.ENDC)
+        sys.exit()
+    if not os.path.isfile(config_sub_filename_v2):
+        print (Colors.YELLOW + "Missing config file for sub for OH-v2" + Colors.ENDC)
         sys.exit()
     
-    if not os.path.isfile(config_sub_filename):
-        print (Colors.YELLOW + "Missing config file for sub: sub_boss.txt" + Colors.ENDC)
-        sys.exit()
-
-    config_boss = getConfig(config_boss_filename)
-    config_sub  = getConfig(config_sub_filename)
+    config_boss_v1 = getConfig(config_boss_filename_v1)
+    config_sub_v1  = getConfig(config_sub_filename_v1)
+    config_boss_v2 = getConfig(config_boss_filename_v2)
+    config_sub_v2  = getConfig(config_sub_filename_v2)
     
     # Running Phase Scan
     try:

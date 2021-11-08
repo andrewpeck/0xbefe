@@ -5,9 +5,16 @@ import argparse
 
 def main(system, oh_ver, boss, reg_list, data_list):
 
+    if oh_ver == 1:
+        final_total_reg = 0x1CE
+        final_readonly_reg = 0x13C
+    elif oh_ver == 1:
+        final_total_reg = 0x1ED
+        final_readonly_reg = 0x14F
+
     for i in range(0, len(reg_list)):
         r = reg_list[i]
-        if r>0x1CE:
+        if r > final_total_reg:
             print (Colors.YELLOW + "Register address out of range" + Colors.ENDC)
             rw_terminate()
         if system!="backend":
@@ -20,7 +27,7 @@ def main(system, oh_ver, boss, reg_list, data_list):
         
         d = data_list[i]
         
-        if r>0x13C:
+        if r > final_readonly_reg:
             print (Colors.YELLOW + "Register is Read-only" + Colors.ENDC)
             rw_terminate()
         mpoke(r, d)
@@ -44,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-r", "--reg", action="store", nargs="+", dest="reg", help="reg = register to read or write (in 0x format)")
-    parser.add_argument("-d", "--data", action="store", nargs="+", dest="data", help="data = data to write to registers (in 0x format)") 
+    parser.add_argument("-d", "--data", action="store", nargs="+", dest="data", help="data = data to write to registers (in 0x format)")
     args = parser.parse_args()
 
     if args.system == "chc":

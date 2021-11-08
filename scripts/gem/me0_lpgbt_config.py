@@ -16,21 +16,21 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
         reset_lpgbt(readback)
 
     if input_config_file is not None:
-        lpgbt_dump_config(input_config_file)
+        lpgbt_dump_config(oh_ver, input_config_file)
     else:
         # configure clocks, chip config, line driver
-        configLPGBT(readback)
+        configLPGBT(oh_ver, readback)
 
         if not minimal:
             # eportrx dll configuration
-            configure_eport_dlls(readback)
+            configure_eport_dlls(oh_ver, readback)
 
             # eportrx channel configuration
             configure_eprx(readback)
 
         # configure downlink
         if (boss):
-            configure_downlink(readback)
+            configure_downlink(oh_ver, readback)
 
         if not minimal:
             # configure eport tx
@@ -42,11 +42,10 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
                 configure_phase_shifter(readback)
 
             # configure ec channels
-            configure_ec_channel(boss, readback)
+            configure_ec_channel(oh_ver, boss, readback)
 
         # invert hsio
-        # Not needed in ASIAGO_v2
-        invert_hsio(boss, readback)
+        invert_hsio(oh_ver, boss, readback)
 
         if not minimal:
             # invert eprx
@@ -59,7 +58,7 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
             invert_eptx(boss, readback)
 
             # configure reset + led outputs
-            configure_gpio(boss, readback)
+            configure_gpio(oh_ver, boss, readback)
             
         # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
         if boss and not readback:
@@ -75,7 +74,10 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
     print("Configuration finished... asserting config done")
     # Finally, Set pll&dllConfigDone to run chip:
     if system=="backend":
-        mpoke(0x0EF, 0x06)
+        if oh_ver == 1:
+            mpoke(0x0EF, 0x06)
+        elif oh_ver == 2:
+            mpoke(0x0FB, 0x06)
     else:
         writeReg(getNode("LPGBT.RWF.POWERUP.DLLCONFIGDONE"), 0x1, readback)
         writeReg(getNode("LPGBT.RWF.POWERUP.PLLCONFIGDONE"), 0x1, readback)
@@ -107,41 +109,52 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
             pass
     
         if boss:
-            lpgbt_write_config_file(dataDir+"/config_boss.txt")
+            lpgbt_write_config_file(oh_ver, dataDir+"/config_boss_ohv%d.txt"%oh_ver)
         else:
-            lpgbt_write_config_file(dataDir+"/config_sub.txt")
+            lpgbt_write_config_file(oh_ver, dataDir+"/config_sub_ohv%d.txt"%oh_ver)
 
-def configLPGBT(readback):
+def configLPGBT(oh_ver, readback):
     print ("Configuring Clock Generator, Line Drivers, Power Good for CERN configuration...")
-
     # Configure ClockGen Block:
-    # [0x01f] EPRXLOCKFILTER
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.EPRXLOCKTHRESHOLD"), 0x5, readback)
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.EPRXRELOCKTHRESHOLD"), 0x5, readback)
-
+    
     # [0x020] CLKGConfig0
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCALIBRATIONENDOFCOUNT"), 0xC, readback)
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCALIBRATIONENDOFCOUNT"), 0xC, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCALIBRATIONENDOFCOUNT"), 0xE, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGBIASGENCONFIG"), 0x8, readback)
-
+    
     # [0x021] CLKGConfig1
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CDRCONTROLOVERRIDEENABLE"), 0x0, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGDISABLEFRAMEALIGNERLOCKCONTROL"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRRES") ,0x1, readback)
+    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRRES"), 0x1, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGVCODAC"), 0x8, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGVCORAILMODE"), 0x1, readback)
-
+    
     # [0x022] CLKGPllRes
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRESWHENLOCKED"), 0x4, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRES"), 0x4, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRESWHENLOCKED"), 0x4, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRES"), 0x4, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRESWHENLOCKED"), 0x2, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLRES"), 0x2, readback)
+        
     #[0x023] CLKGPLLIntCur
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCURWHENLOCKED"), 0x5, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCUR"), 0x5, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCURWHENLOCKED"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCUR"), 0x5, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCURWHENLOCKED"), 0x9, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLINTCUR"), 0x9, readback)
+      
     #[0x024] CLKGPLLPropCur
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCURWHENLOCKED"), 0x5, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCUR"), 0x5, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCURWHENLOCKED"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCUR"), 0x5, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCURWHENLOCKED"), 0x9, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGPLLPROPCUR"), 0x9, readback)
+    
     #[0x025] CLKGCDRPropCur
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRPROPCURWHENLOCKED"), 0x5, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRPROPCUR"), 0x5, readback)
@@ -149,15 +162,22 @@ def configLPGBT(readback):
     #[0x026] CLKGCDRIntCur
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRINTCURWHENLOCKED"), 0x5, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRINTCUR"), 0x5, readback)
-
+    
     #[0x027] CLKGCDRFFPropCur
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCURWHENLOCKED"), 0x5, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCUR"), 0x5, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCURWHENLOCKED"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCUR"), 0x5, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCURWHENLOCKED"), 0x6, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCDRFEEDFORWARDPROPCUR"), 0x6, readback)
+        
     #[0x028] CLKGFLLIntCur
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGFLLINTCURWHENLOCKED"), 0x0, readback)
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGFLLINTCURWHENLOCKED"), 0x0, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGFLLINTCURWHENLOCKED"), 0x5, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGFLLINTCUR"), 0x5, readback)
-
+    
     #[0x029] CLKGFFCAP
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CDRCOCONNECTCDR"), 0x0, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCAPBANKOVERRIDEENABLE"), 0x0, readback)
@@ -180,44 +200,66 @@ def configLPGBT(readback):
     #[0x02c] CLKGWaitTime
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGWAITCDRTIME"), 0x8, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGWAITPLLTIME"), 0x8, readback)
-
+    
     #[0x02d] CLKGLFCONFIG0
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERLOCKTHRCOUNTER"), 0x9, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERLOCKTHRCOUNTER"), 0xF, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERENABLE"), 0x1, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGCAPBANKSELECT_8"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERLOCKTHRCOUNTER"), 0x9, readback)
-
+    
     #[0x02e] CLKGLFConfig1
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERRELOCKTHRCOUNTER"), 0x9, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERUNLOCKTHRCOUNTER"), 0x9, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERRELOCKTHRCOUNTER"), 0x9, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERUNLOCKTHRCOUNTER"), 0x9, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERRELOCKTHRCOUNTER"), 0xF, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.CLKGLOCKFILTERUNLOCKTHRCOUNTER"), 0xF, readback)
+    
     #[0x033] PSDllConfig
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXUNLOCKTHRESHOLD"), 0x5, readback)
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.PSDLLCONFIRMCOUNT"), 0x1, readback) # 4 40mhz clock cycles to confirm lock
     writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.PSDLLCURRENTSEL"), 0x1, readback)
-
-    # [0x039] Set H.S. Uplink Driver current:
+    
+    #[0x039] Set H.S. Uplink Driver current:
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.LINE_DRIVER.LDMODULATIONCURRENT"), 0x20, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.LINE_DRIVER.LDMODULATIONCURRENT"), 0x7F, readback)
     writeReg(getNode("LPGBT.RWF.LINE_DRIVER.LDEMPHASISENABLE"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.LINE_DRIVER.LDMODULATIONCURRENT"), 0x20, readback)
-
+    
     # [0x03b] REFCLK
     #writeReg(getNode("LPGBT.RWF.LINE_DRIVER.REFCLKACBIAS"), 0x1, readback)
     writeReg(getNode("LPGBT.RWF.LINE_DRIVER.REFCLKTERM"), 0x1, readback)
 
-    # [0x03E] PGCONFIG
-    # Enable PowerGood @ 1.0 V, Delay 100 ms:
+    #[0x03E] PGCONFIG
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.POWER_GOOD.PGLEVEL"), 0x5, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.POWER_GOOD.PGLEVEL"), 0x4, readback)
     writeReg(getNode("LPGBT.RWF.POWER_GOOD.PGENABLE"), 0x1, readback)
-    writeReg(getNode("LPGBT.RWF.POWER_GOOD.PGLEVEL"), 0x5, readback)
     writeReg(getNode("LPGBT.RWF.POWER_GOOD.PGDELAY"), 0xC, readback)
+
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CALIBRATION.EPRXLOCKTHRESHOLD"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.CALIBRATION.EPRXRELOCKTHRESHOLD"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXUNLOCKTHRESHOLD"), 0x5, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXLOCKTHRESHOLD"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXRELOCKTHRESHOLD"), 0x5, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXUNLOCKTHRESHOLD"), 0x5, readback)
 
     # Datapath configuration
     writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASDEINTERLEVEAR"), 0x0, readback)
     writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASFECDECODER"), 0x0, readback)
     writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASSDESCRAMBLER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECERRCNTENA"), 0x1, readback)
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECERRCNTENA"), 0x1, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, readback)
     writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSINTERLEAVER"), 0x0, readback)
     writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSSCRAMBLER"), 0x0, readback)
     writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSFECCODER"), 0x0, readback)
-
 
 def set_uplink_group_data_source(type, readback, pattern=0x55555555):
     setting = 0
@@ -252,7 +294,6 @@ def set_uplink_group_data_source(type, readback, pattern=0x55555555):
         writeReg(getNode("LPGBT.RW.TESTING.DPDATAPATTERN1"), 0xff & (pattern>>8), readback) #
         writeReg(getNode("LPGBT.RW.TESTING.DPDATAPATTERN2"), 0xff & (pattern>>16), readback) #
         writeReg(getNode("LPGBT.RW.TESTING.DPDATAPATTERN3"), 0xff & (pattern>>24), readback) #
-
 
 def configure_eptx(readback):
     #[0x0a7] EPTXDataRate
@@ -298,16 +339,17 @@ def configure_eptx(readback):
     writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK15DRIVESTRENGTH"), 0x3, readback)
     writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK16DRIVESTRENGTH"), 0x3, readback)
 
-
-def invert_hsio(boss, readback):
+def invert_hsio(oh_ver, boss, readback):
     print ("Configuring pin inversion...")
     if (boss):
-        writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAININVERT"), 0x1, readback)
+        if oh_ver == 1:
+            writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAININVERT"), 0x1, readback)
+        elif oh_ver == 2:
+            writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAININVERT"), 0x0, readback)
         writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAOUTINVERT"), 0x0, readback)
     else:
         writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAININVERT"), 0x0, readback)
         writeReg(getNode("LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAOUTINVERT"), 0x1, readback)
-
 
 def invert_eprx(boss, readback):
     if (boss):
@@ -336,19 +378,16 @@ def invert_eprx(boss, readback):
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX1INVERT"), 0x1, readback)
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX12INVERT"), 0x1, readback)
 
-
 def invert_epclk(boss, readback):
     if (boss):
         writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"), 0x1, readback)
-
 
 def invert_eptx(boss, readback):
     if (boss):
         writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x1, readback) #boss 4
         writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1, readback) #boss 11
 
-
-def configure_ec_channel(boss, readback):
+def configure_ec_channel(oh_ver, boss, readback):
     print ("Configuring external control channels...")
 
     # enable EC output
@@ -359,7 +398,11 @@ def configure_ec_channel(boss, readback):
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTERM"),   0x1, readback)
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECENABLE"), 0x1, readback)
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECPHASESELECT"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE"), 0x2, readback) # continuous phase tracking
+
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE"), 0x2, readback) # continuous phase tracking
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE"), 0x0, readback)
 
     #if (boss):
         # turn on 80 Mbps EC clock
@@ -367,39 +410,56 @@ def configure_ec_channel(boss, readback):
         #writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK28FREQ"), 0x2, readback)
         #writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK28DRIVESTRENGTH"), 0x3, readback)
 
-
-def configure_gpio(boss, readback):
+def configure_gpio(oh_ver, boss, readback):
     print ("Configuring gpio...")
-    if (boss):
-        writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80 | 0x01, readback) # set as outputs
-        writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04, readback) # set as outputs
-        writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x80, readback) # enable LED
-        writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback) #
-    else:
-        writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x02 | 0x04 | 0x08, readback) # set as outputs
-        writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00, readback) # set as outputs
-        writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00, readback) #
-        writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback) #
+    if oh_ver == 1:
+        if (boss):
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80 | 0x01, readback) # set as outputs (15, 1)
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04, readback) # set as outputs (1, 2)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x80, readback) # enable LED
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback) #
+        else:
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x02 | 0x04 | 0x08, readback) # set as outputs (9, 10, 11)
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00, readback) # set as outputs (0)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00, readback) #
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback) #
+    elif oh_ver == 2:
+        if (boss):
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 , readback) # set as outputs (8, 9)
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04 | 0x20, readback) # set as outputs (0, 2, 5)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00, readback)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x20, readback) # enable LED
+        else:
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x04 | 0x08 | 0x20, readback) # set as outputs (8, 9, 10, 11, 13)
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x02 | 0x08, readback) # set as outputs (0, 1, 3)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00, readback)
+            writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback)
 
 
-def configure_downlink(readback):
+def configure_downlink(oh_ver, readback):
     print ("Configuring downlink...")
     #2.2.6. Downlink: Frame aligner settings (if high speed receiver is used)
     # downlink
-
-    # The following 4 register values might change for lpGBT_v1
-    # [0x02f] FAMaxHeaderFoundCount
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNT"), 0x0A, readback)
-    # [0x030] FAMaxHeaderFoundCountAfterNF
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNTAFTERNF"), 0x1A, readback)
-    # [0x031] FAMaxHeaderNotFoundCount
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERNOTFOUNDCOUNT"), 0x2A, readback)
-    # [0x032] FAFAMaxSkipCycleCountAfterNF
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXSKIPCYCLECOUNTAFTERNF"), 0x3A, readback)
+    if oh_ver == 1:
+        # The following 4 register values might change for lpGBT_v1
+        # [0x02f] FAMaxHeaderFoundCount
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNT"), 0x0A, readback)
+        # [0x030] FAMaxHeaderFoundCountAfterNF
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNTAFTERNF"), 0x1A, readback)
+        # [0x031] FAMaxHeaderNotFoundCount
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERNOTFOUNDCOUNT"), 0x2A, readback)
+        # [0x032] FAFAMaxSkipCycleCountAfterNF
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXSKIPCYCLECOUNTAFTERNF"), 0x3A, readback)
+    elif oh_ver == 2:
+        # [0x02f] FAMaxHeaderFoundCount
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNT"), 0x10, readback)
+        # [0x030] FAMaxHeaderFoundCountAfterNF
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERFOUNDCOUNTAFTERNF"), 0x10, readback)
+        # [0x031] FAMaxHeaderNotFoundCount
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.FAMAXHEADERNOTFOUNDCOUNT"), 0x10, readback)
 
     # [0x037] EQConfig
     writeReg(getNode("LPGBT.RWF.EQUALIZER.EQATTENUATION"), 0x3, readback)
-
 
 def configure_eprx(readback):
     print ("Configuring elink inputs...")
@@ -463,7 +523,6 @@ def configure_eprx(readback):
     for i in range (28):
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dTERM" % i), 1, readback)
 
-
 def reset_lpgbt(readback):
     writeReg(getNode("LPGBT.RW.RESET.RSTPLLDIGITAL"), 1, readback)
     writeReg(getNode("LPGBT.RW.RESET.RSTFUSES"),      1, readback)
@@ -477,18 +536,24 @@ def reset_lpgbt(readback):
     writeReg(getNode("LPGBT.RW.RESET.RSTRXLOGIC"),    0, readback)
     writeReg(getNode("LPGBT.RW.RESET.RSTTXLOGIC"),    0, readback)
 
-
-def configure_eport_dlls(readback):
+def configure_eport_dlls(oh_ver, readback):
     print ("Configuring eport dlls...")
     #2.2.2. Uplink: ePort Inputs DLLs
     #[0x034] EPRXDllConfig
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCURRENT"), 0x1, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCONFIRMCOUNT"), 0x1, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLFSMCLKALWAYSON"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCOARSELOCKDETECTION"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXENABLEREINIT"), 0x0, readback)
-    writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDATAGATINGENABLE"), 0x1, readback)
-
+    if oh_ver == 1:
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCURRENT"), 0x1, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCONFIRMCOUNT"), 0x1, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLFSMCLKALWAYSON"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDLLCOARSELOCKDETECTION"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXENABLEREINIT"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.CLOCKGENERATOR.EPRXDATAGATINGENABLE"), 0x1, readback)
+    elif oh_ver == 2:
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXDLLCURRENT"), 0x1, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXDLLCONFIRMCOUNT"), 0x1, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXDLLFSMCLKALWAYSON"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXDLLCOARSELOCKDETECTION"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXENABLEREINIT"), 0x0, readback)
+        writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXDATAGATINGDISABLE"), 0x0, readback)
 
 def configure_phase_shifter(readback):
     # turn on phase shifter clock
