@@ -60,8 +60,8 @@ ME0_GBT1_SPICY_ELINK_TO_VFAT = {18: 2, 3: 4, 17: 5}
 ME0_SPICY_ELINK_TO_VFAT = [ME0_GBT0_SPICY_ELINK_TO_VFAT, ME0_GBT1_SPICY_ELINK_TO_VFAT]
 ME0_PIZZA_ELINK_TO_VFAT = [ME0_CLASSIC_ELINK_TO_VFAT, ME0_SPICY_ELINK_TO_VFAT]
 
-LPGBT_OHV1_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0CC
-LPGBT_OHV2_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0D0
+LPGBT_V0_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0CC
+LPGBT_V1_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0D0
 ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT = [0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0xa, 0xa, 0xa, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0x3]
 ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT = [0x2, 0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0xa, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0xa, 0x3]
 
@@ -344,13 +344,13 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
 def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
     # set phase
     if isLpGbt: # LpGBT
-        oh_ver = get_config("CONFIG_ME0_OH_VER")[ohSelect][gbtSelect]
+        gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohSelect][gbtSelect]
         isMaster = gbtSelect % 2 == 0
         ctrlRegDefault = ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT[elink] if isMaster else ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT[elink]
-        if oh_ver == 1:
-            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_OHV1_ELINK_SAMPLING_PHASE_BASE_ADDR
-        elif oh_ver == 2:
-            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_OHV2_ELINK_SAMPLING_PHASE_BASE_ADDR
+        if gbt_ver == 0:
+            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_V0_ELINK_SAMPLING_PHASE_BASE_ADDR
+        elif gbt_ver == 1:
+            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_V1_ELINK_SAMPLING_PHASE_BASE_ADDR
         addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
         value = (phase << 4) + ctrlRegDefault
         wReg(ADDR_IC_ADDR, addr)
@@ -397,13 +397,13 @@ def getBestPhase(goodPhases):
 
 def downloadConfig(ohIdx, gbtIdx, filename):
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
-    oh_ver = get_config("CONFIG_ME0_OH_VER")[ohIdx][gbtIdx]
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
 
     n_rw_reg = 0
     if gem_station == 0:
-        if oh_ver == 1:
+        if gbt_ver == 0:
             n_rw_reg = (0x13C+1)
-        elif oh_ver == 2:
+        elif gbt_ver == 1:
             n_rw_reg = (0x14F+1)
     elif gem_station == 1 or gem_station == 2:
         n_rw_reg = 366
@@ -448,13 +448,13 @@ def downloadConfig(ohIdx, gbtIdx, filename):
 
 def destroyConfig():
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
-    oh_ver = get_config("CONFIG_ME0_OH_VER")[ohIdx][gbtIdx]
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
 
     n_rw_reg = 0
     if gem_station == 0:
-        if oh_ver == 1:
+        if gbt_ver == 1:
             n_rw_reg = (0x13C+1)
-        elif oh_ver == 2:
+        elif gbt_ver == 2:
             n_rw_reg = (0x14F+1)
     elif gem_station == 1 or gem_station == 2:
         n_rw_reg = 366
@@ -498,11 +498,11 @@ def selectGbt(ohIdx, gbtIdx):
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
     if station == 0:
-        oh_ver = get_config("CONFIG_ME0_OH_VER")[ohIdx][gbtIdx]
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_OH_VER'), oh_ver)
-        if oh_ver == 1:
+        gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VER'), gbt_ver)
+        if gbt_ver == 0:
             write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
-        elif oh_ver == 2:
+        elif gbt_ver == 1:
             if gbtIdx%2 == 0:
                 write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
             else:

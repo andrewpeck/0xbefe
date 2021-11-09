@@ -40,29 +40,34 @@ def init_gem_frontend():
 
         # Reset only master lpGBTs (automatically resets slave lpGBTs)
         for oh in range(max_ohs):
-            oh_ver_list = get_config("CONFIG_ME0_OH_VER")[oh]
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
             for gbt in range(num_gbts):
-                oh_ver = oh_ver_list[gbt]
+                gbt_ver = gbt_ver_list[gbt]
                 if gbt%2 != 0:
                     continue
                 selectGbt(oh, gbt)
-                if oh_ver == 1:
+                if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
-                elif oh_ver == 2:
+                elif gbt_ver == 1:
                     writeGbtRegAddrs(0x140, 0xA3)
                 sleep(0.1)
-                if oh_ver == 1:
+                if gbt_ver == 0:
                     writeGbtRegAddrs(0x12F, 0x80)
-                elif oh_ver == 2:
+                elif gbt_ver == 1:
                     writeGbtRegAddrs(0x13F, 0x80)
                 sleep(0.1)
         sleep(1)
         
         # configure lpGBTs
         for oh in range(max_ohs):
-            oh_ver_list = get_config("CONFIG_ME0_OH_VER")[oh]
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
             for gbt in range(num_gbts):
-                oh_ver = oh_ver_list[gbt]
+                gbt_ver = gbt_ver_list[gbt]
+                oh_ver = -9999
+                if gbt_ver == 0:
+                    oh_ver = 1
+                elif gbt_ver == 1:
+                    oh_ver = 2
                 gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))

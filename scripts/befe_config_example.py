@@ -113,10 +113,11 @@ CONFIG_ME0_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_sub_config_ohv*
 CONFIG_ME0_OH_GBT_CONFIGS = [CONFIG_ME0_OH_GBT0_CONFIGS, CONFIG_ME0_OH_GBT1_CONFIGS] # do not modify this line
 # VFAT HDLC addresses
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12] # replace with zeros if your setup has VFAT hybrids that don't support addressing
-# OH version - 1 or 2
-CONFIG_ME0_OH_VER = {
-    0: [1, 1, 1, 1, 1, 1, 1, 1], # OH ver for 8 GBTs for OH0
-    1: [1, 1, 1, 1, 1, 1, 1, 1], # OH ver for 8 GBTs for OH1
-    2: [1, 1, 1, 1, 1, 1, 1, 1], # OH ver for 8 GBTs for OH2
-    3: [1, 1, 1, 1, 1, 1, 1, 1]  # OH ver for 8 GBTs for OH3
+# GBT version - 0 for ME0 OH-v1 and 1 for ME0 OH-v2 (0 for GE1/1 and GE2/1)
+CONFIG_ME0_GBT_VER = {
+    0: [0, 0, 0, 0, 0, 0, 0, 0], # lpGBT ver for 8 GBTs for OH0
+    1: [0, 0, 0, 0, 0, 0, 0, 0], # lpGBT ver for 8 GBTs for OH1
+    2: [0, 0, 0, 0, 0, 0, 0, 0], # lpGBT ver for 8 GBTs for OH2
+    3: [0, 0, 0, 0, 0, 0, 0, 0]  # lpGBT ver for 8 GBTs for OH3
 }
+
