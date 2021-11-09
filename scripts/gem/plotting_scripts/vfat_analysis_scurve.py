@@ -121,19 +121,21 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
                 pass
 
             if channel in channel_list:
-                fig, ax = plt.subplots(figsize = (16,10))
-                plt.xlabel("Charge (fC)")
-                plt.ylabel("Fired Events / Total Events")
+                fig, ax = plt.subplots(figsize = (12,10))
+                ax.set_xlabel("Charge (fC)", loc='right')
+                ax.set_ylabel("Fired events / total events", loc='top')
+                ax.grid()
                 ax.plot(scurveData[:,0], scurveData[:,1], "o", markersize= 6, label = "Channel %d" % channel) # plot raw data
                 ax.plot(scurveData[:,0], scurveFunc(scurveData[:,0], *params), "r-", label="fit")
                 props = dict(boxstyle="round", facecolor="white",edgecolor="lightgrey", alpha=1)
                 textstr = "\n".join((
                     r"Threshold: $\mu=%.4f$ (fC)" % (params[2], ),
                     r"ENC: $\sigma=%.4f$ (fC)" % (params[3], ),))
-                ax.text(0.663, 0.7, textstr, transform=ax.transAxes, fontsize=22, verticalalignment="top", bbox=props)
+                ax.text(0.57, 0.7, textstr, transform=ax.transAxes, fontsize=22, verticalalignment="top", bbox=props)
                 ax.set_title("VFAT0%d" % vfat)
                 leg = ax.legend(loc="center right", ncol=2)
-                plt.grid()
+                ax.text(-0.09, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax.transAxes)
+                ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax.transAxes)
                 fig.tight_layout()
                 plt.savefig(directoryName + "/scurveFit_"+oh+"_VFAT%02d/"%(vfat)+"scurveFit_"+oh+"_VFAT%02d_channel%d.pdf" % (vfat, channel))
                 plt.close() # clear the plot
@@ -164,8 +166,10 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     Plots the ENC distribution of all channels for each VFAT.
     """
     fig, ax = plt.subplots(figsize = (12,10))
-    ax.set_xlabel("VFAT Number")
-    ax.set_ylabel("S-curve ENC (fC)")
+    ax.set_title("ENC distributions")
+    ax.set_xlabel("VFAT number", loc='right')
+    ax.set_ylabel("S-curve ENC (fC)", loc='top')
+    ax.grid()
 
     data = []
     for ii in range(len(vfatList)):
@@ -173,9 +177,21 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
 
     ax.boxplot(data, patch_artist=True)
     
+    ax.text(-0.092, 1.01, 'CMS', fontweight='bold', fontsize=30, transform=ax.transAxes)
+    ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=28, transform=ax.transAxes)
+
+    textStr = '\n'.join((
+    r'Orange line = median',
+    r'Box = interquartile range (IQR) Q1$-$Q3', 
+    r'Top whisker = Q3$+1.5$\cdot$IQR', 
+    r'Bottom whisker = Q1$-$1.5$\cdot$IQR',
+    r'Circles = outliers'))
+
+    props = dict(boxstyle='round', facecolor='white', alpha=0.4)
+
+    ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
+    
     plt.xticks(np.arange(1, len(vfatList) + 1), vfatList) # replace ticks with vfat number
-    ax.set_title("ENC Distributions")
-    plt.grid()
     fig.tight_layout()
     plt.savefig(directoryName + "/scurveENCdistribution_"+oh+".pdf")
     print("\nENC distribution plot saved at %s" % directoryName + "/scurveENCdistribution_"+oh+".pdf")
@@ -218,10 +234,11 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
     vfatCnt0 = 0
     for vfat in scurve_result:
         fig, axs = plt.subplots()
-        axs.set_xlabel("Channel Number", fontsize=12)
-        axs.set_ylabel("Injected Charge (fC)", fontsize=12)
+        axs.set_title("VFAT%02d"%vfat, fontsize=16)
+        axs.set_xlabel("Channel number", loc='right', fontsize=14)
+        axs.set_ylabel("Injected charge (fC)", loc='top', fontsize=14)
         for label in (axs.get_xticklabels() + axs.get_yticklabels()):
-            label.set_fontsize(12)
+            label.set_fontsize(14)
         #axs.xlim(0,128)
         #axs.ylim(0,256)
 
@@ -251,53 +268,65 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         #    chargeVals_mod[i] = DACToCharge(chargeVals_mod[i], slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
         cbar = fig.colorbar(cf, ax=axs, pad=0.01)
-        cbar.set_label("Fired Events / Total Events", fontsize=12)
-        cbar.ax.tick_params(labelsize=12)
-        axs.set_title("VFAT# %02d"%vfat, fontsize=12)
+        cbar.set_label("Fired Events / Total Events", loc='top', fontsize=14)
+        cbar.ax.tick_params(labelsize=14)
+        axs.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=axs.transAxes)
+        axs.text(0.03, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=axs.transAxes)
         axs.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
+        axs.set_yticks(np.arange(min(plot_data_y), max(plot_data_y)+1, 20))
         fig.tight_layout()
         fig.savefig((directoryName+"/scurve2Dhist_"+oh+"_VFAT%02d.pdf")%vfat)
         plt.close(fig)
 
         if numVfats == 1:
-            ax1.set_xlabel("Channel Number")
-            ax1.set_ylabel("Injected Charge (fC)")
-            ax1.set_title("VFAT# %02d"%vfat)
+            ax1.set_xlabel("Channel number", loc='right')
+            ax1.set_ylabel("Injected charge (fC)")
+            ax1.set_title("VFAT%02d"%vfat)
             cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
-            cbar1.set_label("Fired Events / Total Events")
+            cbar1.set_label("Fired events / total events", loc='top')
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
+            ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1.transAxes)
+            ax1.text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
         elif numVfats <= 3:
-            ax1[vfatCnt0].set_xlabel("Channel Number")
-            ax1[vfatCnt0].set_ylabel("Injected Charge (fC)")
-            ax1[vfatCnt0].set_title("VFAT# %02d"%vfat)
+            ax1[vfatCnt0].set_xlabel("Channel Number", loc='right')
+            ax1[vfatCnt0].set_ylabel("Injected Charge (fC)", loc='top')
+            ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
             cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
-            cbar1[vfatCnt0].set_label("Fired Events / Total Events")
+            cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
+            ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
         elif numVfats <= 6:
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel Number")
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected Charge (fC)")
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT# %02d"%vfat)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
-            cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired Events / Total Events")
+            cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
+            ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel Number")
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected Charge (fC)")
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT# %02d"%vfat)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
-            cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired Events / Total Events")
+            cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
         vfatCnt0 += 1
         print(("\n2D histogram of scurves for VFAT%d " % vfat )+ ("saved at %s" % directoryName) + "/scurve2Dhist_"+oh+"_VFAT%d.pdf" % vfat)
 
+    #plt.figtext(0.01, 1.0, 'CMS', fontweight='bold', fontsize=28)
+    #plt.figtext(0.8, 1.0, 'Muon R&D', fontstyle='italic', fontsize=26)
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
-    plt.close(fig1)
+    #plt.close(fig1)
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine
