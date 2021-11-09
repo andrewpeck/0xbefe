@@ -34,7 +34,7 @@ def lpgbt_sub_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
         else:
             gpio_dirH_output = 0x02 | 0x04 | 0x08 # set as outputs
             gpio_dirL_output = 0x00 # set as outputs
-    elif of_ver == 2:
+    elif oh_ver == 2:
         if (boss):
             gpio_dirH_output = 0x01 | 0x02 | 0x20 # set as outputs (8, 9, 13)
             gpio_dirL_output = 0x01 | 0x04 | 0x20 # set as outputs (0, 2, 5)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-r", "--reset", action="store", dest="reset", help="reset = sub lpGBT or VTRx+")
+    parser.add_argument("-r", "--reset", action="store", dest="reset", help="reset = sub or vtrx")
     
     args = parser.parse_args()
 
