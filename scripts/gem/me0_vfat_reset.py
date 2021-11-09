@@ -48,16 +48,16 @@ def vfat_reset(system, oh_select, vfat_list):
         # Set GPIO as output
         gpio_dirH_output = 0
         gpio_dirL_output = 0
-        if oh_v == 1:
+        if oh_ver == 1:
             if (boss):
                 gpio_dirH_output = 0x80 | 0x01
-                gpio_dirL_output = 0x01 | 0x04# set as outputs
+                gpio_dirL_output = 0x01 | 0x04 # set as outputs
             else:
                 gpio_dirH_output = 0x02 | 0x04 | 0x08 # set as outputs
                 gpio_dirL_output = 0x00 # set as outputs
-        elif of_v == 2:
+        elif oh_ver == 2:
             if (boss):
-                gpio_dirH_output = 0x01 | 0x02 # set as outputs (8, 9)
+                gpio_dirH_output = 0x01 | 0x02 | 0x20 # set as outputs (8, 9, 13)
                 gpio_dirL_output = 0x01 | 0x04 | 0x20 # set as outputs (0, 2, 5)
             else:
                 gpio_dirH_output = 0x01 | 0x02 | 0x04 | 0x08 | 0x20 # set as outputs
@@ -66,7 +66,7 @@ def vfat_reset(system, oh_select, vfat_list):
         mpoke(gpio_dirH_addr, gpio_dirH_output)
         mpoke(gpio_dirL_addr, gpio_dirL_output)
 
-        print("Set GPIO as output (including GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" % (gpio_dirH_addr, gpio_dirH_output))
+        print("Set GPIO as output (including GPIO 15/5 for boss lpGBT for OH-v1/v2), register: 0x%03X, value: 0x%02X" % (gpio_dirH_addr, gpio_dirH_output))
         print("Set GPIO as output, register: 0x%03X, value: 0x%02X" % (gpio_dirL_addr, gpio_dirL_output))
         sleep(0.000001)
 

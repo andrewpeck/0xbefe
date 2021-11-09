@@ -425,7 +425,7 @@ def configure_gpio(oh_ver, boss, readback):
             writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00, readback) #
     elif oh_ver == 2:
         if (boss):
-            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 , readback) # set as outputs (8, 9)
+            writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x20 , readback) # set as outputs (8, 9, 13)
             writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04 | 0x20, readback) # set as outputs (0, 2, 5)
             writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00, readback)
             writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x20, readback) # enable LED
