@@ -44,7 +44,7 @@ set PROPERTIES [dict create \
         steps.map.args.mt on \
         steps.par.args.mt 4  \
         steps.map.args.register_duplication true \
-        steps.bitgen.args.More\ Options {{-g CRC:enable -g ConfigRate:33 -g StartUpClk:CCLK -g DonePipe:yes -g OverTempPowerDown:enable -g compress}} \
+        steps.bitgen.args.More\ Options {{-g Binary:yes -g CRC:enable -g ConfigRate:33 -g StartUpClk:CCLK -g DonePipe:yes -g OverTempPowerDown:enable -g compress}} \
     ]\
 ]
 # please see https://www.xilinx.com/support/documentation/sw_manuals/xilinx14_7/devref.pdf
