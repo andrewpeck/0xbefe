@@ -24,66 +24,76 @@ def lpgbt_sub_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     gpio_dirL_addr = gpio_dirL_node.address
     gpio_outL_addr = gpio_outL_node.address
 
-    # Set GPIO as output
-    gpio_dirH_output = 0
-    gpio_dirL_output = 0
-    if oh_ver == 1:
-        if (boss):
-            gpio_dirH_output = 0x80 | 0x01
-            gpio_dirL_output = 0x01 | 0x04 # set as outputs
-        else:
-            gpio_dirH_output = 0x02 | 0x04 | 0x08 # set as outputs
-            gpio_dirL_output = 0x00 # set as outputs
-    elif oh_ver == 2:
-        if (boss):
-            gpio_dirH_output = 0x01 | 0x02 | 0x20 # set as outputs (8, 9, 13)
-            gpio_dirL_output = 0x01 | 0x04 | 0x20 # set as outputs (0, 2, 5)
-        else:
-            gpio_dirH_output = 0x01 | 0x02 | 0x04 | 0x08 | 0x20 # set as outputs
-            gpio_dirL_output = 0x01 | 0x02 | 0x08 # set as outputs
-    
-    if backend:
-        mpoke(gpio_dirH_addr, gpio_dirH_output)
-        mpoke(gpio_dirL_addr, gpio_dirL_output)
-    else:
-        writeReg(gpio_dirH_node, gpio_dirH_output, 0)
-        writeReg(gpio_dirL_node, gpio_dirL_output, 0)
-
-    print("Set GPIO as output (including GPIO 15/5 for boss lpGBT for OH-v1/v2), register: 0x%03X, value: 0x%02X" % (gpio_dirH_addr, gpio_dirH_output))
-    print("Set GPIO as output, register: 0x%03X, value: 0x%02X" % (gpio_dirL_addr, gpio_dirL_output))
-    sleep(0.000001)
-        
     gpio = 0
-    if reset == "sub":
-        print ("Reset sub lpGBT\n")
+    if reset == "vtrx":
+        print("VTRx+ RESET\n")
+        gpio  = 13
+    elif reset == "sub":
+        print("SUB RESET\n")
         gpio = 9
-    elif reset == "vtrx": 
-        print ("Reset VTRx+\n")  
-        gpio = 13
+
+    dir_enable = convert_gpio_reg(gpio)
+    dir_disable = 0x00
     data_enable = convert_gpio_reg(gpio)
     data_disable = 0x00
-    gpio_out_addr = gpio_outH_addr
-    gpio_out_node = gpio_outH_node
+    gpio_dir_addr = 0
+    gpio_dir_node = ""
+    gpio_out_addr = 0
+    gpio_out_node = ""
 
-    # Reset - 1
-    if system == "backend":
-        mpoke(gpio_out_addr, data_enable)
+    # These 2 resets are only for OH-v2
+    if gpio <= 7:
+        gpio_dir_addr = gpio_dirL_addr
+        gpio_dir_node = gpio_dirL_node
+        gpio_out_addr = gpio_outL_addr
+        gpio_out_node = gpio_outL_node
+        if boss:
+            dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+            dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+            #data_enable |= 0x20  # To keep GPIO LED on ASIAGO ON
+            data_disable |= 0x20  # To keep GPIO LED on ASIAGO ON
+        else:
+            dir_enable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+            dir_disable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+            #data_enable |= 0x00
+            data_disable |= 0x00
     else:
-        writeReg(gpio_out_node, data_enable, 0)
-    print("Enable GPIO to reset, register: 0x%03X, value: 0x%02X" % (gpio_out_addr, data_enable))
+        gpio_dir_addr = gpio_dirH_addr
+        gpio_dir_node = gpio_dirH_node
+        gpio_out_addr = gpio_outH_addr
+        gpio_out_node = gpio_outH_node
+        if not boss:
+            dir_enable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+            dir_disable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+            #data_enable |= 0x00
+            data_disable |= 0x00
+
+    # Enable GPIO as output
+    if system == "backend":
+        mpoke(gpio_dir_addr, dir_enable)
+    else:
+        writeReg(gpio_dir_node, dir_enable, 0)
+    print("Enable GPIO %d as output"%gpio)
     sleep(0.000001)
 
-    # Reset - 0
+    # Set GPIO to 0 for VFAT reset
     if system == "backend":
         mpoke(gpio_out_addr, data_disable)
     else:
         writeReg(gpio_out_node, data_disable, 0)
-    print("Disable GPIO, register: 0x%03X, value: 0x%02X" % (gpio_out_addr, data_disable))
+    print("Set GPIO %d to 0 for reset"%gpio)
+    sleep(0.1)
+
+    # Disable GPIO as output
+    if system == "backend":
+        mpoke(gpio_dir_addr, dir_disable)
+    else:
+        writeReg(gpio_dir_node, dir_disable, 0)
+    print("Disable GPIO %d as output"%gpio)
     sleep(0.000001)
 
     print("")
 
-    
 if __name__ == "__main__":
 
     # Parsing arguments

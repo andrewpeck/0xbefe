@@ -45,65 +45,77 @@ def vfat_reset(system, oh_select, vfat_list):
             check_rom_readback(oh_select, gbt_select)
             check_lpgbt_mode(boss, oh_select, gbt_select)   
 
-        # Set GPIO as output
-        gpio_dirH_output = 0
-        gpio_dirL_output = 0
-        if oh_ver == 1:
-            if (boss):
-                gpio_dirH_output = 0x80 | 0x01
-                gpio_dirL_output = 0x01 | 0x04 # set as outputs
-            else:
-                gpio_dirH_output = 0x02 | 0x04 | 0x08 # set as outputs
-                gpio_dirL_output = 0x00 # set as outputs
-        elif oh_ver == 2:
-            if (boss):
-                gpio_dirH_output = 0x01 | 0x02 | 0x20 # set as outputs (8, 9, 13)
-                gpio_dirL_output = 0x01 | 0x04 | 0x20 # set as outputs (0, 2, 5)
-            else:
-                gpio_dirH_output = 0x01 | 0x02 | 0x04 | 0x08 | 0x20 # set as outputs
-                gpio_dirL_output = 0x01 | 0x02 | 0x08 # set as outputs
-        
-        mpoke(gpio_dirH_addr, gpio_dirH_output)
-        mpoke(gpio_dirL_addr, gpio_dirL_output)
-
-        print("Set GPIO as output (including GPIO 15/5 for boss lpGBT for OH-v1/v2), register: 0x%03X, value: 0x%02X" % (gpio_dirH_addr, gpio_dirH_output))
-        print("Set GPIO as output, register: 0x%03X, value: 0x%02X" % (gpio_dirL_addr, gpio_dirL_output))
-        sleep(0.000001)
-
+        dir_enable = convert_gpio_reg(gpio)
+        dir_disable = 0x00
         data_enable = convert_gpio_reg(gpio)
         data_disable = 0x00
+        gpio_dir_addr = 0
+        gpio_dir_node = ""
         gpio_out_addr = 0
         gpio_out_node = ""
-        if oh_v == 1:
+
+        if oh_ver == 1:
             if gpio <= 7:
+                gpio_dir_addr = gpio_dirL_addr
+                gpio_dir_node = gpio_dirL_node
                 gpio_out_addr = gpio_outL_addr
                 gpio_out_node = gpio_outL_node
             else:
+                gpio_dir_addr = gpio_dirH_addr
+                gpio_dir_node = gpio_dirH_node
                 gpio_out_addr = gpio_outH_addr
                 gpio_out_node = gpio_outH_node
                 if boss:
+                    dir_enable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
+                    dir_disable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x80  # To keep GPIO LED on ASIAGO ON
                     data_disable |= 0x80  # To keep GPIO LED on ASIAGO ON
-        elif oh_v == 2:
+        elif oh_ver == 2:
             if gpio <= 7:
+                gpio_dir_addr = gpio_dirL_addr
+                gpio_dir_node = gpio_dirL_node
                 gpio_out_addr = gpio_outL_addr
                 gpio_out_node = gpio_outL_node
                 if boss:
+                    dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+                    dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x20  # To keep GPIO LED on ASIAGO ON
                     data_disable |= 0x20  # To keep GPIO LED on ASIAGO ON
+                else:
+                    dir_enable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+                    dir_disable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+                    data_enable |= 0x00
+                    data_disable |= 0x00
             else:
+                gpio_dir_addr = gpio_dirH_addr
+                gpio_dir_node = gpio_dirH_node
                 gpio_out_addr = gpio_outH_addr
                 gpio_out_node = gpio_outH_node
+                if not boss:
+                    dir_enable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+                    dir_disable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+                    data_enable |= 0x00
+                    data_disable |= 0x00
 
-        # Reset - 1
+        # Enable GPIO as output
+        mpoke(gpio_dir_addr, dir_enable)
+        print("Enable GPIO %d as output"%gpio)
+        sleep(0.000001)
+
+        # Set GPIO to 1 for VFAT reset
         mpoke(gpio_out_addr, data_enable)
-        print("Enable GPIO to reset (including GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" % (gpio_out_addr, data_enable))
-        sleep(0.000001) 
-            
-        # Reset - 0
+        print("Set GPIO %d to 1 for VFAT reset"%gpio)
+        sleep(0.1)
+
+        # Set GPIO back to 0
         mpoke(gpio_out_addr, data_disable)
-        print("Disable GPIO (except GPIO 15 for boss lpGBT), register: 0x%03X, value: 0x%02X" % (gpio_out_addr, data_disable))
-        sleep(0.000001) 
+        print("Set GPIO %d back to 0"%gpio)
+        sleep(0.1)
+
+        # Disable GPIO as output
+        mpoke(gpio_dir_addr, dir_disable)
+        print("Disable GPIO %d as output"%gpio)
+        sleep(0.000001)
         
         print ("")
         
