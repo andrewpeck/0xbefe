@@ -271,17 +271,17 @@ def select_ic_link(ohIdx, gbtIdx):
             gbt_ver = 0
         elif oh_ver == 2:
             gbt_ver = 1
-        write_backend_reg(NODE_IC_GBT_VER, gbt_ver)
+        gem_utils.write_backend_reg(NODE_IC_GBT_VER, gbt_ver)
         if oh_ver == 1:
-            write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+            gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
         elif oh_ver == 2:
             if gbtIdx%2 == 0:
-                write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+                gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
             else:
-                write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x71)   
+                gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x71)
         gem_utils.write_backend_reg(NODE_IC_READ_WRITE_LENGTH, 1)
 
-def get_oh_ver(ohIdx, gbtIdx)
+def get_oh_ver(ohIdx, gbtIdx):
     ohIdx = int(ohIdx)
     gbtIdx = int(gbtIdx)
     if ohIdx not in range(0,2) or gbtIdx not in range(0,8):
@@ -307,8 +307,8 @@ def mpeek(address):
             print(Colors.RED + "ERROR: Problem in reading register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
-        #write_backend_reg(NODE_IC_ADDR, address)
-        #write_backend_reg(NODE_IC_EXEC_READ, 1)
+        #gem_utils.write_backend_reg(NODE_IC_ADDR, address)
+        #gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
         #data = read_backend_reg(NODE_IC_READ_DATA)
         #return data
         return reg_list_dryrun[address]
@@ -602,7 +602,7 @@ def mask_to_lsb(mask):
                 return idx
             idx = idx+1
 
-def lpgbt_write_config_file(oh_ver, config_file = "config.txt"):
+def lpgbt_write_config_file(oh_ver, config_file = "config.txt", status=0):
     f = open(config_file,"w+")
     for i in range (n_rw_reg):
         val =  mpeek(i)
@@ -623,7 +623,7 @@ def lpgbt_write_config_file(oh_ver, config_file = "config.txt"):
     f.close()
 
 def lpgbt_dump_config(oh_ver, config_file = "Loopback_test.txt"):
-   input_file = open(config_file, "r")
+    input_file = open(config_file, "r")
     for line in input_file.readlines():
         reg_addr = int(line.split()[0],16)
         value = int(line.split()[1],16)
