@@ -383,9 +383,9 @@ def main(system, oh_ver, boss):
     except FileExistsError: # skip if directory already exists
         pass
     if boss:
-        lpgbt_write_config_file(dataDir+"/status_boss_ohv%d.txt"%oh_ver, status=1)
+        lpgbt_write_config_file(oh_ver, dataDir+"/status_boss_ohv%d.txt"%oh_ver, status=1)
     else:
-        lpgbt_write_config_file(dataDir+"/status_sub_ohv%d.txt"%oh_ver, status=1)
+        lpgbt_write_config_file(oh_ver, dataDir+"/status_sub_ohv%d.txt"%oh_ver, status=1)
 
 
 def init_adc(oh_ver):
