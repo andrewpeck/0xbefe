@@ -101,18 +101,18 @@ def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
 
     figure_name1 = foldername + now + "_pg_current_plot.pdf"
     figure_name2 = foldername + now + "_rt_voltage_plot.pdf"
-    fig1, ax1 = plt.subplots()
-    fig2, ax2 = plt.subplots()
-    ax1.set_xlabel("minutes")
-    ax1.set_ylabel("PG Current (A)")
-    ax2.set_xlabel("minutes")
-    ax2.set_ylabel("Rt Voltage (V)")
-    ax1.plot(minutes, asense0, color="red")
-    ax1.plot(minutes, asense2, color="blue")
-    ax2.plot(minutes, asense1, color="red")
-    ax2.plot(minutes, asense3, color="blue")
-    fig1.savefig(figure_name1, bbox_inches="tight")
-    fig2.savefig(figure_name1, bbox_inches="tight")
+    fig3, ax3 = plt.subplots()
+    fig4, ax4 = plt.subplots()
+    ax3.set_xlabel("minutes")
+    ax3.set_ylabel("PG Current (A)")
+    ax4.set_xlabel("minutes")
+    ax4.set_ylabel("Rt Voltage (V)")
+    ax3.plot(minutes, asense0, color="red")
+    ax3.plot(minutes, asense2, color="blue")
+    ax4.plot(minutes, asense1, color="red")
+    ax4.plot(minutes, asense3, color="blue")
+    fig3.savefig(figure_name1, bbox_inches="tight")
+    fig4.savefig(figure_name2, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
 
