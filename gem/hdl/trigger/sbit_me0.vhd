@@ -24,7 +24,7 @@ entity sbit_me0 is
         g_NUM_OF_OHs         : integer;
         g_NUM_VFATS_PER_OH   : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
-	g_DEBUG              : boolean
+        g_DEBUG              : boolean
     );
     port(
         -- reset
@@ -41,11 +41,6 @@ entity sbit_me0 is
         me0_cluster_count_o : out std_logic_vector(10 downto 0);
         me0_clusters_o      : out t_oh_clusters;
 
-        -- Trigger Signals
-        --ttc_cmds_me0        : in t_ttc_cmds;
-        --l1a_me0             : in std_logic;
-        --calpulse_me0        : in std_logic;
-
         -- IPbus
         ipb_reset_i         : in  std_logic;
         ipb_clk_i           : in  std_logic;
@@ -58,12 +53,11 @@ end sbit_me0;
 architecture sbit_me0_arch of sbit_me0 is
 
     -- Components --
+    -- ila debugger for sbit_me0 --
     COMPONENT ila_sbit_me0
 
         PORT (
             clk : IN STD_LOGIC;
-
-
 
             probe0 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
             probe1 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
@@ -101,20 +95,18 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking
     signal vfat_trigger_arr     : t_std24_array(g_NUM_OF_OHs - 1 downto 0); -- trigger per vfat (or of all unmasked sbits)
 
+    -- probe signal for raw sbits --
     signal sbits_probe : sbits_t;
-
-    --signal l1a_me0         : std_logic;
-    --signal calpulse_me0    : std_logic;
 
     -- counters
     signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat_trigger_rate_arr : t_vfat_trigger_rate_arr(g_NUM_OF_OHs - 1 downto 0);
-    
-   constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
 
-    
-    -- debug me0 sbits    
-    signal sbit_test_reset_o            : std_logic := '0' ;
+    constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
+
+
+    -- signals for raw sbit registers    
+    signal sbit_test_reset_o         : std_logic := '0' ;
 
     signal test_sbit0xe_presum       : t_std32_array(7 downto 0);
     signal test_sbit0xe_count_me0    : std_logic_vector(31 downto 0);
@@ -202,58 +194,59 @@ begin
                 reset_i => reset,
                 en_i    => vfat_trigger_arr(oh),
                 rate_o  => vfat_trigger_rate_arr(oh)
-            ); 
+            );
 
 
         g_vfat_counters: for vfat in 0 to 23 generate
 
-        i_vfat_trigger_cnt : entity work.counter
-            generic map(
-                g_COUNTER_WIDTH  => 16,
-                g_ALLOW_ROLLOVER => FALSE
-            )
-            port map(
-                ref_clk_i => ttc_clk_i.clk_40,
-                reset_i   => reset or reset_cnt,
-                en_i      => vfat_trigger_arr(oh)(vfat),
-                count_o   => vfat_trigger_cnt_arr(oh)(vfat)
-            );
+            i_vfat_trigger_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 16,
+                    g_ALLOW_ROLLOVER => FALSE
+                )
+                port map(
+                    ref_clk_i => ttc_clk_i.clk_40,
+                    reset_i   => reset or reset_cnt,
+                    en_i      => vfat_trigger_arr(oh)(vfat),
+                    count_o   => vfat_trigger_cnt_arr(oh)(vfat)
+                );
         end generate;
 
-end generate;
+    end generate;
 
---== Debug me0 sbits ==--
+    --== Debug me0 sbits ==--
 
-ila_enable : if g_DEBUG generate
-me0_cluster_debug : ila_sbit_me0
-        PORT MAP (
-            clk => ttc_clk_i.clk_40,
+    ila_enable : if g_DEBUG generate
+        me0_cluster_debug : ila_sbit_me0
+            PORT MAP (
+                clk => ttc_clk_i.clk_40,
 
-            probe0 => me0_clusters_o(0).size & me0_clusters_o(0).address,
-            probe1 => me0_clusters_o(1).size & me0_clusters_o(1).address,
-            probe2 => me0_clusters_o(2).size & me0_clusters_o(2).address,
-            probe3 => me0_clusters_o(3).size & me0_clusters_o(3).address,
-            probe4 => me0_clusters_o(4).size & me0_clusters_o(4).address,
-            probe5 => me0_clusters_o(5).size & me0_clusters_o(5).address,
-            probe6 => me0_clusters_o(6).size & me0_clusters_o(6).address,
-            probe7 => me0_clusters_o(7).size & me0_clusters_o(7).address,
-            probe8 => sbits_probe,
-            probe9 => vfat_sbits_arr(0)(1),
-            probe10 => vfat_sbits_arr(0)(8),
-            probe11 => vfat_sbits_arr(0)(9),
-            probe12 => vfat_sbits_arr(0)(16),
-            probe13 => vfat_sbits_arr(0)(17),
-            probe14 => ttc_cmds_i.calpulse,
-            probe15 => ttc_cmds_i.l1a,
-            probe16 => me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf,
-            probe17 => me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf,
-            probe18 => me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf,
-            probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
-        );
+                probe0 => me0_clusters_o(0).size & me0_clusters_o(0).address,
+                probe1 => me0_clusters_o(1).size & me0_clusters_o(1).address,
+                probe2 => me0_clusters_o(2).size & me0_clusters_o(2).address,
+                probe3 => me0_clusters_o(3).size & me0_clusters_o(3).address,
+                probe4 => me0_clusters_o(4).size & me0_clusters_o(4).address,
+                probe5 => me0_clusters_o(5).size & me0_clusters_o(5).address,
+                probe6 => me0_clusters_o(6).size & me0_clusters_o(6).address,
+                probe7 => me0_clusters_o(7).size & me0_clusters_o(7).address,
+                probe8 => sbits_probe,
+                probe9 => vfat_sbits_arr(0)(1),
+                probe10 => vfat_sbits_arr(0)(8),
+                probe11 => vfat_sbits_arr(0)(9),
+                probe12 => vfat_sbits_arr(0)(16),
+                probe13 => vfat_sbits_arr(0)(17),
+                probe14 => ttc_cmds_i.calpulse,
+                probe15 => ttc_cmds_i.l1a,
+                probe16 => me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf,
+                probe17 => me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf,
+                probe18 => me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf,
+                probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
+            );
 
-end generate;
+    end generate;
 
-
+    --== COUNT of summed sbits on selectable elink ==--
+    -- assigned array of sbits for selected vfat (x) and elink (e)
     vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i: for i in 0 to 7 generate
@@ -270,10 +263,11 @@ end generate;
             );
     end generate;
 
+    -- assigned sum of all sbit counts on a selected vfat (x) and elink (e)
     test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
 
-    --     test_sbit0xs_count_me0 <= x"00000002";
-
+    --== COUNTER for selectable sbit ==--
+    -- assigned sbit of selected vfat (x) and sbit (s) 
     vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
@@ -294,11 +288,6 @@ end generate;
     ---------------------------------------------------------------------------------
     cluster_packer_me0 : if (true) generate
 
-        --    attribute DONT_TOUCH                  : string;
-        --    attribute DONT_TOUCH of me0_clusters      : signal is "true";
-        --    attribute DONT_TOUCH of me0_cluster_count : signal is "true";
-        --    attribute DONT_TOUCH of me0_overflow      : signal is "true";
-
     begin
         each_oh:
  for oh in 0 to g_NUM_OF_OHs - 1 generate
@@ -314,7 +303,7 @@ end generate;
 
                 end generate;
             end generate;
-            sbits_probe <= vfat_sbits_type_change(17);
+            sbits_probe <= vfat_sbits_type_change(17); --17 selected arbitrarily, can change if want to probe other vfat
 
             cluster_packer_inst : entity work.cluster_packer
                 generic map (

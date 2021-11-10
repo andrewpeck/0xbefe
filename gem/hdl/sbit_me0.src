@@ -18,15 +18,4 @@ gem/hdl/cluster_finding/hdl/bitonic_sort.vhd 93
 # Cluster packer
 gem/hdl/cluster_finding/cluster_finding.src
 
-# Trigger
-#gem/hdl/oh_fe/trigger/active_vfats.vhd 93
-#gem/hdl/oh_fe/trigger/channel_to_strip.vhd 93
-#gem/hdl/oh_fe/trigger/trigger_data_formatter.vhd 93
-#gem/hdl/oh_fe/trigger/sbit_monitor.vhd 93
-#gem/hdl/oh_fe/trigger/sbits.vhd 93
-#gem/hdl/oh_fe/trigger/sbits_hitmap.vhd 93
-#gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner.v
-#gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner_tmr.vhd 93
-#gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
-
 gem/hdl/oh_fe/utils/clock_strobe.vhd
