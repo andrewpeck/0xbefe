@@ -214,7 +214,7 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         gbt_rpi_chc = rpi_chc.rpi_chc()
         if boss is not None and oh_ver is not None:
             config_initialize_chc(oh_ver, boss)    
-    elif system=="backend" or system=="dryrun":
+    elif system=="backend":
         import gem.gem_utils as gem_utils
         global gem_utils
         print("Parsing backend xml file...")
