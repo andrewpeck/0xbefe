@@ -252,10 +252,10 @@ if __name__ == "__main__":
         boss = 1
     else:
         boss = 0
-    if oh_v == 1 and not boss:
+    if oh_ver == 1 and not boss:
         print(Colors.YELLOW + "Only boss lpGBT allowed for ME0 OH-v1" + Colors.ENDC)
         sys.exit()
-    if oh_v == 2 and boss:
+    if oh_ver == 2 and boss:
         print(Colors.YELLOW + "Only sub lpGBT allowed for ME0 OH-v2" + Colors.ENDC)
         sys.exit()
 

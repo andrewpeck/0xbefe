@@ -246,7 +246,7 @@ def main(system, oh_ver, boss):
     init_adc(oh_ver)
     print ("ADC Readings:")
     
-    if oh_v == 1:
+    if oh_ver == 1:
         if boss == 1:
             for i in range(16):
                 name = ""
@@ -289,7 +289,7 @@ def main(system, oh_ver, boss):
                 if (i==15):  conv=1/0.50; name="VREF/2 (internal signal)"
                 read = read_adc(i, system)
                 print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
-    elif oh_v == 2:
+    elif oh_ver == 2:
         if boss == 1:
             for i in range(16):
                 name = ""
@@ -333,7 +333,7 @@ def main(system, oh_ver, boss):
                 read = read_adc(i, system)
                 print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
 
-    powerdown_adc(oh_v)
+    powerdown_adc(oh_ver)
 
     # CRC
     if oh_v == 2:
@@ -383,9 +383,9 @@ def main(system, oh_ver, boss):
     except FileExistsError: # skip if directory already exists
         pass
     if boss:
-        lpgbt_write_config_file(dataDir+"/status_boss_ohv%d.txt"%oh_v, status=1)
+        lpgbt_write_config_file(dataDir+"/status_boss_ohv%d.txt"%oh_ver, status=1)
     else:
-        lpgbt_write_config_file(dataDir+"/status_sub_ohv%d.txt"%oh_v, status=1)
+        lpgbt_write_config_file(dataDir+"/status_sub_ohv%d.txt"%oh_ver, status=1)
 
 
 def init_adc(oh_ver):
@@ -394,7 +394,7 @@ def init_adc(oh_ver):
     writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0) # enable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0) # enable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0) # enable dividers
-    if oh_v == 1:
+    if oh_ver == 1:
         writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0) # enable dividers
     writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0) # vref enable
@@ -407,7 +407,7 @@ def powerdown_adc(oh_ver):
     writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0) # disable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0) # disable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0) # disable dividers
-    if oh_v == 1:
+    if oh_ver == 1:
         writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0) # disable dividers
     writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0) # disable dividers
     writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0) # vref disable
