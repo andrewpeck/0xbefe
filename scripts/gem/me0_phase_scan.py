@@ -286,9 +286,9 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     
     # set phase
     GBT_ELINK_SAMPLE_PHASE_BASE_REG = -9999
-    if oh_v == 1:
+    if oh_ver == 1:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
-    elif oh_v == 2:
+    elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
     value = (config[addr] & 0x0f) | (phase << 4)
@@ -392,9 +392,9 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
-    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_sub_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
     config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
-    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    config_sub_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
     
     if not os.path.isfile(config_boss_filename_v1):
         print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)

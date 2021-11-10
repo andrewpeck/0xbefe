@@ -57,14 +57,10 @@ def vfat_reset(system, oh_select, vfat_list):
         if oh_ver == 1:
             if gpio <= 7:
                 gpio_dir_addr = gpio_dirL_addr
-                gpio_dir_node = gpio_dirL_node
                 gpio_out_addr = gpio_outL_addr
-                gpio_out_node = gpio_outL_node
             else:
                 gpio_dir_addr = gpio_dirH_addr
-                gpio_dir_node = gpio_dirH_node
                 gpio_out_addr = gpio_outH_addr
-                gpio_out_node = gpio_outH_node
                 if boss:
                     dir_enable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
                     dir_disable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
@@ -73,9 +69,7 @@ def vfat_reset(system, oh_select, vfat_list):
         elif oh_ver == 2:
             if gpio <= 7:
                 gpio_dir_addr = gpio_dirL_addr
-                gpio_dir_node = gpio_dirL_node
                 gpio_out_addr = gpio_outL_addr
-                gpio_out_node = gpio_outL_node
                 if boss:
                     dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
                     dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
@@ -88,9 +82,7 @@ def vfat_reset(system, oh_select, vfat_list):
                     data_disable |= 0x00
             else:
                 gpio_dir_addr = gpio_dirH_addr
-                gpio_dir_node = gpio_dirH_node
                 gpio_out_addr = gpio_outH_addr
-                gpio_out_node = gpio_outH_node
                 if not boss:
                     dir_enable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
                     dir_disable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
