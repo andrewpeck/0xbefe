@@ -175,4 +175,4 @@ def test_cluster_packer(station, oneshot, deadtime):
 
 
 if __name__ == "__main__":
-    test_cluster_packer(2,True,12)
+    test_cluster_packer(1,True,0)

@@ -519,6 +519,9 @@ begin
                             inconcat_valid <= '1';
                             inconcat_bytes <= "0" & x"1";
                         end if;
+                    -- do not push data to the input FIFO otherwise
+                    else
+                        inconcat_valid <= '0';
                     end if;
                     
                     -- check the header and the crc error flag. invalid vfat block? if yes, then just attach it to the current event
