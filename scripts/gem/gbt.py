@@ -418,13 +418,13 @@ def downloadConfig(ohIdx, gbtIdx, filename):
             value = int(line.split()[1],16)
             if addr <= 0x007: # CHIP ID and USER ID
                 value = -9999
-            if oh_v == 2:
+            if gbt_ver == 1:
                 if addr in range(0xfc, 0x100): # CRC
                     value = -9999
-            if oh_v == 1:
+            if gbt_ver == 0:
                 if addr in range(0x0f0, 0x105): # I2C Masters
                     value = 0x00
-            elif oh_v == 2:
+            elif gbt_ver == 1:
                 if addr in range(0x100, 0x115): # I2C Masters
                     value = 0x00
         elif gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
