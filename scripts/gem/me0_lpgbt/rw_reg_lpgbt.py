@@ -460,7 +460,7 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
-    else:
+    elif system == "backend":
         gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
