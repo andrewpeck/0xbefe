@@ -184,7 +184,7 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-   if args.ohid is None:
+    if args.ohid is None:
         print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
     #if int(args.ohid) > 1:
