@@ -336,7 +336,7 @@ def main(system, oh_ver, boss):
     powerdown_adc(oh_ver)
 
     # CRC
-    if oh_v == 2:
+    if oh_ver == 2:
         n_rw_fuse = (0xFF+1)
 
         print ("CRC value calculated from registers: ")
