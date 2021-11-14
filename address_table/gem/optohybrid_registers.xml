@@ -455,7 +455,7 @@
           fw_bus_reset_signal="ipb_reset"
           fw_master_bus_signal="ipb_mosi_i"
           fw_slave_bus_signal="ipb_miso_o"
-          fw_reg_addr_msb="7"
+          fw_reg_addr_msb="8"
           fw_reg_addr_lsb="0">
 
         <node id="CTRL" address="0x0" description = "Controls and monitors various parameters of the S-bit deserialization and cluster building.">
@@ -659,9 +659,22 @@
                     fw_default="0x0"/>
                 <!-- END: TU_MASK DO NOT EDIT -->
             </node> <!--TU_MASK-->
+
+            <node id="SBIT_MAP_SEL" address="0x18" permission="rw"
+                  mask="0x3"
+                  description="GE11: 0=identity map, 1=short, 2=long"
+                  fw_default="0"
+                  fw_signal="sbit_map_sel"/>
+            <node id="REVERSE_PARTITIONS" address="0x18"
+                  permission="rw"
+                  mask="0x10"
+                  description="1 to reverse partitions"
+                  fw_default="0"
+                  fw_signal="reverse_partitions"/>
+
         </node> <!--CTRL-->
 
-        <node id="CNT" address="0x18" description = "S-BIT Counters \\  Set CNT_PERSIST to 1 to accumulate. Otherwise the counters will automatically reset after a programmable time (default is 1 second). By default this time is 1 second, making these counters a rate counter in Hertz">
+        <node id="CNT" address="0x20" description = "S-BIT Counters \\  Set CNT_PERSIST to 1 to accumulate. Otherwise the counters will automatically reset after a programmable time (default is 1 second). By default this time is 1 second, making these counters a rate counter in Hertz">
 
             <node id="VFAT${VFAT_CNT_IDX}_SBITS" address="0x0" permission="r"
                   mask="0xffffffff"
@@ -717,7 +730,7 @@
 
         </node> <!--CNT-->
 
-        <node id="TIMING" address="0x53"
+        <node id="TIMING" address="0x60"
               description = "Controls the tap delay settings of the S-bit trigger unit inputs.
                              Phase shifts the inputs in 78 ps increments
                              \\ The delay of each S-bit in a VFAT should be increased to match the longest delay incurred by the GEB + Optohybrid routing on that VFAT">
@@ -1266,21 +1279,21 @@
             <!-- END: TIMING_DELAYS DO NOT EDIT -->
         </node> <!--Timing Delays-->
 
-        <node id="SBIT_INJECT_MASK" address="0x80" mask="0xffffff" permission="rw"
+        <node id="SBIT_INJECT_MASK" address="0x90" mask="0xffffff" permission="rw"
               description="Injects an S-bit into the 0th channel of the VFATs specified by the mask. Useful for standalone OH testing."
               fw_default="0x000000"
               fw_signal="inject_sbits_mask"/>
 
-        <node id="CYCLIC_INJECT_EN" address="0x80" mask="0x1000000" permission="rw"
+        <node id="CYCLIC_INJECT_EN" address="0x90" mask="0x1000000" permission="rw"
               description="When enabled, periodically injects a cluster into the VFATs specified by the mask"
               fw_default="0x0"
               fw_signal="cyclic_inject_en"/>
 
-        <node id="SBIT_INJECT" address="0x82" mask="0x1" permission="w"
+        <node id="SBIT_INJECT" address="0x92" mask="0x1" permission="w"
               description="Fires injector"
               fw_write_pulse_signal="inject_sbits" />
 
-        <node id="SBIT_MONITOR" address="0x90"
+        <node id="SBIT_MONITOR" address="0xa0"
               description="sbit monitor module which shows the first valid sbit clusters after a reset on the selected link">
             <node id="RESET" address="0x0" permission="w" mask="0x1"
                   description="Reset the sbit monitor module and re-arm for triggering"
@@ -1294,7 +1307,7 @@
                   fw_signal="sbitmon_l1a_delay"/>
         </node>
 
-        <node id="SBIT_HITMAP" address="0xb0"
+        <node id="SBIT_HITMAP" address="0xc0"
               description="The Sbit hitmap module accumulates all incoming Sbits during a period of time">
             <node id="RESET" address="0x0" permission="w"
                   description="Reset the accumulation registers" mask="0x1"
@@ -1313,13 +1326,13 @@
                   generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_HITMAP_IDX"/>
         </node>
 
-        <node id="TRIGGER_PRBS_EN" address="0xe9" permission="rw"
+        <node id="TRIGGER_PRBS_EN" address="0xf9" permission="rw"
               mask="0x00000001"
               description="1 to enable PRBS-7 on the trigger e-links"
               fw_default="0"
               fw_signal="trigger_prbs_en"/>
 
-        <node id="TMR" address="0xf0">
+        <node id="TMR" address="0x100">
             <node id="CLUSTER_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0x0000ffff"
                   description="Cluster building TMR Error Count"

@@ -34,6 +34,9 @@ entity sbits is
 
     reset_i : in std_logic;
 
+    reverse_partitions : in std_logic                     := '0';
+    sbit_map_sel       : in std_logic_vector (1 downto 0) := (others => '0');
+
     vfat_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
 
     inject_sbits_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
@@ -88,7 +91,6 @@ architecture Behavioral of sbits is
   signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
-  signal vfat_sbits              : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
@@ -203,12 +205,16 @@ begin
   end generate;
 
   channel_to_strip_inst : entity work.channel_to_strip
+    generic map (
+      USE_DYNAMIC_MAPPING => true,
+      REGISTER_OUTPUT     => false
+      )
     port map (
+      clock       => clocks.clk40,
+      mapping     => to_integer (unsigned (sbit_map_sel)),
       channels_in => vfat_sbits_raw,
       strips_out  => vfat_sbits_strip_mapped
       );
-
-  vfat_sbits <= vfat_sbits_injected;
 
   --------------------------------------------------------------------------------
   -- S-bit injector
@@ -260,7 +266,7 @@ begin
   process (clocks.clk40)
   begin
     if (rising_edge(clocks.clk40)) then
-      sbits_mux_s0 <= vfat_sbits(to_integer(unsigned(sbits_mux_sel)));
+      sbits_mux_s0 <= vfat_sbits_raw(to_integer(unsigned(sbits_mux_sel)));
       sbits_mux_s1 <= sbits_mux_s0;
       sbits_mux    <= sbits_mux_s1;
       sbits_mux_o  <= sbits_mux;
@@ -279,7 +285,7 @@ begin
       clock_i   => clocks.clk40,
       reset_i   => hitmap_reset_i,
       acquire_i => hitmap_acquire_i,
-      sbits_i   => vfat_sbits,
+      sbits_i   => vfat_sbits_raw,
       hitmap_o  => hitmap_sbits_o
       );
 
@@ -293,12 +299,17 @@ begin
     type sbit_cluster_array_array_t is array(integer range<>)
       of sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    signal clusters      : sbit_cluster_array_array_t (2 downto 0);
+    signal clusters_tmr : sbit_cluster_array_array_t (2 downto 0);
+
+    signal clusters       : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal clusters_rev   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal clusters_norev : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+
     signal cluster_count : t_std11_array (2 downto 0);
     signal overflow      : std_logic_vector (2 downto 0);
 
     attribute DONT_TOUCH                  : string;
-    attribute DONT_TOUCH of clusters      : signal is "true";
+    attribute DONT_TOUCH of clusters_tmr  : signal is "true";
     attribute DONT_TOUCH of cluster_count : signal is "true";
     attribute DONT_TOUCH of overflow      : signal is "true";
 
@@ -328,10 +339,10 @@ begin
           clk_fast => clocks.clk160_0,
           reset    => reset_i,
 
-          sbits_i => vfat_sbits,
+          sbits_i => vfat_sbits_injected,
 
           cluster_count_o => cluster_count(I),
-          clusters_o      => clusters(I),
+          clusters_o      => clusters_tmr(I),
           overflow_o      => overflow(I)
           );
     end generate;
@@ -346,20 +357,46 @@ begin
         signal err : std_logic_vector (3 downto 0) := (others => '0');
       begin
 
-        majority_err (clusters_o(I).adr, err(0), clusters(0)(I).adr, clusters(1)(I).adr, clusters(2)(I).adr);
-        majority_err (clusters_o(I).cnt, err(1), clusters(0)(I).cnt, clusters(1)(I).cnt, clusters(2)(I).cnt);
-        majority_err (clusters_o(I).prt, err(2), clusters(0)(I).prt, clusters(1)(I).prt, clusters(2)(I).prt);
-        majority_err (clusters_o(I).vpf, err(3), clusters(0)(I).vpf, clusters(1)(I).vpf, clusters(2)(I).vpf);
+        majority_err (clusters(I).adr, err(0), clusters_tmr(0)(I).adr, clusters_tmr(1)(I).adr, clusters_tmr(2)(I).adr);
+        majority_err (clusters(I).cnt, err(1), clusters_tmr(0)(I).cnt, clusters_tmr(1)(I).cnt, clusters_tmr(2)(I).cnt);
+        majority_err (clusters(I).prt, err(2), clusters_tmr(0)(I).prt, clusters_tmr(1)(I).prt, clusters_tmr(2)(I).prt);
+        majority_err (clusters(I).vpf, err(3), clusters_tmr(0)(I).vpf, clusters_tmr(1)(I).vpf, clusters_tmr(2)(I).vpf);
 
         cluster_tmr_err(2+I) <= or_reduce(err);
       end generate;
     end generate;
 
     notmr_gen : if (EN_TMR /= 1) generate
-      clusters_o      <= clusters(0);
+      clusters        <= clusters_tmr(0);
       overflow_o      <= overflow(0);
       cluster_count_o <= cluster_count(0);
     end generate;
+
+    reverse_gen : for I in clusters_o'range generate
+
+      --------------------------------------------------------------------------------
+      -- Reversed
+      --------------------------------------------------------------------------------
+
+      clusters_rev(I).vpf <= clusters(I).vpf;
+      clusters_rev(I).cnt <= clusters(I).cnt;
+      clusters_rev(I).prt <= clusters(I).prt;
+      --new_address = 384 - (address + size)  (GE21)
+      --new_address = 191 - (address + size)  (GE11)
+      clusters_rev(I).adr <=
+        std_logic_vector(to_unsigned(MXSBITS*PARTITION_SIZE-1 -
+                                     (to_integer(unsigned(clusters(I).adr)) +
+                                      to_integer(unsigned(clusters(I).cnt))), clusters_rev(I).adr'length));
+
+      --------------------------------------------------------------------------------
+      -- Non-reversed
+      --------------------------------------------------------------------------------
+
+      clusters_norev(I) <= clusters(I);
+
+    end generate;
+
+    clusters_o <= clusters_rev when reverse_partitions = '1' else clusters_norev;
 
     process (clocks.clk40) is
     begin

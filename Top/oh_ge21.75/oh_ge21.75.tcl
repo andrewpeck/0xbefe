@@ -1,6 +1,6 @@
 #vivado
 
-set BIN_FILE 0
+set BIN_FILE 1
 set USE_QUESTA_SIMULATOR 0
 
 set FPGA xc7a75tfgg484-3
@@ -25,3 +25,4 @@ set_property default_lib work [current_project]
 
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs impl_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]
+set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]

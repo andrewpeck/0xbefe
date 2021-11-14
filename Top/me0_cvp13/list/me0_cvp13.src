@@ -15,14 +15,6 @@ gem/hdl/gem.src
 # Trigger Source
 gem/hdl/sbit_me0.src
 
-# Pkg for Clusterizer
-#gem/hdl/oh_fe/pkg/ipbus_pkg.vhd 93
-#gem/hdl/oh_fe/pkg/types_pkg.vhd 93
-#gem/hdl/oh_fe/pkg/hardware_pkg_ge11.vhd 93
-#gem/hdl/oh_fe/pkg/hardware_pkg_ge21.vhd 93
-#gem/hdl/oh_fe/pkg/tmr_en_pkg.vhd 93
-#gem/hdl/oh_fe/pkg/tmr_dis_pkg.vhd 93
-
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
 
