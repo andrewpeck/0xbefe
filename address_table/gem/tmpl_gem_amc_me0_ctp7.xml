@@ -17,5 +17,6 @@
   <node id="GEM_AMC">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
+    &ADDRESS_TABLE_SBIT_ME0;
   </node>
 </node>
