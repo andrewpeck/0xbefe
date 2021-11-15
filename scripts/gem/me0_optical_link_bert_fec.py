@@ -85,6 +85,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             start_fec_errors[gbt] = gem_utils.read_backend_reg(fec_node)
             print ("  GBT %d, number of FEC Errors = %d" % (gbt, start_fec_errors[gbt]))
             file_out.write("  GBT %d, number of FEC Errors = %d\n" % (gbt, start_fec_errors[gbt]))
+        print ("")
+        file_out.write("\n")
 
         t0 = time()
         time_prev = t0
@@ -109,6 +111,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         curr_fec_errors = gem_utils.read_backend_reg(fec_node)
                         print ("  GBT %d, number of FEC errors accumulated = %d" % (gbt, curr_fec_errors))
                         file_out.write("  GBT %d, number of FEC errors accumulated = %d\n" % (gbt, curr_fec_errors))
+                        print ("")
+                        file_out.write("\n")
                 time_prev = time()
 
         print ("\nEnd Error Counting:")
@@ -116,8 +120,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         for gbt in fec_node_list:
             fec_node = fec_node_list[gbt]
             end_fec_errors[gbt] = gem_utils.read_backend_reg(fec_node)
-            print ("  GBT %d, number of FEC Errors = %d\n" %(gbt, end_fec_errors[gbt]))
-            file_out.write("  GBT %d, number of FEC Errors = %d\n\n" %(gbt, end_fec_errors[gbt]))
+            print ("  GBT %d, number of FEC Errors = %d" %(gbt, end_fec_errors[gbt]))
+            file_out.write("  GBT %d, number of FEC Errors = %d\n" %(gbt, end_fec_errors[gbt]))
             fec_errors[gbt] = end_fec_errors[gbt] - start_fec_errors[gbt]
         print ("")
         file_out.write("\n")
@@ -225,8 +229,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         result_string_write += "Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
         result_string_write += "Bit Error Ratio (BER) " + ber_str + "\n"
         result_string_write += "Inefficiency " + ineffi_str + "\n"
-        print (result_string + "\n")
-        file_out.write(result_string_write + "\n\n")
+        print (result_string)
+        file_out.write(result_string_write + "\n")
     file_out.close()
     
 def lpgbt_fec_error_counter(oh_ver):
@@ -353,7 +357,7 @@ if __name__ == "__main__":
             vfat_list.append(v_int)
         
     # Initialization
-    if path == "downlink":
+    if args.path == "downlink":
         rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     else:
         rw_initialize(args.gem, args.system)
