@@ -358,15 +358,15 @@ if __name__ == "__main__":
         
     # Initialization
     if args.path == "downlink":
-        rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
+        rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid[0])
     else:
         rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.system != "backend":
-        check_rom_readback(args.ohid, args.gbtid)
-        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
+        check_rom_readback(args.ohid, args.gbtid[0])
+        check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
     # Check if GBT is READY
     for gbt in args.gbtid:
