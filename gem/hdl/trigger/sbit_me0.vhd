@@ -106,7 +106,7 @@ architecture sbit_me0_arch of sbit_me0 is
 
 
     -- signals for raw sbit registers    
-    signal sbit_test_reset_o         : std_logic := '0' ;
+    signal sbit_test_reset         : std_logic := '0' ;
 
     signal test_sbit0xe_presum       : t_std32_array(7 downto 0);
     signal test_sbit0xe_count_me0    : std_logic_vector(31 downto 0);
@@ -257,7 +257,7 @@ begin
             )
             port map(
                 ref_clk_i => ttc_clk_i.clk_40,
-                reset_i   => sbit_test_reset_o,
+                reset_i   => sbit_test_reset,
                 en_i      => vfat3_sbit0xe_test(i),
                 count_o   => test_sbit0xe_presum(i)
             );
@@ -277,7 +277,7 @@ begin
         )
         port map(
             ref_clk_i => ttc_clk_i.clk_40,
-            reset_i   => sbit_test_reset_o,
+            reset_i   => sbit_test_reset,
             en_i      => vfat3_sbit0xs_test,
             count_o   => test_sbit0xs_count_me0
         );
