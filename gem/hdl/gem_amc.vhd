@@ -469,7 +469,7 @@ begin
                     ipb_clk_i           => ipb_clk_i,
                     ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
                     me0_cluster_count_o => me0_cluster_count,
-                    me0_clusters_o      => me0_clusters(i),
+                    me0_clusters_o      => me0_clusters_arr(i),
                     ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
                 );
         end generate;
