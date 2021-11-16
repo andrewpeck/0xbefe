@@ -231,7 +231,7 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         global NODE_IC_EXEC_READ
         global NODE_IC_READ_DATA
         NODE_IC_GBTX_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT")
-        NODE_IC_GBT_VER = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VER")
+        #NODE_IC_GBT_VER = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VER")
         NODE_IC_GBTX_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR")
         NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
         NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS")
@@ -272,7 +272,7 @@ def select_ic_link(ohIdx, gbtIdx):
             gbt_ver = 0
         elif oh_ver == 2:
             gbt_ver = 1
-        gem_utils.write_backend_reg(NODE_IC_GBT_VER, gbt_ver)
+        #gem_utils.write_backend_reg(NODE_IC_GBT_VER, gbt_ver)
         if oh_ver == 1:
             gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
         elif oh_ver == 2:
