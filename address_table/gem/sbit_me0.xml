@@ -22,7 +22,7 @@
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
     <node id="SBIT_TEST_RESET" address="0x2" permission="w"
           description="Reset all the SBIT counters"
-          fw_write_pulse_signal="sbit_test_reset_o"
+          fw_write_pulse_signal="sbit_test_reset"
           sw_ctrl_configure_set="0x1"/>
   </node>
 
