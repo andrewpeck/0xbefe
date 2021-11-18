@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
-import math
 import os
+import random
 import pytest
 
-from cocotb_test.simulator import run
-
 import cocotb
+from cocotb_test.simulator import run
 from cocotb.triggers import Timer
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge
 from cocotb.triggers import RisingEdge
-from cocotb.triggers import Event
 
-from cluster_finding import *
+from cluster_finding import Cluster, find_clusters, equal
 
-import random
 
 async def latch_in(dut):
+    ""
     while (True):
         await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.latch_i = 0
+        dut.latch_i.value = 0
         for i in range(3):
             await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.latch_i = 1
+        dut.latch_i.value = 1
 
 @cocotb.test()
 async def random_clusters(dut):
@@ -34,51 +31,63 @@ async def random_clusters(dut):
     cocotb.fork(Clock(dut.clk_40,  40, units="ns").start())  # Create a clock
     cocotb.fork(Clock(dut.clk_fast,10,  units="ns").start())  # Create a clock
 
-    STATION = dut.STATION.value
+    station = dut.STATION.value
 
-    if STATION == 0 or STATION == 1:
-        N_PARTITIONS = 8
-    if STATION == 2:
-        N_PARTITIONS = 2
+    # if station in [0, 1]:
+    #     n_partitions = 8
+    # if station == 2:
+    #     n_partitions = 2
 
-    N_VFATS = dut.NUM_VFATS.value
-    WIDTH = int((N_VFATS*64)/N_PARTITIONS)
-    CNTB = 3
+    n_vfats = dut.NUM_VFATS.value
+    #width = int((n_vfats * 64) / n_partitions)
+    #cntb = 3
 
-    dut.reset = 0
+    dut.reset.value = 0
 
-    for i in range (N_VFATS):
-        dut.sbits_i[i] = 0
-    #dut.sbits_i = 0 * [N_VFATS]
+    for i in range(n_vfats):
+        dut.sbits_i[i].value = 0
 
-    for i in range(nloops):
+    for _ in range(nloops):
 
-        vfats = [0 for i in range(N_VFATS)]
+        vfats = [0 for _ in range(n_vfats)]
 
-        # create fill a large number with some random bits
-        for ibit in range(nhits):
-            ivfat = random.randint(0, N_VFATS-1)
-            channel = random.randint(0, 63)
-            vfats[ivfat] |= 1 << channel
-
+        # # create fill a large number with some random bits
+        # for ibit in range(nhits):
+        #     ivfat = random.randint(0, n_vfats-1)
+        #     channel = random.randint(0, 63)
+        #     vfats[ivfat] |= 1 << channel
 
         await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        dut.sbits_i = vfats
-        await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        for i in range (N_VFATS):
-            dut.sbits_i[i] = 0
+
+        dut.sbits_i[1].value = 0x8000000000000000
+        dut.sbits_i[10].value = 0x8000000000000000
+        dut.sbits_i[19].value = 0x8000000000000000
+
+        # await RisingEdge(dut.clk_40)  # Synchronize with the clock
+        # #dut.sbits_i.value = vfats
+        # dut.sbits_i[17].value = 0x1f1f1f1f00000000
+        # dut.sbits_i[2].value  = 0x1f1f1f1f00000000
+        # await RisingEdge(dut.clk_40)  # Synchronize with the clock
+        # dut.sbits_i[17].value = 0xe0e0e0e000000000
+        # dut.sbits_i[2].value  = 0xe0e0e0e000000000
 
         await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        dut.sbits_i = vfats
+
+        for i in range(n_vfats):
+            dut.sbits_i[i].value = 0
+
         await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        for i in range (N_VFATS):
-            dut.sbits_i[i] = 0
+        dut.sbits_i.value = vfats
+        await RisingEdge(dut.clk_40)  # Synchronize with the clock
 
-        #expect = find_clusters(partitions, cnts, WIDTH, dut.NUM_FOUND_CLUSTERS.value, dut.ENCODER_SIZE.value)
-        #for i in range(len(expect)):
-        #    print("generate: i=%02d %s" % (i, str(expect[i])))
+        for i in range(n_vfats):
+            dut.sbits_i[i].value = 0
 
-        for loop in range(8):
+        # expect = find_clusters(partitions, cnts, width, dut.NUM_FOUND_CLUSTERS.value, dut.ENCODER_SIZE.value)
+        # for i in range(len(expect)):
+        #     print("generate: i=%02d %s" % (i, str(expect[i])))
+
+        for _ in range(8):
             await RisingEdge(dut.clk_40)  # Synchronize with the clock
 
 
@@ -112,9 +121,9 @@ async def random_clusters(dut):
 
         # await Timer(200, units='ns')
 
-@pytest.mark.parametrize("station", [1,2])
-@pytest.mark.parametrize("oneshot", [False,True])
-@pytest.mark.parametrize("deadtime", [0,1])
+@pytest.mark.parametrize("station", [1, 2])
+@pytest.mark.parametrize("oneshot", [False, True])
+@pytest.mark.parametrize("deadtime", [0, 1])
 def test_cluster_packer(station, oneshot, deadtime):
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
@@ -175,4 +184,4 @@ def test_cluster_packer(station, oneshot, deadtime):
 
 
 if __name__ == "__main__":
-    test_cluster_packer(1,True,0)
+    test_cluster_packer(1, True, 0)
