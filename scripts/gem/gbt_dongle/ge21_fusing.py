@@ -13,19 +13,28 @@ import sys
 # reconfigure
 # check idle and FEC / SEU counters
 # fuse
-#
+# ask to disconnect the dongle, and power cycle
+# run the whole fused chip check
+# check the link on the backed
 #
 # LOG everything!
 
 USE_DONGLE_LDO = 1
 DRY_RUN = True
+FUSING_TEST = False # setting this to true will only fuse the lowest bit of the serial number
+
 NUM_CONFIG_REGS = 366
 READ_ERRORS_TIME_WINDOW_SEC = 10
-SLEEP_AFTER_CONFIGURE = 3
+SLEEP_AFTER_CONFIGURE = 5
 
 DEBUG = False
 
 CONFIG_FILES = ["../../resources/ge21_gbt0_config.txt", "../../resources/ge21_gbt1_config.txt"]
+
+# some globals for printing
+G_GBT_ID = None
+G_BOARD_SN = None
+G_GBT_SN = None
 
 # copy pasting some stuff from utils.py because this has to run on python2, which utils.py doesn't like...
 class Colors:
@@ -60,6 +69,9 @@ def subheading(msg):
 def print_cyan(msg):
     print_color(msg, Colors.CYAN)
 
+def print_yellow(msg):
+    print_color(msg, Colors.YELLOW)
+
 def print_red(msg):
     print_color(msg, Colors.RED)
 
@@ -89,6 +101,18 @@ def hex32(number):
         return 'None'
     else:
         return "0x%08x" % number
+
+def parse_int(string):
+    if string is None:
+        return None
+    elif isinstance(string, int):
+        return string
+    elif string.startswith('0x'):
+        return int(string, 16)
+    elif string.startswith('0b'):
+        return int(string, 2)
+    else:
+        return int(string)
 
 if sys.version_info > (3, 6):
     def raw_input(s):
@@ -180,6 +204,17 @@ class GE21_dongle():
 
         return state, state_name
 
+    def fuse(self):
+        self.dongle.burnefuse()
+
+def fail():
+    if not DRY_RUN:
+        print_red("================================================================================")
+        print_red("===================================== FAIL =====================================")
+        print_red("================================================================================")
+        print_red("GBT%d (SN: %d) on board SN %d has failed GBT test due to the above errors" % (G_GBT_ID, G_GBT_SN, G_BOARD_SN))
+        exit(-1)
+
 def read_config_file(filename):
     heading("Reading configuration file %s" % filename)
     ret = []
@@ -207,7 +242,7 @@ def check_state0(state):
         exit(-1)
 
 def test_state(dongle, is_fused):
-    heading("TEST0: GBTX state check")
+    heading("TEST: GBTX state check")
     state, state_name = dongle.read_state()
 
     if not is_fused:
@@ -216,9 +251,7 @@ def test_state(dongle, is_fused):
             print_red("ERROR: GBTX state is %s, while pauseForConfig state is expected on a blank chip" % state_name)
             print_red("This can sometimes happen on a blank chip if the chip has not powered up correctly, please power-cycle and try again. If the error continues after multiple power-cycles, set this board aside for investigation.")
             print_red("IMPORTANT: don't forget to disconnect the dongle from the computer before power cycling the OH")
-            if not DRY_RUN:
-                print_red("Exiting...")
-                exit(-1)
+            fail()
         else:
             print_green("PASS: GBTX state is pauseForConfig as expected on a blank chip")
     else:
@@ -226,26 +259,22 @@ def test_state(dongle, is_fused):
             check_state0(state)
             print_red("ERROR: GBTX state is %s, while IDLE state is expected on a fused chip" % state_name)
             print_red("This means that the chip is not locked to the GBT data stream coming from the backend. There can be many causes for that, including bad fiber connection, bad chip configuration, etc..")
-            if not DRY_RUN:
-                print_red("Exiting...")
-                exit(-1)
+            fail()
         else:
             print_green("PASS: GBTX state is IDLE as expected on a fused chip")
 
 # checks if the update from fuses bit is set, if it is it means the chip is reading the config from fuses on startup
 def test_fuse_update_enabled(dongle, expected_value):
-    heading("TEST1: check if the 'update from fuses' bit is set (expect 0 for blank chip, and 1 for fused chip)")
+    heading("TEST: check if the 'update from fuses' bit is set (expect 0 for blank chip, and 1 for fused chip)")
     fuse_config = dongle.read_register(366)
     if (fuse_config & 1 == expected_value) and ((fuse_config & 2) >> 1 == expected_value) and ((fuse_config & 4) >> 2 == expected_value):
         print_green("PASS: fuse update enable bit is set to %d as expected" % expected_value)
     else:
         print_red("ERROR: fuse update enable bit value is not correct, expected %d, but read the triplicated value as %d%d%d" % (expected_value, fuse_config & 1, (fuse_config >> 1) & 1, (fuse_config >> 2) & 1))
-        if not DRY_RUN:
-            print_red("Exiting...")
-            exit(-1)
+        fail()
 
 def read_gbtx_sn(dongle):
-    heading("TEST2: reading GBTX serial number from the test fuses")
+    heading("TEST: reading GBTX serial number from the test fuses")
     test_fuse1 = dongle.read_register(367)
     test_fuse2 = dongle.read_register(368)
     sn = (test_fuse2 << 8) + test_fuse1
@@ -253,10 +282,8 @@ def read_gbtx_sn(dongle):
         print_green("PASS: GBTX serial number is not zero: %d (test fuse1 = %s, test fuse2 = %s)" % (sn, hex8(test_fuse1), hex8(test_fuse2)))
         return sn
     else:
-        print_red("FAIL: GBTX serial number is 0")
-        if not DRY_RUN:
-            print_red("Exiting...")
-            exit(-1)
+        print_red("ERROR: GBTX serial number is 0")
+        fail()
 
 def configure(dongle, config):
     if len(config) < NUM_CONFIG_REGS:
@@ -297,9 +324,7 @@ def read_and_compare_config(dongle, config):
 
     if not match:
         print_red("ERROR: Readback configuration does not match the expected configuration")
-        if not DRY_RUN:
-            print_red("Exiting...")
-            exit(-1)
+        fail()
     else:
         print_green("PASS: all readback register values match the values in the config file")
 
@@ -311,7 +336,7 @@ def read_errors(dongle, time_to_wait_sec):
     # 433 -- EPLL-TX loss of lock count
     # 434 -- EPLL-RX loss of lock count
 
-    heading("TEST3: Reading GBTX error counters in a %d second time window" % time_to_wait_sec)
+    heading("TEST: Reading GBTX error counters in a %d second time window" % time_to_wait_sec)
     fec_err_cnt = dongle.read_register(435)
     seu_err_cnt = dongle.read_register(375)
     tx_lock_loss_cnt = dongle.read_register(376)
@@ -338,21 +363,30 @@ def read_errors(dongle, time_to_wait_sec):
     if fec_err_cnt + seu_err_cnt + tx_lock_loss_cnt + ref_pll_lock_loss_cnt + epll_tx_lock_loss_cnt + epll_rx_lock_loss_cnt != 0:
         print_red("ERROR: GBTX error counters are not zero")
         print_red("Possible causes: bad fiber connection, bad VTRX, or a bad chip")
-        if not DRY_RUN:
-            print_red("Exiting...")
-            exit(-1)
+        fail()
     else:
         print_green("PASS: All GBTX error counters are zero")
 
-if __name__ == '__main__':
+def fuse(dongle, address, value):
+    print("Fusing address %d to value %s" % (address, hex8(value)))
+    addr_l = address & 0xff
+    addr_h = (address >> 8) & 0xff
+    dongle.write_register(238, addr_l) # load the lower address byte
+    dongle.write_register(239, addr_h) # load the higher address byte
+    dongle.write_register(240, value)  # load the value to be fused
+    dongle.fuse() # apply 3.3V fuse power and send the fuse pulse
 
-    heading("Welcome to the GE2/1 GBTX testing and fusing application")
+def fuse_all_non_zero(dongle, config):
+    # go through the config, and fuse all regs that have a non-zero value
+    for addr in range(NUM_CONFIG_REGS):
+        val = config[addr]
+        if val != 0:
+            fuse(dongle, addr, val)
 
-    if DRY_RUN:
-        subheading("NOTE: the software is running in DRY RUN mode")
-        subheading("This means that it will not fuse the chip, and will also not terminate if errors / problems are found")
-        subheading("To disable the DRY_RUN mode, edit this python file and change the DRY_RUN constant to False")
+    # fuse the update enable bit which will cause the GBTX to load the config from fuses on power-up
+    fuse(dongle, 366, 0x7)
 
+def dongle_connect():
     dongle = None
     try:
         dongle = GE21_dongle(USE_DONGLE_LDO)
@@ -367,6 +401,9 @@ if __name__ == '__main__':
         print_red("Exiting...")
         exit(-1)
 
+    return dongle
+
+def get_gbt_id(dongle):
     gbt_addrs = dongle.scan()
     if len(gbt_addrs) < 1:
         print_red("ERROR: No GBTX chip detected on the I2C bus")
@@ -376,18 +413,6 @@ if __name__ == '__main__':
 
     if len(gbt_addrs) > 1:
         print_red("ERROR: more than one GBTX detected on the I2C bus... this should not be the case on GE2/1 OH..")
-        print_red("Exiting...")
-        exit(-1)
-
-    board_sn = raw_input(Colors.YELLOW + "Please enter the board serial number: " + Colors.ENDC)
-    test_blank_str = raw_input('Are you testing a blank chip or a fused chip? Please type in "blank" or "fused": ')
-    test_blank = None
-    if test_blank_str == "blank":
-        test_blank = True
-    elif test_blank_str == "fused":
-        test_blank = False
-    else:
-        print_red('ERROR: unrecognized answer "%s", blank or fused are the only valid answers..' % test_blank_str)
         print_red("Exiting...")
         exit(-1)
 
@@ -403,17 +428,29 @@ if __name__ == '__main__':
         print_red("Exiting...")
         exit(-1)
 
-    print_green("GE2/1 GBT%d chip detected (I2C address = %d)" % (gbt_id, gbt_addr))
+    return gbt_id
 
-    test_state(dongle, not test_blank)
-    expect_update_fuse = 0 if test_blank else 1
-    test_fuse_update_enabled(dongle, expect_update_fuse)
+def run_all_tests(dongle, expected_gbt_id, is_fused):
+
+    gbt_id = get_gbt_id(dongle)
+    if gbt_id != expected_gbt_id:
+        print_red("ERROR: Detected GBT%d, but expected GBT%d, exiting" % (gbt_id, expected_gbt_id))
+        print_red("Please check if you connected the dongle to the correct GBT")
+        exit(-1)
+
+    print_green("GE2/1 GBT%d chip detected" % gbt_id)
     sn = read_gbtx_sn(dongle)
+    global G_GBT_SN
+    G_GBT_SN = sn
+
+    test_state(dongle, is_fused)
+    expect_update_fuse = 1 if is_fused else 0
+    test_fuse_update_enabled(dongle, expect_update_fuse)
 
     config_filename = CONFIG_FILES[gbt_id]
     config = read_config_file(config_filename)
 
-    if test_blank:
+    if not is_fused:
         configure(dongle, config)
         time.sleep(SLEEP_AFTER_CONFIGURE)
         read_and_compare_config(dongle, config)
@@ -423,4 +460,94 @@ if __name__ == '__main__':
 
     read_errors(dongle, READ_ERRORS_TIME_WINDOW_SEC)
 
+    return config
+
+if __name__ == '__main__':
+
+    heading("Welcome to the GE2/1 GBTX testing and fusing application")
+
+    if DRY_RUN:
+        subheading("NOTE: the software is running in DRY RUN mode")
+        subheading("This means that it will not fuse the chip, and will also not terminate if errors / problems are found")
+        subheading("To disable the DRY_RUN mode, edit this python file and change the DRY_RUN constant to False")
+
+    board_sn_str = raw_input(Colors.YELLOW + "Please enter the board serial number: " + Colors.ENDC)
+    board_sn = parse_int(board_sn_str)
+    test_blank_str = raw_input('Are you testing a blank chip or a fused chip? Please type in "blank" or "fused": ')
+    is_fused = None
+    if test_blank_str == "blank":
+        is_fused = False
+    elif test_blank_str == "fused":
+        is_fused = True
+    else:
+        print_red('ERROR: unrecognized answer "%s", blank or fused are the only valid answers..' % test_blank_str)
+        print_red("Exiting...")
+        exit(-1)
+
+    dongle = dongle_connect()
+    gbt_id = get_gbt_id(dongle)
+
+    G_GBT_ID = gbt_id
+    G_BOARD_SN = board_sn
+
+    config = run_all_tests(dongle, gbt_id, is_fused)
+
+    if (not is_fused) and (not DRY_RUN):
+        print("")
+        print_yellow("================================================================================")
+        print_yellow("==================================== FUSING ====================================")
+        print_yellow("================================================================================")
+        print("")
+        print_yellow("Are you sure you want to fuse? Please type YES (in capital letters) to continue")
+        fuse_answer = raw_input('')
+        if fuse_answer != "YES":
+            print("You did not enter YES, exiting without fusing")
+            exit(0)
+        else:
+            if FUSING_TEST:
+                fuse(dongle, 367, 0x1) # fuse the lowest bit of SN
+            else:
+                fuse_all_non_zero(dongle, config)
+
+        time.sleep(1)
+        dongle.disconnect()
+
+        print_yellow("Fusing DONE")
+        print("")
+        print_yellow("Please do the following steps in the exact order:")
+        print_yellow("    1) Disconnect the dongle from the PC USB (do not disconnect from OH)")
+        print_yellow("    2) Power cycle the OH")
+        print_yellow("    3) Connect the dongle back to the PC USB")
+        print_yellow("    4) Press enter here, and this script will check if the fusing was successful")
+        raw_input("")
+
+        dongle = dongle_connect()
+        run_all_tests(dongle, gbt_id, is_fused)
+
     dongle.disconnect()
+
+    print("")
+    print_yellow("As the last step, please check that the GBT is ready on the backend using reg_interface.py:")
+    print_yellow("    1) write BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET 1")
+    print_yellow("    2) wait 10s")
+    print_yellow("    3) read BEFE.GEM_AMC.OH_LINKS.OH0.GBT%d_READY" % gbt_id)
+    print_yellow("Please enter the GBT READY value you read: ")
+    gbt_ready_str = raw_input("")
+    gbt_ready = parse_int(gbt_ready_str)
+    print_yellow("    4) read BEFE.GEM_AMC.OH_LINKS.OH0.GBT%d_WAS_NOT_READY" % gbt_id)
+    print_yellow("Please enter the GBT WAS NOT READY value you read: ")
+    gbt_was_not_ready_str = raw_input("")
+    gbt_was_not_ready = parse_int(gbt_was_not_ready_str)
+
+    if (gbt_ready == 0) or (gbt_was_not_ready == 1):
+        print_red("ERROR: GBT is not locked on the backend, or the lock is unstable")
+        print_red("Please check the fibers..")
+        if not DRY_RUN:
+            print_red("Exiting...")
+            exit(-1)
+
+    print("")
+    print_green("================================================================================")
+    print_green("===================================== PASS =====================================")
+    print_green("================================================================================")
+    print_green("GBT%d (SN: %d) on board SN %d has passed all tests" % (G_GBT_ID, G_GBT_SN, G_BOARD_SN))
