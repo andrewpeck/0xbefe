@@ -530,7 +530,7 @@ if __name__ == '__main__':
 
     config = run_all_tests(dongle, board_sn, gbt_id, is_fused)
 
-    if (not is_fused) and (not DRY_RUN):
+    if (not is_fused) and ((not DRY_RUN) or FUSING_TEST):
         print("")
         print_yellow("================================================================================")
         print_yellow("==================================== FUSING ====================================")
