@@ -1,6 +1,7 @@
 import usb_dongle
 import time
 import sys
+import datetime
 
 # from gbt_vldb import GBTx
 
@@ -35,6 +36,7 @@ CONFIG_FILES = ["../../resources/ge21_gbt0_config.txt", "../../resources/ge21_gb
 G_GBT_ID = None
 G_BOARD_SN = None
 G_GBT_SN = None
+LOG_FILE = None
 
 # copy pasting some stuff from utils.py because this has to run on python2, which utils.py doesn't like...
 class Colors:
@@ -54,8 +56,17 @@ def get_config(config_name):
 def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
 
+def print_to_log(msg):
+    if LOG_FILE is not None:
+        LOG_FILE.write(msg + "\n")
+
+def print_normal(msg):
+    print(msg)
+    print_to_log(msg)
+
 def print_color(msg, color):
     print(color + msg + Colors.ENDC)
+    print_to_log(msg)
 
 def color_string(msg, color):
     return color + msg + Colors.ENDC
@@ -207,12 +218,24 @@ class GE21_dongle():
     def fuse(self):
         self.dongle.burnefuse()
 
+def log_open(board_sn, gbt_id):
+    prefix = "gbtx_test_oh_sn_%d_gbt%d_" % (board_sn, gbt_id)
+    datestr = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    fname = prefix + datestr + ".log"
+    global LOG_FILE
+    LOG_FILE = open(fname, "w")
+
+def log_close():
+    if LOG_FILE is not None:
+        LOG_FILE.close()
+
 def fail():
     if not DRY_RUN:
         print_red("================================================================================")
         print_red("===================================== FAIL =====================================")
         print_red("================================================================================")
         print_red("GBT%d (SN: %d) on board SN %d has failed GBT test due to the above errors" % (G_GBT_ID, G_GBT_SN, G_BOARD_SN))
+        log_close()
         exit(-1)
 
 def read_config_file(filename):
@@ -227,6 +250,7 @@ def read_config_file(filename):
 
     if len(ret) < NUM_CONFIG_REGS:
         print_red("ERROR: bad configuration file, expect at least %d register values, but found %d" % (NUM_CONFIG_REGS, len(ret)))
+        log_close()
         exit(-1)
 
     return ret
@@ -239,6 +263,7 @@ def check_state0(state):
         print_red("If the switch is set correctly, you can try a power-cycle, but if the error persists after multiple power-cycles, set this board aside for investigation")
         print_red("IMPORTANT: don't forget to disconnect the dongle from the computer before power cycling the OH")
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
 def test_state(dongle, is_fused):
@@ -288,6 +313,7 @@ def read_gbtx_sn(dongle):
 def configure(dongle, config):
     if len(config) < NUM_CONFIG_REGS:
         print_red("ERROR: configuration file has less than %d register values" % NUM_CONFIG_REGS)
+        log_close()
         exit(-1)
 
     heading("Configuring GBTX...")
@@ -300,6 +326,7 @@ def configure(dongle, config):
 def read_and_compare_config(dongle, config):
     if len(config) < NUM_CONFIG_REGS:
         print_red("ERROR: configuration file has less than %d register values" % NUM_CONFIG_REGS)
+        log_close()
         exit(-1)
 
     heading("Reading GBTX configuration from the chip, and comparing to the expected configuration")
@@ -399,6 +426,7 @@ def dongle_connect():
         print_red('ACTION=="add", ATTR{idVendor}=="16c0", ATTR{idProduct}=="05df", MODE:="666"')
         print_red("If you didn't have the file and now you created it, you have to execute: sudo udevadm control --reload-rules")
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
     return dongle
@@ -409,11 +437,13 @@ def get_gbt_id(dongle):
         print_red("ERROR: No GBTX chip detected on the I2C bus")
         print_red("Please check that the dongle is connected to the OH")
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
     if len(gbt_addrs) > 1:
         print_red("ERROR: more than one GBTX detected on the I2C bus... this should not be the case on GE2/1 OH..")
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
     gbt_addr = gbt_addrs[0]
@@ -426,17 +456,22 @@ def get_gbt_id(dongle):
         print_red("ERROR: unknown GBT I2C address detected: %d" % gbt_addr)
         print_red("Is the dongle connected to a GE2/1 OH board or something else?..")
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
     return gbt_id
 
-def run_all_tests(dongle, expected_gbt_id, is_fused):
+def run_all_tests(dongle, board_sn, expected_gbt_id, is_fused):
 
     gbt_id = get_gbt_id(dongle)
     if gbt_id != expected_gbt_id:
         print_red("ERROR: Detected GBT%d, but expected GBT%d, exiting" % (gbt_id, expected_gbt_id))
         print_red("Please check if you connected the dongle to the correct GBT")
+        log_close()
         exit(-1)
+
+    if LOG_FILE is None:
+        log_open(board_sn, gbt_id)
 
     print_green("GE2/1 GBT%d chip detected" % gbt_id)
     sn = read_gbtx_sn(dongle)
@@ -482,6 +517,7 @@ if __name__ == '__main__':
     else:
         print_red('ERROR: unrecognized answer "%s", blank or fused are the only valid answers..' % test_blank_str)
         print_red("Exiting...")
+        log_close()
         exit(-1)
 
     dongle = dongle_connect()
@@ -490,7 +526,7 @@ if __name__ == '__main__':
     G_GBT_ID = gbt_id
     G_BOARD_SN = board_sn
 
-    config = run_all_tests(dongle, gbt_id, is_fused)
+    config = run_all_tests(dongle, board_sn, gbt_id, is_fused)
 
     if (not is_fused) and (not DRY_RUN):
         print("")
@@ -502,6 +538,7 @@ if __name__ == '__main__':
         fuse_answer = raw_input('')
         if fuse_answer != "YES":
             print("You did not enter YES, exiting without fusing")
+            log_close()
             exit(0)
         else:
             if FUSING_TEST:
@@ -522,7 +559,7 @@ if __name__ == '__main__':
         raw_input("")
 
         dongle = dongle_connect()
-        run_all_tests(dongle, gbt_id, is_fused)
+        run_all_tests(dongle, board_sn, gbt_id, is_fused)
 
     dongle.disconnect()
 
@@ -542,12 +579,12 @@ if __name__ == '__main__':
     if (gbt_ready == 0) or (gbt_was_not_ready == 1):
         print_red("ERROR: GBT is not locked on the backend, or the lock is unstable")
         print_red("Please check the fibers..")
-        if not DRY_RUN:
-            print_red("Exiting...")
-            exit(-1)
+        fail()
 
     print("")
     print_green("================================================================================")
     print_green("===================================== PASS =====================================")
     print_green("================================================================================")
     print_green("GBT%d (SN: %d) on board SN %d has passed all tests" % (G_GBT_ID, G_GBT_SN, G_BOARD_SN))
+
+    log_close()
