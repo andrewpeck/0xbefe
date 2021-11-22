@@ -20,17 +20,19 @@ import datetime
 #
 # LOG everything!
 
-USE_DONGLE_LDO = 1
-DRY_RUN = True
+######################### USER DEFINED CONSTANTS #########################
+DRY_RUN = True # if this is set to true, the script will not fuse the chip, and also the tests will not terminate if they encounter an error
+CONFIG_FILES = ["../../resources/ge21_gbt0_config.txt", "../../resources/ge21_gbt1_config.txt"] # config file paths for GBT0 and GBT1
 FUSING_TEST = False # setting this to true will only fuse the lowest bit of the serial number
+###########################################################################
 
+
+USE_DONGLE_LDO = 1 # normally should be set to 1, but if you're using a dongle that has SW2 shorted, then you can set this to 0
 NUM_CONFIG_REGS = 366
 READ_ERRORS_TIME_WINDOW_SEC = 10
 SLEEP_AFTER_CONFIGURE = 5
 
 DEBUG = False
-
-CONFIG_FILES = ["../../resources/ge21_gbt0_config.txt", "../../resources/ge21_gbt1_config.txt"]
 
 # some globals for printing
 G_GBT_ID = None
