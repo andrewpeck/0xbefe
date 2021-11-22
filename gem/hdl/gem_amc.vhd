@@ -178,7 +178,6 @@ architecture gem_amc_arch of gem_amc is
     
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal me0_cluster_count        : std_logic_vector(10 downto 0);
 
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -468,7 +467,7 @@ begin
                     ipb_reset_i         => ipb_reset,
                     ipb_clk_i           => ipb_clk_i,
                     ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
-                    me0_cluster_count_o => me0_cluster_count,
+                    me0_cluster_count_o => open,
                     me0_clusters_o      => me0_clusters_arr(i),
                     ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
                 );
