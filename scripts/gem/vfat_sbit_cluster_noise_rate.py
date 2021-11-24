@@ -98,9 +98,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             if sbit == "all":
                 channel_list = range(0,128)
             else:
-                for c in s_bit_cluster_mapping[vfat]:
-                    if sbit == s_bit_cluster_mapping[vfat][c]["sbit"]:
-                        channel_list.append(int(c))
+                if gem == "ME0":
+                    for c in s_bit_cluster_mapping[vfat]:
+                        if sbit == s_bit_cluster_mapping[vfat][c]["sbit"]:
+                            channel_list.append(int(c))
+                else:
+                    channel_list.append(int(2*sbit))
+                    channel_list.append(int(2*sbit)+1)
                 if len(channel_list)>2:
                     print (Colors.YELLOW + "Skipping S-bit %02d, more than 2 channels"%sbit + Colors.ENDC)
                     continue

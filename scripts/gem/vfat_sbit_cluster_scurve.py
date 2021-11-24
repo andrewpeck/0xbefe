@@ -27,7 +27,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "%s_OH%d_vfat_sbit_cluster_scurve_"%(gem,oh_select) + now + ".txt"
+    filename = dataDir + "/%s_OH%d_vfat_sbit_cluster_scurve_"%(gem,oh_select) + now + ".txt"
     file_out = open(filename,"w+")
     file_out.write("vfat    channel    charge    fired    events\n")
 

@@ -212,7 +212,7 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Only valid options: backend, dryrun" + Colors.ENDC)
         sys.exit()
 
-   if args.gem != "ME0":
+    if args.gem != "ME0":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 

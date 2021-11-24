@@ -123,7 +123,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         # set phases for all vfats under test
         for vfat in vfat_list:
-            sbit_elinks = vfat_to_sbit_elink(vfat)
+            sbit_elinks = gem_utils.vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], phase)
 
@@ -263,7 +263,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         # set phases for all elinks for this vfat
         print ("\nVFAT %02d: Setting all ELINK phases to best phases: "%(vfat))
-        sbit_elinks = vfat_to_sbit_elink(vfat)
+        sbit_elinks = gem_utils.vfat_to_sbit_elink(vfat)
         for elink in range(0,8):
             set_bestphase = bestphase_vfat_elink[vfat][elink]
             setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], set_bestphase)
@@ -344,9 +344,9 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
 
     # set phase
     GBT_ELINK_SAMPLE_PHASE_BASE_REG = -9999
-    if oh_v == 1:
+    if oh_ver == 1:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
-    elif oh_v == 2:
+    elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + sbit_elink
     value = (config[addr] & 0x0f) | (phase << 4)
@@ -361,7 +361,7 @@ if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit Phase Scan")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
-    arser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0")
+    parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
@@ -444,9 +444,9 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
-    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_sub_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
     config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
-    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    config_sub_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
     
     if not os.path.isfile(config_boss_filename_v1):
         print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)

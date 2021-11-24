@@ -79,11 +79,11 @@ if __name__ == "__main__":
         for sbit in noise_result[vfat]:
             if sbit == "all":
                 continue
-            nsbits += 1
+            n_sbits += 1
             for i in range(0,len(threshold)):
                 thr = threshold[i]
                 noise_rate_avg[i] += noise_result[vfat][sbit][thr]/time
-        noise_rate_avg = [noise/nsbits for noise in noise_rate_avg]
+        noise_rate_avg = [noise/n_sbits for noise in noise_rate_avg]
 
         if numVfats == 1:
             ax1.set_xlabel("Threshold (DAC)")

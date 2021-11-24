@@ -136,7 +136,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
 
             # Looping over channels to be read
             for channel_read in channel_list:
-                elink = channel_read/16
+                elink = int(channel_read/16)
                 if s_bit_channel_mapping[str(vfat)][str(elink)][str(channel_read)] == -9999:
                     print (Colors.YELLOW + "    Bad channel (from S-bit mapping) %02d on VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
                     continue
@@ -174,10 +174,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     print ("\nCross Talk Results:\n")
     for vfat in vfat_list:
         for channel_inj in channel_list:
-            elink_inj = channel_inj/16
+            elink_inj = int(channel_inj/16)
             crosstalk_channel_list = ""
             for channel_read in channel_list:
-                elink_read = channel_read/16
+                elink_read = int(channel_read/16)
                 if s_bit_channel_mapping[str(vfat)][str(elink_read)][str(channel_read)] != s_bit_channel_mapping[str(vfat)][str(elink_inj)][str(channel_inj)]:
                     if sbit_data[vfat][channel_inj][channel_read]["fired"] > 0:
                         crosstalk_channel_list += " %d,"%channel_read

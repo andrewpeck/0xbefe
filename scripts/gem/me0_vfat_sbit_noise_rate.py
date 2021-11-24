@@ -84,12 +84,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     print (vfat_list)
     print ("")
 
+    initial_thr = {}
     # Looping over VFATs
     for vfat in vfat_list:
         print ("VFAT: %02d"%vfat)
         initial_thr[vfat] = read_backend_reg(dac_node[vfat])
 
-        initial_thr = {}
         # Looping over sbits
         for sbit in sbit_list:
             if sbit == "all":
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     if args.system == "backend":
         print ("Using Backend for S-bit Noise Rate")
-   elif args.system == "dryrun":
+    elif args.system == "dryrun":
         print ("Dry Run - not actually running vfat noise rate")
     else:
         print (Colors.YELLOW + "Only valid options: backend, dryrun" + Colors.ENDC)

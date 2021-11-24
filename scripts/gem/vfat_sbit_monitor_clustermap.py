@@ -75,9 +75,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
         # Looping over all channels
         for channel in range(0,128):
             elink = int(channel/16)
+            sbit = 0
             if gem == "ME0":
                 sbit = s_bit_channel_mapping[str(vfat)][str(elink)][str(channel)]
-            sbit = 0
             s_bit_cluster_mapping[vfat][channel] = {}
             s_bit_cluster_mapping[vfat][channel]["sbit"] = sbit
             s_bit_cluster_mapping[vfat][channel]["cluster_count"] = []
