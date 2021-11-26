@@ -69,7 +69,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
                 slope = abs(slope_adc[vfat])
                 intercept = 0
     if slope==-9999 or intercept==-9999: # use average values
-        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using avergae values"%vfat + Colors.ENDC)
+        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using average values"%vfat + Colors.ENDC)
         if mode=="voltage":
             slope = -0.22 # fC/DAC
             intercept = 56.1 # fC
