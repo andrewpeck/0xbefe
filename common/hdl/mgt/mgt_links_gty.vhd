@@ -415,6 +415,73 @@ begin
         end generate;
 
         --================================--
+        -- TTC MGT type
+        --================================--
+        g_chan_ttc : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_TTC generate
+        
+            -- TX user clocks
+            chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_40;
+            chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_40;
+            
+            -- RX user clocks when using elastic buffer
+            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_40;
+                chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_40;
+            end generate;
+            
+            -- RX user clocks when elastic buffer is bypassed
+            g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                
+                i_rxoutclk_buf : BUFG_GT
+                    port map(
+                        O       => chan_clks_in_arr(chan).rxusrclk,
+                        CE      => '1',
+                        CEMASK  => '0',
+                        CLR     => '0',
+                        CLRMASK => '0',
+                        DIV     => "000",
+                        I       => chan_clks_out_arr(chan).rxoutclk
+                    );                
+
+                chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).rxusrclk;
+            end generate;
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= ctrl_arr_i(chan).rxslide;
+            
+            i_chan_ttc : entity work.gty_channel_ttc
+                generic map(
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
+                    g_TXOUTCLKSEL    => "011", -- straight refclk by default
+                    g_RXOUTCLKSEL    => "010" -- recovered clock by default
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_i          => chan_drp_in_arr(chan),
+                    drp_o          => chan_drp_out_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --================================--
         -- DMB MGT type (1.6Gb/s)
         --================================--
         g_chan_dmb : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_DMB generate

@@ -40,6 +40,8 @@ package board_config_package is
     constant CFG_DAQ_INFIFO_PROG_FULL_RESET : integer := 8192;
     constant CFG_DAQ_INFIFO_DATA_CNT_WIDTH  : integer := 14;
 
+    constant CFG_DAQ_OUTPUT_RAM_TYPE        : string  := "block"; -- "ultra"
+    constant CFG_DAQ_OUTPUT_READ_LATENCY    : integer := 1;       -- need higher number (e.g. 8) for ultraram, use 1 for BRAM
     constant CFG_DAQ_OUTPUT_DEPTH           : integer := 8192;
     constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 4045;
     constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 1365;
@@ -83,8 +85,9 @@ package board_config_package is
         (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))
     );
 
+    type t_spy_link_config is array (0 to 3) of integer range 0 to CFG_BOARD_MAX_LINKS;
     constant CFG_USE_SPY_LINK : boolean := true;
-    constant CFG_SPY_LINK : integer := 12;
+    constant CFG_SPY_LINK : t_spy_link_config := (12, 13, 14, 15);
     
     --================================--
     -- Fiber to MGT mapping
@@ -162,6 +165,22 @@ package board_config_package is
         rx_use_buf              => true
     );
 
+    constant CFG_MGT_TTC : t_mgt_type_config := (
+        link_type               => MGT_TTC,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => true, 
+        rx_use_buf              => false
+    );
+
     constant CFG_MGT_DMB : t_mgt_type_config := (
         link_type               => MGT_DMB,
         cpll_refclk_01          => 1, 
@@ -207,10 +226,10 @@ package board_config_package is
         (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, ibert_inst => true),        
         (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, ibert_inst => true),        
                                                                          
-        (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_ODMB57_156,  qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => false),        
-        (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => false),        
-        (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => false),        
-        (mgt_type => CFG_MGT_ODMB57,    qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => false),        
+        (mgt_type => CFG_MGT_TTC,       qpll_inst_type => QPLL_LPGBT,       qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_TTC,       qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_TTC,       qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => true),        
+        (mgt_type => CFG_MGT_TTC,       qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, ibert_inst => true),        
 
         (mgt_type => CFG_MGT_GBE,       qpll_inst_type => QPLL_GBE_156,     qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => true,  ibert_inst => true),
         (mgt_type => CFG_MGT_GBE,       qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, ibert_inst => false),

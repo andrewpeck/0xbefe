@@ -40,6 +40,8 @@ common/hdl/utils/crc16_usb.vhd
 common/hdl/utils/crc32_gbe.vhd
 common/hdl/utils/cross_domain_pulse.vhd
 common/hdl/utils/freq_meter.sv
+common/hdl/utils/hamming_8_13.vhd
+common/hdl/utils/hamming_32_39.vhd
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project

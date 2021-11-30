@@ -22,6 +22,7 @@ use work.ttc_pkg.all;
 
 entity csc_fed is
     generic(
+        g_SLR                : integer;
         g_NUM_OF_DMBs        : integer;
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
@@ -41,6 +42,7 @@ entity csc_fed is
         ttc_data_p_i            : in  std_logic;      -- TTC protocol backplane signals
         ttc_data_n_i            : in  std_logic;
         external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
+        ttc_cmds_o              : out t_ttc_cmds;
         
         -- DMB links
         csc_dmb_rx_usrclk_arr_i : in  std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
@@ -153,6 +155,8 @@ begin
     csc_spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
     
     board_id <= board_id_i;
+    
+    ttc_cmds_o <= ttc_cmd;
 
     --================================--
     -- Power-on reset  
@@ -240,6 +244,7 @@ begin
 
     i_system : entity work.system_regs
         generic map(
+            g_SLR                => g_SLR,
             g_NUM_OF_DMBs        => g_NUM_OF_DMBs,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS
