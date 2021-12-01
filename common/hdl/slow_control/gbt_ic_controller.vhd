@@ -15,9 +15,9 @@ use ieee.std_logic_misc.all;
 use work.common_pkg.all;
 
 entity gbt_ic_controller is
---    generic(
---        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
---    );
+    --    generic(
+    --        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
+    --    );
     port(
         -- reset
         reset_i                 : in  std_logic;
@@ -25,23 +25,27 @@ entity gbt_ic_controller is
         -- clocks
         gbt_clk_i               : in std_logic;
         
+        -- lpGBT version 0 or 1
+        gbt_version_i             : in std_logic;
+
         -- GBTx I2C address (for OHv2b it should be always 0x1 because that's hardwired on the board), but 0 can be used for broadcast
         gbtx_i2c_address        : in std_logic_vector(6 downto 0);
-        
+
         -- GBTx IC elinks
         gbt_rx_ic_elink_i       : in  std_logic_vector(1 downto 0);
         gbt_tx_ic_elink_o       : out std_logic_vector(1 downto 0);
-        
+
         -- Control
         ic_rw_address_i         : in  std_logic_vector(15 downto 0);
         ic_w_data_i             : in  std_logic_vector(31 downto 0);
-        --ic_r_data_o             : out std_logic_vector(31 downto 0);
+        ic_r_data_o             : out std_logic_vector(31 downto 0);
         ic_rw_length_i          : in std_logic_vector(2 downto 0);
         ic_write_req_i          : in std_logic;
         ic_write_done_o         : out std_logic;
-        ic_read_req_i           : in std_logic
+        ic_read_req_i           : in std_logic;
+        ic_read_valid_o         : out std_logic
         --ic_read_ready_o         : out std_logic
-        
+
     );
 end gbt_ic_controller;
 
@@ -52,28 +56,32 @@ architecture Behavioral of gbt_ic_controller is
     -------------- tx serializer -------------- 
 
     type serdes_state_t is (IDLE, REG_ADDR, DATA, PARITY, EOF);
-    
+
     signal ser_state            : serdes_state_t;
     signal ser_word_pos         : integer range 0 to 31 := 0;
     signal ser_data_word_idx    : integer range 0 to 4 := 0;
     signal ser_frame_pos        : integer range 0 to 127 := 0;
     signal ser_parity           : std_logic_vector(7 downto 0) := (others => '0');
     signal ser_set_bit_cnt      : integer range 0 to 7 := 0;
-    signal ser_is_write         : std_logic;   
-    
+    signal ser_is_write         : std_logic;
+
     signal tx_frame             : std_logic_vector(127 downto 0) := (others => '0');
     signal tx_sender_en         : std_logic;
 
     -------------- tx sender --------------
-     
+
     type sender_state_t is (IDLE, SENDING);
     signal sender_state         : sender_state_t;
     signal sender_frame_pos     : integer range 0 to 127 := 0;
 
+    -------------- rx IC -----------------
+    signal ic_r_data    : std_logic_vector(31 downto 0);
+    signal ic_r_valid   : std_logic;
+
 begin
 
     --========= Serializer FSM =========--
-     
+
     process(gbt_clk_i)
     begin
         if (rising_edge(gbt_clk_i)) then
@@ -86,9 +94,9 @@ begin
                 ser_set_bit_cnt <= 0;
                 ser_data_word_idx <= 0;
                 tx_sender_en <= '0';
-            else                
+            else
                 tx_sender_en <= '0';
-                
+
                 case ser_state is
                     when IDLE   =>
                         if ((ic_write_req_i = '1' and ic_rw_length_i /= "000") or ic_read_req_i = '1') then
@@ -124,9 +132,9 @@ begin
                                     ser_state <= PARITY;
                                 end if;
                             end if;
-                            
+
                             tx_frame(ser_frame_pos) <= ic_rw_address_i(ser_word_pos);
-                            
+
                             if (ic_rw_address_i(ser_word_pos) = '1') then
                                 ser_set_bit_cnt <= ser_set_bit_cnt + 1;
                             else
@@ -150,14 +158,14 @@ begin
                                     ser_state <= PARITY;
                                 end if;
                             end if;
-                            
+
                             if (ser_word_pos = 0) then
                                 -- update parity once per data word
                                 ser_parity <= ser_parity xor ic_w_data_i(((ser_data_word_idx + 1) * 8) - 1 downto (ser_data_word_idx * 8));
                             end if;
-                            
+
                             tx_frame(ser_frame_pos) <= ic_w_data_i((ser_data_word_idx * 8) + ser_word_pos);
-                            
+
                             if (ic_w_data_i((ser_data_word_idx * 8) + ser_word_pos) = '1') then
                                 ser_set_bit_cnt <= ser_set_bit_cnt + 1;
                             else
@@ -177,9 +185,9 @@ begin
                                 ser_word_pos <= 0;
                                 ser_state <= EOF;
                             end if;
-                            
+
                             tx_frame(ser_frame_pos) <= ser_parity(ser_word_pos);
-                            
+
                             if (ser_parity(ser_word_pos) = '1') then
                                 ser_set_bit_cnt <= ser_set_bit_cnt + 1;
                             else
@@ -207,9 +215,9 @@ begin
                 sender_frame_pos <= 0;
                 ic_write_done_o <= '0';
             else
-                
+
                 ic_write_done_o <= '0';
-                
+
                 case sender_state is
                     when IDLE =>
                         gbt_tx_ic_elink_o <= "11";
@@ -229,9 +237,31 @@ begin
                         gbt_tx_ic_elink_o <= "11";
                         sender_state <= IDLE;
                 end case;
-                
+
             end if;
         end if;
     end process;
+
+    --========= IC RX =========--
+    i_ic_rx : entity work.gbt_ic_rx
+        port map(
+            clock_i                 => gbt_clk_i,
+            reset_i                 => reset_i,
+                                    
+            frame_i                 => ic_rw_address_i(7 downto 0),
+            valid_i                 => ic_read_req_i,
+
+            lpgbt_version           => gbt_version_i,
+
+            -- Control
+            chip_adr_o              => open,
+            data_o                  => ic_r_data,
+            length_o                => open,
+            reg_adr_o               => open,
+            uplink_parity_ok_o      => open,
+            downlink_parity_ok_o    => open,
+            err_o                   => open,
+            valid_o                 => ic_r_valid                                    
+        );
 
 end Behavioral;
