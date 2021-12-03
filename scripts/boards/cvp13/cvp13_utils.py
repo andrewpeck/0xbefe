@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 
 def detect_cvp13_cards():
     devices_dir = "/sys/bus/pci/devices"
@@ -17,6 +18,41 @@ def detect_cvp13_cards():
 
     return cvp13s
 
+def cvp13_get_bwtk_path():
+    path = "/opt/bwtk"
+    # check if /opt/bwtk exists
+    if not os.path.isdir(path):
+        return None
+
+    versions = os.listdir(path)
+
+    if len(versions) == 0:
+        return None
+
+    path += "/" + versions[0]
+
+    return path
+
+
+def cvp13_read_qsfp_rx_power(bwtk_path):
+    bwmonitor = bwtk_path + "/bin/bwmonitor"
+
+    print("------------------")
+    for qsfp in range(4):
+        for ch in range(4):
+            out = subprocess.check_output([bwmonitor, '--dev=0', '--i2cread', '--devaddr=0x%da0' % (4 + qsfp), '--addr=%d' % (34 + ch * 2), '--count=2', '--file=/tmp/bwmonitor_out'])
+            # print("output: %s" % out)
+            f = open("/tmp/bwmonitor_out", mode="rb")
+            b = f.read(2)
+            value = 0
+            if len(b) > 0:
+                value = (b[0] << 8) + b[1]
+            power_uw = value / 10
+            print("QSFP%d ch%d: %duW" % (qsfp, ch, power_uw))
+
+            f.close()
+
+        print("------------------")
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
