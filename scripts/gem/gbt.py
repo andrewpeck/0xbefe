@@ -499,7 +499,7 @@ def selectGbt(ohIdx, gbtIdx):
 
     if station == 0:
         gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
-        #write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VER'), gbt_ver)
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VERSION'), gbt_ver)
         if gbt_ver == 0:
             write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
         elif gbt_ver == 1:
