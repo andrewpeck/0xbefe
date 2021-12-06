@@ -271,33 +271,30 @@ def simple_write_backend_reg(node, data, error_value):
             output_value = error_value
     return output_value
 
-def read_backend_reg(node):
+def read_backend_reg(node, n_tries = 1):
     output = 0
     if system == "backend":
-        output = read_reg(node)
-        if output==0xdeaddead:
-            print (Colors.YELLOW + "ERROR: Bus Error, Trying again" + Colors.ENDC)
+        for i in range(0,n_tries):
             output = read_reg(node)
-            if output==0xdeaddead:
-                print (Colors.YELLOW + "ERROR: Bus Error, Trying again" + Colors.ENDC)
-                output = read_reg(node)
-                if output==0xdeaddead:
-                    print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
-                    terminate()
+            if output!=0xdeaddead:
+                break
+            print (Colors.YELLOW + "WARNING: Bus Error, Nr. of tries: %d"%(i+1) + Colors.ENDC)
+    if output==0xdeaddead:
+        print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
+        terminate()
     return output
     
-def write_backend_reg(node, data):
+def write_backend_reg(node, data, n_tries = 1):
     if system == "backend":
-        output = write_reg(node, data)
-        if output==-1:
-            print (Colors.YELLOW + "ERROR: Bus Error, Trying again" + Colors.ENDC)
+        for i in range(0,n_tries):
             output = write_reg(node, data)
-            if output==-1:
-                print (Colors.YELLOW + "ERROR: Bus Error, Trying again" + Colors.ENDC)
-                output = write_reg(node, data)
-                if output==-1:
-                    print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
-                    terminate()
+            if output!=-1:
+                break
+            print (Colors.YELLOW + "ERROR: Bus Error, Nr. of tries: %d"%(i+1) + Colors.ENDC)
+            output = write_reg(node, data)
+    if output==-1:
+        print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
+        terminate()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
