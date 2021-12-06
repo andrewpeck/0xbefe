@@ -75,9 +75,9 @@ architecture Behavioral of gbt_ic_controller is
     signal sender_frame_pos     : integer range 0 to 127 := 0;
 
     -------------- rx IC -----------------
-    signal ic_r_data    : std_logic_vector(31 downto 0);
+--    signal ic_r_data    : std_logic_vector(31 downto 0);
     signal ic_r_valid   : std_logic;
-    signal ic_r_send_en : std_logic := '0';
+--    signal ic_r_send_en : std_logic := '0';
 
 begin
 
@@ -250,13 +250,13 @@ begin
             reset_i                 => reset_i,
                                     
             frame_i                 => ic_rw_address_i(7 downto 0),
-            valid_i                 => ic_r_send_en,
+            valid_i                 => ic_read_req_i,
 
             lpgbt_version           => gbt_version_i,
 
             -- Control
             chip_adr_o              => open,
-            data_o                  => ic_r_data,
+            data_o                  => ic_r_data_o,
             length_o                => open,
             reg_adr_o               => open,
             uplink_parity_ok_o      => open,
@@ -265,13 +265,13 @@ begin
             valid_o                 => ic_r_valid                                    
         );
 
-    process(gbt_clk_i)
-    begin
-        if (rising_edge(gbt_clk_i)) then
-            if (ic_read_req) then
-                ic_r_send_en <= '1';
-            end if;
-        end if;
-    end process;        
+--    process(gbt_clk_i)
+--    begin
+--        if (rising_edge(gbt_clk_i)) then
+--            if (ic_read_req_i) then
+--                ic_r_send_en <= '1';
+--            end if;
+--        end if;
+--    end process;        
 
 end Behavioral;
