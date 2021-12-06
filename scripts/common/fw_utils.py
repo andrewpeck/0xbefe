@@ -299,12 +299,13 @@ def befe_reset_all_plls():
         write_reg("BEFE.MGTS.MGT%d.CTRL.QPLL0_RESET" % i, 1)
         write_reg("BEFE.MGTS.MGT%d.CTRL.QPLL1_RESET" % i, 1)
 
-def befe_config_links():
+# if loopback test is set to true, links will not be inverted regardless of the station
+def befe_config_links(loopback_test=False):
     # check if we need to invert GBT TX or RX
     gbt_tx_invert = False
     gbt_rx_invert = False
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
-    if flavor == 0: # GEM
+    if flavor == 0 and not loopback_test: # GEM
         gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
         if gem_station == 1:
             gbt_tx_invert = True
