@@ -238,7 +238,7 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         NODE_IC_WRITE_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA")
         NODE_IC_EXEC_WRITE = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE")
         NODE_IC_EXEC_READ = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ")
-        #NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA")
+        NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA")
 
         if ohIdx is not None and gbtIdx is not None:
             select_ic_link(ohIdx, gbtIdx)
@@ -308,11 +308,11 @@ def mpeek(address):
             print(Colors.RED + "ERROR: Problem in reading register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
-        #gem_utils.write_backend_reg(NODE_IC_ADDR, address)
-        #gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
-        #data = read_backend_reg(NODE_IC_READ_DATA)
-        #return data
-        return reg_list_dryrun[address]
+        gem_utils.write_backend_reg(NODE_IC_ADDR, address)
+        gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
+        data = read_backend_reg(NODE_IC_READ_DATA)
+        #data = reg_list_dryrun[address]
+        return data
     elif system=="dryrun":
         return reg_list_dryrun[address]
     else:

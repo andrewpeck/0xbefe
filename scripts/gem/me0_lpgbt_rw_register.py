@@ -17,9 +17,9 @@ def main(system, oh_ver, boss, reg_list, data_list):
         if r > final_total_reg:
             print (Colors.YELLOW + "Register address out of range" + Colors.ENDC)
             rw_terminate()
-        if system!="backend":
-            data_read = mpeek(r)
-            print ("Register: " + hex(r) + ", Initial data: " + hex(data_read))
+        #if system!="backend":
+        data_read = mpeek(r)
+        print ("Register: " + hex(r) + ", Initial data: " + hex(data_read))
 
         if len(data_list)==0:
             print ("")
@@ -33,12 +33,12 @@ def main(system, oh_ver, boss, reg_list, data_list):
         mpoke(r, d)
         print ("Register: " + hex(r) + ", Data written: " + hex(d))
 
-        if system!="backend":
-            data_written = mpeek(r)
-            if data_written == d:
-                print (Colors.GREEN + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
-            else:
-                print (Colors.RED + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
+        #if system!="backend":
+        data_written = mpeek(r)
+        if data_written == d:
+            print (Colors.GREEN + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
+        else:
+            print (Colors.RED + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
     
         print ("")
     
