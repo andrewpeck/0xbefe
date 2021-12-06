@@ -11,6 +11,7 @@
 <!ENTITY ADDRESS_TABLE_MGTS SYSTEM "../befe/mgts_generic.xml">
 <!ENTITY ADDRESS_TABLE_TTC SYSTEM "../befe/ttc.xml">
 <!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
+<!ENTITY ADDRESS_TABLE_SBIT_ME0 SYSTEM "sbit_me0.xml">
 ]>
 <node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
   &ADDRESS_TABLE_SYSTEM;
@@ -18,5 +19,6 @@
   <node id="GEM_AMC">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
+    &ADDRESS_TABLE_SBIT_ME0;
   </node>
 </node>
