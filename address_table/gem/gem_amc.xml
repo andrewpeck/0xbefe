@@ -1276,6 +1276,9 @@
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
           fw_signal="ic_read_data" fw_read_pulse_signal="ic_read_req" fw_read_ready_signal="ic_r_valid"/>
+    <node id="GBT_VERSION" address="0x8" permission="w"
+          description="lpGBT version 0 or 1"
+          fw_write_pulse_signal="gbt_version"/>      
   </node>
 
   <node id="VFAT3" address="0x4000">

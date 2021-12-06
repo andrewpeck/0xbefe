@@ -75,8 +75,9 @@ architecture Behavioral of gbt_ic_controller is
     signal sender_frame_pos     : integer range 0 to 127 := 0;
 
     -------------- rx IC -----------------
---    signal ic_r_data    : std_logic_vector(31 downto 0);
-    signal ic_r_valid   : std_logic;
+    signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
+    signal ic_r_valid            : std_logic;
+    signal ic_rx_empty           : std_logic;
 --    signal ic_r_send_en : std_logic := '0';
 
 begin
@@ -104,14 +105,24 @@ begin
                             ser_state <= REG_ADDR;
                             ser_is_write <= ic_write_req_i;
                             -- we assign the beginning of the frame here because there's no chance of bit stuffing here
-                            tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                     x"01" &                                             -- CMD
-                                                     gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
-                                                     x"00" & -- ???? hmm, this is not documented, but saw this in another guy's code...
-                                                     SOF_EOF;                                            -- SOF
-                            tx_frame(127 downto 48) <= (others => '1');
+                            -- Frames are different for lpGBT version 0 and 1
+                            if gbt_version_i = '0' then
+                                tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
+                                                        x"01" &                                             -- CMD
+                                                        gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                        x"00" & -- ???? hmm, this is not documented, but saw this in another guy's code...
+                                                        SOF_EOF;                                            -- SOF
+                                tx_frame(127 downto 48) <= (others => '1');
+                                ser_frame_pos <= 48;
+                            else
+                                tx_frame(39 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
+                                                        x"01" &                                             -- CMD
+                                                        gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                        SOF_EOF;                                            -- SOF                           
+                                tx_frame(127 downto 40) <= (others => '1');
+                                ser_frame_pos <= 40;
+                            end if;
                             ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
-                            ser_frame_pos <= 48;
                             ser_word_pos <= 0;
                             ser_set_bit_cnt <= 0;
                             ser_data_word_idx <= 0;
@@ -244,13 +255,36 @@ begin
     end process;
 
     --========= IC RX =========--
-    i_ic_rx : entity work.gbt_ic_rx
+    i_ic_rx     : entity work.ic_rx
+        generic map (
+            g_FIFO_DEPTH    => 20
+        )
+        port map(
+            -- Clock and reset
+            rx_clk_i        => gbt_clk_i,
+            rx_clk_en       => '1',
+
+            reset_i         => reset_i,
+
+            -- Status
+            rx_empty_o      => ic_rx_empty,
+
+            -- Internal FIFO
+            rd_clk_i        => gbt_clk_i,
+            rd_i            => ic_read_req_i,
+            data_o          => rx_data_from_gbtx,
+
+            -- IC line
+            rx_data_i       => gbt_rx_ic_elink_i
+            
+        );
+    i_gbt_ic_rx : entity work.gbt_ic_rx
         port map(
             clock_i                 => gbt_clk_i,
             reset_i                 => reset_i,
                                     
-            frame_i                 => ic_rw_address_i(7 downto 0),
-            valid_i                 => ic_read_req_i,
+            frame_i                 => rx_data_from_gbtx,
+            valid_i                 => not ic_rx_empty,
 
             lpgbt_version           => gbt_version_i,
 
@@ -263,15 +297,6 @@ begin
             downlink_parity_ok_o    => open,
             err_o                   => open,
             valid_o                 => ic_r_valid                                    
-        );
-
---    process(gbt_clk_i)
---    begin
---        if (rising_edge(gbt_clk_i)) then
---            if (ic_read_req_i) then
---                ic_r_send_en <= '1';
---            end if;
---        end if;
---    end process;        
+        );      
 
 end Behavioral;
