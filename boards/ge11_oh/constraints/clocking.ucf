@@ -4,7 +4,7 @@
 
 # Main E-link clock
 NET "clock_p" TNM_NET = "TN_CLOCK";
-TIMESPEC TS_clock = PERIOD "TN_CLOCK" 3.1 ns HIGH 50 %;
+TIMESPEC TS_clock = PERIOD "TN_CLOCK" 24.8 ns HIGH 50 %;
 
 ## MGT reference clocks
 #NET "mgt_clk_p_i<0>" TNM_NET = "TN_MGT_CLK_0";
@@ -34,12 +34,12 @@ NET "clock_n" DIFF_TERM = "FALSE";
 ## GBTx data clock
 ## It is a 320MHz data clock
 ## fdck36_from_gbt_p
-NET "clock_p" LOC = J9; #elink clock
-NET "clock_n" LOC = H9; #elink clock
+#NET "clock_p" LOC = J9; #elink clock
+#NET "clock_n" LOC = H9; #elink clock
 
 # ClockDes1
-#NET "clock_p"   LOC = A10; #dskw clock
-#NET "clock_n"   LOC = B10; #dskw clock
+NET "clock_p"   LOC = A10; #dskw clock
+NET "clock_n"   LOC = B10; #dskw clock
 # DSKW clock is not used, jitter is higher and causes communications problems
 
 ########################################################################################################################
