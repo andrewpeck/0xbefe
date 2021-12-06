@@ -52,7 +52,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
 
     # Check ready and get nodes
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
 
         link_good_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
@@ -266,17 +266,17 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
                 file_out.write(result_write_string + "\n")
 
             if sc_crc_errors_per_vfat_per_reg == 0:
-                print (Colors.GREEN + "VFAT#: %02d, nr. of CRC errors in slow control: %d, Bit Error Ratio (BER) for Uplink < %.2e"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio_ul) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of CRC errors in slow control: %d, Bit Error Ratio (BER) for Uplink < %.2e\n"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio_ul))
+                print (Colors.GREEN + "VFAT#: %02d, Average nr. of CRC errors in slow control: %.4f, Bit Error Ratio (BER) for Uplink < %.2e"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio_ul) + Colors.ENDC)
+                file_out.write("VFAT#: %02d, Average nr. of CRC errors in slow control: %.4f, Bit Error Ratio (BER) for Uplink < %.2e\n"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio_ul))
             else:
-                print (Colors.YELLOW + "VFAT#: %02d, nr. of CRC errors in slow control: %d, Bit Error Ratio (BER) for Uplink: %.2e"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of CRC errors in slow control: %d, Bit Error Ratio (BER) for Uplink: %.2e\n"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio))
+                print (Colors.YELLOW + "VFAT#: %02d, Average nr. of CRC errors in slow control: %.4f, Bit Error Ratio (BER) for Uplink: %.2e"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio) + Colors.ENDC)
+                file_out.write("VFAT#: %02d, Average nr. of CRC errors in slow control: %.4f, Bit Error Ratio (BER) for Uplink: %.2e\n"%(vfat, sc_crc_errors_per_vfat_per_reg, sc_crc_error_ratio))
             if sc_timeout_errors_per_vfat_per_reg == 0:
-                print (Colors.GREEN + "VFAT#: %02d, nr. of Timeout errors in slow control: %d, Bit Error Ratio (BER) for Downlink < %.2e"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio_ul) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of Timeout errors in slow control: %d, Bit Error Ratio (BER) for Downlink < %.2e\n"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio_ul))
+                print (Colors.GREEN + "VFAT#: %02d, Average nr. of Timeout errors in slow control: %.4f, Bit Error Ratio (BER) for Downlink < %.2e"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio_ul) + Colors.ENDC)
+                file_out.write("VFAT#: %02d, Average nr. of Timeout errors in slow control: %.4f, Bit Error Ratio (BER) for Downlink < %.2e\n"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio_ul))
             else:
-                print (Colors.YELLOW + "VFAT#: %02d, nr. of Timeout errors in slow control: %d, Bit Error Ratio (BER) for Downlink: %.2e"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of Timeout errors in slow control: %d, Bit Error Ratio (BER) for Downlink: %.2e\n"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio))
+                print (Colors.YELLOW + "VFAT#: %02d, Average nr. of Timeout errors in slow control: %.4f, Bit Error Ratio (BER) for Downlink: %.2e"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio) + Colors.ENDC)
+                file_out.write("VFAT#: %02d, Average nr. of Timeout errors in slow control: %.4f, Bit Error Ratio (BER) for Downlink: %.2e\n"%(vfat, sc_timeout_errors_per_vfat_per_reg, sc_timeout_error_ratio))
             print ("")
             file_out.write("\n")
         print ("")

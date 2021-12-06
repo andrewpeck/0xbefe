@@ -67,7 +67,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
@@ -107,7 +107,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         # read cfg_run some number of times, check link good status and sync errors
         print ("Checking errors: ")
         for vfat in vfat_list:
-            gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
             oh_ver = get_oh_ver(oh_select, gbt_select)
             # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
             sleep(0.1)
@@ -270,7 +270,7 @@ def find_phase_center(err_list):
 def setVfatRxPhase(system, oh_select, vfat, phase):
 
     print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
-    gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+    gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
 
     if gbt == "boss":

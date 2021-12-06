@@ -16,7 +16,7 @@ def vfat_reset(system, oh_select, vfat_list):
     print ("VFAT RESET\n")
     
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
         print ("VFAT#: %02d, lpGBT: %s, OH: %d, GBT: %d, GPIO: %d" %(vfat, gbt, oh_select, gbt_select, gpio))
         

@@ -41,7 +41,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     sbit_data = {}
     # Check ready and get nodes
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
 
         print("Configuring VFAT %d" % (vfat))

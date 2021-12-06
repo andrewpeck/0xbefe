@@ -350,7 +350,7 @@ if __name__ == "__main__":
             if v_int not in range(0,23):
                 print (Colors.YELLOW + "Invalid VFAT number, only allowed 0-23" + Colors.ENDC)
                 sys.exit()
-            gbt, gbt_select, elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
             if gbt!=args.lpgbt or gbt_select!=int(args.gbtid):
                 print (Colors.YELLOW + "Invalid VFAT number for selected lpGBT" + Colors.ENDC)
                 sys.exit()

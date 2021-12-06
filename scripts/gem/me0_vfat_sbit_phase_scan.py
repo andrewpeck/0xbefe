@@ -34,7 +34,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     if bestphase_list!={}:
         print ("Setting phases for VFATs only, not scanning")
         for vfat in vfat_list:
-            sbit_elinks = gem_utils.vfat_to_sbit_elink(vfat)
+            sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 set_bestphase = bestphase_list[vfat][elink]
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], set_bestphase)
@@ -81,7 +81,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     reset_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
 
     for vfat in vfat_list:
-        gbt, gbt_select, elink_daq, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
@@ -123,14 +123,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         # set phases for all vfats under test
         for vfat in vfat_list:
-            sbit_elinks = gem_utils.vfat_to_sbit_elink(vfat)
+            sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], phase)
 
         s_bit_channel_mapping = {}
         print ("Checking errors: ")
         for vfat in vfat_list:
-            gbt, gbt_select, elink_daq, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
             oh_ver = get_oh_ver(oh_select, gbt_select)
             # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
             sleep(0.1)
@@ -263,7 +263,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         # set phases for all elinks for this vfat
         print ("\nVFAT %02d: Setting all ELINK phases to best phases: "%(vfat))
-        sbit_elinks = gem_utils.vfat_to_sbit_elink(vfat)
+        sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
         for elink in range(0,8):
             set_bestphase = bestphase_vfat_elink[vfat][elink]
             setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], set_bestphase)
@@ -328,7 +328,7 @@ def find_phase_center(err_list):
 
 
 def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
-    gbt, gbt_select, rx_elink, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+    gbt, gbt_select, rx_elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
 
     if gbt == "boss":

@@ -3,16 +3,6 @@ from common.utils import *
 import common.tables.tableformatter as tf
 import sys
 
-class Colors:
-    WHITE   = "\033[97m"
-    CYAN    = "\033[96m"
-    MAGENTA = "\033[95m"
-    BLUE    = "\033[94m"
-    YELLOW  = "\033[93m"
-    GREEN   = "\033[92m"
-    RED     = "\033[91m"
-    ENDC    = "\033[0m"
-
 try:
     imp.find_module('colorama')
     from colorama import Back
@@ -80,35 +70,6 @@ ME0_VFAT_TO_SBIT_ELINK = {
     14 : [16, 18, 20, 22, 24, 26, 21, 23],
 }
 
-me0_hdlc_address_map = {
-    0 : 0x4,
-    1 : 0x3,
-    2 : 0xa,
-    3 : 0x9,
-    4 : 0x1,
-    5 : 0x3,
-    6 : 0x7,
-    7 : 0x9,
-    8 : 0x1,
-    9 : 0x5,
-    10: 0x7,
-    11: 0xb,
-    12: 0x4,
-    13: 0x5,
-    14: 0xa,
-    15: 0xb,
-    16: 0x2,
-    17: 0x6,
-    18: 0x8,
-    19: 0xc,
-    20: 0x2,
-    21: 0x6,
-    22: 0x8,
-    23: 0xc
-}
-
-VFAT_TO_GBT_ELINK_GPIO = None
-VFAT_TO_SBIT_ELINK = None
 hdlc_address_map = None
 system = ""
 
@@ -241,22 +202,14 @@ def initialize(station, system_val):
     global system
     system = system_val
     
-    global VFAT_TO_GBT_ELINK_GPIO 
-    global VFAT_TO_SBIT_ELINK
     global hdlc_address_map
 
     if station == "ME0":
-        VFAT_TO_GBT_ELINK_GPIO = ME0_VFAT_TO_GBT_ELINK_GPIO
-        VFAT_TO_SBIT_ELINK = ME0_VFAT_TO_SBIT_ELINK
-        hdlc_address_map = me0_hdlc_address_map
-    #elif station == "GE21":
-    #    VFAT_TO_GBT_ELINK_GPIO = GE21_VFAT_TO_GBT_ELINK_GPIO
-    #    VFAT_TO_SBIT_ELINK = GE21_VFAT_TO_SBIT_ELINK
-    #    hdlc_address_map = GE21_hdlc_address_map
-    #elif station == "GE11":
-    #    VFAT_TO_GBT_ELINK_GPIO = GE11_VFAT_TO_GBT_ELINK_GPIO
-    #    VFAT_TO_SBIT_ELINK = GE11_VFAT_TO_SBIT_ELINK
-    #    hdlc_address_map = GE11_hdlc_address_map
+        hdlc_address_map = get_config("CONFIG_ME0_VFAT_HDLC_ADDRESSES")
+    elif station == "GE21":
+        hdlc_address_map = get_config("CONFIG_GE21_VFAT_HDLC_ADDRESSES")
+    elif station == "GE11":
+        hdlc_address_map = get_config("CONFIG_GE11_VFAT_HDLC_ADDRESSES")
 
 def terminate():
     write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
@@ -269,15 +222,15 @@ def check_gbt_link_ready(ohIdx, gbtIdx):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)  
             terminate()
 
-def vfat_to_gbt_elink_gpio(vfat):
-    gbt = VFAT_TO_GBT_ELINK_GPIO[vfat][0]
-    gbtid = VFAT_TO_GBT_ELINK_GPIO[vfat][1]
-    elink = VFAT_TO_GBT_ELINK_GPIO[vfat][2]
-    gpio = VFAT_TO_GBT_ELINK_GPIO[vfat][3]
+def me0_vfat_to_gbt_elink_gpio(vfat):
+    gbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][0]
+    gbtid = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]
+    elink = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
+    gpio = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][3]
     return gbt, gbtid, elink, gpio
 
-def vfat_to_sbit_elink(vfat):
-    sbit_elinks = VFAT_TO_SBIT_ELINK[vfat]
+def me0_vfat_to_sbit_elink(vfat):
+    sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat]
     return sbit_elinks
 
 def enable_hdlc_addressing(addr_list):

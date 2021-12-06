@@ -188,7 +188,7 @@ def vfat_config(system, oh_select, vfat_list, low_thresh, configure):
     sleep(0.1)
 
     for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
         if configure:
             print ("Configuring VFAT#: %02d" %(vfat))

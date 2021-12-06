@@ -44,7 +44,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     for vfat in vfat_list:
         print ("Testing VFAT#: %02d" %(vfat))
         print ("")
-        gbt, gbt_select, elink_daq, gpio = vfat_to_gbt_elink_gpio(vfat)
+        gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
 
         link_good = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))

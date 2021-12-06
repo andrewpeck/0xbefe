@@ -37,7 +37,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
-    gbt, gbt_select, elink_daq, gpio = vfat_to_gbt_elink_gpio(vfat)
+    gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
     print ("Testing VFAT#: %02d\n" %(vfat))
     file_out.write("Testing VFAT#: %02d\n\n")
     

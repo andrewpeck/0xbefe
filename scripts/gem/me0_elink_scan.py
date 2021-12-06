@@ -39,7 +39,7 @@ def me0_elink_scan(system, oh_select, vfat_list):
             gem_utils.gem_link_reset()
             sleep(0.001)
 
-            gbt, gbt_select, elink_old, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+            gbt, gbt_select, elink_old, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
             oh_ver = get_oh_ver(oh_select, gbt_select)
             gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
@@ -70,7 +70,7 @@ def me0_elink_scan(system, oh_select, vfat_list):
         print ("")
 
 def setVfatRxEnable(system, oh_select, vfat, enable, elink):
-    gbt, gbt_select, elink_old, gpio = gem_utils.vfat_to_gbt_elink_gpio(vfat)
+    gbt, gbt_select, elink_old, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
 
     if gbt == "boss":
