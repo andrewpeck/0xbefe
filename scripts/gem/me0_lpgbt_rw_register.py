@@ -8,7 +8,7 @@ def main(system, oh_ver, boss, reg_list, data_list):
     if oh_ver == 1:
         final_total_reg = 0x1CE
         final_readonly_reg = 0x13C
-    elif oh_ver == 1:
+    elif oh_ver == 2:
         final_total_reg = 0x1ED
         final_readonly_reg = 0x14F
 
