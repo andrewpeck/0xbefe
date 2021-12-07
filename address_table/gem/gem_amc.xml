@@ -1275,10 +1275,10 @@
           fw_signal="ic_link_select" fw_default="0b000000"/>
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
-          fw_signal="ic_read_data" fw_read_pulse_signal="ic_read_req" fw_read_ready_signal="ic_r_valid"/>
-    <node id="GBT_VERSION" address="0x8" permission="w"
+          fw_signal="ic_read_data"/>
+    <node id="GBT_VERSION" address="0x8" mask ="0x00000001" permission="w"
           description="lpGBT version 0 or 1"
-          fw_write_pulse_signal="gbt_version"/>      
+          fw_signal="gbt_version" fw_default="0x00"/>      
   </node>
 
   <node id="VFAT3" address="0x4000">
