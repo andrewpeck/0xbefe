@@ -1,0 +1,31 @@
+CMS_OMDS_TUNNEL_LOCAL=(
+    DESCRIPTION=
+    (ADDRESS= (PROTOCOL=TCP) (HOST=localhost) (PORT=10131) )
+    (ADDRESS= (PROTOCOL=TCP) (HOST=localhost) (PORT=10132) )
+    (ADDRESS= (PROTOCOL=TCP) (HOST=localhost) (PORT=10141) )
+    (ADDRESS= (PROTOCOL=TCP) (HOST=localhost) (PORT=10142) )
+    (LOAD_BALANCE=on)
+    (ENABLE=BROKEN)
+    (CONNECT_DATA=
+        (SERVER=DEDICATED)
+        (SERVICE_NAME=cms_omds_tunnel.cern.ch)
+    )
+)
+
+INT2R_LB_LOCAL = (
+    DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 10101))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 10109))
+    (LOAD_BALANCE = on)
+    (ENABLE=BROKEN)
+    (CONNECT_DATA =
+        (SERVER = DEDICATED)
+        (SERVICE_NAME = int2r_lb.cern.ch)
+        (FAILOVER_MODE =
+            (TYPE = SELECT)
+            (METHOD = BASIC)
+            (RETRIES = 180)
+            (DELAY = 5)
+        )
+    )
+)
