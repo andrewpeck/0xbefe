@@ -29,3 +29,22 @@ create_clock -period 12.5 -name MGTREFCLK [get_ports {mgt_clk_p_i[0]}]
 set_max_delay -datapath_only \
     -from [get_clocks *] \
     -to [get_pins -hierarchical -filter {NAME =~ *s_resync_reg*/D}] 2.5
+
+set_max_delay -datapath_only 4.0 \
+    -to   [get_pins gbt_inst/gbt_serdes/gbt_oversample/ise*/iserdes_a7.iserdes/RST] \
+    -from [get_pins gbt_inst/gbt_serdes/gbt_oversample/reset_serdes_reg/C]
+
+set_max_delay -datapath_only 4.0 \
+    -to   [get_pins trigger_inst/sbits/*trig_alignment/*oversample/*/iserdes_a7.iserdes/RST] \
+    -from [get_pins trigger_inst/sbits/*trig_alignment/*/reset_serdes_reg/C]
+
+# manually placed this flip-flop... because its on this weird async timing path
+# the tools don't really optimize it well on its own so forcing the flip-flop
+# close to the serdes keeps timing consistent
+set part [get_property part [current_project]]
+if {[regexp {xc7a200.*} $part]} {
+    set cell [get_cells [list  gbt_inst/gbt_serdes/gbt_oversample/reset_serdes*]]
+    place_cell $cell SLICE_X0Y247
+    set_property is_bel_fixed true $cell
+    set_property is_loc_fixed true $cell
+}
