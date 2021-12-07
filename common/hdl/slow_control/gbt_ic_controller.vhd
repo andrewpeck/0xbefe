@@ -271,7 +271,7 @@ begin
 
             -- Internal FIFO
             rd_clk_i        => gbt_clk_i,
-            rd_i            => ic_read_req_i,
+            rd_i            => '1',
             data_o          => rx_data_from_gbtx,
 
             -- IC line
