@@ -1,4 +1,4 @@
-create_clock -period 24.9 -name clock   [get_ports clock_p]
+create_clock -period 24.8 -name clock   [get_ports clock_p]
 
 set_property MAX_FANOUT 128 [get_nets -hierarchical -filter {name =~ "*i_ipb_reset_sync_usr_clk/s_resync[0]"}]
 
