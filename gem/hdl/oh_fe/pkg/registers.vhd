@@ -93,6 +93,10 @@ package registers is
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
     constant REG_CONTROL_TTC_BX0_SYNC_ERR_BIT    : integer := 13;
 
+    constant REG_CONTROL_TTC_BXN_READ_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_CONTROL_TTC_BXN_READ_OFFSET_MSB    : integer := 11;
+    constant REG_CONTROL_TTC_BXN_READ_OFFSET_LSB     : integer := 0;
+
     constant REG_CONTROL_TTC_BXN_OFFSET_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
     constant REG_CONTROL_TTC_BXN_OFFSET_MSB    : integer := 27;
     constant REG_CONTROL_TTC_BXN_OFFSET_LSB     : integer := 16;

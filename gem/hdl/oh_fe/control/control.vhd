@@ -231,8 +231,9 @@ architecture Behavioral of control is
   signal cnt_snap_pulse   : std_logic;
   signal cnt_snap_disable : std_logic;
 
-  signal ttc_bxn_offset  : std_logic_vector (11 downto 0);
-  signal ttc_bxn_counter : std_logic_vector (11 downto 0);
+  signal ttc_bxn_read_offset : std_logic_vector (11 downto 0);
+  signal ttc_bxn_offset      : std_logic_vector (11 downto 0);
+  signal ttc_bxn_counter     : std_logic_vector (11 downto 0);
 
   signal ttc_bx0_sync_err : std_logic;
   signal ttc_bxn_sync_err : std_logic;
@@ -488,17 +489,18 @@ begin
       reset => reset,
 
       -- ttc commands
-      ttc_bx0    => ttc_i.bc0,
-      bx0_local  => bx0_local,
-      ttc_resync => ttc_i.resync,
+      ttc_bx0     => ttc_i.bc0,
+      bx0_local_o => bx0_local,
+      ttc_resync  => ttc_i.resync,
 
       -- control
-      bxn_offset => ttc_bxn_offset,
+      bxn_offset_i      => ttc_bxn_offset,
+      bxn_read_offset_o => ttc_bxn_read_offset,
 
       -- output
-      bxn_counter  => ttc_bxn_counter,
-      bx0_sync_err => ttc_bx0_sync_err,
-      bxn_sync_err => ttc_bxn_sync_err,
+      bxn_counter_o  => ttc_bxn_counter,
+      bx0_sync_err_o => ttc_bx0_sync_err,
+      bxn_sync_err_o => ttc_bxn_sync_err,
 
       tmr_err_inj_i => tmr_err_inj,
       tmr_err_o     => ttc_tmr_err
@@ -629,6 +631,7 @@ begin
     regs_read_arr(11)(REG_CONTROL_TTC_BXN_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BXN_CNT_LOCAL_LSB) <= ttc_bxn_counter;
     regs_read_arr(12)(REG_CONTROL_TTC_BXN_SYNC_ERR_BIT) <= ttc_bxn_sync_err;
     regs_read_arr(13)(REG_CONTROL_TTC_BX0_SYNC_ERR_BIT) <= ttc_bx0_sync_err;
+    regs_read_arr(14)(REG_CONTROL_TTC_BXN_READ_OFFSET_MSB downto REG_CONTROL_TTC_BXN_READ_OFFSET_LSB) <= ttc_bxn_read_offset;
     regs_read_arr(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= ttc_bxn_offset;
     regs_read_arr(15)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
     regs_read_arr(16)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;

@@ -143,6 +143,10 @@
                   description="Local BXN counter offset (starting value at resync)"
                   fw_signal="ttc_bxn_offset"
                   fw_default="0x0"/>
+            <node id="BXN_READ_OFFSET" address="0x5" permission="r"
+                  mask="0x0000fff"
+                  description="Read value of BXN counter at BC0"
+                  fw_signal="ttc_bxn_read_offset" />
             <node id="L1A_CNT" address="0x6" permission="r"
                   mask="0xffffff"
                   description="L1A Received Counter"
