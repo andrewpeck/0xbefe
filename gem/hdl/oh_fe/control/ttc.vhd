@@ -10,6 +10,7 @@ entity ttc is
     );
   port(
     clock             : in  std_logic;
+    sync_on_resync    : in  std_logic := '0';
     reset             : in  std_logic;
     ttc_bx0           : in  std_logic;
     ttc_resync        : in  std_logic;
@@ -65,7 +66,7 @@ begin
 
   -- Load bxn offset value when a resync is received
   -- allow resync and bx0 in the same bx
-  bxn_preset <= reset or ((ttc_resync or resync_request) and ttc_bx0);
+  bxn_preset <= reset or ((not sync_on_resync or ttc_resync or resync_request) and ttc_bx0);
 
   --------------------------------------------------------------------------------
   -- BXN Counter
