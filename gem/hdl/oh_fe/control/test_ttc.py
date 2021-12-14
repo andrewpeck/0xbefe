@@ -16,6 +16,12 @@ import random
 
 BXN_MAX = 3564
 
+async def inj_bx0_err(dut):
+    await RisingEdge(dut.clock)
+    dut.ttc_bx0.value = not dut.ttc_bx0.value
+    await RisingEdge(dut.clock)
+    dut.ttc_bx0.value = not dut.ttc_bx0.value
+
 async def bxn_generator(dut):
     await RisingEdge(dut.clock)
     bxn_counter = 0
@@ -40,7 +46,7 @@ def setup(dut):
 
 async def resync(dut):
     # send a resync
-    dut.ttc_resync.value = 1
+    dut.ttc_resync.value = 0
     await RisingEdge(dut.clock)  # Synchronize with the clock
     dut.ttc_resync.value = 0
     await RisingEdge(dut.ttc_bx0)
@@ -114,6 +120,13 @@ async def test_status(dut):
     await check_for_bx0_sync_errs(dut)
     print("----------------------------------------------------------------------")
 
+    await inj_bx0_err(dut)
+    assert dut.bx0_sync_err_o.value.integer == 1
+    await RisingEdge(dut.clock)
+    assert dut.bxn_sync_err_o.value.integer == 1
+    await RisingEdge(dut.clock)
+    assert dut.bxn_sync_err_o.value.integer == 1
+    await RisingEdge(dut.clock)
 
 def test_ttc():
 

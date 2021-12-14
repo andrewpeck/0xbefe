@@ -95,14 +95,12 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (reset = '1' or bxn_preset = '1') then
-        bxn_sync_err_o <= '0';          -- reset
-      elsif (ttc_bx0 = '1') then
-        if (bxn_counter = to_integer(unsigned(bxn_offset_lim))) then
-          bxn_sync_err_o <= '0';
-        else
-          bxn_sync_err_o <= '1';
-        end if;
+      -- ok
+      if (ttc_bx0 = '1' and bxn_counter  = to_integer(unsigned(bxn_offset_lim))) then
+        bxn_sync_err_o <= '0'; -- good
+      end if;
+      if (ttc_bx0 = '1' and bxn_counter /= to_integer(unsigned(bxn_offset_lim))) then
+        bxn_sync_err_o <= '1'; -- err
       end if;
     end if;
   end process;
