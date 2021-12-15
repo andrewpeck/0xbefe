@@ -25,12 +25,12 @@ begin
     if (rising_edge(clock)) then
 
       -- make sure ttc commands have priority
-      if (l1a = '1' and bc0 = '1) then eightbit <= L1A_BC0_CHAR;
-      elsif (l1a = '1') then eightbit           <= L1A_CHAR;
-      elsif (bc0 = '1') then eightbit           <= BC0_CHAR;
-      elsif (resync = '1') then eightbit        <= RESYNC_CHAR;
-      elsif (idle = '1') then eightbit          <= IDLE_CHAR;
-      elsif (header = '1') then eightbit        <= HEADER_CHAR;
+      if    (l1a = '1' and bc0 = '1') then eightbit <= L1A_BC0_CHAR;
+      elsif (l1a = '1')               then eightbit <= L1A_CHAR;
+      elsif (bc0 = '1')               then eightbit <= BC0_CHAR;
+      elsif (resync = '1')            then eightbit <= RESYNC_CHAR;
+      elsif (idle = '1')              then eightbit <= IDLE_CHAR;
+      elsif (header = '1')            then eightbit <= HEADER_CHAR;
       else
         case sixbit is
           when "000000" => eightbit <= "01011001";
