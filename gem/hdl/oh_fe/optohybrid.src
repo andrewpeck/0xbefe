@@ -45,9 +45,9 @@ common/hdl/utils/yahamm/matrix_pkg.vhd 93
 common/hdl/utils/yahamm/yahamm_enc.vhd 93
 common/hdl/utils/yahamm/yahamm_pkg.vhd 93
 
-gem/hdl/oh_fe/utils/6b8b.vhd 93
-gem/hdl/oh_fe/utils/6b8b_pkg.vhd 93
-gem/hdl/oh_fe/utils/8b6b.vhd 93
+gem/hdl/oh/link/6b8b.vhd 93
+gem/hdl/oh/link/6b8b_pkg.vhd 93
+gem/hdl/oh/link/8b6b.vhd 93
 gem/hdl/oh_fe/utils/dru.vhd 93
 gem/hdl/oh_fe/utils/dru_tmr.vhd 93
 gem/hdl/oh_fe/utils/oversample.vhd 93
