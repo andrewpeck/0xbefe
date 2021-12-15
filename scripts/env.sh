@@ -39,6 +39,7 @@ else
         export BOARD_TYPE=$BOARD
         export BOARD_IDX
         export BEFE_FLAVOR=$STATION
+        export BEFE_SCRIPT_DIR=$SCRIPT_DIR
         echo "0xBEFE GEM environment setup done!"
     fi
 

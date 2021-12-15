@@ -1,4 +1,5 @@
 import sys
+import os
 
 # bright colors:
 class Colors:
@@ -28,6 +29,10 @@ if sys.version_info < (3, 6):
     print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
     exit()
 
+if sys.version_info >= (3, 6):
+    def raw_input(s):
+        return input(s)
+
 import tableformatter as tf
 import imp
 
@@ -43,6 +48,10 @@ except ImportError:
 
 FULL_TABLE_GRID_STYLE = tf.FancyGrid()
 DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
+
+def get_befe_scripts_dir():
+    scripts_dir = os.environ.get('BEFE_SCRIPT_DIR')
+    return scripts_dir
 
 def get_config(config_name):
     return eval("befe_config." + config_name)

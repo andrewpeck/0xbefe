@@ -106,6 +106,7 @@ CONFIG_GE11_VFAT_HDLC_ADDRESSES = [0] * 24
 
 # OH firmware bitfile (same file is loaded to all OHs)
 CONFIG_GE21_OH_BITFILE = BEFE_SCRIPTS_DIR + "/resources/ge21_oh.bit"
+CONFIG_GE21_OH_LOOPBACK_BITFILE = BEFE_SCRIPTS_DIR + "/resources/ge21_oh_loopback.bit"
 # GBT0 and GBT1 config files: these are arrays that should have a length of at least how many OHs are connected
 # NOTE: the example below is using the same config for all OHs, while in a real system you will likely need different files for each OH (e.g. containing correct phases for the GEB that they're installed on)
 # To specify config files individually for each OH just make each element of the two arrays refer to the configs of the particular OH (and remove the * 16 at the end)
