@@ -3,6 +3,7 @@ import sys, os, subprocess
 from collections import OrderedDict
 from common.utils import *
 import array
+import zlib
 
 DEBUG = True
 ADDRESS_TABLE_TOP_V0 = "me0_lpgbt/lpgbt_registers_v0.xml"
