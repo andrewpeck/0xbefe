@@ -22,7 +22,7 @@ TX_enable_bit["TX4"] = 3
 
 i2c_master_timeout = 1 # 1s
 
-def i2cmaster_write(system, reg_addr, data):
+def i2cmaster_write(system, oh_ver, reg_addr, data):
 
     # Writing control register of I2CMaster 2
     nbytes = 2
@@ -92,7 +92,7 @@ def i2cmaster_write(system, reg_addr, data):
     sleep(0.01)
 
 
-def i2cmaster_read(system, reg_addr):
+def i2cmaster_read(system, oh_ver, reg_addr):
 
     # Writing control register of I2CMaster 2
     nbytes = 1
@@ -160,8 +160,12 @@ def i2cmaster_read(system, reg_addr):
         if int(round((time() - t0))) > i2c_master_timeout:
             print (Colors.RED + "ERROR: I2C master timeout" + Colors.ENDC)
             rw_terminate()
-    
-    data = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ15"))
+
+    data = 0x00
+    if oh_ver == 1:
+        data = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ15"))
+    elif oh_ver == 2:
+        data = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ.I2CM2READ15"))
     reg_addr_string = "0x%02X" % (reg_addr)
     data_string = "0x%02X" % (data)
     print ("Successful read from slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
@@ -184,7 +188,7 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
     # Enabling TX Channel
     if channel is not None and enable is not None:
         if system!="backend":
-            enable_status = i2cmaster_read(system, enable_reg)
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
             sleep(0.1)
         else:
             enable_status = 0x00
@@ -199,10 +203,10 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
             enable_mask = (1 << enable_channel_bit)                           
             enable_data = (enable_status & (~enable_mask)) | (en << enable_channel_bit)    
             enable_status = enable_data         
-        i2cmaster_write(system, enable_reg, enable_data)
+        i2cmaster_write(system, oh_ver, enable_reg, enable_data)
         sleep(0.1)
         if system!="backend":
-            enable_status = i2cmaster_read(system, enable_reg)
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
             sleep(0.1)
         else:
             enable_status = 0x00
@@ -214,7 +218,7 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
     # Reading registers
     print ("Initial Reading of VTRX+ registers: ")
     for reg in reg_list:
-        data = i2cmaster_read(system, reg)
+        data = i2cmaster_read(system, oh_ver, reg)
         sleep(0.1)
     print ("")
     
@@ -224,14 +228,14 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
     # Writing registers
     print ("Writing to VTRX+ registers: ")
     for i, reg in enumerate(reg_list):
-        i2cmaster_write(system, reg, data_list[i])
+        i2cmaster_write(system, oh_ver, reg, data_list[i])
         sleep(0.1)
     print ("")  
 
     # Reading registers
     print ("Final Reading of VTRX+ registers: ")
     for reg in reg_list:
-        data = i2cmaster_read(system, reg)
+        data = i2cmaster_read(system, oh_ver, reg)
         sleep(0.1)
     print ("")
     
