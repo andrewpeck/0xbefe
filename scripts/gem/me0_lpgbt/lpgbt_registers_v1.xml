@@ -3260,7 +3260,7 @@
             <!-- 15.3.12. ROM -->
             <!-- [0x1d7] ROM -->
             <!-- Register with fixed (non zero value). Can be used for testing purposes. -->
-            <node id="ROMREG" address="0x0" permission="r"
+            <node id="ROMREG" address="0x1d7-0x150" permission="r"
                 description=" All read requests for this register should yield value 0xA6 (as opposed to 0xA5 for lpGBTv0)."
                 mask="0xff" />
 
