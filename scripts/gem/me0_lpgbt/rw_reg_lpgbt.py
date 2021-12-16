@@ -2,6 +2,7 @@ import xml.etree.ElementTree as xml
 import sys, os, subprocess
 from collections import OrderedDict
 from common.utils import *
+import array
 
 DEBUG = True
 ADDRESS_TABLE_TOP_V0 = "me0_lpgbt/lpgbt_registers_v0.xml"
