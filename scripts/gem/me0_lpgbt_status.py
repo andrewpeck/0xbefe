@@ -214,7 +214,7 @@ def main(system, oh_ver, boss):
     if oh_ver == 1:
         print ("\t%d" % (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H")) << 8 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))))
     elif oh_ver == 2:
-        print("\t%d" % (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0")) << 24) | (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1")) << 16) | (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2")) << 8) | (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))) )
+        print ("\t%d" % (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0")) << 24 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1")) << 16 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2")) << 8 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3")) ))
 
     print ("CDR Resistor:")
     if (readReg(getNode("LPGBT.RO.CLKG.CLKG_ENABLE_CDR_R"))):
