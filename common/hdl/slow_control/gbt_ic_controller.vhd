@@ -51,7 +51,23 @@ end gbt_ic_controller;
 
 architecture Behavioral of gbt_ic_controller is
 
+    COMPONENT ila_ic_rx
+
+    PORT (
+	clk : IN STD_LOGIC;
+
+	probe0 : IN STD_LOGIC; 
+	probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0); 
+	probe2 : IN STD_LOGIC_VECTOR(7 DOWNTO 0); 
+	probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+	probe4 : IN STD_LOGIC; 
+	probe5 : IN STD_LOGIC;
+	probe6 : IN STD_LOGIC
+    );
+    END COMPONENT  ;
+
     constant SOF_EOF            : std_logic_vector(7 downto 0) := x"7e";
+    constant debug_gbt_ic_rx    : std_logic := '1';
 
     -------------- tx serializer -------------- 
 
@@ -78,6 +94,7 @@ architecture Behavioral of gbt_ic_controller is
     signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
     signal ic_r_valid            : std_logic;
     signal ic_rx_empty           : std_logic;
+--    signal gbt_rx_ic_elink_inv   : std_logic_vector(1 downto 0);
 --    signal ic_r_send_en : std_logic := '0';
 
 begin
@@ -114,6 +131,7 @@ begin
                                                         SOF_EOF;                                            -- SOF
                                 tx_frame(127 downto 48) <= (others => '1');
                                 ser_frame_pos <= 48;
+				ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             else
                                 tx_frame(39 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
                                                         x"01" &                                             -- CMD
@@ -121,11 +139,12 @@ begin
                                                         SOF_EOF;                                            -- SOF                           
                                 tx_frame(127 downto 40) <= (others => '1');
                                 ser_frame_pos <= 40;
+				ser_parity <= ((((gbtx_i2c_address & not ic_write_req_i) xor x"01") xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             end if;
-                            ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             ser_word_pos <= 0;
                             ser_set_bit_cnt <= 0;
                             ser_data_word_idx <= 0;
+
                         end if;
                     when REG_ADDR =>
                         ser_frame_pos <= ser_frame_pos + 1;
@@ -253,8 +272,26 @@ begin
             end if;
         end if;
     end process;
-
     --========= IC RX =========--
+   
+    -- ILA Debug IC RX --
+    ila_enable : if debug_gbt_ic_rx generate
+    	i_gbt_ila_ix_rx : ila_ic_rx
+            PORT MAP (
+	    	clk => gbt_clk_i,
+
+	    	probe0 => ic_rx_empty, 
+	    	probe1 => gbt_rx_ic_elink_i, 
+	    	probe2 => rx_data_from_gbtx, 
+	    	probe3 => ic_r_data_o,
+	    	probe4 => ic_r_valid,
+	    	probe5 => ic_read_req_i,
+            	probe6 => ic_write_req_i
+            );
+
+    end generate;
+
+
     i_ic_rx     : entity work.ic_rx
         generic map (
             g_FIFO_DEPTH    => 20
