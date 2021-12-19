@@ -967,10 +967,10 @@
                 <node id="EPTXECINVERT" address="0x4" permission="rw"
                     description=" Invert data for EC channel output"
                     mask="0x04" />
-                <node id="EPTXECTRISTATE" address="0x2" permission="rw"
+                <node id="EPTXECTRISTATE" address="0x4" permission="rw"
                     description=" Enable tri-state operation of EC channel output in simplex modes"
                     mask="0x02" />
-                <node id="EPTXECENABLE" address="0x1" permission="rw"
+                <node id="EPTXECENABLE" address="0x4" permission="rw"
                     description="Enable EC channel output"
                     mask="0x01" />
 
