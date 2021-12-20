@@ -19,50 +19,31 @@ TIMESPEC TS_cfgmclk = PERIOD "cfgmclk" 12.5 ns HIGH 50 %;
 TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 
 
-########################################################################################################################
-# E-link clock
-########################################################################################################################
-
-NET "clock_p" IOSTANDARD = LVDS_25;
-NET "clock_p" DIFF_TERM = "FALSE";
-NET "clock_n" IOSTANDARD = LVDS_25;
-NET "clock_n" DIFF_TERM = "FALSE";
-
-## GBTx data clock
-## It is a 320MHz data clock
-## fdck36_from_gbt_p
-#NET "clock_p" LOC = J9; #elink clock
-#NET "clock_n" LOC = H9; #elink clock
-
-# ClockDes1
-NET "clock_p"   LOC = A10; #dskw clock
-NET "clock_n"   LOC = B10; #dskw clock
-# DSKW clock is not used, jitter is higher and causes communications problems
-
-########################################################################################################################
-# E-link clock
-########################################################################################################################
-
 # create a closed group around the mgts to keep out extra trigger logic
 INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
 AREA_GROUP "MGT_GROUP" RANGE=SLICE_X98Y120:SLICE_X105Y179;
 AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
 AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
 
+#-------------------------------------------------------------------------------
+# CDC
+#-------------------------------------------------------------------------------
 
-INST "*/s_resync_1" TNM = "resync_grp";
-TIMESPEC TS_SYNC = FROM  FFS TO "resync_grp" TIG ;
+#INST "*/s_resync_1" TNM = "resync_grp";
+#TIMESPEC TS_SYNC = FROM  FFS TO "resync_grp" 2.5 ns;
+
+#-------------------------------------------------------------------------------
+# Random IO
+#-------------------------------------------------------------------------------
 
 TIMEGRP "led_o"       OFFSET = OUT 12.5 ns VALID 25 ns AFTER "clock_p" RISING;
 TIMEGRP "ext_sbits_o" OFFSET = OUT 12.5 ns VALID 25 ns AFTER "clock_p" RISING;
 
-# S-bit TIG
-NET "vfat_sot_*"   TNM=sbit_i_grp;
-NET "vfat_sbits_*" TNM=sbit_i_grp;
+NET "gbt_txready_i[0]" TNM = "async_inputs";
+NET "gbt_rxvalid_i[0]" TNM = "async_inputs";
+NET "gbt_rxready_i[0]" TNM = "async_inputs";
 
-INST "trigger*/sbits/trig_alignment/*oversample*/*ise1*/*" TNM = sbit_serdes_grp;
-
-TIMESPEC TS_SBIT_IOTIG = FROM sbit_i_grp TO sbit_serdes_grp TIG;
+TIMEGRP "async_inputs" OFFSET = IN 12.5 ns VALID 25 ns BEFORE "clock_p" RISING;
 
 
 TIMEGRP "sbit_i_grp" OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
@@ -78,27 +59,6 @@ NET "gbt_rxvalid_i[0]" TNM = "gbt_status_grp";
 NET "gbt_rxready_i[0]" TNM = "gbt_status_grp";
 
 TIMEGRP "gbt_status_grp" OFFSET = IN 12.5 ns VALID 25 ns BEFORE "clock_p" RISING;
-
-########################################################################################################################
-# E-links
-########################################################################################################################
-
-# inputs
-# 320 MHz e-link
-# GBTx DIN 36
-NET "elink_i_p" IOSTANDARD = LVDS_25;
-NET "elink_i_p" DIFF_TERM = "FALSE";
-
-NET "elink_i_n" IOSTANDARD = LVDS_25;
-NET "elink_i_n" DIFF_TERM = "FALSE";
-
-NET "elink_o_p" LOC = L19;
-NET "elink_o_n" LOC = L18;
-
-NET "elink_i_p" LOC = AD24;
-NET "elink_i_n" LOC = AE24;
-
-
 ########################################################################################################################
 # GBT TIG
 ########################################################################################################################
