@@ -423,8 +423,8 @@ begin
     end generate;
 
     notmr_gen : if (EN_TMR /= 1) generate
-      clusters_masked          <= clusters_unmasked_tmr(0);
-      clusters_unmasked        <= clusters_masked_tmr(0);
+      clusters_masked          <= clusters_masked_tmr(0);
+      clusters_unmasked        <= clusters_unmasked_tmr(0);
       overflow_o               <= overflow(0);
       cluster_count_masked_o   <= cluster_count_masked(0);
       cluster_count_unmasked_o <= cluster_count_unmasked(0);
