@@ -294,6 +294,7 @@ architecture Behavioral of control is
     signal cnt_l1a : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_bxn_sync_err : std_logic_vector (15 downto 0) := (others => '0');
     signal cnt_bx0_sync_err : std_logic_vector (15 downto 0) := (others => '0');
+    signal cnt_resync : std_logic_vector (15 downto 0) := (others => '0');
     signal ttc_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal ipb_switch_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal ipb_slave_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
@@ -596,26 +597,27 @@ begin
     regs_addresses(20)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"6";
     regs_addresses(21)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"7";
     regs_addresses(22)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"8";
-    regs_addresses(23)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"a";
+    regs_addresses(23)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"9";
     regs_addresses(24)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"b";
     regs_addresses(25)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"c";
-    regs_addresses(26)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"2";
-    regs_addresses(27)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"4";
-    regs_addresses(28)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"5";
-    regs_addresses(29)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"6";
-    regs_addresses(30)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"7";
-    regs_addresses(31)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"8";
-    regs_addresses(32)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"9";
-    regs_addresses(33)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"a";
-    regs_addresses(34)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"b";
-    regs_addresses(35)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"c";
-    regs_addresses(36)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"d";
-    regs_addresses(37)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"e";
-    regs_addresses(38)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"2";
-    regs_addresses(39)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"3";
-    regs_addresses(40)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"4";
-    regs_addresses(41)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"5";
-    regs_addresses(42)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"6";
+    regs_addresses(26)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "01" & x"d";
+    regs_addresses(27)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"2";
+    regs_addresses(28)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"4";
+    regs_addresses(29)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"5";
+    regs_addresses(30)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"6";
+    regs_addresses(31)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"7";
+    regs_addresses(32)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"8";
+    regs_addresses(33)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"9";
+    regs_addresses(34)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"a";
+    regs_addresses(35)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"b";
+    regs_addresses(36)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"c";
+    regs_addresses(37)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"d";
+    regs_addresses(38)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "10" & x"e";
+    regs_addresses(39)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"2";
+    regs_addresses(40)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"3";
+    regs_addresses(41)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"4";
+    regs_addresses(42)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"5";
+    regs_addresses(43)(REG_CONTROL_ADDRESS_MSB downto REG_CONTROL_ADDRESS_LSB) <= "11" & x"6";
 
     -- Connect read signals
     regs_read_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB) <= loopback;
@@ -643,43 +645,44 @@ begin
     regs_read_arr(15)(REG_CONTROL_TTC_L1A_CNT_MSB downto REG_CONTROL_TTC_L1A_CNT_LSB) <= cnt_l1a;
     regs_read_arr(16)(REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BXN_SYNC_ERR_CNT_LSB) <= cnt_bxn_sync_err;
     regs_read_arr(16)(REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_MSB downto REG_CONTROL_TTC_BX0_SYNC_ERR_CNT_LSB) <= cnt_bx0_sync_err;
-    regs_read_arr(17)(REG_CONTROL_SBITS_CLUSTER_RATE_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_LSB) <= cluster_rate_unmasked;
-    regs_read_arr(18)(REG_CONTROL_SBITS_CLUSTER_RATE_MASKED_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_MASKED_LSB) <= cluster_rate_masked;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= sbit_sel0;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= sbit_sel1;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= sbit_sel2;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= sbit_sel3;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= sbit_sel4;
-    regs_read_arr(19)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= sbit_sel5;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= sbit_sel6;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= sbit_sel7;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= sbit_mode0;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= sbit_mode1;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= sbit_mode2;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= sbit_mode3;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= sbit_mode4;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= sbit_mode5;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= sbit_mode6;
-    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= sbit_mode7;
-    regs_read_arr(22)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= cnt_snap_disable;
-    regs_read_arr(23)(REG_CONTROL_DNA_DNA_LSBS_MSB downto REG_CONTROL_DNA_DNA_LSBS_LSB) <= dna(31 downto 0);
-    regs_read_arr(24)(REG_CONTROL_DNA_DNA_MSBS_MSB downto REG_CONTROL_DNA_DNA_MSBS_LSB) <= dna(56 downto 32);
-    regs_read_arr(25)(REG_CONTROL_UPTIME_MSB downto REG_CONTROL_UPTIME_LSB) <= std_logic_vector(uptime);
-    regs_read_arr(26)(REG_CONTROL_USR_ACCESS_MSB downto REG_CONTROL_USR_ACCESS_LSB) <= usr_access;
-    regs_read_arr(27)(REG_CONTROL_HOG_GLOBAL_DATE_MSB downto REG_CONTROL_HOG_GLOBAL_DATE_LSB) <= GLOBAL_DATE;
-    regs_read_arr(28)(REG_CONTROL_HOG_GLOBAL_TIME_MSB downto REG_CONTROL_HOG_GLOBAL_TIME_LSB) <= GLOBAL_TIME;
-    regs_read_arr(29)(REG_CONTROL_HOG_GLOBAL_VER_MSB downto REG_CONTROL_HOG_GLOBAL_VER_LSB) <= GLOBAL_VER;
-    regs_read_arr(30)(REG_CONTROL_HOG_GLOBAL_SHA_MSB downto REG_CONTROL_HOG_GLOBAL_SHA_LSB) <= GLOBAL_SHA;
-    regs_read_arr(31)(REG_CONTROL_HOG_TOP_SHA_MSB downto REG_CONTROL_HOG_TOP_SHA_LSB) <= TOP_SHA;
-    regs_read_arr(32)(REG_CONTROL_HOG_TOP_VER_MSB downto REG_CONTROL_HOG_TOP_VER_LSB) <= TOP_VER;
-    regs_read_arr(33)(REG_CONTROL_HOG_HOG_SHA_MSB downto REG_CONTROL_HOG_HOG_SHA_LSB) <= HOG_SHA;
-    regs_read_arr(34)(REG_CONTROL_HOG_HOG_VER_MSB downto REG_CONTROL_HOG_HOG_VER_LSB) <= HOG_VER;
-    regs_read_arr(35)(REG_CONTROL_HOG_OH_SHA_MSB downto REG_CONTROL_HOG_OH_SHA_LSB) <= OPTOHYBRID_SHA;
-    regs_read_arr(36)(REG_CONTROL_HOG_OH_VER_MSB downto REG_CONTROL_HOG_OH_VER_LSB) <= OPTOHYBRID_VER;
-    regs_read_arr(37)(REG_CONTROL_HOG_FLAVOUR_MSB downto REG_CONTROL_HOG_FLAVOUR_LSB) <= std_logic_vector(to_unsigned(FLAVOUR,32));
-    regs_read_arr(38)(REG_CONTROL_TMR_TTC_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_TTC_TMR_ERR_CNT_LSB) <= ttc_tmr_err_cnt;
-    regs_read_arr(39)(REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_LSB) <= ipb_switch_tmr_err_cnt;
-    regs_read_arr(40)(REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(17)(REG_CONTROL_TTC_RESYNC_CNT_MSB downto REG_CONTROL_TTC_RESYNC_CNT_LSB) <= cnt_resync;
+    regs_read_arr(18)(REG_CONTROL_SBITS_CLUSTER_RATE_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_LSB) <= cluster_rate_unmasked;
+    regs_read_arr(19)(REG_CONTROL_SBITS_CLUSTER_RATE_MASKED_MSB downto REG_CONTROL_SBITS_CLUSTER_RATE_MASKED_LSB) <= cluster_rate_masked;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= sbit_sel0;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= sbit_sel1;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= sbit_sel2;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= sbit_sel3;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= sbit_sel4;
+    regs_read_arr(20)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= sbit_sel5;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= sbit_sel6;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= sbit_sel7;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= sbit_mode0;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= sbit_mode1;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= sbit_mode2;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= sbit_mode3;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= sbit_mode4;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= sbit_mode5;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= sbit_mode6;
+    regs_read_arr(21)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= sbit_mode7;
+    regs_read_arr(23)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= cnt_snap_disable;
+    regs_read_arr(24)(REG_CONTROL_DNA_DNA_LSBS_MSB downto REG_CONTROL_DNA_DNA_LSBS_LSB) <= dna(31 downto 0);
+    regs_read_arr(25)(REG_CONTROL_DNA_DNA_MSBS_MSB downto REG_CONTROL_DNA_DNA_MSBS_LSB) <= dna(56 downto 32);
+    regs_read_arr(26)(REG_CONTROL_UPTIME_MSB downto REG_CONTROL_UPTIME_LSB) <= std_logic_vector(uptime);
+    regs_read_arr(27)(REG_CONTROL_USR_ACCESS_MSB downto REG_CONTROL_USR_ACCESS_LSB) <= usr_access;
+    regs_read_arr(28)(REG_CONTROL_HOG_GLOBAL_DATE_MSB downto REG_CONTROL_HOG_GLOBAL_DATE_LSB) <= GLOBAL_DATE;
+    regs_read_arr(29)(REG_CONTROL_HOG_GLOBAL_TIME_MSB downto REG_CONTROL_HOG_GLOBAL_TIME_LSB) <= GLOBAL_TIME;
+    regs_read_arr(30)(REG_CONTROL_HOG_GLOBAL_VER_MSB downto REG_CONTROL_HOG_GLOBAL_VER_LSB) <= GLOBAL_VER;
+    regs_read_arr(31)(REG_CONTROL_HOG_GLOBAL_SHA_MSB downto REG_CONTROL_HOG_GLOBAL_SHA_LSB) <= GLOBAL_SHA;
+    regs_read_arr(32)(REG_CONTROL_HOG_TOP_SHA_MSB downto REG_CONTROL_HOG_TOP_SHA_LSB) <= TOP_SHA;
+    regs_read_arr(33)(REG_CONTROL_HOG_TOP_VER_MSB downto REG_CONTROL_HOG_TOP_VER_LSB) <= TOP_VER;
+    regs_read_arr(34)(REG_CONTROL_HOG_HOG_SHA_MSB downto REG_CONTROL_HOG_HOG_SHA_LSB) <= HOG_SHA;
+    regs_read_arr(35)(REG_CONTROL_HOG_HOG_VER_MSB downto REG_CONTROL_HOG_HOG_VER_LSB) <= HOG_VER;
+    regs_read_arr(36)(REG_CONTROL_HOG_OH_SHA_MSB downto REG_CONTROL_HOG_OH_SHA_LSB) <= OPTOHYBRID_SHA;
+    regs_read_arr(37)(REG_CONTROL_HOG_OH_VER_MSB downto REG_CONTROL_HOG_OH_VER_LSB) <= OPTOHYBRID_VER;
+    regs_read_arr(38)(REG_CONTROL_HOG_FLAVOUR_MSB downto REG_CONTROL_HOG_FLAVOUR_LSB) <= std_logic_vector(to_unsigned(FLAVOUR,32));
+    regs_read_arr(39)(REG_CONTROL_TMR_TTC_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_TTC_TMR_ERR_CNT_LSB) <= ttc_tmr_err_cnt;
+    regs_read_arr(40)(REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SWITCH_TMR_ERR_CNT_LSB) <= ipb_switch_tmr_err_cnt;
+    regs_read_arr(41)(REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_CONTROL_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
 
     -- Connect write signals
     loopback <= regs_write_arr(0)(REG_CONTROL_LOOPBACK_DATA_MSB downto REG_CONTROL_LOOPBACK_DATA_LSB);
@@ -687,30 +690,30 @@ begin
     sem_inject_address(39 downto 32) <= regs_write_arr(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB);
     vfat_reset(11 downto 0) <= regs_write_arr(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB);
     ttc_bxn_offset <= regs_write_arr(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB);
-    sbit_sel0 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB);
-    sbit_sel1 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB);
-    sbit_sel2 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB);
-    sbit_sel3 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB);
-    sbit_sel4 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB);
-    sbit_sel5 <= regs_write_arr(19)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB);
-    sbit_sel6 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB);
-    sbit_sel7 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB);
-    sbit_mode0 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB);
-    sbit_mode1 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB);
-    sbit_mode2 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB);
-    sbit_mode3 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB);
-    sbit_mode4 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB);
-    sbit_mode5 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB);
-    sbit_mode6 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB);
-    sbit_mode7 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB);
-    cnt_snap_disable <= regs_write_arr(22)(REG_CONTROL_CNT_SNAP_DISABLE_BIT);
+    sbit_sel0 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB);
+    sbit_sel1 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB);
+    sbit_sel2 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB);
+    sbit_sel3 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB);
+    sbit_sel4 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB);
+    sbit_sel5 <= regs_write_arr(20)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB);
+    sbit_sel6 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB);
+    sbit_sel7 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB);
+    sbit_mode0 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB);
+    sbit_mode1 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB);
+    sbit_mode2 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB);
+    sbit_mode3 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB);
+    sbit_mode4 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB);
+    sbit_mode5 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB);
+    sbit_mode6 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB);
+    sbit_mode7 <= regs_write_arr(21)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB);
+    cnt_snap_disable <= regs_write_arr(23)(REG_CONTROL_CNT_SNAP_DISABLE_BIT);
 
     -- Connect write pulse signals
     sem_inject_strobe <= regs_write_pulse_arr(3);
     sem_cnt_reset <= regs_write_pulse_arr(7);
-    cnt_snap_pulse <= regs_write_pulse_arr(21);
-    tmr_cnt_reset <= regs_write_pulse_arr(41);
-    tmr_err_inj <= regs_write_pulse_arr(42);
+    cnt_snap_pulse <= regs_write_pulse_arr(22);
+    tmr_cnt_reset <= regs_write_pulse_arr(42);
+    tmr_err_inj <= regs_write_pulse_arr(43);
 
     -- Connect write done signals
 
@@ -822,6 +825,19 @@ begin
     );
 
 
+    COUNTER_CONTROL_TTC_RESYNC_CNT : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset,
+        en_i      => ttc_i.resync,
+        snap_i    => cnt_snap,
+        count_o   => cnt_resync
+    );
+
+
     COUNTER_CONTROL_TMR_TTC_TMR_ERR_CNT : entity work.counter_snap_tmr
     generic map (
         g_COUNTER_WIDTH  => 16
@@ -871,23 +887,23 @@ begin
     regs_defaults(5)(REG_CONTROL_SEM_INJ_ADDR_MSBS_MSB downto REG_CONTROL_SEM_INJ_ADDR_MSBS_LSB) <= REG_CONTROL_SEM_INJ_ADDR_MSBS_DEFAULT;
     regs_defaults(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= REG_CONTROL_VFAT_RESET_DEFAULT;
     regs_defaults(14)(REG_CONTROL_TTC_BXN_OFFSET_MSB downto REG_CONTROL_TTC_BXN_OFFSET_LSB) <= REG_CONTROL_TTC_BXN_OFFSET_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= REG_CONTROL_HDMI_SBIT_SEL0_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= REG_CONTROL_HDMI_SBIT_SEL1_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= REG_CONTROL_HDMI_SBIT_SEL2_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= REG_CONTROL_HDMI_SBIT_SEL3_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= REG_CONTROL_HDMI_SBIT_SEL4_DEFAULT;
-    regs_defaults(19)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= REG_CONTROL_HDMI_SBIT_SEL5_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= REG_CONTROL_HDMI_SBIT_SEL6_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= REG_CONTROL_HDMI_SBIT_SEL7_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= REG_CONTROL_HDMI_SBIT_MODE0_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= REG_CONTROL_HDMI_SBIT_MODE1_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= REG_CONTROL_HDMI_SBIT_MODE2_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= REG_CONTROL_HDMI_SBIT_MODE3_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= REG_CONTROL_HDMI_SBIT_MODE4_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= REG_CONTROL_HDMI_SBIT_MODE5_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= REG_CONTROL_HDMI_SBIT_MODE6_DEFAULT;
-    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= REG_CONTROL_HDMI_SBIT_MODE7_DEFAULT;
-    regs_defaults(22)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= REG_CONTROL_CNT_SNAP_DISABLE_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL0_MSB downto REG_CONTROL_HDMI_SBIT_SEL0_LSB) <= REG_CONTROL_HDMI_SBIT_SEL0_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL1_MSB downto REG_CONTROL_HDMI_SBIT_SEL1_LSB) <= REG_CONTROL_HDMI_SBIT_SEL1_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL2_MSB downto REG_CONTROL_HDMI_SBIT_SEL2_LSB) <= REG_CONTROL_HDMI_SBIT_SEL2_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL3_MSB downto REG_CONTROL_HDMI_SBIT_SEL3_LSB) <= REG_CONTROL_HDMI_SBIT_SEL3_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL4_MSB downto REG_CONTROL_HDMI_SBIT_SEL4_LSB) <= REG_CONTROL_HDMI_SBIT_SEL4_DEFAULT;
+    regs_defaults(20)(REG_CONTROL_HDMI_SBIT_SEL5_MSB downto REG_CONTROL_HDMI_SBIT_SEL5_LSB) <= REG_CONTROL_HDMI_SBIT_SEL5_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_SEL6_MSB downto REG_CONTROL_HDMI_SBIT_SEL6_LSB) <= REG_CONTROL_HDMI_SBIT_SEL6_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_SEL7_MSB downto REG_CONTROL_HDMI_SBIT_SEL7_LSB) <= REG_CONTROL_HDMI_SBIT_SEL7_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE0_MSB downto REG_CONTROL_HDMI_SBIT_MODE0_LSB) <= REG_CONTROL_HDMI_SBIT_MODE0_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE1_MSB downto REG_CONTROL_HDMI_SBIT_MODE1_LSB) <= REG_CONTROL_HDMI_SBIT_MODE1_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE2_MSB downto REG_CONTROL_HDMI_SBIT_MODE2_LSB) <= REG_CONTROL_HDMI_SBIT_MODE2_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE3_MSB downto REG_CONTROL_HDMI_SBIT_MODE3_LSB) <= REG_CONTROL_HDMI_SBIT_MODE3_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE4_MSB downto REG_CONTROL_HDMI_SBIT_MODE4_LSB) <= REG_CONTROL_HDMI_SBIT_MODE4_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE5_MSB downto REG_CONTROL_HDMI_SBIT_MODE5_LSB) <= REG_CONTROL_HDMI_SBIT_MODE5_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE6_MSB downto REG_CONTROL_HDMI_SBIT_MODE6_LSB) <= REG_CONTROL_HDMI_SBIT_MODE6_DEFAULT;
+    regs_defaults(21)(REG_CONTROL_HDMI_SBIT_MODE7_MSB downto REG_CONTROL_HDMI_SBIT_MODE7_LSB) <= REG_CONTROL_HDMI_SBIT_MODE7_DEFAULT;
+    regs_defaults(23)(REG_CONTROL_CNT_SNAP_DISABLE_BIT) <= REG_CONTROL_CNT_SNAP_DISABLE_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
@@ -895,9 +911,9 @@ begin
     regs_writable_arr(5) <= '1';
     regs_writable_arr(8) <= '1';
     regs_writable_arr(14) <= '1';
-    regs_writable_arr(19) <= '1';
     regs_writable_arr(20) <= '1';
-    regs_writable_arr(22) <= '1';
+    regs_writable_arr(21) <= '1';
+    regs_writable_arr(23) <= '1';
 
   --==== Registers end ============================================================================
 

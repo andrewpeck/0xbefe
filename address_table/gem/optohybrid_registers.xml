@@ -168,10 +168,17 @@
                   fw_cnt_reset_signal="cnt_reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bx0_sync_err"/>
+            <node id="RESYNC_CNT" address="0x8" permission="r"
+                  mask="0xffff"
+                  description="Count of sesyncs received"
+                  fw_cnt_en_signal="ttc_i.resync"
+                  fw_cnt_reset_signal="reset"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_resync"/>
         </node> <!--TTC-->
 
 
-        <node id="SBITS" address="0x13" description = "S-bit and Cluster Packing Rate">
+        <node id="SBITS" address="0x14" description = "S-bit and Cluster Packing Rate">
             <node id="CLUSTER_RATE" address="0x0" permission="r"
                   description="Trigger cluster rate measured in Hz"
                   fw_signal="cluster_rate_unmasked"/>
@@ -180,7 +187,7 @@
                   fw_signal="cluster_rate_masked"/>
         </node> <!--SBITS-->
 
-        <node id="HDMI" address="0x15" description = "HDMI Connector Control:
+        <node id="HDMI" address="0x16" description = "HDMI Connector Control:
                                                       \\ Mode=0: Each signal is a single VFAT. The VFAT of interest is chosen by SBIT_SEL
                                                       \\ Mode=1: Each signal is the OR of three VFATs in an ieta row. The row of interest is configured by SBIT_SEL
                                                       \\ Mode=2: Each signal is the OR of four VFATs in an iphi half column (e.g. 0-3, 4-7, 8-11, 12-15, 16-19, 20-23)">
@@ -281,7 +288,7 @@
                   fw_default="0x0"/>
         </node> <!--HDMI-->
 
-        <node id="CNT_SNAP" address="0x17" description = "Control the global counter snapshot">
+        <node id="CNT_SNAP" address="0x18" description = "Control the global counter snapshot">
             <node id="PULSE" address="0x0" permission="w"
                   description="Pulse to take a counter snapshot"
                   mask="0x1"
@@ -293,7 +300,7 @@
                   fw_signal="cnt_snap_disable"/>
         </node> <!--CNT_SNAP-->
 
-        <node id="DNA" address="0x1a" description = "57 Bit FPGA-specific device identifier">
+        <node id="DNA" address="0x1b" description = "57 Bit FPGA-specific device identifier">
             <node id="DNA_LSBS" address="0x0" permission="r"
                   description = "Device DNA bits 31 downto 0"
                   mask="0xffffffff"
@@ -304,7 +311,7 @@
                   fw_signal="dna(56 downto 32)"/>
         </node> <!--DNA-->
 
-        <node id="UPTIME" address="0x1C" description="Uptime in seconds" permission="r"
+        <node id="UPTIME" address="0x1D" description="Uptime in seconds" permission="r"
               mask="0xfffff"
               fw_signal="std_logic_vector(uptime)"/>
 
