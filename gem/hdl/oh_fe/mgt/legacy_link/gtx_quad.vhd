@@ -42,7 +42,11 @@ entity gtx_quad is
     GTX2_TXDATA_IN : in std_logic_vector(15 downto 0);
     GTX3_TXDATA_IN : in std_logic_vector(15 downto 0);
 
-    txenprbstst_in : in std_logic_vector (2 downto 0);
+    tx_prbs_mode_0 : in std_logic_vector (2 downto 0);
+    tx_prbs_mode_1 : in std_logic_vector (2 downto 0);
+    tx_prbs_mode_2 : in std_logic_vector (2 downto 0);
+    tx_prbs_mode_3 : in std_logic_vector (2 downto 0);
+
     txreset_in     : in std_logic;
 
     txpowerdown    : in std_logic_vector (1 downto 0);
@@ -102,6 +106,8 @@ architecture Behavioral of gtx_quad is
 
   signal GTX_TXCHARISK_IN : t_std2_array (3 downto 0);
 
+  signal tx_prbs_mode : t_std3_array(3 downto 0);
+
   signal GTX_TXDATA_IN : t_std16_array (3 downto 0);
 
 begin
@@ -118,6 +124,11 @@ begin
     end generate;
 
   end generate;
+
+  tx_prbs_mode(0) <= tx_prbs_mode_0;
+  tx_prbs_mode(1) <= tx_prbs_mode_1;
+  tx_prbs_mode(2) <= tx_prbs_mode_2;
+  tx_prbs_mode(3) <= tx_prbs_mode_3;
 
   GTX_TXCHARISK_IN(0) <= GTX0_TXCHARISK_IN;
   GTX_TXCHARISK_IN(1) <= GTX1_TXCHARISK_IN;
@@ -178,7 +189,7 @@ begin
         TXPLLLKDET_OUT        => pll_lock(I),
         TXRESETDONE_OUT       => gtx_txresetdone_i(I),
         --------------------- Transmit Ports - TX PRBS Generator -------------------
-        TXENPRBSTST_IN        => txenprbstst_in,
+        TXENPRBSTST_IN        => tx_prbs_mode(I),
         -- resets
         TXPOWERDOWN           => TXPOWERDOWN,
         TXPLLPOWERDOWN        => TXPLLPOWERDOWN

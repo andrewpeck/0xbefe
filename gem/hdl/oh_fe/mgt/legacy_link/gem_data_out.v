@@ -16,7 +16,15 @@ module   gem_data_out
        input [N_REFCLKS-1:0] refclk_n,
        input [N_REFCLKS-1:0] refclk_p,
 
-       input [2:0]           tx_prbs_mode,
+       input [2:0]           tx_prbs_mode_0,
+       input [2:0]           tx_prbs_mode_1,
+       input [2:0]           tx_prbs_mode_2,
+       input [2:0]           tx_prbs_mode_3,
+
+       input [2:0]           loopback_mode_0,
+       input [2:0]           loopback_mode_1,
+       input [2:0]           loopback_mode_2,
+       input [2:0]           loopback_mode_3,
 
        input [56*2-1:0]      gem_data, // 56 bit gem data
        input                 overflow_i, // 1 bit gem has more than 8 clusters
@@ -466,7 +474,10 @@ module   gem_data_out
             // If the RX PLL is supplying the clock for the TX datapath,
             // GTXTXRESET and GTXRXRESET must be tied together. In addition,
             // the transmitter reference clock must also be supplied (see Reference Clock Selection, page 102)
-            .txenprbstst_in    (tx_prbs_mode),                  // 000: Standard operation mode (test pattern generation is OFF)
+            .tx_prbs_mode_0    (tx_prbs_mode_0),                  // 000: Standard operation mode (test pattern generation is OFF)
+            .tx_prbs_mode_1    (tx_prbs_mode_1),                  // 000: Standard operation mode (test pattern generation is OFF)
+            .tx_prbs_mode_2    (tx_prbs_mode_2),                  // 000: Standard operation mode (test pattern generation is OFF)
+            .tx_prbs_mode_3    (tx_prbs_mode_3),                  // 000: Standard operation mode (test pattern generation is OFF)
             // 001: PRBS-7
             // 010: PRBS-15
             // 011: PRBS-23

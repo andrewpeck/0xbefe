@@ -251,7 +251,15 @@ begin
         refclk_n : in std_logic_vector (1 downto 0);
         refclk_p : in std_logic_vector (1 downto 0);
 
-        tx_prbs_mode : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_0 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_1 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_2 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_3 : in std_logic_vector (2 downto 0);
+
+        loopback_mode_0 : in std_logic_vector (2 downto 0);
+        loopback_mode_1 : in std_logic_vector (2 downto 0);
+        loopback_mode_2 : in std_logic_vector (2 downto 0);
+        loopback_mode_3 : in std_logic_vector (2 downto 0);
 
         gem_data      : in std_logic_vector (111 downto 0);  -- 56 bit gem data
         overflow_i    : in std_logic;                        -- 1 bit gem has more than 8 clusters
@@ -310,11 +318,24 @@ begin
         ready_o      => open,
         pll_lock_o   => open,
         txfsm_done_o => open,
-        tx_prbs_mode => (others => '0'),
 
+        tx_prbs_mode_0 => control(0).txprbssel,
+        tx_prbs_mode_1 => control(1).txprbssel,
+        tx_prbs_mode_2 => control(2).txprbssel,
+        tx_prbs_mode_3 => control(3).txprbssel,
+
+        loopback_mode_0 => control(0).txloopback,
+        loopback_mode_1 => control(1).txloopback,
+        loopback_mode_2 => control(2).txloopback,
+        loopback_mode_3 => control(3).txloopback,
 
         pll_reset_i        => '0',
-        mgt_reset_i        => (others => '0'),
+
+        mgt_reset_i(0)     => control(0).gttxreset,
+        mgt_reset_i(1)     => control(1).gttxreset,
+        mgt_reset_i(2)     => control(2).gttxreset,
+        mgt_reset_i(3)     => control(3).gttxreset,
+
         gtxtest_start_i    => '0',
         txreset_i          => '0',
         mgt_realign_i      => '0',
