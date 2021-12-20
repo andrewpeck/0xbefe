@@ -48,13 +48,13 @@ def init_gem_frontend():
                 selectGbt(oh, gbt)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
-                elif gbt_ver == 1:
-                    writeGbtRegAddrs(0x140, 0xA3)
+                #elif gbt_ver == 1:
+                #    writeGbtRegAddrs(0x140, 0xA3)
                 sleep(0.1)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x12F, 0x80)
-                elif gbt_ver == 1:
-                    writeGbtRegAddrs(0x13F, 0x80)
+                #elif gbt_ver == 1:
+                #    writeGbtRegAddrs(0x13F, 0x80)
                 sleep(0.1)
         sleep(1)
         
