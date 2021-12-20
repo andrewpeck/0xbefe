@@ -45,34 +45,15 @@ NET "gbt_rxready_i[0]" TNM = "async_inputs";
 
 TIMEGRP "async_inputs" OFFSET = IN 12.5 ns VALID 25 ns BEFORE "clock_p" RISING;
 
+#-------------------------------------------------------------------------------
+# ISERDES
+#-------------------------------------------------------------------------------
 
-TIMEGRP "sbit_i_grp" OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
+NET "vfat_sot_*"   TNM="iserdes_i_grp";
+NET "vfat_sbits_*" TNM="iserdes_i_grp";
+NET "elink_i_*"    TNM="iserdes_i_grp";
+TIMEGRP iserdes_i_grp OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
 
-########################################################################################################################
-# GBT Status
-########################################################################################################################
-# v_diff_k_13_p
-# R_side_2_n
-# R_side_2_p
-NET "gbt_txready_i[0]" TNM = "gbt_status_grp";
-NET "gbt_rxvalid_i[0]" TNM = "gbt_status_grp";
-NET "gbt_rxready_i[0]" TNM = "gbt_status_grp";
-
-TIMEGRP "gbt_status_grp" OFFSET = IN 12.5 ns VALID 25 ns BEFORE "clock_p" RISING;
-########################################################################################################################
-# GBT TIG
-########################################################################################################################
-
-# Output
-INST "elink_o_p" TNM = "elink_o_grp";
-INST "elink_o_n" TNM = "elink_o_grp";
-INST "gbt*/gbt_serdes*/to_gbt_ser*/*" TNM = "elink_o_serdes_grp";
-
-TIMESPEC TS_ELINK_O_TIG = FROM "elink_o_serdes_grp" TO "elink_o_grp" TIG ;
-
-# Input
-INST "elink_i_p" TNM = "elink_i_grp";
-INST "elink_i_n" TNM = "elink_i_grp";
-INST "gbt*/gbt_serdes*/*oversample/ise1*/*" TNM = "elink_i_serdes_grp";
-
-TIMESPEC TS_GBT_IOTIG = FROM "elink_i_grp" TO "elink_i_serdes_grp" TIG ;
+INST "gbt_inst/gbt_serdes/gbt_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
+INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
+TIMESPEC TS_ISERDES = FROM "iserdes_grp" 2.0 ns DATAPATHONLY;
