@@ -59,17 +59,17 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
 
             # configure reset + led outputs
             configure_gpio(oh_ver, boss, readback)
-            
-        # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
-        if boss and not readback:
-            print ("Enabling TX2 channel for VTRX+")
-            i2cmaster_write(system, oh_ver, 0x00, 0x03)
-        
+
         # Powerup settings
         writeReg(getNode("LPGBT.RWF.POWERUP.PUSMPLLTIMEOUTCONFIG"), 0x3, readback)
         writeReg(getNode("LPGBT.RWF.POWERUP.PUSMDLLTIMEOUTCONFIG"), 0x3, readback)
 
         #set_uplink_group_data_source("normal", readback, pattern=0x55555555)
+
+    # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
+    if boss and not readback:
+        print ("Enabling TX2 channel for VTRX+")
+        i2cmaster_write(system, oh_ver, 0x00, 0x03)
 
     print("Configuration finished... asserting config done")
     # Finally, Set pll&dllConfigDone to run chip:
@@ -646,7 +646,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if GBT is READY
-    if args.system != "dryrun" and args.system != "chc":
+    if oh_ver == 1 and args.system != "dryrun" and args.system != "chc":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT

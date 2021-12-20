@@ -182,9 +182,3 @@ if __name__ == "__main__":
 
     # Termination
     rw_terminate()
-
-
-
-../resources/me0_boss_config.txt
-
-

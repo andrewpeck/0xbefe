@@ -129,7 +129,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if GBT is READY
-    if args.system != "dryrun" and args.system != "chc":
+    if oh_ver == 1 and args.system != "dryrun" and args.system != "chc":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT
