@@ -621,9 +621,9 @@ if __name__ == "__main__":
     else:
         boss = 0
     
-    if args.system == "backend":
+    if args.system in ["chc", "backend"]:
         if args.input_config_file is None or ".txt" not in args.input_config_file:
-            print (Colors.YELLOW + "Need input .txt file to configure from backend" + Colors.ENDC)
+            print (Colors.YELLOW + "Need input .txt file to configure from chc or backend" + Colors.ENDC)
             sys.exit()
 
     if args.input_config_file is not None:
