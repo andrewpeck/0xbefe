@@ -545,3 +545,37 @@ NET vfat_sbits_n<6>    IOSTANDARD=LVDS_25 | LOC = "AC28"; # polarity swap
 NET vfat_sbits_n<7>    IOSTANDARD=LVDS_25 | LOC = "AA31";
 NET vfat_sbits_p<7>    IOSTANDARD=LVDS_25 | LOC = "AA30";
 
+# inputs
+# 320 MHz e-link
+# GBTx DIN 36
+NET "elink_i_p" IOSTANDARD = LVDS_25;
+NET "elink_i_p" DIFF_TERM = "FALSE";
+
+NET "elink_i_n" IOSTANDARD = LVDS_25;
+NET "elink_i_n" DIFF_TERM = "FALSE";
+
+NET "elink_o_p" LOC = L19;
+NET "elink_o_n" LOC = L18;
+
+NET "elink_i_p" LOC = AD24;
+NET "elink_i_n" LOC = AE24;
+
+########################################################################################################################
+# E-link clock
+########################################################################################################################
+
+NET "clock_p" IOSTANDARD = LVDS_25;
+NET "clock_p" DIFF_TERM = "FALSE";
+NET "clock_n" IOSTANDARD = LVDS_25;
+NET "clock_n" DIFF_TERM = "FALSE";
+
+## GBTx data clock
+## It is a 320MHz data clock
+## fdck36_from_gbt_p
+#NET "clock_p" LOC = J9; #elink clock
+#NET "clock_n" LOC = H9; #elink clock
+
+# ClockDes1
+NET "clock_p"   LOC = A10; #dskw clock
+NET "clock_n"   LOC = B10; #dskw clock
+# DSKW clock is not used, jitter is higher and causes communications problems

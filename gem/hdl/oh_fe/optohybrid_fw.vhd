@@ -133,6 +133,7 @@ architecture Behavioral of optohybrid_fw is
   signal cluster_count_unmasked : std_logic_vector (10 downto 0);
   signal active_vfats           : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sbit_clusters          : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+  signal legacy_clusters : t_std14_array (7 downto 0);
 
   -- Global signals
   signal idlyrdy     : std_logic;
@@ -468,17 +469,18 @@ begin
       trigger_data_formatter_inst : entity work.trigger_data_formatter
         generic map (g_TMR_INST => I)
         port map (
-          clocks          => clocks,
-          reset_i         => system_reset,
-          ttc_i           => ttc,
-          prbs_en_i       => trigger_prbs_en,
-          clusters_i      => sbit_clusters,
-          overflow_i      => sbit_overflow,
-          bxn_counter_i   => bxn_counter,
-          error_i         => '0',
-          fiber_packets_o => fiber_packets_tmr(I),
-          fiber_kchars_o  => fiber_kchars_tmr(I),
-          elink_packets_o => elink_packets_tmr(I)
+          clocks            => clocks,
+          reset_i           => system_reset,
+          ttc_i             => ttc,
+          prbs_en_i         => trigger_prbs_en,
+          clusters_i        => sbit_clusters,
+          overflow_i        => sbit_overflow,
+          bxn_counter_i     => bxn_counter,
+          error_i           => '0',
+          legacy_clusters_o => legacy_clusters,
+          fiber_packets_o   => fiber_packets_tmr(I),
+          fiber_kchars_o    => fiber_kchars_tmr(I),
+          elink_packets_o   => elink_packets_tmr(I)
           );
     end generate;
 
@@ -539,11 +541,11 @@ begin
         elink_packets_i => elink_packets,
 
         -- legacy phy ports
-        clusters_i    => sbit_clusters,
-        overflow_i    => sbit_overflow,
-        bxn_counter_i => bxn_counter,
-        bc0_i         => ttc.bc0,
-        resync_i      => ttc.resync
+        legacy_clusters_i => legacy_clusters,
+        overflow_i        => sbit_overflow,
+        bxn_counter_i     => bxn_counter,
+        bc0_i             => ttc.bc0,
+        resync_i          => ttc.resync
 
         );
   end generate;
