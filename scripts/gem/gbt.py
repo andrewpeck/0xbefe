@@ -90,7 +90,7 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
 
     if gem_station == 0: # ME0
         selectGbt(ohSelect, gbtSelect)
-    elif: # GE1/1 or GE2/1
+    else: # GE1/1 or GE2/1
         if (checkGbtReady(ohSelect, gbtSelect) == 1):
             selectGbt(ohSelect, gbtSelect)
         else:
