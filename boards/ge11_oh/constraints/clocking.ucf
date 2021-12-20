@@ -1,6 +1,6 @@
-#######################################################################################################################
+#-------------------------------------------------------------------------------
 # Clock Periods
-#######################################################################################################################
+#-------------------------------------------------------------------------------
 
 # Main E-link clock
 NET "clock_p" TNM_NET = "TN_CLOCK";
@@ -13,14 +13,11 @@ TIMESPEC TS_clock = PERIOD "TN_CLOCK" 24.8 ns HIGH 50 %;
 NET "mgt_clk_p_i<1>" TNM_NET = "TN_MGT_CLK_1";
 TIMESPEC TS_mgt_clk_1 = PERIOD "TN_MGT_CLK_1" 12.36 ns HIGH 50 %;
 
-#######################################################################################################################
 # CFGMCLK
-#######################################################################################################################
-
-NET "control*/led_control_inst/startup_clock_o" TNM_NET = "cfgmclk";
+NET "control_inst/led_control_inst/startup/async_clock_o" TNM_NET = "cfgmclk";
 TIMESPEC TS_cfgmclk = PERIOD "cfgmclk" 12.5 ns HIGH 50 %;
+TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 
-TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO  FFS TIG ;
 
 ########################################################################################################################
 # E-link clock
