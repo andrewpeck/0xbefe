@@ -1342,12 +1342,12 @@
         <node id="L1A_MASK" address="0xfa">
             <node id="L1A_MASK_DELAY" address="0x0" permission="rw"
                   mask="0x00001f"
-                  description=""
+                  description="Value to delay the L1A by for masking S-bit clusters"
                   fw_default="0x0"
                   fw_signal="l1a_mask_delay"/>
             <node id="L1A_MASK_WIDTH" address="0x0" permission="rw"
                   mask="0x001f00"
-                  description=""
+                  description="Width of the S-bit cluster mask in bx; 0=off"
                   fw_default="0x0"
                   fw_signal="l1a_mask_width"/>
         </node>
