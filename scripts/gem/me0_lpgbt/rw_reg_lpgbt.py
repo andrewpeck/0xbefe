@@ -457,9 +457,15 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
         print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
+    oh_ver = get_oh_ver(ohIdx, gbtIdx)
+    ready_value = -9999
+    if oh_ver == 1:
+        ready_value = 18
+    elif oh_ver == 2:
+        ready_value == 19
     if system == "chc":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
-        if (pusmstate==18):
+        if (pusmstate==ready_value):
             print ("lpGBT status is READY")
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)

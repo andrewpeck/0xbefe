@@ -122,7 +122,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             end_fec_errors[gbt] = gem_utils.read_backend_reg(fec_node)
             print ("  GBT %d, number of FEC Errors = %d" %(gbt, end_fec_errors[gbt]))
             file_out.write("  GBT %d, number of FEC Errors = %d\n" %(gbt, end_fec_errors[gbt]))
-            fec_errors[gbt] = end_fec_errors[gbt] - start_fec_errors[gbt]
+            #fec_errors[gbt] = end_fec_errors[gbt] - start_fec_errors[gbt]
+            fec_errors[gbt] = end_fec_errors[gbt]
         print ("")
         file_out.write("\n")
 
@@ -178,7 +179,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             print ("\nEnd Error Counting with number of FEC Errors = %d\n" %(end_fec_errors))
             file_out.write("\nEnd Error Counting with number of FEC Errors = %d\n\n" %(end_fec_errors))
         fec_errors = {}
-        fec_errors[gbt_list[0]] = end_fec_errors - start_fec_errors
+        #fec_errors[gbt_list[0]] = end_fec_errors - start_fec_errors
+        fec_errors[gbt_list[0]] = end_fec_errors
         
         # Disable the counter
         if opr in ["run", "stop"]:
@@ -223,12 +225,14 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             result_string += Colors.GREEN
         else:
             result_string += Colors.YELLOW
-        result_string += "Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
-        result_string += "Bit Error Ratio (BER) " + ber_str + Colors.ENDC + "\n"
-        result_string += "Inefficiency " + ineffi_str + Colors.ENDC + "\n"
-        result_string_write += "Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
-        result_string_write += "Bit Error Ratio (BER) " + ber_str + "\n"
-        result_string_write += "Inefficiency " + ineffi_str + "\n"
+        result_string += "GBT %d\n"%gbt
+        result_string += "  Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
+        result_string += "  Bit Error Ratio (BER) " + ber_str + Colors.ENDC + "\n"
+        result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
+        result_string_write += "GBT %d\n"%gbt
+        result_string_write += "  Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
+        result_string_write += "  Bit Error Ratio (BER) " + ber_str + "\n"
+        result_string_write += "  Inefficiency " + ineffi_str + "\n"
         print (result_string)
         file_out.write(result_string_write + "\n")
     file_out.close()

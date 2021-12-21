@@ -87,7 +87,12 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
         sleep(1) # Waiting for 1 sec for the lpGBT configuration to be complete
     pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
     print ("PUSMSTATE register value: " + str(pusmstate))
-    if (pusmstate==18):
+    ready_value = -9999
+    if oh_ver == 1:
+        ready_value = 18
+    elif oh_ver == 2:
+        ready_value == 19
+    if (pusmstate==ready_value):
         print ("lpGBT status is READY")
 
     # Writing lpGBT configuration to text file
