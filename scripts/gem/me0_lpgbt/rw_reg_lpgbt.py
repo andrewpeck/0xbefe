@@ -462,7 +462,7 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
     if oh_ver == 1:
         ready_value = 18
     elif oh_ver == 2:
-        ready_value == 19
+        ready_value = 19
     if system == "chc":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):

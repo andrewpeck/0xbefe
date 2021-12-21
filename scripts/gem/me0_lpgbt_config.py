@@ -91,7 +91,7 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
     if oh_ver == 1:
         ready_value = 18
     elif oh_ver == 2:
-        ready_value == 19
+        ready_value = 19
     if (pusmstate==ready_value):
         print ("lpGBT status is READY")
 
