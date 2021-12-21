@@ -48,13 +48,13 @@ def init_gem_frontend():
                 selectGbt(oh, gbt)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
-                #elif gbt_ver == 1:
-                #    writeGbtRegAddrs(0x140, 0xA3)
+                elif gbt_ver == 1:
+                    writeGbtRegAddrs(0x140, 0xA3)
                 sleep(0.1)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x12F, 0x80)
-                #elif gbt_ver == 1:
-                #    writeGbtRegAddrs(0x13F, 0x80)
+                elif gbt_ver == 1:
+                    writeGbtRegAddrs(0x13F, 0x80)
                 sleep(0.1)
         sleep(1)
         
@@ -78,6 +78,7 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config])
+                sleep(1)
 
                 # Enable TX channels of VTRx+
                 if gbt%2 != 0:
