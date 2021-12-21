@@ -226,11 +226,11 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         else:
             result_string += Colors.YELLOW
         result_string += "GBT %d\n"%gbt
-        result_string += "  Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
+        result_string += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
         result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
         result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
         result_string_write += "GBT %d\n"%gbt
-        result_string_write += "  Number of FEC errors in " + str(runtime) + " minutes: " + str(fec_error_gbt) + "\n"
+        result_string_write += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
         result_string_write += "  Bit Error Ratio (BER) " + ber_str + "\n"
         result_string_write += "  Inefficiency " + ineffi_str + "\n"
         print (result_string)
