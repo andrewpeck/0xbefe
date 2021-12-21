@@ -78,7 +78,7 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config])
-                sleep(1)
+                sleep(2)
 
                 # Enable TX channels of VTRx+
                 if gbt%2 != 0:
