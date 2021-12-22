@@ -48,9 +48,9 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
     cntvalmin = 2**20
 
     #ymin=1
-    #ymax=30
+    #ymax=31
     ymin=0
-    ymax=31
+    ymax=30
     xmin=0
     xmax=64
 
