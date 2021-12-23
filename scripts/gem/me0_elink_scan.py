@@ -148,9 +148,9 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
-    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_sub_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
     config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
-    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    config_sub_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
     
     if not os.path.isfile(config_boss_filename_v1):
         print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)
