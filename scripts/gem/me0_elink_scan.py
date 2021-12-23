@@ -90,7 +90,7 @@ def setVfatRxEnable(system, oh_select, vfat, enable, elink):
         GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C4
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C8
-    addr = GBT_ELINK_SAMPLE_ENABLE_BASE_REG + elink/4
+    addr = GBT_ELINK_SAMPLE_ENABLE_BASE_REG + int(elink/4)
     bit = 4 + elink%4
     mask = (1 << bit)
     value = (config[addr] & (~mask)) | (enable << bit)
