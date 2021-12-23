@@ -84,18 +84,21 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     print (vfat_list)
     print ("")
 
+    initial_thr = {}
     if parallel:
         print ("Unmasking all channels in all VFATs")
         # Unmask channels for this vfat
         for vfat in vfat_list:
+            initial_thr[vfat] = read_backend_reg(dac_node[vfat])
             for channel in range(0,128):
                 enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+            write_backend_reg(dac_node[vfat], 0)
 
-    initial_thr = {}
     # Looping over VFATs
     for vfat in vfat_list:
         print ("VFAT: %02d"%vfat)
-        initial_thr[vfat] = read_backend_reg(dac_node[vfat])
+        if not parallel:
+            initial_thr[vfat] = read_backend_reg(dac_node[vfat])
 
         # Looping over sbits
         for sbit in sbit_list:
@@ -143,7 +146,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                     enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
         # End of sbits loop
-        write_backend_reg(dac_node[vfat], initial_thr[vfat])
+        if parallel:
+            write_backend_reg(dac_node[vfat], 0)
+        else:
+            write_backend_reg(dac_node[vfat], initial_thr[vfat])
         sleep(1e-3)
         print ("")
     # End of VFAT loop
@@ -168,16 +174,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             sbit_data[vfat]["all"][thr]["time"] = runtime
     for vfat in vfat_list:
         write_backend_reg(dac_node[vfat], initial_thr[vfat])
-        if not parallel:
-            # Mask again channels for this vfat
-            for channel in range(0,128):
-                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
-
-    if parallel:
         # Mask again channels for this vfat
-        for vfat in vfat_list:
-            for channel in range(0,128):
-                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+        for channel in range(0,128):
+            enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
     # Disable channels on VFATs
     for vfat in vfat_list:
