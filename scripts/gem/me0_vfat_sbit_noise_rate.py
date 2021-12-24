@@ -8,7 +8,7 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, verbose):
+def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, all, verbose):
 
     resultDir = "results"
     try:
@@ -154,23 +154,30 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     # End of VFAT loop
     print ("")
 
-    # Rate counters for entire VFATs
-    print ("All VFATs, Sbit: All")
-    for vfat in vfat_list:
-        if not parallel:
-            # Unmask channels for this vfat
-            for channel in range(0,128):
-                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
-    for thr in range(0,256,step):
-        print ("  Threshold: %d"%thr)
+    if args.all:
+        # Rate counters for entire VFATs
+        print ("All VFATs, Sbit: All")
         for vfat in vfat_list:
-            write_backend_reg(dac_node[vfat], thr)
-            sleep(1e-3)
-        global_reset()
-        sleep(1.1)
-        for vfat in vfat_list:
-            sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
-            sbit_data[vfat]["all"][thr]["time"] = runtime
+            if not parallel:
+                # Unmask channels for this vfat
+                for channel in range(0,128):
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+        for thr in range(0,256,step):
+            print ("  Threshold: %d"%thr)
+            for vfat in vfat_list:
+                write_backend_reg(dac_node[vfat], thr)
+                sleep(1e-3)
+            global_reset()
+            sleep(1.1)
+            for vfat in vfat_list:
+                sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
+                sbit_data[vfat]["all"][thr]["time"] = runtime
+    else:
+        for thr in range(0,256,step):
+            for vfat in vfat_list:
+                sbit_data[vfat]["all"][thr]["fired"] = 0
+                sbit_data[vfat]["all"][thr]["time"] = runtime
+
     for vfat in vfat_list:
         write_backend_reg(dac_node[vfat], initial_thr[vfat])
         # Mask again channels for this vfat
@@ -254,8 +261,7 @@ if __name__ == "__main__":
         sys.exit()
 
     sbit_list = [i for i in range(0,64)]
-    if args.all:
-        sbit_list.append("all")
+    sbit_list.append("all")
     s_bit_channel_mapping = {}
     print ("")
     if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
@@ -284,7 +290,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, args.verbose)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, args.all, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

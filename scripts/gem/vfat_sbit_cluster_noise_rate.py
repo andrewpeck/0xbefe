@@ -8,7 +8,7 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_cluster_mapping, verbose):
+def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_cluster_mapping, sbits_all, verbose):
 
     resultDir = "results"
     try:
@@ -89,6 +89,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
         # Looping over sbits
         for sbit in sbit_list:
+            if not sbits_all and sbit!="all":
+                for thr in range(0,256,step):
+                    sbit_data[vfat][sbit][thr]["fired"] = 0
+                    sbit_data[vfat][sbit][thr]["time"] = runtime
+                continue
+
             if verbose:
                 if sbit=="all":
                     print ("  VFAT: %02d, Sbit: all"%(vfat))
@@ -256,9 +262,8 @@ if __name__ == "__main__":
             sys.exit()
 
     sbit_list = []
-    if not args.sbits_all:
-        for s in range(0,64):
-            sbit_list.append(s)
+    for s in range(0,64):
+        sbit_list.append(s)
     sbit_list = ["all"] + sbit_list
     s_bit_cluster_mapping = {}
     print ("")
@@ -301,7 +306,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_cluster_mapping, args.verbose)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_cluster_mapping, args.sbits_all, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
