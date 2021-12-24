@@ -37,7 +37,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
-    sbit_list.append("all")
     sbit_data = {}
     # Check ready and get nodes
     for vfat in vfat_list:
@@ -210,6 +209,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = VFAT number (0-23)")
+    parser.add_argument("-a", "--all", action="store_true", dest="all", default=False, help="Set to also perform sbit rate measurement of OR of all channels in a VFAT")
     parser.add_argument("-p", "--parallel", action="store_true", dest="parallel", default=False, help="Set to unmask all channels in all VFATs simultaneosuly for rate measurements")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
@@ -254,6 +254,8 @@ if __name__ == "__main__":
         sys.exit()
 
     sbit_list = [i for i in range(0,64)]
+    if args.all:
+        sbit_list.append("all")
     s_bit_channel_mapping = {}
     print ("")
     if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):

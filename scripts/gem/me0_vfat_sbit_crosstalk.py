@@ -171,6 +171,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     # Writing Results
+    cross_talk_obs = 0
     print ("\nCross Talk Results:\n")
     for vfat in vfat_list:
         for channel_inj in channel_list:
@@ -184,8 +185,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                 file_out.write("%d    %d    %d    %d    %d\n"%(vfat, channel_inj, channel_read, sbit_data[vfat][channel_inj][channel_read]["fired"], sbit_data[vfat][channel_inj][channel_read]["events"]))
             if crosstalk_channel_list != "":
                 print ("Cross Talk for Channel %d in channels: %s"%(channel_inj, crosstalk_channel_list))
-            else:
-                print ("No Cross Talk between channels")
+                cross_talk_obs += 1
+    if cross_talk_obs == 0:
+        print (Colors.GREEN + "No Cross Talk observed between channels" + Colors.ENDC)
 
     print ("")
     file_out.close()
