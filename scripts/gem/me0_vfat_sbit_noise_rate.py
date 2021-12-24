@@ -282,7 +282,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, verbose)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
