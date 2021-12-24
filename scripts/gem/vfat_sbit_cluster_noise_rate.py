@@ -89,7 +89,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
         # Looping over sbits
         for sbit in sbit_list:
-            if not sbits_all and sbit!="all":
+            if sbits_all and sbit!="all":
                 for thr in range(0,256,step):
                     sbit_data[vfat][sbit][thr]["fired"] = 0
                     sbit_data[vfat][sbit][thr]["time"] = runtime
