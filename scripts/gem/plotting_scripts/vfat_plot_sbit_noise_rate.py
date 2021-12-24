@@ -122,6 +122,7 @@ if __name__ == "__main__":
         map_plot_data = []
         map_plot_data_x = []
         map_plot_data_y = threshold
+        z_max = 1
         for sbit in range(0,64):
             map_plot_data_x.append(sbit)
         for thr in range(0,len(threshold)):
@@ -130,6 +131,8 @@ if __name__ == "__main__":
                 if sbit=="all":
                     continue
                 data.append(noise_result[vfat][sbit][thr]/time)
+                if (noise_result[vfat][sbit][thr]/time) > z_max:
+                    z_max = noise_result[vfat][sbit][thr]/time
             map_plot_data.append(data)
 
         if numVfats == 1:
@@ -160,7 +163,7 @@ if __name__ == "__main__":
             ax5.set_xlabel("S-Bit", loc='right')
             ax5.set_ylabel("Threshold (DAC)")
             ax5.set_title("VFAT%02d"%vfat)
-            cf5 = ax5.pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf5 = ax5.pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=colors.LogNorm(vmin=1, vmax=z_max)
             cbar5 = fig5.colorbar(cf5, ax=ax5, pad=0.01)
             cbar5.set_label("S-Bit rate (Hz)", loc='top')
             ax5.set_xticks(np.arange(0, 64, 20))
@@ -194,7 +197,7 @@ if __name__ == "__main__":
             ax5[vfatCnt0].set_xlabel("S-Bit", loc='right')
             ax5[vfatCnt0].set_ylabel("Threshold (DAC)")
             ax5[vfatCnt0].set_title("VFAT%02d"%vfat)
-            cf5[vfatCnt0] = ax5[vfatCnt0].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf5[vfatCnt0] = ax5[vfatCnt0].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=colors.LogNorm(vmin=1, vmax=z_max)
             cbar5[vfatCnt0] = fig5.colorbar(cf5[vfatCnt0], ax=ax5[vfatCnt0], pad=0.01)
             cbar5[vfatCnt0].set_label("S-Bit rate (Hz)", loc='top')
             ax5[vfatCnt0].set_xticks(np.arange(0, 64, 20))
@@ -228,7 +231,7 @@ if __name__ == "__main__":
             ax5[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("S-Bit", loc='right')
             ax5[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Threshold (DAC)")
             ax5[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
-            cf5[int(vfatCnt0/3), vfatCnt0%3] = ax5[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf5[int(vfatCnt0/3), vfatCnt0%3] = ax5[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=colors.LogNorm(vmin=1, vmax=z_max)
             cbar5[int(vfatCnt0/3), vfatCnt0%3] = fig5.colorbar(cf5[int(vfatCnt0/3), vfatCnt0%3], ax=ax5[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
             cbar5[int(vfatCnt0/3), vfatCnt0%3].set_label("S-Bit rate (Hz)", loc='top')
             ax5[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(0, 64, 20))
@@ -262,7 +265,7 @@ if __name__ == "__main__":
             ax5[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("S-Bit", loc='right')
             ax5[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Threshold (DAC)")
             ax5[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
-            cf5[int(vfatCnt0/6), vfatCnt0%6] = ax5[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf5[int(vfatCnt0/6), vfatCnt0%6] = ax5[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=colors.LogNorm(vmin=1, vmax=z_max)
             cbar5[int(vfatCnt0/6), vfatCnt0%6] = fig5.colorbar(cf5[int(vfatCnt0/6), vfatCnt0%6], ax=ax5[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
             cbar5[int(vfatCnt0/6), vfatCnt0%6].set_label("S-Bit rate (Hz)", loc='top')
             ax5[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(0, 64, 20))
