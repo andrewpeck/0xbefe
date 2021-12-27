@@ -75,6 +75,7 @@ def main(system, oh_ver, boss, gain):
     writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0, 0)
     sleep(0.01)
 
+    print ("\nPlotting: ")
     fig, ax = plt.subplots()
     ax.set_xlabel("DAC")
     ax.set_ylabel("F=V/V_m")
