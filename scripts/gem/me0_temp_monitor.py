@@ -78,7 +78,7 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
     t0 = time()
     while int(time()) <= end_time:
         if (time()-t0)>60:
-            V_m = F * read_adc(channel, gain, system)
+            V_m = F * (1.0/1024.0) * read_adc(channel, gain, system)
             R_m = V_m/I
             temp = find_temp(np.log10(R_m))
 
@@ -110,7 +110,7 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
 
 def calculate_F(channel, gain, system):
 
-    R = 1e-03
+    R = 1e3
     LSB = 3.55e-06
     DAC = 150
 
@@ -127,7 +127,7 @@ def calculate_F(channel, gain, system):
     if system == "dryrun":
         F = 1
     else:
-        V_m = read_adc(channel, gain, system)
+        V_m = read_adc(channel, gain, system) * (1.0/1024.0)
         F = V/V_m
 
     writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  # Enables current DAC.

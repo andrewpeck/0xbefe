@@ -66,19 +66,19 @@ def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
     while int(time()) <= end_time:
         if (time()-t0)>60:
             if oh_ver == 1:
-                asense0_value = F * read_adc(4, gain, system)
-                asense1_value = F * read_adc(2, gain, system)
-                asense2_value = F * read_adc(1, gain, system)
-                asense3_value = F * read_adc(3, gain, system)
+                asense0_value = read_adc(4, gain, system)
+                asense1_value = read_adc(2, gain, system)
+                asense2_value = read_adc(1, gain, system)
+                asense3_value = read_adc(3, gain, system)
             if oh_ver == 2:
-                asense0_value = F * read_adc(6, gain, system)
-                asense1_value = F * read_adc(1, gain, system)
-                asense2_value = F * read_adc(0, gain, system)
-                asense3_value = F * read_adc(3, gain, system)
-            asense0_converted = asense_current_conversion(asense0_value)
-            asense1_converted = asense_temp_voltage_conversion(asense1_value)
-            asense2_converted = asense_current_conversion(asense2_value)
-            asense3_converted = asense_temp_voltage_conversion(asense3_value)
+                asense0_value = read_adc(6, gain, system)
+                asense1_value = read_adc(1, gain, system)
+                asense2_value = read_adc(0, gain, system)
+                asense3_value = read_adc(3, gain, system)
+            asense0_converted = asense_current_conversion(asense0_value, F)
+            asense1_converted = asense_temp_voltage_conversion(asense1_value, F)
+            asense2_converted = asense_current_conversion(asense2_value, F)
+            asense3_converted = asense_temp_voltage_conversion(asense3_value, F)
             second = time() - start_time
             asense0.append(asense0_converted)
             asense1.append(asense1_converted)
@@ -138,7 +138,7 @@ def live_plot_temp(ax2, x, y1, y3, run_time_min, gbt):
 
 def calculate_F(channel, gain, system):
 
-    R = 1e-03
+    R = 1e3
     LSB = 3.55e-06
     DAC = 150
 
@@ -155,7 +155,7 @@ def calculate_F(channel, gain, system):
     if system == "dryrun":
         F = 1
     else:
-        V_m = read_adc(channel, gain, system)
+        V_m = read_adc(channel, gain, system) * (1.0/1024.0)
         F = V/V_m
 
     writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE "), 0x0, 0)  #Enables current DAC.
@@ -228,20 +228,20 @@ def read_adc(channel, gain, system):
 
     return val
 
-def asense_current_conversion(asense_adc):
+def asense_current_conversion(asense_adc, F):
     # Resistor values
     R = 0.01 # 0.01 Ohm
 
-    asense_voltage = 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
+    asense_voltage = F * 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
     asense_voltage /= 20 # Gain in current sense circuit
     asense_current = asense_voltage/R # asense current
     return asense_current
 
-def asense_temp_voltage_conversion(asense_adc):
+def asense_temp_voltage_conversion(asense_adc, F):
     # Resistor values
     R = 0.01 # 0.01 Ohm
 
-    asense_voltage = 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
+    asense_voltage = F * 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
     return asense_voltage
 
 

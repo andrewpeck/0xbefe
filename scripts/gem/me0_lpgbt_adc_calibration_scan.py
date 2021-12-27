@@ -38,12 +38,12 @@ def main(system, oh_ver, boss, gain):
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     foldername = dataDir + "/"
-    filename = dataDir + "calibration_data_" + now + ".txt"
+    filename = foldername + "calibration_data_" + now + ".txt"
 
     open(filename, "w+").close()
     F_range = []
 
-    R = 1e-03
+    R = 1e3
     LSB = 3.55e-06
     DAC_range = range(50, 200, 5)
 
@@ -63,7 +63,7 @@ def main(system, oh_ver, boss, gain):
             if system == "dryrun":
                 F = 1
             else:
-                V_m = read_adc(channel, gain, system)
+                V_m = read_adc(channel, gain, system) * (1.0/1024.0)
                 F = V/V_m
 
             F_range.append(F)

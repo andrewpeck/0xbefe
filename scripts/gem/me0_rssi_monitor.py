@@ -59,10 +59,10 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
     while int(time()) <= end_time:
         if (time()-t0)>60:
             if oh_ver == 1:
-                value = F * read_adc(7, gain, system)
+                value = read_adc(7, gain, system)
             if oh_ver == 2:
-                value = F * read_adc(5, gain, system)
-            rssi_current = rssi_current_conversion(value, gain, voltage, oh_ver) * 1e6 # in uA
+                value = read_adc(5, gain, system)
+            rssi_current = rssi_current_conversion(value, F, gain, voltage, oh_ver) * 1e6 # in uA
             second = time() - start_time
             rssi.append(rssi_current)
             minutes.append(second/60.0)
@@ -85,7 +85,7 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
 
 def calculate_F(channel, gain, system):
 
-    R = 1e-03
+    R = 1e3
     LSB = 3.55e-06
     DAC = 150
 
@@ -102,7 +102,7 @@ def calculate_F(channel, gain, system):
     if system == "dryrun":
         F = 1
     else:
-        V_m = read_adc(channel, gain, system)
+        V_m = read_adc(channel, gain, system) * (1.0/1024.0)
         F = V/V_m
 
     writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE "), 0x0, 0)  #Enables current DAC.
@@ -180,10 +180,10 @@ def read_adc(channel, gain, system):
 
     return val
 
-def rssi_current_conversion(rssi_adc, gain, input_voltage, oh_ver):
+def rssi_current_conversion(rssi_adc, F, gain, input_voltage, oh_ver):
 
     rssi_current = -9999
-    rssi_adc_converted = 1.0 * (rssi_adc/1024.0) # 10-bit ADC, range 0-1 V
+    rssi_adc_converted = F * 1.0 * (rssi_adc/1024.0) # 10-bit ADC, range 0-1 V
     #rssi_voltage = rssi_adc_converted/gain # Gain
     rssi_voltage = rssi_adc_converted
 
