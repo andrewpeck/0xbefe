@@ -70,7 +70,7 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
                 live_plot(ax, minutes, rssi)
 
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %f (RSSI (uA)" % (second/60.0, 7, value, rssi_current))
+            print("time = %.2f min, \tch %X: 0x%03X = %f (RSSI (uA))" % (second/60.0, 7, value, rssi_current))
             t0 = time()
             
     file_out.close()

@@ -78,7 +78,8 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
     t0 = time()
     while int(time()) <= end_time:
         if (time()-t0)>60:
-            V_m = F * (1.0/1024.0) * read_adc(channel, gain, system)
+            value = read_adc(channel, gain, system)
+            V_m = F * (1.0/1024.0) * value
             R_m = V_m/I
             temp = find_temp(np.log10(R_m))
 
@@ -89,7 +90,7 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
                 live_plot(ax, minutes, T)
 
             file.write(str(second/60.0) + "\t" + str(V_m) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %f (R (Ohms) = %f (T (C))" % (second/60.0, channel, V_m, R_m, temp))
+            print("time = %.2f min, \tch %X: 0x%03X = %f (R (Ohms) = %f (T (C))" % (second/60.0, channel, value, R_m, temp))
             t0 = time()
     file.close()
 
