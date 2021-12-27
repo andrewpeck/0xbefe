@@ -53,6 +53,7 @@ def main(system, oh_ver, boss, gain):
     writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data, 0)
 
     for DAC in DAC_range:
+        print ("  DAC: %d"%DAC)
         with open(filename, "a") as file:
             I = DAC * LSB
             V = I * R
