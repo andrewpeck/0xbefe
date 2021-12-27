@@ -45,7 +45,7 @@ def main(system, oh_ver, boss, gain):
 
     R = 1e3
     LSB = 3.55e-06
-    DAC_range = range(1, 250, 1)
+    DAC_range = range(1, 251, 1)
 
     reg_data = convert_adc_reg(channel)
 
