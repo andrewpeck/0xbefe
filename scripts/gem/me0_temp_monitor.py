@@ -42,7 +42,7 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     foldername = dataDir + "/"
-    filename = foldername + "temp_" + device + "_data" + now + ".txt"
+    filename = foldername + "temp_" + device + "_data_" + now + ".txt"
 
     open(filename, "w+").close()
     minutes, T = [], []
@@ -55,11 +55,9 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
 
     if device == "OH":
         channel = 6
-        DAC = 50
     else:
         channel = 0
-        DAC = 20
-
+    DAC = 20
     LSB = 3.55e-06
     I = DAC * LSB
     find_temp = temp_res_fit()
@@ -90,11 +88,11 @@ def main(system, oh_ver, boss, device, run_time_min, gain, plot):
                 live_plot(ax, minutes, T)
 
             file.write(str(second/60.0) + "\t" + str(V_m) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %f (R (Ohms) = %f (T (C))" % (second/60.0, channel, value, R_m, temp))
+            print("time = %.2f min, \tch %X: 0x%03X = %f (R (kOhm) = %f (T (C))" % (second/60.0, channel, value, R_m/1000.0, temp))
             t0 = time()
     file.close()
 
-    figure_name = foldername + "temp_" + device + now + "_plot.pdf"
+    figure_name = foldername + "temp_" + device + "_plot_" + now + ".pdf"
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("minutes")
     ax1.set_ylabel("T (C)")
