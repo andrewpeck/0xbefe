@@ -141,6 +141,21 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
             t0 = time()
     file_out.close()
 
+    asense0_label = ""
+    asense1_label = ""
+    asense2_label = ""
+    asense3_label = ""
+    if gbt==0:
+        asense0_label = "PG2.5V current"
+        asense1_label = "Rt2 voltage"
+        asense2_label = "PG1.2V current"
+        asense3_label = "Rt1 voltage"
+    if gbt==2:
+        asense0_label = "PG1.2VD current"
+        asense1_label = "Rt3 voltage"
+        asense2_label = "PG1.2VA current"
+        asense3_label = "Rt4 voltage"
+
     figure_name1 = foldername + now + "_pg_current_plot.pdf"
     figure_name2 = foldername + now + "_rt_voltage_plot.pdf"
     fig3, ax3 = plt.subplots()
@@ -149,10 +164,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
     ax3.set_ylabel("PG Current (A)")
     ax4.set_xlabel("minutes")
     ax4.set_ylabel("Rt Voltage (V)")
-    ax3.plot(minutes, asense0, color="red")
-    ax3.plot(minutes, asense2, color="blue")
-    ax4.plot(minutes, asense1, color="red")
-    ax4.plot(minutes, asense3, color="blue")
+    ax3.plot(minutes, asense0, color="red", label=asense0_label)
+    ax3.plot(minutes, asense2, color="blue", label=asense2_label)
+    ax4.plot(minutes, asense1, color="red", label=asense1_label)
+    ax4.plot(minutes, asense3, color="blue", label=asense3_label)
     fig3.savefig(figure_name1, bbox_inches="tight")
     fig4.savefig(figure_name2, bbox_inches="tight")
 
