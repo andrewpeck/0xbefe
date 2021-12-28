@@ -233,7 +233,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args,gbtid), boss, gain)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, gain)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

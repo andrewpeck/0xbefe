@@ -276,7 +276,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args,gbtid), boss, args.minutes, gain, float(args.voltage), args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, float(args.voltage), args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
