@@ -13,7 +13,7 @@ def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
 def get_vin(vout, fit_results):
-    vin_range = np.linspace(0, 2, 1000)
+    vin_range = np.linspace(0, 1, 1000)
     vout_range = poly5(vin_range, *fit_results)
     diff = 9999
     vin = 0
