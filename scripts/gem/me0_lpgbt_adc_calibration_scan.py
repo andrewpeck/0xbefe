@@ -6,8 +6,12 @@ import csv
 import matplotlib.pyplot as plt
 import os
 import datetime
+import numpy as np
 
-def main(system, oh_ver, boss, gain):
+def poly5(x, a, b, c, d, e, f):
+    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
+
+def main(system, oh_ver, oh_select, gbt_select, boss, gain):
 
     init_adc(oh_ver)
 
@@ -38,50 +42,61 @@ def main(system, oh_ver, boss, gain):
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     foldername = dataDir + "/"
-    filename = foldername + "calibration_data_" + now + ".txt"
+    filename = foldername + "ME0_OH%d_GBT%d_adc_calibration_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename_results = foldername + "ME0_OH%d_GBT%d_adc_calibration_results_"%(oh_select, gbt_select) + now + ".txt"
 
-    open(filename, "w+").close()
-    F_range = []
+    filename_file = open(filename, "w")
+    filename_file.write("#DAC    Vin    Vout\n")
+    Vin_range = []
+    Vout_range = []
 
     R = 1e3
     LSB = 3.55e-06
-    DAC_range = range(1, 251, 1)
+    DAC_range = range(0, 256, 1)
 
     reg_data = convert_adc_reg(channel)
-
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  #Enables current DAC.
+    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  # Enables current DAC.
     writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data, 0)
 
     for DAC in DAC_range:
-        print ("  DAC: %d"%DAC)
-        with open(filename, "a") as file:
-            I = DAC * LSB
-            V = I * R
+        I = DAC * LSB
+        Vin = I * R
 
-            writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC, 0)  #Sets output current for the current DAC.
-            sleep(0.01)
+        writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC, 0)  # Sets output current for the current DAC.
+        sleep(0.01)
 
-            if system == "dryrun":
-                F = 1
-            else:
-                V_m = read_adc(channel, gain, system) * (1.0/1024.0)
-                F = V/V_m
+        Vout = 0
+        if system == "dryrun":
+            Vout = Vin
+        else:
+            Vout = read_adc(channel, gain, system) * (1.0/1024.0)
 
-            F_range.append(F)
-            file.write(str(DAC) + "\t" + str(F) + "\n")
+        Vin_range.append(Vin)
+        Vout_range.append(Vout)
+        print ("  DAC: %d,  Vin: %.4f V,  Vout: %.4f V"%(DAC, Vin, Vout))
+        filename_file.write("%d    %.4f    %.4f"%(DAC, Vin, Vout))
 
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  #Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0, 0)  #Sets output current for the current DAC.
+    filename_file.close()
+    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  # Enables current DAC.
+    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0, 0)  # Sets output current for the current DAC.
     writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0, 0)
     sleep(0.01)
 
-    print ("\nPlotting: ")
+    print ("\nFitting\n")
+    filename_results_file = open(filename_results, "w")
+    fitData = np.polyfit(Vin, Vout, 5) # fit data to 5th degree polynomial
+    Vout_fit = poly5(Vin, *fitData)
+    for m in fitData:
+        filename_results_file.write("%.4f    "%m)
+    filename_results_file.write("\n")
+    filename_results_file.close()
+
+    print ("\nPlotting\n")
     fig, ax = plt.subplots()
-    ax.set_xlabel("DAC")
-    ax.set_ylabel("F=V/V_m")
-
-    live_plot(ax, DAC_range, F_range)
-
+    ax.set_xlabel("Vin (V)")
+    ax.set_ylabel("Vout (V)")
+    ax.plot(Vin_range, Vout_range, "turquoise")
+    plt.draw()
     figure_name = foldername + "calibration_data_" + now + "_plot.pdf"
     fig.savefig(figure_name, bbox_inches="tight")
 
@@ -92,11 +107,6 @@ def convert_adc_reg(adc):
     bit = adc
     reg_data |= (0x01 << bit)
     return reg_data
-
-def live_plot(ax, x, y):
-    ax.plot(x, y, "turquoise")
-    plt.draw()
-    plt.pause(0.01)
 
 def init_adc(oh_ver):
     writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
@@ -223,7 +233,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, boss, gain)
+        main(args.system, oh_ver, int(args.ohid), int(args,gbtid), boss, gain)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

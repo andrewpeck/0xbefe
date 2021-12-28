@@ -6,19 +6,43 @@ import csv
 import matplotlib.pyplot as plt
 import os
 import datetime
+import numpy as np
 
-def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
+def poly5(x, a, b, c, d, e, f):
+    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
+
+def get_vin(vout, fit_results):
+    vin_range = np.linspace(0, 2, 1000)
+    vout_range = poly5(vin_range, *fit_results)
+    diff = 9999
+    vin = 0
+    for i in range(0,len(vout_range)):
+        if abs(vout - vout_range[i])<=diff:
+            diff = abs(vout - vout_range[i])
+            vin = vin_range[i]
+    return vin
+
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltage, plot):
 
     init_adc(oh_ver)
     print("ADC Readings:")
 
-    F = 0
-    if oh_ver == 1:
-        F = 1
-    elif oh_ver == 2:
-        cal_channel = 3 # servant_adc_in3
-        F = calculate_F(cal_channel, gain, system)
-        
+    adc_calib_results = []
+    adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
+    if not os.path.isdir(adc_calibration_dir):
+        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
+    list_of_files = glob.glob(adc_calibration_dir+"ME0_OH%d_GBT%d_adc_calibration_results_*.txt"%(oh_select, gbt_select))
+    if len(list_of_files)==0:
+        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
+    elif len(list_of_files)>1:
+        print ("Mutliple ADC calibration results found, using latest file")
+    if len(list_of_files)!=0:
+        latest_file = max(list_of_files, key=os.path.getctime)
+        adc_calib_file = open(latest_file)
+        adc_calib_results = adc_calib_file.readlines()[0].split()
+        adc_calib_results_array = np.array(adc_calib_results)
+        adc_calib_file.close()
+
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
@@ -62,7 +86,12 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
                 value = read_adc(7, gain, system)
             if oh_ver == 2:
                 value = read_adc(5, gain, system)
-            rssi_current = rssi_current_conversion(value, F, gain, voltage, oh_ver) * 1e6 # in uA
+            Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
+            if len(adc_calib_results)!=0:
+                Vin = get_vin(Vout, adc_calib_results_array)
+            else:
+                Vin = Vout
+            rssi_current = rssi_current_conversion(Vin, gain, voltage, oh_ver) * 1e6 # in uA
             second = time() - start_time
             rssi.append(rssi_current)
             minutes.append(second/60.0)
@@ -70,7 +99,7 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
                 live_plot(ax, minutes, rssi)
 
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %f (RSSI (uA))" % (second/60.0, 7, value, rssi_current))
+            print("time = %.2f min, \tch %X: 0x%03X = %.2f V =  %f (RSSI (uA))" % (second/60.0, 7, value, Vin, rssi_current))
             t0 = time()
             
     file_out.close()
@@ -82,35 +111,6 @@ def main(system, oh_ver, boss, run_time_min, gain, voltage, plot):
     fig1.savefig(figure_name, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
-
-def calculate_F(channel, gain, system):
-
-    R = 1e3
-    LSB = 3.55e-06
-    DAC = 150
-
-    I = DAC * LSB
-    V = I * R
-
-    reg_data = convert_adc_reg(channel)
-
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  #Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC, 0)  #Sets output current for the current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data, 0)
-    sleep(0.01)
-
-    if system == "dryrun":
-        F = 1
-    else:
-        V_m = read_adc(channel, gain, system) * (1.0/1024.0)
-        F = V/V_m
-
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  #Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0, 0)  #Sets output current for the current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0, 0)
-    sleep(0.01)
-
-    return F
     
 def convert_adc_reg(adc):
     reg_data = 0
@@ -180,12 +180,11 @@ def read_adc(channel, gain, system):
 
     return val
 
-def rssi_current_conversion(rssi_adc, F, gain, input_voltage, oh_ver):
+def rssi_current_conversion(Vin, gain, input_voltage, oh_ver):
 
     rssi_current = -9999
-    rssi_adc_converted = F * 1.0 * (rssi_adc/1024.0) # 10-bit ADC, range 0-1 V
-    #rssi_voltage = rssi_adc_converted/gain # Gain
-    rssi_voltage = rssi_adc_converted
+    #rssi_voltage = Vin/gain # Gain
+    rssi_voltage = Vin
 
     if oh_ver == 1:
         # Resistor values
@@ -277,7 +276,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, boss, args.minutes, gain, float(args.voltage), args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args,gbtid), boss, args.minutes, gain, float(args.voltage), args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
