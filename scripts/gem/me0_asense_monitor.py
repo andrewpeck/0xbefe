@@ -166,8 +166,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
     ax4.set_ylabel("Rt Voltage (V)")
     ax3.plot(minutes, asense0, color="red", label=asense0_label)
     ax3.plot(minutes, asense2, color="blue", label=asense2_label)
+    ax3.legend(loc="center right")
     ax4.plot(minutes, asense1, color="red", label=asense1_label)
     ax4.plot(minutes, asense3, color="blue", label=asense3_label)
+    ax4.legend(loc="center right")
     fig3.savefig(figure_name1, bbox_inches="tight")
     fig4.savefig(figure_name2, bbox_inches="tight")
 
