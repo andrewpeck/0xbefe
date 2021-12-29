@@ -334,6 +334,7 @@ def main(system, oh_ver, boss):
                 print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
 
     powerdown_adc(oh_ver)
+    print ("")
 
     # CRC
     if oh_ver == 2:
@@ -345,7 +346,7 @@ def main(system, oh_ver, boss):
             protected_registers[i] = mpeek(i)
         crc_registers = calculate_crc(protected_registers)
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
-        print ("CRC: %d\n"%crc)
+        print ("CRC: 0x%X\n"%crc)
 
         print ("CRC value written in EFuses: ")
         crc_registers = 4*[0]
@@ -354,7 +355,7 @@ def main(system, oh_ver, boss):
         crc_registers[2] = readReg(getNode("LPGBT.RWF.POWERUP.CRC2"))
         crc_registers[3] = readReg(getNode("LPGBT.RWF.POWERUP.CRC3"))
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
-        print ("CRC: %d\n"%crc)
+        print ("CRC: 0x%X\n"%crc)
 
         print ("CRC value last computed: ")
         crc_registers = 4*[0]
@@ -363,7 +364,7 @@ def main(system, oh_ver, boss):
         crc_registers[2] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE2"))
         crc_registers[3] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE3"))
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
-        print ("CRC: %d\n"%crc)
+        print ("CRC: 0x%X\n"%crc)
         print ("Number of CRC calculations which resulted in invalid checksum: %d"%(readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
     
     # Writing lpGBT configuration to text file

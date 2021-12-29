@@ -47,7 +47,7 @@ def main(system, oh_ver, boss, fusing, input_config_file, input_vtrx, input_regi
             protected_registers = read_all_fuse_data(system, n_rw_fuse)
             crc_registers = calculate_crc(protected_registers)
             crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
-            print ("CRC: %d\n"%crc)
+            print ("CRC: 0x%X\n"%crc)
             fuse_register(system, boss, "0x0FC", crc_registers[0])
             fuse_register(system, boss, "0x0FD", crc_registers[1])
             fuse_register(system, boss, "0x0FE", crc_registers[2])
