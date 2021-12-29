@@ -262,7 +262,7 @@ if __name__ == "__main__":
     fig3.tight_layout()
     fig3.savefig((directoryName+"/sbit_cluster_noise_rate_average_"+oh+".pdf"))
     plt.close(fig3)
-    fig5.savefig((directoryName+"/2d_sbit_threshold_noise_rate_or_"+oh+".pdf"))
+    fig5.savefig((directoryName+"/2d_sbit_threshold_noise_rate_"+oh+".pdf"))
     plt.close(fig5)
     print(Colors.GREEN + 'Plots stored at %s' % directoryName + Colors.ENDC)
 

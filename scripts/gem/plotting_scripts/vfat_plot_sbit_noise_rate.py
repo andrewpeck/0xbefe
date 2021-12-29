@@ -306,7 +306,7 @@ if __name__ == "__main__":
     fig4.tight_layout()
     fig4.savefig((directoryName+"/sbit_noise_rate_or_"+oh+".pdf"))
     plt.close(fig4)
-    fig5.savefig((directoryName+"/2d_sbit_threshold_noise_rate_or_"+oh+".pdf"))
+    fig5.savefig((directoryName+"/2d_sbit_threshold_noise_rate_"+oh+".pdf"))
     plt.close(fig5)
     print(Colors.GREEN + 'Plots stored at %s' % directoryName + Colors.ENDC)
 
