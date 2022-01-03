@@ -161,7 +161,7 @@ def vfat_crosstalk(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1
                     crosstalk_channel_list += " %d,"%channel_read
                 file_out.write("%d    %d    %d    %d    %d\n"%(vfat, channel_inj, channel_read, daq_data[vfat][channel_inj][channel_read]["fired"], daq_data[vfat][channel_inj][channel_read]["events"]))
             if crosstalk_channel_list != "":
-                print ("Cross Talk for Channel %d in channels: %s"%(channel_inj, crosstalk_channel_list))
+                print ("VFAT %d, Cross Talk for Channel %d in channels: %s"%(vfat, channel_inj, crosstalk_channel_list))
                 cross_talk_obs += 1
     if cross_talk_obs == 0:
         print (Colors.GREEN + "No Cross Talk observed between channels" + Colors.ENDC)

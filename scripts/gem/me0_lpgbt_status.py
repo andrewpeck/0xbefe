@@ -365,7 +365,7 @@ def main(system, oh_ver, boss):
         crc_registers[3] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE3"))
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
         print ("CRC: 0x%X\n"%crc)
-        print ("Number of CRC calculations which resulted in invalid checksum: %d"%(readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
+        print ("Number of CRC calculations which resulted in invalid checksum: %d\n"%(readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
     
     # Writing lpGBT configuration to text file
     resultDir = "results"
