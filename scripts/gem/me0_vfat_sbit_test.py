@@ -35,7 +35,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
     gem_link_reset()
     global_reset()
     sleep(0.1)
-    #write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
     print ("Testing VFAT#: %02d\n" %(vfat))
@@ -240,7 +240,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
     file_out.write("Unconfiguring VFAT %02d\n" % (vfat))
     configureVfat(0, vfat, oh_select, 0)
 
-    #write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     print ("\nS-Bit Error Test Results for VFAT %02d: \n"%(vfat))
     file_out.write("\nS-Bit Error Test Results for VFAT %02d: \n\n"%(vfat))
