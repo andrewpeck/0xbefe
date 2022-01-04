@@ -311,6 +311,7 @@ def mpeek(address):
             print(Colors.RED + "ERROR: Problem in reading register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
+        gem_utils.global_reset()
         gem_utils.write_backend_reg(NODE_IC_ADDR, address)
         gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
         data = gem_utils.read_backend_reg(NODE_IC_READ_DATA)
