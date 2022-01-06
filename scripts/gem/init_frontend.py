@@ -122,7 +122,7 @@ def init_gem_frontend():
                     sleep(0.01)
 
                 # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
-                if gbt%2 == 0 and oh_ver = 2 and not gbt_ready:
+                if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
                     sleep(2.5)
 
     print("Setting VFAT HDLC addresses")
