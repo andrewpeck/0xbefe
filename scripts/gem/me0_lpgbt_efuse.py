@@ -552,7 +552,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 

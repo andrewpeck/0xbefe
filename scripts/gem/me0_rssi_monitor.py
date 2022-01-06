@@ -220,9 +220,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print("Using Rpi CHeeseCake for rssi monitoring")
     elif args.system == "backend":
-        # print ("Using Backend for rssi monitoring")
-        print(Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
+        print ("Using Backend for rssi monitoring")
     elif args.system == "dryrun":
         print("Dry Run - not actually running rssi monitoring")
     else:
@@ -270,7 +268,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)   
         

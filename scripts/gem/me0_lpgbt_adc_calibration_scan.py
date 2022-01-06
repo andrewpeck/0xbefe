@@ -180,9 +180,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print("Using Rpi CHeeseCake for scanning ADC precision calibration resistor")
     elif args.system == "backend":
-        # print ("Using Backend for scanning ADC precision calibration resistor")
-        print(Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
+        print ("Using Backend for scanning ADC precision calibration resistor")
     elif args.system == "dryrun":
         print("Dry Run - not actually running adc scan")
     else:
@@ -227,7 +225,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 

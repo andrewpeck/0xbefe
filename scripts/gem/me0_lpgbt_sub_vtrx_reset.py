@@ -69,26 +69,17 @@ def lpgbt_sub_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
             data_disable |= 0x00
 
     # Enable GPIO as output
-    if system == "backend":
-        mpoke(gpio_dir_addr, dir_enable)
-    else:
-        writeReg(gpio_dir_node, dir_enable, 0)
+    writeReg(gpio_dir_node, dir_enable, 0)
     print("Enable GPIO %d as output"%gpio)
     sleep(0.000001)
 
     # Set GPIO to 0 for reset
-    if system == "backend":
-        mpoke(gpio_out_addr, data_disable)
-    else:
-        writeReg(gpio_out_node, data_disable, 0)
+    writeReg(gpio_out_node, data_disable, 0)
     print("Set GPIO %d to 0 for reset"%gpio)
     sleep(0.1)
 
     # Disable GPIO as output
-    if system == "backend":
-        mpoke(gpio_dir_addr, dir_disable)
-    else:
-        writeReg(gpio_dir_node, dir_disable, 0)
+    writeReg(gpio_dir_node, dir_disable, 0)
     print("Disable GPIO %d as output"%gpio)
     sleep(0.000001)
 
@@ -109,9 +100,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print("Using Rpi CHeeseCake for sub lpGBT or VTRx+ reset")
     elif args.system == "backend":
-        # print ("Using Backend for sub lpGBT or VTRx+ reset")
-        print(Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
+        print ("Using Backend for sub lpGBT or VTRx+ reset")
     elif args.system == "dryrun":
         print("Dry Run - not actually doing sub lpGBT or VTRx+ reset")
     else:
@@ -157,7 +146,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 

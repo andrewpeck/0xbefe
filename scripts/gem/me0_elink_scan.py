@@ -97,7 +97,7 @@ def setVfatRxEnable(system, oh_select, vfat, enable, elink):
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
     select_ic_link(oh_select, gbt_select)
-    if system!= "dryrun" and system!= "backend":
+    if system!= "dryrun":
         check_rom_readback(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13

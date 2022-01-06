@@ -41,7 +41,7 @@ def vfat_reset(system, oh_select, vfat_list):
             config_initialize_chc(oh_ver, boss)
         check_lpgbt_ready(oh_select, gbt_select)
                      
-        if system!="dryrun" and system!="backend":
+        if system!="dryrun":
             check_rom_readback(oh_select, gbt_select)
             check_lpgbt_mode(boss, oh_select, gbt_select)   
 

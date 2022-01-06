@@ -312,11 +312,9 @@ def mpeek(address):
             print(Colors.RED + "ERROR: Problem in reading register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
-        sleep(0.05)
         gem_utils.write_backend_reg(NODE_IC_ADDR, address)
-        gem_utils.global_reset()
         gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
-        data = gem_utils.read_backend_reg(NODE_IC_READ_DATA)
+        data = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
         #data = reg_list_dryrun[address]
         return data
     elif system=="dryrun":
@@ -337,6 +335,10 @@ def mpoke(address, value):
         gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value)
         gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1)
         reg_list_dryrun[address] = value
+        read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
+        if read_value != value:
+            print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
+            rw_terminate()
     elif system=="dryrun":
         reg_list_dryrun[address] = value
     else:
@@ -466,14 +468,14 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         ready_value = 18
     elif oh_ver == 2:
         ready_value = 19
-    if system == "chc":
+    if system != "dryrun":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):
             print ("lpGBT status is READY")
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
-    elif system == "backend":
+    if system == "backend":
         gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
