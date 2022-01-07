@@ -12,7 +12,7 @@ def convert_gpio_reg(gpio):
     reg_data |= (0x01 << bit)
     return reg_data
 
-def lpgbt_sub_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
+def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     print("Sub lpGBT or VTRx+ RESET\n")
 
     gpio_dirH_node = getNode("LPGBT.RWF.PIO.PIODIRH")
