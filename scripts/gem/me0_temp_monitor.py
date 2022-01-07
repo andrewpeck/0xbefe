@@ -69,7 +69,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     foldername = dataDir + "/"
-    filename = foldername + "temp_" + device + "_data_" + now + ".txt"
+    filename = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_data_" + now + ".txt"
 
     open(filename, "w+").close()
     minutes, T = [], []
@@ -123,7 +123,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
             t0 = time()
     file.close()
 
-    figure_name = foldername + "temp_" + device + "_plot_" + now + ".pdf"
+    figure_name = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_plot_" + now + ".pdf"
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("minutes")
     ax1.set_ylabel("T (C)")

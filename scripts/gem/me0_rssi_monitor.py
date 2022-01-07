@@ -62,7 +62,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/rssi_data_" + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
     minutes, rssi = [], []
@@ -105,7 +105,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
             t0 = time()
             
     file_out.close()
-    figure_name = dataDir + "/rssi_data_" + now + "_plot.pdf"
+    figure_name = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("minutes")
     ax1.set_ylabel("RSSI (uA)")
