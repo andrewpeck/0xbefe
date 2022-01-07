@@ -666,15 +666,14 @@ if __name__ == "__main__":
 
     # Checking LPGBT configuration
     readback = 1
-    if (args.input_config_file is None):
-        try:
-            main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
-        except KeyboardInterrupt:
-            print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
-            rw_terminate()
-        except EOFError:
-            print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-            rw_terminate()
+    try:
+        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
+    except KeyboardInterrupt:
+        print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        rw_terminate()
+    except EOFError:
+        print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        rw_terminate()
 
     # Termination
     rw_terminate()
