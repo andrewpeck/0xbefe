@@ -16,7 +16,10 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
         reset_lpgbt(readback)
 
     if input_config_file is not None:
-        lpgbt_dump_config(oh_ver, input_config_file)
+        if not readback:
+            lpgbt_dump_config(oh_ver, input_config_file)
+        else:
+            lpgbt_check_config_with_file(oh_ver, input_config_file)
     else:
         # configure clocks, chip config, line driver
         configLPGBT(oh_ver, readback)

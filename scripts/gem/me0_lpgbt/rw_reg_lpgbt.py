@@ -613,7 +613,31 @@ def mask_to_lsb(mask):
                 return idx
             idx = idx+1
 
-def lpgbt_write_config_file(oh_ver, config_file = "config.txt", status=0):
+def lpgbt_check_config_with_file(oh_ver, config_file = "config_read.txt"):
+    input_file = open(config_file, "r")
+    reg_list = {}
+    for line in input_file.readlines():
+        reg_addr = int(line.split()[0],16)
+        value = int(line.split()[1],16)
+        lpgbt_val =  mpeek(reg_addr)
+        if reg_addr <= 0x007: # CHIP ID and USER ID
+            continue
+        if oh_ver == 2:
+            if reg_addr in range(0xfc, 0x100): # CRC
+                continue
+        if oh_ver == 1:
+            if reg_addr in range(0x0f0, 0x105): # I2C Masters
+                continue
+        elif oh_ver == 2:
+            if reg_addr in range(0x100, 0x115): # I2C Masters
+                continue
+        if value != lpgbt_val:
+            print (Colors.RED + "Register 0x%03X, value mismatch: "%reg_addr + Colors.ENDC)
+            print (Colors.RED + "  Value from file: 0x%02X, Value from lpGBT: 0x%02X"%(value, lpgbt_val) + Colors.ENDC)
+        input_file.close()
+        print("lpGBT Configuration Checked")
+
+def lpgbt_write_config_file(oh_ver, config_file = "config_write.txt", status=0):
     f = open(config_file,"w+")
     for i in range (n_rw_reg):
         val =  mpeek(i)
@@ -633,7 +657,7 @@ def lpgbt_write_config_file(oh_ver, config_file = "config.txt", status=0):
         f.write(write_string)
     f.close()
 
-def lpgbt_dump_config(oh_ver, config_file = "Loopback_test.txt"):
+def lpgbt_dump_config(oh_ver, config_file = "config_read.txt"):
     input_file = open(config_file, "r")
     for line in input_file.readlines():
         reg_addr = int(line.split()[0],16)
