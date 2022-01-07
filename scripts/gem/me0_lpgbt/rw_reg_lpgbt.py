@@ -538,14 +538,10 @@ def check_rom_readback(ohIdx=None, gbtIdx=None):
         if (romreg != 0xA5):
             print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
             rw_terminate()
-        else:
-            print ("Successfully read from ROM. I2C communication OK")
     elif oh_ver == 2:
         if (romreg != 0xA6):
             print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA6) + Colors.ENDC)
             rw_terminate()
-        else:
-            print ("Successfully read from ROM. I2C communication OK")
 
 def check_lpgbt_mode(boss = None, ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
