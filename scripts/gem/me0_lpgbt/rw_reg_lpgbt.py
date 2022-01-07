@@ -634,8 +634,8 @@ def lpgbt_check_config_with_file(oh_ver, config_file = "config_read.txt"):
         if value != lpgbt_val:
             print (Colors.RED + "Register 0x%03X, value mismatch: "%reg_addr + Colors.ENDC)
             print (Colors.RED + "  Value from file: 0x%02X, Value from lpGBT: 0x%02X"%(value, lpgbt_val) + Colors.ENDC)
-        input_file.close()
-        print("lpGBT Configuration Checked")
+    input_file.close()
+    print("lpGBT Configuration Checked")
 
 def lpgbt_write_config_file(oh_ver, config_file = "config_write.txt", status=0):
     f = open(config_file,"w+")
