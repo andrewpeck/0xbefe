@@ -92,7 +92,6 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
                 Vin = get_vin(Vout, adc_calib_results_array)
             else:
                 Vin = Vout
-            print (Vin, Vout)
             rssi_current = rssi_current_conversion(Vin, gain, voltage, oh_ver) * 1e6 # in uA
             second = time() - start_time
             rssi.append(rssi_current)
