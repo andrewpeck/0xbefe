@@ -34,6 +34,7 @@ source $PATH_REPO/Hog/Tcl/create_project.tcl
 
 set_property default_lib work [current_project]
 
+set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs impl_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]
 set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]

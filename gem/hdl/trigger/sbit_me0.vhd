@@ -306,23 +306,26 @@ begin
             sbits_probe <= vfat_sbits_type_change(17); --17 selected arbitrarily, can change if want to probe other vfat
 
             cluster_packer_inst : entity work.cluster_packer
-                generic map (
-                    DEADTIME => 0,
-                    ONESHOT => true,
-                    SPLIT_CLUSTERS => 0,
-                    INVERT_PARTITIONS => false,
-                    NUM_VFATS => 24,
-                    NUM_PARTITIONS => 8,
-                    STATION => 0
+              generic map (
+                DEADTIME          => 0,
+                ONESHOT           => true,
+                SPLIT_CLUSTERS    => 0,
+                INVERT_PARTITIONS => false,
+                NUM_VFATS         => 24,
+                NUM_PARTITIONS    => 8,
+                STATION           => 0
                 )
-                port map (
-                    reset => reset_i,
-                    clk_40 => ttc_clk_i.clk_40,
-                    clk_fast => ttc_clk_i.clk_160,
-                    sbits_i => vfat_sbits_type_change,
-                    cluster_count_o => me0_cluster_count,
-                    clusters_o => me0_clusters,
-                    overflow_o => me0_overflow
+              port map (
+                reset                  => reset_i,
+                clk_40                 => ttc_clk_i.clk_40,
+                clk_fast               => ttc_clk_i.clk_160,
+                mask_output_i          => '0',
+                sbits_i                => vfat_sbits_type_change,
+                cluster_count_o        => me0_cluster_count,
+                cluster_count_masked_o => open,
+                clusters_o             => me0_clusters,
+                clusters_masked_o      => open,
+                overflow_o             => me0_overflow
                 );
         end generate;
     end generate;
