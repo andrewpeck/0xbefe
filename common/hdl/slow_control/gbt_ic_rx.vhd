@@ -124,6 +124,8 @@ begin
   process (clock_i)
   begin
     if (rising_edge(clock_i)) then
+      
+      valid_o <= '0';
 
       case rx_state is
 
@@ -131,9 +133,10 @@ begin
 
           if (valid_i = '1') then
             if (lpgbt_version = '0') then
-              rx_state <= RSVRD;
+              rx_state   <= RSVRD;
             elsif (lpgbt_version = '1') then
-              rx_state <= CMD;
+              rx_state   <= CMD;
+	      parity_int <= frame_i;
             end if;
             chip_adr_int <= frame_i(7 downto 1);
             rw_bit_int   <= frame_i(0);
@@ -150,7 +153,7 @@ begin
           if (valid_i = '1') then
             rx_state               <= LENGTH0;
             downlink_parity_ok_int <= frame_i(0);
-            parity_int             <= frame_i;
+            parity_int             <= parity_int xor frame_i;
           end if;
 
         when LENGTH0 =>
@@ -255,6 +258,7 @@ begin
           length_o             <= (others => '0');
           reg_adr_o            <= (others => '0');
           data_o               <= (others => '0');
+	  data_int             <= (others => '0');
           downlink_parity_ok_o <= '0';
           valid_o              <= '0';
 

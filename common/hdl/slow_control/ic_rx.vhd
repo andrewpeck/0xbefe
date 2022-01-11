@@ -30,8 +30,8 @@ entity ic_rx is
         reset_i         : in  std_logic;                        --! Reset all of the RX processes
 
         -- Status
-        rx_empty_o      : out std_logic;                        --! Rx FIFO is empty (no reply from GBTx)
-
+--        rx_empty_o      : out std_logic;                        --! Rx FIFO is empty (no reply from GBTx)
+	wr_o            : out std_logic;
         -- Internal FIFO
         rd_clk_i        : in  std_logic;
         rd_i            : in  std_logic;                        --! Request a read operation of the internal FIFO (GBTx reply)
@@ -117,38 +117,38 @@ begin                 --========####   Architecture Body   ####========--
 
             -- Data
             data_i              => rx_data_i,
-            data_o              => byte_des,
+            data_o              => data_o,
 
             -- Status
-            write_o             => wr,
+            write_o             => wr_o,
             new_word_o          => open
         );
 
     -- RX Fifo
     --! Instantiation of the RX FIFO.
-    ic_rx_fifo_inst: ic_rx_fifo
-        generic map(
-            g_WORD_SIZE         => 8,
-            g_FIFO_DEPTH        => g_FIFO_DEPTH
-        )
-        port map(
-            wr_clk_i            => rx_clk_i,
-            wr_clk_en_i         => rx_clk_en,
-            rd_clk_i            => rd_clk_i,
-
-            reset_i             => reset_i,
-
-            -- Data
-            data_i              => byte_des,
-            data_o              => data_o,
-
-            -- Control
-            write_i             => wr,
-            read_i              => rd_i,
-
-            -- Status
-            rx_empty_o          => rx_empty_o
-        );
+--    ic_rx_fifo_inst: ic_rx_fifo
+--        generic map(
+--            g_WORD_SIZE         => 8,
+--            g_FIFO_DEPTH        => g_FIFO_DEPTH
+--        )
+--        port map(
+--            wr_clk_i            => rx_clk_i,
+--            wr_clk_en_i         => rx_clk_en,
+--            rd_clk_i            => rd_clk_i,
+--
+--            reset_i             => reset_i,
+--
+--            -- Data
+--            data_i              => byte_des,
+--            data_o              => data_o,
+--
+--            -- Control
+--            write_i             => wr,
+--            read_i              => rd_i,
+--
+--            -- Status
+--            rx_empty_o          => rx_empty_o
+--        );
 
 end behaviour;
 --============================================================================--
