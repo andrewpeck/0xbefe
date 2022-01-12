@@ -374,6 +374,7 @@ if __name__ == "__main__":
         
     # Check if GBT is READY
     for gbt in args.gbtid:
+        select_ic_link(args.ohid, gbt)
         check_lpgbt_ready(args.ohid, gbt)
 
     try:
