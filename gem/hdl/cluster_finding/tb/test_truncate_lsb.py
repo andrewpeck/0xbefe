@@ -50,10 +50,10 @@ async def truncate_lsb_random_data(dut):
 
         # turn off after 1 clock
         await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.data_i <= data
-        dut.latch <= 1
+        dut.data_i.value = data
+        dut.latch.value = 1
         await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.latch <= 0
+        dut.latch.value = 0
 
         for i in range(0, 3):
 
@@ -91,12 +91,13 @@ def test_truncate_lsb(width, segments):
     parameters['WIDTH'] = width
     parameters['SEGMENTS'] = segments
 
-    os.environ["SIM"] = "questa"
+    #os.environ["SIM"] = "questa"
+    os.environ["SIM"] = "ghdl"
 
     run(
         vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
-        compile_args=["-2008"],
+        #compile_args=["-2008"],
         toplevel="truncate_lsb",            # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
@@ -105,4 +106,5 @@ def test_truncate_lsb(width, segments):
 
 
 if __name__ == "__main__":
-    test_truncate_lsb()
+    test_truncate_lsb(192, 12)
+    test_truncate_lsb(384, 16)

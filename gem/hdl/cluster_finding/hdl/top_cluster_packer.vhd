@@ -26,11 +26,15 @@ entity cluster_packer is
     clk_40   : in std_logic;
     clk_fast : in std_logic;
 
+    mask_output_i : in std_logic;
+
     sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0);
 
-    cluster_count_o : out std_logic_vector (10 downto 0);
-    clusters_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    overflow_o      : out std_logic
+    cluster_count_o        : out std_logic_vector (10 downto 0);
+    cluster_count_masked_o : out std_logic_vector (10 downto 0);
+    clusters_o             : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    clusters_masked_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    overflow_o             : out std_logic
     );
 end cluster_packer;
 
@@ -56,9 +60,9 @@ architecture behavioral of cluster_packer is
   signal vpfs     : std_logic_vector (NUM_VFATS*MXSBITS-1 downto 0);
   signal cnts     : std_logic_vector (NUM_VFATS*MXSBITS*MXCNTB-1 downto 0);
 
-  signal overflow           : std_logic;
-  signal cluster_count      : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY : natural := 1;
+  signal overflow                           : std_logic;
+  signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
+  constant OVERFLOW_LATENCY                 : natural := 1;
 
   signal cluster_latch : std_logic;
 
@@ -255,8 +259,11 @@ begin
     port map (
       clock  => clk_fast,
       data_i => cluster_count,
-      data_o => cluster_count_o
+      data_o => cluster_count_delay
       );
+
+  cluster_count_o <= cluster_count_delay;
+  cluster_count_masked_o <= (others => '0') when mask_output_i = '1' else cluster_count_delay;
 
   overflow_delay : entity work.fixed_delay
     generic map (
@@ -292,6 +299,7 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  clusters_o <= clusters when reset='0' else (others => NULL_CLUSTER);
+  clusters_o        <= (others => NULL_CLUSTER) when reset = '1'                        else clusters;
+  clusters_masked_o <= (others => NULL_CLUSTER) when reset = '1' or mask_output_i = '1' else clusters;
 
 end behavioral;

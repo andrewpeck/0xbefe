@@ -59,6 +59,8 @@ end trig_alignment;
 
 architecture Behavioral of trig_alignment is
 
+  signal reset : std_logic := '1';
+
   signal frame_aligner_tmr_err : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sot_tmr_err           : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sbit_tmr_err          : std_logic_vector (NUM_VFATS*8-1 downto 0);
@@ -90,6 +92,9 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
+
+      reset <= reset_i;
+
       sot_invert <= sot_invert_i;
       tu_invert  <= tu_invert_i;
       vfat_mask  <= vfat_mask_i;
@@ -110,7 +115,7 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        sot_reset(I) <= reset_i or (vfat_mask(I));
+        sot_reset(I) <= reset or reset_i or (vfat_mask(I)); -- make sure it is 2 clocks wide
       end if;
     end process;
 
@@ -150,7 +155,8 @@ begin
     process (clock) is
     begin
       if (rising_edge(clock)) then
-        tu_reset(I) <= reset_i or tu_mask(I) or (not sot_is_aligned_int (I/8)) or vfat_mask(I/8);
+        -- make sure it is at least 2 clocks wide
+        tu_reset(I) <= reset or reset_i or tu_mask(I) or (not sot_is_aligned_int (I/8)) or vfat_mask(I/8);
       end if;
     end process;
 

@@ -44,8 +44,9 @@ entity trigger is
 
     -- cluster packer
 
-    cluster_count_o : out std_logic_vector (10 downto 0);
-    overflow_o      : out std_logic;
+    cluster_count_masked_o   : out std_logic_vector (10 downto 0);
+    cluster_count_unmasked_o : out std_logic_vector (10 downto 0);
+    overflow_o               : out std_logic;
 
     active_vfats_o : out std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -76,6 +77,9 @@ architecture Behavioral of trigger is
 
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
+  signal l1a_mask_delay : std_logic_vector(4 downto 0);
+  signal l1a_mask_width : std_logic_vector(4 downto 0);
+
   signal sbit_overflow   : std_logic;
   signal sbit_clusters, sbit_clusters_r   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
   signal frozen_clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
@@ -83,7 +87,8 @@ architecture Behavioral of trigger is
 
   signal valid_clusters_or : std_logic;
 
-  signal cluster_count : std_logic_vector (10 downto 0);
+  signal cluster_count_masked   : std_logic_vector (10 downto 0);
+  signal cluster_count_unmasked : std_logic_vector (10 downto 0);
 
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -211,10 +216,11 @@ begin
   -- Outputs
   --------------------------------------------------------------------------------------------------------------------
 
-  trigger_prbs_en_o <= trigger_prbs_en;
-  overflow_o        <= sbit_overflow;
-  active_vfats_o    <= active_vfats;
-  cluster_count_o   <= cluster_count;
+  trigger_prbs_en_o        <= trigger_prbs_en;
+  overflow_o               <= sbit_overflow;
+  active_vfats_o           <= active_vfats;
+  cluster_count_masked_o   <= cluster_count_masked;
+  cluster_count_unmasked_o <= cluster_count_unmasked;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Counter Snap
@@ -253,7 +259,7 @@ begin
   begin
     if (rising_edge(clocks.clk40)) then
 
-      if (unsigned(cluster_count) > 0) then
+      if (unsigned(cluster_count_masked) > 0) then
         sbits_comparator_over_threshold(0) <= '1';
       else
         sbits_comparator_over_threshold(0) <= '0';
@@ -267,7 +273,7 @@ begin
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
-        if (unsigned(cluster_count) > 63*I) then
+        if (unsigned(cluster_count_masked) > 63*I) then
           sbits_comparator_over_threshold(I) <= '1';
         else
           sbits_comparator_over_threshold(I) <= '0';
@@ -288,6 +294,10 @@ begin
       -- clock and reset
       clocks  => clocks,
       reset_i => reset_i,
+
+      ttc            => ttc,
+      l1a_mask_delay => l1a_mask_delay,
+      l1a_mask_width => l1a_mask_width,
 
       -- sbit inputs
       sbits_p => vfat_sbits_p,
@@ -320,10 +330,11 @@ begin
       hitmap_sbits_o   => hitmap_sbits,
 
       -- sbit outputs
-      active_vfats_o  => active_vfats,
-      clusters_o      => sbit_clusters,
-      cluster_count_o => cluster_count,
-      overflow_o      => sbit_overflow,
+      active_vfats_o           => active_vfats,
+      clusters_o               => sbit_clusters,
+      cluster_count_masked_o   => cluster_count_masked,
+      cluster_count_unmasked_o => cluster_count_unmasked,
+      overflow_o               => sbit_overflow,
 
       -- status outputs
       sot_is_aligned_o      => sot_is_aligned,
@@ -509,10 +520,11 @@ begin
     regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d8";
     regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d9";
     regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"f9";
-    regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"00";
-    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"01";
-    regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"02";
-    regs_addresses(105)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"03";
+    regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"fa";
+    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"00";
+    regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"01";
+    regs_addresses(105)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"02";
+    regs_addresses(106)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"03";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -725,10 +737,12 @@ begin
     regs_read_arr(99)(REG_TRIG_SBIT_HITMAP_VFAT11_MSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_MSB_LSB) <= hitmap_sbits(11)(63 downto 32);
     regs_read_arr(100)(REG_TRIG_SBIT_HITMAP_VFAT11_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_LSB_LSB) <= hitmap_sbits(11)(31 downto 0);
     regs_read_arr(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= trigger_prbs_en;
-    regs_read_arr(102)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
-    regs_read_arr(102)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
-    regs_read_arr(103)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
-    regs_read_arr(103)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
+    regs_read_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= l1a_mask_delay;
+    regs_read_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= l1a_mask_width;
+    regs_read_arr(103)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
+    regs_read_arr(103)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
+    regs_read_arr(104)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(104)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);
@@ -876,14 +890,16 @@ begin
     cyclic_inject_en <= regs_write_arr(63)(REG_TRIG_CYCLIC_INJECT_EN_BIT);
     hitmap_acquire <= regs_write_arr(76)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT);
     trigger_prbs_en <= regs_write_arr(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT);
+    l1a_mask_delay <= regs_write_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB);
+    l1a_mask_width <= regs_write_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB);
 
     -- Connect write pulse signals
     reset_counters <= regs_write_pulse_arr(29);
     inject_sbits <= regs_write_pulse_arr(64);
     reset_monitor <= regs_write_pulse_arr(65);
     hitmap_reset <= regs_write_pulse_arr(75);
-    tmr_cnt_reset <= regs_write_pulse_arr(104);
-    tmr_err_inj <= regs_write_pulse_arr(105);
+    tmr_cnt_reset <= regs_write_pulse_arr(105);
+    tmr_err_inj <= regs_write_pulse_arr(106);
 
     -- Connect write done signals
 
@@ -1431,6 +1447,8 @@ begin
     regs_defaults(63)(REG_TRIG_CYCLIC_INJECT_EN_BIT) <= REG_TRIG_CYCLIC_INJECT_EN_DEFAULT;
     regs_defaults(76)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= REG_TRIG_SBIT_HITMAP_ACQUIRE_DEFAULT;
     regs_defaults(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= REG_TRIG_TRIGGER_PRBS_EN_DEFAULT;
+    regs_defaults(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_DELAY_DEFAULT;
+    regs_defaults(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
@@ -1467,6 +1485,7 @@ begin
     regs_writable_arr(63) <= '1';
     regs_writable_arr(76) <= '1';
     regs_writable_arr(101) <= '1';
+    regs_writable_arr(102) <= '1';
 
   --==== Registers end ============================================================================
 

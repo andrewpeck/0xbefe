@@ -84,6 +84,8 @@ architecture Behavioral of gbt_serdes is
 
   signal rst : std_logic := '0';
 
+  signal rst_serdes : std_logic := '1';
+
   attribute MAX_FANOUT        : string;
   attribute MAX_FANOUT of rst : signal is "10";
 
@@ -107,8 +109,9 @@ begin
   process (clk_1x)
   begin
     if (rising_edge(clk_1x)) then
-      rst <= rst_i;
-      tmr_err_o <= oversample_tmr_err;
+      rst        <= rst_i;
+      tmr_err_o  <= oversample_tmr_err;
+      rst_serdes <= rst or rst_i;
     end if;
   end process;
 
@@ -133,7 +136,7 @@ begin
       clk1x             => clk_1x,
       clk4x_0           => clk_4x,
       clk4x_90          => clk_4x_90,
-      reset_i           => rst,
+      reset_i           => rst_serdes,
       rxd_p             => elink_i_p,
       rxd_n             => elink_i_n,
       rxdata_o          => from_gbt_raw,

@@ -30,7 +30,7 @@ entity trigger is
     port(
         -- reset
         reset_i             : in  std_logic;
-        
+
         -- TTC
         ttc_clk_i           : in  t_ttc_clks;
         ttc_cmds_i          : in  t_ttc_cmds;

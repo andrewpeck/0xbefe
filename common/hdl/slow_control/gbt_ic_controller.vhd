@@ -15,9 +15,10 @@ use ieee.std_logic_misc.all;
 use work.common_pkg.all;
 
 entity gbt_ic_controller is
-    --    generic(
-    --        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
-    --    );
+    generic(
+        g_DEBUG			: boolean
+--        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
+        );
     port(
         -- reset
         reset_i                 : in  std_logic;
@@ -62,13 +63,17 @@ architecture Behavioral of gbt_ic_controller is
 	probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 	probe4 : IN STD_LOGIC; 
 	probe5 : IN STD_LOGIC;
-	probe6 : IN STD_LOGIC
+	probe6 : IN STD_LOGIC;
+	probe7 : IN STD_LOGIC; 
+	probe8 : IN STD_LOGIC; 
+	probe9 : IN STD_LOGIC; 
+	probe10 : IN STD_LOGIC_VECTOR(6 DOWNTO 0); 
+	probe11 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	probe12 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
     );
     END COMPONENT  ;
 
     constant SOF_EOF            : std_logic_vector(7 downto 0) := x"7e";
-    constant debug_gbt_ic_rx    : std_logic := '1';
-
     -------------- tx serializer -------------- 
 
     type serdes_state_t is (IDLE, REG_ADDR, DATA, PARITY, EOF);
@@ -94,8 +99,15 @@ architecture Behavioral of gbt_ic_controller is
     signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
     signal ic_r_valid            : std_logic;
     signal ic_rx_empty           : std_logic;
+    signal wr                    : std_logic;
 --    signal gbt_rx_ic_elink_inv   : std_logic_vector(1 downto 0);
 --    signal ic_r_send_en : std_logic := '0';
+    signal ic_err                : std_logic;
+    signal ic_uplink_parity_ok   : std_logic; 
+    signal ic_downlink_parity_ok : std_logic; 
+    signal ic_chip_adr           : std_logic_vector(6 downto 0);
+    signal ic_length             : std_logic_vector(15 downto 0);
+    signal ic_reg_adr            : std_logic_vector(15 downto 0);
 
 begin
 
@@ -275,7 +287,10 @@ begin
     --========= IC RX =========--
    
     -- ILA Debug IC RX --
-    ila_enable : if debug_gbt_ic_rx generate
+    ila_enable : if g_DEBUG generate
+
+	ic_r_valid <= ic_read_valid_o;
+
     	i_gbt_ila_ix_rx : ila_ic_rx
             PORT MAP (
 	    	clk => gbt_clk_i,
@@ -286,7 +301,13 @@ begin
 	    	probe3 => ic_r_data_o,
 	    	probe4 => ic_r_valid,
 	    	probe5 => ic_read_req_i,
-            	probe6 => ic_write_req_i
+            	probe6 => ic_write_req_i,
+		probe7 => ic_err, 
+		probe8 => ic_uplink_parity_ok, 
+		probe9 => ic_downlink_parity_ok, 
+		probe10 => ic_chip_adr, 
+		probe11 => ic_length,
+		probe12 => ic_reg_adr
             );
 
     end generate;
@@ -303,8 +324,9 @@ begin
 
             reset_i         => reset_i,
 
-            -- Status
-            rx_empty_o      => ic_rx_empty,
+            -- Status>
+            --rx_empty_o      => ic_rx_empty,
+	    wr_o            => wr,
 
             -- Internal FIFO
             rd_clk_i        => gbt_clk_i,
@@ -312,7 +334,7 @@ begin
             data_o          => rx_data_from_gbtx,
 
             -- IC line
-            rx_data_i       => gbt_rx_ic_elink_i
+            rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
             
         );
     i_gbt_ic_rx : entity work.gbt_ic_rx
@@ -321,19 +343,19 @@ begin
             reset_i                 => reset_i,
                                     
             frame_i                 => rx_data_from_gbtx,
-            valid_i                 => not ic_rx_empty,
+            valid_i                 => wr,
 
             lpgbt_version           => gbt_version_i,
 
             -- Control
-            chip_adr_o              => open,
+            chip_adr_o              => ic_chip_adr,
             data_o                  => ic_r_data_o,
-            length_o                => open,
-            reg_adr_o               => open,
-            uplink_parity_ok_o      => open,
-            downlink_parity_ok_o    => open,
-            err_o                   => open,
-            valid_o                 => ic_r_valid                                    
+            length_o                => ic_length,
+            reg_adr_o               => ic_reg_adr,
+            uplink_parity_ok_o      => ic_uplink_parity_ok,
+            downlink_parity_ok_o    => ic_downlink_parity_ok,
+            err_o                   => ic_err,
+            valid_o                 => ic_read_valid_o                                    
         );      
 
 end Behavioral;

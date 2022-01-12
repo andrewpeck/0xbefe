@@ -128,10 +128,11 @@ architecture Behavioral of optohybrid_fw is
   signal fiber_kchars  : t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
 
   -- Clusters
-  signal sbit_overflow : std_logic;
-  signal cluster_count : std_logic_vector (10 downto 0);
-  signal active_vfats  : std_logic_vector (NUM_VFATS-1 downto 0);
-  signal sbit_clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+  signal sbit_overflow          : std_logic;
+  signal cluster_count_masked   : std_logic_vector (10 downto 0);
+  signal cluster_count_unmasked : std_logic_vector (10 downto 0);
+  signal active_vfats           : std_logic_vector (NUM_VFATS-1 downto 0);
+  signal sbit_clusters          : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
   -- Global signals
   signal idlyrdy     : std_logic;
@@ -386,9 +387,10 @@ begin
       gbt_link_error_i       => gbt_link_error,
 
       -- Trigger
-      active_vfats_i  => active_vfats,
-      sbit_overflow_i => sbit_overflow,
-      cluster_count_i => cluster_count,
+      active_vfats_i           => active_vfats,
+      sbit_overflow_i          => sbit_overflow,
+      cluster_count_masked_i   => cluster_count_masked,
+      cluster_count_unmasked_i => cluster_count_unmasked,
 
       -- Outputs
       bxn_counter_o => bxn_counter,
@@ -428,10 +430,11 @@ begin
       vfat_sot_n   => vfat_sot_n,
 
       -- cluster finding outputs
-      sbit_clusters_o => sbit_clusters,
-      cluster_count_o => cluster_count,
-      overflow_o      => sbit_overflow,
-      active_vfats_o  => active_vfats,
+      sbit_clusters_o          => sbit_clusters,
+      cluster_count_masked_o   => cluster_count_masked,
+      cluster_count_unmasked_o => cluster_count_unmasked,
+      overflow_o               => sbit_overflow,
+      active_vfats_o           => active_vfats,
 
       --
       trigger_prbs_en_o => trigger_prbs_en
@@ -443,8 +446,6 @@ begin
 
 
   trigger_data_formatter_tmr : if (true) generate
-    signal cluster_count : t_std11_array (2 downto 0);
-    signal overflow      : std_logic_vector (2 downto 0);
 
     type t_fiber_packets_tmr is array (2 downto 0) of t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
     type t_elink_packets_tmr is array (2 downto 0) of t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
