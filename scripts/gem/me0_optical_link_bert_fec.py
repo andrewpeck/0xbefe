@@ -373,9 +373,9 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
     # Check if GBT is READY
-    for gbt in args.gbtid:
-        select_ic_link(args.ohid, gbt)
-        check_lpgbt_ready(args.ohid, gbt)
+    if args.path == "downlink":
+        for gbt in args.gbtid:
+            check_lpgbt_ready(args.ohid, gbt)
 
     try:
         check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, float(args.time), vfat_list, args.verbose)
