@@ -596,7 +596,8 @@ begin
                 end if;
                 
                 -- No data coming, but we do have data in the buffer, manage the timeout timer
-                if ((ep_last_rx_data_valid = '0') and (eb_vfat_words_64 /= x"000") and (eb_timeout_flag = '0')) then
+                --if ((ep_last_rx_data_valid = '0') and (eb_vfat_words_64 /= x"000") and (eb_timeout_flag = '0')) then
+                if ((ep_last_rx_data_valid = '0') and (eb_counters_valid = '1') and (eb_timeout_flag = '0')) then
                     eb_timer <= eb_timer + 1;
                 end if;
                 

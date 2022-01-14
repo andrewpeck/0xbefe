@@ -3,4 +3,3 @@ generate_project:csc_apex:
     variables:
       extends: .vars
       PROJECT_NAME: csc_apex
-

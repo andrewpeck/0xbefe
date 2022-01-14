@@ -1,0 +1,6 @@
+generate_project:csc_apex_devel:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: csc_apex
+      INTERMEDIATE_BUILD: "1"
