@@ -8,7 +8,7 @@ from ADC_read import *
 from oh_fw_programming import *
 from phase_scan import *
 from loopback import *
-from sbit_timing_scan_oh_sbit_hitmap import *
+# from sbit_timing_scan_oh_sbit_hitmap import *
 
 from gem.init_backend import init_gem_backend
 from gem.init_frontend import init_gem_frontend
