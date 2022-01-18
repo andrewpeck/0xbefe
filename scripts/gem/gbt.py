@@ -71,6 +71,7 @@ PHASE_SCAN_L1A_GAP = 40 # 1MHz
 
 def gbt_command(oh_idx, gbt_idx, command, command_args):
 
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     ohSelect = oh_idx
     gbtSelect = gbt_idx
 
@@ -87,11 +88,14 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
 
     heading("Hello, I'm your GBT controller :)")
 
-    if (checkGbtReady(ohSelect, gbtSelect) == 1):
+    if gem_station == 0: # ME0
         selectGbt(ohSelect, gbtSelect)
-    else:
-        print_red("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
-        return
+    else: # GE1/1 or GE2/1
+        if (checkGbtReady(ohSelect, gbtSelect) == 1):
+            selectGbt(ohSelect, gbtSelect)
+        else:
+            print_red("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
+            return
 
     if command == "charge-pump-current-scan":
         write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
@@ -499,7 +503,7 @@ def selectGbt(ohIdx, gbtIdx):
 
     if station == 0:
         gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
-        #write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VER'), gbt_ver)
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VERSION'), gbt_ver)
         if gbt_ver == 0:
             write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
         elif gbt_ver == 1:

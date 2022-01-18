@@ -48,9 +48,9 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
     cntvalmin = 2**20
 
     #ymin=1
-    #ymax=30
+    #ymax=31
     ymin=0
-    ymax=31
+    ymax=30
     xmin=0
     xmax=64
 
@@ -171,9 +171,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for lpGBT eye scan")
     elif args.system == "backend":
-        #print ("Using Backend for lpGBT eye scan")
-        print (Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
+        print ("Using Backend for lpGBT eye scan")
     elif args.system == "dryrun":
         print ("Dry Run - not actually running on lpGBT")
     else:
@@ -271,7 +269,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 

@@ -4,20 +4,46 @@ import sys
 import argparse
 import csv
 import matplotlib.pyplot as plt
-import os
+import os, glob
 import datetime
+import numpy as np
 
-def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
+def poly5(x, a, b, c, d, e, f):
+    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
+def get_vin(vout, fit_results):
+    vin_range = np.linspace(0, 1, 1000)
+    vout_range = poly5(vin_range, *fit_results)
+    diff = 9999
+    vin = 0
+    for i in range(0,len(vout_range)):
+        if abs(vout - vout_range[i])<=diff:
+            diff = abs(vout - vout_range[i])
+            vin = vin_range[i]
+    return vin
+
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
+
+    gbt = gbt_select%4
     init_adc(oh_ver)
     print("ADC Readings:")
-    
-    F = 0
-    if oh_ver == 1:
-        F = 1
-    elif oh_ver == 2:
-        cal_channel = 7 # main_adc_in7
-        F = calculate_F(cal_channel, gain, system)
+
+    adc_calib_results = []
+    adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
+    if not os.path.isdir(adc_calibration_dir):
+        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
+    list_of_files = glob.glob(adc_calibration_dir+"ME0_OH%d_GBT%d_adc_calibration_results_*.txt"%(oh_select, gbt_select))
+    if len(list_of_files)==0:
+        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
+    elif len(list_of_files)>1:
+        print ("Mutliple ADC calibration results found, using latest file")
+    if len(list_of_files)!=0:
+        latest_file = max(list_of_files, key=os.path.getctime)
+        adc_calib_file = open(latest_file)
+        adc_calib_results = adc_calib_file.readlines()[0].split()
+        adc_calib_results_float = [float(a) for a in adc_calib_results]
+        adc_calib_results_array = np.array(adc_calib_results_float)
+        adc_calib_file.close()
 
     resultDir = "results"
     try:
@@ -39,7 +65,7 @@ def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     foldername = dataDir + "/"
-    filename = foldername + "asense_data_" + now + ".txt"
+    filename = foldername + "ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
     minutes, asense0, asense1, asense2, asense3 = [], [], [], [], []
@@ -66,19 +92,35 @@ def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
     while int(time()) <= end_time:
         if (time()-t0)>60:
             if oh_ver == 1:
-                asense0_value = F * read_adc(4, gain, system)
-                asense1_value = F * read_adc(2, gain, system)
-                asense2_value = F * read_adc(1, gain, system)
-                asense3_value = F * read_adc(3, gain, system)
+                asense0_value = read_adc(4, gain, system)
+                asense1_value = read_adc(2, gain, system)
+                asense2_value = read_adc(1, gain, system)
+                asense3_value = read_adc(3, gain, system)
             if oh_ver == 2:
-                asense0_value = F * read_adc(6, gain, system)
-                asense1_value = F * read_adc(1, gain, system)
-                asense2_value = F * read_adc(0, gain, system)
-                asense3_value = F * read_adc(3, gain, system)
-            asense0_converted = asense_current_conversion(asense0_value)
-            asense1_converted = asense_temp_voltage_conversion(asense1_value)
-            asense2_converted = asense_current_conversion(asense2_value)
-            asense3_converted = asense_temp_voltage_conversion(asense3_value)
+                asense0_value = read_adc(6, gain, system)
+                asense1_value = read_adc(1, gain, system)
+                asense2_value = read_adc(0, gain, system)
+                asense3_value = read_adc(3, gain, system)
+
+            asense0_Vout = 1.0 * (asense0_value/1024.0) # 10-bit ADC, range 0-1 V
+            asense1_Vout = 1.0 * (asense1_value/1024.0) # 10-bit ADC, range 0-1 V
+            asense2_Vout = 1.0 * (asense2_value/1024.0) # 10-bit ADC, range 0-1 V
+            asense3_Vout = 1.0 * (asense3_value/1024.0) # 10-bit ADC, range 0-1 V
+            if len(adc_calib_results)!=0:
+                asense0_Vin = get_vin(asense0_Vout, adc_calib_results_array)
+                asense1_Vin = get_vin(asense1_Vout, adc_calib_results_array)
+                asense2_Vin = get_vin(asense2_Vout, adc_calib_results_array)
+                asense3_Vin = get_vin(asense3_Vout, adc_calib_results_array)
+            else:
+                asense0_Vin = asense0_Vout
+                asense1_Vin = asense1_Vout
+                asense2_Vin = asense2_Vout
+                asense3_Vin = asense3_Vout
+
+            asense0_converted = asense_current_conversion(asense0_Vin)
+            asense1_converted = asense1_Vin
+            asense2_converted = asense_current_conversion(asense2_Vin)
+            asense3_converted = asense3_Vin
             second = time() - start_time
             asense0.append(asense0_converted)
             asense1.append(asense1_converted)
@@ -99,18 +141,35 @@ def main(system, oh_ver, boss, gbt, run_time_min, gain, plot):
             t0 = time()
     file_out.close()
 
-    figure_name1 = foldername + now + "_pg_current_plot.pdf"
-    figure_name2 = foldername + now + "_rt_voltage_plot.pdf"
+    asense0_label = ""
+    asense1_label = ""
+    asense2_label = ""
+    asense3_label = ""
+    if gbt==0:
+        asense0_label = "PG2.5V current"
+        asense1_label = "Rt2 voltage"
+        asense2_label = "PG1.2V current"
+        asense3_label = "Rt1 voltage"
+    if gbt==2:
+        asense0_label = "PG1.2VD current"
+        asense1_label = "Rt3 voltage"
+        asense2_label = "PG1.2VA current"
+        asense3_label = "Rt4 voltage"
+
+    figure_name1 = foldername + "ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name2 = foldername + "ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig3, ax3 = plt.subplots()
     fig4, ax4 = plt.subplots()
     ax3.set_xlabel("minutes")
     ax3.set_ylabel("PG Current (A)")
     ax4.set_xlabel("minutes")
     ax4.set_ylabel("Rt Voltage (V)")
-    ax3.plot(minutes, asense0, color="red")
-    ax3.plot(minutes, asense2, color="blue")
-    ax4.plot(minutes, asense1, color="red")
-    ax4.plot(minutes, asense3, color="blue")
+    ax3.plot(minutes, asense0, color="red", label=asense0_label)
+    ax3.plot(minutes, asense2, color="blue", label=asense2_label)
+    ax3.legend(loc="center right")
+    ax4.plot(minutes, asense1, color="red", label=asense1_label)
+    ax4.plot(minutes, asense3, color="blue", label=asense3_label)
+    ax4.legend(loc="center right")
     fig3.savefig(figure_name1, bbox_inches="tight")
     fig4.savefig(figure_name2, bbox_inches="tight")
 
@@ -135,35 +194,6 @@ def live_plot_temp(ax2, x, y1, y3, run_time_min, gbt):
         ax2.legend((line1, line3), ("Rt3 voltage", "Rt4 voltage"), loc="center right")
     plt.draw()
     plt.pause(0.01)
-
-def calculate_F(channel, gain, system):
-
-    R = 1e-03
-    LSB = 3.55e-06
-    DAC = 150
-
-    I = DAC * LSB
-    V = I * R
-
-    reg_data = convert_adc_reg(channel)
-
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  #Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC, 0)  #Sets output current for the current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data, 0)
-    sleep(0.01)
-
-    if system == "dryrun":
-        F = 1
-    else:
-        V_m = read_adc(channel, gain, system)
-        F = V/V_m
-
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE "), 0x0, 0)  #Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0, 0)  #Sets output current for the current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0, 0)
-    sleep(0.01)
-
-    return F
 
 def convert_adc_reg(adc):
     reg_data = 0
@@ -228,21 +258,14 @@ def read_adc(channel, gain, system):
 
     return val
 
-def asense_current_conversion(asense_adc):
+def asense_current_conversion(Vin):
     # Resistor values
     R = 0.01 # 0.01 Ohm
 
-    asense_voltage = 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
+    asense_voltage = Vin
     asense_voltage /= 20 # Gain in current sense circuit
     asense_current = asense_voltage/R # asense current
     return asense_current
-
-def asense_temp_voltage_conversion(asense_adc):
-    # Resistor values
-    R = 0.01 # 0.01 Ohm
-
-    asense_voltage = 1.0 * (asense_adc/1024.0) # 10-bit ADC, range 0-1 V
-    return asense_voltage
 
 
 if __name__ == "__main__":
@@ -261,9 +284,7 @@ if __name__ == "__main__":
     if args.system == "chc":
         print("Using Rpi CHeeseCake for asense monitoring")
     elif args.system == "backend":
-        # print ("Using Backend for asense monitoring")
-        print(Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
+        print ("Using Backend for asense monitoring")
     elif args.system == "dryrun":
         print("Dry Run - not actually running asense monitoring")
     else:
@@ -287,7 +308,6 @@ if __name__ == "__main__":
     if int(args.gbtid) > 7:
         print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
         sys.exit()
-    gbt = int(args.gbtid)%4
 
     oh_ver = get_oh_ver(args.ohid, args.gbtid)
     boss = None
@@ -309,7 +329,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
@@ -317,7 +337,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)    
         
     try:
-        main(args.system, oh_ver, boss, gbt, args.minutes, gain, args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

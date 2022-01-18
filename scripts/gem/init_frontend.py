@@ -69,7 +69,7 @@ def init_gem_frontend():
                 elif gbt_ver == 1:
                     oh_ver = 2
                 gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
-                if gbt_ready == 0:
+                if oh_ver == 1 and gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh]
@@ -78,6 +78,52 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config])
+
+                # Enable TX channels of VTRx+
+                if gbt%2 != 0:
+                    continue
+                selectGbt(oh, gbt)
+                nbytes = 2
+                control_register_data = nbytes<<2 | 0 # using 100 kHz
+                reg_addr = 0x00
+                data = 0x03
+                vtrx_slave_addr = 0x50
+                if gbt_ver == 0:
+                    writeGbtRegAddrs(0x100, control_register_data)
+                    writeGbtRegAddrs(0x104, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x100, reg_addr)
+                    writeGbtRegAddrs(0x101, data)
+                    writeGbtRegAddrs(0x104, 0x8)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x0FF, vtrx_slave_addr)
+                    writeGbtRegAddrs(0x104, 0xC)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x100, 0x0)
+                    writeGbtRegAddrs(0x101, 0x0)
+                    writeGbtRegAddrs(0x0FF, 0x0)
+                    writeGbtRegAddrs(0x104, 0x0)
+                    sleep(0.01)
+                elif gbt_ver == 1:
+                    writeGbtRegAddrs(0x110, control_register_data)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, reg_addr)
+                    writeGbtRegAddrs(0x111, data)
+                    writeGbtRegAddrs(0x114, 0x8)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x10F, vtrx_slave_addr)
+                    writeGbtRegAddrs(0x114, 0xC)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, 0x0)
+                    writeGbtRegAddrs(0x111, 0x0)
+                    writeGbtRegAddrs(0x10F, 0x0)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+
+                # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
+                if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
+                    sleep(2.5)
 
     print("Setting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
