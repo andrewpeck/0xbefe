@@ -99,9 +99,8 @@ architecture Behavioral of gbt_ic_controller is
     signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
     signal ic_r_valid            : std_logic;
     signal ic_rx_empty           : std_logic;
+    -- IC rx debug
     signal wr                    : std_logic;
---    signal gbt_rx_ic_elink_inv   : std_logic_vector(1 downto 0);
---    signal ic_r_send_en : std_logic := '0';
     signal ic_err                : std_logic;
     signal ic_uplink_parity_ok   : std_logic; 
     signal ic_downlink_parity_ok : std_logic; 
@@ -313,6 +312,8 @@ begin
     end generate;
 
 
+    -- instantiate ic rx module (CERN module) to desirialize 2 elink bits to 8 bit words
+
     i_ic_rx     : entity work.ic_rx
         generic map (
             g_FIFO_DEPTH    => 20
@@ -337,6 +338,7 @@ begin
             rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
             
         );
+    -- gbt_ic_rx module is finite state machine for rx frame
     i_gbt_ic_rx : entity work.gbt_ic_rx
         port map(
             clock_i                 => gbt_clk_i,

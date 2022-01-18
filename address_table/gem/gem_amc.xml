@@ -1266,7 +1266,7 @@
           fw_write_pulse_signal="ic_write_req" fw_write_done_signal="ic_write_done"/>
     <node id="EXECUTE_READ" address="0x4" permission="w"
           description="writing any value here will execute a GBTx register read operation"
-          fw_write_pulse_signal="ic_read_req"/>
+          fw_write_pulse_signal="ic_read_req" fw_write_done_signal="ic_read_done"/>
     <node id="GBTX_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
           description="GBTx I2C address as defined by the I2CADDRESS pins of the GBTx chip"
           fw_signal="ic_gbtx_i2c_addr" fw_default="0b0000001"/>
@@ -1276,7 +1276,7 @@
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
           fw_signal="ic_read_data"/>
-    <node id="GBT_VERSION" address="0x8" mask ="0x00000001" permission="w"
+    <node id="GBT_VERSION" address="0x8" mask ="0x00000001" permission="rw"
           description="lpGBT version 0 or 1"
           fw_signal="gbt_version" fw_default="0x00"/>      
   </node>
