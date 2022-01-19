@@ -68,10 +68,11 @@ def ADC_Test():
     data = {}
     while(iter == 0):
         # read FPGA temperature
+        sleep(1)
         tempRaw = read_reg('BEFE.GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)
         temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
         TEMP_Val[0] = temp
-        #print("FPGA temperature: %fC" % temp)
+        # print("FPGA temperature: %fC" % temp)
 
         # read the SCA ADCs
         write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', OH_MASK)

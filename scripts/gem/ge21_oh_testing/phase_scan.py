@@ -176,6 +176,7 @@ def program_phase(ohSelect , gbtSelect , configFile , Phases):
             wReg(ADDR_IC_ADDR, addr)
             wReg(ADDR_IC_WRITE_DATA, value)
             wReg(ADDR_IC_EXEC_WRITE, 1)
+            sleep(0.000001) # writing is too fast for CVP13 :)
 
         if elink in GE21_GBT_ELINK_TO_VFAT[gbtSelect]:
             vfat = GE21_GBT_ELINK_TO_VFAT[gbtSelect][elink]
@@ -434,6 +435,7 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
                 wReg(ADDR_IC_ADDR, addr)
                 wReg(ADDR_IC_WRITE_DATA, value)
                 wReg(ADDR_IC_EXEC_WRITE, 1)
+                sleep(0.000001) # writing is too fast for CVP13 :)
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
             write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
@@ -481,6 +483,7 @@ def downloadConfig(ohIdx, gbtIdx, filename):
         wReg(ADDR_IC_ADDR, addr)
         wReg(ADDR_IC_WRITE_DATA, value)
         wReg(ADDR_IC_EXEC_WRITE, 1)
+        sleep(0.000001) # writing is too fast for CVP13 :)
         addr += 1
         lines += 1
         ret.append(value)
@@ -498,6 +501,7 @@ def destroyConfig():
         wReg(ADDR_IC_ADDR, i)
         wReg(ADDR_IC_WRITE_DATA, 0)
         wReg(ADDR_IC_EXEC_WRITE, 1)
+        sleep(0.000001) # writing is too fast for CVP13 :)
 
 def initGbtRegAddrs():
     global ADDR_IC_ADDR
