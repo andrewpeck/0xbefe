@@ -444,8 +444,7 @@ module   gem_data_out
            (
             .refclk_n          (refclk_n),
             .refclk_p          (refclk_p),
-            .clock_160         (clock_160),
-            .clock_200         (clock_200),
+            .userclk           (usrclks),
             .gtx_txoutclk      (),
             .TXN_OUT           (trg_tx_n),
             .TXP_OUT           (trg_tx_p),

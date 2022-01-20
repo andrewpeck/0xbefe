@@ -21,8 +21,7 @@ entity gtx_quad is
     refclk_p : in std_logic_vector (1 downto 0);
     refclk_n : in std_logic_vector (1 downto 0);
 
-    clock_160 : in std_logic;
-    clock_200 : in std_logic;
+    userclk : in std_logic_vector (3 downto 0);
 
     gttx_reset_in : in  std_logic_vector(3 downto 0);
     TXN_OUT       : out std_logic_vector(3 downto 0);
@@ -69,8 +68,6 @@ architecture Behavioral of gtx_quad is
   type string_array_t is array (3 downto 0) of string (1 to 3);
   constant RATE : string_array_t := (RATE3, RATE2, RATE1, RATE0);
 
-  signal userclk : std_logic_vector (3 downto 0);
-
   constant DLY : time := 1 ns;
 
   signal mgt_refclk0 : std_logic;
@@ -111,19 +108,6 @@ architecture Behavioral of gtx_quad is
   signal GTX_TXDATA_IN : t_std16_array (3 downto 0);
 
 begin
-
-  userclk_assign : for I in 0 to 3 generate
-  begin
-
-    g3p2 : if (RATE(I) = "3p2") generate
-      userclk(I) <= clock_160;
-    end generate;
-
-    g4p0 : if (RATE(I) = "4p0") generate
-      userclk(I) <= clock_200;
-    end generate;
-
-  end generate;
 
   tx_prbs_mode(0) <= tx_prbs_mode_0;
   tx_prbs_mode(1) <= tx_prbs_mode_1;
