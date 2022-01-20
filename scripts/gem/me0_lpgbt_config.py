@@ -6,17 +6,20 @@ from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 
 def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, readback=0):
 
-    # Set the PLLCONFIGDONE and DLLCONFIGDONE first to 0 is re-configuring using I2C
-    if system=="chc" and not readback:
+    # Set the PLLCONFIGDONE and DLLCONFIGDONE first to 0 if re-configuring using I2C/IC
+    if system!="dryrun" and not readback:
         writeReg(getNode("LPGBT.RWF.POWERUP.DLLCONFIGDONE"), 0x0, readback)
         writeReg(getNode("LPGBT.RWF.POWERUP.PLLCONFIGDONE"), 0x0, readback)
 
     # Optionally reset LPGBT
-    if (reset_before_config and not readback and system!="backend"):
+    if (reset_before_config and not readback):
         reset_lpgbt(readback)
 
     if input_config_file is not None:
-        lpgbt_dump_config(oh_ver, input_config_file)
+        if not readback:
+            lpgbt_dump_config(oh_ver, input_config_file)
+        else:
+            lpgbt_check_config_with_file(oh_ver, input_config_file)
     else:
         # configure clocks, chip config, line driver
         configLPGBT(oh_ver, readback)
@@ -59,35 +62,34 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
 
             # configure reset + led outputs
             configure_gpio(oh_ver, boss, readback)
-            
-        # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
-        if boss and not readback:
-            print ("Enabling TX2 channel for VTRX+")
-            i2cmaster_write(system, 0x00, 0x03)
-        
+
         # Powerup settings
         writeReg(getNode("LPGBT.RWF.POWERUP.PUSMPLLTIMEOUTCONFIG"), 0x3, readback)
         writeReg(getNode("LPGBT.RWF.POWERUP.PUSMDLLTIMEOUTCONFIG"), 0x3, readback)
 
         #set_uplink_group_data_source("normal", readback, pattern=0x55555555)
 
+    # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
+    if boss and not readback:
+        print ("Enabling TX2 channel for VTRX+")
+        i2cmaster_write(system, oh_ver, 0x00, 0x03)
+
     print("Configuration finished... asserting config done")
     # Finally, Set pll&dllConfigDone to run chip:
-    if system=="backend":
-        if oh_ver == 1:
-            mpoke(0x0EF, 0x06)
-        elif oh_ver == 2:
-            mpoke(0x0FB, 0x06)
-    else:
-        writeReg(getNode("LPGBT.RWF.POWERUP.DLLCONFIGDONE"), 0x1, readback)
-        writeReg(getNode("LPGBT.RWF.POWERUP.PLLCONFIGDONE"), 0x1, readback)
+    writeReg(getNode("LPGBT.RWF.POWERUP.DLLCONFIGDONE"), 0x1, readback)
+    writeReg(getNode("LPGBT.RWF.POWERUP.PLLCONFIGDONE"), 0x1, readback)
 
     # Check READY status
     if not readback:
         sleep(1) # Waiting for 1 sec for the lpGBT configuration to be complete
     pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
     print ("PUSMSTATE register value: " + str(pusmstate))
-    if (pusmstate==18):
+    ready_value = -9999
+    if oh_ver == 1:
+        ready_value = 18
+    elif oh_ver == 2:
+        ready_value = 19
+    if (pusmstate==ready_value):
         print ("lpGBT status is READY")
 
     # Writing lpGBT configuration to text file
@@ -588,8 +590,6 @@ if __name__ == "__main__":
         print ("Using Rpi CHeeseCake for configuration")
     elif args.system == "backend":
         print ("Using Backend for configuration")
-        #print ("Only chc (Rpi Cheesecake) or dryrun supported at the moment")
-        #sys.exit()
     elif args.system == "dryrun":
         print ("Dry Run - not actually configuring lpGBT")
     else:
@@ -621,9 +621,9 @@ if __name__ == "__main__":
     else:
         boss = 0
     
-    if args.system == "backend":
+    if args.system in ["chc", "backend"]:
         if args.input_config_file is None or ".txt" not in args.input_config_file:
-            print (Colors.YELLOW + "Need input .txt file to configure from backend" + Colors.ENDC)
+            print (Colors.YELLOW + "Need input .txt file to configure from chc or backend" + Colors.ENDC)
             sys.exit()
 
     if args.input_config_file is not None:
@@ -641,12 +641,12 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if GBT is READY
-    if args.system != "dryrun" and args.system != "chc":
+    if oh_ver == 1 and args.system == "backend":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT
@@ -666,15 +666,14 @@ if __name__ == "__main__":
 
     # Checking LPGBT configuration
     readback = 1
-    if (args.input_config_file is None and args.system!="backend"):
-        try:
-            main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
-        except KeyboardInterrupt:
-            print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
-            rw_terminate()
-        except EOFError:
-            print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-            rw_terminate()
+    try:
+        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
+    except KeyboardInterrupt:
+        print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        rw_terminate()
+    except EOFError:
+        print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        rw_terminate()
 
     # Termination
     rw_terminate()

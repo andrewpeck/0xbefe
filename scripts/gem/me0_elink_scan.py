@@ -90,14 +90,14 @@ def setVfatRxEnable(system, oh_select, vfat, enable, elink):
         GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C4
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_ENABLE_BASE_REG = 0x0C8
-    addr = GBT_ELINK_SAMPLE_ENABLE_BASE_REG + elink/4
+    addr = GBT_ELINK_SAMPLE_ENABLE_BASE_REG + int(elink/4)
     bit = 4 + elink%4
     mask = (1 << bit)
     value = (config[addr] & (~mask)) | (enable << bit)
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
     select_ic_link(oh_select, gbt_select)
-    if system!= "dryrun" and system!= "backend":
+    if system!= "dryrun":
         check_rom_readback(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
@@ -148,9 +148,9 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
-    config_boss_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
+    config_sub_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
     config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
-    config_boss_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    config_sub_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
     
     if not os.path.isfile(config_boss_filename_v1):
         print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)
@@ -182,9 +182,3 @@ if __name__ == "__main__":
 
     # Termination
     rw_terminate()
-
-
-
-../resources/me0_boss_config.txt
-
-

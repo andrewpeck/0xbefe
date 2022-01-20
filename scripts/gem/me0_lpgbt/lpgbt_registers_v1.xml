@@ -967,10 +967,10 @@
                 <node id="EPTXECINVERT" address="0x4" permission="rw"
                     description=" Invert data for EC channel output"
                     mask="0x04" />
-                <node id="EPTXECTRISTATE" address="0x2" permission="rw"
+                <node id="EPTXECTRISTATE" address="0x4" permission="rw"
                     description=" Enable tri-state operation of EC channel output in simplex modes"
                     mask="0x02" />
-                <node id="EPTXECENABLE" address="0x1" permission="rw"
+                <node id="EPTXECENABLE" address="0x4" permission="rw"
                     description="Enable EC channel output"
                     mask="0x01" />
 
@@ -2869,7 +2869,7 @@
             </node>
 
             <!-- 15.3.4 ECLK -->
-            <node id="ECLK" address="0x1ae-0x150" description="I2C Read">
+            <node id="ECLK" address="0x1ae-0x150" description="ECLK">
 
                 <!-- [0x1ae] PSStatus -->
                 <!-- Status of phase-shifter DLL initialization state machines -->
@@ -2903,43 +2903,45 @@
                     <!-- PIOIn[n]   Input signal level -->
                     <!-- 1'b0   Low -->
                     <!-- 1'b1   High -->
+            </node>
 
+            <node id="FUSE_READ" address="0x1b1-0x150" description="FUSE READ">
                 <!-- [0x1b1] FUSEStatus -->
                 <!-- Status of fuse block. -->
-                <node id="FUSEBLOWERROR" address="0x3" permission="r"
+                <node id="FUSEBLOWERROR" address="0x0" permission="r"
                     description="Error flag (attempt to blow fuses without magic number)."
                     mask="0x08" />
-                <node id="FUSEDATAVALID" address="0x3" permission="r"
+                <node id="FUSEDATAVALID" address="0x0" permission="r"
                     description="Fuse read sequence was successful, SelectedFuseValues[31:0] is valid."
                     mask="0x04" />
-                <node id="FUSEBLOWDONE" address="0x3" permission="r"
+                <node id="FUSEBLOWDONE" address="0x0" permission="r"
                     description="Fuse blowing sequence was successful."
                     mask="0x02" />
-                <node id="FUSEBLOWBUSY" address="0x3" permission="r"
+                <node id="FUSEBLOWBUSY" address="0x0" permission="r"
                     description="Fuse block is busy (either read or blowing sequence)."
                     mask="0x01" />
 
                 <!-- [0x1b2] FUSEValuesA -->
                 <!-- Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1b1] FUSEStatus register). -->
-                <node id="FUSEVALUESA" address="0x4" permission="r"
+                <node id="FUSEVALUESA" address="0x1" permission="r"
                     description="Bits 7:0 of the data word."
                     mask="0xff" />
 
                 <!-- [0x1b3] FUSEValuesB -->
                 <!-- Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1b1] FUSEStatus register). -->
-                <node id="FUSEVALUESB" address="0x5" permission="r"
+                <node id="FUSEVALUESB" address="0x2" permission="r"
                     description="Bits 15:8 of the data word."
                     mask="0xff" />
 
                 <!-- [0x1b4] FUSEValuesC -->
                 <!-- Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1b1] FUSEStatus register). -->
-                <node id="FUSEVALUESC" address="0x6" permission="r"
+                <node id="FUSEVALUESC" address="0x3" permission="r"
                     description="Bits 23:16 of the data word."
                     mask="0xff" />
 
                 <!-- [0x1b5] FUSEValuesD -->
                 <!-- Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1b1] FUSEStatus register). -->
-                <node id="FUSEVALUESD" address="0x7" permission="r"
+                <node id="FUSEVALUESD" address="0x4" permission="r"
                     description="Bits 31:24 of the data word."
                     mask="0xff" />
             </node>
@@ -3258,14 +3260,11 @@
             </node>
 
             <!-- 15.3.12. ROM -->
-            <node id="ROM" address="0x1d7-0x150" description="">
-
-                <!-- [0x1d7] ROM -->
-                <!-- Register with fixed (non zero value). Can be used for testing purposes. -->
-                <node id="ROMREG" address="0x0" permission="r"
-                    description=" All read requests for this register should yield value 0xA6 (as opposed to 0xA5 for lpGBTv0)."
-                    mask="0xff" />
-            </node>
+            <!-- [0x1d7] ROM -->
+            <!-- Register with fixed (non zero value). Can be used for testing purposes. -->
+            <node id="ROMREG" address="0x1d7-0x150" permission="r"
+                description=" All read requests for this register should yield value 0xA6 (as opposed to 0xA5 for lpGBTv0)."
+                mask="0xff" />
 
             <!-- 15.3.13. POR -->
             <node id="PORBOR" address="0x1d8-0x150" permission="r" description="All read requests for this register should yield value 0xA5.">

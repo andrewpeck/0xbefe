@@ -10,5 +10,5 @@ boards/apex/hdl/c2c/mgt/c2c_gth_example_gtwiz_userclk_tx.v
 boards/apex/hdl/c2c/mgt/c2c_gth_example_init.v
 boards/apex/hdl/c2c/mgt/c2c_gth_example_reset_inv_sync.v
 boards/apex/hdl/c2c/mgt/c2c_gth_example_reset_sync.v
-boards/apex/hdl/c2c/mgt/c2c_gth_example_wrapper_functions.v
+boards/apex/hdl/c2c/mgt/c2c_gth_example_wrapper_functions.v verilog_header
 boards/apex/hdl/c2c/mgt/c2c_gth_example_wrapper.v

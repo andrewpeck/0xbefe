@@ -2711,40 +2711,39 @@
 
             <node id="FUSE_READ" address="0x1a1-0x140" description="">
 
-            <!-- [0x1a1] FUSEStatus -->
-            <node id="FUSEBLOWERROR" address="0x0" permission="r"
-                    description="Error flag (attempt to blow fuses without magic number)."
-                    mask="0x08" />
-            <node id="FUSEDATAVALID" address="0x0" permission="r"
-                    description="Fuse read sequence was successful, SelectedFuseValues[31:0] is valid."
-                    mask="0x04" />
-            <node id="FUSEBLOWDONE" address="0x0" permission="r"
-                    description="Fuse blowing sequence was successful."
-                    mask="0x02" />
-            <node id="FUSEBLOWBUSY" address="0x0" permission="r"
-                    description="Fuse block is busy (either read or blowing sequence)."
-                    mask="0x01" />
+                <!-- [0x1a1] FUSEStatus -->
+                <node id="FUSEBLOWERROR" address="0x0" permission="r"
+                        description="Error flag (attempt to blow fuses without magic number)."
+                        mask="0x08" />
+                <node id="FUSEDATAVALID" address="0x0" permission="r"
+                        description="Fuse read sequence was successful, SelectedFuseValues[31:0] is valid."
+                        mask="0x04" />
+                <node id="FUSEBLOWDONE" address="0x0" permission="r"
+                        description="Fuse blowing sequence was successful."
+                        mask="0x02" />
+                <node id="FUSEBLOWBUSY" address="0x0" permission="r"
+                        description="Fuse block is busy (either read or blowing sequence)."
+                        mask="0x01" />
 
-            <!-- [0x1a2] FUSEValuesA -->
-            <node id="FUSEVALUESA" address="0x1" permission="r"
-                    description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 7:0 of the data word."
-                    mask="0xff" />
+                <!-- [0x1a2] FUSEValuesA -->
+                <node id="FUSEVALUESA" address="0x1" permission="r"
+                        description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 7:0 of the data word."
+                        mask="0xff" />
 
-            <!-- [0x1a3] FUSEValuesB -->
-            <node id="FUSEVALUESB" address="0x2" permission="r"
-                    description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 15:8 of the data word."
-                    mask="0xff" />
+                <!-- [0x1a3] FUSEValuesB -->
+                <node id="FUSEVALUESB" address="0x2" permission="r"
+                        description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 15:8 of the data word."
+                        mask="0xff" />
 
-            <!-- [0x1a4] FUSEValuesC -->
-            <node id="FUSEVALUESC" address="0x3" permission="r"
-                    description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 23:16 of the data word."
-                    mask="0xff" />
+                <!-- [0x1a4] FUSEValuesC -->
+                <node id="FUSEVALUESC" address="0x3" permission="r"
+                        description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 23:16 of the data word."
+                        mask="0xff" />
 
-            <!-- [0x1a5] FUSEValuesD -->
-            <node id="FUSEVALUESD" address="0x4" permission="r"
-                    description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 31:24 of the data word."
-                    mask="0xff" />
-
+                <!-- [0x1a5] FUSEValuesD -->
+                <node id="FUSEVALUESD" address="0x4" permission="r"
+                        description="Value of selected FUSE block. (should be accessed only if FuseDataValid bit is set in [0x1a1] FUSEStatus register). Bits 31:24 of the data word."
+                        mask="0xff" />
             </node>
 
             <node id="SEU" address="0x1aa-0x140" description="">

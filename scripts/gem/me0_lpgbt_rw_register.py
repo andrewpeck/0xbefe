@@ -8,7 +8,7 @@ def main(system, oh_ver, boss, reg_list, data_list):
     if oh_ver == 1:
         final_total_reg = 0x1CE
         final_readonly_reg = 0x13C
-    elif oh_ver == 1:
+    elif oh_ver == 2:
         final_total_reg = 0x1ED
         final_readonly_reg = 0x14F
 
@@ -17,9 +17,8 @@ def main(system, oh_ver, boss, reg_list, data_list):
         if r > final_total_reg:
             print (Colors.YELLOW + "Register address out of range" + Colors.ENDC)
             rw_terminate()
-        if system!="backend":
-            data_read = mpeek(r)
-            print ("Register: " + hex(r) + ", Initial data: " + hex(data_read))
+        data_read = mpeek(r)
+        print ("Register: " + hex(r) + ", Initial data: " + hex(data_read))
 
         if len(data_list)==0:
             print ("")
@@ -33,12 +32,11 @@ def main(system, oh_ver, boss, reg_list, data_list):
         mpoke(r, d)
         print ("Register: " + hex(r) + ", Data written: " + hex(d))
 
-        if system!="backend":
-            data_written = mpeek(r)
-            if data_written == d:
-                print (Colors.GREEN + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
-            else:
-                print (Colors.RED + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
+        data_written = mpeek(r)
+        if data_written == d:
+            print (Colors.GREEN + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
+        else:
+            print (Colors.RED + "Register: " + hex(r) + ", Data read: " + hex(data_written) + Colors.ENDC)
     
         print ("")
     
@@ -58,8 +56,6 @@ if __name__ == "__main__":
         print ("Using Rpi CHeeseCake for register R/W")
     elif args.system == "backend":
         print ("Using Backend for register R/W")
-        #print ("Only chc (Rpi Cheesecake) or dryrun supported at the moment")
-        #sys.exit()
     elif args.system == "dryrun":
         print ("Dry Run - not actually doing register R/W")
     else:
@@ -124,12 +120,12 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.system != "backend":
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Check if GBT is READY
-    if args.system != "dryrun" and args.system != "chc":
+    if oh_ver == 1 and args.system == "backend":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT

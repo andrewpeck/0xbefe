@@ -8,7 +8,7 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_cluster_mapping):
+def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_cluster_mapping, sbits_all, verbose):
 
     resultDir = "results"
     try:
@@ -89,10 +89,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
         # Looping over sbits
         for sbit in sbit_list:
-            if sbit=="all":
-                print ("  VFAT: %02d, Sbit: all"%(vfat))
-            else:
-                print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
+            if sbits_all and sbit!="all":
+                for thr in range(0,256,step):
+                    sbit_data[vfat][sbit][thr]["fired"] = 0
+                    sbit_data[vfat][sbit][thr]["time"] = runtime
+                continue
+
+            if verbose:
+                if sbit=="all":
+                    print ("  VFAT: %02d, Sbit: all"%(vfat))
+                else:
+                    print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
 
             channel_list = []
             if sbit == "all":
@@ -161,7 +168,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
                 sbit_data[vfat][sbit][thr]["fired"] = n_total_clusters
                 sbit_data[vfat][sbit][thr]["time"] = runtime
-                # End of charge loop
+                # End of threshold loop
 
             # Mask channels again for this vfat
             for channel in channel_list:
@@ -206,10 +213,12 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = VFAT number (0-23)")
+    parser.add_argument("-x", "--sbits_all", dest="sbits_all", action="store_true", default=False, help="Set to only calculate rates for entire VFATs, not individual sbits")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for threshold scan (default=1)")
     parser.add_argument("-m", "--time", action="store", dest="time", default="0.001", help="time = time for each elink in sec (default = 0.001 s or 1 ms)")
+    parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", default=False, help="Set for more verbosity")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -297,7 +306,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_cluster_mapping)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_cluster_mapping, args.sbits_all, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

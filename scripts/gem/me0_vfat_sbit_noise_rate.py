@@ -8,7 +8,7 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping):
+def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, all, verbose):
 
     resultDir = "results"
     try:
@@ -37,7 +37,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
-    sbit_list.append("all")
     sbit_data = {}
     # Check ready and get nodes
     for vfat in vfat_list:
@@ -85,16 +84,27 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     print ("")
 
     initial_thr = {}
+    if parallel:
+        print ("Unmasking all channels in all VFATs")
+        # Unmask channels for this vfat
+        for vfat in vfat_list:
+            initial_thr[vfat] = read_backend_reg(dac_node[vfat])
+            for channel in range(0,128):
+                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+            write_backend_reg(dac_node[vfat], 0)
+
     # Looping over VFATs
     for vfat in vfat_list:
         print ("VFAT: %02d"%vfat)
-        initial_thr[vfat] = read_backend_reg(dac_node[vfat])
+        if not parallel:
+            initial_thr[vfat] = read_backend_reg(dac_node[vfat])
 
         # Looping over sbits
         for sbit in sbit_list:
             if sbit == "all":
                 continue
-            print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
+            if verbose:
+                print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
             elink = int(sbit/8)
             channel_list = []
             for c in s_bit_channel_mapping[str(vfat)][str(elink)]:
@@ -111,9 +121,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             write_backend_reg(vfat_sbit_select_node, vfat)
             write_backend_reg(channel_sbit_select_node, sbit)
 
-            # Unmask channels for this sbit
-            for channel in channel_list:
-                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+            if not parallel:
+                # Unmask channels for this sbit
+                for channel in channel_list:
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
 
             # Looping over threshold
             for thr in range(0,256,step):
@@ -128,38 +139,50 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 sbit_data[vfat][sbit][thr]["time"] = runtime
             # End of threshold loop
 
-            # Mask again channels for this sbit
-            for channel in channel_list:
-                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+            if not parallel:
+                # Mask again channels for this sbit
+                for channel in channel_list:
+                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
         # End of sbits loop
-        write_backend_reg(dac_node[vfat], initial_thr[vfat])
+        if parallel:
+            write_backend_reg(dac_node[vfat], 0)
+        else:
+            write_backend_reg(dac_node[vfat], initial_thr[vfat])
         sleep(1e-3)
         print ("")
     # End of VFAT loop
     print ("")
 
-    # Rate counters for entire VFATs
-    print ("All VFATs, Sbit: All")
-    for vfat in vfat_list:
-        # Unmask channels for this vfat
-        for channel in range(0,128):
-            enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
-    for thr in range(0,256,step):
-        print ("  Threshold: %d"%thr)
+    if args.all:
+        # Rate counters for entire VFATs
+        print ("All VFATs, Sbit: All")
         for vfat in vfat_list:
-            write_backend_reg(dac_node[vfat], thr)
-            sleep(1e-3)
-        global_reset()
-        sleep(1.1)
-        for vfat in vfat_list:
-            sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
-            sbit_data[vfat]["all"][thr]["time"] = runtime
+            if not parallel:
+                # Unmask channels for this vfat
+                for channel in range(0,128):
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+        for thr in range(0,256,step):
+            print ("  Threshold: %d"%thr)
+            for vfat in vfat_list:
+                write_backend_reg(dac_node[vfat], thr)
+                sleep(1e-3)
+            global_reset()
+            sleep(1.1)
+            for vfat in vfat_list:
+                sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
+                sbit_data[vfat]["all"][thr]["time"] = runtime
+    else:
+        for thr in range(0,256,step):
+            for vfat in vfat_list:
+                sbit_data[vfat]["all"][thr]["fired"] = 0
+                sbit_data[vfat]["all"][thr]["time"] = runtime
+
     for vfat in vfat_list:
         write_backend_reg(dac_node[vfat], initial_thr[vfat])
         # Mask again channels for this vfat
         for channel in range(0,128):
-            enableVfatchannel(vfat, oh_select, channel, 1, 0) # unmask channels
+            enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
     # Disable channels on VFATs
     for vfat in vfat_list:
@@ -193,10 +216,13 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = VFAT number (0-23)")
+    parser.add_argument("-a", "--all", action="store_true", dest="all", default=False, help="Set to also perform sbit rate measurement of OR of all channels in a VFAT")
+    parser.add_argument("-p", "--parallel", action="store_true", dest="parallel", default=False, help="Set to unmask all channels in all VFATs simultaneosuly for rate measurements")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for threshold scan (default = 1)")
     parser.add_argument("-m", "--time", action="store", dest="time", default="0.001", help="time = time for each elink in sec (default = 0.001 s or 1 ms)")
+    parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", default=False, help="Set for more verbosity")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -235,6 +261,7 @@ if __name__ == "__main__":
         sys.exit()
 
     sbit_list = [i for i in range(0,64)]
+    sbit_list.append("all")
     s_bit_channel_mapping = {}
     print ("")
     if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
@@ -263,7 +290,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, args.all, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
