@@ -1,11 +1,25 @@
 from common.rw_reg import *
 from common.utils import *
 
-FPGA_TYPE = "VU27P"
-# FPGA_TYPE = "VU13P"
-RESERVED_GTYS = [124, 125, 126, 127] # reserved GTYs, which are e.g. used by the C2C
-RESERVED_REFCLK0 = RESERVED_GTYS
-RESERVED_REFCLK1 = [125]
+# FPGA_TYPE = "VU27P"
+FPGA_TYPE = "VU13P"
+# RESERVED_GTYS = [124, 125, 126, 127] # reserved GTYs, which are e.g. used by the C2C
+RESERVED_GTYS = [126, 127, 230] # reserved GTYs, which are e.g. used by the C2C
+RESERVED_REFCLK0 = [126, 127]
+# RESERVED_REFCLK1 = [125]
+RESERVED_REFCLK1 = []
+# RESERVED_ARF6 = ["J12"]
+RESERVED_ARF6 = []
+NUM_SLR = 4
+
+###############################################################
+########################## GEM / CSC ##########################
+###############################################################
+
+GE11_NUM_OH = 0
+GE21_NUM_OH = 40
+ME0_NUM_OH = 12
+CSC_NUM_DMB = 56
 
 ###############################################################
 ########################## REF CLKS ###########################
@@ -77,10 +91,10 @@ REFCLKS = [REFCLK0, REFCLK1]
 # our logical counting of the ARF6 connectors is as listed in the above two lines
 
 ###############################################################
-####################### LEFT SIDE ARF6 #######################
+########################## SLR 0 ARF6 #########################
 ###############################################################
 
-# ARF6 #1
+# ARF6 #0 (LEFT SIDE SLR 0)
 ARF6_TO_MGT_J19 = [
     {"mgt": 120, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 120, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 1},
@@ -100,7 +114,7 @@ ARF6_TO_MGT_J19 = [
     {"mgt": 122, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #2
+# ARF6 #1 (LEFT SIDE SLR 0)
 ARF6_TO_MGT_J20 = [
     {"mgt": 123, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 1},
     {"mgt": 122, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 1},
@@ -120,131 +134,7 @@ ARF6_TO_MGT_J20 = [
     {"mgt": 121, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #3
-ARF6_TO_MGT_J12 = [
-    {"mgt": 124, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 1},
-    {"mgt": 124, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 1},
-    {"mgt": 127, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 2},
-    {"mgt": 127, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 2},
-    {"mgt": 124, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 3},
-    {"mgt": 124, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 3},
-    {"mgt": 127, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 4},
-    {"mgt": 127, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 4},
-    {"mgt": 125, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 5},
-    {"mgt": 125, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 5},
-    {"mgt": 126, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 6},
-    {"mgt": 126, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 6},
-    {"mgt": 125, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 7},
-    {"mgt": 125, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 7},
-    {"mgt": 126, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 8},
-    {"mgt": 126, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 8}
-]
-
-# ARF6 #4
-ARF6_TO_MGT_J11 = [
-    {"mgt": 127, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 1},
-    {"mgt": 127, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 1},
-    {"mgt": 124, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 2},
-    {"mgt": 124, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 2},
-    {"mgt": 127, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 3},
-    {"mgt": 127, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 3},
-    {"mgt": 124, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 4},
-    {"mgt": 124, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 4},
-    {"mgt": 126, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 5},
-    {"mgt": 126, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 5},
-    {"mgt": 125, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 6},
-    {"mgt": 125, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 6},
-    {"mgt": 126, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 7},
-    {"mgt": 126, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 7},
-    {"mgt": 125, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 8},
-    {"mgt": 125, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 8}
-]
-
-# ARF6 #5
-ARF6_TO_MGT_J15 = [
-    {"mgt": 128, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 1},
-    {"mgt": 128, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 1},
-    {"mgt": 131, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 2},
-    {"mgt": 131, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 2},
-    {"mgt": 128, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 3},
-    {"mgt": 128, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 3},
-    {"mgt": 131, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 4},
-    {"mgt": 131, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 4},
-    {"mgt": 129, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 5},
-    {"mgt": 129, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 5},
-    {"mgt": 130, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 6},
-    {"mgt": 130, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 6},
-    {"mgt": 129, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 7},
-    {"mgt": 129, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 7},
-    {"mgt": 130, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 8},
-    {"mgt": 130, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 8}
-]
-
-# ARF6 #6
-ARF6_TO_MGT_J16 = [
-    {"mgt": 131, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 1},
-    {"mgt": 131, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 1},
-    {"mgt": 128, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 2},
-    {"mgt": 128, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 2},
-    {"mgt": 131, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 3},
-    {"mgt": 131, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 3},
-    {"mgt": 128, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 4},
-    {"mgt": 128, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 4},
-    {"mgt": 130, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 5},
-    {"mgt": 130, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 5},
-    {"mgt": 129, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 6},
-    {"mgt": 129, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 6},
-    {"mgt": 130, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 7},
-    {"mgt": 130, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 7},
-    {"mgt": 129, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 8},
-    {"mgt": 129, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 8}
-]
-
-# ARF6 #7
-ARF6_TO_MGT_J5 = [
-    {"mgt": 132, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 1},
-    {"mgt": 132, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 1},
-    {"mgt": 134, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 2},
-    {"mgt": 134, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 2},
-    {"mgt": 135, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 3},
-    {"mgt": 132, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 3},
-    {"mgt": 135, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 4},
-    {"mgt": 135, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 4},
-    {"mgt": 132, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 5},
-    {"mgt": 133, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 5},
-    {"mgt": 134, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 6},
-    {"mgt": 135, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 6},
-    {"mgt": 133, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 7},
-    {"mgt": 133, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 7},
-    {"mgt": 133, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 8},
-    {"mgt": 134, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 8}
-]
-
-# ARF6 #8
-ARF6_TO_MGT_J6 = [
-    {"mgt": 134, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 1},
-    {"mgt": 134, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 1},
-    {"mgt": 132, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 2},
-    {"mgt": 132, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 2},
-    {"mgt": 135, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 3},
-    {"mgt": 134, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 3},
-    {"mgt": 132, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 4},
-    {"mgt": 132, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 4},
-    {"mgt": 135, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 5},
-    {"mgt": 135, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 5},
-    {"mgt": 133, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 6},
-    {"mgt": 133, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 6},
-    {"mgt": 134, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 7},
-    {"mgt": 135, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 7},
-    {"mgt": 133, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 8},
-    {"mgt": 133, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 8}
-]
-
-###############################################################
-####################### RIGHT SIDE ARF6 #######################
-###############################################################
-
-# ARF6 #9
+# ARF6 #2 (RIGHT SIDE SLR 0)
 ARF6_TO_MGT_J18 = [
     {"mgt": 223, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 1},
     {"mgt": 223, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 1},
@@ -264,7 +154,7 @@ ARF6_TO_MGT_J18 = [
     {"mgt": 221, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #10
+# ARF6 #3 (RIGHT SIDE SLR 0)
 ARF6_TO_MGT_J17 = [
     {"mgt": 220, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 221, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 1},
@@ -284,7 +174,51 @@ ARF6_TO_MGT_J17 = [
     {"mgt": 223, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #11
+###############################################################
+########################## SLR 1 ARF6 #########################
+###############################################################
+
+# ARF6 #4 (LEFT SIDE SLR 1)
+ARF6_TO_MGT_J12 = [
+    {"mgt": 124, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 1},
+    {"mgt": 124, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 1},
+    {"mgt": 127, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 2},
+    {"mgt": 127, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 2},
+    {"mgt": 124, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 3},
+    {"mgt": 124, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 3},
+    {"mgt": 127, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 4},
+    {"mgt": 127, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 4},
+    {"mgt": 125, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 5},
+    {"mgt": 125, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 5},
+    {"mgt": 126, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 6},
+    {"mgt": 126, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 6},
+    {"mgt": 125, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 7},
+    {"mgt": 125, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 7},
+    {"mgt": 126, "mgt_chan": 0, "inv": False, "dir": "TX", "arf6_chan": 8},
+    {"mgt": 126, "mgt_chan": 0, "inv": True , "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #5 (LEFT SIDE SLR 1)
+ARF6_TO_MGT_J11 = [
+    {"mgt": 127, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 1},
+    {"mgt": 127, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 1},
+    {"mgt": 124, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 2},
+    {"mgt": 124, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 2},
+    {"mgt": 127, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 3},
+    {"mgt": 127, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 3},
+    {"mgt": 124, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 4},
+    {"mgt": 124, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 4},
+    {"mgt": 126, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 5},
+    {"mgt": 126, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 5},
+    {"mgt": 125, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 6},
+    {"mgt": 125, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 6},
+    {"mgt": 126, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 7},
+    {"mgt": 126, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 7},
+    {"mgt": 125, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 8},
+    {"mgt": 125, "mgt_chan": 3, "inv": False, "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #6 (RIGHT SIDE SLR 1)
 ARF6_TO_MGT_J7 = [
     {"mgt": 227, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 227, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 1},
@@ -304,7 +238,7 @@ ARF6_TO_MGT_J7 = [
     {"mgt": 225, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #12
+# ARF6 #7 (RIGHT SIDE SLR 1)
 ARF6_TO_MGT_J10 = [
     {"mgt": 224, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 224, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 1},
@@ -324,7 +258,51 @@ ARF6_TO_MGT_J10 = [
     {"mgt": 226, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #13
+###############################################################
+########################## SLR 2 ARF6 #########################
+###############################################################
+
+# ARF6 #8 (LEFT SIDE SLR 2)
+ARF6_TO_MGT_J15 = [
+    {"mgt": 128, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 1},
+    {"mgt": 128, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 1},
+    {"mgt": 131, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 2},
+    {"mgt": 131, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 2},
+    {"mgt": 128, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 3},
+    {"mgt": 128, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 3},
+    {"mgt": 131, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 4},
+    {"mgt": 131, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 4},
+    {"mgt": 129, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 5},
+    {"mgt": 129, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 5},
+    {"mgt": 130, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 6},
+    {"mgt": 130, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 6},
+    {"mgt": 129, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 7},
+    {"mgt": 129, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 7},
+    {"mgt": 130, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 8},
+    {"mgt": 130, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #9 (LEFT SIDE SLR 2)
+ARF6_TO_MGT_J16 = [
+    {"mgt": 131, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 1},
+    {"mgt": 131, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 1},
+    {"mgt": 128, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 2},
+    {"mgt": 128, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 2},
+    {"mgt": 131, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 3},
+    {"mgt": 131, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 3},
+    {"mgt": 128, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 4},
+    {"mgt": 128, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 4},
+    {"mgt": 130, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 5},
+    {"mgt": 130, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 5},
+    {"mgt": 129, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 6},
+    {"mgt": 129, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 6},
+    {"mgt": 130, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 7},
+    {"mgt": 130, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 7},
+    {"mgt": 129, "mgt_chan": 3, "inv": True , "dir": "TX", "arf6_chan": 8},
+    {"mgt": 129, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #10 (RIGHT SIDE SLR 2)
 ARF6_TO_MGT_J14 = [
     {"mgt": 231, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 231, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 1},
@@ -344,7 +322,7 @@ ARF6_TO_MGT_J14 = [
     {"mgt": 229, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #14
+# ARF6 #11 (RIGHT SIDE SLR 2)
 ARF6_TO_MGT_J13 = [
     {"mgt": 228, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 228, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 1},
@@ -364,7 +342,51 @@ ARF6_TO_MGT_J13 = [
     {"mgt": 230, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #15
+###############################################################
+########################## SLR 3 ARF6 #########################
+###############################################################
+
+# ARF6 #12 (LEFT SIDE SLR 3)
+ARF6_TO_MGT_J5 = [
+    {"mgt": 132, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 1},
+    {"mgt": 132, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 1},
+    {"mgt": 134, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 2},
+    {"mgt": 134, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 2},
+    {"mgt": 135, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 3},
+    {"mgt": 132, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 3},
+    {"mgt": 135, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 4},
+    {"mgt": 135, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 4},
+    {"mgt": 132, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 5},
+    {"mgt": 133, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 5},
+    {"mgt": 134, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 6},
+    {"mgt": 135, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 6},
+    {"mgt": 133, "mgt_chan": 0, "inv": True , "dir": "TX", "arf6_chan": 7},
+    {"mgt": 133, "mgt_chan": 2, "inv": False, "dir": "RX", "arf6_chan": 7},
+    {"mgt": 133, "mgt_chan": 2, "inv": True , "dir": "TX", "arf6_chan": 8},
+    {"mgt": 134, "mgt_chan": 0, "inv": False, "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #13 (LEFT SIDE SLR 3)
+ARF6_TO_MGT_J6 = [
+    {"mgt": 134, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 1},
+    {"mgt": 134, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 1},
+    {"mgt": 132, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 2},
+    {"mgt": 132, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 2},
+    {"mgt": 135, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 3},
+    {"mgt": 134, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 3},
+    {"mgt": 132, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 4},
+    {"mgt": 132, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 4},
+    {"mgt": 135, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 5},
+    {"mgt": 135, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 5},
+    {"mgt": 133, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 6},
+    {"mgt": 133, "mgt_chan": 1, "inv": True , "dir": "RX", "arf6_chan": 6},
+    {"mgt": 134, "mgt_chan": 1, "inv": False, "dir": "TX", "arf6_chan": 7},
+    {"mgt": 135, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 7},
+    {"mgt": 133, "mgt_chan": 3, "inv": False, "dir": "TX", "arf6_chan": 8},
+    {"mgt": 133, "mgt_chan": 3, "inv": True , "dir": "RX", "arf6_chan": 8}
+]
+
+# ARF6 #14 (RIGHT SIDE SLR 3)
 ARF6_TO_MGT_J4 = [
     {"mgt": 234, "mgt_chan": 2, "inv": False, "dir": "TX", "arf6_chan": 1},
     {"mgt": 235, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 1},
@@ -384,8 +406,7 @@ ARF6_TO_MGT_J4 = [
     {"mgt": 233, "mgt_chan": 2, "inv": True , "dir": "RX", "arf6_chan": 8}
 ]
 
-# ARF6 #16
-
+# ARF6 #15 (RIGHT SIDE SLR 3)
 ARF6_TO_MGT_J3 = [
     {"mgt": 232, "mgt_chan": 1, "inv": True , "dir": "TX", "arf6_chan": 1},
     {"mgt": 232, "mgt_chan": 1, "inv": False, "dir": "RX", "arf6_chan": 1},
@@ -409,9 +430,14 @@ ARF6_TO_MGT_J3 = [
 ########################## ALL ARF6s ##########################
 ###############################################################
 
-ARF6_TO_MGT = [ARF6_TO_MGT_J19, ARF6_TO_MGT_J20, ARF6_TO_MGT_J12, ARF6_TO_MGT_J11, ARF6_TO_MGT_J15, ARF6_TO_MGT_J16, ARF6_TO_MGT_J5, ARF6_TO_MGT_J6,  # LEFT SIDE
-               ARF6_TO_MGT_J18, ARF6_TO_MGT_J17, ARF6_TO_MGT_J7, ARF6_TO_MGT_J10, ARF6_TO_MGT_J14, ARF6_TO_MGT_J13, ARF6_TO_MGT_J4, ARF6_TO_MGT_J3]   # RIGHT SIDE
-ARF6_J_LABELS = ["J19", "J20", "J12", "J11", "J15", "J16", "J5", "J6", "J18", "J17", "J7", "J10", "J14", "J13", "J4", "J3"]
+ARF6_TO_MGT = [ARF6_TO_MGT_J19, ARF6_TO_MGT_J20, ARF6_TO_MGT_J18, ARF6_TO_MGT_J17, # SLR 0
+               ARF6_TO_MGT_J12, ARF6_TO_MGT_J11, ARF6_TO_MGT_J7, ARF6_TO_MGT_J10,  # SLR 1
+               ARF6_TO_MGT_J15, ARF6_TO_MGT_J16, ARF6_TO_MGT_J14, ARF6_TO_MGT_J13, # SLR 2
+               ARF6_TO_MGT_J5, ARF6_TO_MGT_J6, ARF6_TO_MGT_J4, ARF6_TO_MGT_J3]     # SLR 3
+ARF6_J_LABELS = ["J19", "J20", "J18", "J17",
+                 "J12", "J11", "J7", "J10",
+                 "J15", "J16", "J14", "J13",
+                 "J5", "J6", "J4", "J3"]
 
 ###############################################################
 ############################ GTYs #############################
@@ -430,6 +456,7 @@ GTYS_RIGHT = GTYS_VU27P_RIGHT if FPGA_TYPE == "VU27P" else GTYS_VU13P_RIGHT if F
 GTYS = GTYS_VU27P if FPGA_TYPE == "VU27P" else GTYS_VU13P if FPGA_TYPE == "VU13P" else None
 GTYS = [gty for gty in GTYS if gty not in RESERVED_GTYS]
 
+GTY_SLR = {}
 GTY_CHAN_LOC = {}
 
 for gty in GTYS:
@@ -447,6 +474,7 @@ for gty in GTYS:
     for chan in range(4):
         chan_locs.append([x, y + chan])
     GTY_CHAN_LOC[gty] = chan_locs
+    GTY_SLR[gty] = 0 if y < 16 else 1 if y < 32 else 2 if y < 48 else 3 if y < 64 else 99
 
 GTY_REFCLK_IDX = [[], []]
 
@@ -502,9 +530,12 @@ def bool_str_lower(b):
 # also returns gty_chan_idx map to tx/rx fiber idx
 def generate_fiber_to_mgt_vhdl():
     gty_chan_to_fiber = [{} for i in range(len(GTYS) * 4)]
+    fiber_to_slr = {}
     print("constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (")
     fiber_idx = 0
     for arf6_idx in range(len(ARF6_TO_MGT)):
+        if ARF6_J_LABELS[arf6_idx] in RESERVED_ARF6:
+            continue
         arf6 = ARF6_TO_MGT[arf6_idx]
         first = True
         for arf6_chan_idx in range(0, len(arf6), 2):
@@ -527,16 +558,22 @@ def generate_fiber_to_mgt_vhdl():
 
             gty_chan_to_fiber[tx_gty_chan_idx]["tx"] = fiber_idx
             gty_chan_to_fiber[rx_gty_chan_idx]["rx"] = fiber_idx
+            slr = GTY_SLR[arf6_tx_chan["mgt"]]
+            if slr != GTY_SLR[arf6_rx_chan["mgt"]]:
+                print_red("Mixed SLR on TX and RX fiber pair!")
+                return
+
+            fiber_to_slr[fiber_idx] = slr
 
             # fiber_idx = arf6_idx * 8 + arf6_chan_idx / 2
-            print("    (%03d, %03d, %s, %s), -- fiber %d" % (tx_gty_chan_idx, rx_gty_chan_idx, bool_str_lower(arf6_tx_chan["inv"]), bool_str_lower(arf6_rx_chan["inv"]), fiber_idx))
+            print("    (%03d, %03d, %s, %s), -- fiber %d (SLR %d)" % (tx_gty_chan_idx, rx_gty_chan_idx, bool_str_lower(arf6_tx_chan["inv"]), bool_str_lower(arf6_rx_chan["inv"]), fiber_idx, slr))
             fiber_idx += 1
 
     print("    --=== DUMMY fiber - use for unconnected channels ===--")
     print("    (MGT_NULL, MGT_NULL, false, false)")
     print(");")
 
-    return gty_chan_to_fiber
+    return gty_chan_to_fiber, fiber_to_slr
 
 def generate_refclk_constraints(refclk01):
     sync_async = "(async)" if refclk01 == 0 else "(sync) " if refclk01 == 1 else None
@@ -587,7 +624,7 @@ def generate_loc_constraints():
 ###############################################################
 
 # also returns MGT types needed
-def generate_gem_oh_link_map():
+def generate_gem_oh_link_map(fiber_to_slr):
     NUM_LINKS = len(GTYS) * 4
     MAX_OHS = 48 if NUM_LINKS >= 96 else 4 if NUM_LINKS <= 16 else None # use 48 OHs on VU13P (max GE21 OHs), and 4 OHs on VU27P
 
@@ -599,38 +636,107 @@ def generate_gem_oh_link_map():
         ge11_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
         print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
     print("    );")
+    print("")
 
     ## GE21
     ge21_link_types = []
     print("    constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (")
+    if GE21_NUM_OH % NUM_SLR != 0:
+        print_red("ERROR: number of GE21 OHs (%d) is not divisible by number of SLRs (%d)" % (GE21_NUM_OH, NUM_SLR))
+        return
+    oh_per_slr = int(GE21_NUM_OH / NUM_SLR)
+    fiber = 0
     for oh in range(MAX_OHS):
         comma = "," if oh < MAX_OHS - 1 else ""
-        gbt_tx = [oh * 2, oh * 2 + 1]
+        if oh >= GE21_NUM_OH or fiber >= NUM_LINKS:
+            # fill the rest with dummies
+            print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
+            continue
+
+        slr = int(oh / oh_per_slr)
+        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr:
+            fiber += 2
+            ge21_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
+
+        gbt_tx = [fiber, fiber + 1]
         gbt_rx = gbt_tx
+        fiber += 2
         ge21_link_types.extend(["CFG_MGT_GBTX"] * 2)
-        print("        (((%02d, %02d), (%02d, %02d), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (gbt_tx[0], gbt_rx[0], gbt_tx[1], gbt_rx[1], comma))
+        print("        (((%03d, %03d), (%03d, %03d), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" % (gbt_tx[0], gbt_rx[0], gbt_tx[1], gbt_rx[1], comma, oh, slr))
+
     print("    );")
+    print("")
 
     ## ME0
     me0_link_types = []
     print("    constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (")
+    if ME0_NUM_OH % NUM_SLR != 0:
+        print_red("ERROR: number of ME0 OHs (%d) is not divisible by number of SLRs (%d)" % (ME0_NUM_OH, NUM_SLR))
+        return
+    oh_per_slr = int(ME0_NUM_OH / NUM_SLR)
+    fiber = 0
     for oh in range(MAX_OHS):
         comma = "," if oh < MAX_OHS - 1 else ""
-        gbt_tx = [oh * 8, oh * 8 + 1, oh * 8 + 2, oh * 8 + 3]
-        gbt_rx = [oh * 8, oh * 8 + 1, oh * 8 + 2, oh * 8 + 3, oh * 8 + 4, oh * 8 + 5, oh * 8 + 6, oh * 8 + 7]
-        if oh < 12 and oh * 8 < NUM_LINKS:
-            me0_link_types.extend(["CFG_MGT_LPGBT"] * 8)
-            print("        (((%02d, %02d), (TXRX_NULL, %02d), (%02d, %02d),  (TXRX_NULL, %02d),  (%02d, %02d),   (TXRX_NULL, %02d),  (%02d, %02d),  (TXRX_NULL, %02d)), (LINK_NULL, LINK_NULL))%s" %
-                  (gbt_tx[0], gbt_rx[0], gbt_rx[1], gbt_tx[1], gbt_rx[2], gbt_rx[3], gbt_tx[2], gbt_rx[4], gbt_rx[5], gbt_tx[3], gbt_rx[6], gbt_rx[7], comma))
-        else:
+        if oh >= ME0_NUM_OH or fiber >= NUM_LINKS:
             # fill the rest with dummies
             print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
+            continue
+
+        slr = int(oh / oh_per_slr)
+        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr or fiber_to_slr[fiber + 2] != slr or fiber_to_slr[fiber + 3] != slr or fiber_to_slr[fiber + 4] != slr or fiber_to_slr[fiber + 5] != slr or fiber_to_slr[fiber + 6] != slr or fiber_to_slr[fiber + 7] != slr:
+            fiber += 8
+            me0_link_types.extend(["CFG_MGT_TYPE_NULL"] * 8)
+
+        gbt_tx = [fiber, fiber + 1, fiber + 2, fiber + 3]
+        gbt_rx = [fiber, fiber + 1, fiber + 2, fiber + 3, fiber + 4, fiber + 5, fiber + 6, fiber + 7]
+        fiber += 8
+        me0_link_types.extend(["CFG_MGT_LPGBT"] * 8)
+        print("        (((%03d, %03d), (TXRX_NULL, %03d), (%03d, %03d),  (TXRX_NULL, %03d),  (%03d, %03d),   (TXRX_NULL, %03d),  (%03d, %03d),  (TXRX_NULL, %03d)), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" %
+              (gbt_tx[0], gbt_rx[0], gbt_rx[1], gbt_tx[1], gbt_rx[2], gbt_rx[3], gbt_tx[2], gbt_rx[4], gbt_rx[5], gbt_tx[3], gbt_rx[6], gbt_rx[7], comma, oh, slr))
     print("    );")
 
     return ge11_link_types, ge21_link_types, me0_link_types
 
-MGT_TYPE_QPLL = {"CFG_MGT_TYPE_NULL": "QPLL_NULL", "CFG_MGT_GBTX": "QPLL_GBTX", "CFG_MGT_LPGBT": "QPLL_LPGBT", "CFG_MGT_GBE": "QPLL_GBE_156"}
-NUM_IBERTS_PER_MGT_TYPE = {"CFG_MGT_TYPE_NULL": 0, "CFG_MGT_GBTX": 2, "CFG_MGT_LPGBT": 8, "CFG_MGT_GBE": 1}
+# also returns MGT types needed
+def generate_csc_dmb_link_map(fiber_to_slr):
+    NUM_LINKS = len(GTYS) * 4
+    MAX_DMBS = 56 if NUM_LINKS >= 96 else 4 if NUM_LINKS <= 16 else None # use 56 DMBs on VU13P, and 4 DMBs on VU27P
+
+    ## GE21
+    csc_link_types = []
+    print("    constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr := (")
+    if CSC_NUM_DMB % NUM_SLR != 0:
+        print_red("ERROR: number of CSC DMBs (%d) is not divisible by number of SLRs (%d)" % (CSC_NUM_DMB, NUM_SLR))
+        return
+    dmb_per_slr = int(CSC_NUM_DMB / NUM_SLR)
+    fiber = 0
+    for dmb in range(MAX_DMBS):
+        comma = "," if dmb < MAX_DMBS - 1 else ""
+        if dmb >= CSC_NUM_DMB or fiber >= NUM_LINKS:
+            # fill the rest with dummies
+            print("        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))%s" % (comma))
+            continue
+
+        slr = int(dmb / dmb_per_slr)
+        while fiber_to_slr[fiber] != slr:
+            fiber += 1
+            csc_link_types.extend(["CFG_MGT_TYPE_NULL"] * 1)
+
+        rx = [fiber]
+        fiber += 1
+        csc_link_types.extend(["CFG_MGT_DMB"] * 1)
+        print("        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (%d, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))%s -- DMB%d, SLR %d" % (rx[0], comma, dmb, slr))
+
+    print("    );")
+    print("")
+
+    return csc_link_types
+
+
+MGT_TYPE_QPLL = {"CFG_MGT_TYPE_NULL": "QPLL_NULL", "CFG_MGT_GBTX": "QPLL_GBTX", "CFG_MGT_LPGBT": "QPLL_LPGBT", "CFG_MGT_GBE": "QPLL_GBE_156",
+                 "CFG_MGT_DMB": "QPLL_DMB_GBE_156", "CFG_MGT_ODMB57": "QPLL_ODMB57_156"}
+NUM_IBERTS_PER_MGT_TYPE = {"CFG_MGT_TYPE_NULL": 0, "CFG_MGT_GBTX": 2, "CFG_MGT_LPGBT": 8, "CFG_MGT_GBE": 1,
+                           "CFG_MGT_DMB": 1, "CFG_MGT_ODMB57": 1}
 
 def generate_mgt_config(name, link_types, gty_chan_to_fiber):
     mgt_type_chars = len(max(MGT_TYPE_QPLL.keys(), key=len))
@@ -639,15 +745,16 @@ def generate_mgt_config(name, link_types, gty_chan_to_fiber):
     mgt_types_used = []
     for quad_idx in range(len(GTYS)):
         quad = GTYS[quad_idx]
+        slr = GTY_SLR[quad]
         qpll_type = None
         qpll_idx = quad_idx * 4
         num_iberts_left = NUM_IBERTS_PER_MGT_TYPE
-        print("        ----------------------------- quad %d -----------------------------" % quad)
+        print("        ----------------------------- quad %d (SLR %d) -----------------------------" % (quad, slr))
         for quad_chan_idx in range(4):
             idx = quad_idx * 4 + quad_chan_idx
             comma = "," if idx < len(GTYS) * 4 - 1 else ""
-            tx_fiber = gty_chan_to_fiber[idx]["tx"]
-            rx_fiber = gty_chan_to_fiber[idx]["rx"]
+            tx_fiber = gty_chan_to_fiber[idx]["tx"] if "tx" in gty_chan_to_fiber[idx] else 999
+            rx_fiber = gty_chan_to_fiber[idx]["rx"] if "rx" in gty_chan_to_fiber[idx] else 999
             tx_type = link_types[tx_fiber] if tx_fiber < len(link_types) else "CFG_MGT_TYPE_NULL"
             rx_type = link_types[rx_fiber] if rx_fiber < len(link_types) else "CFG_MGT_TYPE_NULL"
             if tx_type != rx_type and tx_type != "CFG_MGT_TYPE_NULL" and rx_type != "CFG_MGT_TYPE_NULL":
@@ -691,11 +798,16 @@ if __name__ == '__main__':
     generate_loc_constraints()
 
     heading("fiber to MGT map")
-    gty_chan_to_fiber = generate_fiber_to_mgt_vhdl()
+    gty_chan_to_fiber, fiber_to_slr = generate_fiber_to_mgt_vhdl()
 
     heading("GEM OH link map")
-    ge11_link_types, ge21_link_types, me0_link_types = generate_gem_oh_link_map()
-    heading("MGT configuration")
+    ge11_link_types, ge21_link_types, me0_link_types = generate_gem_oh_link_map(fiber_to_slr)
+    heading("GEM MGT configuration")
     generate_mgt_config("CFG_MGT_LINK_CONFIG_GE11", ge11_link_types, gty_chan_to_fiber)
     generate_mgt_config("CFG_MGT_LINK_CONFIG_GE21", ge21_link_types, gty_chan_to_fiber)
     generate_mgt_config("CFG_MGT_LINK_CONFIG_ME0", me0_link_types, gty_chan_to_fiber)
+
+    heading("CSC OH link map")
+    csc_link_types = generate_csc_dmb_link_map(fiber_to_slr)
+    heading("CSC MGT configuration")
+    generate_mgt_config("CFG_MGT_LINK_CONFIG", csc_link_types, gty_chan_to_fiber)
