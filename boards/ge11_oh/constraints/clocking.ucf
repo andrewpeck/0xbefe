@@ -18,10 +18,13 @@ NET "control_inst/led_control_inst/startup/async_clock_o" TNM_NET = "cfgmclk";
 TIMESPEC TS_cfgmclk = PERIOD "cfgmclk" 12.5 ns HIGH 50 %;
 TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 
+#-------------------------------------------------------------------------------
+# MGT Keepout
+#-------------------------------------------------------------------------------
 
 # create a closed group around the mgts to keep out extra trigger logic
 INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
-AREA_GROUP "MGT_GROUP" RANGE=SLICE_X98Y120:SLICE_X105Y179;
+AREA_GROUP "MGT_GROUP" RANGE=SLICE_X78Y121:SLICE_X105Y159;
 AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
 AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
 
