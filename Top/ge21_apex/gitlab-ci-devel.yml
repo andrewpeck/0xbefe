@@ -1,4 +1,4 @@
-generate_project:ge21_apex_devel:
+GEN:ge21_apex_devel:
     extends: .generate_project
     variables:
       extends: .vars

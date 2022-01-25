@@ -1,4 +1,4 @@
-generate_project:oh_ge21.200:
+GEN:oh_ge21.200:
     extends: .generate_project
     variables:
       extends: .vars

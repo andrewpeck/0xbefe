@@ -1,4 +1,4 @@
-generate_project:csc_cvp13:
+GEN:csc_cvp13:
     extends: .generate_project
     variables:
       extends: .vars
