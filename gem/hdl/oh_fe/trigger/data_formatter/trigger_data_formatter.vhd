@@ -59,6 +59,7 @@ entity trigger_data_formatter is
     fiber_packets_o : out t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
     elink_packets_o : out t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
 
+    legacy_overflow_o : out std_logic;
     legacy_clusters_o : out t_std14_array (7 downto 0)
 
     );
@@ -529,6 +530,8 @@ begin
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
+
+        legacy_overflow_o <= overflow_i;
 
         if (clusters(I).vpf = '1') then
           if (GE21 = 1) then

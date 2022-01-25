@@ -61,7 +61,9 @@ entity trigger_data_phy is
     fiber_kchars_i    : in t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
     fiber_packets_i   : in t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
     elink_packets_i   : in t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
-    legacy_clusters_i : in t_std14_array (7 downto 0)
+
+    legacy_clusters_i : in t_std14_array (7 downto 0);
+    legacy_overflow_i : in std_logic
 
     );
 end trigger_data_phy;
@@ -350,7 +352,7 @@ begin
                     legacy_clusters_i(4) & legacy_clusters_i(3) & legacy_clusters_i(2) &
                     legacy_clusters_i(1) & legacy_clusters_i(0),
 
-        overflow_i => overflow_i
+        overflow_i => legacy_overflow_i
         );
 
   end generate;
