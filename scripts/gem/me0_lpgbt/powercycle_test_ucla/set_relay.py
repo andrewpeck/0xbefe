@@ -1,4 +1,4 @@
-import gem.me0_lpgbt.ucla_relay_test.ethernet_relay
+import ethernet_relay
 from time import sleep
 import sys
 import argparse

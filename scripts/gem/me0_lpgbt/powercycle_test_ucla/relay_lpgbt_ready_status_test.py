@@ -1,4 +1,4 @@
-import gem.me0_lpgbt.ucla_relay_test.ethernet_relay
+import ethernet_relay
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 import gem.gem_utils as gem_utils
 from time import sleep
@@ -17,6 +17,17 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         rw_terminate()
 
     # Get first list of registers to compare
+    print ("Turning on power and getting initial list of registers and turning off power")
+    set_status = relay_object.relay_set(relay_number, 1)
+    if not set_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    read_status = relay_object.relay_read(relay_number)
+    if not read_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    sleep(10)
+
     reg_list_boss = {}
     reg_list_sub = {}
     n_rw_reg = 0
@@ -41,6 +52,16 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         for reg in range(n_rw_reg):
             reg_list_sub[gbt][reg] = mpeek(reg)
 
+    set_status = relay_object.relay_set(relay_number, 0)
+    if not set_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    read_status = relay_object.relay_read(relay_number)
+    if not read_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    sleep(10)
+   
     n_error_backend_ready_boss = {}
     n_error_backend_ready_sub = {}
     n_error_uplink_fec_boss = {}
@@ -102,7 +123,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
             # Check Uplink FEC Errors
-            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (ohid, gbt)))
+            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_boss[gbt] += 1
@@ -113,24 +134,24 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             if oh_ver == 1:
                 ready_value = 18
                 mode_value = 11
-                mode = (mpeek(0x140) && 0xF0) >> 4
+                mode = (mpeek(0x140) & 0xF0) >> 4
                 pusmstate = mpeek(0x1C7)
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 11
-                mode = (mpeek(0x150) && 0xF0) >> 4
+                mode = (mpeek(0x150) & 0xF0) >> 4
                 pusmstate = mpeek(0x1D9)
 
             if mode != mode_value:
                 n_error_mode_boss[gbt] += 1
                 print (Colors.YELLOW + "  Incorrect mode: %d"%mode + Colors.ENDC)
             else:
-                print (Colors.GREEN + "  Correct mode: "%mode + Colors.ENDC)
+                print (Colors.GREEN + "  Correct mode: %d"%mode + Colors.ENDC)
             if pusmstate != ready_value:
                 n_error_pusm_ready_boss[gbt] += 1
                 print (Colors.YELLOW + "  Incorrect PUSM State: %d"%pusmstate + Colors.ENDC)
             else:
-                print (Colors.GREEN + "  Correct PUSM State: "%pusmstate + Colors.ENDC)
+                print (Colors.GREEN + "  Correct PUSM State: %d"%pusmstate + Colors.ENDC)
 
             # Check register list
             if oh_ver == 1:
@@ -139,9 +160,9 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
                 val = mpeek(reg)
-                if val != reg_list_boss[gbt][reg]
+                if val != reg_list_boss[gbt][reg]:
                     n_error_reg_list_boss[gbt] += 1
-                    print (Colors.YELLOW + "  Register 0x%02X value mismatch: %d"%reg + Colors.ENDC)
+                    print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
         # Sub
         for gbt in gbt_list["sub"]:
@@ -159,7 +180,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
             # Check Uplink FEC Errors
-            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (ohid, gbt)))
+            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_sub[gbt] += 1
@@ -169,25 +190,25 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             # Check lpGBT PUSM READY and MODE
             if oh_ver == 1:
                 ready_value = 18
-                mode_value = 11
-                mode = (mpeek(0x140) && 0xF0) >> 4
+                mode_value = 9
+                mode = (mpeek(0x140) & 0xF0) >> 4
                 pusmstate = mpeek(0x1C7)
             elif oh_ver == 2:
                 ready_value = 19
-                mode_value = 11
-                mode = (mpeek(0x150) && 0xF0) >> 4
+                mode_value = 9
+                mode = (mpeek(0x150) & 0xF0) >> 4
                 pusmstate = mpeek(0x1D9)
 
             if mode != mode_value:
                 n_error_mode_sub[gbt] += 1
                 print (Colors.YELLOW + "  Incorrect mode: %d"%mode + Colors.ENDC)
             else:
-                print (Colors.GREEN + "  Correct mode: "%mode + Colors.ENDC)
+                print (Colors.GREEN + "  Correct mode: %d"%mode + Colors.ENDC)
             if pusmstate != ready_value:
                 n_error_pusm_ready_sub[gbt] += 1
                 print (Colors.YELLOW + "  Incorrect PUSM State: %d"%pusmstate + Colors.ENDC)
             else:
-                print (Colors.GREEN + "  Correct PUSM State: "%pusmstate + Colors.ENDC)
+                print (Colors.GREEN + "  Correct PUSM State: %d"%pusmstate + Colors.ENDC)
 
             # Check register list
             if oh_ver == 1:
@@ -196,9 +217,9 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
                 val = mpeek(reg)
-                if val != reg_list_sub[gbt][reg]
+                if val != reg_list_sub[gbt][reg]:
                     n_error_reg_list_sub[gbt] += 1
-                    print (Colors.YELLOW + "  Register 0x%02X value mismatch: %d"%reg + Colors.ENDC)
+                    print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
         print ("")
         # Turn off relay
@@ -233,7 +254,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             str_n_error_uplink_fec_boss += Colors.GREEN
         else:
             str_n_error_uplink_fec_boss += Colors.YELLOW
-        if n_error_mode_ready_boss[gbt]==0:
+        if n_error_mode_boss[gbt]==0:
             str_n_error_mode_boss += Colors.GREEN
         else:
             str_n_error_mode_boss += Colors.YELLOW
@@ -253,12 +274,12 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         str_n_error_backend_ready_boss += Colors.ENDC
         str_n_error_uplink_fec_boss += Colors.ENDC
         str_n_error_mode_boss += Colors.ENDC
-        str_n_error_pusm_boss += Colors.ENDC
+        str_n_error_pusm_ready_boss += Colors.ENDC
         str_n_error_reg_list_boss += Colors.ENDC
         print (str_n_error_backend_ready_boss)
         print (str_n_error_uplink_fec_boss)
         print (str_n_error_mode_boss)
-        print (str_n_error_pusm_boss)
+        print (str_n_error_pusm_ready_boss)
         print (str_n_error_reg_list_boss)
 
     print ("")
@@ -277,7 +298,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             str_n_error_uplink_fec_sub += Colors.GREEN
         else:
             str_n_error_uplink_fec_sub += Colors.YELLOW
-        if n_error_mode_ready_sub[gbt]==0:
+        if n_error_mode_sub[gbt]==0:
             str_n_error_mode_sub += Colors.GREEN
         else:
             str_n_error_mode_sub += Colors.YELLOW
@@ -297,12 +318,12 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         str_n_error_backend_ready_sub += Colors.ENDC
         str_n_error_uplink_fec_sub += Colors.ENDC
         str_n_error_mode_sub += Colors.ENDC
-        str_n_error_pusm_sub += Colors.ENDC
+        str_n_error_pusm_ready_sub += Colors.ENDC
         str_n_error_reg_list_sub += Colors.ENDC
         print (str_n_error_backend_ready_sub)
         print (str_n_error_uplink_fec_sub)
         print (str_n_error_mode_sub)
-        print (str_n_error_pusm_sub)
+        print (str_n_error_pusm_ready_sub)
         print (str_n_error_reg_list_sub)
 
     print ("")
