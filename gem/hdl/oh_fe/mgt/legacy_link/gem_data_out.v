@@ -141,7 +141,7 @@ module   gem_data_out
            assign gem_link_data[ilink] = gem_data_sync[ilink][111:56];
 
          always @(posedge usrclks[ilink]) begin
-            if (reset || ~ready_sync || (tx_frame[ilink] == CLOCK_MULT[ilink]-1))
+            if (reset || ~ready_sync || (tx_frame[ilink] >= CLOCK_MULT[ilink]-1))
               tx_frame[ilink] <= 0;
             else
               tx_frame[ilink]  <= tx_frame[ilink] + 1'b1;
@@ -278,6 +278,10 @@ module   gem_data_out
                       trg_tx_isk [ilink] <= 2'b00;
                    end
                    3'd4: begin // for 200mhz only
+                      trg_tx_data[ilink] <= 0;
+                      trg_tx_isk [ilink] <= 2'b00;
+                   end
+                   default: begin // should never happen
                       trg_tx_data[ilink] <= 0;
                       trg_tx_isk [ilink] <= 2'b00;
                    end
