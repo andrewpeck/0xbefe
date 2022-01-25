@@ -235,10 +235,10 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         sleep (10) # To allow power supply to ramp down
 
     print ("\nEnd of powercycle iteration")
-    print ("Number of iterations: %d"%niter)
+    print ("Number of iterations: %d\n"%niter)
 
     # Results
-    print ("Result For Boss lpGBTs: ")
+    print ("Result For lpGBTs: \n")
     for gbt in gbt_list["boss"]:
         print ("Boss lpGBT %d: "%gbt)
         str_n_error_backend_ready_boss = ""
