@@ -344,12 +344,12 @@ module   gem_data_out
 
 
          always @(posedge clock_160) begin
-            ready <= &tx_fsm_reset_done;
+            ready <= tx_fsm_reset_done;
             //ready <= &tx_fsm_reset_done && startup_done;
          end
 
          synchronizer synchronizer_reset      (.async_i (reset_i),      .clk_i (txoutclk), .sync_o (reset));
-         synchronizer synchronizer_ready_sync (.async_i (ready),        .clk_i (txoutclk), .sync_o (ready_sync));
+         synchronizer synchronizer_ready_sync (.async_i (&ready),       .clk_i (txoutclk), .sync_o (ready_sync));
          synchronizer synchronizer_mgtrst     (.async_i (mgt_reset[0]), .clk_i (txoutclk), .sync_o (mgt_reset_sync));
 
          assign overflow[3:1] = {3{overflow[0]}};
