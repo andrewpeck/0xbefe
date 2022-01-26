@@ -389,8 +389,6 @@ module   gem_data_out
             .rd_en         (tx_frame[0]==0),
             .rst           (reset_i),    // 1-bit input: Reset: Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
 
-            .full          (),
-            .empty         (),
             .data_valid    (),       // 1-bit output: Read Data Valid: When asserted, this signal indicates that valid data is available on the output bus (dout).
             .empty         (),       // 1-bit output: Empty Flag: When asserted, this signal indicates that the FIFO is empty. Read requests are ignored when the FIFO is empty, initiating a read while empty is not destructive to the FIFO.
             .full          (),       // 1-bit output: Full Flag: When asserted, this signal indicates that the FIFO is full. Write requests are ignored when the FIFO is full, initiating a write when the FIFO is full is not destructive to the contents of the FIFO.
@@ -412,8 +410,8 @@ module   gem_data_out
             .sleep         (0)       // 1-bit input: Dynamic power saving- If sleep is High, the memory/fifo block is in power saving mode.
             );
 
-         a7_gtp_wrapper_inst
-           a7_gtp_wrapper
+         a7_gtp_wrapper
+           a7_gtp_wrapper_inst
              (
 
               .soft_reset_tx_in          (mgt_reset[0]),
