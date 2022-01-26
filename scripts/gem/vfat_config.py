@@ -159,8 +159,6 @@ def configureVfat(configure, vfatN, ohN, low_thresh):
             register_written.append(reg)
 
         if low_thresh:
-            #print ("Set low threshold")
-            #write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_THR_ZCC_DAC"     % (ohN, vfatN)) , 0)
             write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC"     % (ohN, vfatN)) , 0)
 
         for i in range(128):
