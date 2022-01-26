@@ -288,7 +288,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
         file_out.write("Unconfiguring VFAT %d\n" % (vfat))
         for channel in range(128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels and disable calpulsing
-        sconfigureVfat(0, vfat, oh_select, 0)
+        configureVfat(0, vfat, oh_select, 0)
 
     file_out.close()
 if __name__ == "__main__":
