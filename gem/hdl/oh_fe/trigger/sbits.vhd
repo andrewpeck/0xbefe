@@ -317,7 +317,7 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-      if (ttc.l1a = '1') then
+      if (l1a_delayed = '1') then
         l1a_mask_cnt <= unsigned(l1a_mask_width);
       elsif (l1a_mask_cnt > 0) then
         l1a_mask_cnt <= l1a_mask_cnt - 1;
