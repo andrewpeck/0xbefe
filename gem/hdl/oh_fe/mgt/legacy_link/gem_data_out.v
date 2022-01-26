@@ -353,6 +353,9 @@ module   gem_data_out
          synchronizer synchronizer_mgtrst     (.async_i (mgt_reset[0]), .clk_i (txoutclk), .sync_o (mgt_reset_sync));
 
          assign overflow[3:1] = {3{overflow[0]}};
+         assign gem_data_sync[3] = gem_data_sync[0];
+         assign gem_data_sync[2] = gem_data_sync[0];
+         assign gem_data_sync[1] = gem_data_sync[0];
 
          xpm_fifo_async
            #(
@@ -382,8 +385,8 @@ module   gem_data_out
             .dout          ({gem_data_sync[0],bc0,   resync,   bxn_counter_lsbs,    overflow[0]}),
             .wr_clk        (clock_40), // write at 40
             .rd_clk        (txoutclk), // read at  160/200
-            .wr_en         (ready),
-            .rd_en         (tx_frame[ilink]==0),
+            .wr_en         (ready[0]),
+            .rd_en         (tx_frame[0]==0),
             .rst           (reset_i),    // 1-bit input: Reset: Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
 
             // .full          (),
