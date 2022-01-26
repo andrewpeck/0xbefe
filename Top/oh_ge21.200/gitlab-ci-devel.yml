@@ -4,3 +4,5 @@ GEN:oh_ge21.200_devel:
       extends: .vars
       PROJECT_NAME: oh_ge21.200
       INTERMEDIATE_BUILD: "1"
+    tags:
+        - vivado_2020_2

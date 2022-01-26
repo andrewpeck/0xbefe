@@ -3,3 +3,5 @@ GEN:oh_ge21.75:
     variables:
       extends: .vars
       PROJECT_NAME: oh_ge21.75
+    tags:
+        - vivado_2020_2
