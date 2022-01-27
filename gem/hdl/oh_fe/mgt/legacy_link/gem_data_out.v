@@ -78,7 +78,6 @@ module   gem_data_out
             CLOCK_MULT [1] = 4;
             CLOCK_MULT [0] = 4;
          end
-         assign usrclks = {clock_160, clock_160, clock_160, clock_160};
       end
    endgenerate;
 
@@ -339,6 +338,7 @@ module   gem_data_out
       if (FPGA_TYPE_IS_ARTIX7) begin
 
          wire txoutclk;
+         assign usrclks = {txoutclk, txoutclk, txoutclk, txoutclk};
 
          initial $display ("Generating optical links for Artix-7");
 
