@@ -361,7 +361,7 @@ module   gem_data_out
            #(
              .FIFO_MEMORY_TYPE    ("auto"),               // auto, block, distributed, ultra
              .ECC_MODE            ("no_ecc"),             // no_ecc, en_ecc
-             .RELATED_CLOCKS      (1),                    // DECIMAL
+             .RELATED_CLOCKS      (0),                    // DECIMAL
              .FIFO_WRITE_DEPTH    (16),                   // DECIMAL
              .WRITE_DATA_WIDTH    (117),                  // DECIMAL
              .WR_DATA_COUNT_WIDTH (5),                    // DECIMAL
