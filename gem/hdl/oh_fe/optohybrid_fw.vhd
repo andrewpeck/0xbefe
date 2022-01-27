@@ -457,15 +457,21 @@ begin
     type t_fiber_packets_tmr is array (2 downto 0) of t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
     type t_elink_packets_tmr is array (2 downto 0) of t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
     type t_fiber_kchars_tmr is array (2 downto 0) of t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
+    type t_legacy_clusters_tmr is array (2 downto 0) of t_std14_array (7 downto 0);
+    type t_legacy_overflow_tmr is array (2 downto 0) of std_logic;
 
-    signal fiber_packets_tmr : t_fiber_packets_tmr;
-    signal elink_packets_tmr : t_elink_packets_tmr;
-    signal fiber_kchars_tmr  : t_fiber_kchars_tmr;
+    signal fiber_packets_tmr   : t_fiber_packets_tmr;
+    signal elink_packets_tmr   : t_elink_packets_tmr;
+    signal fiber_kchars_tmr    : t_fiber_kchars_tmr;
+    signal legacy_clusters_tmr : t_legacy_clusters_tmr;
+    signal legacy_overflow_tmr : t_legacy_overflow_tmr;
 
-    attribute DONT_TOUCH                      : string;
-    attribute DONT_TOUCH of fiber_packets_tmr : signal is "true";
-    attribute DONT_TOUCH of elink_packets_tmr : signal is "true";
-    attribute DONT_TOUCH of fiber_kchars_tmr  : signal is "true";
+    attribute DONT_TOUCH                        : string;
+    attribute DONT_TOUCH of fiber_packets_tmr   : signal is "true";
+    attribute DONT_TOUCH of elink_packets_tmr   : signal is "true";
+    attribute DONT_TOUCH of fiber_kchars_tmr    : signal is "true";
+    attribute DONT_TOUCH of legacy_clusters_tmr : signal is "true";
+    attribute DONT_TOUCH of legacy_overflow_tmr : signal is "true";
 
 
   begin
@@ -483,8 +489,8 @@ begin
           overflow_i        => sbit_overflow,
           bxn_counter_i     => bxn_counter,
           error_i           => '0',
-          legacy_clusters_o => legacy_clusters,
-          legacy_overflow_o => legacy_overflow,
+          legacy_clusters_o => legacy_clusters_tmr(I),
+          legacy_overflow_o => legacy_overflow_tmr(I),
           fiber_packets_o   => fiber_packets_tmr(I),
           fiber_kchars_o    => fiber_kchars_tmr(I),
           elink_packets_o   => elink_packets_tmr(I)
@@ -492,24 +498,36 @@ begin
     end generate;
 
     tmr_gen : if (EN_TMR = 1) generate
-      signal fiber_packets_tmr_err : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0) := (others => '0');
-      signal fiber_kchars_tmr_err  : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0) := (others => '0');
-      signal elink_packets_tmr_err : std_logic_vector (NUM_ELINK_PACKETS-1 downto 0)   := (others => '0');
+      signal fiber_packets_tmr_err   : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0)    := (others => '0');
+      signal fiber_kchars_tmr_err    : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0)    := (others => '0');
+      signal elink_packets_tmr_err   : std_logic_vector (NUM_ELINK_PACKETS-1 downto 0)      := (others => '0');
+      signal legacy_clusters_tmr_err : std_logic_vector (legacy_clusters'length-1 downto 0) := (others => '0');
+      signal legacy_overflow_tmr_err : std_logic;
     begin
+
       fiber_assign_loop : for I in 0 to NUM_OPTICAL_PACKETS-1 generate
         majority_err (fiber_packets(I), fiber_packets_tmr_err(I), fiber_packets_tmr(0)(I), fiber_packets_tmr(1)(I), fiber_packets_tmr(2)(I));
         majority_err (fiber_kchars(I), fiber_kchars_tmr_err(I), fiber_kchars_tmr(0)(I), fiber_kchars_tmr(1)(I), fiber_kchars_tmr(2)(I));
       end generate;
+
       elink_assign_loop : for I in 0 to NUM_ELINK_PACKETS-1 generate
         majority_err (elink_packets(I), elink_packets_tmr_err(I), elink_packets_tmr(0)(I), elink_packets_tmr(1)(I), elink_packets_tmr(2)(I));
       end generate;
+
+      legacy_clusters_tmr_loop : for I in 0 to legacy_clusters_tmr'length-1 generate
+        majority_err (legacy_clusters(I), legacy_clusters_tmr_err(I), legacy_clusters_tmr(0)(I), legacy_clusters_tmr(1)(I), legacy_clusters_tmr(2)(I));
+      end generate;
+
+      majority_err (legacy_overflow, legacy_overflow_tmr_err, legacy_overflow_tmr(0), legacy_overflow_tmr(1), legacy_overflow_tmr(2));
 
       process (clocks.clk40) is
       begin
         if (rising_edge(clocks.clk40)) then
           trigger_data_formatter_tmr_err <= or_reduce(fiber_packets_tmr_err) or
                                             or_reduce(fiber_kchars_tmr_err) or
-                                            or_reduce(elink_packets_tmr_err);
+                                            or_reduce(elink_packets_tmr_err) or
+                                            or_reduce(legacy_clusters_tmr_err) or
+                                            legacy_overflow_tmr_err;
         end if;
       end process;
 
@@ -517,9 +535,11 @@ begin
 
 
     notmr_gen : if (EN_TMR = 0) generate
-      fiber_packets <= fiber_packets_tmr(0);
-      elink_packets <= elink_packets_tmr(0);
-      fiber_kchars  <= fiber_kchars_tmr(0);
+      fiber_packets   <= fiber_packets_tmr(0);
+      elink_packets   <= elink_packets_tmr(0);
+      fiber_kchars    <= fiber_kchars_tmr(0);
+      legacy_clusters <= legacy_clusters_tmr(0);
+      legacy_overflow <= legacy_overflow_tmr(0);
     end generate;
 
   end generate;
