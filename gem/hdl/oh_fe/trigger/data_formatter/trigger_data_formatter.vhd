@@ -533,7 +533,7 @@ begin
 
         legacy_overflow_o <= overflow_i;
 
-        if (clusters(I).vpf = '1') then
+        if (clusters_i(I).vpf = '1') then
           if (GE21 = 1) then
             legacy_clusters_o(I) <= '0' & clusters_i(I).cnt
                                     & clusters_i(I).prt(0 downto 0)

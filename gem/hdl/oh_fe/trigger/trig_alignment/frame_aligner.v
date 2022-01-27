@@ -67,7 +67,7 @@ module frame_aligner
   generate
   for (I=0; I<8; I=I+1'b1) begin  : Iloop
 
-  bitslip_fast data_bitslip (
+  bitslip data_bitslip (
     .clock        (clock),
     .reset        (1'b0), //(reset || mask_i || ~sot_is_aligned),
     .bitslip_cnt  (bitslip_cnt),
@@ -78,7 +78,7 @@ module frame_aligner
   end
   endgenerate
 
-  bitslip_fast sot_bitslip (
+  bitslip sot_bitslip (
     .clock        (clock),
     .reset        (reset),
     .bitslip_cnt  (bitslip_cnt),
