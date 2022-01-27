@@ -62,7 +62,7 @@ architecture behavioral of cluster_packer is
 
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 1;
+  constant OVERFLOW_LATENCY                 : natural := 2;
 
   signal cluster_latch : std_logic;
 
@@ -299,7 +299,23 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  clusters_o        <= (others => NULL_CLUSTER) when reset = '1'                        else clusters;
-  clusters_masked_o <= (others => NULL_CLUSTER) when reset = '1' or mask_output_i = '1' else clusters;
+  process (clk_fast) is
+  begin
+    if (rising_edge(clk_fast)) then
+
+      if (reset = '1') then
+        clusters_o <= clusters;
+      else
+        clusters_o <= (others => NULL_CLUSTER);
+      end if;
+
+      if (reset = '1' or mask_output_i = '1') then
+        clusters_masked_o <= clusters;
+      else
+        clusters_masked_o <= (others => NULL_CLUSTER);
+      end if;
+
+    end if;
+  end process;
 
 end behavioral;
