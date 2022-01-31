@@ -8,6 +8,7 @@ from ADC_read import *
 from oh_fw_programming import *
 from phase_scan import *
 from loopback import *
+from vttx_optical_link import *
 # from sbit_timing_scan_oh_sbit_hitmap import *
 
 from gem.init_backend import init_gem_backend
@@ -61,10 +62,10 @@ def main():
 	testStatus.Validate_Promless_Load(PROMLESS_LOAD_CYCLES, PROMless_Load_Iters)
 
 	# Check VTTX Optical Link Health
-	print_red("Skipping VTTX optical link test since OTMB receivers are not implemented in CVP13")
-	# VTTX_Optical_Result = Check_VTTX_Optical_Link(VERBOSE)
-	# print(VTTX_Optical_Result)
-	# testStatus.Validate_VTTX_Optical_Link(VTTX_Optical_Result)
+	# print_red("Skipping VTTX optical link test since OTMB receivers are not implemented in CVP13")
+	VTTX_Optical_Result = Check_VTTX_Optical_Link(VERBOSE)
+	print(VTTX_Optical_Result)
+	testStatus.Validate_VTTX_Optical_Link(VTTX_Optical_Result)
 
 	# Check ADC Readings
 	ADC_Check_Result = ADC_Test()
