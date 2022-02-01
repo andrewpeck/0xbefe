@@ -1,4 +1,4 @@
-from rw_reg_lpgbt import *
+from gem.me0_lpgbt.rw_reg_lpgbt import *
 import sys
 import argparse
 from time import *
@@ -118,11 +118,10 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="LpGBT LED Show")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dongle or dryrun")
-    parser.add_argument("-y", "--oh_v", action="store", dest="oh_v", help="oh_v = 1 or 2")
-    parser.add_argument("-l", "--lpgbt", action="store", dest="lpgbt", help="lpgbt = boss or sub")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = 0-1 (only needed for backend)")
-    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = 0-7 (only needed for backend)")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
+    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-g_l", "--gpio_light", action="store", nargs="+", dest="gpio_light", help="gpio_light = [15 for boss in OHv1] or [5 for boss or {0,1,3,8,13} for sub in OHv2]")
     parser.add_argument("-g_s", "--gpio_sound", action="store", dest="gpio_sound", help="gpio_sound = on, off")
     args = parser.parse_args()
@@ -226,24 +225,18 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
             sys.exit()
 
-
-    # Parsing Registers XML File
-    print("Parsing xml file...")
-    parseXML(oh_v)
-    print("Parsing complete...")
-
-    # Initialization (for CHeeseCake: reset and config_select)
-    rw_initialize(args.system, oh_v, boss, args.ohid, args.gbtid)
+    # Initialization 
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
-    
-    # Readback rom register to make sure communication is OK
-    if args.system!="dryrun" and args.system!="backend":
-        check_rom_readback()
-        check_lpgbt_mode(boss)
 
-    # Check if lpGBT is READY
-    if args.system=="backend":
-        check_lpgbt_link_ready(args.ohid, args.gbtid)
+    # Readback rom register to make sure communication is OK
+    if args.system != "dryrun":
+        check_rom_readback(args.ohid, args.gbtid)
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
+
+    # Check if GBT is READY
+    if oh_ver == 1 and args.system == "backend":
+        check_lpgbt_ready(args.ohid, args.gbtid)
        
     # LPGBT LED Show
     try:
