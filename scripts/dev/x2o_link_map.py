@@ -496,6 +496,364 @@ for refclk01 in range(2):
         GTY_REFCLK_IDX[refclk01].append(best_refclk)
         print("GTY %d closest refclk%d = %d (quad %d), distance = %d" % (gty, refclk01, best_refclk, REFCLKS[refclk01][best_refclk]["mgt"], best_refclk_dist))
 
+####################################################################
+############################ Cable map #############################
+####################################################################
+
+QSFP_PINS = {
+    37: {"dir": "TX", "chan": 1, "pol": "n"},
+    36: {"dir": "TX", "chan": 1, "pol": "p"},
+    34: {"dir": "TX", "chan": 3, "pol": "n"},
+    33: {"dir": "TX", "chan": 3, "pol": "p"},
+    25: {"dir": "RX", "chan": 4, "pol": "p"},
+    24: {"dir": "RX", "chan": 4, "pol": "n"},
+    22: {"dir": "RX", "chan": 2, "pol": "p"},
+    21: {"dir": "RX", "chan": 2, "pol": "n"},
+    2:  {"dir": "TX", "chan": 2, "pol": "n"},
+    3:  {"dir": "TX", "chan": 2, "pol": "p"},
+    5:  {"dir": "TX", "chan": 4, "pol": "n"},
+    6:  {"dir": "TX", "chan": 4, "pol": "p"},
+    14: {"dir": "RX", "chan": 3, "pol": "p"},
+    15: {"dir": "RX", "chan": 3, "pol": "n"},
+    17: {"dir": "RX", "chan": 1, "pol": "p"},
+    18: {"dir": "RX", "chan": 1, "pol": "n"}
+}
+
+ARF6_PINS = {
+    3:  {"dir": "TX", "chan": 1, "pol": "p"},
+    5:  {"dir": "TX", "chan": 1, "pol": "n"},
+    6:  {"dir": "RX", "chan": 1, "pol": "p"},
+    4:  {"dir": "RX", "chan": 1, "pol": "n"},
+    45: {"dir": "TX", "chan": 2, "pol": "p"},
+    47: {"dir": "TX", "chan": 2, "pol": "n"},
+    48: {"dir": "RX", "chan": 2, "pol": "p"},
+    46: {"dir": "RX", "chan": 2, "pol": "n"},
+    9:  {"dir": "TX", "chan": 3, "pol": "p"},
+    11: {"dir": "TX", "chan": 3, "pol": "n"},
+    12: {"dir": "RX", "chan": 3, "pol": "p"},
+    10: {"dir": "RX", "chan": 3, "pol": "n"},
+    39: {"dir": "TX", "chan": 4, "pol": "p"},
+    41: {"dir": "TX", "chan": 4, "pol": "n"},
+    42: {"dir": "RX", "chan": 4, "pol": "p"},
+    40: {"dir": "RX", "chan": 4, "pol": "n"},
+    15: {"dir": "TX", "chan": 5, "pol": "p"},
+    17: {"dir": "TX", "chan": 5, "pol": "n"},
+    18: {"dir": "RX", "chan": 5, "pol": "p"},
+    16: {"dir": "RX", "chan": 5, "pol": "n"},
+    33: {"dir": "TX", "chan": 6, "pol": "p"},
+    35: {"dir": "TX", "chan": 6, "pol": "n"},
+    36: {"dir": "RX", "chan": 6, "pol": "p"},
+    34: {"dir": "RX", "chan": 6, "pol": "n"},
+    21: {"dir": "TX", "chan": 7, "pol": "p"},
+    23: {"dir": "TX", "chan": 7, "pol": "n"},
+    24: {"dir": "RX", "chan": 7, "pol": "p"},
+    22: {"dir": "RX", "chan": 7, "pol": "n"},
+    27: {"dir": "TX", "chan": 8, "pol": "p"},
+    29: {"dir": "TX", "chan": 8, "pol": "n"},
+    30: {"dir": "RX", "chan": 8, "pol": "p"},
+    28: {"dir": "RX", "chan": 8, "pol": "n"}
+}
+
+# Pin mapping on the cable
+# In Samtec drawings:
+# J1 -- ARF6 #0
+# J2 -- ARF6 #1
+# J6 -- FQSFP #0
+# J5 -- FQSFP #1
+# J4 -- FQSFP #2
+# J3 -- FQSFP #3
+QUAD_QSFP_CABLE_MAP_PINS = [
+    ####################### J1 -- ARF6 #0 #######################
+    {"arf6_idx": 0, "arf6_pin": 3,  "qsfp_idx": 0, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 5,  "qsfp_idx": 0, "qsfp_pin": 37},
+    {"arf6_idx": 0, "arf6_pin": 9,  "qsfp_idx": 0, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 11, "qsfp_idx": 0, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 15, "qsfp_idx": 1, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 17, "qsfp_idx": 1, "qsfp_pin": 37},
+    {"arf6_idx": 0, "arf6_pin": 21, "qsfp_idx": 1, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 23, "qsfp_idx": 1, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 27, "qsfp_idx": 2, "qsfp_pin": 6 },
+    {"arf6_idx": 0, "arf6_pin": 29, "qsfp_idx": 2, "qsfp_pin": 5 },
+    {"arf6_idx": 0, "arf6_pin": 33, "qsfp_idx": 2, "qsfp_pin": 3 },
+    {"arf6_idx": 0, "arf6_pin": 35, "qsfp_idx": 2, "qsfp_pin": 2 },
+
+    {"arf6_idx": 0, "arf6_pin": 39, "qsfp_idx": 3, "qsfp_pin": 6 },
+    {"arf6_idx": 0, "arf6_pin": 41, "qsfp_idx": 3, "qsfp_pin": 5 },
+    {"arf6_idx": 0, "arf6_pin": 45, "qsfp_idx": 3, "qsfp_pin": 3 },
+    {"arf6_idx": 0, "arf6_pin": 47, "qsfp_idx": 3, "qsfp_pin": 2 },
+
+    {"arf6_idx": 0, "arf6_pin": 4,  "qsfp_idx": 0, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 6,  "qsfp_idx": 0, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 10, "qsfp_idx": 0, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 12, "qsfp_idx": 0, "qsfp_pin": 15},
+
+    {"arf6_idx": 0, "arf6_pin": 16, "qsfp_idx": 1, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 18, "qsfp_idx": 1, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 22, "qsfp_idx": 1, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 24, "qsfp_idx": 1, "qsfp_pin": 15},
+
+    {"arf6_idx": 0, "arf6_pin": 28, "qsfp_idx": 2, "qsfp_pin": 25},
+    {"arf6_idx": 0, "arf6_pin": 30, "qsfp_idx": 2, "qsfp_pin": 24},
+    {"arf6_idx": 0, "arf6_pin": 34, "qsfp_idx": 2, "qsfp_pin": 22},
+    {"arf6_idx": 0, "arf6_pin": 36, "qsfp_idx": 2, "qsfp_pin": 21},
+
+    {"arf6_idx": 0, "arf6_pin": 40, "qsfp_idx": 3, "qsfp_pin": 25},
+    {"arf6_idx": 0, "arf6_pin": 42, "qsfp_idx": 3, "qsfp_pin": 24},
+    {"arf6_idx": 0, "arf6_pin": 46, "qsfp_idx": 3, "qsfp_pin": 22},
+    {"arf6_idx": 0, "arf6_pin": 48, "qsfp_idx": 3, "qsfp_pin": 21},
+
+    ####################### J2 -- ARF6 #1 #######################
+    {"arf6_idx": 1, "arf6_pin": 3,  "qsfp_idx": 3, "qsfp_pin": 36},
+    {"arf6_idx": 1, "arf6_pin": 5,  "qsfp_idx": 3, "qsfp_pin": 37},
+    {"arf6_idx": 1, "arf6_pin": 9,  "qsfp_idx": 3, "qsfp_pin": 33},
+    {"arf6_idx": 1, "arf6_pin": 11, "qsfp_idx": 3, "qsfp_pin": 34},
+
+    {"arf6_idx": 1, "arf6_pin": 15, "qsfp_idx": 2, "qsfp_pin": 36},
+    {"arf6_idx": 1, "arf6_pin": 17, "qsfp_idx": 2, "qsfp_pin": 37},
+    {"arf6_idx": 1, "arf6_pin": 21, "qsfp_idx": 2, "qsfp_pin": 33},
+    {"arf6_idx": 1, "arf6_pin": 23, "qsfp_idx": 2, "qsfp_pin": 34},
+
+    {"arf6_idx": 1, "arf6_pin": 27, "qsfp_idx": 1, "qsfp_pin": 6 },
+    {"arf6_idx": 1, "arf6_pin": 29, "qsfp_idx": 1, "qsfp_pin": 5 },
+    {"arf6_idx": 1, "arf6_pin": 33, "qsfp_idx": 1, "qsfp_pin": 3 },
+    {"arf6_idx": 1, "arf6_pin": 35, "qsfp_idx": 1, "qsfp_pin": 2 },
+
+    {"arf6_idx": 1, "arf6_pin": 39, "qsfp_idx": 0, "qsfp_pin": 6 },
+    {"arf6_idx": 1, "arf6_pin": 41, "qsfp_idx": 0, "qsfp_pin": 5 },
+    {"arf6_idx": 1, "arf6_pin": 45, "qsfp_idx": 0, "qsfp_pin": 3 },
+    {"arf6_idx": 1, "arf6_pin": 47, "qsfp_idx": 0, "qsfp_pin": 2 },
+
+    {"arf6_idx": 1, "arf6_pin": 4,  "qsfp_idx": 3, "qsfp_pin": 17},
+    {"arf6_idx": 1, "arf6_pin": 6,  "qsfp_idx": 3, "qsfp_pin": 18},
+    {"arf6_idx": 1, "arf6_pin": 10, "qsfp_idx": 3, "qsfp_pin": 14},
+    {"arf6_idx": 1, "arf6_pin": 12, "qsfp_idx": 3, "qsfp_pin": 15},
+
+    {"arf6_idx": 1, "arf6_pin": 16, "qsfp_idx": 2, "qsfp_pin": 17},
+    {"arf6_idx": 1, "arf6_pin": 18, "qsfp_idx": 2, "qsfp_pin": 18},
+    {"arf6_idx": 1, "arf6_pin": 22, "qsfp_idx": 2, "qsfp_pin": 14},
+    {"arf6_idx": 1, "arf6_pin": 24, "qsfp_idx": 2, "qsfp_pin": 15},
+
+    {"arf6_idx": 1, "arf6_pin": 28, "qsfp_idx": 1, "qsfp_pin": 25},
+    {"arf6_idx": 1, "arf6_pin": 30, "qsfp_idx": 1, "qsfp_pin": 24},
+    {"arf6_idx": 1, "arf6_pin": 34, "qsfp_idx": 1, "qsfp_pin": 22},
+    {"arf6_idx": 1, "arf6_pin": 36, "qsfp_idx": 1, "qsfp_pin": 21},
+
+    {"arf6_idx": 1, "arf6_pin": 40, "qsfp_idx": 0, "qsfp_pin": 25},
+    {"arf6_idx": 1, "arf6_pin": 42, "qsfp_idx": 0, "qsfp_pin": 24},
+    {"arf6_idx": 1, "arf6_pin": 46, "qsfp_idx": 0, "qsfp_pin": 22},
+    {"arf6_idx": 1, "arf6_pin": 48, "qsfp_idx": 0, "qsfp_pin": 21},
+]
+
+# Pin mapping on the cable
+# In Samtec drawings:
+# J1 -- ARF6 #0
+# J2 -- ARF6 #1
+# J6 -- FQSFP #0
+# J5 -- FQSFP #1
+# J3 and J4 map to FF connectors which are meant for AXI and TCDS, and are not represented here
+DUAL_QSFP_AXI_TCDS_CABLE_MAP_PINS = [
+    ####################### J1 -- ARF6 #0 #######################
+    {"arf6_idx": 0, "arf6_pin": 3,  "qsfp_idx": 0, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 5,  "qsfp_idx": 0, "qsfp_pin": 37},
+    {"arf6_idx": 0, "arf6_pin": 9,  "qsfp_idx": 0, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 11, "qsfp_idx": 0, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 15, "qsfp_idx": 1, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 17, "qsfp_idx": 1, "qsfp_pin": 37},
+    {"arf6_idx": 0, "arf6_pin": 21, "qsfp_idx": 1, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 23, "qsfp_idx": 1, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 4,  "qsfp_idx": 0, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 6,  "qsfp_idx": 0, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 10, "qsfp_idx": 0, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 12, "qsfp_idx": 0, "qsfp_pin": 15},
+
+    {"arf6_idx": 0, "arf6_pin": 16, "qsfp_idx": 1, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 18, "qsfp_idx": 1, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 22, "qsfp_idx": 1, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 24, "qsfp_idx": 1, "qsfp_pin": 15},
+
+    ####################### J2 -- ARF6 #1 #######################
+    {"arf6_idx": 1, "arf6_pin": 27, "qsfp_idx": 1, "qsfp_pin": 6 },
+    {"arf6_idx": 1, "arf6_pin": 29, "qsfp_idx": 1, "qsfp_pin": 5 },
+    {"arf6_idx": 1, "arf6_pin": 33, "qsfp_idx": 1, "qsfp_pin": 3 },
+    {"arf6_idx": 1, "arf6_pin": 35, "qsfp_idx": 1, "qsfp_pin": 2 },
+
+    {"arf6_idx": 1, "arf6_pin": 39, "qsfp_idx": 0, "qsfp_pin": 6 },
+    {"arf6_idx": 1, "arf6_pin": 41, "qsfp_idx": 0, "qsfp_pin": 5 },
+    {"arf6_idx": 1, "arf6_pin": 45, "qsfp_idx": 0, "qsfp_pin": 3 },
+    {"arf6_idx": 1, "arf6_pin": 47, "qsfp_idx": 0, "qsfp_pin": 2 },
+
+    {"arf6_idx": 1, "arf6_pin": 28, "qsfp_idx": 1, "qsfp_pin": 25},
+    {"arf6_idx": 1, "arf6_pin": 30, "qsfp_idx": 1, "qsfp_pin": 24},
+    {"arf6_idx": 1, "arf6_pin": 34, "qsfp_idx": 1, "qsfp_pin": 22},
+    {"arf6_idx": 1, "arf6_pin": 36, "qsfp_idx": 1, "qsfp_pin": 21},
+
+    {"arf6_idx": 1, "arf6_pin": 40, "qsfp_idx": 0, "qsfp_pin": 25},
+    {"arf6_idx": 1, "arf6_pin": 42, "qsfp_idx": 0, "qsfp_pin": 24},
+    {"arf6_idx": 1, "arf6_pin": 46, "qsfp_idx": 0, "qsfp_pin": 22},
+    {"arf6_idx": 1, "arf6_pin": 48, "qsfp_idx": 0, "qsfp_pin": 21},
+]
+
+# Construct a cable map of QSFP number and channel to ARF6 number and channel, and note if there is an inversion on the cable
+# the map is a 2d array of dictionaries where the first array index refers to the QSFP index on the cable, and the second index refers to the QSFP channel
+
+def find_arf6_pin(qsfp_idx, qsfp_chan, qsfp_dir, qsfp_pol, cable_pin_map):
+    for cable_wire in cable_pin_map:
+        qsfp_pin = QSFP_PINS[cable_wire["qsfp_pin"]]
+        arf6_idx = cable_wire["arf6_idx"]
+        arf6_pin = ARF6_PINS[cable_wire["arf6_pin"]]
+
+        if cable_wire["qsfp_idx"] == qsfp_idx and qsfp_pin["chan"] == qsfp_chan + 1 and qsfp_pin["dir"] == qsfp_dir and qsfp_pin["pol"] == qsfp_pol:
+            return arf6_idx, arf6_pin
+
+def create_cable_map(num_qsfps, cable_pin_map):
+    ret = []
+    for qsfp_idx in range(num_qsfps):
+        chans = []
+        for qsfp_chan in range(4):
+            for qsfp_dir in ["TX", "RX"]:
+                arf6_idx_p, arf6_pin_p = find_arf6_pin(qsfp_idx, qsfp_chan, qsfp_dir, "p", cable_pin_map)
+                arf6_idx_n, arf6_pin_n = find_arf6_pin(qsfp_idx, qsfp_chan, qsfp_dir, "n", cable_pin_map)
+
+                if arf6_idx_p != arf6_idx_n or arf6_pin_p["chan"] != arf6_pin_n["chan"] or arf6_pin_p["dir"] != arf6_pin_n["dir"]:
+                    print_red("QSFP cable ERROR: QSFP %d chan %d dir %s differential pair pins map to different ARF6 idx, chan, or dir" % (qsfp_idx, qsfp_chan, qsfp_dir))
+                    exit()
+
+                if arf6_pin_p["dir"] != qsfp_dir or arf6_pin_n["dir"] != qsfp_dir:
+                    print_red("QSFP cable ERROR: QSFP %d chan %d dir %s pins map to a different direction in ARF6" % (qsfp_idx, qsfp_chan, qsfp_dir))
+                    exit()
+
+                inverted = None
+                if arf6_pin_p["pol"] == "p" and arf6_pin_n["pol"] == "n":
+                    inverted = False
+                elif arf6_pin_p["pol"] == "n" and arf6_pin_n["pol"] == "p":
+                    inverted = True
+                else:
+                    print_red("QSFP cable ERROR: QSFP %d chan %d dir %s pins map to unknown polarity on the ARF6 side" % (qsfp_idx, qsfp_chan, qsfp_dir))
+                    exit()
+
+                chan = {"qsfp_chan": qsfp_chan, "dir": qsfp_dir, "arf6_idx": arf6_idx_p, "arf6_chan": arf6_pin_p["chan"], "inv": inverted}
+                chans.append(chan)
+
+        ret.append(chans)
+    return ret
+
+QUAD_QSFP_CABLE_MAP = create_cable_map(4, QUAD_QSFP_CABLE_MAP_PINS)
+DUAL_QSFP_CABLE_MAP = create_cable_map(2, QUAD_QSFP_CABLE_MAP_PINS)
+
+# Define cable connections from each QSFP on the front panel to the ARF6s, and construct a full front panel QSFP to ARF6 connection map
+# QSFPs are numbered from left (board bottom side) to right (board top side) and from top (crate top) to bottom (crate bottom) like this:
+# 0  |  1
+# 2  |  3
+# 4  |  5
+# .....
+# 28 | 29
+
+CABLE_CONNECTIONS = [
+    # Octopus left
+    {"type": "quad", "qsfp_idx": [0,  1,  2,  3 ], "arf6_j_labels": ["J19", "J20"]},
+    {"type": "dual", "qsfp_idx": [4,  5 ],         "arf6_j_labels": ["J12", "J11"]},
+    {"type": "quad", "qsfp_idx": [6,  7,  8,  9 ], "arf6_j_labels": ["J15", "J16"]},
+    {"type": "quad", "qsfp_idx": [10, 11, 12, 13], "arf6_j_labels": ["J5",  "J6" ]},
+    # Octopus right
+    {"type": "quad", "qsfp_idx": [14, 15, 16, 17], "arf6_j_labels": ["J4",  "J3" ]},
+    {"type": "quad", "qsfp_idx": [18, 19, 20, 21], "arf6_j_labels": ["J14", "J13"]},
+    {"type": "quad", "qsfp_idx": [22, 23, 24, 25], "arf6_j_labels": ["J7",  "J10"]},
+    {"type": "quad", "qsfp_idx": [26, 27, 28, 29], "arf6_j_labels": ["J18", "J17"]}
+]
+
+def find_qsfp_cable(qsfp_idx):
+    for cable in CABLE_CONNECTIONS:
+        if qsfp_idx in cable["qsfp_idx"]:
+            return cable
+
+QSFP_TO_MGT = []
+for qsfp_idx in range(30):
+    cable = find_qsfp_cable(qsfp_idx)
+    qsfp_connector_idx = cable["qsfp_idx"].index(qsfp_idx)
+    qsfp_entry = []
+    for qsfp_chan_idx in range(8): # 4 TX and 4 RX channels
+        exp_dir = "TX" if qsfp_chan_idx % 2 == 0 else "RX"
+        qsfp_chan = int(qsfp_chan_idx / 2)
+        cable_map = QUAD_QSFP_CABLE_MAP if cable["type"] == "quad" else DUAL_QSFP_CABLE_MAP if cable["type"] == "dual" else None
+        cable_map_entry = cable_map[qsfp_connector_idx][qsfp_chan_idx]
+
+        if cable_map_entry["qsfp_chan"] != qsfp_chan:
+            print_red("Unexpected QSFP channel in the cable map")
+            exit()
+        if cable_map_entry["dir"] != exp_dir:
+            print_red("Unexpected QSFP direction in the cable map")
+            exit()
+
+        cable_arf6_idx = cable_map_entry["arf6_idx"]
+        cable_arf6_chan = cable_map_entry["arf6_chan"]
+        cable_inverted = cable_map_entry["inv"]
+        arf6_j_label = cable["arf6_j_labels"][cable_arf6_idx]
+
+        arf6_to_mgt_map = ARF6_TO_MGT[ARF6_J_LABELS.index(arf6_j_label)]
+        # find the entry in the map with the required ARF6 channel and direction
+        arf6_to_mgt_map_entry = None
+        for entry in arf6_to_mgt_map:
+            if entry["arf6_chan"] == cable_arf6_chan and entry["dir"] == exp_dir:
+                arf6_to_mgt_map_entry = entry
+                break
+
+        inverted = False if (cable_inverted and arf6_to_mgt_map_entry) or ((not cable_inverted) and (not arf6_to_mgt_map_entry)) else True
+        qsfp_chan_entry = {"mgt": arf6_to_mgt_map_entry["mgt"], "mgt_chan": arf6_to_mgt_map_entry["mgt_chan"], "inv": inverted, "dir": exp_dir, "qsfp_chan": qsfp_chan, "arf6_j_label": arf6_j_label}
+        qsfp_entry.append(qsfp_chan_entry)
+    QSFP_TO_MGT.append(qsfp_entry)
+
+# print the cable map
+print("")
+print("============================================================")
+print("==   QSFP connections to MGT using the remapping cables   ==")
+print("============================================================")
+for qsfp_idx in range(len(QSFP_TO_MGT)):
+    qsfp = QSFP_TO_MGT[qsfp_idx]
+    tx_mgts_used = {}
+    rx_mgts_used = {}
+    print("")
+    print("=============== QSFP %d ===============" % qsfp_idx)
+    for qsfp_chan in range(4):
+        tx_chan = qsfp[qsfp_chan * 2]
+        rx_chan = qsfp[qsfp_chan * 2 + 1]
+
+        if (tx_chan["qsfp_chan"] != qsfp_chan) or (tx_chan["dir"] != "TX") or (rx_chan["qsfp_chan"] != qsfp_chan) or (rx_chan["dir"] != "RX") or (tx_chan["arf6_j_label"] != rx_chan["arf6_j_label"]):
+            print_red("Something wrong in the QSFP cable map, didn't get the expected qsfp channel or direction, or mismached tx/rx arf6 j label when printing the table, check the code")
+            exit()
+
+        arf6_j_label = tx_chan["arf6_j_label"]
+        print("Channel %d: TX MGT %d_%d, RX MGT %d_%d (ARF6 %s)" % (qsfp_chan, tx_chan["mgt"], tx_chan["mgt_chan"], rx_chan["mgt"], rx_chan["mgt_chan"], arf6_j_label))
+
+        if not tx_chan["mgt"] in tx_mgts_used:
+            tx_mgts_used[tx_chan["mgt"]] = [tx_chan["mgt_chan"]]
+        else:
+            if tx_chan["mgt_chan"] in tx_mgts_used[tx_chan["mgt"]]:
+                print_red("Something is wrong in the QSFP to ARF6 map -- the same TX MGT channel is used twice!")
+                exit()
+            tx_mgts_used[tx_chan["mgt"]].append(tx_chan["mgt_chan"])
+
+        if not rx_chan["mgt"] in rx_mgts_used:
+            rx_mgts_used[rx_chan["mgt"]] = [rx_chan["mgt_chan"]]
+        else:
+            if rx_chan["mgt_chan"] in rx_mgts_used[rx_chan["mgt"]]:
+                print_red("Something is wrong in the QSFP to ARF6 map -- the same RX MGT channel is used twice!")
+                exit()
+            rx_mgts_used[rx_chan["mgt"]].append(rx_chan["mgt_chan"])
+
+        if tx_chan["mgt"] != rx_chan["mgt"]:
+            print_color("! this QSFP channel is connected to different MGT quads", Colors.YELLOW)
+        elif tx_chan["mgt_chan"] != rx_chan["mgt_chan"]:
+            print_color("! this QSFP channel is connected to different MGT channels", Colors.YELLOW)
+
+    if len(tx_mgts_used) == 1 and len(rx_mgts_used) == 1:
+        print_green("==> This QSFP is fully mapped to a single MGT quad")
+    else:
+        print_color("==> This QSFP is mapped to multiple MGT quads", Colors.YELLOW)
+exit()
 ###############################################################
 ############ MGT & LINK CODE GENERATIONS FUNCTIONS ############
 ###############################################################
