@@ -20,7 +20,9 @@ use work.ipbus_pkg.all;
 use work.registers.all;
 
 entity clocking is
-  generic (ASYNC_MODE : boolean := false);
+  generic (
+    ASYNC_MODE : boolean := false
+    );
   port(
 
     async_clock_i : in std_logic;
@@ -46,13 +48,23 @@ architecture Behavioral of clocking is
       clk80_o     : out std_logic;
       clk160_o    : out std_logic;
       clk160_90_o : out std_logic;
-      clk200_o    : out std_logic;
+      clk320_o    : out std_logic;
+      clk320_90_o : out std_logic;
       locked_o    : out std_logic
       );
   end component;
 
+  component clocks200
+    port (
+      reset    : in  std_logic;
+      clk_in1  : in  std_logic;
+      clk200_o : out std_logic;
+      locked_o : out std_logic
+      );
+  end component;
+
   signal sysclk      : std_logic;
-  signal mmcm_locked : std_logic;
+  signal mmcm_locked : std_logic_vector (1 downto 0);
   signal clock_i     : std_logic;
 
 begin
@@ -90,15 +102,26 @@ begin
       clk40_o     => clocks_o.clk40,
       clk160_o    => clocks_o.clk160_0,
       clk160_90_o => clocks_o.clk160_90,
-      clk200_o    => clocks_o.clk200,
       clk80_o     => clocks_o.clk80,
+      clk320_o    => clocks_o.clk320_0,
+      clk320_90_o => clocks_o.clk320_90,
 
-      locked_o => mmcm_locked
+      locked_o => mmcm_locked(0)
+      );
+
+  clocks_200_inst : clocks200
+    port map(
+
+      reset => '0',
+
+      clk200_o => clocks_o.clk200,
+      clk_in1  => clock_i,
+
+      locked_o => mmcm_locked(1)
       );
 
   clocks_o.sysclk <= sysclk;
-  clocks_o.locked <= mmcm_locked;
-
-  mmcm_locked_o <= mmcm_locked;
+  clocks_o.locked <= mmcm_locked(0) and mmcm_locked(1);
+  mmcm_locked_o   <= mmcm_locked(0) and mmcm_locked(1);
 
 end Behavioral;

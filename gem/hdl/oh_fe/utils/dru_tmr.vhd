@@ -89,15 +89,22 @@ begin
           g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
           )
         port map(
-          clk1x        => clk1x,
-          clk4x        => clk4x,
-          e4_in        => e4_in,
-          i            => i,            -- the even bits are inverted!
-          phase_sel_in => phase_sel_in,
 
-          o                 => o_tmr(J),  -- 8-bit deserialized data
-          e4_out            => e4_tmr(J),
-          phase_sel_out     => phase_sel_tmr(J),
+          -- clocks
+          clk1x => clk1x,
+          clk4x => clk4x,
+
+          -- data in/out
+          i => i,                       -- the even bits are inverted!
+          o => o_tmr(J),                -- 8-bit deserialized data
+
+          -- control
+          e4_in         => e4_in,
+          e4_out        => e4_tmr(J),
+          phase_sel_in  => phase_sel_in,
+          phase_sel_out => phase_sel_tmr(J),
+
+          -- status
           invalid_bitskip_o => invalid_bitskip_tmr(J)
           );
 

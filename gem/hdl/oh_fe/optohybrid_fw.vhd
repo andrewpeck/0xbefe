@@ -23,6 +23,7 @@ use unisim.vcomponents.all;
 entity optohybrid_fw is
   generic (
 
+    g_DDR_MODE      : integer := 1;
     STANDALONE_MODE : boolean := false;
 
     -- turn off to disable the MGTs (for simulation and such)
@@ -410,7 +411,10 @@ begin
   --------------------------------------------------------------------------------
 
   trigger_inst : entity work.trigger
-    generic map (STANDALONE_MODE => STANDALONE_MODE)
+    generic map (
+      g_DDR_MODE      => g_DDR_MODE,
+      STANDALONE_MODE => STANDALONE_MODE
+      )
     port map (
 
       -- wishbone

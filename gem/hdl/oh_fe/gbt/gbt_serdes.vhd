@@ -129,13 +129,13 @@ begin
   gbt_oversample : entity work.oversample
     generic map (
       g_ENABLE_TMR_DRU     => EN_TMR_GBT_DRU,
-      g_PHASE_SEL_EXTERNAL => false
+      g_PHASE_SEL_EXTERNAL => false,
+      g_DDR_MODE           => 0
       )
     port map (
-      clk1x_logic       => clk_1x,
-      clk1x             => clk_1x,
-      clk4x_0           => clk_4x,
-      clk4x_90          => clk_4x_90,
+      clk40             => clk_1x,
+      clk160_0          => clk_1x,
+      clk160_90         => clk_4x_90,
       reset_i           => rst_serdes,
       rxd_p             => elink_i_p,
       rxd_n             => elink_i_n,

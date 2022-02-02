@@ -103,6 +103,8 @@ package types_pkg is
     clk80     : std_logic;
     clk160_0  : std_logic;
     clk160_90 : std_logic;
+    clk320_0  : std_logic;
+    clk320_90 : std_logic;
     clk200    : std_logic;
   end record;
 

@@ -122,6 +122,9 @@ begin
   end process;
 
   clock_strobe_inst : entity work.clock_strobe
+    generic map (
+      RATIO => 4
+      )
     port map (
       fast_clk_i => clk_fast,
       slow_clk_i => clk_40,

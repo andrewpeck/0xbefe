@@ -153,6 +153,7 @@ begin
   tx_usrclk <= clocks.clk200;
 
   clock_strobe_200_inst : entity work.clock_strobe
+    generic map (RATIO => 5)
     port map (
       fast_clk_i => tx_usrclk,
       slow_clk_i => clocks.clk40,

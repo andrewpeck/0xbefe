@@ -26,7 +26,10 @@ use work.hardware_pkg.all;
 use work.cluster_pkg.all;
 
 entity sbits is
-  generic (STANDALONE_MODE : boolean := false);
+  generic (
+    STANDALONE_MODE : boolean := false;
+    g_DDR_MODE      : integer := 0
+    );
   port(
     clocks : in clocks_t;
 
@@ -92,6 +95,10 @@ end sbits;
 
 architecture Behavioral of sbits is
 
+  constant SBITS_PER_LINK    : integer := 8*(g_DDR_MODE+1);        -- 8 in SDR, 16 in DDR
+  constant SBITS_PER_BX      : integer := 8*SBITS_PER_LINK;        -- 64 in SDR, 128 in DDR
+  constant SBITS_PER_CHAMBER : integer := NUM_VFATS*SBITS_PER_BX;  -- 1536 in SDR, 3072 in DDR
+
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
   signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
@@ -108,7 +115,10 @@ architecture Behavioral of sbits is
 
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
-  signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0) := (others => '0');
+  signal sbits : std_logic_vector (SBITS_PER_CHAMBER-1 downto 0) := (others => '0');
+
+  signal sbits_ORed : std_logic_vector (SBITS_PER_CHAMBER/(g_DDR_MODE+1)-1 downto 0)
+    := (others => '0');
 
   signal active_vfats_s1 : std_logic_vector (NUM_VFATS*8-1 downto 0);
 
@@ -150,6 +160,9 @@ begin
 
     -- deserializes and aligns the 192 320 MHz s-bits into 1536 40MHz s-bits
     trig_alignment : entity work.trig_alignment
+      generic map(
+        g_DDR_MODE => g_DDR_MODE
+        )
       port map (
 
         vfat_mask_i => vfat_mask_i,
@@ -169,8 +182,11 @@ begin
         start_of_frame_n => start_of_frame_n,
 
         clock     => clocks.clk40,
+        clk80     => clocks.clk80,
         clk160_0  => clocks.clk160_0,
         clk160_90 => clocks.clk160_90,
+        clk320_0  => clocks.clk320_0,
+        clk320_90 => clocks.clk320_90,
 
         sot_is_aligned      => sot_is_aligned_o,
         sot_unstable        => sot_unstable_o,
@@ -190,13 +206,25 @@ begin
   -- Channel to Strip Mapping
   --------------------------------------------------------------------------------------------------------------------
 
+  sdr_or : if (g_DDR_MODE = 0) generate
+    sbit_or_gen : for I in 0 to sbits_ORed'length-1 generate
+      sbits_ORed(I) <= sbits(I);
+    end generate;
+  end generate;
+
+  ddr_or : if (g_DDR_MODE = 1) generate
+    sbit_or_gen : for I in 0 to sbits_ORed'length-1 generate
+    begin
+      sbits_ORed(I) <= sbits(I*2) or sbits(I*2+1);
+    end generate;
+  end generate;
+
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
 
-
     -- optionally reverse the sbit order... needed for some slots on ge11 ?
 
-    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS)
+    vfat_sbits_raw (I) <= sbits_ORed ((I+1)*MXSBITS-1 downto (I)*MXSBITS)
                           when REVERSE_VFAT_SBITS(I) = '0'
                           else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
 
@@ -265,7 +293,7 @@ begin
   active_vfats_inst : entity work.active_vfats
     port map (
       clock          => clocks.clk40,
-      sbits_i        => sbits,
+      sbits_i        => sbits_ORed,
       active_vfats_o => active_vfats
       );
 

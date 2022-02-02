@@ -15,17 +15,19 @@ use work.hardware_pkg.all;
 
 entity frame_aligner_tmr is
   generic (
-    g_ENABLE_TMR : integer := 1
+    g_ENABLE_TMR : integer := 1;
+    g_WIDTH_I    : integer := 8;
+    g_WIDTH_O    : integer := 64
     );
 
   port (
-    sbits_i                  : in  std_logic_vector (MXSBITS-1 downto 0);
-    start_of_frame_i         : in  std_logic_vector (7 downto 0);
+    sbits_i                  : in  std_logic_vector (g_WIDTH_O-1 downto 0);
+    start_of_frame_i         : in  std_logic_vector (g_WIDTH_I-1 downto 0);
     reset_i                  : in  std_logic;
     clock                    : in  std_logic;
     mask_i                   : in  std_logic;
     aligned_count_to_ready_i : in  std_logic_vector (11 downto 0);
-    sbits_o                  : out std_logic_vector (MXSBITS-1 downto 0);
+    sbits_o                  : out std_logic_vector (g_WIDTH_O-1 downto 0);
     sot_unstable_o           : out std_logic;
     sot_is_aligned_o         : out std_logic;
     tmr_err_o                : out std_logic := '0'
@@ -39,20 +41,22 @@ architecture Behavioral of frame_aligner_tmr is
 
   component frame_aligner
     generic (
+      FRAME_SIZE     : integer;
+      MXSBITS        : integer;
       EN_BITSLIP_TMR : integer
       );
     port (
 
-      sbits_i : in  std_logic_vector (MXSBITS-1 downto 0);
-      sbits_o : out std_logic_vector (MXSBITS-1 downto 0);
+      sbits_i : in  std_logic_vector;
+      sbits_o : out std_logic_vector;
 
-      start_of_frame_i : in std_logic_vector (7 downto 0);
+      start_of_frame_i : in std_logic_vector;
 
       reset_i : in std_logic;
       clock   : in std_logic;
       mask_i  : in std_logic;
 
-      aligned_count_to_ready_i : in  std_logic_vector (11 downto 0);
+      aligned_count_to_ready_i : in  std_logic_vector;
       sot_unstable_o           : out std_logic;
       sot_is_aligned_o         : out std_logic
       );
@@ -70,7 +74,11 @@ begin
   NO_TMR : if (g_ENABLE_TMR = 0) generate
 
     frame_aligner_inst : frame_aligner
-      generic map (EN_BITSLIP_TMR => EN_TMR_FRAME_BITSLIP)
+      generic map (
+        MXSBITS        => g_WIDTH_O,
+        FRAME_SIZE     => g_WIDTH_I,
+        EN_BITSLIP_TMR => EN_TMR_FRAME_BITSLIP
+        )
       port map (
         clock                    => clock,
         sbits_i                  => sbits_i,
@@ -89,7 +97,8 @@ begin
 
     attribute DONT_TOUCH : string;
 
-    type t_sbits_tmr is array(2 downto 0) of std_logic_vector (MXSBITS-1 downto 0);
+    type t_sbits_tmr is array(2 downto 0) of std_logic_vector (g_WIDTH_O-1 downto 0);
+
     signal sbits_tmr          : t_sbits_tmr;
     signal sot_unstable_tmr   : std_logic_vector (2 downto 0);
     signal sot_is_aligned_tmr : std_logic_vector (2 downto 0);
@@ -103,7 +112,11 @@ begin
     begin
 
       frame_aligner_inst : frame_aligner
-        generic map (EN_BITSLIP_TMR => EN_TMR_FRAME_BITSLIP)
+        generic map (
+          FRAME_SIZE     => g_WIDTH_I,
+          MXSBITS        => g_WIDTH_O,
+          EN_BITSLIP_TMR => EN_TMR_FRAME_BITSLIP
+          )
         port map (
           clock                    => clock,
           sbits_i                  => sbits_i,

@@ -23,7 +23,10 @@ use work.cluster_pkg.all;
 use work.registers.all;
 
 entity trigger is
-  generic(STANDALONE_MODE : boolean := false);
+  generic(
+    STANDALONE_MODE : boolean := false;
+    g_DDR_MODE      : integer := 0
+    );
   port(
 
     -- ipbus wishbone
@@ -288,7 +291,10 @@ begin
   --------------------------------------------------------------------------------------------------------------------
 
   sbits : entity work.sbits
-    generic map (STANDALONE_MODE => STANDALONE_MODE)
+    generic map (
+      g_DDR_MODE      => g_DDR_MODE,
+      STANDALONE_MODE => STANDALONE_MODE
+      )
     port map (
 
       -- clock and reset

@@ -58,7 +58,7 @@ module frame_aligner
   //  Bitslips
   //--------------------------------------------------------------------------------------------------------------------
 
-  reg [2:0] bitslip_cnt;
+  reg  [$clog2(FRAME_SIZE)-1:0] bitslip_cnt;
   wire [7:0] start_of_frame_slipped;
 
   (* KEEP = "TRUE" *) wire sot_mon;
@@ -67,18 +67,22 @@ module frame_aligner
   generate
   for (I=0; I<8; I=I+1'b1) begin  : Iloop
 
-  bitslip_fast data_bitslip (
+  bitslip_fast
+     #(.g_WORD_SIZE (FRAME_SIZE))
+     data_bitslip (
     .clock        (clock),
     .reset        (1'b0), //(reset || mask_i || ~sot_is_aligned),
     .bitslip_cnt  (bitslip_cnt),
-    .din          (sbits_i[8*(I+1)-1 : 8*I]),
-    .dout         (sbits_o[8*(I+1)-1 : 8*I])
+    .din          (sbits_i[FRAME_SIZE*(I+1)-1 : FRAME_SIZE*I]),
+    .dout         (sbits_o[FRAME_SIZE*(I+1)-1 : FRAME_SIZE*I])
   );
 
   end
   endgenerate
 
-  bitslip_fast sot_bitslip (
+  bitslip_fast
+    #(.g_WORD_SIZE (FRAME_SIZE))
+   sot_bitslip (
     .clock        (clock),
     .reset        (reset),
     .bitslip_cnt  (bitslip_cnt),
@@ -108,19 +112,52 @@ module frame_aligner
   //
   // I have no idea why
 
-  always @(posedge clock) begin
-    case (start_of_frame_reg)
-      8'b00000001: begin bitslip_cnt <= 3'd1; sot_good <= 1'b1; end
-      8'b00000010: begin bitslip_cnt <= 3'd2; sot_good <= 1'b1; end
-      8'b00000100: begin bitslip_cnt <= 3'd3; sot_good <= 1'b1; end
-      8'b00001000: begin bitslip_cnt <= 3'd4; sot_good <= 1'b1; end
-      8'b00010000: begin bitslip_cnt <= 3'd5; sot_good <= 1'b1; end
-      8'b00100000: begin bitslip_cnt <= 3'd6; sot_good <= 1'b1; end
-      8'b01000000: begin bitslip_cnt <= 3'd7; sot_good <= 1'b1; end
-      8'b10000000: begin bitslip_cnt <= 3'd0; sot_good <= 1'b1; end
-      default:     begin bitslip_cnt <= 3'd1; sot_good <= 1'b0; end
-    endcase
-  end
+   generate
+
+      if (FRAME_SIZE == 8) begin
+         always @(posedge clock) begin
+            case (start_of_frame_reg)
+              8'b00000001: begin bitslip_cnt <= 3'd1; sot_good <= 1'b1; end
+              8'b00000010: begin bitslip_cnt <= 3'd2; sot_good <= 1'b1; end
+              8'b00000100: begin bitslip_cnt <= 3'd3; sot_good <= 1'b1; end
+              8'b00001000: begin bitslip_cnt <= 3'd4; sot_good <= 1'b1; end
+              8'b00010000: begin bitslip_cnt <= 3'd5; sot_good <= 1'b1; end
+              8'b00100000: begin bitslip_cnt <= 3'd6; sot_good <= 1'b1; end
+              8'b01000000: begin bitslip_cnt <= 3'd7; sot_good <= 1'b1; end
+              8'b10000000: begin bitslip_cnt <= 3'd0; sot_good <= 1'b1; end
+
+              default:     begin bitslip_cnt <= bitslip_cnt; sot_good <= 1'b0; end
+            endcase
+         end
+      end
+
+      if (FRAME_SIZE == 16) begin
+         always @(posedge clock) begin
+            case (start_of_frame_reg)
+              16'b0000000000000001: begin bitslip_cnt <= 4'd1;  sot_good <= 1'b1; end
+              16'b0000000000000010: begin bitslip_cnt <= 4'd2;  sot_good <= 1'b1; end
+              16'b0000000000000100: begin bitslip_cnt <= 4'd3;  sot_good <= 1'b1; end
+              16'b0000000000001000: begin bitslip_cnt <= 4'd4;  sot_good <= 1'b1; end
+              16'b0000000000010000: begin bitslip_cnt <= 4'd5;  sot_good <= 1'b1; end
+              16'b0000000000100000: begin bitslip_cnt <= 4'd6;  sot_good <= 1'b1; end
+              16'b0000000001000000: begin bitslip_cnt <= 4'd7;  sot_good <= 1'b1; end
+              16'b0000000010000000: begin bitslip_cnt <= 4'd8;  sot_good <= 1'b1; end
+              16'b0000000100000000: begin bitslip_cnt <= 4'd9;  sot_good <= 1'b1; end
+              16'b0000001000000000: begin bitslip_cnt <= 4'd10; sot_good <= 1'b1; end
+              16'b0000010000000000: begin bitslip_cnt <= 4'd11; sot_good <= 1'b1; end
+              16'b0000100000000000: begin bitslip_cnt <= 4'd12; sot_good <= 1'b1; end
+              16'b0001000000000000: begin bitslip_cnt <= 4'd13; sot_good <= 1'b1; end
+              16'b0010000000000000: begin bitslip_cnt <= 4'd14; sot_good <= 1'b1; end
+              16'b0100000000000000: begin bitslip_cnt <= 4'd15; sot_good <= 1'b1; end
+              16'b1000000000000000: begin bitslip_cnt <= 4'd0;  sot_good <= 1'b1; end
+
+              default: begin bitslip_cnt <= bitslip_cnt; sot_good <= 1'b0; end
+            endcase
+         end
+      end
+
+   endgenerate
+
 
   //--------------------------------------------------------------------------------------------------------------------
   // SOT ready/unstable
