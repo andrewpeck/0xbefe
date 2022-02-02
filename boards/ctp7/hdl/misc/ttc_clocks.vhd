@@ -16,6 +16,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 library UNISIM;
 use UNISIM.VComponents.all;
 
@@ -27,7 +30,9 @@ use work.board_config_package.all;
 --============================================================================
 entity ttc_clocks is
     generic (
-        PLL_LOCK_WAIT_TIMEOUT     : unsigned(23 downto 0) := x"002710" -- way too long, will measure how low we can go here
+        g_GEM_STATION               : integer range 0 to 2;
+        g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false;
+        PLL_LOCK_WAIT_TIMEOUT       : unsigned(23 downto 0) := x"002710" -- way too long, will measure how low we can go here
     );
     port (
         clk_40_ttc_p_i          : in  std_logic; -- TTC backplane clock signals
@@ -76,35 +81,45 @@ END COMPONENT  ;
     --============================================================================
     --                                                         Signal declarations
     --============================================================================
-    signal clk_40_ttc_ibufgds   : std_logic;
-    signal clk_40_ttc_bufg      : std_logic;
 
     signal clkin                : std_logic;
 
+    -- phase shifting MMCM
+    signal ps_clkfbout          : std_logic;
+    signal ps_clkfbin           : std_logic;
+    signal psmmcm_locked        : std_logic;
+
+    -- main MMCM
     signal clkfbout             : std_logic;
-    signal clkfbin              : std_logic;
+    signal clkfbin              : std_logic;    
 
     signal clk_40               : std_logic;
     signal clk_80               : std_logic;
     signal clk_120              : std_logic;
     signal clk_160              : std_logic;
+    signal clk_200              : std_logic;
     signal clk_320              : std_logic;
+
+    -- output clocks
+    signal clk_40_ttc_ibufgds   : std_logic;
+    signal clk_40_ttc_bufg      : std_logic;
 
     signal ttc_clocks_bufg      : t_ttc_clks;
     
-    -- this function determines the feedback clock multiplication factor based on whether the station is using LpGBT or GBTX
+    -- this function determines the feedback clock multiplication factor based on whether the station is using LpGBT (clkin is 320MHz) or GBTX (clkin is 160MHz)
+    -- VCO frequency should be 960MHz
     function get_clkfbout_mult(gem_station : integer; is_lpgbt_loopback : boolean) return real is
     begin
         if is_lpgbt_loopback then
-            return 3.0;
+            return 3.00;
         elsif gem_station = 0 then
-            return 3.0;
+            return 3.00;
         elsif gem_station = 1 then
-            return 6.0;
+            return 6.00;
         elsif gem_station = 2 then
-            return 6.0;
+            return 6.00;
         else -- hmm whatever, lets say 6.0
-            return 6.0;  
+            return 6.00;  
         end if;
     end function get_clkfbout_mult;    
 
@@ -123,25 +138,9 @@ END COMPONENT  ;
         end if;
     end function get_clkin_period;    
 
-    function get_clkin_frequency_slv32(gem_station : integer; is_lpgbt_loopback : boolean) return std_logic_vector is
-    begin
-        if is_lpgbt_loopback then
-            return x"131c74c0"; -- 320.632
-        elsif gem_station = 0 then
-            return x"131c74c0"; -- 320.632
-        elsif gem_station = 1 then
-            return x"098e3a60"; -- 160.316MHz
-        elsif gem_station = 2 then
-            return x"098e3a60"; -- 160.316MHz
-        else -- hmm whatever, lets say 160
-            return x"098e3a60";  -- 160.316MHz
-        end if;
-    end function get_clkin_frequency_slv32;    
 
-
-    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_FREQ_SLV32 : std_logic_vector := get_clkin_frequency_slv32(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
+    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(g_GEM_STATION, g_LPGBT_2P56G_LOOPBACK_TEST);
+    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(g_GEM_STATION, g_LPGBT_2P56G_LOOPBACK_TEST);
     
     ----------------- phase alignment ------------------
     constant MMCM_PS_DONE_TIMEOUT : unsigned(7 downto 0) := x"9f"; -- datasheet says MMCM should complete a phase shift in 12 clocks, but we check it with some margin, just in case
@@ -198,13 +197,17 @@ END COMPONENT  ;
     signal phase_offset_pos         : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_offset_neg         : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_zero_cross         : std_logic;
-    signal phase_zero_cross_psclk   : std_logic;
     signal phase_lock_update        : std_logic;
+
+    -- phase monitoring CDC to psclk domain
+    signal phase_lock_update_psclk  : std_logic;
+    signal phase_lock_ack_psclk     : std_logic;
+    signal phase_lock_ack_psclk_dly : std_logic;
+    signal phase_lock_data_psclk    : std_logic_vector(33 downto 0) := (others => '0');
+    signal phase_zero_cross_psclk   : std_logic;
     signal phase_locked_psclk       : std_logic;
     signal phase_offset_pos_psclk   : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_offset_neg_psclk   : std_logic_vector(15 downto 0) := (others => '0');
-    signal phase_lock_update_psclk : std_logic;
-    signal phase_lock_update1_psclk : std_logic;
    
     -- control signals moved to mmcm_ps_clk domain
     signal ctrl_psclk               : t_ttc_clk_ctrl;
@@ -259,10 +262,10 @@ begin
             I => clk_40_ttc_ibufgds
         );
         
-    -- Main MMCM
-    i_main_mmcm : MMCME2_ADV
+    -- Phase shift MMCM
+    i_ps_mmcm : MMCME2_ADV
         generic map(
-            BANDWIDTH            => "OPTIMIZED",
+            BANDWIDTH            => "OPTIMIZED", -- TODO: try HIGH and/or LOW
             CLKOUT4_CASCADE      => false,
             COMPENSATION         => "ZHOLD",
             STARTUP_WAIT         => false,
@@ -270,45 +273,23 @@ begin
             CLKFBOUT_MULT_F      => CFG_CLKFBOUT_MULT,
             CLKFBOUT_PHASE       => 0.000,
             CLKFBOUT_USE_FINE_PS => true,
-            CLKOUT0_DIVIDE_F     => 24.000,
+            CLKOUT0_DIVIDE_F     => 3.000,
             CLKOUT0_PHASE        => 0.000,
             CLKOUT0_DUTY_CYCLE   => 0.500,
             CLKOUT0_USE_FINE_PS  => false,
-            CLKOUT1_DIVIDE       => 12,
+            CLKOUT1_DIVIDE       => 6,
             CLKOUT1_PHASE        => 0.000,
             CLKOUT1_DUTY_CYCLE   => 0.500,
             CLKOUT1_USE_FINE_PS  => false,
-            CLKOUT2_DIVIDE       => 8,
-            CLKOUT2_PHASE        => 0.000,
-            CLKOUT2_DUTY_CYCLE   => 0.500,
-            CLKOUT2_USE_FINE_PS  => false,
-            CLKOUT3_DIVIDE       => 6,
-            CLKOUT3_PHASE        => 0.000,
-            CLKOUT3_DUTY_CYCLE   => 0.500,
-            CLKOUT3_USE_FINE_PS  => false,
-            CLKOUT4_DIVIDE       => 3,
-            CLKOUT4_PHASE        => 0.000,
-            CLKOUT4_DUTY_CYCLE   => 0.500,
-            CLKOUT4_USE_FINE_PS  => false,
             CLKIN1_PERIOD        => CFG_CLKIN1_PERIOD,
             REF_JITTER1          => 0.010)
         port map(
             -- Output clocks
-            CLKFBOUT     => clkfbout,
-            CLKFBOUTB    => open,
-            CLKOUT0      => clk_40,
-            CLKOUT0B     => open,
-            CLKOUT1      => clk_80,
-            CLKOUT1B     => open,
-            CLKOUT2      => clk_120,
-            CLKOUT2B     => open,
-            CLKOUT3      => clk_160,
-            CLKOUT3B     => open,
-            CLKOUT4      => clk_320,
-            CLKOUT5      => open,
-            CLKOUT6      => open,
+            CLKFBOUT     => ps_clkfbout,
+            CLKOUT0      => clk_320,
+            CLKOUT1      => clk_160,
             -- Input clock control
-            CLKFBIN      => clkfbin,
+            CLKFBIN      => ps_clkfbin,
             CLKIN1       => clkin,
             CLKIN2       => '0',
             -- Tied to always select the primary input clock
@@ -328,11 +309,82 @@ begin
             PSINCDEC     => (mmcm_ps_incdec and not ctrl_psclk.pa_manual_shift_ovrd) or (ctrl_psclk.pa_manual_shift_dir and ctrl_psclk.pa_manual_shift_ovrd),
             PSDONE       => mmcm_ps_done,
             -- Other control and status signals
-            LOCKED       => mmcm_locked_raw,
+            LOCKED       => psmmcm_locked,
             CLKINSTOPPED => open,
             CLKFBSTOPPED => open,
             PWRDWN       => '0',
             RST          => ctrl_psclk.reset_mmcm
+        );
+    
+    ps_clkfbin <= ps_clkfbout; -- use internal feedback for better performance, because we don't care about the skew
+    
+        
+    -- Main MMCM for frequency synthesis (we are using fractional divider here, so dynamic phase shifting is not allowed)
+    -- VCO freq = 1200MHz
+    i_main_mmcm : MMCME2_ADV
+        generic map(
+            BANDWIDTH            => "OPTIMIZED",
+            CLKOUT4_CASCADE      => false,
+            COMPENSATION         => "ZHOLD",
+            STARTUP_WAIT         => false,
+            DIVCLK_DIVIDE        => 1,
+            CLKFBOUT_MULT_F      => 3.750, -- 1200MHz VCO freq
+            CLKFBOUT_PHASE       => 0.000,
+            CLKFBOUT_USE_FINE_PS => false,
+            CLKOUT0_DIVIDE_F     => 6.000,
+            CLKOUT0_PHASE        => 0.000,
+            CLKOUT0_DUTY_CYCLE   => 0.500,
+            CLKOUT0_USE_FINE_PS  => false,
+            CLKOUT1_DIVIDE       => 10,
+            CLKOUT1_PHASE        => 0.000,
+            CLKOUT1_DUTY_CYCLE   => 0.500,
+            CLKOUT1_USE_FINE_PS  => false,
+            CLKOUT2_DIVIDE       => 15,
+            CLKOUT2_PHASE        => 0.000,
+            CLKOUT2_DUTY_CYCLE   => 0.500,
+            CLKOUT2_USE_FINE_PS  => false,
+            CLKOUT3_DIVIDE       => 30,
+            CLKOUT3_PHASE        => 0.000,
+            CLKOUT3_DUTY_CYCLE   => 0.500,
+            CLKOUT3_USE_FINE_PS  => false,
+            CLKIN1_PERIOD        => 3.125, -- 320MHz in
+            REF_JITTER1          => 0.010)
+        port map(
+            -- Output clocks
+            CLKFBOUT     => clkfbout,
+            CLKOUT0      => clk_200,
+            CLKOUT1      => clk_120,
+            CLKOUT2      => clk_80,
+            CLKOUT3      => clk_40,
+            CLKOUT4      => open,
+            CLKOUT5      => open,
+            CLKOUT6      => open,
+            -- Input clock control
+            CLKFBIN      => clkfbin,
+            CLKIN1       => ttc_clocks_bufg.clk_320,
+            CLKIN2       => '0',
+            -- Tied to always select the primary input clock
+            CLKINSEL     => '1',
+
+            -- Ports for dynamic reconfiguration
+            DADDR        => (others => '0'),
+            DCLK         => '0',
+            DEN          => '0',
+            DI           => (others => '0'),
+            DO           => open,
+            DRDY         => open,
+            DWE          => '0',
+            -- Ports for dynamic phase shift
+            PSCLK        => mmcm_ps_clk,
+            PSEN         => '0',
+            PSINCDEC     => '0',
+            PSDONE       => open,
+            -- Other control and status signals
+            LOCKED       => mmcm_locked_raw,
+            CLKINSTOPPED => open,
+            CLKFBSTOPPED => open,
+            PWRDWN       => '0',
+            RST          => not psmmcm_locked
         );
 
     -- Output buffering
@@ -362,6 +414,12 @@ begin
             I => clk_160
         );
 
+    i_bufg_clk_200 : BUFG
+        port map(
+            O => ttc_clocks_bufg.clk_200,
+            I => clk_200
+        );
+
     i_bufg_clk_320 : BUFG
         port map(
             O => ttc_clocks_bufg.clk_320,
@@ -377,7 +435,15 @@ begin
     -- In case of the MGT refclk as the source, we have to align the MMCM 40MHz output to the backplane 40MHz clk manually. This has better clock performance, but the phase management can be tricky in CMS conditions
 
     clkin <= clk_gbt_mgt_txout_i;
-    clkfbin <= clkfbout; -- use internal feedback for better performance, because we don't care about the skew
+    
+    -- we need the clocks of the second MMCM to be in phase with the first one, so using a BUFG feedback path
+    i_clkfb_bufg : BUFG
+        port map(
+            O => clkfbout,
+            I => clkfbin
+        );
+    
+--    clkfbin <= clkfbout; -- use internal feedback for better performance, because we don't care about the skew
 
     ----------------------------------------------------------
     --------- Phase Alignment to TTC backplane clock ---------
@@ -403,10 +469,14 @@ begin
                 searching_unlock <= '0';
                 mmcm_ps_incdec <= '0';
                 shift_cnt <= (others => '0');
+                phase_lock_ack_psclk <= '0';
+                phase_lock_ack_psclk_dly <= '0';
             else
                 sync_done_flag <= '0';
                 mmcm_ps_en <= '0';
                 mmcm_ps_done_timer <= (others => '0');
+                phase_lock_ack_psclk_dly <= phase_lock_ack_psclk;
+                phase_lock_ack_psclk <= '0';
                 
                 case pa_state is
                     
@@ -414,6 +484,7 @@ begin
                     when IDLE =>
                         -- wait for the MMCM to be locked, and TTC clk reported as present, and phase lock to be updated before moving forward
                         if (mmcm_locked = '1' and ttc_clk_present_psclk = '1' and phase_lock_update_psclk = '1') then
+                            phase_lock_ack_psclk <= '1';
                             pa_state <= FIND_UNLOCK;
                         end if;
                         
@@ -763,16 +834,6 @@ begin
     
     -- transfer the lockmon signals to psclk domain
     
-    i_sync_phase_locked_psclk : entity work.synch
-        generic map(
-            N_STAGES => 2
-        )
-        port map(
-            async_i => phase_locked,
-            clk_i   => mmcm_ps_clk,
-            sync_o  => phase_locked_psclk
-        );
-    
     i_sync_ttc_clk_present_psclk : entity work.synch
         generic map(
             N_STAGES => 2
@@ -782,37 +843,30 @@ begin
             clk_i   => mmcm_ps_clk,
             sync_o  => ttc_clk_present_psclk
         );
-
-    i_sync_zero_cross_psclk : entity work.synch
+    
+    i_phasemon_update_cdc : xpm_cdc_handshake
         generic map(
-            N_STAGES => 2
+            DEST_EXT_HSK   => 0,
+            DEST_SYNC_FF   => 4,
+            SRC_SYNC_FF    => 4,
+            WIDTH          => 34
         )
         port map(
-            async_i => phase_zero_cross,
-            clk_i   => mmcm_ps_clk,
-            sync_o  => phase_zero_cross_psclk
-        );
-    
-    i_sync_phase_lock_update : entity work.oneshot_cross_domain
-        port map(
-            reset_i       => ttc_phase_meas_reset,
-            input_clk_i   => ttc_clocks_bufg.clk_40,
-            oneshot_clk_i => mmcm_ps_clk,
-            input_i       => phase_lock_update,
-            oneshot_o     => phase_lock_update1_psclk
-        );
-    
-    process (mmcm_ps_clk)
-    begin
-        if rising_edge(mmcm_ps_clk) then
-            phase_lock_update_psclk <= phase_lock_update1_psclk;
-            if (phase_lock_update1_psclk = '1') then
-                phase_offset_pos_psclk <= phase_offset_pos;
-                phase_offset_neg_psclk <= phase_offset_neg;
-            end if;
-        end if;
-    end process;
-    
+            src_clk  => ttc_clocks_bufg.clk_40,
+            src_in   => phase_locked & phase_zero_cross & phase_offset_pos & phase_offset_neg,
+            src_send => phase_lock_update,
+            src_rcv  => open,
+            dest_clk => mmcm_ps_clk,
+            dest_req => phase_lock_update_psclk,
+            dest_ack => phase_lock_ack_psclk_dly,
+            dest_out => phase_lock_data_psclk
+        );    
+
+    phase_locked_psclk <= phase_lock_data_psclk(33);
+    phase_zero_cross_psclk <= phase_lock_data_psclk(32);
+    phase_offset_pos_psclk <= phase_lock_data_psclk(31 downto 16);
+    phase_offset_neg_psclk <= phase_lock_data_psclk(15 downto 0);
+
     -------------- DEBUG -------------- 
     
 --    i_clk_phase_check : entity work.clk_phase_check_v7

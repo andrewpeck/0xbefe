@@ -3,12 +3,14 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date: 05/05/2020
--- Module Name: GTH_SINGLE_TX_10p24g_RX_3p2g
+-- Module Name: GTH_SINGLE_TX_1p25g_RX_4p0g
 -- Project Name: GEM_AMC
--- Description: raw 10.24Gb/s TX & 8b10b 3.2Gb/s RX. The TX is intended to be used with the LpGBT core, and RX is for receiving trigger data from OH. Both TX and RX elastic buffers are bypassed, and there is no encoding on TX, and RX uses 8b10b.
---              the TX user bus width is selectable between 32 and 64 bits using the g_TX_BUS_WIDTH and g_RX_BUS_WIDTH generics. RX user bus is 16 bits wide.
---              the TX usrclk has to be 320MHz, and TX usrclk2 has to be 320MHz when 32 bit bus is selected, and 160MHz when 64 bit bus is selected. The RX usrclk and usrclk2 have to be 160MHz.
---              the TX is using a QPLL, and the RX is using a CPLL. The CPLL expects a 160MHz refclk, for TX see QPLL configuration to determine the refclk frequency (normally 320MHz). 
+-- Description: 8b10b 1.25Gb/s TX & 8b10b 4.0Gb/s RX. The TX is intended to be used for GbE (local DAQ), and RX is for receiving trigger data from OH.
+--              RX elastic buffers are bypassed, TX is using the buffer and clock correction using 0x50BC words
+--              Both TX and RX user bus width is 16 bits
+--              TX refclk should be 200.00MHz, userclk should be 62.5MHz
+--              The RX refclk should be 320.64MHz, and usrclk should be 200.4MHz
+--              the TX is using a CPLL, and the RX is using a QPLL. The CPLL expects a 200MHz refclk, for TX see QPLL configuration to determine the refclk frequency (normally 320.64MHz). 
 --              only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").
 -- 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,13 +31,12 @@ use work.gem_pkg.all;
 --============================================================================
 --                                                          Entity declaration
 --============================================================================
-entity gth_single_tx_10p24g_rx_3p2g is
+entity gth_single_tx_1p25g_rx_4p0g is
   generic
     (
       -- Simulation attributes
       g_GT_SIM_GTRESET_SPEEDUP : string := "TRUE";  -- Set to "TRUE" to speed up sim reset
-      g_RX_REFCLK_01           : integer range 0 to 1 := 0; -- selects which ref clock should be used for RX
-      g_TX_BUS_WIDTH           : integer range 0 to 64 := 32 -- select the TX bus width, valid options are 32 and 64. Note that when using 64 bit bus, the TXUSRCLK2 must be half the frequency of the TXUSRCLK, and both clocks have to come from the same MMCM on low skew buffer 
+      g_TX_REFCLK_01           : integer range 0 to 1 := 0 -- selects which ref clock should be used for RX
       );
   port
     (
@@ -71,19 +72,17 @@ entity gth_single_tx_10p24g_rx_3p2g is
       );
 
 
-end gth_single_tx_10p24g_rx_3p2g;
+end gth_single_tx_1p25g_rx_4p0g;
 
 --============================================================================
 --                                                        Architecture section
 --============================================================================
-architecture gth_single_tx_10p24g_rx_3p2g_arch of gth_single_tx_10p24g_rx_3p2g is
+architecture gth_single_tx_1p25g_rx_4p0g_arch of gth_single_tx_1p25g_rx_4p0g is
 
 
 --============================================================================
 --                                                         Signal declarations
 --============================================================================
-
-  signal s_txdata             : std_logic_vector(63 downto 0);
 
   -- dummy signals to surpress synth. warnings
   signal s_rxdata_float        : std_logic_vector(47 downto 0);
@@ -115,25 +114,15 @@ architecture gth_single_tx_10p24g_rx_3p2g_arch of gth_single_tx_10p24g_rx_3p2g i
 begin
 
   -- CPLL is used
-  g_ref_clk0: if g_RX_REFCLK_01 = 0 generate
+  g_ref_clk0: if g_TX_REFCLK_01 = 0 generate
     refclks(0) <= gth_gt_clk_i.GTREFCLK0;
   end generate;
 
-  g_ref_clk1: if g_RX_REFCLK_01 = 1 generate
+  g_ref_clk1: if g_TX_REFCLK_01 = 1 generate
     refclks(1) <= gth_gt_clk_i.GTREFCLK1;
   end generate;
 
 --  s_cpll_pd <= '0';
-
-  -- select the user bus width
-  g_64b_tx_bus : if g_TX_BUS_WIDTH = 64 generate
-      s_txdata <= gth_tx_data_i.txdata;
-  end generate;
-  
-  g_not_64b_tx_bus : if g_TX_BUS_WIDTH /= 64 generate
-      s_txdata(g_TX_BUS_WIDTH - 1 downto 0) <= gth_tx_data_i.txdata(g_TX_BUS_WIDTH - 1 downto 0);
-      s_txdata(63 downto g_TX_BUS_WIDTH) <= (others => '0');
-  end generate;
 
   ----------------------------- GTHE2 Instance  --------------------------   
 
@@ -142,135 +131,135 @@ begin
     (
       --_______________________ Simulation-Only Attributes ___________________
 
-      SIM_RECEIVER_DETECT_PASS => ("TRUE"),
-      SIM_RESET_SPEEDUP        => (g_GT_SIM_GTRESET_SPEEDUP),
-      SIM_TX_EIDLE_DRIVE_LEVEL => ("X"),
-      SIM_CPLLREFCLK_SEL       => ("001"),
-      SIM_VERSION              => ("2.0"),
+      SIM_RECEIVER_DETECT_PASS => "TRUE",
+      SIM_RESET_SPEEDUP        => g_GT_SIM_GTRESET_SPEEDUP,
+      SIM_TX_EIDLE_DRIVE_LEVEL => "X",
+      SIM_CPLLREFCLK_SEL       => "001",
+      SIM_VERSION              => "2.0",
 
 
       ------------------RX Byte and Word Alignment Attributes---------------
-      ALIGN_COMMA_DOUBLE => ("FALSE"),
-      ALIGN_COMMA_ENABLE => ("1111111111"),
-      ALIGN_COMMA_WORD   => (2),
-      ALIGN_MCOMMA_DET   => ("TRUE"),
-      ALIGN_MCOMMA_VALUE => ("1010000011"),
-      ALIGN_PCOMMA_DET   => ("TRUE"),
-      ALIGN_PCOMMA_VALUE => ("0101111100"),
-      SHOW_REALIGN_COMMA => ("TRUE"),
-      RXSLIDE_AUTO_WAIT  => (7),
-      RXSLIDE_MODE       => ("PCS"),
-      RX_SIG_VALID_DLY   => (10),
+      ALIGN_COMMA_DOUBLE => "FALSE",
+      ALIGN_COMMA_ENABLE => "1111111111",
+      ALIGN_COMMA_WORD   => 2,
+      ALIGN_MCOMMA_DET   => "TRUE",
+      ALIGN_MCOMMA_VALUE => "1010000011",
+      ALIGN_PCOMMA_DET   => "TRUE",
+      ALIGN_PCOMMA_VALUE => "0101111100",
+      SHOW_REALIGN_COMMA => "FALSE",
+      RXSLIDE_AUTO_WAIT  => 7,
+      RXSLIDE_MODE       => "PCS",
+      RX_SIG_VALID_DLY   => 10,
 
       ------------------RX 8B/10B Decoder Attributes---------------
-      RX_DISPERR_SEQ_MATCH => ("TRUE"),
-      DEC_MCOMMA_DETECT    => ("TRUE"),
-      DEC_PCOMMA_DETECT    => ("TRUE"),
-      DEC_VALID_COMMA_ONLY => ("FALSE"),
+      RX_DISPERR_SEQ_MATCH => "TRUE",
+      DEC_MCOMMA_DETECT    => "TRUE",
+      DEC_PCOMMA_DETECT    => "TRUE",
+      DEC_VALID_COMMA_ONLY => "FALSE",
 
       ------------------------RX Clock Correction Attributes----------------------
-      CBCC_DATA_SOURCE_SEL => ("DECODED"),
-      CLK_COR_SEQ_2_USE    => ("FALSE"),
-      CLK_COR_KEEP_IDLE    => ("FALSE"),
-      CLK_COR_MAX_LAT      => (10),
-      CLK_COR_MIN_LAT      => (8),
-      CLK_COR_PRECEDENCE   => ("TRUE"),
-      CLK_COR_REPEAT_WAIT  => (0),
-      CLK_COR_SEQ_LEN      => (1),
-      CLK_COR_SEQ_1_ENABLE => ("1111"),
-      CLK_COR_SEQ_1_1      => ("0100000000"),
-      CLK_COR_SEQ_1_2      => ("0000000000"),
-      CLK_COR_SEQ_1_3      => ("0000000000"),
-      CLK_COR_SEQ_1_4      => ("0000000000"),
-      CLK_CORRECT_USE      => ("FALSE"),
-      CLK_COR_SEQ_2_ENABLE => ("1111"),
-      CLK_COR_SEQ_2_1      => ("0100000000"),
-      CLK_COR_SEQ_2_2      => ("0000000000"),
-      CLK_COR_SEQ_2_3      => ("0000000000"),
-      CLK_COR_SEQ_2_4      => ("0000000000"),
+      CBCC_DATA_SOURCE_SEL => "DECODED",
+      CLK_COR_SEQ_2_USE    => "FALSE",
+      CLK_COR_KEEP_IDLE    => "FALSE",
+      CLK_COR_MAX_LAT      => 10,
+      CLK_COR_MIN_LAT      => 8,
+      CLK_COR_PRECEDENCE   => "TRUE",
+      CLK_COR_REPEAT_WAIT  => 0,
+      CLK_COR_SEQ_LEN      => 1,
+      CLK_COR_SEQ_1_ENABLE => "1111",
+      CLK_COR_SEQ_1_1      => "0100000000",
+      CLK_COR_SEQ_1_2      => "0000000000",
+      CLK_COR_SEQ_1_3      => "0000000000",
+      CLK_COR_SEQ_1_4      => "0000000000",
+      CLK_CORRECT_USE      => "FALSE",
+      CLK_COR_SEQ_2_ENABLE => "1111",
+      CLK_COR_SEQ_2_1      => "0100000000",
+      CLK_COR_SEQ_2_2      => "0000000000",
+      CLK_COR_SEQ_2_3      => "0000000000",
+      CLK_COR_SEQ_2_4      => "0000000000",
 
       ------------------------RX Channel Bonding Attributes----------------------
-      CHAN_BOND_KEEP_ALIGN   => ("FALSE"),
-      CHAN_BOND_MAX_SKEW     => (1),
-      CHAN_BOND_SEQ_LEN      => (1),
-      CHAN_BOND_SEQ_1_1      => ("0000000000"),
-      CHAN_BOND_SEQ_1_2      => ("0000000000"),
-      CHAN_BOND_SEQ_1_3      => ("0000000000"),
-      CHAN_BOND_SEQ_1_4      => ("0000000000"),
-      CHAN_BOND_SEQ_1_ENABLE => ("1111"),
-      CHAN_BOND_SEQ_2_1      => ("0000000000"),
-      CHAN_BOND_SEQ_2_2      => ("0000000000"),
-      CHAN_BOND_SEQ_2_3      => ("0000000000"),
-      CHAN_BOND_SEQ_2_4      => ("0000000000"),
-      CHAN_BOND_SEQ_2_ENABLE => ("1111"),
-      CHAN_BOND_SEQ_2_USE    => ("FALSE"),
-      FTS_DESKEW_SEQ_ENABLE  => ("1111"),
-      FTS_LANE_DESKEW_CFG    => ("1111"),
-      FTS_LANE_DESKEW_EN     => ("FALSE"),
+      CHAN_BOND_KEEP_ALIGN   => "FALSE",
+      CHAN_BOND_MAX_SKEW     => 1,
+      CHAN_BOND_SEQ_LEN      => 1,
+      CHAN_BOND_SEQ_1_1      => "0000000000",
+      CHAN_BOND_SEQ_1_2      => "0000000000",
+      CHAN_BOND_SEQ_1_3      => "0000000000",
+      CHAN_BOND_SEQ_1_4      => "0000000000",
+      CHAN_BOND_SEQ_1_ENABLE => "1111",
+      CHAN_BOND_SEQ_2_1      => "0000000000",
+      CHAN_BOND_SEQ_2_2      => "0000000000",
+      CHAN_BOND_SEQ_2_3      => "0000000000",
+      CHAN_BOND_SEQ_2_4      => "0000000000",
+      CHAN_BOND_SEQ_2_ENABLE => "1111",
+      CHAN_BOND_SEQ_2_USE    => "FALSE",
+      FTS_DESKEW_SEQ_ENABLE  => "1111",
+      FTS_LANE_DESKEW_CFG    => "1111",
+      FTS_LANE_DESKEW_EN     => "FALSE",
 
       ---------------------------RX Margin Analysis Attributes----------------------------
-      ES_CONTROL     => ("000000"),
-      ES_ERRDET_EN   => ("FALSE"),
-      ES_EYE_SCAN_EN => ("TRUE"),
-      ES_HORZ_OFFSET => (x"000"),
-      ES_PMA_CFG     => ("0000000000"),
-      ES_PRESCALE    => ("00000"),
-      ES_QUALIFIER   => (x"00000000000000000000"),
-      ES_QUAL_MASK   => (x"00000000000000000000"),
-      ES_SDATA_MASK  => (x"00000000000000000000"),
-      ES_VERT_OFFSET => ("000000000"),
+      ES_CONTROL     => "000000",
+      ES_ERRDET_EN   => "FALSE",
+      ES_EYE_SCAN_EN => "TRUE",
+      ES_HORZ_OFFSET => "000000000000",
+      ES_PMA_CFG     => "0000000000",
+      ES_PRESCALE    => "00000",
+      ES_QUALIFIER   => "00000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      ES_QUAL_MASK   => "00000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      ES_SDATA_MASK  => "00000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      ES_VERT_OFFSET => "000000000",
 
       -------------------------FPGA RX Interface Attributes-------------------------
-      RX_DATA_WIDTH => (20),
+      RX_DATA_WIDTH => 20,
 
       ---------------------------PMA Attributes----------------------------
-      OUTREFCLK_SEL_INV => ("11"),
-      PMA_RSV           => ("00000000000000000000000010000000"),
-      PMA_RSV2          => (x"1C00000A"),
-      PMA_RSV3          => ("00"),
-      PMA_RSV4          => (x"0008"),
-      RX_BIAS_CFG       => ("000011000000000000010000"),
-      DMONITOR_CFG      => (x"000A00"),
-      RX_CM_SEL         => ("00"),
-      RX_CM_TRIM        => ("0000"),
-      RX_DEBUG_CFG      => ("00000000000000"),
-      RX_OS_CFG         => ("0000010000000"),
-      TERM_RCAL_CFG     => ("100001000010000"),
-      TERM_RCAL_OVRD    => ("000"),
-      TST_RSV           => (x"00000000"),
-      RX_CLK25_DIV      => (7),
-      TX_CLK25_DIV      => (13),
-      UCODEER_CLR       => ('0'),
+      OUTREFCLK_SEL_INV => "11",
+      PMA_RSV           => "00000000000000000000000010000000",
+      PMA_RSV2          => "00011100000000000000000000001010",
+      PMA_RSV3          => "00",
+      PMA_RSV4          => "000000000001000",
+      RX_BIAS_CFG       => "000011000000000000010000",
+      DMONITOR_CFG      => "000000000000101000000000",
+      RX_CM_SEL         => "00",
+      RX_CM_TRIM        => "0000",
+      RX_DEBUG_CFG      => "00000000000000",
+      RX_OS_CFG         => "0000010000000",
+      TERM_RCAL_CFG     => "100001000010000",
+      TERM_RCAL_OVRD    => "000",
+      TST_RSV           => "00000000000000000000000000000000",
+      RX_CLK25_DIV      => 13,
+      TX_CLK25_DIV      => 8,
+      UCODEER_CLR       => '0',
 
       ---------------------------PCI Express Attributes----------------------------
-      PCS_PCIE_EN => ("FALSE"),
+      PCS_PCIE_EN => "FALSE",
 
       ---------------------------PCS Attributes----------------------------
-      PCS_RSVD_ATTR => (x"000000000000"),
+      PCS_RSVD_ATTR => "000000000000000000000000000000000000000000000000",
 
       -------------RX Buffer Attributes------------
-      RXBUF_ADDR_MODE            => ("FAST"),
-      RXBUF_EIDLE_HI_CNT         => ("1000"),
-      RXBUF_EIDLE_LO_CNT         => ("0000"),
-      RXBUF_EN                   => ("FALSE"),
-      RX_BUFFER_CFG              => ("000000"),
-      RXBUF_RESET_ON_CB_CHANGE   => ("TRUE"),
-      RXBUF_RESET_ON_COMMAALIGN  => ("FALSE"),
-      RXBUF_RESET_ON_EIDLE       => ("FALSE"),
-      RXBUF_RESET_ON_RATE_CHANGE => ("TRUE"),
-      RXBUFRESET_TIME            => ("00001"),
-      RXBUF_THRESH_OVFLW         => (61),
-      RXBUF_THRESH_OVRD          => ("FALSE"),
-      RXBUF_THRESH_UNDFLW        => (4),
-      RXDLY_CFG                  => (x"001F"),
-      RXDLY_LCFG                 => (x"030"),
-      RXDLY_TAP_CFG              => (x"0000"),
-      RXPH_CFG                   => (x"C00002"),
-      RXPHDLY_CFG                => (x"084020"),
-      RXPH_MONITOR_SEL           => ("00000"),
-      RX_XCLK_SEL                => ("RXUSR"),
-      RX_DDI_SEL                 => ("000000"),
-      RX_DEFER_RESET_BUF_EN      => ("TRUE"),
+      RXBUF_ADDR_MODE            => "FAST",
+      RXBUF_EIDLE_HI_CNT         => "1000",
+      RXBUF_EIDLE_LO_CNT         => "0000",
+      RXBUF_EN                   => "FALSE",
+      RX_BUFFER_CFG              => "000000",
+      RXBUF_RESET_ON_CB_CHANGE   => "TRUE",
+      RXBUF_RESET_ON_COMMAALIGN  => "FALSE",
+      RXBUF_RESET_ON_EIDLE       => "FALSE",
+      RXBUF_RESET_ON_RATE_CHANGE => "TRUE",
+      RXBUFRESET_TIME            => "00001",
+      RXBUF_THRESH_OVFLW         => 61,
+      RXBUF_THRESH_OVRD          => "FALSE",
+      RXBUF_THRESH_UNDFLW        => 4,
+      RXDLY_CFG                  => "0000000000011111",
+      RXDLY_LCFG                 => "000110000",
+      RXDLY_TAP_CFG              => "0000000000000000",
+      RXPH_CFG                   => "110000000000000000000010",
+      RXPHDLY_CFG                => "000010000100000000100000",
+      RXPH_MONITOR_SEL           => "00000",
+      RX_XCLK_SEL                => "RXUSR",
+      RX_DDI_SEL                 => "000000",
+      RX_DEFER_RESET_BUF_EN      => "TRUE",
 
       -----------------------CDR Attributes-------------------------
 
@@ -289,214 +278,214 @@ begin
       --For SATA Gen2 GTP- set RXCDR_CFG=83'h0_0000_47FE_2060_2448_1010
 
       --For SATA Gen1 GTP- set RXCDR_CFG=83'h0_0000_47FE_1060_2448_1010
-      RXCDR_CFG               => (x"0002007FE2000C2080018"),
-      RXCDR_FR_RESET_ON_EIDLE => ('0'),
-      RXCDR_HOLD_DURING_EIDLE => ('0'),
-      RXCDR_PH_RESET_ON_EIDLE => ('0'),
-      RXCDR_LOCK_CFG          => ("010101"),
+      RXCDR_CFG               => "00000000000001000000000011111111110000100000000000011000010000010000000000000011000",
+      RXCDR_FR_RESET_ON_EIDLE => '0',
+      RXCDR_HOLD_DURING_EIDLE => '0',
+      RXCDR_PH_RESET_ON_EIDLE => '0',
+      RXCDR_LOCK_CFG          => "010101",
 
       -------------------RX Initialization and Reset Attributes-------------------
-      RXCDRFREQRESET_TIME => ("00001"),
-      RXCDRPHRESET_TIME   => ("00001"),
-      RXISCANRESET_TIME   => ("00001"),
-      RXPCSRESET_TIME     => ("00001"),
-      RXPMARESET_TIME     => ("00011"),
+      RXCDRFREQRESET_TIME => "00001",
+      RXCDRPHRESET_TIME   => "00001",
+      RXISCANRESET_TIME   => "00001",
+      RXPCSRESET_TIME     => "00001",
+      RXPMARESET_TIME     => "00011",
 
       -------------------RX OOB Signaling Attributes-------------------
-      RXOOB_CFG => ("0000110"),
+      RXOOB_CFG => "0000110",
 
       -------------------------RX Gearbox Attributes---------------------------
-      RXGEARBOX_EN => ("FALSE"),
-      GEARBOX_MODE => ("000"),
+      RXGEARBOX_EN => "FALSE",
+      GEARBOX_MODE => "000",
 
       -------------------------PRBS Detection Attribute-----------------------
-      RXPRBS_ERR_LOOPBACK => ('0'),
+      RXPRBS_ERR_LOOPBACK => '0',
 
       -------------Power-Down Attributes----------
-      PD_TRANS_TIME_FROM_P2 => (x"03c"),
-      PD_TRANS_TIME_NONE_P2 => (x"3c"),
-      PD_TRANS_TIME_TO_P2   => (x"64"),
+      PD_TRANS_TIME_FROM_P2 => "000000111100",
+      PD_TRANS_TIME_NONE_P2 => "00111100",
+      PD_TRANS_TIME_TO_P2   => "01100100",
 
       -------------RX OOB Signaling Attributes----------
-      SAS_MAX_COM        => (64),
-      SAS_MIN_COM        => (36),
-      SATA_BURST_SEQ_LEN => ("0101"),
-      SATA_BURST_VAL     => ("100"),
-      SATA_EIDLE_VAL     => ("100"),
-      SATA_MAX_BURST     => (8),
-      SATA_MAX_INIT      => (21),
-      SATA_MAX_WAKE      => (7),
-      SATA_MIN_BURST     => (4),
-      SATA_MIN_INIT      => (12),
-      SATA_MIN_WAKE      => (4),
+      SAS_MAX_COM        => 64,
+      SAS_MIN_COM        => 36,
+      SATA_BURST_SEQ_LEN => "0101",
+      SATA_BURST_VAL     => "100",
+      SATA_EIDLE_VAL     => "100",
+      SATA_MAX_BURST     => 8,
+      SATA_MAX_INIT      => 21,
+      SATA_MAX_WAKE      => 7,
+      SATA_MIN_BURST     => 4,
+      SATA_MIN_INIT      => 12,
+      SATA_MIN_WAKE      => 4,
 
       -------------RX Fabric Clock Output Control Attributes----------
-      TRANS_TIME_RATE => (x"0E"),
+      TRANS_TIME_RATE => "00001110",
 
       --------------TX Buffer Attributes----------------
-      TXBUF_EN                   => ("FALSE"),
-      TXBUF_RESET_ON_RATE_CHANGE => ("TRUE"),
-      TXDLY_CFG                  => (x"001F"),
-      TXDLY_LCFG                 => (x"030"),
-      TXDLY_TAP_CFG              => (x"0000"),
-      TXPH_CFG                   => (x"0780"),
-      TXPHDLY_CFG                => (x"084020"),
-      TXPH_MONITOR_SEL           => ("00000"),
-      TX_XCLK_SEL                => ("TXUSR"),
+      TXBUF_EN                   => "TRUE",
+      TXBUF_RESET_ON_RATE_CHANGE => "TRUE",
+      TXDLY_CFG                  => "0000000000011111",
+      TXDLY_LCFG                 => "000110000",
+      TXDLY_TAP_CFG              => "0000000000000000",
+      TXPH_CFG                   => "0000011110000000",
+      TXPHDLY_CFG                => "000010000100000000100000",
+      TXPH_MONITOR_SEL           => "00000",
+      TX_XCLK_SEL                => "TXOUT",
 
       -------------------------FPGA TX Interface Attributes-------------------------
-      TX_DATA_WIDTH => (g_TX_BUS_WIDTH),
+      TX_DATA_WIDTH => 20,
 
       -------------------------TX Configurable Driver Attributes-------------------------
-      TX_DEEMPH0              => ("000000"),
-      TX_DEEMPH1              => ("000000"),
-      TX_EIDLE_ASSERT_DELAY   => ("110"),
-      TX_EIDLE_DEASSERT_DELAY => ("100"),
-      TX_LOOPBACK_DRIVE_HIZ   => ("FALSE"),
-      TX_MAINCURSOR_SEL       => ('0'),
-      TX_DRIVE_MODE           => ("DIRECT"),
-      TX_MARGIN_FULL_0        => ("1001110"),
-      TX_MARGIN_FULL_1        => ("1001001"),
-      TX_MARGIN_FULL_2        => ("1000101"),
-      TX_MARGIN_FULL_3        => ("1000010"),
-      TX_MARGIN_FULL_4        => ("1000000"),
-      TX_MARGIN_LOW_0         => ("1000110"),
-      TX_MARGIN_LOW_1         => ("1000100"),
-      TX_MARGIN_LOW_2         => ("1000010"),
-      TX_MARGIN_LOW_3         => ("1000000"),
-      TX_MARGIN_LOW_4         => ("1000000"),
+      TX_DEEMPH0              => "000000",
+      TX_DEEMPH1              => "000000",
+      TX_EIDLE_ASSERT_DELAY   => "110",
+      TX_EIDLE_DEASSERT_DELAY => "100",
+      TX_LOOPBACK_DRIVE_HIZ   => "FALSE",
+      TX_MAINCURSOR_SEL       => '0',
+      TX_DRIVE_MODE           => "DIRECT",
+      TX_MARGIN_FULL_0        => "1001110",
+      TX_MARGIN_FULL_1        => "1001001",
+      TX_MARGIN_FULL_2        => "1000101",
+      TX_MARGIN_FULL_3        => "1000010",
+      TX_MARGIN_FULL_4        => "1000000",
+      TX_MARGIN_LOW_0         => "1000110",
+      TX_MARGIN_LOW_1         => "1000100",
+      TX_MARGIN_LOW_2         => "1000010",
+      TX_MARGIN_LOW_3         => "1000000",
+      TX_MARGIN_LOW_4         => "1000000",
 
       -------------------------TX Gearbox Attributes--------------------------
-      TXGEARBOX_EN => ("FALSE"),
+      TXGEARBOX_EN => "FALSE",
 
       -------------------------TX Initialization and Reset Attributes--------------------------
-      TXPCSRESET_TIME => ("00001"),
-      TXPMARESET_TIME => ("00001"),
+      TXPCSRESET_TIME => "00001",
+      TXPMARESET_TIME => "00001",
 
       -------------------------TX Receiver Detection Attributes--------------------------
-      TX_RXDETECT_CFG => (x"1832"),
-      TX_RXDETECT_REF => ("100"),
+      TX_RXDETECT_CFG => "01100000110010",
+      TX_RXDETECT_REF => "100",
 
       ----------------------------CPLL Attributes----------------------------
-      CPLL_CFG        => (x"00BC07DC"),
-      CPLL_FBDIV      => (2),
-      CPLL_FBDIV_45   => (5),
-      CPLL_INIT_CFG   => (x"00001E"),
-      CPLL_LOCK_CFG   => (x"01E8"),
-      CPLL_REFCLK_DIV => (1),
-      RXOUT_DIV       => (1),
-      TXOUT_DIV       => (1),
-      SATA_CPLL_CFG   => ("VCO_3000MHZ"),
+      CPLL_CFG        => "00000101111000000011111011100",
+      CPLL_FBDIV      => 5,
+      CPLL_FBDIV_45   => 5,
+      CPLL_INIT_CFG   => "000000000000000000011110",
+      CPLL_LOCK_CFG   => "0000000111101000",
+      CPLL_REFCLK_DIV => 2,
+      RXOUT_DIV       => 2,
+      TXOUT_DIV       => 4,
+      SATA_CPLL_CFG   => "VCO_3000MHZ",
 
       --------------RX Initialization and Reset Attributes-------------
-      RXDFELPMRESET_TIME => ("0001111"),
+      RXDFELPMRESET_TIME => "0001111",
 
       --------------RX Equalizer Attributes-------------
-      RXLPM_HF_CFG                 => ("00001000000000"),
-      RXLPM_LF_CFG                 => ("001001000000000000"),
-      RX_DFE_GAIN_CFG              => (x"0020C0"),
-      RX_DFE_H2_CFG                => ("000000000000"),
-      RX_DFE_H3_CFG                => ("000001000000"),
-      RX_DFE_H4_CFG                => ("00011100000"),
-      RX_DFE_H5_CFG                => ("00011100000"),
-      RX_DFE_KL_CFG                => ("001000001000000000000001100010000"),
-      RX_DFE_LPM_CFG               => (x"0080"),
-      RX_DFE_LPM_HOLD_DURING_EIDLE => ('0'),
-      RX_DFE_UT_CFG                => ("00011100000000000"),
-      RX_DFE_VP_CFG                => ("00011101010100011"),
+      RXLPM_HF_CFG                 => "00001000000000",
+      RXLPM_LF_CFG                 => "001001000000000000",
+      RX_DFE_GAIN_CFG              => "00000000010000011000000",
+      RX_DFE_H2_CFG                => "000000000000",
+      RX_DFE_H3_CFG                => "000001000000",
+      RX_DFE_H4_CFG                => "00011100000",
+      RX_DFE_H5_CFG                => "00011100000",
+      RX_DFE_KL_CFG                => "001000001000000000000001100010000",
+      RX_DFE_LPM_CFG               => "0000000010000000",
+      RX_DFE_LPM_HOLD_DURING_EIDLE => '0',
+      RX_DFE_UT_CFG                => "00011100000000000",
+      RX_DFE_VP_CFG                => "00011101010100011",
 
       -------------------------Power-Down Attributes-------------------------
-      RX_CLKMUX_PD => ('1'),
-      TX_CLKMUX_PD => ('1'),
+      RX_CLKMUX_PD => '1',
+      TX_CLKMUX_PD => '1',
 
       -------------------------FPGA RX Interface Attribute-------------------------
-      RX_INT_DATAWIDTH => (0),
+      RX_INT_DATAWIDTH => 0,
 
       -------------------------FPGA TX Interface Attribute-------------------------
-      TX_INT_DATAWIDTH => (1),
+      TX_INT_DATAWIDTH => 0,
 
       ------------------TX Configurable Driver Attributes---------------
-      TX_QPI_STATUS_EN => ('0'),
+      TX_QPI_STATUS_EN => '0',
 
       ------------------ JTAG Attributes ---------------
-      ACJTAG_DEBUG_MODE       => ('0'),
-      ACJTAG_MODE             => ('0'),
-      ACJTAG_RESET            => ('0'),
-      ADAPT_CFG0              => (x"00C10"),
-      CFOK_CFG                => (x"24800040E80"),
-      CFOK_CFG2               => (x"20"),
-      CFOK_CFG3               => (x"20"),
-      ES_CLK_PHASE_SEL        => ('0'),
-      PMA_RSV5                => (x"0"),
-      RESET_POWERSAVE_DISABLE => ('0'),
-      USE_PCS_CLK_PHASE_SEL   => ('0'),
-      A_RXOSCALRESET          => ('0'),
+      ACJTAG_DEBUG_MODE       => '0',
+      ACJTAG_MODE             => '0',
+      ACJTAG_RESET            => '0',
+      ADAPT_CFG0              => "00000000110000010000",
+      CFOK_CFG                => "100100100000000000000001000000111010000000",
+      CFOK_CFG2               => "100000",
+      CFOK_CFG3               => "100000",
+      ES_CLK_PHASE_SEL        => '0',
+      PMA_RSV5                => "0000",
+      RESET_POWERSAVE_DISABLE => '0',
+      USE_PCS_CLK_PHASE_SEL   => '0',
+      A_RXOSCALRESET          => '0',
 
       ------------------ RX Phase Interpolator Attributes---------------
-      RXPI_CFG0 => ("00"),
-      RXPI_CFG1 => ("00"),
-      RXPI_CFG2 => ("00"),
-      RXPI_CFG3 => ("11"),
-      RXPI_CFG4 => ('1'),
-      RXPI_CFG5 => ('1'),
-      RXPI_CFG6 => ("001"),
+      RXPI_CFG0 => "00",
+      RXPI_CFG1 => "11",
+      RXPI_CFG2 => "11",
+      RXPI_CFG3 => "11",
+      RXPI_CFG4 => '0',
+      RXPI_CFG5 => '0',
+      RXPI_CFG6 => "100",
 
       --------------RX Decision Feedback Equalizer(DFE)-------------
-      RX_DFELPM_CFG0             => ("0110"),
-      RX_DFELPM_CFG1             => ('0'),
-      RX_DFELPM_KLKH_AGC_STUP_EN => ('1'),
-      RX_DFE_AGC_CFG0            => ("00"),
-      RX_DFE_AGC_CFG1            => ("010"),
-      RX_DFE_AGC_CFG2            => ("0000"),
-      RX_DFE_AGC_OVRDEN          => ('1'),
-      RX_DFE_H6_CFG              => (x"020"),
-      RX_DFE_H7_CFG              => (x"020"),
-      RX_DFE_KL_LPM_KH_CFG0      => ("01"),
-      RX_DFE_KL_LPM_KH_CFG1      => ("010"),
-      RX_DFE_KL_LPM_KH_CFG2      => ("0010"),
-      RX_DFE_KL_LPM_KH_OVRDEN    => ('1'),
-      RX_DFE_KL_LPM_KL_CFG0      => ("01"),
-      RX_DFE_KL_LPM_KL_CFG1      => ("010"),
-      RX_DFE_KL_LPM_KL_CFG2      => ("0010"),
-      RX_DFE_KL_LPM_KL_OVRDEN    => ('1'),
-      RX_DFE_ST_CFG              => (x"00E100000C003F"),
+      RX_DFELPM_CFG0             => "0110",
+      RX_DFELPM_CFG1             => '0',
+      RX_DFELPM_KLKH_AGC_STUP_EN => '1',
+      RX_DFE_AGC_CFG0            => "00",
+      RX_DFE_AGC_CFG1            => "010",
+      RX_DFE_AGC_CFG2            => "0000",
+      RX_DFE_AGC_OVRDEN          => '1',
+      RX_DFE_H6_CFG              => "00000100000",
+      RX_DFE_H7_CFG              => "00000100000",
+      RX_DFE_KL_LPM_KH_CFG0      => "01",
+      RX_DFE_KL_LPM_KH_CFG1      => "010",
+      RX_DFE_KL_LPM_KH_CFG2      => "0010",
+      RX_DFE_KL_LPM_KH_OVRDEN    => '1',
+      RX_DFE_KL_LPM_KL_CFG0      => "01",
+      RX_DFE_KL_LPM_KL_CFG1      => "010",
+      RX_DFE_KL_LPM_KL_CFG2      => "0010",
+      RX_DFE_KL_LPM_KL_OVRDEN    => '1',
+      RX_DFE_ST_CFG              => "000000111000010000000000000000000011000000000000111111",
 
       ------------------ TX Phase Interpolator Attributes---------------
-      TXPI_CFG0                  => ("00"),
-      TXPI_CFG1                  => ("00"),
-      TXPI_CFG2                  => ("00"),
-      TXPI_CFG3                  => ('0'),
-      TXPI_CFG4                  => ('0'),
-      TXPI_CFG5                  => ("100"),
-      TXPI_GREY_SEL              => ('0'),
-      TXPI_INVSTROBE_SEL         => ('0'),
-      TXPI_PPMCLK_SEL            => ("TXUSRCLK2"),
-      TXPI_PPM_CFG               => (x"00"),
-      TXPI_SYNFREQ_PPM           => ("001"),
-      TX_RXDETECT_PRECHARGE_TIME => (x"155CC"),
+      TXPI_CFG0                  => "00",
+      TXPI_CFG1                  => "00",
+      TXPI_CFG2                  => "00",
+      TXPI_CFG3                  => '0',
+      TXPI_CFG4                  => '0',
+      TXPI_CFG5                  => "100",
+      TXPI_GREY_SEL              => '0',
+      TXPI_INVSTROBE_SEL         => '0',
+      TXPI_PPMCLK_SEL            => "TXUSRCLK2",
+      TXPI_PPM_CFG               => "00000000",
+      TXPI_SYNFREQ_PPM           => "001",
+      TX_RXDETECT_PRECHARGE_TIME => "10101010111001100",
 
       ------------------ LOOPBACK Attributes---------------
-      LOOPBACK_CFG => ('0'),
+      LOOPBACK_CFG => '0',
 
       ------------------RX OOB Signalling Attributes---------------
-      RXOOB_CLK_CFG => ("PMA"),
+      RXOOB_CLK_CFG => "PMA",
 
       ------------------ CDR Attributes ---------------
-      RXOSCALRESET_TIME    => ("00011"),
-      RXOSCALRESET_TIMEOUT => ("00000"),
+      RXOSCALRESET_TIME    => "00011",
+      RXOSCALRESET_TIMEOUT => "00000",
 
       ------------------TX OOB Signalling Attributes---------------
-      TXOOB_CFG => ('0'),
+      TXOOB_CFG => '0',
 
       ------------------RX Buffer Attributes---------------
-      RXSYNC_MULTILANE => ('0'),
-      RXSYNC_OVRD      => ('0'),
-      RXSYNC_SKIP_DA   => ('0'),
+      RXSYNC_MULTILANE => '0',
+      RXSYNC_OVRD      => '0',
+      RXSYNC_SKIP_DA   => '0',
 
       ------------------TX Buffer Attributes---------------
-      TXSYNC_MULTILANE => ('0'),
-      TXSYNC_OVRD      => ('1'),
-      TXSYNC_SKIP_DA   => ('0')
+      TXSYNC_MULTILANE => '0',
+      TXSYNC_OVRD      => '0',
+      TXSYNC_SKIP_DA   => '0'
 
       )
 
@@ -536,10 +525,10 @@ begin
       GTREFCLKMONITOR            => open,
       QPLLCLK                    => gth_gt_clk_i.qpllclk,
       QPLLREFCLK                 => gth_gt_clk_i.qpllrefclk,
-      RXSYSCLKSEL                => "00", -- CPLL
-      TXSYSCLKSEL                => "11", -- QPLL
+      RXSYSCLKSEL                => "11", -- QPLL
+      TXSYSCLKSEL                => "00", -- CPLL
       ----------------- FPGA TX Interface Datapath Configuration  ----------------
-      TX8B10BEN                  => '0',
+      TX8B10BEN                  => '1',
       ------------------------------- Loopback Ports -----------------------------
       LOOPBACK                   => gth_misc_ctrl_i.loopback,
       ----------------------------- PCI Express Ports ----------------------------
@@ -769,7 +758,7 @@ begin
       TXPIPPMEN                  => '0',
       TXPIPPMOVRDEN              => '0',
       TXPIPPMPD                  => '0',
-      TXPIPPMSEL                 => '0',
+      TXPIPPMSEL                 => '1',
       TXPIPPMSTEPSIZE            => "00000",
       ---------------------- Transceiver Reset Mode Operation --------------------
       GTRESETSEL                 => '0',
@@ -779,8 +768,8 @@ begin
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
       TXHEADER                   => "000",
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
-      TXCHARDISPMODE             => "00000000",
-      TXCHARDISPVAL              => "00000000",
+      TXCHARDISPMODE             => gth_tx_data_i.txchardispmode,
+      TXCHARDISPVAL              => gth_tx_data_i.txchardispval,
       ------------------ Transmit Ports - FPGA TX Interface Ports ----------------
       TXUSRCLK                  => gth_gt_clk_i.txusrclk,
       TXUSRCLK2                 => gth_gt_clk_i.txusrclk2,
@@ -792,7 +781,7 @@ begin
       ------------------ Transmit Ports - Pattern Generator Ports ----------------
       TXPRBSFORCEERR            => gth_tx_ctrl_i.txprbsforceerr,
       ------------------ Transmit Ports - TX Buffer Bypass Ports -----------------
-      TXDLYBYPASS               => '0',
+      TXDLYBYPASS               => '1',
       TXDLYEN                   => gth_tx_init_i.TXDLYEN,
       TXDLYHOLD                 => '0',
       TXDLYOVRDEN               => '0',
@@ -823,7 +812,7 @@ begin
       TXMAINCURSOR              => gth_tx_ctrl_i.txmaincursor,
       TXPISOPD                  => '0',
       ------------------ Transmit Ports - TX Data Path interface -----------------
-      TXDATA                    => s_txdata,
+      TXDATA                    => gth_tx_data_i.txdata,
       ---------------- Transmit Ports - TX Driver and OOB signaling --------------
       GTHTXN                    => gth_tx_serial_o.gthtxn,
       GTHTXP                    => gth_tx_serial_o.gthtxp,
@@ -831,7 +820,7 @@ begin
       TXOUTCLK                  => gth_gt_clk_o.txoutclk,
       TXOUTCLKFABRIC            => open,
       TXOUTCLKPCS               => open,
-      TXOUTCLKSEL               => gth_tx_ctrl_i.TXOUTCLKSEL,
+      TXOUTCLKSEL               => "010",
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
@@ -856,7 +845,7 @@ begin
       ------------------ Transmit Ports - pattern Generator Ports ----------------
       TXPRBSSEL                 => gth_tx_ctrl_i.txprbssel,
       ----------- Transmit Transmit Ports - 8b10b Encoder Control Ports ----------
-      TXCHARISK                 => "00000000",
+      TXCHARISK                 => gth_tx_data_i.txcharisk,
       ----------------------- Tx Configurable Driver  Ports ----------------------
       TXQPISENN                 => open,
       TXQPISENP                 => open
@@ -890,7 +879,7 @@ begin
   s_cpll_reset <= gth_cpll_init_i.cpllreset;
   s_cpll_pd <= gth_cpll_init_i.cpllpd;
 
-end gth_single_tx_10p24g_rx_3p2g_arch;
+end gth_single_tx_1p25g_rx_4p0g_arch;
 --============================================================================
 --                                                            Architecture end
 --============================================================================

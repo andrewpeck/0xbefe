@@ -28,6 +28,7 @@ package ttc_pkg is
         clk_40              : std_logic;
         clk_80              : std_logic;
         clk_120             : std_logic;
+        clk_200             : std_logic;
         clk_160             : std_logic;
         clk_320             : std_logic;
     end record;
@@ -44,6 +45,8 @@ package ttc_pkg is
         calpulse   : std_logic;
         test_sync  : std_logic;
     end record;
+
+    type t_ttc_cmds_arr is array(integer range <>) of t_ttc_cmds;
 
     type t_ttc_conf is record
         cmd_bc0        : std_logic_vector(7 downto 0);

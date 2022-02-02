@@ -34,9 +34,12 @@
           <node id="NUM_OF_DMBS" address="0x0" mask="0x000000ff" permission="r"
                 description="Number of DMB inputs supported in this build"
                 fw_signal="std_logic_vector(to_unsigned(g_NUM_OF_DMBs, 8))"/>
+          <node id="SLR" address="0x0" mask="0x00000300" permission="r"
+                description="SLR number of this CSC block"
+                fw_signal="std_logic_vector(to_unsigned(g_SLR, 2))"/>
           <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
                 description="Indicates whether or not local DAQ link is supported by this firmware build"
-                fw_signal="'1' when CFG_USE_SPY_LINK else '0'"/>
+                fw_signal="'1' when CFG_USE_SPY_LINK(g_SLR) else '0'"/>
           <node id="DMB_LINK_CONFIG" address="0x5">
             <node id="DMB${DMB_IDX}" address="0x0"
                   description="DMB${DMB_IDX} link numbers"
@@ -44,30 +47,30 @@
               <node id="TYPE" address="0x0" mask="0x00000007" permission="r"
                     description="DMB${DMB_IDX} type: 0 = DMB, 1 = ODMB, 2 = ODMB5, 3 = ODMB7"
                     sw_enum="['DMB', 'ODMB', 'ODMB5', 'ODMB7']"
-                    fw_signal="std_logic_vector(to_unsigned(t_dmb_type'POS(CFG_DMB_CONFIG_ARR(${DMB_IDX}).dmb_type), 3))"/>
+                    fw_signal="std_logic_vector(to_unsigned(t_dmb_type'POS(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).dmb_type), 3))"/>
               <node id="NUM_RX_LINKS" address="0x0" mask="0x00000038" permission="r"
                     description="Number of RX links that DMB${DMB_IDX} uses"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).num_fibers, 3))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).num_fibers, 3))"/>
               <node id="TX_LINK" address="0x0" mask="0x0000ff00" permission="r"
                     description="DMB${DMB_IDX} TX link number"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).tx_fiber, 8))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).tx_fiber, 8))"/>
               <node id="RX0_LINK" address="0x0" mask="0x00ff0000" permission="r"
                     description="DMB${DMB_IDX} RX0 link number"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(0), 8))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(0), 8))"/>
               <node id="RX1_LINK" address="0x0" mask="0xff000000" permission="r"
                     description="DMB${DMB_IDX} RX1 link number"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(1), 8))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(1), 8))"/>
               <node id="RX2_LINK" address="0x0" mask="0xff000000" permission="r"
                     description="DMB${DMB_IDX} RX2 link number"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(2), 8))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(2), 8))"/>
               <node id="RX3_LINK" address="0x1" mask="0x000000ff" permission="r"
                     description="DMB${DMB_IDX} RX3 link number"
-                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(${DMB_IDX}).rx_fibers(3), 8))"/>
+                    fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(3), 8))"/>
             </node>
           </node>
           <node id="LOCAL_DAQ_LINK" address="0x200" mask="0x000000ff" permission="r"
                 description="Local DAQ link number"
-                fw_signal="std_logic_vector(to_unsigned(CFG_SPY_LINK, 8))"/>
+                fw_signal="std_logic_vector(to_unsigned(CFG_SPY_LINK(g_SLR), 8))"/>
         </node>
 
         <node id="PROMLESS" address="0x400">
@@ -270,6 +273,7 @@
                       description="If this is set to 1, the spy path will not send empty events."
                       fw_signal="spy_skip_empty_evts" fw_default="0b0"
                       sw_units="bool"/>
+                <!--
                 <node id="SPY_DEST_MAC_1"      address="0x1"  mask="0x0000ffff" permission="rw"
                       description="Destination MAC part 1 i.e. 16 bits that are sent out first"
                       fw_signal="spy_gbe_dest_mac(15 downto 0)" fw_default="0xbeef"/>
@@ -277,20 +281,21 @@
                       description="Destination MAC part 2 i.e. 16 bits that are sent out second"
                       fw_signal="spy_gbe_dest_mac(31 downto 16)" fw_default="0xcafe"/>
                 <node id="SPY_DEST_MAC_3"      address="0x2"  mask="0x0000ffff" permission="rw"
-                      description="Destination MAC part 3 -- 16 bits that are sent out last"
+                      description="Destination MAC part 3 - 16 bits that are sent out last"
                       fw_signal="spy_gbe_dest_mac(47 downto 32)" fw_default="0xaaaa"/>
                 <node id="SPY_SOURCE_MAC_1"      address="0x2"  mask="0xffff0000" permission="rw"
                       description="Source MAC part 1 i.e. 16 bits that are sent out first"
                       fw_signal="spy_gbe_source_mac(15 downto 0)" fw_default="0xbefe"/>
-                <node id="SPY_SOURCE_MAC_2"      address="0x2"  mask="0x0000ffff" permission="rw"
+                <node id="SPY_SOURCE_MAC_2"      address="0x3"  mask="0x0000ffff" permission="rw"
                       description="Source MAC part 2 i.e. 16 bits that are sent out second"
                       fw_signal="spy_gbe_source_mac(31 downto 16)" fw_default="0xbefe"/>
-                <node id="SPY_SOURCE_MAC_3"      address="0x2"  mask="0xffff0000" permission="rw"
-                      description="Source MAC part 3 -- 16 bits that are sent out last"
+                <node id="SPY_SOURCE_MAC_3"      address="0x3"  mask="0xffff0000" permission="rw"
+                      description="Source MAC part 3 - 16 bits that are sent out last"
                       fw_signal="spy_gbe_source_mac(47 downto 32)" fw_default="0xbefe"/>
-                <node id="SPY_ETHERTYPE"      address="0x3"  mask="0x0000ffff" permission="rw"
+                <node id="SPY_ETHERTYPE"      address="0x4"  mask="0x0000ffff" permission="rw"
                       description="Ethertype (should be set to jumbo)"
                       fw_signal="spy_gbe_ethertype" fw_default="0x7088"/>
+                -->
             </node>
         </node> <!-- end CONTROL -->
 

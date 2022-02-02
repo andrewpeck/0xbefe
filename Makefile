@@ -65,6 +65,10 @@ update_me0_cvp13: config
 	@cd address_table/gem && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/me0_cvp13/ gem_amc
 
+update_ge210_cvp13: config
+	@cd address_table/gem && python generate_xml.py
+	@cd regtools && python generate_registers.py -p generated/ge210_cvp13/ gem_amc
+
 update_csc_cvp13: config
 	@cd address_table/csc && python generate_xml.py
 	@cd regtools && python generate_registers.py -p generated/csc_cvp13/ csc_fed

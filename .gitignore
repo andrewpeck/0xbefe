@@ -15,6 +15,7 @@ cxl_error.log
 /common/ip/*/*
 !*.xci
 !*.xcix
+!*.prj
 
 **/ip_custom/*/drivers
 **/ip_custom/*/example_designs

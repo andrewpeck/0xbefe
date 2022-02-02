@@ -26,7 +26,7 @@ gem/hdl/oh/generated/me0_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
-boards/cvp13/hdl/system/generated/ge21_cvp13/pcie_slow_control.vhd
+boards/cvp13/hdl/system/generated/me0_cvp13/pcie_slow_control.vhd
 
 #dummy promless just to keep compiler happy
 common/hdl/misc/promless_bram.vhd

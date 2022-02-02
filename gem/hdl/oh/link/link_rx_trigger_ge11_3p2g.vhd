@@ -3,7 +3,7 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date:    00:01 2016-05-10
--- Module Name:    link_rx_trigger_ge11
+-- Module Name:    link_rx_trigger_ge11_3p2g
 -- Description:    This module takes two GTX/GTH trigger RX links and outputs sbit cluster data synchronous to the TTC clk. It works with GE1/1 OHs and early prototypes of GE2/1 OH which use dedicated 8b10b trigger links.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ use ieee.std_logic_misc.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 
-entity link_rx_trigger_ge11 is
+entity link_rx_trigger_ge11_3p2g is
     generic(
         g_DEBUG         : boolean := false -- if this is set to true, some chipscope cores will be inserted
     );
@@ -35,9 +35,9 @@ entity link_rx_trigger_ge11 is
         
         missed_comma_err_o  : out std_logic
     );
-end link_rx_trigger_ge11;
+end link_rx_trigger_ge11_3p2g;
 
-architecture Behavioral of link_rx_trigger_ge11 is    
+architecture Behavioral of link_rx_trigger_ge11_3p2g is    
 
     -- trigger links will send a K-char every 4 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0xBC, 0xF7, 0xFB, 0xFD
     -- in case there is an overflow in that particular BX, the K-char for this BX will be 0xFC

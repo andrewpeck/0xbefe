@@ -15,10 +15,16 @@ package common_pkg is
     function log2ceil(arg : positive) return natural; -- returns the number of bits needed to encode the given number
     function up_to_power_of_2(arg : positive) return natural; -- "rounds" the given number up to the closest power of 2 number (e.g. if you give 6, it will say 8, which is 2^3)
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
+    function min(arg1, arg2: integer) return integer; -- returns the lower of the two arguments
+    function max(arg1, arg2: integer) return integer; -- returns the higher of the two arguments
 
     --============--
     --== Common ==--
     --============--   
+
+    type t_int_array is array(integer range <>) of integer;
+    
+    type t_bool_array is array(integer range <>) of boolean;
     
     type t_std_array is array(integer range <>) of std_logic;
 
@@ -440,6 +446,22 @@ package common_pkg is
         daq_enabled     : std_logic;
     end record;
 
+    constant DAQ_TO_DAQLINK_NULL : t_daq_to_daqlink := (
+        reset           => '0',
+        ttc_clk         => '0',
+        ttc_bc0         => '0',
+        trig            => (others => '0'),
+        tts_clk         => '0',
+        tts_state       => (others => '0'),
+        resync          => '0',
+        event_clk       => '0',
+        event_valid     => '0',
+        event_header    => '0',
+        event_trailer   => '0',
+        event_data      => (others => '0'),
+        daq_enabled     => '0'
+    );
+
     type t_daq_to_daqlink_arr is array(integer range <>) of t_daq_to_daqlink;
 
     type t_daqlink_to_daq is record
@@ -524,7 +546,9 @@ package common_pkg is
 end common_pkg;
    
 package body common_pkg is
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function count_ones(s : std_logic_vector) return integer is
         variable temp : natural := 0;
     begin
@@ -536,7 +560,9 @@ package body common_pkg is
 
         return temp;
     end function count_ones;
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function bool_to_std_logic(L : BOOLEAN) return std_logic is
     begin
         if L then
@@ -545,7 +571,9 @@ package body common_pkg is
             return ('0');
         end if;
     end function bool_to_std_logic;
-    
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function log2ceil(arg : positive) return natural is
         variable tmp : positive     := 1;
         variable log : natural      := 0;
@@ -557,7 +585,9 @@ package body common_pkg is
         end loop;
         return log;
     end function;   
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function up_to_power_of_2(arg : positive) return natural is
         variable tmp : positive     := 1;
     begin
@@ -566,7 +596,9 @@ package body common_pkg is
         end loop;
         return tmp;
     end function;   
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function div_ceil(numerator, denominator : positive) return natural is
         variable tmp : positive     := denominator;
         variable ret : positive     := 1;
@@ -578,5 +610,27 @@ package body common_pkg is
         end loop;
         return ret;
     end function;  
-        
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function min(arg1, arg2: integer) return integer is
+    begin
+        if arg1 < arg2 then
+            return arg1;
+        else
+            return arg2;
+        end if;
+    end function;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function max(arg1, arg2: integer) return integer is
+    begin
+        if arg1 > arg2 then
+            return arg1;
+        else
+            return arg2;
+        end if;
+    end function;
+            
 end common_pkg;

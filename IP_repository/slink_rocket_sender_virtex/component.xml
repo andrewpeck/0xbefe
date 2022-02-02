@@ -2,7 +2,7 @@
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <spirit:vendor>CERN_CMS_CMD</spirit:vendor>
   <spirit:library>user</spirit:library>
-  <spirit:name>SR_sender_GLB</spirit:name>
+  <spirit:name>SR_sender_GLB_virtex</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>

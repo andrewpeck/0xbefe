@@ -230,7 +230,7 @@ architecture Behavioral of daq is
     signal l1afifo_prog_empty       : std_logic;
     signal l1afifo_prog_empty_wrclk : std_logic;
     signal l1afifo_near_full        : std_logic;
-    signal l1afifo_data_cnt         : std_logic_vector(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH downto 0);
+    signal l1afifo_data_cnt         : std_logic_vector(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH - 1 downto 0);
     signal l1afifo_near_full_cnt    : std_logic_vector(15 downto 0);
     signal l1a_gap_cntdown          : unsigned(7 downto 0) := (others => '0'); -- this is used to detect close L1As (meaning less than 1000ns apart)
     
@@ -272,7 +272,7 @@ architecture Behavioral of daq is
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
-    signal spy_gbe_ethertype          : std_logic_vector(15 downto 0);        
+    signal spy_gbe_ethertype        : std_logic_vector(15 downto 0);        
     signal spy_prescale             : std_logic_vector(15 downto 0);
     signal spy_skip_empty_evts      : std_logic;
     
@@ -567,50 +567,105 @@ begin
     -- DAQ output FIFO
     --================================--
 
-    i_daq_output_fifo : xpm_fifo_sync
-        generic map(
-            FIFO_MEMORY_TYPE    => "block",
-            FIFO_WRITE_DEPTH    => CFG_DAQ_OUTPUT_DEPTH,
-            WRITE_DATA_WIDTH    => 66,
-            READ_MODE           => "std",
-            FIFO_READ_LATENCY   => 1,
-            FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => "1307", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => OUTFIFO_RD_WIDTH,
-            WR_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
-            PROG_FULL_THRESH    => CFG_DAQ_OUTPUT_PROG_FULL_SET,
-            RD_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
-            PROG_EMPTY_THRESH   => CFG_DAQ_OUTPUT_PROG_FULL_RESET,
-            DOUT_RESET_VALUE    => "0",
-            ECC_MODE            => "no_ecc"
-        )
-        port map(
-            sleep         => '0',
-            rst           => reset_daq,
-            wr_clk        => daq_clk_i,
-            wr_en         => daqfifo_wr_en,
-            din           => daqfifo_din,
-            full          => daqfifo_full,
-            prog_full     => daqfifo_prog_full,
-            wr_data_count => daqfifo_data_cnt,
-            overflow      => open, -- TODO: have to monitor this!
-            wr_rst_busy   => open,
-            almost_full   => open,
-            wr_ack        => open,
-            rd_en         => daqfifo_rd_en,
-            dout          => daqfifo_dout,
-            empty         => daqfifo_empty,
-            prog_empty    => daqfifo_prog_empty,
-            rd_data_count => open,
-            underflow     => open, -- TODO: have to monitor this!
-            rd_rst_busy   => open,
-            almost_empty  => open,
-            data_valid    => daqfifo_valid,
-            injectsbiterr => '0',
-            injectdbiterr => '0',
-            sbiterr       => open,
-            dbiterr       => open
-        );
+    g_daq_output_fifo_slink_rocket : if g_IS_SLINK_ROCKET generate 
+
+        i_daq_output_fifo : xpm_fifo_sync
+            generic map(
+                FIFO_MEMORY_TYPE    => CFG_DAQ_OUTPUT_RAM_TYPE,
+                FIFO_WRITE_DEPTH    => CFG_DAQ_OUTPUT_DEPTH,
+                WRITE_DATA_WIDTH    => 144,
+                READ_MODE           => "std",
+                FIFO_READ_LATENCY   => CFG_DAQ_OUTPUT_READ_LATENCY,
+                FULL_RESET_VALUE    => 0,
+                USE_ADV_FEATURES    => "1307", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 144,
+                WR_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+                PROG_FULL_THRESH    => CFG_DAQ_OUTPUT_PROG_FULL_SET,
+                RD_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+                PROG_EMPTY_THRESH   => CFG_DAQ_OUTPUT_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => daqfifo_wr_en,
+                din           => x"0000000000000000000" & "00" & daqfifo_din,
+                full          => daqfifo_full,
+                prog_full     => daqfifo_prog_full,
+                wr_data_count => daqfifo_data_cnt,
+                overflow      => open, -- TODO: have to monitor this!
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_en         => daqfifo_rd_en,
+                dout(131 downto 0)          => daqfifo_dout,
+                dout(143 downto 132)          => open,
+                empty         => daqfifo_empty,
+                prog_empty    => daqfifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open, -- TODO: have to monitor this!
+                rd_rst_busy   => open,
+                almost_empty  => open,
+                data_valid    => daqfifo_valid,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
+        
+    end generate;
+
+    g_daq_output_fifo_amc13 : if not g_IS_SLINK_ROCKET generate 
+
+        i_daq_output_fifo : xpm_fifo_sync
+            generic map(
+                FIFO_MEMORY_TYPE    => CFG_DAQ_OUTPUT_RAM_TYPE,
+                FIFO_WRITE_DEPTH    => CFG_DAQ_OUTPUT_DEPTH,
+                WRITE_DATA_WIDTH    => 72,
+                READ_MODE           => "std",
+                FIFO_READ_LATENCY   => CFG_DAQ_OUTPUT_READ_LATENCY,
+                FULL_RESET_VALUE    => 0,
+                USE_ADV_FEATURES    => "1307", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 72,
+                WR_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+                PROG_FULL_THRESH    => CFG_DAQ_OUTPUT_PROG_FULL_SET,
+                RD_DATA_COUNT_WIDTH => CFG_DAQ_OUTPUT_DATA_CNT_WIDTH,
+                PROG_EMPTY_THRESH   => CFG_DAQ_OUTPUT_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => daqfifo_wr_en,
+                din           => "000000" & daqfifo_din,
+                full          => daqfifo_full,
+                prog_full     => daqfifo_prog_full,
+                wr_data_count => daqfifo_data_cnt,
+                overflow      => open, -- TODO: have to monitor this!
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_en         => daqfifo_rd_en,
+                dout(65 downto 0)          => daqfifo_dout,
+                dout(71 downto 67)          => open,
+                empty         => daqfifo_empty,
+                prog_empty    => daqfifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open, -- TODO: have to monitor this!
+                rd_rst_busy   => open,
+                almost_empty  => open,
+                data_valid    => daqfifo_valid,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
+        
+    end generate;
 
     i_latch_evtfifo_near_full : entity work.latch port map(
             reset_i => daqfifo_prog_empty,
@@ -841,12 +896,13 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS   => 3976,
-            g_MIN_PAYLOAD_WORDS   => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
-            g_MAX_EVT_WORDS       => 50000,
-            g_NUM_IDLES_SMALL_EVT => 2,
-            g_NUM_IDLES_BIG_EVT   => 7,
-            g_SMALL_EVT_MAX_WORDS => 24
+            g_MAX_PAYLOAD_WORDS    => 3976,
+            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
+            g_MAX_EVT_WORDS        => 50000,
+            g_NUM_IDLES_SMALL_EVT  => 2,
+            g_NUM_IDLES_BIG_EVT    => 7,
+            g_SMALL_EVT_MAX_WORDS  => 24,
+            g_USE_TRAILER_FLAG_EOE => false
         )
         port map(
             reset_i             => reset_daq,
@@ -858,6 +914,7 @@ begin
             ether_type_i        => spy_gbe_ethertype,
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout,
+            data_trailer_i      => '0',
             data_rd_en          => spy_fifo_rd_en,
             last_valid_word_i   => spy_fifo_aempty,
             err_event_too_big_o => spy_err_evt_too_big,

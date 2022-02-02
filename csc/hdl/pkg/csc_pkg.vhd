@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.board_config_package.all;
+--use work.project_config.CFG_NUM_SLRS;
+
 package csc_pkg is
 
     --======================--
@@ -9,6 +12,26 @@ package csc_pkg is
     --======================-- 
         
     constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
+    
+    --========================--
+    --== Link configuration ==--
+    --========================--
+
+    type t_dmb_type is (NONE, DMB, ODMB, ODMB5, ODMB7);
+    
+    type t_dmb_rx_fiber_arr is array (0 to 3) of integer range 0 to CFG_BOARD_MAX_LINKS;
+    
+    type t_dmb_config is record
+        dmb_type    : t_dmb_type;           -- type of DMB
+        num_fibers  : integer range 0 to 4; -- number of downlink fibers to be used for this DMB (should be 1 for old DMBs/ODMBs, and greater than 1 for multilink ODMBs)
+        tx_fiber    : integer range 0 to CFG_BOARD_MAX_LINKS; -- TX fiber number
+        rx_fibers   : t_dmb_rx_fiber_arr;   -- RX fiber number(s) to be used for this DMB (only items [0 to num_fibers -1] will be used)  
+    end record;
+
+    constant DMB_CONFIG_NULL : t_dmb_config := (dmb_type => NONE, num_fibers => 0, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (others => CFG_BOARD_MAX_LINKS));
+
+    type t_dmb_config_arr is array (integer range <>) of t_dmb_config;
+    type t_dmb_config_arr_per_slr is array (integer range <>) of t_dmb_config_arr;
 
     --======================--
     --== Config Constants ==--

@@ -42,6 +42,7 @@ common/hdl/utils/cross_domain_pulse.vhd
 common/hdl/utils/freq_meter.sv
 common/hdl/utils/hamming_8_13.vhd
 common/hdl/utils/hamming_32_39.vhd
+common/hdl/utils/i2c_master.vhd
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project

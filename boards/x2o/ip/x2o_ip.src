@@ -1,4 +1,5 @@
 # -*- mode: TCL;-*-
 
 # X2O IP
-#boards/x2o/ip/slink_rocket_sender_virtex/slink_rocket_sender_virtex.xci
+boards/x2o/ip/slink_rocket_virtex_master/slink_rocket_virtex_master.xci
+boards/x2o/ip/slink_rocket_virtex_slave/slink_rocket_virtex_slave.xci

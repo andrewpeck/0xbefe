@@ -1,7 +1,6 @@
 # MGT location
 set_property LOC GTYE4_CHANNEL_X0Y20 [get_cells -hierarchical -filter name=~i_slink_rocket/i_slink_sender/*GTYE4_CHANNEL_PRIM_INST]
 
-
 set_max_delay -datapath_only -from [get_pins -hierarchical -filter {NAME =~ */Sender_core_i1*/resync_pulse*/reg_1st_stage*/C}] -to [get_pins -hierarchical -filter {NAME =~ */Sender_core_i1*/resync_pulse*/reg_2nd_stage_async*/D}] 2.000
 set_max_delay -datapath_only -from [get_pins -hierarchical -filter {NAME =~ */*serdes_sender*/resync_pulse*/reg_1st_stage*/C}] -to [get_pins -hierarchical -filter {NAME =~ */*serdes_sender*/resync_pulse*/reg_2nd_stage_async*/D}] 2.000
 

@@ -11,7 +11,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 
 use work.mgt_pkg.all;
-use work.project_config.all;
 use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 
 --============================================================================
@@ -24,7 +23,7 @@ package board_config_package is
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"3"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
 
     ------------ Board specific constants ------------
-    constant CFG_BOARD_MAX_LINKS    : integer := 16;
+    constant CFG_BOARD_MAX_LINKS    : integer := 116;
 
     ------------ DAQ configuration ------------
     constant CFG_DAQ_MAX_DMBS               : integer := 15; -- the number of DMBs that are supported by the DAQ module (the CFG_NUM_DMBS can be less than or equal to this number)
@@ -39,9 +38,11 @@ package board_config_package is
     constant CFG_DAQ_INFIFO_PROG_FULL_RESET : integer := 8192;
     constant CFG_DAQ_INFIFO_DATA_CNT_WIDTH  : integer := 14;
 
-    constant CFG_DAQ_OUTPUT_DEPTH           : integer := 8192;
-    constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 4045;
-    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 1365;
+    constant CFG_DAQ_OUTPUT_RAM_TYPE        : string  := "ultra"; -- "block"
+    constant CFG_DAQ_OUTPUT_READ_LATENCY    : integer := 8;       -- need higher number for ultraram, use 1 for BRAM
+    constant CFG_DAQ_OUTPUT_DEPTH           : integer := 524288; --1048576;  --8192;
+    constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 393216; --786432;   --4045;
+    constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 262144; --524285;   --1365;
     constant CFG_DAQ_OUTPUT_DATA_CNT_WIDTH  : integer := 13;
 
     constant CFG_DAQ_L1AFIFO_DEPTH          : integer := 8192;
@@ -57,39 +58,14 @@ package board_config_package is
     constant CFG_DAQ_LASTEVT_FIFO_DEPTH     : integer := 4096;
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
-
-    --========================--
-    --== Link configuration ==--
-    --========================--
-    
-    type t_dmb_type is (DMB, ODMB, ODMB5, ODMB7);
-    
-    type t_dmb_rx_fiber_arr is array (0 to 3) of integer range 0 to CFG_BOARD_MAX_LINKS;
-    
-    type t_dmb_config is record
-        dmb_type    : t_dmb_type;           -- type of DMB
-        num_fibers  : integer range 0 to 4; -- number of downlink fibers to be used for this DMB (should be 1 for old DMBs/ODMBs, and greater than 1 for multilink ODMBs)
-        tx_fiber    : integer range 0 to CFG_BOARD_MAX_LINKS; -- TX fiber number
-        rx_fibers   : t_dmb_rx_fiber_arr;   -- RX fiber number(s) to be used for this DMB (only items [0 to num_fibers -1] will be used)  
-    end record;
-
-    type t_dmb_config_arr is array (integer range <>) of t_dmb_config;
-
-    constant CFG_NUM_DMBS           : integer := PRJ_CFG_NUM_DMBS;    -- total number of DMBs to instanciate
-
-    constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr(0 to CFG_NUM_DMBS - 1) := (
-        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (0, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)),
-        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (1, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))
-    );
-
-    constant CFG_USE_SPY_LINK : boolean := true;
-    constant CFG_SPY_LINK : integer := 2;
     
     --================================--
     -- Fiber to MGT mapping
     --================================--    
 
-    constant CFG_MGT_NUM_CHANNELS : integer := 8;
+    constant CFG_NUM_REFCLK0      : integer := 30;
+    constant CFG_NUM_REFCLK1      : integer := 8; 
+    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
     -- this record is used in fiber to MGT map (holding tx and rx MGT index)
@@ -108,49 +84,140 @@ package board_config_package is
     -- DUMMY: fiber 16 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
     -- note that GTH channel #16 is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
-        --=== Quad 128 ===--
-        (2, 1, false, false),   -- fiber 0
-        (1, 3, false, true ),   -- fiber 1  ! RX inverted
-        (0, 0, false, true ),   -- fiber 2  ! RX inverted
-        (3, 2, false, true ),   -- fiber 3  ! RX inverted
-        --=== Quad 130 ===--
-        (5, 4, false, false),   -- fiber 8
-        (7, 5, false, true ),   -- fiber 9  ! RX inverted
-        (4, 6, false, true ),   -- fiber 10 ! RX inverted
-        (6, 7, false, true ),   -- fiber 11 ! RX inverted
-
-        --=== dummy ===--
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        
---        --=== Quad 129 ===--
---        (0, 0, false, true ),   -- fiber 0  ! RX inverted
---        (2, 1, false, true ),   -- fiber 1  ! RX inverted
---        (1, 2, false, false),   -- fiber 2
---        (3, 3, false, false),   -- fiber 3
---        --=== Quad 131 ===--
---        (10, 8,  true, true),  -- fiber 4  ! RX inverted ! TX inverted
---        (9,  9,  true, true),  -- fiber 5  ! RX inverted ! TX inverted
---        (8,  10, true, true),  -- fiber 6  ! RX inverted ! TX inverted
---        (11, 11, true, true),  -- fiber 7  ! RX inverted ! TX inverted
---        --=== Quad 130 ===--
---        (5, 4, false, false),   -- fiber 8
---        (7, 5, false, true ),   -- fiber 9  ! RX inverted
---        (4, 6, false, true ),   -- fiber 10 ! RX inverted
---        (6, 7, false, true ),   -- fiber 11 ! RX inverted
---        --=== Quad 132 ===--
---        (12, 12, false, true ), -- fiber 12 ! RX inverted
---        (13, 13, true,  false), -- fiber 13               ! TX inverted
---        (15, 14, true,  false), -- fiber 14               ! TX inverted
---        (14, 15, false, false), -- fiber 15
-        --=== DUMMY channel - use for unconnected channels ===--
-        (MGT_NULL, MGT_NULL, false, false)  -- dummy fiber
+        --========= ARF6 #0 (J19) =========--
+        (002, 002, false, true ), -- fiber 0 (SLR 0)
+        (014, 014, false, true ), -- fiber 1 (SLR 0)
+        (004, 000, false, true ), -- fiber 2 (SLR 0)
+        (012, 012, true , true ), -- fiber 3 (SLR 0)
+        (000, 004, false, true ), -- fiber 4 (SLR 0)
+        (010, 010, false, true ), -- fiber 5 (SLR 0)
+        (006, 006, false, true ), -- fiber 6 (SLR 0)
+        (008, 008, false, true ), -- fiber 7 (SLR 0)
+        --========= ARF6 #1 (J20) =========--
+        (015, 009, true , false), -- fiber 8 (SLR 0)
+        (003, 005, true , false), -- fiber 9 (SLR 0)
+        (013, 015, true , false), -- fiber 10 (SLR 0)
+        (005, 003, true , false), -- fiber 11 (SLR 0)
+        (011, 011, true , false), -- fiber 12 (SLR 0)
+        (001, 001, true , false), -- fiber 13 (SLR 0)
+        (007, 013, false, false), -- fiber 14 (SLR 0)
+        (009, 007, true , false), -- fiber 15 (SLR 0)
+        --========= ARF6 #2 (J18) =========--
+        (070, 070, true , false), -- fiber 16 (SLR 0)
+        (058, 056, true , false), -- fiber 17 (SLR 0)
+        (068, 068, false, false), -- fiber 18 (SLR 0)
+        (060, 058, true , false), -- fiber 19 (SLR 0)
+        (066, 066, true , false), -- fiber 20 (SLR 0)
+        (056, 060, true , false), -- fiber 21 (SLR 0)
+        (064, 064, true , false), -- fiber 22 (SLR 0)
+        (062, 062, true , false), -- fiber 23 (SLR 0)
+        --========= ARF6 #3 (J17) =========--
+        (059, 061, false, true ), -- fiber 24 (SLR 0)
+        (071, 065, false, true ), -- fiber 25 (SLR 0)
+        (061, 059, false, true ), -- fiber 26 (SLR 0)
+        (069, 071, false, true ), -- fiber 27 (SLR 0)
+        (057, 057, false, true ), -- fiber 28 (SLR 0)
+        (067, 067, false, true ), -- fiber 29 (SLR 0)
+        (065, 063, false, true ), -- fiber 30 (SLR 0)
+        (063, 069, true , true ), -- fiber 31 (SLR 0)
+        --========= ARF6 #4 (J12) =========--
+        (016, 016, false, true ), -- fiber 32 (SLR 1)
+        (018, 018, false, true ), -- fiber 33 (SLR 1)
+        (020, 020, false, true ), -- fiber 34 (SLR 1)
+        (022, 022, false, true ), -- fiber 35 (SLR 1)
+        --========= ARF6 #5 (J11) =========--
+        (017, 017, false, false), -- fiber 36 (SLR 1)
+        (019, 019, false, false), -- fiber 37 (SLR 1)
+        (021, 021, false, false), -- fiber 38 (SLR 1)
+        (023, 023, false, false), -- fiber 39 (SLR 1)
+        --========= ARF6 #6 (J7) =========--
+        (086, 086, false, false), -- fiber 40 (SLR 1)
+        (072, 072, false, false), -- fiber 41 (SLR 1)
+        (084, 084, false, false), -- fiber 42 (SLR 1)
+        (074, 074, false, false), -- fiber 43 (SLR 1)
+        (082, 082, false, false), -- fiber 44 (SLR 1)
+        (076, 076, false, false), -- fiber 45 (SLR 1)
+        (080, 080, false, false), -- fiber 46 (SLR 1)
+        (078, 078, false, false), -- fiber 47 (SLR 1)
+        --========= ARF6 #7 (J10) =========--
+        (073, 073, false, true ), -- fiber 48 (SLR 1)
+        (087, 087, false, true ), -- fiber 49 (SLR 1)
+        (075, 075, false, true ), -- fiber 50 (SLR 1)
+        (085, 085, false, true ), -- fiber 51 (SLR 1)
+        (077, 077, false, true ), -- fiber 52 (SLR 1)
+        (083, 083, false, true ), -- fiber 53 (SLR 1)
+        (079, 079, false, true ), -- fiber 54 (SLR 1)
+        (081, 081, false, true ), -- fiber 55 (SLR 1)
+        --========= ARF6 #8 (J15) =========--
+        (024, 024, true , false), -- fiber 56 (SLR 2)
+        (038, 038, true , false), -- fiber 57 (SLR 2)
+        (026, 026, true , false), -- fiber 58 (SLR 2)
+        (036, 036, true , false), -- fiber 59 (SLR 2)
+        (028, 028, true , false), -- fiber 60 (SLR 2)
+        (034, 034, true , false), -- fiber 61 (SLR 2)
+        (030, 030, true , false), -- fiber 62 (SLR 2)
+        (032, 032, true , false), -- fiber 63 (SLR 2)
+        --========= ARF6 #9 (J16) =========--
+        (039, 039, true , true ), -- fiber 64 (SLR 2)
+        (025, 025, true , true ), -- fiber 65 (SLR 2)
+        (037, 037, true , true ), -- fiber 66 (SLR 2)
+        (027, 027, true , true ), -- fiber 67 (SLR 2)
+        (035, 035, true , true ), -- fiber 68 (SLR 2)
+        (029, 029, true , true ), -- fiber 69 (SLR 2)
+        (033, 033, true , true ), -- fiber 70 (SLR 2)
+        (031, 031, true , true ), -- fiber 71 (SLR 2)
+        --========= ARF6 #10 (J14) =========--
+        (098, 098, false, true ), -- fiber 72 (SLR 2)
+        (088, 088, false, true ), -- fiber 73 (SLR 2)
+        (096, 096, false, true ), -- fiber 74 (SLR 2)
+        (090, 090, false, true ), -- fiber 75 (SLR 2)
+        (092, 092, false, true ), -- fiber 76 (SLR 2)
+        (094, 094, false, true ), -- fiber 77 (SLR 2)
+        --========= ARF6 #11 (J13) =========--
+        (089, 089, false, false), -- fiber 78 (SLR 2)
+        (099, 099, false, false), -- fiber 79 (SLR 2)
+        (091, 091, false, false), -- fiber 80 (SLR 2)
+        (097, 097, false, false), -- fiber 81 (SLR 2)
+        (093, 093, false, false), -- fiber 82 (SLR 2)
+        (095, 095, false, false), -- fiber 83 (SLR 2)
+        --========= ARF6 #12 (J5) =========--
+        (040, 040, true , false), -- fiber 84 (SLR 3)
+        (050, 050, true , false), -- fiber 85 (SLR 3)
+        (054, 042, true , false), -- fiber 86 (SLR 3)
+        (052, 052, true , false), -- fiber 87 (SLR 3)
+        (042, 044, true , false), -- fiber 88 (SLR 3)
+        (048, 054, true , false), -- fiber 89 (SLR 3)
+        (044, 046, true , false), -- fiber 90 (SLR 3)
+        (046, 048, true , false), -- fiber 91 (SLR 3)
+        --========= ARF6 #13 (J6) =========--
+        (051, 049, false, true ), -- fiber 92 (SLR 3)
+        (041, 041, false, true ), -- fiber 93 (SLR 3)
+        (053, 051, false, true ), -- fiber 94 (SLR 3)
+        (043, 043, false, true ), -- fiber 95 (SLR 3)
+        (055, 053, false, true ), -- fiber 96 (SLR 3)
+        (045, 045, false, true ), -- fiber 97 (SLR 3)
+        (049, 055, false, true ), -- fiber 98 (SLR 3)
+        (047, 047, false, true ), -- fiber 99 (SLR 3)
+        --========= ARF6 #14 (J4) =========--
+        (110, 114, false, true ), -- fiber 100 (SLR 3)
+        (100, 100, false, true ), -- fiber 101 (SLR 3)
+        (112, 112, false, true ), -- fiber 102 (SLR 3)
+        (114, 102, false, true ), -- fiber 103 (SLR 3)
+        (108, 110, false, true ), -- fiber 104 (SLR 3)
+        (102, 104, false, true ), -- fiber 105 (SLR 3)
+        (106, 108, false, true ), -- fiber 106 (SLR 3)
+        (104, 106, false, true ), -- fiber 107 (SLR 3)
+        --========= ARF6 #15 (J3) =========--
+        (101, 101, true , false), -- fiber 108 (SLR 3)
+        (111, 109, true , false), -- fiber 109 (SLR 3)
+        (103, 103, true , false), -- fiber 110 (SLR 3)
+        (113, 111, true , false), -- fiber 111 (SLR 3)
+        (105, 105, true , false), -- fiber 112 (SLR 3)
+        (115, 113, true , false), -- fiber 113 (SLR 3)
+        (107, 107, true , false), -- fiber 114 (SLR 3)
+        (109, 115, true , false), -- fiber 115 (SLR 3)
+        --=== DUMMY fiber - use for unconnected channels ===--
+        (MGT_NULL, MGT_NULL, false, false)
     );
     
     --================================--
@@ -211,18 +278,6 @@ package board_config_package is
         
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
-    constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 0, is_master => false, ibert_inst => true),
-                                                                                                                                                                 
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_ODMB57_156,  qpll_idx => 4, is_master => true,  ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true),        
-        (mgt_type => CFG_MGT_ODMB57, qpll_inst_type => QPLL_NULL,        qpll_idx => 4, is_master => false, ibert_inst => true)                
-    );
-
 end board_config_package;
 
 --============================================================================

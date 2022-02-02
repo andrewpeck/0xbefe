@@ -26,8 +26,12 @@ use work.lpgbtfpga_package.all;
 
 entity gem_amc is
     generic(
+        g_SLR                : integer;
         g_GEM_STATION        : integer;
         g_NUM_OF_OHs         : integer;
+        g_OH_VERSION         : integer;
+        g_GBT_WIDEBUS        : integer;
+        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;        
         g_NUM_GBTS_PER_OH    : integer;
         g_NUM_VFATS_PER_OH   : integer;
         g_USE_TRIG_TX_LINKS  : boolean := true;  -- if true, then trigger output links will be instantiated
@@ -264,6 +268,11 @@ architecture gem_amc_arch of gem_amc is
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
 
+    -- to prevent sbits from being optimized out
+    signal vfat_triggers : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    signal oh_triggers   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal trigger_test  : std_logic;
+
 begin
 
     --================================--
@@ -384,10 +393,11 @@ begin
         i_optohybrid_single : entity work.optohybrid
             generic map(
                 g_GEM_STATION       => g_GEM_STATION,
-                g_OH_VERSION        => CFG_OH_VERSION,
+                g_OH_VERSION        => g_OH_VERSION,
+                g_OH_TRIG_LINK_TYPE => g_OH_TRIG_LINK_TYPE,
                 g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_DEBUG             => CFG_DEBUG_OH and (i = 0)
+                g_DEBUG             => CFG_DEBUG_OH and ((i = 0) or (i = 1))
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -525,6 +535,37 @@ begin
 --
 --me0_vfat3_sbits_arr
 
+    g_sbit_test : if True generate
+    begin
+        
+        trigger_test <= or_reduce(oh_triggers);
+        
+        g_sbit_test_ohs : for oh in 0 to g_NUM_OF_OHs - 1 generate
+
+            process(ttc_clocks_i.clk_40)
+            begin
+                if rising_edge(ttc_clocks_i.clk_40) then
+                    for vfat in 0 to 23 loop
+                        vfat_triggers(oh)(vfat) <= or_reduce(me0_vfat3_sbits_arr(oh)(vfat));
+                    end loop; 
+                end if;
+            end process;
+
+            process(ttc_clocks_i.clk_40)
+            begin
+                if rising_edge(ttc_clocks_i.clk_40) then
+                    oh_triggers(oh) <= or_reduce(vfat_triggers(oh));
+                end if;
+            end process;
+        
+            g_vfats : for vfat in 0 to 23 generate
+            
+            
+            end generate;
+        
+        end generate; 
+    end generate;
+
     --================================--
     -- DAQ
     --================================--
@@ -570,6 +611,8 @@ begin
 
     i_gem_system : entity work.gem_system_regs
         generic map(
+            g_SLR                => g_SLR,
+            g_GEM_STATION        => g_GEM_STATION,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS
         )
@@ -629,6 +672,7 @@ begin
 
     i_slow_control : entity work.slow_control
         generic map(
+            g_GEM_STATION       => g_GEM_STATION,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -691,7 +735,7 @@ begin
                 RX_OPTIMIZATION     => 0,
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
-                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS,
+                RX_ENCODING_ODD     => g_GBT_WIDEBUS,
                 g_USE_RX_SYNC_FIFOS => false
             )
             port map(
@@ -791,7 +835,7 @@ begin
             generic map(
                 g_NUM_OF_OHs        => g_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
-                g_OH_VERSION        => CFG_OH_VERSION
+                g_OH_VERSION        => g_OH_VERSION
             )
             port map(
                 gbt_frame_clk_i             => ttc_clocks_i.clk_40,
@@ -926,7 +970,7 @@ begin
                     probe2  => dbg_gbt_link_status.gbt_rx_ready,
                     probe3  => dbg_gbt_link_status.gbt_rx_gearbox_ready,
                     probe4  => dbg_gbt_link_status.gbt_rx_header_locked,
-                    probe5  => dbg_gbt_link_status.gbt_tx_ready,
+                    probe5  => trigger_test,
                     probe6  => dbg_gbt_link_status.gbt_tx_gearbox_ready,
                     probe7  => dbg_lpgbt_tx_data.tx_ic_data,
                     probe8  => dbg_lpgbt_tx_data.tx_ec_data,

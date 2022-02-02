@@ -106,67 +106,68 @@ architecture mgt_links_gty_arch of mgt_links_gty is
         );
     end component;
 
-    signal refclk0              : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
-    signal refclk1              : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
-    signal refclk0_fabric       : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
-    signal refclk1_fabric       : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
-    signal refclk0_freq         : t_std32_array(g_NUM_REFCLK0 - 1 downto 0);
-    signal refclk1_freq         : t_std32_array(g_NUM_REFCLK1 - 1 downto 0);
-    
-    signal channel_refclk_arr   : t_mgt_refclks_arr(g_NUM_CHANNELS-1 downto 0);
-    signal chan_clks_in_arr     : t_mgt_clk_in_arr(g_NUM_CHANNELS-1 downto 0);
-    signal chan_clks_out_arr    : t_mgt_clk_out_arr(g_NUM_CHANNELS-1 downto 0);
-
-    signal master_txoutclk      : t_mgt_master_clks;
-    signal master_rxoutclk      : t_mgt_master_clks;
-    signal master_rxoutclk_div2 : t_mgt_master_clks;
-    signal master_txusrclk      : t_mgt_master_clks;
-    signal master_rxusrclk      : t_mgt_master_clks;
-    signal master_rxusrclk2     : t_mgt_master_clks;
-
-    signal tx_data_arr          : t_mgt_64b_tx_data_arr(g_NUM_CHANNELS-1 downto 0);
-    signal rx_data_arr          : t_mgt_64b_rx_data_arr(g_NUM_CHANNELS-1 downto 0);
-
-    signal cpll_reset_arr       : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    signal cpll_status_arr      : t_mgt_cpll_status_arr(g_NUM_CHANNELS-1 downto 0);
-
-    signal qpll_clks_tmp_arr    : t_mgt_qpll_clk_out_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_CLK_NULL);
-    signal qpll_ctrl_arr        : t_mgt_qpll_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
-    signal qpll_status_tmp_arr  : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
-    signal qpll_status_arr      : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
-
-    signal chan_drp_in_arr      : t_drp_in_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_IN_NULL);
-    signal chan_drp_out_arr     : t_drp_out_arr(g_NUM_CHANNELS-1 downto 0);
-
-    signal tx_slow_ctrl_arr     : t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
-    signal rx_slow_ctrl_arr     : t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
-    signal rx_fast_ctrl_arr     : t_mgt_rx_fast_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
-    signal tx_init_arr          : t_mgt_tx_init_arr(g_NUM_CHANNELS-1 downto 0);
-    signal rx_init_arr          : t_mgt_rx_init_arr(g_NUM_CHANNELS-1 downto 0);
-    signal misc_ctrl_arr        : t_mgt_misc_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
-
-    signal sc_tx_reset_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    signal sc_rx_reset_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-
-    signal tx_status_arr        : t_mgt_tx_status_arr(g_NUM_CHANNELS-1 downto 0);
-    signal rx_status_arr        : t_mgt_rx_status_arr(g_NUM_CHANNELS-1 downto 0);
-    signal misc_status_arr      : t_mgt_misc_status_arr(g_NUM_CHANNELS-1 downto 0);
-    
-    signal tx_reset_done_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    signal rx_reset_done_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    signal tx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    signal rx_phalign_done_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
-    
-    signal ibert_scanreset_arr  : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal refclk0                  : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1                  : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+    signal refclk0_fabric           : std_logic_vector(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_fabric           : std_logic_vector(g_NUM_REFCLK1 - 1 downto 0);
+    signal refclk0_freq             : t_std32_array(g_NUM_REFCLK0 - 1 downto 0);
+    signal refclk1_freq             : t_std32_array(g_NUM_REFCLK1 - 1 downto 0);
+                                    
+    signal channel_refclk_arr       : t_mgt_refclks_arr(g_NUM_CHANNELS-1 downto 0);
+    signal chan_clks_in_arr         : t_mgt_clk_in_arr(g_NUM_CHANNELS-1 downto 0);
+    signal chan_clks_out_arr        : t_mgt_clk_out_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal master_txoutclk          : t_mgt_master_clks;
+    signal master_rxoutclk          : t_mgt_master_clks;
+    signal master_rxoutclk_div2     : t_mgt_master_clks;
+    signal master_txusrclk          : t_mgt_master_clks;
+    signal master_rxusrclk          : t_mgt_master_clks;
+    signal master_rxusrclk2         : t_mgt_master_clks;
+                                    
+    signal tx_data_arr              : t_mgt_64b_tx_data_arr(g_NUM_CHANNELS-1 downto 0);
+    signal rx_data_arr              : t_mgt_64b_rx_data_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal cpll_reset_arr           : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    signal cpll_status_arr          : t_mgt_cpll_status_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal qpll_clks_tmp_arr        : t_mgt_qpll_clk_out_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_CLK_NULL);
+    signal qpll_ctrl_arr            : t_mgt_qpll_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+    signal qpll_status_tmp_arr      : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
+    signal qpll_status_arr          : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
+                                    
+    signal chan_drp_in_arr          : t_drp_in_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_IN_NULL);
+    signal chan_drp_out_arr         : t_drp_out_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal tx_slow_ctrl_arr         : t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+    signal rx_slow_ctrl_arr         : t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+    signal rx_fast_ctrl_arr         : t_mgt_rx_fast_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+    signal tx_init_arr              : t_mgt_tx_init_arr(g_NUM_CHANNELS-1 downto 0);
+    signal rx_init_arr              : t_mgt_rx_init_arr(g_NUM_CHANNELS-1 downto 0);
+    signal misc_ctrl_arr            : t_mgt_misc_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal sc_tx_reset_arr          : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    signal sc_rx_reset_arr          : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal tx_status_arr            : t_mgt_tx_status_arr(g_NUM_CHANNELS-1 downto 0);
+    signal rx_status_arr            : t_mgt_rx_status_arr(g_NUM_CHANNELS-1 downto 0);
+    signal misc_status_arr          : t_mgt_misc_status_arr(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal tx_reset_done_arr        : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    signal rx_reset_done_arr        : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    signal tx_phalign_done_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+    signal rx_phalign_done_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
+                                    
+    signal ibert_scanreset_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
     -- multi-lane tx phase alignment signals
-    signal txph_syncallin_arr   : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
-    signal txph_syncin_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
-    signal txph_syncmode_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
-    signal txph_dlysreset_arr   : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
-    signal txph_phaligndone_arr : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '1');
-    signal txph_syncdone_arr    : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
-    signal txph_syncout_arr     : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_syncallin_arr       : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_syncin_arr          : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_syncmode_arr        : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_dlysreset_arr       : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_dlysresetdone_arr   : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_phaligndone_arr     : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '1');
+    signal txph_syncdone_arr        : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
+    signal txph_syncout_arr         : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
 begin
 
@@ -248,6 +249,7 @@ begin
             txph_phaligndone_arr(chan) <= tx_status_arr(chan).txphaligndone; 
             txph_syncdone_arr(chan) <= tx_status_arr(chan).txsyncdone;
             txph_syncout_arr(chan) <= tx_status_arr(chan).txsyncout;
+            txph_dlysresetdone_arr(chan) <= tx_status_arr(chan).txdlysresetdone;
         end generate;
 
         g_tx_no_phalign : if not g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign generate
@@ -258,6 +260,7 @@ begin
             txph_phaligndone_arr(chan) <= '1'; 
             txph_syncdone_arr(chan) <= '1';
             txph_syncout_arr(chan) <= '1';
+            txph_dlysresetdone_arr(chan) <= '1';
         end generate;
         
         --================================--
@@ -380,6 +383,76 @@ begin
             rx_fast_ctrl_arr(chan).rxslide <= ctrl_arr_i(chan).rxslide;
             
             i_chan_lpgbt : entity work.gty_channel_lpgbt
+                generic map(
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
+                    g_TXOUTCLKSEL    => "011", -- straight refclk by default
+                    g_RXOUTCLKSEL    => "010" -- recovered clock by default
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_i          => chan_drp_in_arr(chan),
+                    drp_o          => chan_drp_out_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --================================--
+        -- Trigger 3.2Gb/s MGT type
+        --================================--
+        g_chan_trig_3p2 : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_3P2G_8B10B generate
+                
+            -- TX user clocks
+            chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_160;
+            chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_160;
+            
+            -- RX user clocks when using elastic buffer
+            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_160;
+                chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_160;
+            end generate;
+
+            -- RX user clocks when elastic buffer is bypassed
+            g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                
+                i_rxoutclk_buf : BUFG_GT
+                    port map(
+                        O       => chan_clks_in_arr(chan).rxusrclk,
+                        CE      => '1',
+                        CEMASK  => '0',
+                        CLR     => '0',
+                        CLRMASK => '0',
+                        DIV     => "000",
+                        I       => chan_clks_out_arr(chan).rxoutclk
+                    );                
+
+                chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).rxusrclk;
+            end generate;
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= '0';
+            
+            i_chan_trig_3p2 : entity work.gty_channel_trig_3p2
                 generic map(
                     g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
                     g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
@@ -751,6 +824,52 @@ begin
         end generate;
 
         --================================--
+        -- Trigger 3.2Gb/s QPLL 
+        --================================--
+
+        g_qpll_trig_3p2 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_3P2G generate
+            
+            i_qpll_trig_3p2 : entity work.gty_qpll_trig_3p2
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================================--
+        -- Trigger 3.2Gb/s on QPLL0 and GBTX on QPLL1 
+        --================================================--
+
+        g_qpll0_trig_3p2_qpll1_gbtx : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_3P2G_QPLL1_GBTX generate
+            
+            i_qpll0_trig_3p2_qpll1_gbtx : entity work.gty_qpll0_trig_3p2_qpll1_gbtx
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_i        => DRP_IN_NULL,
+                    drp_o        => open
+                );
+            
+        end generate;
+
+        --================================--
         -- ODMB57 QPLL with 200MHz refclk
         --================================--
 
@@ -964,7 +1083,8 @@ begin
         generic map(
             g_STABLE_CLK_PERIOD  => g_STABLE_CLK_PERIOD,
             g_NUM_CHANNELS       => g_NUM_CHANNELS,
-            g_LINK_CONFIG        => g_LINK_CONFIG
+            g_LINK_CONFIG        => g_LINK_CONFIG,
+            g_DEBUG              => false
         )
         port map(
             clk_stable_i             => clk_stable_i,
@@ -973,6 +1093,7 @@ begin
             mgt_syncin_arr_o         => txph_syncin_arr,
             mgt_syncmode_arr_o       => txph_syncmode_arr,
             mgt_dlysreset_arr_o      => txph_dlysreset_arr,
+            mgt_dlysresetdone_arr_i  => txph_dlysresetdone_arr,
             mgt_phaligndone_arr_i    => txph_phaligndone_arr,
             mgt_syncdone_arr_i       => txph_syncdone_arr,
             mgt_syncout_arr_i        => txph_syncout_arr,

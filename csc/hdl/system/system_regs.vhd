@@ -17,12 +17,12 @@ use work.common_pkg.all;
 use work.csc_pkg.all;
 use work.registers.all;
 use work.ttc_pkg.all;
-use work.board_config_package.all;
+use work.project_config.all;
 
 entity system_regs is
     generic(
-        g_NUM_OF_DMBs   : integer;
-        
+        g_SLR                    : integer;
+        g_NUM_OF_DMBs            : integer;
         g_NUM_IPB_MON_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS      : integer
     );

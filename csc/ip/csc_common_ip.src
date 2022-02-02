@@ -1,3 +1,4 @@
 # -*- mode: TCL;-*-
 
 csc/ip/ila_daq/ila_daq.xci
+csc/ip/vio_ttc_test/vio_ttc_test.xci

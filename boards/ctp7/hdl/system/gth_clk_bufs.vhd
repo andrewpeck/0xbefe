@@ -152,6 +152,19 @@ begin
 
     end generate;
 
+    -- when txoutclk is used as the txusrclk, put the txoutclk on a bufg and send it back (this is used in the GbE link)
+    gen_gth_txoutclk_txuserclk : if c_gth_config_arr(n).gth_txusrclk = GTH_USRCLK_OUTCLK generate
+
+      i_bufg_gbt_tx_outclk : BUFG
+        port map(
+          I => gth_gt_clk_out_arr_i(n).txoutclk,
+          O => s_gth_tx_usrclk_arr(n)
+        );
+
+      s_gth_tx_usrclk2_arr(n) <= s_gth_tx_usrclk_arr(n);
+
+    end generate;
+
     -- connect the TXUSRCLKs
     gen_gth_txusrclk_40 : if c_gth_config_arr(n).gth_txusrclk = GTH_USRCLK_40 generate
         s_gth_tx_usrclk_arr(n) <= ttc_clks_i.clk_40;
@@ -195,14 +208,28 @@ begin
         s_gth_tx_usrclk2_arr(n) <= ttc_clks_i.clk_320;
     end generate;
   
-    -- connect the RXOUTCLK to RXUSRCLK through BUFH
-    i_bufh_rx_outclk : BUFH
-      port map
-      (
-        I => gth_gt_clk_out_arr_i(n).rxoutclk,
-        O => clk_gth_rx_usrclk_arr_o(n)
-        );
+    assert (c_gth_config_arr(n).rx_usrclk_buffer = "BUFH") or (c_gth_config_arr(n).rx_usrclk_buffer = "BUFG") or (c_gth_config_arr(n).rx_usrclk_buffer = "NONE") report "t_gth_config.rx_usrclk_buffer value must be either BUFH, BUFG, or NONE" severity failure;
 
+    -- connect the RXOUTCLK to RXUSRCLK through BUFH
+    g_rxusrclk_bufh : if c_gth_config_arr(n).rx_usrclk_buffer = "BUFH" generate
+        i_bufh_rx_outclk : BUFH
+          port map
+          (
+            I => gth_gt_clk_out_arr_i(n).rxoutclk,
+            O => clk_gth_rx_usrclk_arr_o(n)
+            );
+    end generate;
+
+    -- connect the RXOUTCLK to RXUSRCLK through BUFH
+    g_rxusrclk_bufg : if c_gth_config_arr(n).rx_usrclk_buffer = "BUFG" generate
+        i_bufh_rx_outclk : BUFG
+          port map
+          (
+            I => gth_gt_clk_out_arr_i(n).rxoutclk,
+            O => clk_gth_rx_usrclk_arr_o(n)
+            );
+    end generate;
+    
   end generate;
 
 end gth_clk_bufs_arch;

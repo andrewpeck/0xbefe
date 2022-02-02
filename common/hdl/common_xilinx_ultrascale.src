@@ -19,12 +19,15 @@ common/hdl/mgt/refclk_bufs.vhd
 common/hdl/mgt/gty_channel_lpgbt.vhd
 common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd
+common/hdl/mgt/gty_channel_trig_3p2.vhd
 common/hdl/mgt/gty_channel_dmb.vhd
 common/hdl/mgt/gty_channel_odmb57.vhd
 common/hdl/mgt/gty_channel_gbe.vhd
 common/hdl/mgt/gty_channel_ttc.vhd
 common/hdl/mgt/gty_qpll_gbtx.vhd
 common/hdl/mgt/gty_qpll_lpgbt.vhd
+common/hdl/mgt/gty_qpll_trig_3p2.vhd
+common/hdl/mgt/gty_qpll0_trig_3p2_qpll1_gbtx.vhd
 common/hdl/mgt/gty_qpll_odmb57_200.vhd
 common/hdl/mgt/gty_qpll_odmb57_156p25.vhd
 common/hdl/mgt/gty_qpll0_dmb_qpll1_gbe_156p25.vhd
