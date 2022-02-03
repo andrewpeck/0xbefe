@@ -327,6 +327,7 @@ def find_phase_center(err_list):
 def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     gbt, gbt_select, rx_elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
+    select_ic_link(oh_select, gbt_select)
 
     if gbt == "boss":
         if oh_ver == 1:
@@ -350,7 +351,6 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     value = (mpeek(addr) & 0x0f) | (phase << 4)
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
-    select_ic_link(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
 

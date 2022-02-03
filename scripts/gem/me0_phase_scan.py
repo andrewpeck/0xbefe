@@ -272,6 +272,7 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
+    select_ic_link(oh_select, gbt_select)
 
     if gbt == "boss":
         if oh_ver == 1:
@@ -294,7 +295,6 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     #value = (config[addr] & 0x0f) | (phase << 4)
     value = (mpeek(addr) & 0x0f) | (phase << 4)
 
-    select_ic_link(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
     
