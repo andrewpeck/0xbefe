@@ -11,6 +11,7 @@ entity oversample is
   generic (
     g_ENABLE_TMR_DRU     : integer := 0;
     g_PHASE_SEL_EXTERNAL : boolean := false;
+    g_USE_DRU            : boolean := false;
     g_DDR_MODE           : integer := 0
     );
   port(
@@ -63,18 +64,13 @@ architecture behavioral of oversample is
   signal reset_output_sr : std_logic_vector(3 downto 0);
   signal reset_output    : std_logic;
 
-  signal data_p, data_n : std_logic;                     -- outputs from the ibufds_diff_out
-  signal data           : std_logic_vector(1 downto 0);  -- output from iodelay
-
   signal q : std_logic_vector(7 downto 0);  -- outputs from iserdes
 
   signal rxdata     : std_logic_vector(7 downto 0) := (others => '0');  -- output from dru
   signal rxdata_inv : std_logic_vector(7 downto 0) := (others => '0');  -- optionally inverted output from dru
 
   -- tap delay settings for 0/45 degress + offset
-  signal tap_delay    : std_logic_vector (tap_delay_i'high downto 0);
-  signal tap_delay_0  : std_logic_vector (tap_delay_i'high downto 0);
-  signal tap_delay_45 : std_logic_vector (tap_delay_i'high downto 0);
+  signal tap_delay : std_logic_vector (tap_delay_i'high downto 0);
 
 begin
 
@@ -114,111 +110,172 @@ begin
     end if;
   end process;
 
-  ----------------------------------------------------------------------------------------------------------------------
-  -- Tap Delay Addition
-  ----------------------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------
+  -- Simple Rx
+  --------------------------------------------------------------------------------
 
-  process(clk40)
+  gen_simple : if (not g_USE_DRU) generate
+    signal data_ibufds  : std_logic;
+    signal data_delayed : std_logic := '0';
   begin
-    if rising_edge(clk40) then
-      tap_delay   <= tap_delay_i;
-      tap_delay_0 <= tap_delay;
-      tap_delay_45 <= std_logic_vector (unsigned(tap_delay)
-                                        + to_unsigned(NUM_TAPS_45, tap_delay'length));
-    end if;
-  end process;
 
-  ----------------------------------------------------------------------------------------------------------------------
-  -- IBUFDS
-  ----------------------------------------------------------------------------------------------------------------------
+    process(clk40)
+    begin
+      if rising_edge(clk40) then
+        tap_delay <= tap_delay_i;
+      end if;
+    end process;
 
-  rx_ibuf_d : ibufds_diff_out
-    generic map(
-      IBUF_LOW_PWR => true,
-      DIFF_TERM    => true,
-      IOSTANDARD   => "LVDS_25"
-      )
-    port map(
-      i  => rxd_p,
-      ib => rxd_n,
-      o  => data_p,
-      ob => data_n
-      );
+    rx_ibuf_d : ibufds
+      generic map(
+        IBUF_LOW_PWR => true,
+        DIFF_TERM    => true,
+        IOSTANDARD   => "LVDS_25"
+        )
+      port map(
+        i  => rxd_p,
+        ib => rxd_n,
+        o  => data_ibufds
+        );
 
-  ----------------------------------------------------------------------------------------------------------------------
-  -- IODELAY in FPGA agnostic wrapper
-  ----------------------------------------------------------------------------------------------------------------------
+    delay_io : entity work.iodelay
+      port map(
+        clock       => clk40,
+        tap_delay_i => tap_delay,
+        data_i      => data_ibufds,
+        data_o      => data_delayed
+        );
 
-  delay_master : entity work.iodelay
-    port map(
-      clock       => clk40,
-      tap_delay_i => tap_delay_0,
-      data_i      => data_p,
-      data_o      => data(0)
-      );
+    iserdes_inst : entity work.iserdes_x8
+      port map (
+        data_i    => data_delayed,
+        data_o    => rxdata,
+        bitslip_i => '0',               -- FIXME: this will want to be connected... monitor the sot and align to that?
+        clk_i     => clk_4x_dru,
+        clk_div_i => clk_1x_dru,
+        io_reset  => reset_serdes
+        );
 
-  delay_slave : entity work.iodelay
-    port map(
-      clock       => clk40,
-      tap_delay_i => tap_delay_45,
-      data_i      => data_n,
-      data_o      => data(1)
-      );
+  end generate;
 
-  ----------------------------------------------------------------------------------------------------------------------
-  -- ISERDES in FPGA agnostic wrapper
-  ----------------------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------
+  -- DRU
+  --------------------------------------------------------------------------------
 
-  ise1_m : entity work.iserdes
-    port map(
-      clk_i     => clk_io_0,
-      clk_90_i  => clk_io_90,
-      reset_i   => reset_serdes,
-      data_i    => data(0),
-      data_o(0) => q(1),
-      data_o(1) => q(5),
-      data_o(2) => q(3),
-      data_o(3) => q(7)
-      );
+  gen_dru : if (g_USE_DRU) generate
+    signal tap_delay_0                  : std_logic_vector (tap_delay_i'high downto 0);
+    signal tap_delay_45                 : std_logic_vector (tap_delay_i'high downto 0);
+    signal data_ibufds_p, data_ibufds_n : std_logic;                     -- outputs from the ibufds_diff_out
+    signal data_delayed                 : std_logic_vector(1 downto 0);  -- output from iodelay
 
-  ise1_s : entity work.iserdes
-    port map(
-      clk_i     => clk_io_0,
-      clk_90_i  => clk_io_90,
-      reset_i   => reset_serdes,
-      data_i    => data(1),
-      data_o(0) => q(0),
-      data_o(1) => q(4),
-      data_o(2) => q(2),
-      data_o(3) => q(6)
-      );
+  begin
 
-  ----------------------------------------------------------------------------------------------------------------------
-  -- Data Recovery Unit
-  ----------------------------------------------------------------------------------------------------------------------
+    ----------------------------------------------------------------------------------------------------------------------
+    -- Tap Delay Addition
+    ----------------------------------------------------------------------------------------------------------------------
 
-  dru : entity work.dru_tmr
-    generic map(
-      g_ENABLE_TMR         => g_ENABLE_TMR_DRU,
-      g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
-      )
-    port map(
+    process(clk40)
+    begin
+      if rising_edge(clk40) then
+        tap_delay   <= tap_delay_i;
+        tap_delay_0 <= tap_delay;
+        tap_delay_45 <= std_logic_vector (unsigned(tap_delay)
+                                          + to_unsigned(NUM_TAPS_45, tap_delay'length));
+      end if;
+    end process;
 
-      clk1x => clk_1x_dru,
-      clk4x => clk_4x_dru,
+    ----------------------------------------------------------------------------------------------------------------------
+    -- IBUFDS
+    ----------------------------------------------------------------------------------------------------------------------
 
-      i => q,                           -- the even bits are inverted!
-      o => rxdata,                      -- 8-bit deserialized data
+    rx_ibuf_d : ibufds_diff_out
+      generic map(
+        IBUF_LOW_PWR => true,
+        DIFF_TERM    => true,
+        IOSTANDARD   => "LVDS_25"
+        )
+      port map(
+        i  => rxd_p,
+        ib => rxd_n,
+        o  => data_ibufds_p,
+        ob => data_ibufds_n
+        );
 
-      e4_in         => e4_in,
-      e4_out        => e4_out,
-      phase_sel_in  => phase_sel_in,
-      phase_sel_out => phase_sel_out,
+    ----------------------------------------------------------------------------------------------------------------------
+    -- IODELAY in FPGA agnostic wrapper
+    ----------------------------------------------------------------------------------------------------------------------
 
-      invalid_bitskip_o => invalid_bitskip_o,
+    delay_master : entity work.iodelay
+      port map(
+        clock       => clk40,
+        tap_delay_i => tap_delay_0,
+        data_i      => data_ibufds_p,
+        data_o      => data_delayed(0)
+        );
 
-      tmr_err_o => tmr_err_o
-      );
+    delay_slave : entity work.iodelay
+      port map(
+        clock       => clk40,
+        tap_delay_i => tap_delay_45,
+        data_i      => data_ibufds_n,
+        data_o      => data_delayed(1)
+        );
+
+    ----------------------------------------------------------------------------------------------------------------------
+    -- ISERDES in FPGA agnostic wrapper
+    ----------------------------------------------------------------------------------------------------------------------
+
+    ise1_m : entity work.iserdes
+      port map(
+        clk_i     => clk_io_0,
+        clk_90_i  => clk_io_90,
+        reset_i   => reset_serdes,
+        data_i    => data_delayed(0),
+        data_o(0) => q(1),
+        data_o(1) => q(5),
+        data_o(2) => q(3),
+        data_o(3) => q(7)
+        );
+
+    ise1_s : entity work.iserdes
+      port map(
+        clk_i     => clk_io_0,
+        clk_90_i  => clk_io_90,
+        reset_i   => reset_serdes,
+        data_i    => data_delayed(1),
+        data_o(0) => q(0),
+        data_o(1) => q(4),
+        data_o(2) => q(2),
+        data_o(3) => q(6)
+        );
+
+    ----------------------------------------------------------------------------------------------------------------------
+    -- Data Recovery Unit
+    ----------------------------------------------------------------------------------------------------------------------
+
+    dru : entity work.dru_tmr
+      generic map(
+        g_ENABLE_TMR         => g_ENABLE_TMR_DRU,
+        g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
+        )
+      port map(
+
+        clk1x => clk_1x_dru,
+        clk4x => clk_4x_dru,
+
+        i => q,                         -- the even bits are inverted!
+        o => rxdata,                    -- 8-bit deserialized data
+
+        e4_in         => e4_in,
+        e4_out        => e4_out,
+        phase_sel_in  => phase_sel_in,
+        phase_sel_out => phase_sel_out,
+
+        invalid_bitskip_o => invalid_bitskip_o,
+
+        tmr_err_o => tmr_err_o
+        );
+  end generate;
 
   -- optionally invert the data, since some of the s-bit pairs are polarity swapped
   rxdata_inv <= rxdata when invert = '0' else not rxdata;
@@ -233,7 +290,7 @@ begin
     process (clk_1x_dru) is              -- 80MHz
     begin
       if (rising_edge(clk_1x_dru)) then  -- 80MHz
-        if (clk40 = '1') then
+        if (clk40_lac = '1') then
           rxdata_demux(15 downto 8) <= rxdata_inv;
         else
           rxdata_demux(7 downto 0) <= rxdata_inv;

@@ -67,7 +67,7 @@ module frame_aligner
   generate
   for (I=0; I<8; I=I+1'b1) begin  : Iloop
 
-  bitslip_fast
+  bitslip
      #(.g_WORD_SIZE (FRAME_SIZE))
      data_bitslip (
     .clock        (clock),
@@ -80,7 +80,7 @@ module frame_aligner
   end
   endgenerate
 
-  bitslip_fast
+  bitslip
     #(.g_WORD_SIZE (FRAME_SIZE))
    sot_bitslip (
     .clock        (clock),

@@ -128,6 +128,7 @@ begin
 
   gbt_oversample : entity work.oversample
     generic map (
+      g_USE_DRU            => true,
       g_ENABLE_TMR_DRU     => EN_TMR_GBT_DRU,
       g_PHASE_SEL_EXTERNAL => false,
       g_DDR_MODE           => 0
@@ -195,7 +196,7 @@ begin
 
       )
     port map(
-      fabric_clk  => clk_1x,
+      clock       => clk_1x,
       reset       => rst,
       bitslip_cnt => rx_bitslip_cnt_stdlog,
       din         => from_gbt_raw,

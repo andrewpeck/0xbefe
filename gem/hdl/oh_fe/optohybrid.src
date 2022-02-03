@@ -62,6 +62,7 @@ gem/hdl/oh_fe/utils/err_indicator.v
 gem/hdl/oh_fe/utils/fader.v
 gem/hdl/oh_fe/utils/iodelay.vhd 93
 gem/hdl/oh_fe/utils/iserdes.vhd 93
+gem/hdl/oh_fe/utils/iserdes_x8.vhd 93
 gem/hdl/oh_fe/utils/progress_bar.vhd 93
 gem/hdl/oh_fe/utils/sem_mon.vhd 93
 gem/hdl/oh_fe/utils/synchronizer.vhd 93
