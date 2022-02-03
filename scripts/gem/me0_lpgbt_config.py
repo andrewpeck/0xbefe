@@ -251,18 +251,6 @@ def configLPGBT(oh_ver, readback):
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXRELOCKTHRESHOLD"), 0x5, readback)
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXUNLOCKTHRESHOLD"), 0x5, readback)
 
-    # Datapath configuration
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASDEINTERLEVEAR"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASFECDECODER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASSDESCRAMBLER"), 0x0, readback)
-    if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECERRCNTENA"), 0x1, readback)
-    elif oh_ver == 2:
-        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSINTERLEAVER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSSCRAMBLER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSFECCODER"), 0x0, readback)
-
 def set_uplink_group_data_source(type, readback, pattern=0x55555555):
     setting = 0
     if (type=="normal"):
