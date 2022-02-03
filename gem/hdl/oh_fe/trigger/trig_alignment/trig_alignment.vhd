@@ -140,6 +140,7 @@ begin
 
     sot_oversample : entity work.oversample
       generic map (
+        g_FPGA_TYPE          => FPGA_TYPE,
         g_PHASE_SEL_EXTERNAL => false,
         g_ENABLE_TMR_DRU     => EN_TMR_SOT_DRU,
         g_DDR_MODE           => g_DDR_MODE
@@ -196,6 +197,7 @@ begin
 
     sbit_oversample : entity work.oversample
       generic map (
+        g_FPGA_TYPE          => FPGA_TYPE,
         g_PHASE_SEL_EXTERNAL => true,
         g_ENABLE_TMR_DRU     => EN_TMR_SBIT_DRU,
         g_DDR_MODE           => g_DDR_MODE

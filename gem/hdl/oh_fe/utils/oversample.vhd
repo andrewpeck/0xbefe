@@ -9,6 +9,7 @@ use unisim.vcomponents.all;
 
 entity oversample is
   generic (
+    g_FPGA_TYPE          : string := "A7";
     g_ENABLE_TMR_DRU     : integer := 0;
     g_PHASE_SEL_EXTERNAL : boolean := false;
     g_USE_DRU            : boolean := false;
@@ -92,9 +93,9 @@ begin
   -- Reset
   ----------------------------------------------------------------------------------------------------------------------
 
-  process(clk_io_0)
+  process(clk_1x_dru)
   begin
-    if rising_edge(clk_io_0) then
+    if rising_edge(clk_1x_dru) then
       reset_serdes <= reset_i;
     end if;
   end process;
@@ -140,13 +141,16 @@ begin
 
     delay_io : entity work.iodelay
       port map(
-        clock       => clk40,
+        clock       => clk_1x_dru,
         tap_delay_i => tap_delay,
         data_i      => data_ibufds,
         data_o      => data_delayed
         );
 
     iserdes_inst : entity work.iserdes_x8
+      generic map (
+        g_FPGA_TYPE => g_FPGA_TYPE
+        )
       port map (
         data_i    => data_delayed,
         data_o    => rxdata,

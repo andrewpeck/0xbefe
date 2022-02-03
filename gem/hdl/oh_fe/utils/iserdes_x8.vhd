@@ -1,3 +1,35 @@
+----------------------------------------------------------------------------------
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- Optohybrid Firmware -- iserdes_x8
+-- A. Peck
+----------------------------------------------------------------------------------
+--
+-- Description:
+--
+--  This is a wrapper around Artix-7 and Virtex-6 primitives for performing 1:8
+--  deserialization of S-bits
+--
+--  It assumes that the input clocks are on global clock buffers,  and that the
+--  input data is connected to IDELAY elements
+--
+--  If IDELAY elements are to be removed, the data_i input should be connected to
+--  d instead of ddly
+--
+-- Reset:
+--
+--     When asserted, the reset input causes the outputs of all data flip-flops
+--     in the CLK and CLKDIV domains to be driven low asynchronously. When
+--     deasserted synchronously with CLKDIV, internal logic re-times this
+--     deassertion to the first rising edge of CLK. Every OSERDESE2 in a
+--     multiple bit output structure should therefore be driven by the same
+--     reset signal, asserted asynchronously, and deasserted synchronously to
+--     CLKDIV to ensure that all OSERDESE2 elements come out of reset in
+--     synchronization. The reset signal should only be deasserted when it is
+--     known that CLK and CLKDIV are stable and present.
+--
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -31,9 +63,9 @@ begin
   begin
     -- This places the first data in time on the right
     data_o(I) <= iserdes_q(NUM_SERIAL_BITS-I-1);
-    -- To place the first data in time on the left, use the
-    --   following code, instead
-    -- data_o(I) <= iserdes_q(I);
+  -- To place the first data in time on the left, use the
+  --   following code, instead
+  -- data_o(I) <= iserdes_q(I);
   end generate;
 
   ----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +106,7 @@ begin
         clk          => clk_i,          -- fast clock driven by mmcm
         clkb         => not clk_i,      -- locally inverted clock
         clkdiv       => clk_div_i,      -- slow clock driven by mmcm
-        d            => '0',         -- 1-bit input signal from iob.
+        d            => '0',            -- 1-bit input signal from iob.
         ddly         => data_i,
         rst          => io_reset,       -- 1-bit asynchronous reset only.
         shiftin1     => '0',
@@ -103,8 +135,8 @@ begin
         q2           => open,
         q3           => iserdes_q(6),
         q4           => iserdes_q(7),
-        q5           => iserdes_q(8),
-        q6           => iserdes_q(9),
+        q5           => open,           -- used for 1:10
+        q6           => open,           -- used for 1:10
         shiftout1    => open,
         shiftout2    => open,
         shiftin1     => icascade1,      -- cascade connections from master iserdes
@@ -156,7 +188,7 @@ begin
         Q8           => iserdes_q(7),
         SHIFTOUT1    => open,
         SHIFTOUT2    => open,
-        BITSLIP      => bitslip_i,     -- 1-bit Invoke Bitslip. This can be used with any DATA_WIDTH, cascaded or not.
+        BITSLIP      => bitslip_i,      -- 1-bit Invoke Bitslip. This can be used with any DATA_WIDTH, cascaded or not.
         CE1          => '1',            -- 1-bit Clock enable input
         CE2          => '1',            -- 1-bit Clock enable input
         CLK          => clk_i,          -- Fast clock driven by MMCM

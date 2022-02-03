@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------
 -- CMS Muon Endcap
 -- GEM Collaboration
--- Optohybrid v3 Firmware -- GBT SerDes
+-- Optohybrid Firmware -- GBT SerDes
 -- T. Lenzi, E. Juska, A. Peck
 ----------------------------------------------------------------------------------
 -- Description:
@@ -128,6 +128,7 @@ begin
 
   gbt_oversample : entity work.oversample
     generic map (
+      g_FPGA_TYPE          => FPGA_TYPE,
       g_USE_DRU            => true,
       g_ENABLE_TMR_DRU     => EN_TMR_GBT_DRU,
       g_PHASE_SEL_EXTERNAL => false,
