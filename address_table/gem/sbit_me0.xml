@@ -60,18 +60,20 @@
  
  
   <node id="ME0_VFAT${VFAT_CNT_ID}_MAP" address="0x60" permission="wr"
-    mask="111"
+    mask="0x0000000f"
     description="slip count for bitslip of VFAT${VFAT_CNT_ID} for mapping sbits"
     fw_signal="vfat_sbit_mapping_arr(${VFAT_CNT_ID})"
+    fw_default="0x00000000"
     generate="true"
     generate_size="&NUM_VFATS_PER_OH;"
     generate_address_step="0x1"
     generate_idx_var="VFAT_CNT_ID"/>
  
    <node id="ME0_VFAT${VFAT_CNT_ID}_DELAY" address="0x90" permission="wr"
-    mask="0xf"
+    mask="0x0000000f"
     description="tap delay for shift register of VFAT${VFAT_CNT_ID} for sbits phase allignment"
     fw_signal="vfat_sbit_delay_arr(${VFAT_CNT_ID})"
+    fw_default="0x00000000"
     generate="true"
     generate_size="&NUM_VFATS_PER_OH;"
     generate_address_step="0x1"
