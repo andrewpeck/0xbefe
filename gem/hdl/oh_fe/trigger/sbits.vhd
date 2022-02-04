@@ -245,7 +245,7 @@ begin
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
       USE_DYNAMIC_MAPPING => true,
-      REGISTER_OUTPUT     => false
+      REGISTER_OUTPUT     => true
       )
     port map (
       clock       => clocks.clk40,
