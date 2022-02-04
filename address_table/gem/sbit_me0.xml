@@ -57,7 +57,25 @@
   <node id="TEST_SEL_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
         description="Test register to display count of sbit from particular OH vfat sbit"
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
-  
+ 
+ 
+  <node id="ME0_VFAT${VFAT_CNT_ID}_MAP" address="0x60" permission="wr"
+    mask="111"
+    description="slip count for bitslip of VFAT${VFAT_CNT_ID} for mapping sbits"
+    fw_signal="vfat_sbit_mapping_arr(${VFAT_CNT_ID})"
+    generate="true"
+    generate_size="&NUM_VFATS_PER_OH;"
+    generate_address_step="0x1"
+    generate_idx_var="VFAT_CNT_ID"/>
+ 
+   <node id="ME0_VFAT${VFAT_CNT_ID}_DELAY" address="0x90" permission="wr"
+    mask="0xf"
+    description="tap delay for shift register of VFAT${VFAT_CNT_ID} for sbits phase allignment"
+    fw_signal="vfat_sbit_delay_arr(${VFAT_CNT_ID})"
+    generate="true"
+    generate_size="&NUM_VFATS_PER_OH;"
+    generate_address_step="0x1"
+    generate_idx_var="VFAT_CNT_ID"/> 
 
 </node>
 <!--end sbit_me0 module -->

@@ -88,8 +88,15 @@ architecture sbit_me0_arch of sbit_me0 is
     signal reset                : std_logic;
     signal reset_cnt            : std_logic;
 
+    -- VFAT constants
+    constant g_NUM_ELINKs   : integer:= 8;
+    constant g_MAX_SLIP_CNT   : integer:= 8;
+    constant g_MAX_SR_DELAY   : integer:= 16;
+
     -- control signals
-    signal vfat_sbit_mask_arr   : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
+    signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
+    signal vfat_sbit_mapping_arr : t_vfat_mapping_arr;
+    signal vfat_sbit_delay_arr   : t_std32_array(g_MAX_SR_DELAY - 1 downto 0);
 
     -- trigger signals
     signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking
@@ -178,6 +185,29 @@ begin
             end loop;
         end if;
     end process;
+
+    -- apply me0 sbit phase allignment & mapping
+    g_oh_allign : for OH in 0 to g_NUM_OF_OHs - 1 generate
+        i_sbit_allign: entity work.me0_sbit_allign
+            generic map(
+                g_NUM_OF_VFATs => g_NUM_VFATS_PER_OH,
+                g_NUM_ELINKs   => 8,
+                g_MAX_SLIP_CNT => 8,
+                g_MAX_SR_DELAY => 16
+            )
+            port map(
+                clk_i            => ttc_clk_i.clk_40,
+                rst_i            => reset_i,
+        
+                vfat_mapping_arr =>  vfat_sbit_mapping_arr,
+                vfat_delay_arr   =>  vfat_sbit_delay_arr,
+                
+                vfat_sbits_i     =>  vfat_sbits_arr(OH),
+                vfat_sbits_o     =>  vfat_sbits_allign(OH) 
+            );
+    
+    end generate;
+    
 
     --== Counters ==--
 
