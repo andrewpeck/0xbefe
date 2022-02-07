@@ -5,65 +5,117 @@ from time import *
 import array
 import struct
 
-DEBUG=False
+def main(boss, oh_ver, gpio_light, gpio_sound, operation):
 
-class Colors:            
-    WHITE   = "\033[97m"
-    CYAN    = "\033[96m"
-    MAGENTA = "\033[95m"
-    BLUE    = "\033[94m"
-    YELLOW  = "\033[93m"
-    GREEN   = "\033[92m"
-    RED     = "\033[91m"
-    ENDC    = "\033[0m"
+    piodirl = getNode("LPGBT.RWF.PIO.PIODIRL").address
+    piodirh = getNode("LPGBT.RWF.PIO.PIODIRH").address
+    piooutl = getNode("LPGBT.RWF.PIO.PIOOUTL").address
+    pioouth = getNode("LPGBT.RWF.PIO.PIOOUTH").address
+    piodirl_initial = mpeek(piodirl)
+    piodirh_initial = mpeek(piodirh)
+    piooutl_initial = mpeek(piooutl)
+    pioouth_initial = mpeek(pioouth)
 
-def main(boss, gpio_selected):
+    piodirl_val = piodirl_initial
+    piodirh_val = piodirh_initial
+    piooutl_val = piooutl_initial
+    pioouth_val = pioouth_initial
+    for g in gpio_light:
+        if g in range(0,8):
+            piodirl_val |= convert_gpio_reg(g)
+        elif g in range(8,16):
+            piodirh_val |= convert_gpio_reg(g)
+    if gpio_sound is not None:
+        piodirh_val |= convert_gpio_reg(gpio_sound)
+    mpoke(piodirl, piodirl_val)
+    mpoke(piodirh, piodirh_val)
 
-    sound_gpio = 13
-    if sound_gpio in gpio_selected:
-        print ("Starting LED show and turning speaker on\n")
-    else:
-        print("Starting LED show")
-
-    brightnessStart = 0
-    while True: # cycle brightness from on to off and off to on approx once per second (assuming 100kHz update rate)
-        brightnessEnd = 100
-        step = 1
-        if brightnessStart == 0:
-            brightnessStart = 100
-            brightnessEnd = -1
-            step = -1
-        else:
-            brightnessStart = 0
-            brightnessEnd = 101
-            step = 1
-
-        for b in range(brightnessStart, brightnessEnd, step): # one brightness cycle from on to off or off to on (100 steps per cycle)
-            for i in range(10): # generate 10 clocks at a specific brightness
-                for j in range(100): # generate a PWM waveform for one clock, setting the duty cycle according to the brightness
-                    gpio_list = gpio_selected
-                    if j >= b:
-                        gpio_list = []
-                    set_pioout(gpio_list)
+    if operation == "on":
+        print ("Operation ON")
+        for g in gpio_light:
+            if g in range(0,8):
+                if boss:
+                    piooutl_val |= convert_gpio_reg(g)
+                else:
+                    piooutl_val &= ~convert_gpio_reg(g)
+            elif g in range(8,16):
+                if boss:
+                    pioouth_val |= convert_gpio_reg(g)
+                else:
+                    pioouth_val &= ~convert_gpio_reg(g)
+        mpoke(piooutl, piooutl_val)
+        mpoke(pioouth, pioouth_val)
 
         stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
         if stop=="stop":
-            gpio_list = []
-            set_pioout(gpio_list)
             print ("\nStopping LED show\n")
-            break
 
-def set_pioout(gpio_list):
-    value_l = 0
-    value_h = 0
-    for gpio in gpio_list:
-        if gpio in range(0,8):
-            value_l |= convert_gpio_reg(gpio)
-        elif gpio in range(8,16):
-            value_h |= convert_gpio_reg(gpio)
+    elif operation == "off":
+        print ("Operation OFF")
+        for g in gpio_light:
+            if g in range(0,8):
+                if boss:
+                    piooutl_val &= ~convert_gpio_reg(g)
+                else:
+                    piooutl_val |= convert_gpio_reg(g)
+            elif g in range(8,16):
+                if boss:
+                    pioouth_val &= ~convert_gpio_reg(g)
+                else:
+                    pioouth_val |= convert_gpio_reg(g)
+        mpoke(piooutl, piooutl_val)
+        mpoke(pioouth, pioouth_val)
 
-    mpoke(getNode("LPGBT.RWF.PIO.PIOOUTL").address, value_l)
-    mpoke(getNode("LPGBT.RWF.PIO.PIOOUTH").address, value_h)
+        stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
+        if stop=="stop":
+            print ("\nStopping LED show\n")
+
+    elif operation == "show":
+        print ("Operation SHOW")
+        brightnessStart = 0
+        while True: # cycle brightness from on to off and off to on approx once per second (assuming 100kHz update rate)
+            brightnessEnd = 100
+            step = 1
+            if brightnessStart == 0:
+                brightnessStart = 100
+                brightnessEnd = -1
+                step = -1
+            else:
+                brightnessStart = 0
+                brightnessEnd = 101
+                step = 1
+
+            for b in range(brightnessStart, brightnessEnd, step): # one brightness cycle from on to off or off to on (100 steps per cycle)
+                for i in range(10): # generate 10 clocks at a specific brightness
+                    for j in range(100): # generate a PWM waveform for one clock, setting the duty cycle according to the brightness
+                        if j >= b:
+                            piooutl_val = piooutl_initial
+                            pioouth_val = pioouth_initial
+                        for g in gpio_light:
+                            if g in range(0,8):
+                                if boss:
+                                    piooutl_val |= convert_gpio_reg(g)
+                                else:
+                                    piooutl_val &= ~convert_gpio_reg(g)
+                            elif g in range(8,16):
+                                if boss:
+                                    pioouth_val |= convert_gpio_reg(g)
+                                else:
+                                    pioouth_val &= ~convert_gpio_reg(g)
+                        if gpio_sound is not None:
+                            pioouth_val &= ~convert_gpio_reg(g)
+                        mpoke(piooutl, piooutl_val)
+                        mpoke(pioouth, pioouth_val)
+
+            stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
+            if stop=="stop":
+                print ("\nStopping show\n")
+                break
+
+    mpoke(piodirl, piodirl_initial)
+    mpoke(piodirh, piodirh_initial)
+    mpoke(piooutl, piooutl_initial)
+    mpoke(pioouth, pioouth_initial)
 
 def convert_gpio_reg(gpio):
     reg_data = 0
@@ -74,45 +126,6 @@ def convert_gpio_reg(gpio):
     reg_data |= (0x01 << bit)
     return reg_data
 
-def check_bit(byteval,idx):
-    return ((byteval&(1<<idx))!=0);
-
-def debug(string):
-    if DEBUG:
-        print("DEBUG: " + string)
-
-def debugCyan(string):
-    if DEBUG:
-        printCyan("DEBUG: " + string)
-
-def heading(string):                                                                    
-    print (Colors.BLUE)
-    print ("\n>>>>>>> "+str(string).upper()+" <<<<<<<")
-    print (Colors.ENDC)
-                                                      
-def subheading(string):                         
-    print (Colors.YELLOW)
-    print ("---- "+str(string)+" ----",Colors.ENDC)
-                                                                     
-def printCyan(string):                                                
-    print (Colors.CYAN)
-    print (string, Colors.ENDC)
-                                                                      
-def printRed(string):                                                                                                                       
-    print (Colors.RED)
-    print (string, Colors.ENDC)
-
-def hex(number):
-    if number is None:
-        return "None"
-    else:
-        return "{0:#0x}".format(number)
-
-def binary(number, length):
-    if number is None:
-        return "None"
-    else:
-        return "{0:#0{1}b}".format(number, length + 2)
 
 if __name__ == "__main__":
 
@@ -123,109 +136,112 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-g_l", "--gpio_light", action="store", nargs="+", dest="gpio_light", help="gpio_light = [15 for boss in OHv1] or [5 for boss or {0,1,3,8,13} for sub in OHv2]")
-    parser.add_argument("-g_s", "--gpio_sound", action="store", dest="gpio_sound", help="gpio_sound = on, off")
+    parser.add_argument("-g_s", "--gpio_sound", action="store", dest="gpio_sound", help="gpio_sound = 13 for sub in OHv2")
+    parser.add_argument("-p", "--op", action="store", dest="op", help="op = on, off, show")
     args = parser.parse_args()
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for LED Show")
     elif args.system == "backend":
         print ("Using Backend for LED Show")
-        #print ("Only chc (Rpi Cheesecake) or dryrun supported at the moment")
-        #sys.exit()
-    elif args.system == "dongle":
-        #print ("Using USB Dongle for LED Show"")
-        print (Colors.YELLOW + "Only chc (Rpi Cheesecake) or dryrun supported at the moment" + Colors.ENDC)
-        sys.exit()
     elif args.system == "dryrun":
-        print ("Dry Run - not actually doing the LED Show")
+        print ("Dry Run - not actually doing LED Show")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dongle, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
+    if args.gem != "ME0":
+        print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
+        sys.exit()
+
+    if args.ohid is None:
+        print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
+        sys.exit()
+    #if int(args.ohid) > 1:
+    #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
+    #    sys.exit()
+
+    if args.gbtid is None:
+        print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
+        sys.exit()
+    if int(args.gbtid) > 7:
+        print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
+        sys.exit()
+
+    oh_ver = get_oh_ver(args.ohid, args.gbtid)
     boss = None
-    gpio_selected = []
-    oh_v = 0
-    if args.oh_v == "1":
-        oh_v = 1
+    if int(args.gbtid)%2 == 0:
+        boss = 1
+    else:
+        boss = 0
+
+    if args.op not in ["on", "off", "show"]:
+        print (Colors.YELLOW + "Only operations allowed are on, off and show" + Colors.ENDC)
+        sys.exit()
+
+    gpio_light = []
+    gpio_sound = None
+    if oh_ver == 1:
         print("Using OHv1")
-        if args.lpgbt is None or args.lpgbt!="boss":
-            print (Colors.YELLOW + "Please select boss for OH v1" + Colors.ENDC)
-            sys.exit()
-        else:
-            print ("Configuring LPGBT as boss")
-            boss = 1
-            if args.gpio_light is None or args.gpio_light[0] == "15":
-                print("Enabling led")
-                gpio_selected.append(int(args.gpio_light[0]))
-            elif args.gpio_light[0] != "15":
-                print(Colors.YELLOW + "Only gpio15 connected to led" + Colors.ENDC)
+        if boss:
+            if args.gpio_light is None:
+                print(Colors.YELLOW + "Select a LED GPIO for OHv1: 15" + Colors.ENDC)
                 sys.exit()
+            elif len(args.gpio_light)>1 or args.gpio_light[0]!="15":
+                print(Colors.YELLOW + "Only GPIO15 connected to LED for OHv1" + Colors.ENDC)
+                sys.exit()
+            elif args.gpio_light[0]=="15":
+                print("LED: GPIO 15 - Operation: %s"%args.op)
+                gpio_light.append(int(args.gpio_light[0]))
             if args.gpio_sound is not None:
                 print(Colors.YELLOW + "Sound not supported for OHv1" + Colors.ENDC)
                 sys.exit()
-    elif args.oh_v == "2":
+        else:
+            print (Colors.YELLOW + "Please select boss for OH v1" + Colors.ENDC)
+            sys.exit()
+    elif oh_ver == 2:
         print("Using OHv2")
-        oh_v = 2
-        if args.lpgbt is None:
-            print (Colors.YELLOW + "Please select boss or sub for OH v2" + Colors.ENDC)
-            sys.exit()
-        elif args.lpgbt == "boss":
-            print("Configuring LPGBT as boss")
-            boss = 1
-            if args.gpio_light is None or args.gpio_light[0] == "5":
-                print("Enabling gpio5 for led")
-                gpio_selected.append(int(args.gpio_light[0]))
-            elif args.gpio_light[0] != "5":
-                print(Colors.YELLOW + "Only gpio5 connected to led" + Colors.ENDC)
-                sys.exit()
-            if args.gpio_sound is not None or args.gpio_sound == "off":
-                print(Colors.YELLOW + "Sound not supported for master in OHv2" + Colors.ENDC)
-                sys.exit()
-        elif args.lpgbt == "sub":
-            print("Configuring LPGBT as sub")
-            boss = 0
+        if boss:
+            print("Boss lpGBT")
             if args.gpio_light is None:
-                print(Colors.YELLOW + "Please select any of the following: {0, 1, 3, 8, 13}" + Colors.ENDC)
+                print(Colors.YELLOW + "Select a LED GPIO for OHv2: 5" + Colors.ENDC)
                 sys.exit()
-            for gpio_light in args.gpio_light:
-                gpio_light = int(gpio_light)
-                if gpio_light not in [0, 1, 3, 8, 13]:
-                    print(Colors.YELLOW + "Invalid gpio, only allowed {0, 1, 3, 8, 13}" + Colors.ENDC)
+            elif len(args.gpio_light)>1 or args.gpio_light[0]!="5":
+                print(Colors.YELLOW + "Only GPIO5 connected to LED for boss lpGBT in OHv2" + Colors.ENDC)
+                sys.exit()
+            elif args.gpio_light[0]=="5":
+                print("LED: GPIO 5 - Operation: %s"%args.op)
+                gpio_light.append(int(args.gpio_light[0]))
+            if args.gpio_sound is not None:
+                print(Colors.YELLOW + "Sound not supported for boss lpGBT in OHv2" + Colors.ENDC)
+                sys.exit()
+        else:
+            if args.gpio_light is not None and args.gpio_sound is not None:
+                print(Colors.YELLOW + "Select either LED GPIOs (0, 1, 3, 8) or sound GPIO (13) for OHv2, not both" + Colors.ENDC)
+                sys.exit()
+            if args.gpio_light is None and args.gpio_sound is None:
+                print(Colors.YELLOW + "Select either of LED GPIOs (0, 1, 3, 8) or sound GPIO (13) for OHv2" + Colors.ENDC)
+                sys.exit()
+            if args.gpio_light is not None:
+                for g in args.gpio_light:
+                    if int(g) not in [0, 1, 3, 8]:
+                        print(Colors.YELLOW + "Only GPIOs 0, 1, 3 and 8 connected to LED for sub lpGBT in OHv2" + Colors.ENDC)
+                        sys.exit()
+                    print("LED: GPIO %s - Operation: %s"%(g, args.op))
+                    gpio_light.append(int(g))
+            if args.gpio_sound is not None:
+                if int(args.gpio_sound) != 13:
+                    print(Colors.YELLOW + "Only GPIO 13 connected to Speaker for sub lpGBT in OHv2" + Colors.ENDC)
                     sys.exit()
-                gpio_selected.append(gpio_light)
-            print("Enabling led(s)")
-            if args.gpio_sound == "off" and 13 in gpio_selected:
-                print(Colors.YELLOW + "No can do: gpio 13 enables both the led and the speaker" + Colors.ENDC)
-                sys.exit()
-            elif args.gpio_sound == "on":
-                print("Enabling speaker")
-                if 13 not in gpio_selected:
-                    gpio_selected.append(13)
-    else:
-        print(Colors.YELLOW + "Please select either OH v1 or v2" + Colors.ENDC)
-        sys.exit()
-    if boss is None:
-        sys.exit()
-        
-    if args.system == "backend":
-        if args.ohid is None:
-            print (Colors.YELLOW + "Need OHID for backend" + Colors.ENDC)
-            sys.exit()
-        if args.gbtid is None:
-            print (Colors.YELLOW + "Need GBTID for backend" + Colors.ENDC)
-            sys.exit()
-        if int(args.ohid) > 1:
-            print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
-            sys.exit()
-        if int(args.gbtid) > 7:
-            print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
-            sys.exit()
-    else:
-        if args.ohid is not None or args.gbtid is not None:
-            print (Colors.YELLOW + "OHID and GBTID only needed for backend" + Colors.ENDC)
-            sys.exit()
+                print("Speaker: GPIO 13 - Operation: %s"%args.op)
+                gpio_sound = int(args.gpio_sound)
 
-    # Initialization 
+    if args.gpio_sound is not None:
+        if args.op != "show":
+            print("Only show operation allowed for Speaker in OH_v2")
+            gpio_sound = int(args.gpio_sound)
+
+    # Initialization
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
@@ -240,7 +256,7 @@ if __name__ == "__main__":
        
     # LPGBT LED Show
     try:
-        main(boss, gpio_selected)
+        main(boss, oh_ver, gpio_light, gpio_sound, args.op)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
