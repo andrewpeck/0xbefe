@@ -561,9 +561,6 @@ def writeGbtRegAddrs(reg, val):
     write_reg(NODE_IC_WRITE_DATA, val)
     write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
-    data = read_reg(NODE_IC_READ_DATA) & 0xFF
-    if data != val:
-        print (Colors.RED + "ERROR: Read back value of register did not match with value written" + Colors.ENDC)
 
 def readGbtRegAddrs(reg):
     write_reg(NODE_IC_ADDR, reg)
