@@ -534,7 +534,7 @@ def writeGbtRegAddrs(reg, val):
     write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
 
-def readGbtRegAddrs(reg, val):
+def readGbtRegAddrs(reg):
     write_reg(NODE_IC_ADDR, reg)
     write_reg(NODE_IC_EXEC_READ, 1)
     data = read_reg(NODE_IC_READ_DATA) & 0xFF
