@@ -103,7 +103,7 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
                                 else:
                                     pioouth_val &= ~convert_gpio_reg(g)
                         if gpio_sound is not None:
-                            pioouth_val &= ~convert_gpio_reg(g)
+                            pioouth_val &= ~convert_gpio_reg(gpio_sound)
                         mpoke(piooutl, piooutl_val)
                         mpoke(pioouth, pioouth_val)
 
