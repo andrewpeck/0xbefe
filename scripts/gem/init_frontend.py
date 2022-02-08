@@ -43,9 +43,12 @@ def init_gem_frontend():
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
-                if gbt%2 != 0:
-                    continue
                 selectGbt(oh, gbt)
+                if gbt%2 != 0:
+                    if gbt_ver == 1:
+                        for i in range(0,10):
+                            read_data = readGbtRegAddrs(0x00)
+                    continue
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
                 elif gbt_ver == 1:

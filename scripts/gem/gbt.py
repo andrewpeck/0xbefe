@@ -11,11 +11,13 @@ import sys
 DEBUG = False
 
 ADDR_IC_ADDR = None
+ADDR_IC_READ_DATA = None
 ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
 
 NODE_IC_ADDR = None
+NODE_IC_READ_DATA = None
 NODE_IC_WRITE_DATA = None
 NODE_IC_EXEC_WRITE = None
 NODE_IC_EXEC_READ = None
@@ -471,21 +473,25 @@ def destroyConfig():
 
 def initGbtRegAddrs():
     global ADDR_IC_ADDR
+    global ADDR_IC_READ_DATA
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
 
     global NODE_IC_ADDR
+    global NODE_IC_READ_DATA
     global NODE_IC_WRITE_DATA
     global NODE_IC_EXEC_WRITE
     global NODE_IC_EXEC_READ
 
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
+    ADDR_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
 
     NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
+    NODE_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA')
     NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
     NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
     NODE_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ')
@@ -527,6 +533,12 @@ def writeGbtRegAddrs(reg, val):
     write_reg(NODE_IC_WRITE_DATA, val)
     write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
+
+def readGbtRegAddrs(reg, val):
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_EXEC_READ, 1)
+    data = read_reg(NODE_IC_READ_DATA) & 0xFF
+    return data
 
 def signal_handler(sig, frame):
     print("Exiting..")
