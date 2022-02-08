@@ -45,6 +45,8 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         reg_list_sub[gbt] = {}
         oh_ver = get_oh_ver(str(oh_select), str(gbt))
         if oh_ver == 1:
+            for i in range(0,10):
+                test_read = mpeek(0x00)
             n_rw_reg = (0x13C+1)
         if oh_ver == 2:
             n_rw_reg = (0x14F+1)
