@@ -45,9 +45,6 @@ def init_gem_frontend():
                 gbt_ver = gbt_ver_list[gbt]
                 selectGbt(oh, gbt)
                 if gbt%2 != 0:
-                    if gbt_ver == 1:
-                        for i in range(0,10):
-                            read_data = readGbtRegAddrs(0x00)
                     continue
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
@@ -59,7 +56,20 @@ def init_gem_frontend():
                 elif gbt_ver == 1:
                     writeGbtRegAddrs(0x13F, 0x80)
                 sleep(0.1)
-        sleep(1)
+        sleep(2)
+
+        # Do some lpGBT read operations for sub in OH-v1s to get the EC working
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            for gbt in range(num_gbts):
+                gbt_ver = gbt_ver_list[gbt]
+                selectGbt(oh, gbt)
+                if gbt%2 != 0:
+                    if gbt_ver == 0:
+                        for i in range(0,10):
+                            read_data = readGbtRegAddrs(0x00)
+                else:
+                    continue
         
         # configure lpGBTs
         for oh in range(max_ohs):

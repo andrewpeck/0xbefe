@@ -189,6 +189,8 @@ def main(system, oh_select, gbt_list, relay_number, niter):
 
             # Check lpGBT PUSM READY and MODE
             if oh_ver == 1:
+                for i in range(0,10):
+                    test_read = mpeek(0x00)
                 ready_value = 18
                 mode_value = 9
                 mode = (mpeek(0x140) & 0xF0) >> 4

@@ -114,6 +114,13 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
             if wasNotReady != 0:
                 break
 
+    elif command == 'read-config':
+        filename = command_args[0]
+        if filename[-3:] != "txt":
+            print_red("Seems like the file %s is not a txt file, please provide a txt file for output" % filename)
+            return
+        readConfig(ohSelect, gbtSelect, filename)
+
     elif (command == 'config') or (command == 'v3b-phase-scan') or (command == 'ge21-phase-scan') or ('ge21-fpga-phase-scan' in command) or (command == 'ge21-program-phases'):
         if len(command_args) < 1:
             print("For this command, you also need to provide a config file")
@@ -401,6 +408,27 @@ def getBestPhase(goodPhases):
     print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
     return bestPhase
 
+def readConfig(ohIdx, gbtIdx, filename):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+
+    n_rw_reg = 0
+    if gem_station == 0:
+        if gbt_ver == 0:
+            n_rw_reg = (0x13C+1)
+        elif gbt_ver == 1:
+            n_rw_reg = (0x14F+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
+    f = open(filename, 'w')
+    for reg in range(0, n_rw_reg):
+        wReg(ADDR_IC_ADDR, addr)
+        wReg(ADDR_IC_EXEC_READ, 1)
+        value = rReg(ADDR_IC_READ_DATA)
+        f.write("0x%03X  0x%02X"%(reg, value))
+    f.close()
+
 def downloadConfig(ohIdx, gbtIdx, filename):
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
@@ -533,10 +561,14 @@ def writeGbtRegAddrs(reg, val):
     write_reg(NODE_IC_WRITE_DATA, val)
     write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
+    data = read_reg(NODE_IC_READ_DATA) & 0xFF
+    if data != val:
+        print (Colors.RED + "ERROR: Read back value of register did not match with value written" + Colors.ENDC)
 
 def readGbtRegAddrs(reg):
     write_reg(NODE_IC_ADDR, reg)
     write_reg(NODE_IC_EXEC_READ, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
     data = read_reg(NODE_IC_READ_DATA) & 0xFF
     return data
 
@@ -557,6 +589,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 4:
         print('Usage: gbt.py <oh_num> <gbt_num> <command>')
         print('available commands:')
+        print('  read-config <config_filename_txt>:   Reads the configuration of the GBT and writes it to the given config file (must use the txt version of the config file)')
         print('  config <config_filename_txt>:   Configures the GBT with the given config file (must use the txt version of the config file, can be generated with the GBT programmer software)')
         print('  v3b-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  ge21-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
