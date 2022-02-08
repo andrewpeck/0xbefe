@@ -44,13 +44,13 @@ def main(system, oh_select, gbt_list, relay_number, niter):
     for gbt in gbt_list["sub"]:
         reg_list_sub[gbt] = {}
         oh_ver = get_oh_ver(str(oh_select), str(gbt))
+        select_ic_link(oh_select, gbt)
         if oh_ver == 1:
             for i in range(0,10):
                 test_read = mpeek(0x00)
             n_rw_reg = (0x13C+1)
         if oh_ver == 2:
             n_rw_reg = (0x14F+1)
-        select_ic_link(oh_select, gbt)
         for reg in range(n_rw_reg):
             reg_list_sub[gbt][reg] = mpeek(reg)
 
