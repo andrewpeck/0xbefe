@@ -71,8 +71,11 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
 
     # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
     if boss and not readback:
-        print ("Enabling TX2 channel for VTRX+")
-        i2cmaster_write(system, oh_ver, 0x00, 0x03)
+        # Check if old VTRx+
+        check_data = i2cmaster_read(system, oh_ver, 0x01)
+        if check_data == 0x00:
+            print ("Enabling TX2 channel for VTRX+")
+            i2cmaster_write(system, oh_ver, 0x00, 0x03)
 
     print("Configuration finished... asserting config done")
     # Finally, Set pll&dllConfigDone to run chip:
