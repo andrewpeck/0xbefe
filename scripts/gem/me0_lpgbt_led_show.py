@@ -88,22 +88,36 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
             for b in range(brightnessStart, brightnessEnd, step): # one brightness cycle from on to off or off to on (100 steps per cycle)
                 for i in range(10): # generate 10 clocks at a specific brightness
                     for j in range(100): # generate a PWM waveform for one clock, setting the duty cycle according to the brightness
-                        if j >= b:
-                            piooutl_val = piooutl_initial
-                            pioouth_val = pioouth_initial
+                        piooutl_val = piooutl_initial
+                        pioouth_val = pioouth_initial
                         for g in gpio_light:
-                            if g in range(0,8):
-                                if boss:
-                                    piooutl_val |= convert_gpio_reg(g)
-                                else:
-                                    piooutl_val &= ~convert_gpio_reg(g)
-                            elif g in range(8,16):
-                                if boss:
-                                    pioouth_val |= convert_gpio_reg(g)
-                                else:
-                                    pioouth_val &= ~convert_gpio_reg(g)
+                            if j >= b:
+                                if g in range(0,8):
+                                    if boss:
+                                        piooutl_val &= ~convert_gpio_reg(g)
+                                    else:
+                                        piooutl_val |= convert_gpio_reg(g)
+                                elif g in range(8,16):
+                                    if boss:
+                                        pioouth_val &= ~convert_gpio_reg(g)
+                                    else:
+                                        pioouth_val |= convert_gpio_reg(g)
+                            else:
+                                if g in range(0,8):
+                                    if boss:
+                                        piooutl_val |= convert_gpio_reg(g)
+                                    else:
+                                        piooutl_val &= ~convert_gpio_reg(g)
+                                elif g in range(8,16):
+                                    if boss:
+                                        pioouth_val |= convert_gpio_reg(g)
+                                    else:
+                                        pioouth_val &= ~convert_gpio_reg(g)
                         if gpio_sound is not None:
-                            pioouth_val &= ~convert_gpio_reg(gpio_sound)
+                            if j >= b:
+                                pioouth_val |= convert_gpio_reg(gpio_sound)
+                            else:
+                                pioouth_val &= ~convert_gpio_reg(gpio_sound)
                         mpoke(piooutl, piooutl_val)
                         mpoke(pioouth, pioouth_val)
 
@@ -135,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-g_l", "--gpio_light", action="store", nargs="+", dest="gpio_light", help="gpio_light = [15 for boss in OHv1] or [5 for boss or {0,1,3,8,13} for sub in OHv2]")
+    parser.add_argument("-g_l", "--gpio_light", action="store", nargs="+", dest="gpio_light", help="gpio_light = [15 for boss in OHv1] or [5 for boss or {0,1,3,8} for sub in OHv2]")
     parser.add_argument("-g_s", "--gpio_sound", action="store", dest="gpio_sound", help="gpio_sound = 13 for sub in OHv2")
     parser.add_argument("-p", "--op", action="store", dest="op", help="op = on, off, show")
     args = parser.parse_args()
