@@ -24,6 +24,7 @@ use UNISIM.VComponents.all;
 
 use work.ttc_pkg.all;
 use work.board_config_package.all;
+use work.common_pkg.all;
 
 --============================================================================
 --                                                          Entity declaration
@@ -32,9 +33,11 @@ entity ttc_clocks is
     generic (
         g_GEM_STATION               : integer range 0 to 2;
         g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false;
-        PLL_LOCK_WAIT_TIMEOUT       : unsigned(23 downto 0) := x"002710" -- way too long, will measure how low we can go here
+        PLL_LOCK_WAIT_TIMEOUT       : unsigned(23 downto 0) := x"002710"; -- way too long, will measure how low we can go here
+        g_CLK_STABLE_FREQ           : integer
     );
     port (
+        clk_stable_i            : in  std_logic;
         clk_40_ttc_p_i          : in  std_logic; -- TTC backplane clock signals
         clk_40_ttc_n_i          : in  std_logic;
         clk_gbt_mgt_txout_i     : in  std_logic; -- TTC jitter cleaned 160MHz or 320MHz TTC clock, should come from MGT ref (160MHz in GBTX case, and 320MHz in LpGBT case)
@@ -78,6 +81,18 @@ COMPONENT ila_ttc_clocks
     );
 END COMPONENT  ;
 
+    component freq_meter is
+        generic(
+            REF_F       : std_logic_vector(31 downto 0);
+            N           : integer
+        );
+        port(
+            ref_clk     : in  std_logic;
+            f           : in  std_logic_vector(N - 1 downto 0);
+            freq        : out t_std32_array(N - 1 downto 0)
+        );
+    end component freq_meter;
+    
     --============================================================================
     --                                                         Signal declarations
     --============================================================================
@@ -211,6 +226,10 @@ END COMPONENT  ;
    
     -- control signals moved to mmcm_ps_clk domain
     signal ctrl_psclk               : t_ttc_clk_ctrl;
+    
+    -- frequency monitor
+    signal ttc_freq                 : t_std32_array(0 downto 0);
+    signal ttc_freq_sync            : std_logic_vector(31 downto 0);
     
 --============================================================================
 --                                                          Architecture begin
@@ -735,11 +754,32 @@ begin
             seconds_o => sync_done_time
         );   
 
+    i_freq_meter : freq_meter
+        generic map(
+            REF_F => std_logic_vector(to_unsigned(g_CLK_STABLE_FREQ, 32)),
+            N     => 1
+        )
+        port map(
+            ref_clk => clk_stable_i,
+            f       => (0 => ttc_clocks_bufg.clk_40),
+            freq    => ttc_freq
+        );    
         
     --- transfer status signals from psclk to clk40 domain    
     
     i_sync_sync_done_clk40 :        entity work.synch generic map(N_STAGES => 2) port map(async_i => sync_done_flag, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => sync_done_flag_clk40);
     i_sync_mmcm_locked_clk40 :      entity work.synch generic map(N_STAGES => 2) port map(async_i => mmcm_locked, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => mmcm_locked_clk40);
+ 
+     i_ttc_freq_sync : xpm_cdc_array_single
+        generic map(
+            WIDTH          => 32
+        )
+        port map(
+            src_clk  => clk_stable_i,
+            src_in   => ttc_freq(0),
+            dest_clk => ttc_clocks_bufg.clk_40,
+            dest_out => ttc_freq_sync
+        );        
     
     -- status signal wiring    
     
@@ -752,6 +792,7 @@ begin
     status_o.sync_done_time <= sync_done_time;
     status_o.phase_unlock_time <= phase_unlock_time;
     status_o.ttc_clk_loss_time <= ttc_clk_loss_time;
+    status_o.clk40_freq <= ttc_freq_sync;
         
         
     -------------- Phase monitoring of the 40MHz derived from TXOUTCLK vs TTC backplane -------------- 

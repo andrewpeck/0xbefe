@@ -231,10 +231,12 @@ begin
 
     i_ttc_clks : entity work.ttc_clocks
         generic map(
+            g_CLK_STABLE_FREQ           => 100_000_000,
             g_GEM_STATION               => 1,
             g_LPGBT_2P56G_LOOPBACK_TEST => false
         )
         port map(
+            clk_stable_i        => axil_clk,
             clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
             clk_gbt_mgt_ready_i => '1',
             clocks_o            => ttc_clks,

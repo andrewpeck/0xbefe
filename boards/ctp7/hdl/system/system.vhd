@@ -347,9 +347,11 @@ begin
   
   i_ttc_clocks : entity work.ttc_clocks
           generic map (
+              g_CLK_STABLE_FREQ => 50_000_000,
               g_GEM_STATION => g_GEM_STATION
           )
       port map(
+          clk_stable_i          => s_clk_50,
           clk_40_ttc_p_i        => clk_40_ttc_p_i,
           clk_40_ttc_n_i        => clk_40_ttc_n_i,
           clk_gbt_mgt_txout_i   => gbt_mgt_txoutclk,

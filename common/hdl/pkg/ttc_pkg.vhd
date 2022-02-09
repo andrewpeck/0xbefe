@@ -110,6 +110,7 @@ package ttc_pkg is
         phase_unlock_time       : std_logic_vector(15 downto 0); -- number of seconds since last phase unlock
         ttc_clk_loss_time       : std_logic_vector(15 downto 0); -- number of seconds since last TTC clock loss
         phase_monitor           : t_phase_monitor_status;
+        clk40_freq              : std_logic_vector(31 downto 0); -- frequency of clk40
     end record;
 
     type t_bc0_status is record
