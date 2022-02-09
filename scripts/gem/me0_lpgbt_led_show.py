@@ -87,9 +87,9 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
 
             for b in range(brightnessStart, brightnessEnd, step): # one brightness cycle from on to off or off to on (100 steps per cycle)
                 for i in range(10): # generate 10 clocks at a specific brightness
+                    piooutl_val = piooutl_initial
+                    pioouth_val = pioouth_initial
                     for j in range(100): # generate a PWM waveform for one clock, setting the duty cycle according to the brightness
-                        piooutl_val = piooutl_initial
-                        pioouth_val = pioouth_initial
                         for g in gpio_light:
                             if j >= b:
                                 if g in range(0,8):
