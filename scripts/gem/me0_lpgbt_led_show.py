@@ -121,6 +121,7 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
                         mpoke(piooutl, piooutl_val)
                         mpoke(pioouth, pioouth_val)
 
+            brightnessStart = brightnessEnd
             stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
             if stop=="stop":
                 print ("\nStopping show\n")
