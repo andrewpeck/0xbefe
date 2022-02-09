@@ -4,8 +4,9 @@ import sys
 import argparse
 import random
 import datetime
+import math
 
-def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, vfat_list, verbose):
+def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, ber_limit, vfat_list, verbose):
 
     resultDir = "results"
     try:
@@ -37,6 +38,22 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     gbt_list = []
     for gbt in gbtid:
         gbt_list.append(int(gbt))
+
+    data_rate=0
+    data_packet_size = 0
+    if path=="uplink":
+        print ("For Uplink:")
+        file_out.write("For Uplink:\n")
+        data_rate = 10.24 * 1e9
+        data_packet_size = 256
+    elif path=="downlink":
+        print ("For Downlink:")
+        file_out.write("For Downlink:\n")
+        data_rate = 2.56 * 1e9
+        data_packet_size = 64
+        
+    if runtime is None:
+        runtime = 1.0/(data_rate * ber_limit * 60)
 
     if path == "uplink": # check FEC errors on backend
         if opr != "run" and opr != "read":
@@ -90,6 +107,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
         t0 = time()
         time_prev = t0
+        ber_passed = -1
         while ((time()-t0)/60.0) < runtime:
             for v_node in vfat_node:
                 data_write = random.randint(0, (2**32 - 1)) # random number to write (32 bit)
@@ -101,6 +119,27 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         file_out.write("Register value mismatch\n\n")
                         rw_terminate()
 
+            ber_t = math.log(1.0/(data_rate * (time()-t0)), 10)
+            if ber_t<=-9 and (ber_passed-ber_t)>=1:
+                print ("\nBER: ")
+                file_out.write("\nBER: ")
+                for gbt in fec_node_list:
+                    fec_node = fec_node_list[gbt]
+                    curr_fec_errors = gem_utils.read_backend_reg(fec_node)
+                    curr_ber_str = ""
+                    if curr_fec_errors == 0:
+                        curr_ber_str += Colors.GREEN + "  GBT %d, BER "%gbt
+                        curr_ber_str += "< {:.2e}".format(ber_t)
+                    else:
+                        curr_ber_str += Colors.RED + "  GBT %d, BER "%gbt
+                        curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                    curr_ber_str += "Colors.ENDC"
+                    print (curr_ber_str)
+                    file_out.write(curr_ber_str+"\n")
+                print ("\n")
+                file_out.write("\n\n")
+                ber_passed = ber_t
+                
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
                 if verbose:
@@ -143,11 +182,31 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         if opr in ["start", "run"]:
             print ("Starting with number of FEC Errors = %d\n" % (start_fec_errors))
             file_out.write("Starting with number of FEC Errors = %d\n\n" % (start_fec_errors))
+        
         t0 = time()
         time_prev = t0
-
+        ber_passed = -1
         if opr == "run":
             while ((time()-t0)/60.0) < runtime:
+                ber_t = math.log(1.0/(data_rate * (time()-t0)), 10)
+                if ber_t<=-9 and (ber_passed-ber_t)>=1:
+                    print ("\nBER: ")
+                    file_out.write("\nBER: ")
+                    curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
+                    curr_ber_str = ""
+                    if curr_fec_errors == 0:
+                       curr_ber_str += Colors.GREEN + "  GBT %d, BER "%gbt
+                       curr_ber_str += "< {:.2e}".format(ber_t)
+                    else:
+                       curr_ber_str += Colors.RED + "  GBT %d, BER "%gbt
+                       curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                    curr_ber_str += "Colors.ENDC"
+                    print (curr_ber_str)
+                    file_out.write(curr_ber_str)
+                    print ("\n")
+                    file_out.write("\n\n")
+                    ber_passed = ber_t
+            
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -190,20 +249,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
 
         if opr != "run":
-            return
-
-    data_rate=0
-    data_packet_size = 0
-    if path=="uplink":
-        print ("For Uplink:")
-        file_out.write("For Uplink:\n")
-        data_rate = 10.24 * 1e9
-        data_packet_size = 256
-    elif path=="downlink":
-        print ("For Downlink:")
-        file_out.write("For Downlink:\n")
-        data_rate = 2.56 * 1e9
-        data_packet_size = 64
+            return  
 
     for gbt in gbt_list:
         fec_error_gbt = fec_errors[gbt]
@@ -261,6 +307,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--path", action="store", dest="path", help="path = uplink, downlink")
     parser.add_argument("-r", "--opr", action="store", dest="opr", default="run", help="opr = start, run, read, stop (only allowed options for uplink: run, read)")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
+    parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = list of VFATs (0-23) for read/write TEST_REG")
     parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", help="VERBOSE")
     args = parser.parse_args()
@@ -331,14 +378,18 @@ if __name__ == "__main__":
             sys.exit()
 
     if (args.path == "uplink" and args.opr == "run") or (args.path == "downlink" and args.opr == "run"):
-        if args.time is None:
-            print (Colors.YELLOW + "BERT measurement time required" + Colors.ENDC)
+        if args.time is None and args.ber is None:
+            print (Colors.YELLOW + "BERT measurement time or BER limit required" + Colors.ENDC)
+            sys.exit()
+        if args.time is not None and args.ber is not None:
+            print (Colors.YELLOW + "Only either BERT measurement time or BER limit should be given" + Colors.ENDC)
             sys.exit()
     else:
-        if args.time is not None:
-            print (Colors.YELLOW + "BERT measurement time not required" + Colors.ENDC)
+        if args.time is not None or args.ber is not None:
+            print (Colors.YELLOW + "BERT measurement time or VER limit not required" + Colors.ENDC)
             sys.exit()
         args.time = "0"
+        args.ber = "0"
 
     if args.system == "backend" or args.system == "dryrun":
         import gem.gem_utils as gem_utils
@@ -378,7 +429,7 @@ if __name__ == "__main__":
             check_lpgbt_ready(args.ohid, gbt)
 
     try:
-        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, float(args.time), vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, float(args.time), float(args.ber), vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
