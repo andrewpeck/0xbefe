@@ -51,9 +51,12 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         file_out.write("For Downlink:\n")
         data_rate = 2.56 * 1e9
         data_packet_size = 64
-        
+
     if runtime is None:
+        ber_limit = float(ber_limit)
         runtime = 1.0/(data_rate * ber_limit * 60)
+    elif ber_limit is None:
+        runtime = float(runtime)
 
     if path == "uplink": # check FEC errors on backend
         if opr != "run" and opr != "read":
@@ -429,7 +432,7 @@ if __name__ == "__main__":
             check_lpgbt_ready(args.ohid, gbt)
 
     try:
-        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, float(args.time), float(args.ber), vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
