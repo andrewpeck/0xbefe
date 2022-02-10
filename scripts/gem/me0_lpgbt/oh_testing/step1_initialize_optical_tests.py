@@ -163,8 +163,6 @@ if __name__ == "__main__":
     eye_result_slot1_boss_file.close()
     print (result)
     logfile.write(result)
-    print ("\n")
-    logfile.write("\n\n")
     
     print ("Running Eye diagram for Slot 2 Boss lpGBT")
     logfile.write("Running Eye diagram for Slot 2 Boss lpGBT")
@@ -182,8 +180,6 @@ if __name__ == "__main__":
     eye_result_slot2_boss_file.close()
     print (result)
     logfile.write(result)
-    print ("\n")
-    logfile.write("\n\n")
     
     print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
@@ -199,14 +195,14 @@ if __name__ == "__main__":
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-13 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("%s %s/downlink_optical_bert_boss_slot1.txt"%(latest_file, dataDir))
+    os.system("cp %s %s/downlink_optical_bert_boss_slot1.txt"%(latest_file, dataDir))
     
     print ("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n")
     logfile.write("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 2 -p downlink -r run -b 1e-13 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("%s %s/downlink_optical_bert_boss_slot2.txt"%(latest_file, dataDir))
+    os.system("cp %s %s/downlink_optical_bert_boss_slot2.txt"%(latest_file, dataDir))
     
     print (Colors.GREEN + "\nStep 3: Downlink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: Downlink Optical BERT Complete\n\n")

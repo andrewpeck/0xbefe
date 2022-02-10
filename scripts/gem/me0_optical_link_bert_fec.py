@@ -136,7 +136,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         curr_ber_str += Colors.GREEN + "  GBT %d: BER "%gbt
                         curr_ber_str_write += "  GBT %d: BER "%gbt
                         curr_ber_str += "< {:.2e}".format(ber_t)
-                        curr_ber_str_write += < {:.2e}".format(ber_t)
+                        curr_ber_str_write += "< {:.2e}".format(ber_t)
                     else:
                         curr_ber_str += Colors.RED + "  GBT %d: BER "%gbt
                         curr_ber_str_write += "  GBT %d: BER "%gbt
