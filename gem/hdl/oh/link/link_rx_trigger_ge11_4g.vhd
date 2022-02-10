@@ -70,8 +70,8 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal rx_data              : t_mgt_16b_rx_data; 
     
     signal state                : state_t := DATA_0;
-    signal frame_200            : std_logic_vector(80 downto 0); -- 80 data bits + 1 bit for error (not in table)
-    signal frame_40             : std_logic_vector(80 downto 0); -- 80 data bits + 1 bit for error (not in table)
+    signal frame_200            : std_logic_vector(84 downto 0); -- 80 data bits + 1 bit for error (not in table) + 2 bits for charisk + 2 bits for chariscomma (from the comma state only)
+    signal frame_40             : std_logic_vector(84 downto 0); -- 80 data bits + 1 bit for error (not in table) + 2 bits for charisk + 2 bits for chariscomma (from the comma state only)
     
     signal fifo_wr_en           : std_logic;
     signal fifo_valid           : std_logic;
@@ -210,13 +210,15 @@ begin
         if rising_edge(rx_usrclk_i) then
             if reset_200 = '1' then
                 frame_200(15 downto 0) <= rx_data.rxdata;
-                frame_200(80 downto 16) <= (others => '0');
+                frame_200(84 downto 16) <= (others => '0');
                 fifo_wr_en <= '0';
             else
                 case state is
                     when COMMA =>
                         frame_200(15 downto 0) <= rx_data.rxdata;
-                        frame_200(80) <= '0';
+                        frame_200(81 downto 80) <= rx_data.rxcharisk;
+                        frame_200(83 downto 82) <= rx_data.rxchariscomma;
+                        frame_200(84) <= '0';
                         fifo_wr_en <= '0';
                     when DATA_0 =>
                         frame_200(31 downto 16) <= rx_data.rxdata;
@@ -236,7 +238,7 @@ begin
                 end case;
                 
                 if rx_data.rxnotintable /= "00" then
-                    frame_200(80) <= '1';
+                    frame_200(90) <= '1';
                 end if;
                 
             end if;
@@ -249,12 +251,12 @@ begin
         generic map(
             FIFO_MEMORY_TYPE    => "auto",
             FIFO_WRITE_DEPTH    => 16,
-            WRITE_DATA_WIDTH    => 81,
+            WRITE_DATA_WIDTH    => 85,
             READ_MODE           => "std",
             FIFO_READ_LATENCY   => 1,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "1101", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 81,
+            READ_DATA_WIDTH     => 85,
             CDC_SYNC_STAGES     => 2,
             DOUT_RESET_VALUE    => "0"
         )
@@ -290,12 +292,10 @@ begin
                 frame_counter_valid <= '0';
             else
                 if frame_counter_valid = '0' then
-                    for i in 0 to FRAME_MARKERS'length - 1 loop
-                        if frame_40(7 downto 0) = FRAME_MARKERS(i) then
-                            frame_counter <= i;
-                            frame_counter_valid <= '1';
-                        end if;
-                    end loop;
+                    if frame_40(7 downto 0) = FRAME_MARKERS(0) and frame_40(81 downto 80) = "01" and frame_40(83 downto 82) = "01" then
+                        frame_counter <= 1;
+                        frame_counter_valid <= '1';
+                    end if;
                 else
                     if frame_counter = FRAME_MARKERS'length - 1 then
                         frame_counter <= 0;
@@ -317,7 +317,7 @@ begin
                 sbit_overflow <= '0';
                 not_in_table_err <= '0';                   
             else
-                not_in_table_err <= frame_40(80);
+                not_in_table_err <= frame_40(84);
                 
                 if frame_40(7 downto 0) = OVERFLOW_FRAME_MARKER then
                     sbit_overflow <= '1';
