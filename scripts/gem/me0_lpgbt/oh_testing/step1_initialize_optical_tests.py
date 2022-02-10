@@ -32,17 +32,20 @@ if __name__ == "__main__":
     oh_ver_slot2 = get_oh_ver("0", "2")
     
     # Step 1 - run init_frontend
-    print ("Initializing")
-    logfile.write("Initializing\n")
+    print ("Step 1: Initializing")
+    logfile.write("Step 1: Initializing\n")
+    
     os.system("python ../../init_frontend.py")
-    print (Colors.GREEN + "Initialization Complete\n" + Colors.ENDC)
-    logfile.write("Initialization Complete\n\n")
+    
+    print (Colors.GREEN + "Step 1: Initialization Complete\n" + Colors.ENDC)
+    logfile.write("Step 1: Initialization Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - check lpGBT status
-    print ("Checking lpGBT Status")
-    logfile.write("Checking lpGBT Status\n")
+    print ("Step 2: Checking lpGBT Status")
+    logfile.write("Step 2: Checking lpGBT Status\n")
+    
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
     list_of_files = glob.glob("../../results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -86,33 +89,33 @@ if __name__ == "__main__":
     for line in config_boss_slot1_file.readlines():
         print ("Checking Slot 1 OH Boss lpGBT:")
         logfile.write("Checking Slot 1 OH Boss lpGBT:\n")
-        if status_boss_slot1_registers[int(line.split()[0],16] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16, int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16]) + Colors.ENDC)
-            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16, int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16]))
+        if status_boss_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]))
     
     for line in config_sub_slot1_file.readlines():
         print ("Checking Slot 1 OH Sub lpGBT:")
         logfile.write("Checking Slot 1 OH Sub lpGBT:\n")
-        if status_sub_slot1_registers[int(line.split()[0],16] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16, int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16]) + Colors.ENDC)
-            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16, int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16]))
+        if status_sub_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]))
             
     for line in config_boss_slot2_file.readlines():
         print ("Checking Slot 2 OH Boss lpGBT:")
         logfile.write("Checking Slot 2 OH Boss lpGBT:\n")
-        if status_boss_slot2_registers[int(line.split()[0],16] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16, int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16]) + Colors.ENDC)
-            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16, int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16]))
+        if status_boss_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]))
     
     for line in config_sub_slot2_file.readlines():
         print ("Checking Slot 2 OH Sub lpGBT:")
         logfile.write("Checking Slot 2 OH Sub lpGBT:\n")
-        if status_sub_slot2_registers[int(line.split()[0],16] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16, int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16]) + Colors.ENDC)
-            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16, int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16]))
+        if status_sub_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]))
    
-    print (Colors.GREEN + "\nChecking lpGBT Status Complete\n" + Colors.ENDC)
-    logfile.write("\nChecking lpGBT Status Complete\n\n")
+    print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
     config_boss_slot1_file.close()
     config_sub_slot1_file.close()
     config_boss_slot2_file.close()
