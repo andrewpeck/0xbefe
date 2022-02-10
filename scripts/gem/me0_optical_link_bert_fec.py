@@ -110,7 +110,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
         t0 = time()
         time_prev = t0
-        ber_passed = -1
+        ber_passed_log = -1
         while ((time()-t0)/60.0) < runtime:
             for v_node in vfat_node:
                 data_write = random.randint(0, (2**32 - 1)) # random number to write (32 bit)
@@ -124,7 +124,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
             ber_t = 1.0/(data_rate * (time()-t0))
             ber_t_log = math.log(ber_t, 10)
-            if ber_t<=-9 and (ber_passed-ber_t)>=1:
+            if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                 print ("\nBER: ")
                 file_out.write("\nBER: ")
                 for gbt in fec_node_list:
@@ -142,7 +142,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     file_out.write(curr_ber_str+"\n")
                 print ("\n")
                 file_out.write("\n\n")
-                ber_passed = ber_t
+                ber_passed_log = ber_t_log
                 
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
@@ -189,12 +189,12 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         
         t0 = time()
         time_prev = t0
-        ber_passed = -1
+        ber_passed_log = -1
         if opr == "run":
             while ((time()-t0)/60.0) < runtime:
                 ber_t = 1.0/(data_rate * (time()-t0))
                 ber_t_log = math.log(ber_t, 10)
-                if ber_t<=-9 and (ber_passed-ber_t)>=1:
+                if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                     print ("\nBER: ")
                     file_out.write("\nBER: ")
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -210,7 +210,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     file_out.write(curr_ber_str)
                     print ()
                     file_out.write("\n")
-                    ber_passed = ber_t
+                    ber_passed_log = ber_t_log
             
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
