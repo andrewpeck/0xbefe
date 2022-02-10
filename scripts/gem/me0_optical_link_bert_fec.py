@@ -137,7 +137,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     else:
                         curr_ber_str += Colors.RED + "  GBT %d: BER "%gbt
                         curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                    curr_ber_str += "(time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
+                    curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     print (curr_ber_str)
                     file_out.write(curr_ber_str+"\n")
                 print ("\n")
@@ -205,7 +205,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     else:
                        curr_ber_str += Colors.RED + "  GBT %d: BER "%int(gbt_list[0])
                        curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                    curr_ber_str += "(time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
+                    curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     print (curr_ber_str)
                     file_out.write(curr_ber_str)
                     print ()
