@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
     if args.gpio_sound is not None:
         if args.op != "show":
-            print("Only show operation allowed for Speaker in OH_v2")
+            print(Colors.YELLOW + "Only show operation allowed for Speaker in OH_v2" + Colors.ENDC)
             sys.exit()
         gpio_sound = int(args.gpio_sound)
 
