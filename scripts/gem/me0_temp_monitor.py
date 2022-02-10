@@ -162,7 +162,10 @@ def temp_res_fit(temp_cal="10k", power=2):
         T_list[i] = T_list[i] + 273.15
 
     for B, T in zip(B_list, T_list):
-        R = 10e3 * math.exp(-B * ((1/298.15) - (1/T)))
+        if temp_cal=="10k":
+            R = 10e3 * math.exp(-B * ((1/298.15) - (1/T)))
+        elif temp_cal=="1k":
+            R = 1e3 * math.exp(-B * ((1/298.15) - (1/T)))
         R_list.append(R)
 
     T_list = [298.15] + T_list
