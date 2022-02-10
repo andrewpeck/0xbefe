@@ -122,7 +122,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         file_out.write("Register value mismatch\n\n")
                         rw_terminate()
 
-            ber_t = math.log(1.0/(data_rate * (time()-t0)), 10)
+            ber_t = 1.0/(data_rate * (time()-t0))
+            ber_t_log = math.log(ber_t, 10)
             if ber_t<=-9 and (ber_passed-ber_t)>=1:
                 print ("\nBER: ")
                 file_out.write("\nBER: ")
@@ -131,12 +132,12 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     curr_fec_errors = gem_utils.read_backend_reg(fec_node)
                     curr_ber_str = ""
                     if curr_fec_errors == 0:
-                        curr_ber_str += Colors.GREEN + "  GBT %d, BER "%gbt
+                        curr_ber_str += Colors.GREEN + "  GBT %d: BER "%gbt
                         curr_ber_str += "< {:.2e}".format(ber_t)
                     else:
-                        curr_ber_str += Colors.RED + "  GBT %d, BER "%gbt
+                        curr_ber_str += Colors.RED + "  GBT %d: BER "%gbt
                         curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                    curr_ber_str += "Colors.ENDC"
+                    curr_ber_str += "(time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     print (curr_ber_str)
                     file_out.write(curr_ber_str+"\n")
                 print ("\n")
@@ -151,8 +152,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                     for gbt in fec_node_list:
                         fec_node = fec_node_list[gbt]
                         curr_fec_errors = gem_utils.read_backend_reg(fec_node)
-                        print ("  GBT %d, number of FEC errors accumulated = %d" % (gbt, curr_fec_errors))
-                        file_out.write("  GBT %d, number of FEC errors accumulated = %d\n" % (gbt, curr_fec_errors))
+                        print ("  GBT %d: number of FEC errors accumulated = %d" % (gbt, curr_fec_errors))
+                        file_out.write("  GBT %d: number of FEC errors accumulated = %d\n" % (gbt, curr_fec_errors))
                     print ("")
                     file_out.write("\n")
                 time_prev = time()
@@ -191,31 +192,32 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         ber_passed = -1
         if opr == "run":
             while ((time()-t0)/60.0) < runtime:
-                ber_t = math.log(1.0/(data_rate * (time()-t0)), 10)
+                ber_t = 1.0/(data_rate * (time()-t0))
+                ber_t_log = math.log(ber_t, 10)
                 if ber_t<=-9 and (ber_passed-ber_t)>=1:
                     print ("\nBER: ")
                     file_out.write("\nBER: ")
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     curr_ber_str = ""
                     if curr_fec_errors == 0:
-                       curr_ber_str += Colors.GREEN + "  GBT %d, BER "%int(gbt_list[0])
+                       curr_ber_str += Colors.GREEN + "  GBT %d: BER "%int(gbt_list[0])
                        curr_ber_str += "< {:.2e}".format(ber_t)
                     else:
-                       curr_ber_str += Colors.RED + "  GBT %d, BER "%int(gbt_list[0])
+                       curr_ber_str += Colors.RED + "  GBT %d: BER "%int(gbt_list[0])
                        curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                    curr_ber_str += "Colors.ENDC"
+                    curr_ber_str += "(time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     print (curr_ber_str)
                     file_out.write(curr_ber_str)
-                    print ("\n")
-                    file_out.write("\n\n")
+                    print ()
+                    file_out.write("\n")
                     ber_passed = ber_t
             
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     if verbose:
-                        print ("Time passed: %f minutes, GBT %d, number of FEC errors accumulated = %d" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
-                        file_out.write("Time passed: %f minutes, GBT %d, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
+                        print ("Time passed: %f minutes, GBT %d: number of FEC errors accumulated = %d" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
+                        file_out.write("Time passed: %f minutes: GBT %d, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
                     time_prev = time()
         
         end_fec_errors = lpgbt_fec_error_counter(oh_ver)
