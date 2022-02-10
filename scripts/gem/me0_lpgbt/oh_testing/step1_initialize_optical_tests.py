@@ -10,12 +10,16 @@ if __name__ == "__main__":
     parser.add_argument("-s2", "--slot2", action="store", dest="slot2", help="slot2 = OH serial number on slot 2")
     args = parser.parse_args()
 
+    if args.slot1 is "None" or args.slot2 is None:
+        print (Colors.YELLOW + "Enter OH serial numbers for both slot 1 and 2" + Colors.ENDC) 
+        sys.exit()
+
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
-    me0Dir = "results/OH_slot1_%s_slot2_%s"%(args.s1, args.s2)
+    me0Dir = "me0_lpgbt/oh_testing/results/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
     try:
         os.makedirs(me0Dir) # create directory for OH under test
     except FileExistsError: # skip if directory already exists
@@ -31,11 +35,14 @@ if __name__ == "__main__":
     oh_ver_slot1 = get_oh_ver("0", "0")
     oh_ver_slot2 = get_oh_ver("0", "2")
     
+    print ("\n#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
     # Step 1 - run init_frontend
-    print ("Step 1: Initializing")
-    logfile.write("Step 1: Initializing\n")
+    print (Colors.YELLOW + "Step 1: Initializing\n" + Colors.ENDC)
+    logfile.write("Step 1: Initializing\n\n")
     
-    os.system("python ../../init_frontend.py")
+    os.system("python3 init_frontend.py")
     
     print (Colors.GREEN + "Step 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("Step 1: Initialization Complete\n\n")
@@ -43,31 +50,31 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - check lpGBT status
-    print ("Step 2: Checking lpGBT Status")
-    logfile.write("Step 2: Checking lpGBT Status\n")
+    print (Colors.YELLOW + "Step 2: Checking lpGBT Status\n" + Colors.ENDC)
+    logfile.write("Step 2: Checking lpGBT Status\n\n")
     
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
-    list_of_files = glob.glob("../../results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_boss_slot1.txt"%(latest_file, dataDir))
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 1 > out.txt")
-    list_of_files = glob.glob("../../results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_sub_slot1.txt"%(latest_file, dataDir))
     
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 2 > out.txt")
-    list_of_files = glob.glob("../../results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_boss_slot2.txt"%(latest_file, dataDir))
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 3 > out.txt")
-    list_of_files = glob.glob("../../results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_sub_slot2.txt"%(latest_file, dataDir))
       
-    config_boss_slot1_file = open("../../../resources/me0_boss_config_ohv%d"%oh_ver_slot1) 
-    config_sub_slot1_file = open("../../../resources/me0_sub_config_ohv%d"%oh_ver_slot1)
-    config_boss_slot2_file = open("../../../resources/me0_boss_config_ohv%d"%oh_ver_slot2) 
-    config_sub_slot2_file = open("../../../resources/me0_sub_config_ohv%d"%oh_ver_slot2) 
+    config_boss_slot1_file = open("../resources/me0_boss_config_ohv%d.txt"%oh_ver_slot1) 
+    config_sub_slot1_file = open("../resources/me0_sub_config_ohv%d.txt"%oh_ver_slot1)
+    config_boss_slot2_file = open("../resources/me0_boss_config_ohv%d.txt"%oh_ver_slot2) 
+    config_sub_slot2_file = open("../resources/me0_sub_config_ohv%d.txt"%oh_ver_slot2) 
     status_boss_slot1_file = open("%s/status_boss_slot1.txt"%dataDir) 
     status_sub_slot1_file = open("%s/status_sub_slot1.txt"%dataDir) 
     status_boss_slot2_file = open("%s/status_boss_slot2.txt"%dataDir) 
@@ -85,33 +92,41 @@ if __name__ == "__main__":
         status_boss_slot2_registers[int(line.split()[0],16)] = int(line.split()[1],16)
     for line in status_sub_slot2_file.readlines():
         status_sub_slot2_registers[int(line.split()[0],16)] = int(line.split()[1],16)
-        
+       
+    print ("Checking Slot 1 OH Boss lpGBT:") 
+    logfile.write("Checking Slot 1 OH Boss lpGBT:\n")
     for line in config_boss_slot1_file.readlines():
-        print ("Checking Slot 1 OH Boss lpGBT:")
-        logfile.write("Checking Slot 1 OH Boss lpGBT:\n")
+        if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
+            continue
         if status_boss_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]))
     
+    print ("Checking Slot 1 OH Sub lpGBT:")
+    logfile.write("Checking Slot 1 OH Sub lpGBT:\n")
     for line in config_sub_slot1_file.readlines():
-        print ("Checking Slot 1 OH Sub lpGBT:")
-        logfile.write("Checking Slot 1 OH Sub lpGBT:\n")
+        if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
+            continue
         if status_sub_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]))
-            
+        
+    print ("Checking Slot 2 OH Boss lpGBT:")
+    logfile.write("Checking Slot 2 OH Boss lpGBT:\n")    
     for line in config_boss_slot2_file.readlines():
-        print ("Checking Slot 2 OH Boss lpGBT:")
-        logfile.write("Checking Slot 2 OH Boss lpGBT:\n")
+        if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
+            continue
         if status_boss_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]))
-    
+   
+    print ("Checking Slot 2 OH Sub lpGBT:") 
+    logfile.write("Checking Slot 2 OH Sub lpGBT:\n")
     for line in config_sub_slot2_file.readlines():
-        print ("Checking Slot 2 OH Sub lpGBT:")
-        logfile.write("Checking Slot 2 OH Sub lpGBT:\n")
+        if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
+            continue
         if status_sub_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
-            print (Colors.YELLOW + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
+            print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]))
    
     print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
