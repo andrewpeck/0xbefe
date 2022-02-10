@@ -46,8 +46,8 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
         mpoke(piooutl, piooutl_val)
         mpoke(pioouth, pioouth_val)
 
-        stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
-        if stop=="stop":
+        stop = input(Colors.YELLOW + "Do you want to stop the show (y/n): " + Colors.ENDC)
+        if stop=="y":
             print ("\nStopping LED show\n")
 
     elif operation == "off":
@@ -66,13 +66,15 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
         mpoke(piooutl, piooutl_val)
         mpoke(pioouth, pioouth_val)
 
-        stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
-        if stop=="stop":
+        stop = input(Colors.YELLOW + "Do you want to stop the show (y/n): " + Colors.ENDC)
+        if stop=="y":
             print ("\nStopping LED show\n")
 
     elif operation == "show":
         print ("Operation SHOW")
         brightnessStart = 0
+        t0 = time()
+        time_passed = t0
         while True: # cycle brightness from on to off and off to on approx once per second (assuming 100kHz update rate)
             brightnessEnd = 100
             step = 1
@@ -121,11 +123,12 @@ def main(boss, oh_ver, gpio_light, gpio_sound, operation):
                         mpoke(piooutl, piooutl_val)
                         mpoke(pioouth, pioouth_val)
 
-            brightnessStart = brightnessEnd
-            stop = input(Colors.YELLOW + "Please type \"stop\" to stop the show: " + Colors.ENDC)
-            if stop=="stop":
-                print ("\nStopping show\n")
-                break
+            if (time() - time_passed)>10:
+                stop = input(Colors.YELLOW + "Do you want to stop the show (y/n): " + Colors.ENDC)
+                if stop=="y":
+                    print ("\nStopping LED show\n")
+                    break
+                time_passed = time()
 
     mpoke(piodirl, piodirl_initial)
     mpoke(piodirh, piodirh_initial)
