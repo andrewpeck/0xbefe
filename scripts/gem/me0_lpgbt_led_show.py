@@ -257,7 +257,8 @@ if __name__ == "__main__":
     if args.gpio_sound is not None:
         if args.op != "show":
             print("Only show operation allowed for Speaker in OH_v2")
-            gpio_sound = int(args.gpio_sound)
+            sys.exit()
+        gpio_sound = int(args.gpio_sound)
 
     # Initialization
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
