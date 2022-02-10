@@ -154,7 +154,7 @@ def temp_res_fit(temp_cal="10k", power=2):
         B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+ 10k: NTCG063UH103HTBX
         T_list = [50, 75, 85, 100]
     elif temp_cal=="1k": 
-        B_list_1k = [3500, 3539, 3545, 3560]  # VTRX+ 1k: NCP03XM102E05RL
+        B_list = [3500, 3539, 3545, 3560]  # VTRX+ 1k: NCP03XM102E05RL
         T_list = [50, 80, 85, 100]
     R_list = []
 
