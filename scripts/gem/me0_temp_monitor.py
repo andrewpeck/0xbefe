@@ -308,7 +308,7 @@ if __name__ == "__main__":
     temp_cal = ""
     if args.temp == "VTRX":
         gbtid_sub = int(args.gbtid)
-        gbt_boss = str(gbtid_sub-1)
+        gbtid_boss = str(gbtid_sub-1)
         rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, gbtid_boss)
         vtrx_id1 = i2cmaster_read(system, oh_ver, 0x16)
         vtrx_id2 = i2cmaster_read(system, oh_ver, 0x17)
