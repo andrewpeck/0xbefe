@@ -26,9 +26,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    file_out = open(dataDir+"/%s_OH%d_GBT%s_optical_link_bert_fec_test_output_"%(gem,ohid,"_".join(gbtid))+now+".txt", "w")
-    print ("Checking FEC Errors for: " + path)
-    file_out.write("Checking FEC Errors for: \n" + path)
+    file_out = open(dataDir+"/%s_OH%d_GBT%s_%s_bert_fec_test_output_"%(gem,ohid,"_".join(gbtid), path)+now+".txt", "w")
+    print ("Checking FEC Errors for: " + path + "\n")
+    file_out.write("Checking FEC Errors for: " + path + "\n\n")
     fec_errors = 0
 
     if system != "chc" and opr in ["start", "run"]:
@@ -126,20 +126,26 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             ber_t_log = math.log(ber_t, 10)
             if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                 print ("\nBER: ")
-                file_out.write("\nBER: ")
+                file_out.write("\nBER: \n")
                 for gbt in fec_node_list:
                     fec_node = fec_node_list[gbt]
                     curr_fec_errors = gem_utils.read_backend_reg(fec_node)
                     curr_ber_str = ""
+                    curr_ber_str_write = ""
                     if curr_fec_errors == 0:
                         curr_ber_str += Colors.GREEN + "  GBT %d: BER "%gbt
+                        curr_ber_str_write += "  GBT %d: BER "%gbt
                         curr_ber_str += "< {:.2e}".format(ber_t)
+                        curr_ber_str_write += < {:.2e}".format(ber_t)
                     else:
                         curr_ber_str += Colors.RED + "  GBT %d: BER "%gbt
+                        curr_ber_str_write += "  GBT %d: BER "%gbt
                         curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                        curr_ber_str_write += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
                     curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
+                    curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
                     print (curr_ber_str)
-                    file_out.write(curr_ber_str+"\n")
+                    file_out.write(curr_ber_str_write+"\n")
                 print ("\n")
                 file_out.write("\n\n")
                 ber_passed_log = ber_t_log
@@ -196,18 +202,24 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 ber_t_log = math.log(ber_t, 10)
                 if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                     print ("\nBER: ")
-                    file_out.write("\nBER: ")
+                    file_out.write("\nBER: \n")
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     curr_ber_str = ""
+                    curr_ber_str_write = ""
                     if curr_fec_errors == 0:
                        curr_ber_str += Colors.GREEN + "  GBT %d: BER "%int(gbt_list[0])
+                       curr_ber_str_write += "  GBT %d: BER "%int(gbt_list[0])
                        curr_ber_str += "< {:.2e}".format(ber_t)
+                       curr_ber_str_write += "< {:.2e}".format(ber_t)
                     else:
                        curr_ber_str += Colors.RED + "  GBT %d: BER "%int(gbt_list[0])
+                       curr_ber_str_write += "  GBT %d: BER "%int(gbt_list[0])
                        curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                       curr_ber_str_write += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
                     curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
+                    curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
                     print (curr_ber_str)
-                    file_out.write(curr_ber_str)
+                    file_out.write(curr_ber_str_write)
                     print ()
                     file_out.write("\n")
                     ber_passed_log = ber_t_log
