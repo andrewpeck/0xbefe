@@ -159,9 +159,10 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     eye_result_slot1_boss_file = open(latest_file)
-    print (eye_result_slot1_boss_file.readlines()[0])
-    logfile.write(eye_result_slot1_boss_file.readlines()[0])
+    result = eye_result_slot1_boss_file.readlines()[0]
     eye_result_slot1_boss_file.close()
+    print (result)
+    logfile.write(result)
     print ("\n")
     logfile.write("\n\n")
     
@@ -177,9 +178,10 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     eye_result_slot2_boss_file = open(latest_file)
-    print (eye_result_slot2_boss_file.readlines()[0])
-    logfile.write(eye_result_slot2_boss_file.readlines()[0])
+    result = eye_result_slot2_boss_file.readlines()[0]
     eye_result_slot2_boss_file.close()
+    print (result)
+    logfile.write(result)
     print ("\n")
     logfile.write("\n\n")
     
