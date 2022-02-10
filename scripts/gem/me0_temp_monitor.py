@@ -306,7 +306,7 @@ if __name__ == "__main__":
 
     # Check VTRx+ version if reading VTRx+ temperature
     temp_cal = ""
-    if device == "VTRX":
+    if args.temp == "VTRX":
         gbtid_sub = int(args.gbtid)
         gbt_boss = str(gbtid_sub-1)
         rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, gbtid_boss)
@@ -318,7 +318,7 @@ if __name__ == "__main__":
             temp_cal = "10k"
         else:
             temp_cal = "1k"
-    elif device == "OH":
+    elif args.temp == "OH":
         temp_cal = "10k"
 
     # Initialization
