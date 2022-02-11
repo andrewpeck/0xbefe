@@ -45,7 +45,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/%s_OH%d_vfat_sbit_crosstalk_"%(gem,oh_select) + now + ".txt"
+    filename = dataDir + "/%s_OH%d_vfat_sbit_crosstalk_"%(gem,oh_select) + now + "_data.txt"
     file_out = open(filename,"w+")
     file_out.write("vfat    channel_inj    channel_read    fired    events\n")
 
@@ -172,7 +172,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
 
     # Writing Results
     cross_talk_obs = 0
+    filename_result = dataDir + "/%s_OH%d_vfat_crosstalk_caldac%d_"%(gem,oh_select,cal_dac) + now + "_result.txt"
+    file_result_out = open(filename_result,"w+")
     print ("\nCross Talk Results:\n")
+    file_result_out.write("Cross Talk Results:\n")
     for vfat in vfat_list:
         for channel_inj in channel_list:
             elink_inj = int(channel_inj/16)
@@ -184,14 +187,16 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                         crosstalk_channel_list += " %d,"%channel_read
                 file_out.write("%d    %d    %d    %d    %d\n"%(vfat, channel_inj, channel_read, sbit_data[vfat][channel_inj][channel_read]["fired"], sbit_data[vfat][channel_inj][channel_read]["events"]))
             if crosstalk_channel_list != "":
-                print ("VFAT %d, Cross Talk for Channel %d in channels: %s"%(vfat, channel_inj, crosstalk_channel_list))
+                print ("  VFAT %d, Cross Talk for Channel %d in channels: %s"%(vfat, channel_inj, crosstalk_channel_list))
+                file_result_out.write("  VFAT %d, Cross Talk for Channel %d in channels: %s\n"%(vfat, channel_inj, crosstalk_channel_list))
                 cross_talk_obs += 1
     if cross_talk_obs == 0:
         print (Colors.GREEN + "No Cross Talk observed between channels" + Colors.ENDC)
+        file_result_out.write("No Cross Talk observed between channels\n")
 
     print ("")
     file_out.close()
-
+    file_result_out.close()
 
 if __name__ == "__main__":
 
