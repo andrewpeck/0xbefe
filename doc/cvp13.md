@@ -162,11 +162,19 @@ Mapping to ME0 OHs is the following:
 | OH0 GBT7 TX |       | 4     |       |       |
 
 CSC Fiber mapping (for now only one QSFP is used):
-|          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
-|----------|-------|-------|-------|-------|
-| DMB0     | 1&12  |       |       |       |
-| DMB1     | 2&11  |       |       |       |
-| Spy GbE  | 3&10  |       |       |       |
+|                  | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|------------------|-------|-------|-------|-------|
+| DMB0             | 1&12  |       |       |       |
+| DMB1             | 2&11  |       |       |       |
+| GBT for PROMless |       | 1&12  |       |       |
+| GBT for PROMless |       | 2&11  |       |       |
+| GBT for PROMless |       | 3&10  |       |       |
+| GBT for PROMless |       | 4&9   |       |       |
+| TTC TX           |       |       | 12    |       |
+| TTC TX           |       |       | 11    |       |
+| TTC TX           |       |       | 10    |       |
+| TTC TX           |       |       | 9     |       |
+| Spy GbE          |       |       |       | 1&12  |
 
 ## PROMless
 The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless.py``` script e.g.:
