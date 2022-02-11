@@ -92,6 +92,7 @@ if __name__ == "__main__":
     logfile.write("Configuring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)    
+    logfile = open(filename, "a")
     
     print ("Resetting all VFATs\n")
     logfile.write("Resetting all VFATs\n\n")
