@@ -129,8 +129,6 @@ if __name__ == "__main__":
             print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]))
    
-    print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
     config_boss_slot1_file.close()
     config_sub_slot1_file.close()
     config_boss_slot2_file.close()
@@ -140,6 +138,8 @@ if __name__ == "__main__":
     status_boss_slot2_file.close()
     status_sub_slot2_file.close()
     
+    print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
@@ -181,47 +181,53 @@ if __name__ == "__main__":
     print (result)
     logfile.write(result)
     
-    print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
+    print (Colors.GREEN + "Step 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
+    logfile.write("Step 3: Downlink Eye Diagram Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - Downlink Optical BERT
-    print (Colors.YELLOW + "Step 3: Downlink Optical BERT\n" + Colors.ENDC)
-    logfile.write("Step 3: Downlink Optical BERT\n\n")
+    print (Colors.YELLOW + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
+    logfile.write("Step 4: Downlink Optical BERT\n\n")
     
     print ("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n")
     logfile.write("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n\n")
-    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-13 -z")
+    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("cp %s %s/downlink_optical_bert_boss_slot1.txt"%(latest_file, dataDir))
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
     
+    logfile = open(filename, "a")
     print ("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n")
     logfile.write("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n\n")
-    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 2 -p downlink -r run -b 1e-13 -z")
+    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 2 -p downlink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("cp %s %s/downlink_optical_bert_boss_slot2.txt"%(latest_file, dataDir))
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
     
-    print (Colors.GREEN + "\nStep 3: Downlink Optical BERT Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: Downlink Optical BERT Complete\n\n")
+    logfile = open(filename, "a")
+    print (Colors.GREEN + "\nStep 4: Downlink Optical BERT Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 4: Downlink Optical BERT Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - Uplink Optical BERT
-    print (Colors.YELLOW + "Step 3: Uplink Optical BERT\n" + Colors.ENDC)
-    logfile.write("Step 3: Uplink Optical BERT\n\n")
+    print (Colors.YELLOW + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
+    logfile.write("Step 5: Uplink Optical BERT\n\n")
     
     print ("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n")
     logfile.write("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n\n")
-    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 1 2 3 -p uplink -r run -b 1e-13 -z")
+    os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 1 2 3 -p uplink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("%s %s/uplink_optical_bert_boss_sub_slot1_slot2.txt"%(latest_file, dataDir))
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
     
-    print (Colors.GREEN + "\nStep 3: Uplink Optical BERT Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: Uplink Optical BERT Complete\n\n")
+    logfile = open(filename, "a")
+    print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
