@@ -238,7 +238,7 @@ begin
                 end case;
                 
                 if rx_data.rxnotintable /= "00" then
-                    frame_200(90) <= '1';
+                    frame_200(84) <= '1';
                 end if;
                 
             end if;

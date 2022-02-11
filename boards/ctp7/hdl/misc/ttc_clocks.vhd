@@ -545,10 +545,10 @@ begin
                             pa_state <= FIND_LOCK;
                             searching_unlock <= '0';
                             if (phase_offset_pos_psclk > phase_offset_neg_psclk) then
-                                shift_cnt <= unsigned(phase_offset_neg_psclk) + unsigned("000000000" & phase_offset_neg_psclk(15 downto 9)); -- offset + 1/512 * offset (see the main FSM description for details)
+                                shift_cnt <= unsigned(phase_offset_neg_psclk) + resize(unsigned(phase_offset_neg_psclk(15 downto 9)), 16); -- offset + 1/512 * offset (see the main FSM description for details)
                                 mmcm_ps_incdec <= '1';
                             else
-                                shift_cnt <= unsigned(phase_offset_pos_psclk) + unsigned("000000000" & phase_offset_pos_psclk(15 downto 9)); -- offset + 1/512 * offset (see the main FSM description for details)
+                                shift_cnt <= unsigned(phase_offset_pos_psclk) + resize(unsigned(phase_offset_pos_psclk(15 downto 9)), 16); -- offset + 1/512 * offset (see the main FSM description for details)
                                 mmcm_ps_incdec <= '0';
                             end if;
                             
