@@ -76,7 +76,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("cp %s %s/step2_vfat_clustermap.txt"%(latest_file, dataDir))
+    os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
     
     logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 2: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
@@ -194,9 +194,14 @@ if __name__ == "__main__":
     print (Colors.YELLOW + "Step 7: DAC Scans\n" + Colors.ENDC)
     logfile.write("Step 7: DAC Scans\n\n")
     
+    print ("\nRunning DAC Scans for all VFATs\n")
+    logfile.write("\nRunning DAC Scans for all VFATs\n\n")
     os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -f ../resources/DAC_scan_reg_list.txt")
     list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
+    
+    print ("\Plotting DAC Scans for all VFATs\n")
+    logfile.write("\Plotting DAC Scans for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
@@ -205,7 +210,7 @@ if __name__ == "__main__":
         except FileExistsError: 
             os.system("rm -rf dac_scan_results")
             os.makedirs(dataDir + "/dac_scan_results") 
-        os.system("%s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
+        os.system("cp %s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
         logfile.write("DAC scan result directory not found\n")
