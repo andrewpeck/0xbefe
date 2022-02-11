@@ -27,6 +27,7 @@ package board_config_package is
 
     ------------ DAQ configuration ------------
     constant CFG_DAQ_MAX_DMBS               : integer := 15; -- the number of DMBs that are supported by the DAQ module (the CFG_NUM_DMBS can be less than or equal to this number)
+    constant CFG_MAX_GBTS                   : integer := 15; -- max number of GBT links that can be supported by this board
     
     constant CFG_DAQ_EVTFIFO_DEPTH          : integer := 4096;
     constant CFG_DAQ_EVTFIFO_PROG_FULL_SET  : integer := 3072;
@@ -65,7 +66,7 @@ package board_config_package is
 
     constant CFG_NUM_REFCLK0      : integer := 3;
     constant CFG_NUM_REFCLK1      : integer := 3; 
-    constant CFG_MGT_NUM_CHANNELS : integer := 12;
+    constant CFG_MGT_NUM_CHANNELS : integer := 16;
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
     -- this record is used in fiber to MGT map (holding tx and rx MGT index)
@@ -84,33 +85,28 @@ package board_config_package is
     -- DUMMY: fiber 16 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
     -- note that GTH channel #16 is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
-        --=== Quad 127 ===--
-        (2, 2, false, true ),   -- fiber 0  ! RX inverted
-        (0, 3, false, false),   -- fiber 1
-        (1, 0, false, true ),   -- fiber 2  ! RX inverted
-        (3, 1, false, false),   -- fiber 3        
+        --=== Quad 129 ===--
+        (0, 0, false, true ),   -- fiber 0  ! RX inverted
+        (2, 1, false, true ),   -- fiber 1  ! RX inverted
+        (1, 2, false, false),   -- fiber 2
+        (3, 3, false, false),   -- fiber 3
+        --=== Quad 130 ===--    
+        (5, 4, false, false),   -- fiber 4
+        (7, 5, false, true ),   -- fiber 5  ! RX inverted
+        (4, 6, false, true ),   -- fiber 6  ! RX inverted
+        (6, 7, false, true ),   -- fiber 7  ! RX inverted
         --=== Quad 131 ===--
-        (6,  4,  true,  true),   -- fiber 4  ! RX inverted ! TX inverted
-        (5,  5,  true,  true),   -- fiber 5  ! RX inverted ! TX inverted
-        (4,  6,  true,  true),   -- fiber 6  ! RX inverted ! TX inverted
-        (7,  7,  true,  true),   -- fiber 7  ! RX inverted ! TX inverted
-        --=== Quad 130 ===--
-        (9,  8,  false, false),  -- fiber 4
-        (11, 9,  false, true ),  -- fiber 5  ! RX inverted
-        (8,  10, false, true ),  -- fiber 6  ! RX inverted
-        (10, 11, false, true ),  -- fiber 7  ! RX inverted
+        (10, 8,   true,  true), -- fiber 8  ! RX inverted ! TX inverted
+        (9,  9,   true,  true), -- fiber 9  ! RX inverted ! TX inverted
+        (8,  10,  true,  true), -- fiber 10 ! RX inverted ! TX inverted
+        (11, 11,  true,  true), -- fiber 11 ! RX inverted ! TX inverted
+        --=== Quad 132 ===--
+        (12, 12, false, true ), -- fiber 12 ! RX inverted
+        (13, 13, true,  false), -- fiber 13               ! TX inverted
+        (15, 14, true,  false), -- fiber 14               ! TX inverted
+        (14, 15, false, false), -- fiber 15
+                
 
-        --=== dummy ===--
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-        (MGT_NULL, MGT_NULL, false, false),
-
---        --=== Quad 129 ===--
---        (0, 0, false, true ),   -- fiber 0  ! RX inverted
---        (2, 1, false, true ),   -- fiber 1  ! RX inverted
---        (1, 2, false, false),   -- fiber 2
---        (3, 3, false, false),   -- fiber 3
 --        --=== Quad 131 ===--
 --        (10, 8,  true, true),  -- fiber 4  ! RX inverted ! TX inverted
 --        (9,  9,  true, true),  -- fiber 5  ! RX inverted ! TX inverted
@@ -201,7 +197,23 @@ package board_config_package is
         tx_multilane_phalign    => true, 
         rx_use_buf              => true
     );
-       
+
+    constant CFG_MGT_GBTX : t_mgt_type_config := (
+        link_type               => MGT_GBTX,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 1,
+        tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 40,
+        tx_multilane_phalign    => true, 
+        rx_use_buf              => false
+    );
+           
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
 
 end board_config_package;

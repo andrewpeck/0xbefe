@@ -395,7 +395,7 @@ begin
             ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
         );
 
-    slink_mgt_ref_clk <= refclk1(1);
+    slink_mgt_ref_clk <= refclk1(2);
 
     --================================--
     -- PROMless

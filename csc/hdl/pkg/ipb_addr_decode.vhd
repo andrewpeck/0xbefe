@@ -50,7 +50,7 @@ package body ipb_addr_decode is
         elsif std_match(addr, "--------0011000000000000--------") then sel := C_IPB_SLV.ttc;
         elsif std_match(addr, "--------01000000000-------------") then sel := C_IPB_SLV.daq;
         elsif std_match(addr, "--------01010000000-------------") then sel := C_IPB_SLV.tests;
-        else sel := 999;
+        else sel := C_IPB_SLV.none;
         end if;
 
 		return sel;

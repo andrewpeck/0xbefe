@@ -33,6 +33,14 @@ package csc_pkg is
     type t_dmb_config_arr is array (integer range <>) of t_dmb_config;
     type t_dmb_config_arr_per_slr is array (integer range <>) of t_dmb_config_arr;
 
+    type t_gbt_link_config is record
+        tx_fiber    : integer range 0 to CFG_BOARD_MAX_LINKS; -- TX fiber number
+        rx_fiber    : integer range 0 to CFG_BOARD_MAX_LINKS; -- RX fiber number  
+    end record;
+
+    type t_gbt_link_config_arr is array (integer range <>) of t_gbt_link_config;
+    type t_gbt_link_config_arr_per_slr is array (integer range <>) of t_gbt_link_config_arr;
+
     --======================--
     --== Config Constants ==--
     --======================-- 
@@ -111,5 +119,25 @@ package csc_pkg is
     end record;
 
     type t_chamber_evtfifo_rd_array is array(integer range <>) of t_chamber_evtfifo_rd;
+
+    --====================--
+    --==   PROMless     ==--
+    --====================--
+
+    type t_xdcfeb_switches is record
+        ------ XDCFEB board switches ------
+        prog_b          : std_logic; -- directly wired to FPGA PROG_B signal (active low reset)
+        prog_en         : std_logic; -- when high enables the PROG_B through GBT
+        gbt_override    : std_logic; -- when high overrides the switches
+        sel_gbt         : std_logic; -- when high selects GBT as the programming source, when low PROMs are programming the FPGA
+        sel_8bit        : std_logic; -- when high 8bit bus is used, when low 16bit bus is used
+        sel_master      : std_logic; -- when high master mode is used, when low slave mode is used
+        sel_cclk_src    : std_logic; -- when high GBT clock is used as CCLK, when low then PROM 31.25MHz clock is used as CCLK
+        sel_gbt_cclk_src: std_logic; -- when high then GBT de-skew (phase-shiftable) clock is used for CCLK, when low then eport clock is used for CCLK
+        ------ CTP7 configuration ------
+        pattern_en      : std_logic; -- when high the GBT TX eports will be sending the data provided in pattern_data (and programming is disabled) 
+        pattern_data    : std_logic_vector(31 downto 0); -- data to send to GBT TX eports when pattern_en is high
+        rx_select       : integer range 0 to 11; -- selects the fiber to latch the XDCFEB RX data from
+    end record;
 	
 end csc_pkg;

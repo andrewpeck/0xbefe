@@ -73,6 +73,50 @@
                 fw_signal="std_logic_vector(to_unsigned(CFG_SPY_LINK(g_SLR), 8))"/>
         </node>
 
+        <node id="XDCFEB" address="0x250">
+          <node id="PROG_EN" address="0x0" mask="0x00000001" permission="rw"
+                description="when high enables the PROG_B through GBT"
+                fw_signal="xdcfeb_switches.prog_en" fw_default="0b1"/>
+          <node id="GBT_OVERRIDE" address="0x0" mask="0x00000002" permission="rw"
+                description="when high overrides the switches"
+                fw_signal="xdcfeb_switches.gbt_override" fw_default="0b1"/>
+          <node id="SEL_GBT" address="0x0" mask="0x00000004" permission="rw"
+                description="when high selects GBT as the programming source, when low PROMs are programming the FPGA"
+                fw_signal="xdcfeb_switches.sel_gbt" fw_default="0b1"/>
+          <node id="SEL_8BIT" address="0x0" mask="0x00000008" permission="rw"
+                description="when high 8bit bus is used, when low 16bit bus is used"
+                fw_signal="xdcfeb_switches.sel_8bit" fw_default="0b1"/>
+          <node id="SEL_MASTER" address="0x0" mask="0x00000010" permission="rw"
+                description="when high master mode is used, when low slave mode is used"
+                fw_signal="xdcfeb_switches.sel_master" fw_default="0b0"/>
+          <node id="SEL_CCLK_SRC" address="0x0" mask="0x00000020" permission="rw"
+                description="when high GBT clock is used as CCLK, when low then PROM 31.25MHz clock is used as CCLK"
+                fw_signal="xdcfeb_switches.sel_cclk_src" fw_default="0b1"/>
+          <node id="SEL_GBT_CCLK_SRC" address="0x0" mask="0x00000040" permission="rw"
+                description="when high then GBT de-skew (phase-shiftable) clock is used for CCLK, when low then eport clock is used for CCLK"
+                fw_signal="xdcfeb_switches.sel_gbt_cclk_src" fw_default="0b0"/>
+          <node id="PATTERN_EN" address="0x0" mask="0x00000080" permission="rw"
+                description="when high the GBT TX eports will be sending the data provided in pattern_data (and programming is disabled)"
+                fw_signal="xdcfeb_switches.pattern_en" fw_default="0b0"/>
+          <node id="RX_SELECT" address="0x0" mask="0x00000f00" permission="rw"
+                description="selects the fiber to latch the XDCFEB RX data from"
+                fw_signal="xdcfeb_rx_select" fw_default="0x0"/>
+          <node id="PATTERN_DATA" address="0x1" mask="0xffffffff" permission="rw"
+                description="data to send to GBT TX eports when pattern_en is high"
+                fw_signal="xdcfeb_switches.pattern_data" fw_default="0xaaaabbbb"/>
+          <node id="RX_DATA" address="0x2" mask="0xffffffff" permission="r"
+                description="XDCFEB RX data (on the fiber selected by RX_SELECT"
+                fw_signal="xdcfeb_rx_data_i"/>
+        </node>
+
+        <node id="TESTS" address="0x300">
+          <node id="GBT_LOOPBACK_EN" address="0x0" mask="0x00000001" permission="rw"
+                description="GBT Loopback test enable -- if this is true then all GBT links are redirected to the loopback test
+                             module and the test module is enabled (communication with optohybrid is not possible during the test)"
+                fw_signal="loopback_gbt_test_en" fw_default="0b0"
+                sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x0"/>
+        </node>
+
         <node id="PROMLESS" address="0x400">
           <node id="FIRMWARE_SIZE" address="0x10" mask="0xffffffff" permission="rw"
                 description="Number of bytes in the OH firmware"
@@ -176,6 +220,50 @@
                   description="Number of disparity errors"
                   fw_signal="spy_disperr"
                   sw_monitor_warn_min_threshold="1000"/>
+        </node>
+
+        <node id="GBT${GBT_IDX}" address="0xb00"
+              description="GBT link ${GBT_IDX} status"
+              generate="true" generate_size="&NUM_GBT_LINKS;" generate_address_step="0x10" generate_idx_var="GBT_IDX">
+
+          <node id="READY" address="0x0" mask="0x00000001" permission="r"
+                description="If this is set to 1 it means that the backend is receiving valid GBT frames from this GBT link"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_ready"
+                sw_val_bad="self == 0" sw_enum="['NOT_READY', 'READY']"/>
+
+          <node id="WAS_NOT_READY" address="0x0" mask="0x00000002" permission="r"
+                description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_had_not_ready"
+                sw_val_warn="self == 1"/>
+
+          <node id="RX_HAD_OVERFLOW" address="0x0" mask="0x00000004" permission="r"
+                description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_sync_status.had_ovf"
+                sw_val_bad="self == 1"/>
+
+          <node id="RX_HAD_UNDERFLOW" address="0x0" mask="0x00000008" permission="r"
+                description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_sync_status.had_unf"
+                sw_val_bad="self == 1"/>
+
+          <node id="FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
+                description="Number of FEC errors corrected by the GBT decoder"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_correction_cnt"
+                sw_val_warn="self > 0"/>
+
+          <node id="RX_HEADER_HAD_UNLOCK" address="0x0" mask="0x00080000" permission="r"
+                description="This flag is latched high if the GBT RX header lock has been lost, and is reset with link reset"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_header_had_unlock"
+                sw_val_bad="self == 1"/>
+
+          <node id="RX_NUM_BITSLIPS" address="0x0" mask="0x0ff00000" permission="r"
+                description="Number of bitslips done on the RX data before achieving header lock"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_rx_num_bitslips"/>
+
+          <node id="TX_READY" address="0x0" mask="0x10000000" permission="r"
+                description="This is set to 1 when the GBT TX core is ready (gearbox is aligned)"
+                fw_signal="gbt_link_status_arr_i(${GBT_IDX}).gbt_tx_ready"
+                sw_val_bad="self == 0"/>
         </node>
 
     </node>
@@ -640,6 +728,35 @@
             <node id="MANUAL_READ" address="0x5" mask="0x0003ffff" permission="r"
                   description="If manual reading is enabled, reading this register will read the first word in the fifo (and consume it)"
                   fw_signal="gbe_manual_rd_data" fw_read_pulse_signal="gbe_manual_rd_en" fw_read_ready_signal="gbe_manual_rd_valid"/>
+        </node>
+
+        <node id="GBT_LOOPBACK" address="0x20"
+                description="This module controls the PRBS loopback tester (this tester can be connected to one GBT link at a time by using the LINK_SELECT register). This module sends a PRBS7 8b sequence to all elinks of the chosen GBT, and checks each elink of that GBT with the same sequence checker">
+          <node id="CTRL" address="0x0">
+            <node id="RESET" address="0x0" permission="w"
+                  description="reset the PRBS loopback module"
+                  fw_write_pulse_signal="gbt_loop_reset"/>
+            <node id="LINK_SELECT" address="0x1" mask="0x0000000f" permission="rw"
+              description="This register sets the index of the GBT link that the loopback tester is going to be testing"
+              fw_signal="gbt_loop_link_select" fw_default="0x0"/>
+            <node id="INJECT_ERR" address="0x2" permission="w"
+              description="Writing to this register will result in one error being injected to the PRBS TX data going to the GBT"
+              fw_write_pulse_signal="gbt_loop_err_inject"/>
+          </node>
+          <node id="ELINK_${ELINK_IDX}"  address="0x10"
+                description="E-link specific registers for e-link ${ELINK_IDX}"
+                generate="true" generate_size="10" generate_address_step="0x2" generate_idx_var="ELINK_IDX">
+
+            <node id="PRBS_LOCKED" mask="0x80000000" permission="r" address="0x0"
+                  description="Indicates whether or not the PRBS7 checker is locked on this elink"
+                  fw_signal="gbt_loop_locked_arr(${ELINK_IDX})"/>
+            <node id="MEGA_WORD_CNT" permission="r" address="0x1"
+                  description="Number of generated data words in units of one million received by this RX elink after PRBS checker has locked"
+                  fw_signal="gbt_loop_mega_word_cnt_arr(${ELINK_IDX})"/>
+            <node id="ERROR_CNT" mask="0x7fffffff" permission="r" address="0x0"
+                  description="Number of PRBS7 errors found in the received data for this elink"
+                  fw_signal="gbt_loop_error_cnt_arr(${ELINK_IDX})(30 downto 0)"/>
+          </node>
         </node>
 
     </node>

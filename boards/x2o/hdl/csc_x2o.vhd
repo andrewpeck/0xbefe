@@ -483,13 +483,13 @@ begin
     -- TTC TX links
     g_use_ttc_links : if CFG_USE_TTC_TX_LINK generate
         g_ttc_links : for i in CFG_TTC_LINKS'range generate 
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txchardispmode <= (others => '0');
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txchardispval <= (others => '0');
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txcharisk <= (others => '0');
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txreset <= '0';
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).rx).rxreset <= '0';
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).rx).rxslide <= '0';
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispmode <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispval <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txcharisk <= (others => '0');
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxslide <= '0';
         end generate;
     end generate;
 

@@ -397,6 +397,15 @@ begin
         signal csc_dmb_rx_usrclk_arr    : std_logic_vector(CFG_NUM_DMBS(slr) - 1 downto 0);
         signal csc_dmb_rx_data_arr      : t_mgt_16b_rx_data_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
         signal csc_dmb_rx_status_arr    : t_mgt_status_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
+
+        -- GBT links
+        signal csc_gbt_rx_data_arr   : t_std40_array(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_tx_data_arr   : t_std40_array(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_rx_clk_arr    : std_logic_vector(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_tx_clk_arr    : std_logic_vector(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+    
+        signal csc_gbt_ctrl_arr      : t_mgt_ctrl_arr(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
         
         -- Spy readout link
         signal csc_spy_usrclk           : std_logic;
@@ -408,6 +417,7 @@ begin
         
         i_csc_fed : entity work.csc_fed
             generic map(
+                g_NUM_GBT_LINKS     => CFG_NUM_GBT_LINKS(slr),
                 g_SLR               => slr,
                 g_NUM_OF_DMBs       => CFG_NUM_DMBS(slr),
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
@@ -434,6 +444,16 @@ begin
                 csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
                 csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
                 csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+
+                -- GBT links
+                gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
+                gbt_tx_data_arr_o       => csc_gbt_tx_data_arr,
+                gbt_rx_clk_arr_i        => csc_gbt_rx_clk_arr,
+                gbt_tx_clk_arr_i        => csc_gbt_tx_clk_arr,
+                gbt_rx_common_clk_i     => mgt_master_rxusrclk.gbt,
+
+                gbt_status_arr_i        => csc_gbt_status_arr,
+                gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
                 csc_spy_usrclk_i        => csc_spy_usrclk,
@@ -478,6 +498,20 @@ begin
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= (txdata => x"00000000000050bc", txcharisk => x"01", txchardispmode => x"00", txchardispval => x"00");
         end generate; 
 
+        g_csc_gbt_links : for gbt in 0 to CFG_NUM_GBT_LINKS(slr) - 1 generate
+            csc_gbt_rx_data_arr(gbt) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxdata(39 downto 0);
+            csc_gbt_rx_clk_arr(gbt) <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).txdata(39 downto 0) <= csc_gbt_tx_data_arr(gbt);
+            csc_gbt_tx_clk_arr(gbt) <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx);
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).txreset <= csc_gbt_ctrl_arr(gbt).txreset;
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxreset <= csc_gbt_ctrl_arr(gbt).rxreset;
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxslide <= csc_gbt_ctrl_arr(gbt).rxslide;
+            csc_gbt_status_arr(gbt).tx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).tx_reset_done;
+            csc_gbt_status_arr(gbt).tx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).tx_pll_locked;
+            csc_gbt_status_arr(gbt).rx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_reset_done;
+            csc_gbt_status_arr(gbt).rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_pll_locked;
+        end generate;
+
         -- spy link mapping
         g_csc_spy_link : if CFG_USE_SPY_LINK(slr) generate
             csc_spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
@@ -509,13 +543,13 @@ begin
     -- TTC TX links
     g_use_ttc_links : if CFG_USE_TTC_TX_LINK generate
         g_ttc_links : for i in CFG_TTC_LINKS'range generate 
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txchardispmode <= (others => '0');
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txchardispval <= (others => '0');
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txcharisk <= (others => '0');
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).tx).txreset <= '0';
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).rx).rxreset <= '0';
-            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(i).rx).rxslide <= '0';
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispmode <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispval <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txcharisk <= (others => '0');
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxslide <= '0';
         end generate;
     end generate;
 

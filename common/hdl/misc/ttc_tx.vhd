@@ -52,8 +52,9 @@ architecture ttc_tx_arch of ttc_tx is
     -- bit [2] is = bit [1] if channel B data is 0, and it is = NOT bit [1] if channel B data is 1
     -- bits [1] and [3] are always an inverted version of bits [0] and [2]
     signal ttc_out              : std_logic_vector(3 downto 0);
-    signal ttc_out_final        : std_logic_vector(3 downto 0);
     signal ttc_out_reverse      : std_logic;
+    signal ttc_out_test_en      : std_logic;
+    signal ttc_out_test_pattern : std_logic_vector(15 downto 0);
     
     -- inputs
     signal req_l1a              : std_logic;
@@ -263,20 +264,22 @@ begin
     process(ttc_clocks_i.clk_40)
     begin
         if rising_edge(ttc_clocks_i.clk_40) then
-            if ttc_out_reverse = '0' then
-                ttc_out_final <= ttc_out;
+            if ttc_out_test_en = '1' then
+                ttc_data_o.txdata <= ttc_out_test_pattern;
+            elsif ttc_out_reverse = '0' then
+                -- map to MGT out (quadrouple each bit to get from 640Mb/s to 160Mb/s)
+                ttc_data_o.txdata <= ttc_out(3) & ttc_out(3) & ttc_out(3) & ttc_out(3) &
+                                     ttc_out(2) & ttc_out(2) & ttc_out(2) & ttc_out(2) &
+                                     ttc_out(1) & ttc_out(1) & ttc_out(1) & ttc_out(1) &
+                                     ttc_out(0) & ttc_out(0) & ttc_out(0) & ttc_out(0);
             else
-                ttc_out_final <= ttc_out(0) & ttc_out(1) & ttc_out(2) & ttc_out(3);
+                ttc_data_o.txdata <= ttc_out(0) & ttc_out(0) & ttc_out(0) & ttc_out(0) &
+                                     ttc_out(1) & ttc_out(1) & ttc_out(1) & ttc_out(1) &
+                                     ttc_out(2) & ttc_out(2) & ttc_out(2) & ttc_out(2) &
+                                     ttc_out(3) & ttc_out(3) & ttc_out(3) & ttc_out(3);
             end if;
         end if;
     end process; 
-
-    -- map to MGT out (quadrouple each bit to get from 640Mb/s to 160Mb/s)
-
-    ttc_data_o.txdata <= ttc_out_final(3) & ttc_out_final(3) & ttc_out_final(3) & ttc_out_final(3) &
-                         ttc_out_final(2) & ttc_out_final(2) & ttc_out_final(2) & ttc_out_final(2) &
-                         ttc_out_final(1) & ttc_out_final(1) & ttc_out_final(1) & ttc_out_final(1) &
-                         ttc_out_final(0) & ttc_out_final(0) & ttc_out_final(0) & ttc_out_final(0);
     
     ttc_data_o.txchardispmode <= (others => '0');
     ttc_data_o.txchardispval <= (others => '0');

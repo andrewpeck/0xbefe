@@ -28,6 +28,7 @@ package board_config_package is
     
     ------------ DAQ configuration ------------
     constant CFG_DAQ_MAX_DMBS               : integer := 15; -- the number of DMBs that are supported by the DAQ module (the CFG_NUM_DMBS can be less than or equal to this number)
+    constant CFG_MAX_GBTS                   : integer := 15; -- max number of GBT links that can be supported by this board
     
     constant CFG_DAQ_EVTFIFO_DEPTH          : integer := 4096;
     constant CFG_DAQ_EVTFIFO_PROG_FULL_SET  : integer := 3072;
@@ -183,7 +184,23 @@ package board_config_package is
         tx_multilane_phalign    => true, 
         rx_use_buf              => true
     );
-        
+
+    constant CFG_MGT_GBTX : t_mgt_type_config := (
+        link_type               => MGT_GBTX,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 1,
+        tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 40,
+        tx_multilane_phalign    => true, 
+        rx_use_buf              => false
+    );
+            
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
 end board_config_package;
