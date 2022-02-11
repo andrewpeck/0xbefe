@@ -293,6 +293,7 @@ if __name__ == "__main__":
     oh_ver = get_oh_ver(args.ohid, args.gbtid)
     if oh_ver == 1:
         print(Colors.YELLOW + "Only OH-v2 is allowed" + Colors.ENDC)
+        sys.exit()
     boss = None
     if int(args.gbtid)%2 == 0:
         boss = 1
