@@ -41,21 +41,45 @@ if __name__ == "__main__":
     # Step 1 - DAQ Phase Scan
     print (Colors.YELLOW + "Step 1: DAQ Phase Scan\n" + Colors.ENDC)
     logfile.write("Step 1: DAQ Phase Scan\n\n")
-    logfile.close()
     
+    print ("Running DAQ Phase Scan on all VFATs")
+    logfile.write("Running DAQ Phase Scan on all VFATs\n")
+    logfile.close()
     os.system("python3 me0_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c >> %s"%filename)
     
     logfile = open(filename, "a")
-    print (Colors.GREEN + "Step 1: DAQ Phase Scan Complete\n" + Colors.ENDC)
-    logfile.write("Step 1: DAQ Phase Scan Complete\n\n")
+    print (Colors.GREEN + "\nStep 1: DAQ Phase Scan Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 1: DAQ Phase Scan Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - S-bit Phase Scan, Mapping, Cluster Mapping
     print (Colors.YELLOW + "Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
+    logfile.close()
     
-
+    print ("Running S-bit Phase Scan on all VFATs\n")
+    logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
+    logfile.close()
+    os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+    
+    print ("Running S-bit Mapping on all VFATs\n")
+    logfile.write("Running S-bit Mapping on all VFATs\n\n")
+    logfile.close()
+    os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+    
+    print ("Running S-bit Cluster Mapping on all VFATs\n")
+    logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    os.system("cp %s %s/step2_vfat_clustermap.txt"%(latest_file, dataDir))
+    
+    logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 2: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
     print ("#####################################################################################################################################\n")
@@ -64,8 +88,23 @@ if __name__ == "__main__":
     # Step 3 - VFAT Reset
     print (Colors.YELLOW + "Step 3: VFAT Reset\n" + Colors.ENDC)
     logfile.write("Step 3: VFAT Reset\n\n")
-    
 
+    print ("Configuring all VFATs\n")
+    logfile.write("Configuring all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)    
+    
+    print ("Resetting all VFATs\n")
+    logfile.write("Resetting all VFATs\n\n")
+    logfile.close()
+    os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+    
+    print ("Unconfiguring all VFATs\n")
+    logfile.write("Unconfiguring all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)    
+    logfile = open(filename, "a")
     
     print (Colors.GREEN + "\nStep 3: VFAT Reset Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: VFAT Reset Complete\n\n")
@@ -76,7 +115,17 @@ if __name__ == "__main__":
     print (Colors.YELLOW + "Step 4: Slow Control Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 4: Slow Control Error Rate Test\n\n")
     
-    
+    os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -r TEST_REG -t 30")
+    list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    slow_control_results_file = open(latest_file)
+    write_flag = 0
+    for line in slow_control_results_file.readlines():
+        if "Error test results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    slow_control_results_file.close()
     
     print (Colors.GREEN + "\nStep 4: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: Slow Control Error Rate Test Complete\n\n")
@@ -87,7 +136,17 @@ if __name__ == "__main__":
     print (Colors.YELLOW + "Step 5: DAQ Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 5: DAQ Error Rate Test\n\n")
     
-    
+    os.system("python3 vfat_daq_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -t 30")
+    list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    daq_results_file = open(latest_file)
+    write_flag = 0
+    for line in daq_results_file.readlines():
+        if "Error test results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    daq_results_file.close()
     
     print (Colors.GREEN + "\nStep 5: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: DAQ Error Rate Test Complete\n\n")
@@ -98,7 +157,33 @@ if __name__ == "__main__":
     print (Colors.YELLOW + "Step 6: S-bit Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 6: S-bit Error Rate Test\n\n")
     
+    print ("Running S-bit Error test for VFAT17 Elink7\n")
+    logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 20")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    sbit_results_file1 = open(latest_file)
+    write_flag = 0
+    for line in sbit_results_file1.readlines():
+        if "Error Test Results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    sbit_results_file1.close()
     
+    print ("\nRunning S-bit Error test for VFAT19 Elink7\n")
+    logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 20")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    sbit_results_file2 = open(latest_file)
+    write_flag = 0
+    for line in sbit_results_file2.readlines():
+        if "Error Test Results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    sbit_results_file2.close()
     
     print (Colors.GREEN + "\nStep 6: S-bit Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 6: S-bit Error Rate Test Complete\n\n")
@@ -109,7 +194,21 @@ if __name__ == "__main__":
     print (Colors.YELLOW + "Step 7: DAC Scans\n" + Colors.ENDC)
     logfile.write("Step 7: DAC Scans\n\n")
     
-    
+    os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -f ../resources/DAC_scan_reg_list.txt")
+    list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
+    latest_dir = latest_file.split(".txt")[0]
+    if os.path.isdir(latest_dir):
+        try:
+            os.makedirs(dataDir + "/dac_scan_results") 
+        except FileExistsError: 
+            os.system("rm -rf dac_scan_results")
+            os.makedirs(dataDir + "/dac_scan_results") 
+        os.system("%s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
+    else:
+        print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
+        logfile.write("DAC scan result directory not found\n")
     
     print (Colors.GREEN + "\nStep 7: DAC Scans Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: DAC Scans Complete\n\n")

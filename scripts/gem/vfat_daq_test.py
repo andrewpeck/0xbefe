@@ -279,7 +279,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             print ("")
             file_out.write("\n")
         print ("")
-        file_out.write("\n")
+        file_out.write("\n\n")
 
     # Disable channels on VFATs
     for vfat in vfat_list:
