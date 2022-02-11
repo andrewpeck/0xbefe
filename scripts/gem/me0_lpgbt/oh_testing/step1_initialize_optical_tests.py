@@ -41,11 +41,14 @@ if __name__ == "__main__":
     # Step 1 - run init_frontend
     print (Colors.YELLOW + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
-    
+    logfile.close()
+
     os.system("python3 init_frontend.py")
+    os.system("python3 init_frontend.py >> %s"%filename)
+    logfile = open(filename, "a")
     
-    print (Colors.GREEN + "Step 1: Initialization Complete\n" + Colors.ENDC)
-    logfile.write("Step 1: Initialization Complete\n\n")
+    print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 1: Initialization Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
