@@ -39,7 +39,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 1 - DAQ Phase Scan
-    print (Colors.YELLOW + "Step 1: DAQ Phase Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 1: DAQ Phase Scan\n" + Colors.ENDC)
     logfile.write("Step 1: DAQ Phase Scan\n\n")
     
     print ("Running DAQ Phase Scan on all VFATs")
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - S-bit Phase Scan, Mapping, Cluster Mapping
-    print (Colors.YELLOW + "Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
     
     print ("Running S-bit Phase Scan on all VFATs\n")
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
    
     # Step 3 - VFAT Reset
-    print (Colors.YELLOW + "Step 3: VFAT Reset\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 3: VFAT Reset\n" + Colors.ENDC)
     logfile.write("Step 3: VFAT Reset\n\n")
 
     print ("Configuring all VFATs\n")
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - Slow Control Error Rate Test
-    print (Colors.YELLOW + "Step 4: Slow Control Error Rate Test\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 4: Slow Control Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 4: Slow Control Error Rate Test\n\n")
     
     os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -r TEST_REG -t 30")
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - DAQ Error Rate Test
-    print (Colors.YELLOW + "Step 5: DAQ Error Rate Test\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 5: DAQ Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 5: DAQ Error Rate Test\n\n")
     
     os.system("python3 vfat_daq_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -t 30")
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 6 - S-bit Error Rate Test
-    print (Colors.YELLOW + "Step 6: S-bit Error Rate Test\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 6: S-bit Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 6: S-bit Error Rate Test\n\n")
     
     print ("Running S-bit Error test for VFAT17 Elink7\n")
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 7 - DAC Scans
-    print (Colors.YELLOW + "Step 7: DAC Scans\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 7: DAC Scans\n" + Colors.ENDC)
     logfile.write("Step 7: DAC Scans\n\n")
     
     print ("\nRunning DAC Scans for all VFATs\n")
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 8 - ADC Measurements
-    print (Colors.YELLOW + "Step 8: ADC Measurements\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 8: ADC Measurements\n" + Colors.ENDC)
     logfile.write("Step 8: ADC Measurements\n\n")
     
     print ("Configuring all VFATs\n")

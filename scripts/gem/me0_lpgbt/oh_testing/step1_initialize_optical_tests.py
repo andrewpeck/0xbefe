@@ -39,7 +39,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 1 - run init_frontend
-    print (Colors.YELLOW + "Step 1: Initializing\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
     logfile.close()
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - check lpGBT status
-    print (Colors.YELLOW + "Step 2: Checking lpGBT Status\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 2: Checking lpGBT Status\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Status\n\n")
     
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
@@ -98,40 +98,60 @@ if __name__ == "__main__":
        
     print ("Checking Slot 1 OH Boss lpGBT:") 
     logfile.write("Checking Slot 1 OH Boss lpGBT:\n")
+    n_error = 0
     for line in config_boss_slot1_file.readlines():
         if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
             continue
         if status_boss_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            n_error += 1
             print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot1_registers[int(line.split()[0],16)]))
-    
+    if n_error == 0:
+        print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+        logfile.write("  No register mismatches")
+
     print ("Checking Slot 1 OH Sub lpGBT:")
     logfile.write("Checking Slot 1 OH Sub lpGBT:\n")
+    n_error = 0
     for line in config_sub_slot1_file.readlines():
         if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
             continue
         if status_sub_slot1_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            n_error += 1
             print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot1_registers[int(line.split()[0],16)]))
-        
+    if n_error == 0:
+        print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+        logfile.write("  No register mismatches")
+
     print ("Checking Slot 2 OH Boss lpGBT:")
-    logfile.write("Checking Slot 2 OH Boss lpGBT:\n")    
+    logfile.write("Checking Slot 2 OH Boss lpGBT:\n")
+    n_error = 0
     for line in config_boss_slot2_file.readlines():
         if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
             continue
         if status_boss_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            n_error += 1
             print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_boss_slot2_registers[int(line.split()[0],16)]))
-   
+    if n_error == 0:
+        print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+        logfile.write("  No register mismatches")
+
     print ("Checking Slot 2 OH Sub lpGBT:") 
     logfile.write("Checking Slot 2 OH Sub lpGBT:\n")
+    n_error = 0
     for line in config_sub_slot2_file.readlines():
         if int(line.split()[0],16) in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
             continue
         if status_sub_slot2_registers[int(line.split()[0],16)] != int(line.split()[1],16):
+            n_error += 1
             print (Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]) + Colors.ENDC)
             logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(int(line.split()[0],16), int(line.split()[1],16), status_sub_slot2_registers[int(line.split()[0],16)]))
-   
+    if n_error == 0:
+        print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+        logfile.write("  No register mismatches")
+
     config_boss_slot1_file.close()
     config_sub_slot1_file.close()
     config_boss_slot2_file.close()
@@ -147,7 +167,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
    
     # Step 3 - Downlink eye diagrams
-    print (Colors.YELLOW + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink Eye Diagram\n\n")
     
     print ("Running Eye diagram for Slot 1 Boss lpGBT")
@@ -190,7 +210,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - Downlink Optical BERT
-    print (Colors.YELLOW + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     
     print ("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n")
@@ -217,7 +237,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - Uplink Optical BERT
-    print (Colors.YELLOW + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 5: Uplink Optical BERT\n\n")
     
     print ("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n")

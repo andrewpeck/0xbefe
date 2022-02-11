@@ -39,7 +39,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 1 - DAQ SCurve
-    print (Colors.YELLOW + "Step 1: DAQ SCurve\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 1: DAQ SCurve\n" + Colors.ENDC)
     logfile.write("Step 1: DAQ SCurve\n\n")
     
     print ("Running DAQ SCurves for all VFATs\n")
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 2 - DAQ Crosstalk
-    print (Colors.YELLOW + "Step 2: DAQ Crosstalk\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 2: DAQ Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 2: DAQ Crosstalk\n\n")
     
     print ("Running DAQ Crosstalk for all VFATs\n")
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 3 - S-bit SCurve
-    print (Colors.YELLOW + "Step 3: S-bit SCurve\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 3: S-bit SCurve\n" + Colors.ENDC)
     logfile.write("Step 3: S-bit SCurve\n\n")
     
     print ("Running S-bit SCurves for all VFATs\n")
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - S-bit Crosstalk
-    print (Colors.YELLOW + "Step 4: S-bit Crosstalk\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 4: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 4: S-bit Crosstalk\n\n")
     
     print ("Running S-bit Crosstalk for all VFATs\n")
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - S-bit Noise Rate
-    print (Colors.YELLOW + "Step 5: S-bit Noise Rate\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 5: S-bit Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 5: S-bit Noise Rate\n\n")
     
     print ("Running S-bit Noise Rate for all VFATs\n")
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 6 - S-bit Cluster SCurve
-    print (Colors.YELLOW + "Step 6: S-bit Cluster SCurve\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 6: S-bit Cluster SCurve\n" + Colors.ENDC)
     logfile.write("Step 6: S-bit Cluster SCurve\n\n")
     
     print ("Running S-bit Cluster SCurves for all VFATs\n")
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 7 - S-bit Cluster Noise Rate
-    print (Colors.YELLOW + "Step 7: S-bit Cluster Noise Rate\n" + Colors.ENDC)
+    print (Colors.BLUE + "Step 7: S-bit Cluster Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Cluster Noise Rate\n\n")
     
     print ("Running S-bit Cluster Noise Rate for all VFATs\n")
