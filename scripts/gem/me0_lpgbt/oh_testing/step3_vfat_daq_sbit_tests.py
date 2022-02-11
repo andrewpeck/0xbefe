@@ -5,7 +5,7 @@ from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Testing Step 2 - VFAT Communication Tests")
+    parser = argparse.ArgumentParser(description="Testing Step 2 - VFAT DAQ and S-bit Tests")
     parser.add_argument("-s1", "--slot1", action="store", dest="slot1", help="slot1 = OH serial number on slot 1")
     parser.add_argument("-s2", "--slot2", action="store", dest="slot2", help="slot2 = OH serial number on slot 2")
     args = parser.parse_args()
@@ -24,12 +24,12 @@ if __name__ == "__main__":
         os.makedirs(me0Dir) # create directory for OH under test
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = me0Dir+"/step2_vfat_communication_tests"
+    dataDir = me0Dir+"/step2_vfat_daq_sbit_tests"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
-    filename = dataDir + "/step_2_log.txt"
+    filename = dataDir + "/step_3_log.txt"
     logfile = open(filename, "w")
     
     oh_ver_slot1 = get_oh_ver("0", "0")
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     # Step 2 - S-bit Phase Scan, Mapping, Cluster Mapping
     print (Colors.YELLOW + "Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
+    logfile.close()
     
     print ("Running S-bit Phase Scan on all VFATs\n")
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
