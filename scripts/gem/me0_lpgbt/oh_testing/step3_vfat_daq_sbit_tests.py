@@ -42,13 +42,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 1: DAQ SCurve\n" + Colors.ENDC)
     logfile.write("Step 1: DAQ SCurve\n\n")
     
-    print ("Running DAQ SCurves for all VFATs\n")
+    print (Colors.BLUE + "Running DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running DAQ SCurves for all VFATs\n\n")
     os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000")
     list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting DAQ SCurves for all VFATs\n")
+    print (Colors.BLUE + "Plotting DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 2: DAQ Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 2: DAQ Crosstalk\n\n")
     
-    print ("Running DAQ Crosstalk for all VFATs\n")
+    print (Colors.BLUE + "Running DAQ Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Running DAQ Crosstalk for all VFATs\n\n")
     os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000")
     logfile.close()
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting DAQ Crosstalk for all VFATs\n")
+    print (Colors.BLUE + "Plotting DAQ Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -98,13 +98,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 3: S-bit SCurve\n" + Colors.ENDC)
     logfile.write("Step 3: S-bit SCurve\n\n")
     
-    print ("Running S-bit SCurves for all VFATs\n")
+    print (Colors.BLUE + "Running S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit SCurves for all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting S-bit SCurves for all VFATs\n")
+    print (Colors.BLUE + "Plotting S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 4: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 4: S-bit Crosstalk\n\n")
     
-    print ("Running S-bit Crosstalk for all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Crosstalk for all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
     logfile.close()
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting S-bit Crosstalk for all VFATs\n")
+    print (Colors.BLUE + "Plotting S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -154,13 +154,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 5: S-bit Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 5: S-bit Noise Rate\n\n")
     
-    print ("Running S-bit Noise Rate for all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Noise Rate for all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -z")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_noise_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting S-bit Noise Rate for all VFATs\n")
+    print (Colors.BLUE + "Plotting S-bit Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -187,13 +187,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 6: S-bit Cluster SCurve\n" + Colors.ENDC)
     logfile.write("Step 6: S-bit Cluster SCurve\n\n")
     
-    print ("Running S-bit Cluster SCurves for all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster SCurves for all VFATs\n\n")
     os.system("python3 vfat_sbit_cluster_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_cluster_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting S-bit Cluster SCurves for all VFATs\n")
+    print (Colors.BLUE + "Plotting S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -213,13 +213,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 7: S-bit Cluster Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Cluster Noise Rate\n\n")
     
-    print ("Running S-bit Cluster Noise Rate for all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Cluster Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Noise Rate for all VFATs\n\n")
     os.system("python3 vfat_sbit_cluster_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -x -z")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_cluster_noise_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("Plotting S-bit Cluster Noise Rate for all VFATs\n")
+    print (Colors.BLUE + "Plotting S-bit Cluster Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_cluster_noise_rate.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]

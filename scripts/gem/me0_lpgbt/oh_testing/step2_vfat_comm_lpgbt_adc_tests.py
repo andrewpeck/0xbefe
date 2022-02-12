@@ -84,7 +84,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 3: S-bit Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 3: S-bit Error Rate Test\n\n")
     
-    print ("Running S-bit Error test for VFAT17 Elink7\n")
+    print (Colors.BLUE + "Running S-bit Error test for VFAT17 Elink7\n" + Colors.ENDC)
     logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
     os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 20")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             logfile.write(line)
     sbit_results_file1.close()
     
-    print ("\nRunning S-bit Error test for VFAT19 Elink7\n")
+    print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
     logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
     os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 20")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
@@ -121,13 +121,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 4: DAC Scans\n" + Colors.ENDC)
     logfile.write("Step 4: DAC Scans\n\n")
     
-    print ("\nRunning DAC Scans for all VFATs\n")
+    print (Colors.BLUE + "\nRunning DAC Scans for all VFATs\n" + Colors.ENDC)
     logfile.write("\nRunning DAC Scans for all VFATs\n\n")
     os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -f ../resources/DAC_scan_reg_list.txt")
     list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print ("\Plotting DAC Scans for all VFATs\n")
+    print (Colors.BLUE + "\Plotting DAC Scans for all VFATs\n" + Colors.ENDC)
     logfile.write("\Plotting DAC Scans for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
@@ -151,13 +151,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 5: ADC Measurements\n" + Colors.ENDC)
     logfile.write("Step 5: ADC Measurements\n\n")
     
-    print ("Configuring all VFATs\n")
+    print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
     logfile.write("Configuring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)    
     logfile = open(filename, "a")
     
-    print ("Running ADC Calibration Scan\n")
+    print (Colors.BLUE + "Running ADC Calibration Scan\n" + Colors.ENDC)
     logfile.write("Running ADC Calibration Scan\n\n")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 0")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 1")
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot2_sub.pdf"%(latest_file, dataDir))
     
-    print ("Running RSSI Scan\n")
+    print (Colors.BLUE + "Running RSSI Scan\n" + Colors.ENDC)
     logfile.write("Running RSSI Scan\n\n")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 1 -v 2.56 -m 5")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 3 -v 2.56 -m 5")
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rssi_slot2.pdf"%(latest_file, dataDir))
     
-    print ("Running GEB Current and Temperature Scan\n")
+    print (Colors.BLUE + "Running GEB Current and Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running GEB Current and Temperature Scan\n\n")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 0 -m 5")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 2 -m 5")
@@ -214,7 +214,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rt_voltage_slot2.pdf"%(latest_file, dataDir))
     
-    print ("Running OH Temperature Scan\n")
+    print (Colors.BLUE + "Running OH Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running OH Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t OH -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t OH -m 5")
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/oh_temp_slot2.pdf"%(latest_file, dataDir))
     
-    print ("Running VTRx+ Temperature Scan\n")
+    print (Colors.BLUE + "Running VTRx+ Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running VTRx+ Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t VTRX -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t VTRX -m 5")
@@ -240,7 +240,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vtrx+_temp_slot2.pdf"%(latest_file, dataDir)) 
     
-    print ("Unconfiguring all VFATs\n")
+    print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)    

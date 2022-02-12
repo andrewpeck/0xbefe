@@ -170,8 +170,8 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink Eye Diagram\n\n")
     
-    print ("Running Eye diagram for Slot 1 Boss lpGBT")
-    logfile.write("Running Eye diagram for Slot 1 Boss lpGBT")
+    print (Colors.BLUE + "Running Eye diagram for Slot 1, Boss lpGBT" + Colors.ENDC)
+    logfile.write("Running Eye diagram for Slot 1, Boss lpGBT")
     os.system("python3 me0_eye_scan.py -s backend -q ME0 -o 0 -g 0 > out.txt")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -187,8 +187,8 @@ if __name__ == "__main__":
     print (result)
     logfile.write(result)
     
-    print ("Running Eye diagram for Slot 2 Boss lpGBT")
-    logfile.write("Running Eye diagram for Slot 2 Boss lpGBT")
+    print (Colors.BLUE + "Running Eye diagram for Slot 2, Boss lpGBT" + Colors.ENDC)
+    logfile.write("Running Eye diagram for Slot 2, Boss lpGBT")
     os.system("python3 me0_eye_scan.py -s backend -q ME0 -o 0 -g 2 > out.txt")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     
-    print ("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n")
+    print (Colors.BLUE + "Running Downlink Optical BERT for Slot 1 Boss lpGBT\n" + Colorrs.ENDC)
     logfile.write("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     os.system("cat %s >> %s"%(latest_file, filename))
     
     logfile = open(filename, "a")
-    print ("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n")
+    print (Colors.BLUE + "Running Downlink Optical BERT for Slot 2 Boss lpGBT\n" + Colors.ENDC)
     logfile.write("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 2 -p downlink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 5: Uplink Optical BERT\n\n")
     
-    print ("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n")
+    print (Colors.BLUE + "Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n" + Colors.ENDC)
     logfile.write("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 1 2 3 -p uplink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
@@ -258,8 +258,8 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 6: DAQ Phase Scan\n" + Colors.ENDC)
     logfile.write("Step 6: DAQ Phase Scan\n\n")
 
-    print ("Running DAQ Phase Scan on all VFATs")
-    logfile.write("Running DAQ Phase Scan on all VFATs\n")
+    print (Colors.BLUE + "Running DAQ Phase Scan on all VFATs\n" + Colors.ENDC)
+    logfile.write("Running DAQ Phase Scan on all VFATs\n\n")
     os.system("python3 me0_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c")
     list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
 
-    print ("Running S-bit Phase Scan on all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
 
-    print ("\n\nRunning S-bit Mapping on all VFATs\n")
+    print (Colors.BLUE + "\n\nRunning S-bit Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("\n\nRunning S-bit Mapping on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
 
-    print ("Running S-bit Cluster Mapping on all VFATs\n")
+    print (Colors.BLUE + "Running S-bit Cluster Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
@@ -313,19 +313,19 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
     logfile.write("Step 8: VFAT Reset\n\n")
 
-    print ("Configuring all VFATs\n")
+    print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
     logfile.write("Configuring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)
     logfile = open(filename, "a")
 
-    print ("Resetting all VFATs\n")
+    print (Colors.BLUE + "Resetting all VFATs\n" + Colors.ENDC)
     logfile.write("Resetting all VFATs\n\n")
     logfile.close()
     os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
     logfile = open(filename, "a")
 
-    print ("Unconfiguring all VFATs\n")
+    print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)
