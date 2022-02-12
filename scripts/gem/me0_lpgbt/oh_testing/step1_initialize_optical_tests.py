@@ -254,6 +254,88 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
+    # Step 6 - DAQ Phase Scan
+    print (Colors.BLUE + "Step 6: DAQ Phase Scan\n" + Colors.ENDC)
+    logfile.write("Step 6: DAQ Phase Scan\n\n")
+
+    print ("Running DAQ Phase Scan on all VFATs")
+    logfile.write("Running DAQ Phase Scan on all VFATs\n")
+    os.system("python3 me0_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c")
+    list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
+
+    logfile = open(filename, "a")
+    print (Colors.GREEN + "\nStep 6: DAQ Phase Scan Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 6: DAQ Phase Scan Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 7 - S-bit Phase Scan, Mapping, Cluster Mapping
+    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
+    logfile.write("Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
+
+    print ("Running S-bit Phase Scan on all VFATs\n")
+    logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
+    os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
+    logfile = open(filename, "a")
+
+    print ("Running S-bit Mapping on all VFATs\n")
+    logfile.write("Running S-bit Mapping on all VFATs\n\n")
+    os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
+    logfile = open(filename, "a")
+
+    print ("Running S-bit Cluster Mapping on all VFATs\n")
+    logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
+
+    logfile = open(filename, "a")
+    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 8 - VFAT Reset
+    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
+    logfile.write("Step 8: VFAT Reset\n\n")
+
+    print ("Configuring all VFATs\n")
+    logfile.write("Configuring all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)
+    logfile = open(filename, "a")
+
+    print ("Resetting all VFATs\n")
+    logfile.write("Resetting all VFATs\n\n")
+    logfile.close()
+    os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
+    logfile = open(filename, "a")
+
+    print ("Unconfiguring all VFATs\n")
+    logfile.write("Unconfiguring all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)
+    logfile = open(filename, "a")
+
+    print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 8: VFAT Reset Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
     logfile.close()
     os.system("rm -rf out.txt")
 

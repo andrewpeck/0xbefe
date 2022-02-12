@@ -61,6 +61,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     now = now.replace(" ", "_")
     filename = dataDir + "/%s_OH%d_vfat_sbit_phase_scan_results_"%(gem,oh_select) + now + ".txt"
     file_out = open(filename, "w")
+    filename_data = dataDir + "/%s_OH%d_vfat_sbit_phase_scan_data_"%(gem,oh_select) + now + ".txt"
+    file_out_data = open(filename_data, "w")
     file_out.write("vfat  elink  phase\n")
 
     errs = [[[0 for phase in range(16)] for elink in range(0,8)] for vfat in range(24)]
@@ -230,6 +232,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
 
     bestphase_vfat_elink = [[0 for elink in range(8)] for vfat in range(24)]
+    print ("\nPhase Scan Results:")
+    file_out_data.write("\nPhase Scan Results:\n")
     for vfat in vfat_list:
         centers = 8*[0]
         widths  = 8*[0]
@@ -237,8 +241,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             centers[elink], widths[elink] = find_phase_center(errs[vfat][elink])
 
         print ("\nVFAT %02d :" %(vfat))
+        file_out_data.write("\nVFAT %02d :\n" %(vfat))
         for elink in range(0,8):
-            sys.stdout.write("  ELINK %02d: " % (elink))
+            phase_print = "  ELINK %02d: " % (elink)
             for phase in range(0, 16):
                 if (widths[elink]>0 and phase==centers[elink]):
                     char=Colors.GREEN + "+" + Colors.ENDC
@@ -248,15 +253,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 else:
                     char = Colors.YELLOW + "x" + Colors.ENDC
 
-                sys.stdout.write("%s" % char)
-                sys.stdout.flush()
+                phase_print += "%s" %char
             if widths[elink]<3:
-                sys.stdout.write(Colors.RED + " (center=%d, width=%d) BAD\n" % (centers[elink], widths[elink]) + Colors.ENDC)
+                phase_print += Colors.RED + " (center=%d, width=%d) BAD\n" % (centers[elink], widths[elink]) + Colors.ENDC
             elif widths[elink]<5:
-                sys.stdout.write(Colors.YELLOW + " (center=%d, width=%d) WARNING\n" % (centers[elink], widths[elink]) + Colors.ENDC)
+                phase_print += Colors.YELLOW + " (center=%d, width=%d) WARNING\n" % (centers[elink], widths[elink]) + Colors.ENDC
             else:
-                sys.stdout.write(Colors.GREEN + " (center=%d, width=%d) GOOD\n" % (centers[elink], widths[elink]) + Colors.ENDC)
-            sys.stdout.flush()
+                phase_print += Colors.GREEN + " (center=%d, width=%d) GOOD\n" % (centers[elink], widths[elink]) + Colors.ENDC
+            print(phase_print)
+            file_out_data.write(phase_print + "\n")
 
         # set phases for all elinks for this vfat
         print ("\nVFAT %02d: Setting all ELINK phases to best phases: "%(vfat))
@@ -273,6 +278,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     gem_utils.gem_link_reset()
     print ("")
     file_out.close()
+    file_out_data.close()
 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     print ("\nS-bit phase scan done\n")

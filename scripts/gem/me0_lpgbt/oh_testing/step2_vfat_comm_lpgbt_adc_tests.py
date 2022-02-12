@@ -38,82 +38,9 @@ if __name__ == "__main__":
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 1 - DAQ Phase Scan
-    print (Colors.BLUE + "Step 1: DAQ Phase Scan\n" + Colors.ENDC)
-    logfile.write("Step 1: DAQ Phase Scan\n\n")
-    
-    print ("Running DAQ Phase Scan on all VFATs")
-    logfile.write("Running DAQ Phase Scan on all VFATs\n")
-    logfile.close()
-    os.system("python3 me0_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c >> %s"%filename)
-    
-    logfile = open(filename, "a")
-    print (Colors.GREEN + "\nStep 1: DAQ Phase Scan Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 1: DAQ Phase Scan Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-    
-    # Step 2 - S-bit Phase Scan, Mapping, Cluster Mapping
-    print (Colors.BLUE + "Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
-    logfile.write("Step 2: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
-    
-    print ("Running S-bit Phase Scan on all VFATs\n")
-    logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
-    logfile.close()
-    os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
-    logfile = open(filename, "a")
-    
-    print ("Running S-bit Mapping on all VFATs\n")
-    logfile.write("Running S-bit Mapping on all VFATs\n\n")
-    logfile.close()
-    os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
-    logfile = open(filename, "a")
-    
-    print ("Running S-bit Cluster Mapping on all VFATs\n")
-    logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
-    logfile.close()
-    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
-    logfile = open(filename, "a")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
-    latest_file = max(list_of_files, key=os.path.getctime)
-    os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
-    
-    logfile = open(filename, "a")
-    print (Colors.GREEN + "\nStep 2: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 2: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-   
-    # Step 3 - VFAT Reset
-    print (Colors.BLUE + "Step 3: VFAT Reset\n" + Colors.ENDC)
-    logfile.write("Step 3: VFAT Reset\n\n")
-
-    print ("Configuring all VFATs\n")
-    logfile.write("Configuring all VFATs\n\n")
-    logfile.close()
-    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)    
-    logfile = open(filename, "a")
-    
-    print ("Resetting all VFATs\n")
-    logfile.write("Resetting all VFATs\n\n")
-    logfile.close()
-    os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
-    logfile = open(filename, "a")
-    
-    print ("Unconfiguring all VFATs\n")
-    logfile.write("Unconfiguring all VFATs\n\n")
-    logfile.close()
-    os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)    
-    logfile = open(filename, "a")
-    
-    print (Colors.GREEN + "\nStep 3: VFAT Reset Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: VFAT Reset Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-    
-    # Step 4 - Slow Control Error Rate Test
-    print (Colors.BLUE + "Step 4: Slow Control Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 4: Slow Control Error Rate Test\n\n")
+    # Step 1 - Slow Control Error Rate Test
+    print (Colors.BLUE + "Step 1: Slow Control Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 1: Slow Control Error Rate Test\n\n")
     
     os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -r TEST_REG -t 30")
     list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
@@ -127,14 +54,14 @@ if __name__ == "__main__":
             logfile.write(line)
     slow_control_results_file.close()
     
-    print (Colors.GREEN + "\nStep 4: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 4: Slow Control Error Rate Test Complete\n\n")
+    print (Colors.GREEN + "\nStep 1: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 1: Slow Control Error Rate Test Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 5 - DAQ Error Rate Test
-    print (Colors.BLUE + "Step 5: DAQ Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 5: DAQ Error Rate Test\n\n")
+    # Step 2 - DAQ Error Rate Test
+    print (Colors.BLUE + "Step 2: DAQ Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 2: DAQ Error Rate Test\n\n")
     
     os.system("python3 vfat_daq_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -t 30")
     list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
@@ -148,14 +75,14 @@ if __name__ == "__main__":
             logfile.write(line)
     daq_results_file.close()
     
-    print (Colors.GREEN + "\nStep 5: DAQ Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 5: DAQ Error Rate Test Complete\n\n")
+    print (Colors.GREEN + "\nStep 2: DAQ Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 2: DAQ Error Rate Test Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 6 - S-bit Error Rate Test
-    print (Colors.BLUE + "Step 6: S-bit Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 6: S-bit Error Rate Test\n\n")
+    # Step 3 - S-bit Error Rate Test
+    print (Colors.BLUE + "Step 3: S-bit Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 3: S-bit Error Rate Test\n\n")
     
     print ("Running S-bit Error test for VFAT17 Elink7\n")
     logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
@@ -185,14 +112,14 @@ if __name__ == "__main__":
             logfile.write(line)
     sbit_results_file2.close()
     
-    print (Colors.GREEN + "\nStep 6: S-bit Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 6: S-bit Error Rate Test Complete\n\n")
+    print (Colors.GREEN + "\nStep 3: S-bit Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 3: S-bit Error Rate Test Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 7 - DAC Scans
-    print (Colors.BLUE + "Step 7: DAC Scans\n" + Colors.ENDC)
-    logfile.write("Step 7: DAC Scans\n\n")
+    # Step 4 - DAC Scans
+    print (Colors.BLUE + "Step 4: DAC Scans\n" + Colors.ENDC)
+    logfile.write("Step 4: DAC Scans\n\n")
     
     print ("\nRunning DAC Scans for all VFATs\n")
     logfile.write("\nRunning DAC Scans for all VFATs\n\n")
@@ -215,14 +142,14 @@ if __name__ == "__main__":
         print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
         logfile.write("DAC scan result directory not found\n")
     
-    print (Colors.GREEN + "\nStep 7: DAC Scans Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 7: DAC Scans Complete\n\n")
+    print (Colors.GREEN + "\nStep 4: DAC Scans Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 4: DAC Scans Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 8 - ADC Measurements
-    print (Colors.BLUE + "Step 8: ADC Measurements\n" + Colors.ENDC)
-    logfile.write("Step 8: ADC Measurements\n\n")
+    # Step 5 - ADC Measurements
+    print (Colors.BLUE + "Step 5: ADC Measurements\n" + Colors.ENDC)
+    logfile.write("Step 5: ADC Measurements\n\n")
     
     print ("Configuring all VFATs\n")
     logfile.write("Configuring all VFATs\n\n")
@@ -319,8 +246,8 @@ if __name__ == "__main__":
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)    
     logfile = open(filename, "a")
     
-    print (Colors.GREEN + "\nStep 8: ADC Measurements Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 8: ADC Measurements Complete\n\n")
+    print (Colors.GREEN + "\nStep 5: ADC Measurements Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 5: ADC Measurements Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
