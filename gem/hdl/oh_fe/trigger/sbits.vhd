@@ -303,29 +303,36 @@ begin
   -- L1A Delay
   --------------------------------------------------------------------------------
 
+  l1a_pipeline(0) <= ttc.l1a;
+  l1a_delayed     <= l1a_pipeline(to_integer(unsigned(l1a_mask_delay)));
+
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-      l1a_pipeline(0) <= ttc.l1a;
       for I in 1 to l1a_pipeline'left loop
         l1a_pipeline(I) <= l1a_pipeline(I-1);
       end loop;
     end if;
-    l1a_delayed <= l1a_pipeline(to_integer(unsigned(l1a_mask_delay)));
   end process;
 
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
+
       if (l1a_delayed = '1') then
         l1a_mask_cnt <= unsigned(l1a_mask_width);
       elsif (l1a_mask_cnt > 0) then
         l1a_mask_cnt <= l1a_mask_cnt - 1;
       end if;
+
+      if (l1a_mask_cnt > 0) then
+        mask_l1a <= '1';
+      else
+        mask_l1a <= '0';
+      end if;
+
     end if;
   end process;
-
-  mask_l1a <= '1' when l1a_mask_cnt > 0 else '0';
 
   --------------------------------------------------------------------------------------------------------------------
   -- Cluster Packer
