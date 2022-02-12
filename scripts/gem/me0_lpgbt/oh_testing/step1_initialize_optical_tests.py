@@ -46,9 +46,10 @@ if __name__ == "__main__":
     os.system("python3 init_frontend.py")
     os.system("python3 init_frontend.py >> %s"%filename)
     logfile = open(filename, "a")
-    
+
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Initialization Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -163,6 +164,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
@@ -206,6 +208,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "Step 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink Eye Diagram Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -233,6 +236,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 4: Downlink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: Downlink Optical BERT Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -251,6 +255,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -269,6 +274,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 6: DAQ Phase Scan Complete\n" + Colors.ENDC)
     logfile.write("\nStep 6: DAQ Phase Scan Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -284,6 +290,7 @@ if __name__ == "__main__":
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
+    time.sleep(5)
 
     print (Colors.BLUE + "\n\nRunning S-bit Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("\n\nRunning S-bit Mapping on all VFATs\n\n")
@@ -293,6 +300,7 @@ if __name__ == "__main__":
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
+    time.sleep(5)
 
     print (Colors.BLUE + "Running S-bit Cluster Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
@@ -306,6 +314,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -318,12 +327,14 @@ if __name__ == "__main__":
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)
     logfile = open(filename, "a")
+    time.sleep(5)
 
     print (Colors.BLUE + "Resetting all VFATs\n" + Colors.ENDC)
     logfile.write("Resetting all VFATs\n\n")
     logfile.close()
     os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 >> %s"%filename)
     logfile = open(filename, "a")
+    time.sleep(5)
 
     print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
@@ -333,6 +344,7 @@ if __name__ == "__main__":
 
     print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
     logfile.write("\nStep 8: VFAT Reset Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 

@@ -56,6 +56,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 1: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Slow Control Error Rate Test Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -77,6 +78,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 2: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: DAQ Error Rate Test Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -97,6 +99,7 @@ if __name__ == "__main__":
         if write_flag:
             logfile.write(line)
     sbit_results_file1.close()
+    time.sleep(5)
     
     print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
     logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
@@ -114,6 +117,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 3: S-bit Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: S-bit Error Rate Test Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -144,6 +148,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 4: DAC Scans Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: DAC Scans Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
@@ -156,6 +161,7 @@ if __name__ == "__main__":
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 >> %s"%filename)    
     logfile = open(filename, "a")
+    time.sleep(5)
     
     print (Colors.BLUE + "Running ADC Calibration Scan\n" + Colors.ENDC)
     logfile.write("Running ADC Calibration Scan\n\n")
@@ -179,6 +185,7 @@ if __name__ == "__main__":
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot2_sub.pdf"%(latest_file, dataDir))
+    time.sleep(5)
     
     print (Colors.BLUE + "Running RSSI Scan\n" + Colors.ENDC)
     logfile.write("Running RSSI Scan\n\n")
@@ -192,6 +199,7 @@ if __name__ == "__main__":
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rssi_slot2.pdf"%(latest_file, dataDir))
+    time.sleep(5)
     
     print (Colors.BLUE + "Running GEB Current and Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running GEB Current and Temperature Scan\n\n")
@@ -213,6 +221,7 @@ if __name__ == "__main__":
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rt_voltage_slot2.pdf"%(latest_file, dataDir))
+    time.sleep(5)
     
     print (Colors.BLUE + "Running OH Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running OH Temperature Scan\n\n")
@@ -226,6 +235,7 @@ if __name__ == "__main__":
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/oh_temp_slot2.pdf"%(latest_file, dataDir))
+    time.sleep(5)
     
     print (Colors.BLUE + "Running VTRx+ Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running VTRx+ Temperature Scan\n\n")
@@ -238,7 +248,8 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT3_temp_VTRX*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("cp %s %s/vtrx+_temp_slot2.pdf"%(latest_file, dataDir)) 
+        os.system("cp %s %s/vtrx+_temp_slot2.pdf"%(latest_file, dataDir))
+    time.sleep(5)
     
     print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
@@ -248,6 +259,7 @@ if __name__ == "__main__":
     
     print (Colors.GREEN + "\nStep 5: ADC Measurements Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: ADC Measurements Complete\n\n")
+    time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
