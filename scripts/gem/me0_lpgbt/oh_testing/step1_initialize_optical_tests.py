@@ -285,8 +285,8 @@ if __name__ == "__main__":
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
 
-    print ("Running S-bit Mapping on all VFATs\n")
-    logfile.write("Running S-bit Mapping on all VFATs\n\n")
+    print ("\n\nRunning S-bit Mapping on all VFATs\n")
+    logfile.write("\n\nRunning S-bit Mapping on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)

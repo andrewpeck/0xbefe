@@ -255,11 +255,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
                 phase_print += "%s" %char
             if widths[elink]<3:
-                phase_print += Colors.RED + " (center=%d, width=%d) BAD\n" % (centers[elink], widths[elink]) + Colors.ENDC
+                phase_print += Colors.RED + " (center=%d, width=%d) BAD" % (centers[elink], widths[elink]) + Colors.ENDC
             elif widths[elink]<5:
-                phase_print += Colors.YELLOW + " (center=%d, width=%d) WARNING\n" % (centers[elink], widths[elink]) + Colors.ENDC
+                phase_print += Colors.YELLOW + " (center=%d, width=%d) WARNING" % (centers[elink], widths[elink]) + Colors.ENDC
             else:
-                phase_print += Colors.GREEN + " (center=%d, width=%d) GOOD\n" % (centers[elink], widths[elink]) + Colors.ENDC
+                phase_print += Colors.GREEN + " (center=%d, width=%d) GOOD" % (centers[elink], widths[elink]) + Colors.ENDC
             print(phase_print)
             file_out_data.write(phase_print + "\n")
 
