@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-e", "--sbit", action="store", nargs="+", dest="sbit", help="sbit = list of SBIT elinks to set (0-7)")
     parser.add_argument("-d", "--daq", action="store_true", dest="daq", help="whether to set for the DAQ elink")
-    parser.add_argument("-q", "--eq", action="store", dest="eq", help="eq = equalization setting (0, 1, 2, 3)")
+    parser.add_argument("-eq", "--eq", action="store", dest="eq", help="eq = equalization setting (0, 1, 2, 3)")
     args = parser.parse_args()
 
     if args.system == "chc":
