@@ -83,7 +83,7 @@ if __name__ == "__main__":
     else:
         boss = 0
 
-    if args.vfats is None:
+    if args.vfat is None:
         print (Colors.YELLOW + "Enter VFAT number" + Colors.ENDC)
         sys.exit()
     if int(args.vfat) not in range(0,24):
