@@ -88,7 +88,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Error test for VFAT17 Elink7\n" + Colors.ENDC)
     logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
-    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 20")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file1 = open(latest_file)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
     logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
-    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 20")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file2 = open(latest_file)
