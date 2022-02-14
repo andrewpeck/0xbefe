@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     sbit_elink_list = []
     for s in args.sbit:
-        s_int = int(args.sbit)
+        s_int = int(s)
         if s_int not in range(0,8):
             print (Colors.YELLOW + "Invalid SBIT ELINK number, only allowed 0-7" + Colors.ENDC)
             sys.exit()
