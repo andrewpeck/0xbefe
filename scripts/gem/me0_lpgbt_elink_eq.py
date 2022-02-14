@@ -42,7 +42,7 @@ def main(system, oh_select, vfat_list, sbit_elink_list, daq, eq):
             print ("    For DAQ Elink: %d"%eq)
         for sbit_elink in sbit_elink_list:
             set_eq_setting(sbit_elinks[sbit_elink], eq_setting0, eq_setting1)
-            print ("    For Sbit Elink %d: %d"(%sbit_elink,eq))
+            print ("    For Sbit Elink %d: %d"%(sbit_elink,eq))
         print ("")
 
 if __name__ == "__main__":
