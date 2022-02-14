@@ -38,7 +38,7 @@ def main(system, oh_select, vfat_list, sbit_elink_list, daq, eq):
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
         if daq:
-            set_eq_setting(elink, eq_setting0, eq_setting1):
+            set_eq_setting(elink, eq_setting0, eq_setting1)
             print ("    For DAQ Elink: %d"%eq)
         for sbit_elink in sbit_elink_list:
             set_eq_setting(sbit_elinks[sbit_elink], eq_setting0, eq_setting1):
