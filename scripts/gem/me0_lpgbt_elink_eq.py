@@ -102,7 +102,7 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Enter at least Sbit elink or DAQ elink" + Colors.ENDC)
         sys.exit()
 
-    if int(args.eq) not in range(0,3):
+    if int(args.eq) not in range(0,4):
         print (Colors.YELLOW + "Invalid equalization setting, only allowed 0-3" + Colors.ENDC)
         sys.exit()
 
