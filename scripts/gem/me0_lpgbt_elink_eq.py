@@ -4,14 +4,14 @@ from time import sleep
 import sys
 import argparse
 
-get_elink_group_channel(elink):
+def get_elink_group_channel(elink):
     group = -9999
     channel = -9999
     group = int(elink/4)
     channel = elink%4
     return group, channel
 
-set_eq_setting(elink, eq0, eq1):
+def set_eq_setting(elink, eq0, eq1):
     group, channel = get_elink_group_channel(elink)
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX%d%dEQ0"%(group, channel), eq0, 0)
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dEQ1"%elink), eq1, 0)
