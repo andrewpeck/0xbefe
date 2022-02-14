@@ -94,10 +94,7 @@ begin
     tst_gbt_ready_arr_o <= gbt_rx_ready_arr;
 
     xdcfeb_switches <= xdcfeb_switches_vio when xdcfeb_switches_vio_override = '1' else xdcfeb_switches_i;
-    -- reverse the RX data bits
-    g_rx_data_bits : for i in 0 to 31 generate
-        xdcfeb_rx_data_o(i) <= real_gbt_rx_data(xdcfeb_switches_i.rx_select)(31 - i);
-    end generate;
+    xdcfeb_rx_data_o <= real_gbt_rx_data(xdcfeb_switches_i.rx_select)(31 downto 0);
 
     g_links : for i in 0 to g_NUM_LINKS - 1 generate
     
