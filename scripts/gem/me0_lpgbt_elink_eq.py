@@ -16,7 +16,7 @@ def set_eq_setting(elink, eq0, eq1):
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX%d%dEQ0"%(group, channel)), eq0, 0)
     writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dEQ1"%elink), eq1, 0)
 
-def main(system, oh_select, vfat_list, sbit_elink_list, daq, eq):
+def main(system, oh_select, vfat, sbit_elink_list, daq, eq):
 
     eq_setting0 = 0
     eq_setting1 = 0
@@ -29,21 +29,17 @@ def main(system, oh_select, vfat_list, sbit_elink_list, daq, eq):
         eq_setting1 = 1
 
     print ("Setting Equalization Settings for: \n")
-    for vfat in vfat_list:
-        print ("  VFAT %02d: ")
-        gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
-        sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
-        oh_ver = get_oh_ver(oh_select, gbt_select)
-        select_ic_link(oh_select, gbt_select)
-        gem_utils.check_gbt_link_ready(oh_select, gbt_select)
+    print ("  VFAT %02d: ")
+    gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
+    sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
 
-        if daq:
-            set_eq_setting(elink, eq_setting0, eq_setting1)
-            print ("    For DAQ Elink: %d"%eq)
-        for sbit_elink in sbit_elink_list:
-            set_eq_setting(sbit_elinks[sbit_elink], eq_setting0, eq_setting1)
-            print ("    For Sbit Elink %d: %d"%(sbit_elink,eq))
-        print ("")
+    if daq:
+        set_eq_setting(elink, eq_setting0, eq_setting1)
+        print ("    For DAQ Elink: %d"%eq)
+    for sbit_elink in sbit_elink_list:
+        set_eq_setting(sbit_elinks[sbit_elink], eq_setting0, eq_setting1)
+        print ("    For Sbit Elink %d: %d"%(sbit_elink,eq))
+    print ("")
 
 if __name__ == "__main__":
 
@@ -52,7 +48,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
-    parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
+    parser.add_argument("-v", "--vfat", action="store", dest="vfat", help="vfat = VFAT number (0-23)")
     parser.add_argument("-e", "--sbit", action="store", nargs="+", dest="sbit", help="sbit = list of SBIT elinks to set (0-7)")
     parser.add_argument("-d", "--daq", action="store_true", dest="daq", help="whether to set for the DAQ elink")
     parser.add_argument("-eq", "--eq", action="store", dest="eq", help="eq = equalization setting (0, 1, 2, 3)")
@@ -78,17 +74,21 @@ if __name__ == "__main__":
     #if int(args.ohid) > 1:
     #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
     #    sys.exit()
-    
+
+    gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(int(args.vfat))
+    oh_ver = get_oh_ver(args.ohid, str(gbt_select))
+    boss = None
+    if gbt_select%2 == 0:
+        boss = 1
+    else:
+        boss = 0
+
     if args.vfats is None:
-        print (Colors.YELLOW + "Enter VFAT numbers" + Colors.ENDC)
+        print (Colors.YELLOW + "Enter VFAT number" + Colors.ENDC)
         sys.exit()
-    vfat_list = []
-    for v in args.vfats:
-        v_int = int(v)
-        if v_int not in range(0,24):
-            print (Colors.YELLOW + "Invalid VFAT number, only allowed 0-23" + Colors.ENDC)
-            sys.exit()
-        vfat_list.append(v_int)
+    if int(args.vfat) not in range(0,24):
+        print (Colors.YELLOW + "Invalid VFAT number, only allowed 0-23" + Colors.ENDC)
+        sys.exit()
 
     sbit_elink_list = []
     for s in args.sbit:
@@ -106,12 +106,21 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Invalid equalization setting, only allowed 0-3" + Colors.ENDC)
         sys.exit()
 
-    # Initialization 
-    rw_initialize(args.gem, args.system)
+    # Initialization
+    rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, str(gbt_select))
     print("Initialization Done\n")
+
+    # Readback rom register to make sure communication is OK
+    if args.system != "dryrun":
+        check_rom_readback(args.ohid, str(gbt_select))
+        check_lpgbt_mode(boss, args.ohid, str(gbt_select))
+
+    # Check if GBT is READY
+    if oh_ver == 1 and args.system == "backend":
+        check_lpgbt_ready(args.ohid, str(gbt_select))
         
     try:
-        main(args.system, int(args.ohid), vfat_list, sbit_elink_list, args.daq, int(args.eq))
+        main(args.system, int(args.ohid), int(args.vfat), sbit_elink_list, args.daq, int(args.eq))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
