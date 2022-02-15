@@ -136,11 +136,9 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        try:
-            os.makedirs(dataDir + "/dac_scan_results") 
-        except FileExistsError: 
-            os.system("rm -rf dac_scan_results")
-            os.makedirs(dataDir + "/dac_scan_results") 
+        if os.path.isdir(dataDir + "/dac_scan_results"):
+            os.system("rm -rf " + dataDir + "/dac_scan_results")
+        os.makedirs(dataDir + "/dac_scan_results")
         os.system("cp %s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
