@@ -42,8 +42,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     s_bit_cluster_mapping = {}
 
     for vfat in vfat_list:
-        print ("Testing VFAT#: %02d" %(vfat))
-        print ("")
         gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
 
@@ -72,6 +70,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         s_bit_cluster_mapping[vfat] = {}
 
+    # Looping over VFATs
+    for vfat in vfat_list:
+        print ("Testing VFAT#: %02d" %(vfat))
+        print ("")
         # Looping over all channels
         for channel in range(0,128):
             elink = int(channel/16)
@@ -118,6 +120,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             # Disabling the pulsing channels
             enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
 
+    for vfat in vfat_list:
         # Unconfigure the pulsing VFAT
         print("Unconfiguring VFAT %02d" % (vfat))
         configureVfat(0, vfat, oh_select, 0)
