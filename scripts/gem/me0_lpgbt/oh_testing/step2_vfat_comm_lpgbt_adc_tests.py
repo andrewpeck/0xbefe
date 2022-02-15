@@ -131,8 +131,8 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print (Colors.BLUE + "\Plotting DAC Scans for all VFATs\n" + Colors.ENDC)
-    logfile.write("\Plotting DAC Scans for all VFATs\n\n")
+    print (Colors.BLUE + "\nPlotting DAC Scans for all VFATs\n" + Colors.ENDC)
+    logfile.write("\nPlotting DAC Scans for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
