@@ -165,7 +165,7 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        if os.path.isdir(dataDir + "/sbit_noise_rate_results")
+        if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
             os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
         os.makedirs(dataDir + "/sbit_noise_rate_results")
         os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_mean.pdf"%(latest_dir, dataDir))
