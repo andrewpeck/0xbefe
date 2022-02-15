@@ -216,7 +216,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     
-    print (Colors.BLUE + "Running Downlink Optical BERT for Slot 1 Boss lpGBT\n" + Colorrs.ENDC)
+    print (Colors.BLUE + "Running Downlink Optical BERT for Slot 1 Boss lpGBT\n" + Colors.ENDC)
     logfile.write("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-12 -z")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
