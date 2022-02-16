@@ -57,14 +57,17 @@ entity trigger_data_formatter is
 
     fiber_kchars_o  : out t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
     fiber_packets_o : out t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
-    elink_packets_o : out t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0)
+    elink_packets_o : out t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
+
+    legacy_overflow_o : out std_logic;
+    legacy_clusters_o : out t_std14_array (7 downto 0)
 
     );
 end trigger_data_formatter;
 
 architecture Behavioral of trigger_data_formatter is
 
-  signal reset : std_logic := '0';
+  signal reset  : std_logic := '0';
   signal enable : std_logic := '0';
 
   -- NUM_FOUND_CLUSTERS = # clusters found per bx
@@ -205,7 +208,7 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-      reset <= reset_i;
+      reset  <= reset_i;
       enable <= not reset_i;
     end if;
   end process;
@@ -248,7 +251,7 @@ begin
   end process;
 
   --------------------------------------------------------------------------------
-  -- Cluster assignment
+  -- Overflow cluster assignment
   --------------------------------------------------------------------------------
 
   -- Make a copy of the clusters that couldn't be sent out this bx, to let them be send out the next bx instead
@@ -319,7 +322,7 @@ begin
   -- 3'h6 Reserved
   -- 3'h7 Error
 
-  special_bits (9 downto 5) <= special_bits (4 downto 0); -- make a copy for the second link
+  special_bits (9 downto 5) <= special_bits (4 downto 0);  -- make a copy for the second link
 
   process (clocks.clk160_0)
   begin
@@ -327,7 +330,7 @@ begin
     if (rising_edge(clocks.clk160_0)) then
 
       special_bits(0) <= ttc_i.bc0;
-      special_bits(4) <= '0'; -- reserved
+      special_bits(4) <= '0';           -- reserved
 
       if (error_i = '1') then
         special_bits (3 downto 1) <= "111";  -- 7
@@ -356,15 +359,14 @@ begin
 
   comma <= x"DC" when ttc_i.bc0 = '1' else x"BC";
 
-  optical_outputs : for I in 0 to (NUM_OPTICAL_PACKETS-1) generate
-    signal ecc8                    : std_logic_vector (7 downto 0);
-    signal vpf_r, vpf_r2           : std_logic;
-    signal comma_r, comma_r2       : std_logic_vector (7 downto 0);
-    signal cluster4_r, cluster4_r2 : std_logic_vector (15 downto 0);
-    signal word4                   : std_logic_vector (15 downto 0);
-    signal kchars                  : std_logic_vector (9 downto 0);
-    signal frame                   : std_logic_vector (79 downto 0);
-    signal packet_i, packet_o      : std_logic_vector (4*16-1 downto 0);
+  optical_outputs_gen : for I in 0 to (NUM_OPTICAL_PACKETS-1) generate
+    signal ecc8                            : std_logic_vector (7 downto 0);
+    signal vpf_r, vpf_r2                   : std_logic;
+    signal comma_r, comma_r2               : std_logic_vector (7 downto 0);
+    signal cluster4_r, cluster4_r2         : std_logic_vector (15 downto 0);
+    signal word4                           : std_logic_vector (15 downto 0);
+    signal kchars                          : std_logic_vector (9 downto 0);
+    signal packet_pre_ecc, packet_post_ecc : std_logic_vector (4*16-1 downto 0);
   begin
 
 
@@ -384,10 +386,10 @@ begin
     process (clocks.clk160_0)
     begin
       if (rising_edge(clocks.clk160_0)) then
-        packet_i(15 downto 0)  <= cluster_words(0+5*I);
-        packet_i(31 downto 16) <= cluster_words(1+5*I);
-        packet_i(47 downto 32) <= cluster_words(2+5*I);
-        packet_i(63 downto 48) <= cluster_words(3+5*I);
+        packet_pre_ecc(15 downto 0)  <= cluster_words(0+5*I);
+        packet_pre_ecc(31 downto 16) <= cluster_words(1+5*I);
+        packet_pre_ecc(47 downto 32) <= cluster_words(2+5*I);
+        packet_pre_ecc(63 downto 48) <= cluster_words(3+5*I);
       end if;
     end process;
 
@@ -401,7 +403,7 @@ begin
     process (clocks.clk40)
     begin
       if (rising_edge(clocks.clk40)) then
-        fiber_packets_o(I) <= word4 & packet_o;
+        fiber_packets_o(I) <= word4 & packet_post_ecc;
         fiber_kchars_o(I)  <= kchars;
       end if;
     end process;
@@ -411,16 +413,16 @@ begin
       process (clocks.clk160_0)
       begin
         if (rising_edge(clocks.clk160_0)) then
-          packet_o <= packet_i;
+          packet_post_ecc <= packet_pre_ecc;
         end if;
       end process;
-    end generate;
+    end generate noecc_gen;
 
     ecc_gen : if (ENABLE_ECC = 1) generate
 
       yahamm_enc_1 : entity work.yahamm_enc
         generic map (
-          MESSAGE_LENGTH   => packet_i'length,
+          MESSAGE_LENGTH   => packet_pre_ecc'length,
           EXTRA_PARITY_BIT => 1,
           ONE_PARITY_BIT   => false
           )
@@ -428,22 +430,22 @@ begin
           clk_i        => clocks.clk160_0,
           rst_i        => reset,
           en_i         => enable,
-          data_i       => packet_i,
-          data_o       => packet_o,
+          data_i       => packet_pre_ecc,
+          data_o       => packet_post_ecc,
           data_valid_o => open,
           parity_o     => ecc8
           );
-    end generate;
+    end generate ecc_gen;
 
-  end generate;
+  end generate optical_outputs_gen;
 
   --------------------------------------------------------------------------------
   -- Copper Data Packet
   --------------------------------------------------------------------------------
 
   ge21_elink_gen : if (GE21 = 1) and HAS_ELINK_OUTPUTS generate
-    signal ecc8               : std_logic_vector (7 downto 0);
-    signal packet_i, packet_o : std_logic_vector (5*16-1 downto 0);
+    signal ecc8                            : std_logic_vector (7 downto 0);
+    signal packet_pre_ecc, packet_post_ecc : std_logic_vector (5*16-1 downto 0);
 
     signal prbs_gen  : std_logic_vector (7 downto 0) := (others => '0');
     signal prbs_data : std_logic_vector (7 downto 0) := (others => '0');
@@ -476,7 +478,7 @@ begin
                                 prbs_data & prbs_data & prbs_data & prbs_data & prbs_data &
                                 prbs_data;
         else
-          elink_packets_o(0) <= ecc8 & packet_o;
+          elink_packets_o(0) <= ecc8 & packet_post_ecc;
         end if;
       end if;
     end process;
@@ -485,19 +487,25 @@ begin
     process (clocks.clk160_0)
     begin
       if (rising_edge(clocks.clk160_0)) then
-        packet_i <= cluster_words(4) & cluster_words(3) & cluster_words(2) & cluster_words(1) & cluster_words(0);
+        packet_pre_ecc <= cluster_words(4) & cluster_words(3) &
+                          cluster_words(2) & cluster_words(1) &
+                          cluster_words(0);
       end if;
     end process;
 
+    --------------------------------------------------------------------------------
+    -- GE21 Copper ECC
+    --------------------------------------------------------------------------------
+
     noecc_gen : if (ENABLE_ECC = 0) generate
-      ecc8     <= x"00";
-      packet_o <= packet_i;
-    end generate;
+      ecc8            <= x"00";
+      packet_post_ecc <= packet_pre_ecc;
+    end generate noecc_gen;
 
     ecc_gen : if (ENABLE_ECC = 1) generate
       yahamm_enc_1 : entity work.yahamm_enc
         generic map (
-          MESSAGE_LENGTH   => packet_i'length,
+          MESSAGE_LENGTH   => packet_pre_ecc'length,
           EXTRA_PARITY_BIT => 1,
           ONE_PARITY_BIT   => false
           )
@@ -505,13 +513,41 @@ begin
           clk_i        => clocks.clk160_0,
           rst_i        => reset,
           en_i         => enable,
-          data_i       => packet_i,
-          data_o       => packet_o,
+          data_i       => packet_pre_ecc,
+          data_o       => packet_post_ecc,
           data_valid_o => open,
           parity_o     => ecc8
           );
-    end generate;
+    end generate ecc_gen;
 
+  end generate ge21_elink_gen;
+
+  --------------------------------------------------------------------------------
+  -- Legacy Cluster Format
+  --------------------------------------------------------------------------------
+
+  cluster_loop : for I in 0 to 7 generate
+    process (clocks.clk40)
+    begin
+      if (rising_edge(clocks.clk40)) then
+
+        legacy_overflow_o <= overflow_i;
+
+        if (clusters_i(I).vpf = '1') then
+          if (GE21 = 1) then
+            legacy_clusters_o(I) <= '0' & clusters_i(I).cnt
+                                    & clusters_i(I).prt(0 downto 0)
+                                    & clusters_i(I).adr(8 downto 0);
+          else
+            legacy_clusters_o(I) <= clusters_i(I).cnt
+                                    & clusters_i(I).prt(2 downto 0)
+                                    & clusters_i(I).adr(7 downto 0);
+          end if;
+        else
+          legacy_clusters_o(I) <= (others => '1');
+        end if;
+      end if;
+    end process;
   end generate;
 
 end Behavioral;

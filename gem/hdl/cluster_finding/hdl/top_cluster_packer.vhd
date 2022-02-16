@@ -307,15 +307,15 @@ begin
     if (rising_edge(clk_fast)) then
 
       if (reset = '1') then
-        clusters_o <= clusters;
-      else
         clusters_o <= (others => NULL_CLUSTER);
+      else
+        clusters_o <= clusters;
       end if;
 
       if (reset = '1' or mask_output_i = '1') then
-        clusters_masked_o <= clusters;
-      else
         clusters_masked_o <= (others => NULL_CLUSTER);
+      else
+        clusters_masked_o <= clusters;
       end if;
 
     end if;

@@ -1,5 +1,0 @@
-v 4
-file / "/tmp/flycheckGIDiyR/hardware_pkg_ge21_75t.vhd" "df1797039feb5a52c9664a74bb17beff7e4b8871" "20201020122100.180":
-  package hardware_pkg at 1( 0) + 0 on 20;
-file / "/tmp/flycheckqJwL6T/generation_pkg_2b.vhd" "6f9d8f19e577d18218bd67037307431b980fece3" "20201020023023.558":
-  package generation_pkg at 2( 1) + 0 on 16;

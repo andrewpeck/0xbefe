@@ -33,7 +33,6 @@ entity trigger_data_phy is
     -- Legacy Ports
     ----------------------------------------------------------------------------------------------------------------------
 
-    clusters_i    : in sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     overflow_i    : in std_logic;                       -- 1 bit gem has more than 8 clusters
     bxn_counter_i : in std_logic_vector (11 downto 0);  -- 12 bit bxn counter
     bc0_i         : in std_logic;                       -- 1  bit bx0 flag
@@ -59,9 +58,12 @@ entity trigger_data_phy is
     -- Data
     ----------------------------------------------------------------------------------------------------------------------
 
-    fiber_kchars_i  : in t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
-    fiber_packets_i : in t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
-    elink_packets_i : in t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0)
+    fiber_kchars_i    : in t_std10_array (NUM_OPTICAL_PACKETS-1 downto 0);
+    fiber_packets_i   : in t_fiber_packet_array (NUM_OPTICAL_PACKETS-1 downto 0);
+    elink_packets_i   : in t_elink_packet_array (NUM_ELINK_PACKETS-1 downto 0);
+
+    legacy_clusters_i : in t_std14_array (7 downto 0);
+    legacy_overflow_i : in std_logic
 
     );
 end trigger_data_phy;
@@ -69,8 +71,6 @@ end trigger_data_phy;
 architecture Behavioral of trigger_data_phy is
 
   constant NUM_GTS : integer := 4;
-
-  signal clusters : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
   signal ipb_slave_tmr_err : std_logic;
 
@@ -150,91 +150,95 @@ begin
   --
   -- cnt        < 0 >< 1 >< 2 >< 3 >< 4 >< 5 >< 0>
 
-  tx_usrclk <= clocks.clk200;
+  -- tx_usrclk <= clocks.clk200;
 
-  clock_strobe_200_inst : entity work.clock_strobe
-    generic map (RATIO => 5)
-    port map (
-      fast_clk_i => tx_usrclk,
-      slow_clk_i => clocks.clk40,
-      strobe_o   => strobe
-      );
+  -- clock_strobe_200_inst : entity work.clock_strobe
+  --   generic map (RATIO => 5)
+  --   port map (
+  --     fast_clk_i => tx_usrclk,
+  --     slow_clk_i => clocks.clk40,
+  --     strobe_o   => strobe
+  --     );
 
-  process (tx_usrclk)
-  begin
-    if (rising_edge(tx_usrclk)) then
-      if (strobe = '1') then
-        link_frame_cnt <= 1;
-      elsif (link_frame_cnt = c_LINK_FRAME_CNT_MAX) then
-        link_frame_cnt <= 0;
-      else
-        link_frame_cnt <= link_frame_cnt + 1;
-      end if;
-    end if;
-  end process;
+  -- process (tx_usrclk)
+  -- begin
+  --   if (rising_edge(tx_usrclk)) then
+  --     if (strobe = '1') then
+  --       link_frame_cnt <= 1;
+  --     elsif (link_frame_cnt = c_LINK_FRAME_CNT_MAX) then
+  --       link_frame_cnt <= 0;
+  --     else
+  --       link_frame_cnt <= link_frame_cnt + 1;
+  --     end if;
+  --   end if;
+  -- end process;
 
-  optical_outputs : for I in 0 to (NUM_OPTICAL_PACKETS-1) generate
-    signal cnt : integer;
-  begin
-    cnt <= link_frame_cnt;
-    process (tx_usrclk)
-    begin
-      if (rising_edge(tx_usrclk)) then
-        mgt_words (I) <= fiber_packets_i(I)((cnt+1)*16-1 downto cnt*16);
-        is_kchar (I)  <= fiber_kchars_i (I)((cnt+1)*2 -1 downto cnt*2);
-      end if;
-    end process;
-  end generate;
+  -- optical_outputs : for I in 0 to (NUM_OPTICAL_PACKETS-1) generate
+  --   signal cnt : integer;
+  -- begin
+  --   cnt <= link_frame_cnt;
+  --   process (tx_usrclk)
+  --   begin
+  --     if (rising_edge(tx_usrclk)) then
+  --       mgt_words (I) <= fiber_packets_i(I)((cnt+1)*16-1 downto cnt*16);
+  --       is_kchar  (I) <= fiber_kchars_i (I)((cnt+1)*2 -1 downto cnt*2);
+  --     end if;
+  --   end process;
+  -- end generate;
 
   --------------------------------------------------------------------------------
-  -- A7 MGT
+  --
   --------------------------------------------------------------------------------
 
-  optics_gen : if (NUM_OPTICAL_PACKETS > 0 and not USE_LEGACY_OPTICS) generate
-    signal common_drp_i : drp_i_t;
-    signal common_drp_o : drp_o_t;
-  begin
+  -- optics_gen : if (NUM_OPTICAL_PACKETS > 0 and not USE_LEGACY_OPTICS) generate
+  --   signal common_drp_i : drp_i_t;
+  --   signal common_drp_o : drp_o_t;
+  -- begin
 
-    mgt_wrapper_inst : entity work.mgt_wrapper
-      port map (
+  --   mgt_wrapper_inst : entity work.mgt_wrapper
+  --     port map (
 
-        refclk_in_p => refclk_p,
-        refclk_in_n => refclk_n,
+  --       refclk_in_p => refclk_p,
+  --       refclk_in_n => refclk_n,
 
-        sysclk_in => clocks.clk40,
+  --       sysclk_in => clocks.clk40,
 
-        soft_reset_tx_in => '0',
+  --       soft_reset_tx_in => '0',
 
-        pll_lock_out => pll_lock,
+  --       pll_lock_out => pll_lock,
 
-        status_o  => status,
-        control_i => control,
+  --       status_o  => status,
+  --       control_i => control,
 
-        txusrclk_in => clocks.clk200,
+  --       txusrclk_in => clocks.clk200,
 
-        txp_out => trg_tx_p,
-        txn_out => trg_tx_n,
+  --       txp_out => trg_tx_p,
+  --       txn_out => trg_tx_n,
 
-        drp_i => drp_i,
-        drp_o => drp_o,
+  --       drp_i => drp_i,
+  --       drp_o => drp_o,
 
-        common_drp_i => common_drp_i,
-        common_drp_o => common_drp_o,
+  --       common_drp_i => common_drp_i,
+  --       common_drp_o => common_drp_o,
 
-        mmcm_lock_i => clocks.locked,
+  --       mmcm_lock_i => clocks.locked,
 
-        txcharisk_i(0) => is_kchar(0),
-        txcharisk_i(1) => is_kchar(0),
-        txcharisk_i(2) => is_kchar(NUM_OPTICAL_PACKETS-1),
-        txcharisk_i(3) => is_kchar(NUM_OPTICAL_PACKETS-1),
+  --       txcharisk_i(0) => is_kchar(0),
+  --       txcharisk_i(1) => is_kchar(0),
+  --       txcharisk_i(2) => is_kchar(NUM_OPTICAL_PACKETS-1),
+  --       txcharisk_i(3) => is_kchar(NUM_OPTICAL_PACKETS-1),
 
-        txdata_i(0) => mgt_words(0),
-        txdata_i(1) => mgt_words(0),
-        txdata_i(2) => mgt_words(NUM_OPTICAL_PACKETS-1),
-        txdata_i(3) => mgt_words(NUM_OPTICAL_PACKETS-1)
-        );
+  --       txdata_i(0) => mgt_words(0),
+  --       txdata_i(1) => mgt_words(0),
+  --       txdata_i(2) => mgt_words(NUM_OPTICAL_PACKETS-1),
+  --       txdata_i(3) => mgt_words(NUM_OPTICAL_PACKETS-1)
+  --       );
 
-  end generate;
+  -- end generate;
+
+  --------------------------------------------------------------------------------
+  -- Wrapper to generate the "Legacy" 3.2 Gbps format
+  --------------------------------------------------------------------------------
 
   legacy_optics_gen : if (NUM_OPTICAL_PACKETS > 0 and USE_LEGACY_OPTICS) generate
 
@@ -250,7 +254,15 @@ begin
         refclk_n : in std_logic_vector (1 downto 0);
         refclk_p : in std_logic_vector (1 downto 0);
 
-        tx_prbs_mode : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_0 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_1 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_2 : in std_logic_vector (2 downto 0);
+        tx_prbs_mode_3 : in std_logic_vector (2 downto 0);
+
+        loopback_mode_0 : in std_logic_vector (2 downto 0);
+        loopback_mode_1 : in std_logic_vector (2 downto 0);
+        loopback_mode_2 : in std_logic_vector (2 downto 0);
+        loopback_mode_3 : in std_logic_vector (2 downto 0);
 
         gem_data      : in std_logic_vector (111 downto 0);  -- 56 bit gem data
         overflow_i    : in std_logic;                        -- 1 bit gem has more than 8 clusters
@@ -270,6 +282,7 @@ begin
 
         clock_40  : in std_logic;
         clock_160 : in std_logic;
+        clock_200 : in std_logic;
 
         ready_o      : out std_logic;
         pll_lock_o   : out std_logic;
@@ -279,49 +292,7 @@ begin
         );
     end component;
 
-    function get_adr (partition : in std_logic_vector; strip : in std_logic_vector)
-      return std_logic_vector is
-      variable s : integer;
-      variable p : integer;
-    begin
-      s := to_integer(unsigned(strip));
-      p := to_integer(unsigned(partition));
-      if (GE21 = 1) then
-        return std_logic_vector(to_unsigned(p*384+s, 11));
-      elsif (GE11 = 1) then
-        return std_logic_vector(to_unsigned(p*192+s, 11));
-      else
-        return (others => '1');
-      end if;
-    end;
-
-    signal legacy_clusters : t_std14_array (7 downto 0);
-
   begin
-
-    clusters <= clusters_i;
-
-    cluster_loop : for I in 0 to 7 generate
-      process (clocks.clk40)
-      begin
-        if (rising_edge(clocks.clk40)) then
-
-          if (clusters(I).vpf = '1') then
-            if (USE_NEW_FORMAT_WITH_OLD_OPTICS) then
-              if (GE21=1) then
-                legacy_clusters(I) <= '0' & clusters(I).cnt & clusters(I).prt(0 downto 0) & clusters(I).adr(8 downto 0);
-              else
-                legacy_clusters(I) <= clusters(I).cnt & clusters(I).prt(2 downto 0) & clusters(I).adr(7 downto 0);
-              end if;
-            else
-              legacy_clusters(I) <= clusters(I).cnt & get_adr(clusters(I).adr, clusters(I).prt);
-            end if;
-          else
-            legacy_clusters(I) <= (others => '1');
-          end if;
-        end if;
-      end process;
-    end generate;
 
     gem_data_out_inst : gem_data_out
       generic map (
@@ -335,6 +306,7 @@ begin
 
         clock_40  => clocks.clk40,      -- 40 MHz  Logic Clock
         clock_160 => clocks.clk160_0,   -- 160 MHz  Logic Clock
+        clock_200 => clocks.clk200,     -- 200 MHz  Logic Clock
 
         bxn_counter_i => bxn_counter_i,
         bc0_i         => bc0_i,
@@ -349,11 +321,24 @@ begin
         ready_o      => open,
         pll_lock_o   => open,
         txfsm_done_o => open,
-        tx_prbs_mode => (others => '0'),
 
+        tx_prbs_mode_0 => control(0).txprbssel,
+        tx_prbs_mode_1 => control(1).txprbssel,
+        tx_prbs_mode_2 => control(2).txprbssel,
+        tx_prbs_mode_3 => control(3).txprbssel,
+
+        loopback_mode_0 => control(0).txloopback,
+        loopback_mode_1 => control(1).txloopback,
+        loopback_mode_2 => control(2).txloopback,
+        loopback_mode_3 => control(3).txloopback,
 
         pll_reset_i        => '0',
-        mgt_reset_i        => (others => '0'),
+
+        mgt_reset_i(0)     => control(0).gttxreset,
+        mgt_reset_i(1)     => control(1).gttxreset,
+        mgt_reset_i(2)     => control(2).gttxreset,
+        mgt_reset_i(3)     => control(3).gttxreset,
+
         gtxtest_start_i    => '0',
         txreset_i          => '0',
         mgt_realign_i      => '0',
@@ -364,9 +349,11 @@ begin
         trg_tx_p => trg_tx_p (3 downto 0),
         trg_tx_n => trg_tx_n (3 downto 0),
 
-        gem_data => legacy_clusters(7) & legacy_clusters(6) & legacy_clusters(5) & legacy_clusters(4) & legacy_clusters(3) & legacy_clusters(2) & legacy_clusters(1) & legacy_clusters(0),
+        gem_data => legacy_clusters_i(7) & legacy_clusters_i(6) & legacy_clusters_i(5) &
+                    legacy_clusters_i(4) & legacy_clusters_i(3) & legacy_clusters_i(2) &
+                    legacy_clusters_i(1) & legacy_clusters_i(0),
 
-        overflow_i => overflow_i
+        overflow_i => legacy_overflow_i
         );
 
   end generate;
