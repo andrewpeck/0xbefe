@@ -226,6 +226,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
             # Unconfigure the pulsing VFAT
             configureVfat(0, vfat, oh_select, 0)
+            sleep(0.1)
             print ("")
         # End of VFAT loop
     # End of Phase loop

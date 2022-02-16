@@ -88,7 +88,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Error test for VFAT17 Elink7\n" + Colors.ENDC)
     logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
-    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 20")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file1 = open(latest_file)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
     logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
-    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 20")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file2 = open(latest_file)
@@ -131,16 +131,14 @@ if __name__ == "__main__":
     list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    print (Colors.BLUE + "\Plotting DAC Scans for all VFATs\n" + Colors.ENDC)
-    logfile.write("\Plotting DAC Scans for all VFATs\n\n")
+    print (Colors.BLUE + "\nPlotting DAC Scans for all VFATs\n" + Colors.ENDC)
+    logfile.write("\nPlotting DAC Scans for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        try:
-            os.makedirs(dataDir + "/dac_scan_results") 
-        except FileExistsError: 
-            os.system("rm -rf dac_scan_results")
-            os.makedirs(dataDir + "/dac_scan_results") 
+        if os.path.isdir(dataDir + "/dac_scan_results"):
+            os.system("rm -rf " + dataDir + "/dac_scan_results")
+        os.makedirs(dataDir + "/dac_scan_results")
         os.system("cp %s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)

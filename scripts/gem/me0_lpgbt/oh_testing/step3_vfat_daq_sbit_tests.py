@@ -100,7 +100,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit SCurves for all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
+    os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Crosstalk for all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
+    os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 40")
     logfile.close()
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -165,11 +165,9 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        try:
-            os.makedirs(dataDir + "/sbit_noise_rate_results") 
-        except FileExistsError: 
-            os.system("rm -rf sbit_noise_rate_results")
-            os.makedirs(dataDir + "/sbit_noise_rate_results") 
+        if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
+            os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
+        os.makedirs(dataDir + "/sbit_noise_rate_results")
         os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_mean.pdf"%(latest_dir, dataDir))
         os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_or.pdf"%(latest_dir, dataDir))
         os.system("cp %s/2d*.pdf %s/sbit_2d_threshold_noise_rate.pdf"%(latest_dir, dataDir))
@@ -189,7 +187,7 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster SCurves for all VFATs\n\n")
-    os.system("python3 vfat_sbit_cluster_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20")
+    os.system("python3 vfat_sbit_cluster_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 40")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_cluster_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
