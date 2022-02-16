@@ -26,7 +26,12 @@ TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
 INST "*trigger_data_formatter*" AREA_GROUP=MGT_GROUP;
 AREA_GROUP "MGT_GROUP" RANGE=SLICE_X80Y125:SLICE_X105Y159;
+# GROUP controls the packing of logic into physical components (slices) as follows.
+#     CLOSED:  Do not allow logic outside the Area Group to be combined with logic inside the Area Group.
 AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
+
+# PLACE controls the allocation of resources in the Area Group’s RANGE, as follows
+# Do not allow comps that are not members of the Area Group to be placed within the RANGE defined for the Area Group.
 AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
 
 #-------------------------------------------------------------------------------
