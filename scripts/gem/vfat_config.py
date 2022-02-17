@@ -132,7 +132,6 @@ def enableVfatchannel(vfatN, ohN, channel, mask, enable_cal):
             #write_backend_reg(channel_node, 0x0000)
             write_backend_reg(channel_enable_node, 0)
             write_backend_reg(channel_mask_node, 0)
-    sleep(0.001)
     
 def configureVfat(configure, vfatN, ohN, low_thresh):
 
