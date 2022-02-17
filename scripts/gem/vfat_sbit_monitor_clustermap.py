@@ -151,6 +151,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     file_out.write("VFAT    Channel    Sbit    Cluster_Counts (1-7)    Clusters (Size, Address)\n\n")
 
     bad_mapping_str = Colors.RED + "Bad mapping for channels: "
+    bad_mapping_count = 0
     for vfat in s_bit_cluster_mapping:
         for channel in s_bit_cluster_mapping[vfat]:
             result_str = "%02d  %03d  %03d  "%(vfat, channel, s_bit_cluster_mapping[vfat][channel]["sbit"])
@@ -165,11 +166,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 result_str += "%d,%03d  "%(s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i], s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i])
             if n_clusters > 1:
                 bad_mapping_str += "  VFAT %02d, Channel %02d\n"%(vfat, channel)
+                bad_mapping_count += 1
             result_str += "\n"
             file_out.write(result_str)
     file_out.close()
     bad_mapping_str += "\n" + Colors.ENDC
-    print (bad_mapping_str)
+    if bad_mapping_count != 0:
+        print (bad_mapping_str)
+    else:
+        print (Colors.GREEN + "No Bad Channels in Mapping" + Colors.ENDC)
 
     print ("S-bit Monitor Cluster Mapping Results written in file: %s \n"%filename)
 
