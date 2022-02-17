@@ -180,6 +180,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
     print ("S-bit Mapping Results: \n")
     file_out_data.write("S-bit Mapping Results: \n\n")
+    bad_channels_string = Colors.RED + "\n Bad Channels: "
     for vfat in s_bit_channel_mapping:
         print ("VFAT %02d: "%(vfat))
         file_out_data.write("VFAT %02d: \n"%(vfat))
@@ -190,11 +191,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 if s_bit_channel_mapping[vfat][elink][channel] == -9999:
                     print (Colors.RED + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
                     file_out_data.write(Colors.RED + "    Channel %02d:  S-bit %02d\n"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
+                    bad_channels_string += "  VFAT %02d, Elink %02d, Channel %02d\n"%(vfat, elink, chhannel)
                 else:
                     print (Colors.GREEN + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
                     file_out_data.write(Colors.GREEN + "    Channel %02d:  S-bit %02d\n"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
         print ("")
         file_out_data.write("\n")
+        bad_channels_string += "\n" + Colors.ENDC
+        print (bad_channels_string)
+        file_out_data.write(bad_channels_string)
 
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     print ("\nS-bit mapping done\n")

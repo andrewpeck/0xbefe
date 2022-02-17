@@ -150,19 +150,27 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     file_out = open(filename, "w")
     file_out.write("VFAT    Channel    Sbit    Cluster_Counts (1-7)    Clusters (Size, Address)\n\n")
 
+    bad_mapping_str = Colors.RED + "Bad mapping for channels: "
     for vfat in s_bit_cluster_mapping:
         for channel in s_bit_cluster_mapping[vfat]:
             result_str = "%02d  %03d  %03d  "%(vfat, channel, s_bit_cluster_mapping[vfat][channel]["sbit"])
             for i in range(1,8):
                 result_str += "%d,"%s_bit_cluster_mapping[vfat][channel]["cluster_count"][i]
             result_str += "  "
+            n_clusters = 0
             for i in range(0,8):
                 if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff and s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 0x7):
                     continue
+                n_clusters += 1
                 result_str += "%d,%03d  "%(s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i], s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i])
+            if n_clusters > 1:
+                bad_mapping_str += "  VFAT %02d, Channel %02d\n"%(vfat, channel)
             result_str += "\n"
             file_out.write(result_str)
     file_out.close()
+    bad_mapping_str += "\n" + Colors.ENDC
+    print (bad_mapping_str)
+
     print ("S-bit Monitor Cluster Mapping Results written in file: %s \n"%filename)
 
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
