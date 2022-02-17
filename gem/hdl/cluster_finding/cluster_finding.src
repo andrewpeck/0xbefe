@@ -16,3 +16,5 @@ gem/hdl/cluster_finding/hdl/cluster_pkg.vhd 93
 gem/hdl/cluster_finding/hdl/bitonic_merge.vhd 93
 gem/hdl/cluster_finding/hdl/bitonic_exchange.vhd 93
 gem/hdl/cluster_finding/hdl/bitonic_sorter.vhd 93
+
+gem/hdl/oh_fe/utils/clock_strobe.vhd
