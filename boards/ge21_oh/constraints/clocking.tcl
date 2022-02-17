@@ -16,19 +16,19 @@ create_clock -period 24.8 -name clock   [get_ports clock_p]
 ################################################################################
 
 # keep a short between iserdes and the ffs
-set_max_delay 1.5 \
-    -from [get_cells gbt_inst/gbt_serdes/gbt_oversample/*/iserdes_a7.iserdes]
+set_max_delay 3.0 \
+    -from [get_cells gbt_inst/gbt_serdes/gbt_oversample/*/*iserdes*]
 
-set_max_delay 1.5 \
-    -from [get_cells trigger_inst/sbits/*trig_alignment*/*oversample*/*ise*/iserdes_a7.iserdes]
+set_max_delay 3.0 \
+    -from [get_cells trigger_inst/sbits/*trig_alignment*/*oversample*/*ise*/*iserdes*]
 
 # keep ISERDES resets synchronized for both gbt and sbits
-set_max_delay -datapath_only 4.0 \
-    -to   [get_pins gbt_inst/gbt_serdes/gbt_oversample/ise*/iserdes_a7.iserdes/RST] \
+set_max_delay -datapath_only 3.0 \
+    -to   [get_pins gbt_inst/gbt_serdes/gbt_oversample/*/*iserdes*/RST] \
     -from [get_pins gbt_inst/gbt_serdes/gbt_oversample/reset_serdes_reg/C]
 
-set_max_delay -datapath_only 4.0 \
-    -to   [get_pins trigger_inst/sbits/*trig_alignment/*oversample/*/iserdes_a7.iserdes/RST] \
+set_max_delay -datapath_only 3.0 \
+    -to   [get_pins trigger_inst/sbits/*trig_alignment/*oversample/*/*iserdes*/RST] \
     -from [get_pins trigger_inst/sbits/*trig_alignment/*/reset_serdes_reg/C]
 
 set part [get_property part [current_project]]

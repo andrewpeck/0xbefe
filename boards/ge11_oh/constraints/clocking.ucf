@@ -63,6 +63,6 @@ NET "vfat_sbits_*" TNM="iserdes_i_grp";
 NET "elink_i_*"    TNM="iserdes_i_grp";
 TIMEGRP iserdes_i_grp OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
 
-INST "gbt_inst/gbt_serdes/gbt_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
-INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
-TIMESPEC TS_ISERDES = FROM "iserdes_grp" 3.0 ns DATAPATHONLY;
+INST "gbt_inst/gbt_serdes/gbt_oversample/*ise*/*iserdes*" TNM = iserdes_grp;
+INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/*ise*/*iserdes*" TNM = iserdes_grp;
+TIMESPEC TS_ISERDES = FROM "iserdes_grp" 3.0 ns;
