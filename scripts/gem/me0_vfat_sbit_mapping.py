@@ -180,7 +180,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
     print ("S-bit Mapping Results: \n")
     file_out_data.write("S-bit Mapping Results: \n\n")
-    bad_channels_string = Colors.RED + "\n Bad Channels: "
+    bad_channels_string = Colors.RED + "\n Bad Channels: \n"
     bad_channel_count = 0
     for vfat in s_bit_channel_mapping:
         print ("VFAT %02d: "%(vfat))
@@ -192,7 +192,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 if s_bit_channel_mapping[vfat][elink][channel] == -9999:
                     print (Colors.RED + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
                     file_out_data.write(Colors.RED + "    Channel %02d:  S-bit %02d\n"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
-                    bad_channels_string += "  VFAT %02d, Elink %02d, Channel %02d\n"%(vfat, elink, chhannel)
+                    bad_channels_string += "  VFAT %02d, Elink %02d, Channel %02d\n"%(vfat, elink, channel)
                     bad_channel_count += 1
                 else:
                     print (Colors.GREEN + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
