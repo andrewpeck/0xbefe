@@ -204,8 +204,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
         print (bad_channels_string)
         file_out_data.write(bad_channels_string)
     else:
-        print (Colors.GREEN + "No Bad Channels in Mapping" + Colors.ENDC)
-        file_out_data.write(Colors.GREEN + "No Bad Channels in Mapping" + Colors.ENDC)
+        print (Colors.GREEN + "No Bad Channels in Mapping\n" + Colors.ENDC)
+        file_out_data.write(Colors.GREEN + "No Bad Channels in Mapping\n\n" + Colors.ENDC)
 
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     print ("\nS-bit mapping done\n")

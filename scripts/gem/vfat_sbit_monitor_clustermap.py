@@ -174,7 +174,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     if bad_mapping_count != 0:
         print (bad_mapping_str)
     else:
-        print (Colors.GREEN + "No Bad Mapping for Channels" + Colors.ENDC)
+        print (Colors.GREEN + "No Bad Mapping for Channels\n" + Colors.ENDC)
 
     print ("S-bit Monitor Cluster Mapping Results written in file: %s \n"%filename)
 
