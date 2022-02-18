@@ -31,6 +31,8 @@ USE_DONGLE_LDO = 1 # normally should be set to 1, but if you're using a dongle t
 NUM_CONFIG_REGS = 366
 READ_ERRORS_TIME_WINDOW_SEC = 10
 SLEEP_AFTER_CONFIGURE = 5
+MAX_WRITE_REG_BLOCK_SIZE = 5
+MAX_ATTEMPTS_TO_LOAD_FUSE_DATA = 100
 
 DEBUG = False
 
@@ -143,6 +145,8 @@ class GE21_dongle():
     def __init__(self, use_dongle_ldo):
         self.use_dongle_ldo = use_dongle_ldo
         self.dongle = usb_dongle.USB_dongle()
+        fw = self.dongle.get_firmware_version()
+        print("Dongle: %s" % fw)
         self.dongle.setvtargetldo(use_dongle_ldo)
         if use_dongle_ldo == 1:
             self.dongle.i2c_connect(1)
@@ -172,7 +176,7 @@ class GE21_dongle():
         addr = start_addr
         regs_left = len(values)
         while regs_left > 0:
-            n_write = regs_left if regs_left < 15 else 15
+            n_write = regs_left if regs_left < MAX_WRITE_REG_BLOCK_SIZE else MAX_WRITE_REG_BLOCK_SIZE
 
             reg_add_l=addr&0xFF
             reg_add_h=(addr>>8)&0xFF
@@ -231,8 +235,8 @@ def log_close():
     if LOG_FILE is not None:
         LOG_FILE.close()
 
-def fail():
-    if not DRY_RUN:
+def fail(ignore_dry_run=False):
+    if not DRY_RUN or ignore_dry_run:
         print_red("================================================================================")
         print_red("===================================== FAIL =====================================")
         print_red("================================================================================")
@@ -400,10 +404,28 @@ def fuse(dongle, address, value):
     print("Fusing address %d to value %s" % (address, hex8(value)))
     addr_l = address & 0xff
     addr_h = (address >> 8) & 0xff
-    dongle.write_register(238, addr_l) # load the lower address byte
-    dongle.write_register(239, addr_h) # load the higher address byte
-    dongle.write_register(240, value)  # load the value to be fused
-    dongle.fuse() # apply 3.3V fuse power and send the fuse pulse
+
+    ready = False
+    attempt_cnt = 0
+    while (ready == False) and (attempt_cnt < MAX_ATTEMPTS_TO_LOAD_FUSE_DATA):
+        dongle.write_register(238, addr_l) # load the lower address byte
+        dongle.write_register(239, addr_h) # load the higher address byte
+        dongle.write_register(240, value)  # load the value to be fused
+        addr_l_read = dongle.read_register(238)
+        addr_h_read = dongle.read_register(239)
+        value_read = dongle.read_register(240)
+
+        if addr_l_read == addr_l and addr_h_read == addr_h and value_read == value:
+            ready = True
+        else:
+            print_yellow("Attempt #%d to load fusing data for address %d failed: addr_l readback = %s expected = %s, addr_h readback = %s expected %s, value readback = %s expected %s" % (attempt_cnt, address, hex8(addr_l_read), hex8(addr_l), hex8(addr_h_read), hex8(addr_h), hex8(value_read), hex8(value)))
+        attempt_cnt += 1
+
+    if ready:
+        dongle.fuse() # apply 3.3V fuse power and send the fuse pulse
+    else:
+        print_red("Made %d attempts to load fusing data for address %d, but all of them failed, giving up.." % (attempt_cnt, address))
+        fail(True)
 
 def fuse_all_non_zero(dongle, config):
     # go through the config, and fuse all regs that have a non-zero value
