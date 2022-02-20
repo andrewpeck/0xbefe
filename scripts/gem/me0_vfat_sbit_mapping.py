@@ -77,6 +77,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
             s_bit_channel_mapping[vfat][elink] = {}
             s_bit_matches = {}
+            for sbit in range(elink*8,elink*8+8):
+                s_bit_matches[sbit] = 0
+
             # Looping over all channels in that elink
             for channel in range(elink*16,elink*16+16):
                 # Enabling the pulsing channel
@@ -93,7 +96,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                     write_backend_reg(reset_sbit_counter_node, 1)
 
                     write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
-                    s_bit_matches[sbit] = 0
 
                     # Start the cyclic generator
                     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
@@ -135,6 +137,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                                 print (Colors.YELLOW + "WARNING: S-bit %02d already matched to an earlier odd numbered channel"%(sbit) + Colors.ENDC)
                                 s_bit_channel_mapping[vfat][elink][channel] = -9999
                                 break
+                        if channel_sbit_counter_final[sbit] != nl1a:
+                            print (Colors.YELLOW + "WARNING: S-bit %02d counter doesn't match with number of L1A's"%(sbit) + Colors.ENDC)
+                            s_bit_channel_mapping[vfat][elink][channel] = -9999
+                            break
                         s_bit_channel_mapping[vfat][elink][channel] = sbit
                         sbit_channel_match = 1
                         s_bit_matches[sbit] += 1

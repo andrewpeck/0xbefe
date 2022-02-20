@@ -82,6 +82,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     channel_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
     reset_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
 
+    # Configure TTC generator
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), nl1a)
+    if l1a_bxgap >= 40:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 25)
+    else:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 2)
+
+    s_bit_channel_mapping = {}
     for vfat in vfat_list:
         gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
@@ -93,59 +104,45 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
             gem_utils.terminate()
 
-    # Configure TTC generator
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), nl1a)
-    if l1a_bxgap >= 40:
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 25)
-    else:
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 2)
+        # Configure the pulsing VFAT
+        configureVfat(1, vfat, oh_select, 0)
+        if set_cal_mode == "voltage":
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 200)
+        elif set_cal_mode == "current":
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 2)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
+        else:
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DAC"% (oh_select, vfat)), cal_dac)
+        for i in range(128):
+            enableVfatchannel(vfat, oh_select, i, 1, 0) # mask all channels and disable calpulsing
 
-    for phase in range(0, 16):
-        print("Scanning phase %d" % phase)
+        # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
+        sleep(0.1)
+        gem_utils.gem_link_reset()
+        sleep(0.1)
 
-        # set phases for all vfats under test
-        for vfat in vfat_list:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
+
+        print ("VFAT %02d: ")
+        print ("Checking errors: ")
+        s_bit_channel_mapping[vfat] = {}
+        for phase in range(0, 16):
+            # set phases for elinks in the vfat
             sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], phase)
 
-        s_bit_channel_mapping = {}
-        print ("Checking errors: ")
-        for vfat in vfat_list:
-            gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
-            oh_ver = get_oh_ver(oh_select, gbt_select)
-
-            # Configure the pulsing VFAT
-            configureVfat(1, vfat, oh_select, 0)
-            if set_cal_mode == "voltage":
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 200)
-            elif set_cal_mode == "current":
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 2)
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
-            else:
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
-            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_DAC"% (oh_select, vfat)), cal_dac)
-            for i in range(128):
-                enableVfatchannel(vfat, oh_select, i, 1, 0) # mask all channels and disable calpulsing
-
-            # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
-            sleep(0.1)
-            gem_utils.gem_link_reset()
-            sleep(0.1)
-
-            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
-
-            s_bit_channel_mapping[vfat] = {}
             # Looping over all 8 elinks
             for elink in range(0,8):
                 gem_utils.write_backend_reg(elink_sbit_select_node, elink) # Select elink for S-bit counter
                 s_bit_channel_mapping[vfat][elink] = {}
                 s_bit_matches = {}
+
+                for sbit in range(elink*8,elink*8+8):
+                    s_bit_matches[sbit] = 0
 
                 # Looping over all channels in that elink
                 for channel in range(elink*16,elink*16+16):
@@ -156,14 +153,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                     sbit_channel_match = 0
                     s_bit_channel_mapping[vfat][elink][channel] = -9999
 
-                    # Looping over all s-bits in that elink
+                    # Looping over all S-bits in that elink
                     for sbit in range(elink*8,elink*8+8):
                         # Reset L1A, CalPulse and S-bit counters
                         gem_utils.global_reset()
                         gem_utils.write_backend_reg(reset_sbit_counter_node, 1)
 
                         gem_utils.write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
-                        s_bit_matches[sbit] = 0
 
                         # Start the cyclic generator
                         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
@@ -194,14 +190,18 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                                 s_bit_channel_mapping[vfat][elink][channel] = -9999
                                 break
                             if s_bit_matches[sbit] == 1:
+                                if channel%2==0:
+                                    # S-bit already matched to an earlier odd numbered channel
+                                    s_bit_channel_mapping[vfat][elink][channel] = -9999
+                                    break
                                 if s_bit_channel_mapping[vfat][elink][channel-1] != sbit:
                                     # S-bit matched to a different channel than the previous one
                                     s_bit_channel_mapping[vfat][elink][channel] = -9999
                                     break
-                                if channel%2==0:
-                                    # S-bit already matched to an earlier odd numbered channel"
-                                    s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                    break
+                            if channel_sbit_counter_final[sbit] != nl1a:
+                                # S-bit counter doesn't match with number of L1A's
+                                s_bit_channel_mapping[vfat][elink][channel] = -9999
+                                break
                             s_bit_channel_mapping[vfat][elink][channel] = sbit
                             sbit_channel_match = 1
                             s_bit_matches[sbit] += 1
@@ -215,21 +215,21 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 # End of Channel loop
 
                 if errs[vfat][elink][phase] == 0:
-                    print (Colors.GREEN + "Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.GREEN + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
                 elif errs[vfat][elink][phase] < 16:
-                    print (Colors.YELLOW + "Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.YELLOW + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
                 else:
-                    print (Colors.RED + "Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.RED + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
 
             # End of Elink loop
             print ("")
 
-            # Unconfigure the pulsing VFAT
-            configureVfat(0, vfat, oh_select, 0)
-            sleep(0.1)
-            print ("")
-        # End of VFAT loop
-    # End of Phase loop
+        # Unconfigure the pulsing VFAT
+        configureVfat(0, vfat, oh_select, 0)
+        sleep(0.1)
+        print ("")
+        # End of Phase loop
+    # End of VFAT loop
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
 
     bestphase_vfat_elink = [[0 for elink in range(8)] for vfat in range(24)]
