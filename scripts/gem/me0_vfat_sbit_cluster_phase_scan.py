@@ -192,7 +192,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                         if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff and s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 0x7):
                             continue
                         n_clusters += 1
-                    if n_clusters > 1 or multiple_cluster_counts == 1:
+                    if n_clusters > 1 or multiple_cluster_counts == 1 or phase == 7: # Not using phase 7
                         errs[vfat][elink][phase] += 1
 
                 if errs[vfat][elink][phase] == 0:
