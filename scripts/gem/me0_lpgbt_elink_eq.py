@@ -29,7 +29,7 @@ def main(system, oh_select, vfat, sbit_elink_list, daq, eq):
         eq_setting1 = 1
 
     print ("Setting Equalization Settings for: \n")
-    print ("  VFAT %02d: ")
+    print ("  VFAT %02d: "%vfat)
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
 
