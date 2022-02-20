@@ -64,6 +64,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 sbit_data[vfat][sbit][thr]["time"] = -9999
                 sbit_data[vfat][sbit][thr]["fired"] = -9999
 
+    sleep(1)
+
     # Nodes for Sbit counters
     vfat_sbit_select_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0") # VFAT for reading S-bits
     elink_sbit_select_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_ELINK_SBIT_ME0") # Node for selecting Elink to count

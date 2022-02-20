@@ -64,6 +64,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 sbit_data[vfat][sbit][thr]["time"] = -9999
                 sbit_data[vfat][sbit][thr]["fired"] = -9999
 
+    sleep(1)
+    
     # Nodes for Sbit counters
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
     reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor

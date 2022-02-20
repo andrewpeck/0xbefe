@@ -76,13 +76,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     l1a_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CMD_COUNTERS.L1A")
     calpulse_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CMD_COUNTERS.CALPULSE")
 
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
-    reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
+    reset_sbit_monitor_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
     sbit_monitor_nodes = []
     cluster_count_nodes = []
     for i in range(0,8):
-        sbit_monitor_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
-        cluster_count_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
+        sbit_monitor_nodes.append(gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
+        cluster_count_nodes.append(gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
 
     # Configure TTC generator
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -146,28 +146,28 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
 
                 # Reset L1A, CalPulse and S-bit monitor
-                global_reset()
-                write_backend_reg(reset_sbit_monitor_node, 1)
+                gem_utils.global_reset()
+                gem_utils.write_backend_reg(reset_sbit_monitor_node, 1)
 
                 # Start the cyclic generator
-                write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
-                cyclic_running = read_backend_reg(cyclic_running_node)
+                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
                 while cyclic_running:
-                    cyclic_running = read_backend_reg(cyclic_running_node)
+                    cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
                 # Stop the cyclic generator
-                write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
+                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
 
-                l1a_counter = read_backend_reg(l1a_node)
-                calpulse_counter = read_backend_reg(calpulse_node)
+                l1a_counter = gem_utils.read_backend_reg(l1a_node)
+                calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
 
                 if system!="dryrun" and l1a_counter != nl1a:
                     print (Colors.RED + "ERROR: Number of L1As incorrect" + Colors.ENDC)
                     rw_terminate()
 
                 for i in range(0,8):
-                    s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i])/calpulse_counter)
-                    sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
+                    s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(gem_utils.read_backend_reg(cluster_count_nodes[i])/calpulse_counter)
+                    sbit_monitor_value = gem_utils.read_backend_reg(sbit_monitor_nodes[i])
                     sbit_cluster_address = sbit_monitor_value & 0x7ff
                     sbit_cluster_size = ((sbit_monitor_value >> 11) & 0x7) + 1
                     s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"].append(sbit_cluster_size)

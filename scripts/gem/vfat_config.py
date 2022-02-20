@@ -178,8 +178,6 @@ def configureVfat(configure, vfatN, ohN, low_thresh):
             setVfatchannelTrim(vfatN, ohN, i, 0, 0)
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN"%(ohN, vfatN)), 0)
 
-    sleep(0.1)
-
 def vfat_config(system, oh_select, vfat_list, low_thresh, configure):
     print ("VFAT Configuration\n")
     

@@ -70,6 +70,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         s_bit_cluster_mapping[vfat] = {}
 
+    sleep(1)
+
     # Looping over VFATs
     for vfat in vfat_list:
         print ("Testing VFAT#: %02d" %(vfat))

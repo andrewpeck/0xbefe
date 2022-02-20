@@ -119,6 +119,8 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
         for channel in range(0, 128):
             enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
 
+    sleep(1)
+
     for elink in elink_list:
         print ("Channel List in ELINK# %02d:" %(elink))
         file_out.write("Channel List in ELINK# %02d:\n" %(elink))

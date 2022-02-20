@@ -94,6 +94,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                 sbit_data[vfat][channel_inj][channel_read]["events"] = -9999
                 sbit_data[vfat][channel_inj][channel_read]["fired"] = -9999
 
+    sleep(1)
+
     # Configure TTC generator
     #write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
