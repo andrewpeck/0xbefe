@@ -112,7 +112,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 rw_terminate()
 
             for i in range(0,8):
-                s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i])/calpulse_counter)
+                s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i]))
                 sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
                 sbit_cluster_address = sbit_monitor_value & 0x7ff
                 sbit_cluster_size = ((sbit_monitor_value >> 11) & 0x7) + 1
@@ -160,10 +160,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             multiple_cluster_counts = 0
             for i in range(1,8):
                 result_str += "%d,"%s_bit_cluster_mapping[vfat][channel]["cluster_count"][i]
-                if i == 1:
-                    if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 1:
-                        multiple_cluster_counts = 1
-                else:
+                if i != 1:
                     if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 0:
                         multiple_cluster_counts = 1
             result_str += "  "
