@@ -119,7 +119,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                         break
                     channel_sbit_counter_final[sbit] = read_backend_reg(channel_sbit_counter_node)
 
-                    if channel_sbit_counter_final[sbit] > 0:
+                    if channel_sbit_counter_final[sbit] == nl1a:
                         if sbit_channel_match == 1:
                             print (Colors.YELLOW + "WARNING: Multiple S-bits registered hits for calpulse on channel %02d"%(channel) + Colors.ENDC)
                             s_bit_channel_mapping[vfat][elink][channel] = -9999
@@ -137,10 +137,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                                 print (Colors.YELLOW + "WARNING: S-bit %02d already matched to an earlier odd numbered channel"%(sbit) + Colors.ENDC)
                                 s_bit_channel_mapping[vfat][elink][channel] = -9999
                                 break
-                        if channel_sbit_counter_final[sbit] != nl1a:
-                            print (Colors.YELLOW + "WARNING: S-bit %02d counter doesn't match with number of L1A's"%(sbit) + Colors.ENDC)
-                            s_bit_channel_mapping[vfat][elink][channel] = -9999
-                            break
                         s_bit_channel_mapping[vfat][elink][channel] = sbit
                         sbit_channel_match = 1
                         s_bit_matches[sbit] += 1
@@ -266,7 +262,7 @@ if __name__ == "__main__":
             sys.exit()
 
     nl1a = 100 # Nr. of L1As
-    l1a_bxgap = 100 # Gap between 2 L1As in nr. of BXs
+    l1a_bxgap = 20 # Gap between 2 L1As in nr. of BXs
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
         

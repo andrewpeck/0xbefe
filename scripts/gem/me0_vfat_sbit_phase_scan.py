@@ -126,7 +126,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
 
-        print ("VFAT %02d: ")
+        print ("VFAT %02d: "%vfat)
         print ("Checking errors: ")
         s_bit_channel_mapping[vfat] = {}
         for phase in range(0, 16):
@@ -215,11 +215,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 # End of Channel loop
 
                 if errs[vfat][elink][phase] == 0:
-                    print (Colors.GREEN + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.GREEN + "Phase: %d, VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
                 elif errs[vfat][elink][phase] < 16:
-                    print (Colors.YELLOW + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.YELLOW + "Phase: %d, VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
                 else:
-                    print (Colors.RED + "Phase: %d, Results of VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
+                    print (Colors.RED + "Phase: %d, VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
 
             # End of Elink loop
             print ("")
@@ -439,7 +439,7 @@ if __name__ == "__main__":
             sys.exit()
 
     nl1a = 100 # Nr. of L1As
-    l1a_bxgap = 100 # Gap between 2 L1As in nr. of BXs
+    l1a_bxgap = 20 # Gap between 2 L1As in nr. of BXs
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
 

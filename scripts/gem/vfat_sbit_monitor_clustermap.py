@@ -247,7 +247,7 @@ if __name__ == "__main__":
             sys.exit()
 
     nl1a = 1 # Nr. of L1As
-    l1a_bxgap = 100 # Gap between 2 L1As in nr. of BXs
+    l1a_bxgap = 20 # Gap between 2 L1As in nr. of BXs
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
         
