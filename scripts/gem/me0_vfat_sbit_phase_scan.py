@@ -174,8 +174,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                         l1a_counter = gem_utils.read_backend_reg(l1a_node)
                         calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
 
-                        if elink_sbit_counter_final == 0:
-                            # Elink did not register a hit
+                        if elink_sbit_counter_final != nl1a:
+                            # Elink did not register the correct number of hits
                             s_bit_channel_mapping[vfat][elink][channel] = -9999
                             break
                         channel_sbit_counter_final[sbit] = gem_utils.read_backend_reg(channel_sbit_counter_node)
@@ -203,7 +203,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                             s_bit_matches[sbit] += 1
                     # End of S-bit loop for this channel
 
-                    if s_bit_channel_mapping[vfat][elink][channel] == -9999 or phase == 7: # Not using phase 7
+                    if s_bit_channel_mapping[vfat][elink][channel] == -9999:
                         errs[vfat][elink][phase] += 1
 
                     # Disabling the pulsing channels
