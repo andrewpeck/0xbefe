@@ -155,8 +155,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     for vfat in s_bit_cluster_mapping:
         for channel in s_bit_cluster_mapping[vfat]:
             result_str = "%02d  %03d  %03d  "%(vfat, channel, s_bit_cluster_mapping[vfat][channel]["sbit"])
+            multiple_cluster_counts = 0
             for i in range(1,8):
                 result_str += "%d,"%s_bit_cluster_mapping[vfat][channel]["cluster_count"][i]
+                if i == 1:
+                    if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 1:
+                        multiple_cluster_counts = 1
+                else:
+                    if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 0:
+                        multiple_cluster_counts = 1
             result_str += "  "
             n_clusters = 0
             for i in range(0,8):
@@ -164,7 +171,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                     continue
                 n_clusters += 1
                 result_str += "%d,%03d  "%(s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i], s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i])
-            if n_clusters > 1:
+            if n_clusters > 1 or multiple_cluster_counts == 1:
                 bad_mapping_str += "  VFAT %02d, Channel %02d\n"%(vfat, channel)
                 bad_mapping_count += 1
             result_str += "\n"
@@ -246,7 +253,7 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
-    nl1a = 1 # Nr. of L1As
+    nl1a = 100 # Nr. of L1As
     l1a_bxgap = 20 # Gap between 2 L1As in nr. of BXs
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode

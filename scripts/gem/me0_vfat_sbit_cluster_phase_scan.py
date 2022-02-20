@@ -76,11 +76,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     l1a_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CMD_COUNTERS.L1A")
     calpulse_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CMD_COUNTERS.CALPULSE")
 
-    elink_sbit_select_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_ELINK_SBIT_ME0") # Node for selecting Elink to count
-    channel_sbit_select_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_SBIT_ME0") # Node for selecting S-bit to count
-    elink_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink
-    channel_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
-    reset_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
+    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
+    reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
+    sbit_monitor_nodes = []
+    cluster_count_nodes = []
+    for i in range(0,8):
+        sbit_monitor_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
+        cluster_count_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
 
     # Configure TTC generator
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -92,7 +94,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
     else:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 2)
 
-    s_bit_channel_mapping = {}
+    s_bit_cluster_mapping = {}
     for vfat in vfat_list:
         gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
@@ -124,95 +126,74 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
         gem_utils.gem_link_reset()
         sleep(0.1)
 
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
-
         print ("VFAT %02d: "%vfat)
         print ("Checking errors: ")
-        s_bit_channel_mapping[vfat] = {}
+        s_bit_cluster_mapping[vfat] = {}
         for phase in range(0, 16):
             # set phases for elinks in the vfat
             sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], phase)
 
-            # Looping over all 8 elinks
+            # Looping over all channels
+            for channel in range(0,128):
+                s_bit_cluster_mapping[vfat][channel] = {}
+                s_bit_cluster_mapping[vfat][channel]["cluster_count"] = []
+                s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"] = []
+                s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"] = []
+
+                # Enabling the pulsing channel
+                enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
+
+                # Reset L1A, CalPulse and S-bit monitor
+                global_reset()
+                write_backend_reg(reset_sbit_monitor_node, 1)
+
+                # Start the cyclic generator
+                write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                cyclic_running = read_backend_reg(cyclic_running_node)
+                while cyclic_running:
+                    cyclic_running = read_backend_reg(cyclic_running_node)
+
+                # Stop the cyclic generator
+                write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
+
+                l1a_counter = read_backend_reg(l1a_node)
+                calpulse_counter = read_backend_reg(calpulse_node)
+
+                if system!="dryrun" and l1a_counter != nl1a:
+                    print (Colors.RED + "ERROR: Number of L1As incorrect" + Colors.ENDC)
+                    rw_terminate()
+
+                for i in range(0,8):
+                    s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i])/calpulse_counter)
+                    sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
+                    sbit_cluster_address = sbit_monitor_value & 0x7ff
+                    sbit_cluster_size = ((sbit_monitor_value >> 11) & 0x7) + 1
+                    s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"].append(sbit_cluster_size)
+                    s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"].append(sbit_cluster_address)
+
+                # Disabling the pulsing channels
+                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
+
+            # Detecting bad phase for each Elink
             for elink in range(0,8):
-                gem_utils.write_backend_reg(elink_sbit_select_node, elink) # Select elink for S-bit counter
-                s_bit_channel_mapping[vfat][elink] = {}
-                s_bit_matches = {}
-
-                for sbit in range(elink*8,elink*8+8):
-                    s_bit_matches[sbit] = 0
-
-                # Looping over all channels in that elink
-                for channel in range(elink*16,elink*16+16):
-                    # Enabling the pulsing channel
-                    enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
-
-                    channel_sbit_counter_final = {}
-                    sbit_channel_match = 0
-                    s_bit_channel_mapping[vfat][elink][channel] = -9999
-
-                    # Looping over all S-bits in that elink
-                    for sbit in range(elink*8,elink*8+8):
-                        # Reset L1A, CalPulse and S-bit counters
-                        gem_utils.global_reset()
-                        gem_utils.write_backend_reg(reset_sbit_counter_node, 1)
-
-                        gem_utils.write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
-
-                        # Start the cyclic generator
-                        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
-                        cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
-                        while cyclic_running:
-                            cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
-
-                        # Stop the cyclic generator
-                        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-
-                        elink_sbit_counter_final = gem_utils.read_backend_reg(elink_sbit_counter_node)
-                        l1a_counter = gem_utils.read_backend_reg(l1a_node)
-                        calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
-
-                        if elink_sbit_counter_final == 0:
-                            # Elink did not register a hit
-                            s_bit_channel_mapping[vfat][elink][channel] = -9999
-                            break
-                        channel_sbit_counter_final[sbit] = gem_utils.read_backend_reg(channel_sbit_counter_node)
-
-                        if channel_sbit_counter_final[sbit] > 0:
-                            if sbit_channel_match == 1:
-                                # Multiple S-bits registered hits for calpulse on this channel
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                break
-                            if s_bit_matches[sbit] >= 2:
-                                # S-bit already matched to 2 channels
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                break
-                            if s_bit_matches[sbit] == 1:
-                                if channel%2==0:
-                                    # S-bit already matched to an earlier odd numbered channel
-                                    s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                    break
-                                if s_bit_channel_mapping[vfat][elink][channel-1] != sbit:
-                                    # S-bit matched to a different channel than the previous one
-                                    s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                    break
-                            if channel_sbit_counter_final[sbit] != nl1a:
-                                # S-bit counter doesn't match with number of L1A's
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                break
-                            s_bit_channel_mapping[vfat][elink][channel] = sbit
-                            sbit_channel_match = 1
-                            s_bit_matches[sbit] += 1
-                    # End of S-bit loop for this channel
-
-                    if s_bit_channel_mapping[vfat][elink][channel] == -9999 or phase == 7: # Not using phase 7
+                for channel in range(elink*16, elink*16 + 16):
+                    multiple_cluster_counts = 0
+                    for i in range(1,8):
+                        if i == 1:
+                            if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 1:
+                                multiple_cluster_counts = 1
+                        else:
+                            if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 0:
+                                multiple_cluster_counts = 1
+                    n_clusters = 0
+                    for i in range(0,8):
+                        if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff and s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 0x7):
+                            continue
+                        n_clusters += 1
+                    if n_clusters > 1 or multiple_cluster_counts == 1:
                         errs[vfat][elink][phase] += 1
-
-                    # Disabling the pulsing channels
-                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
-                # End of Channel loop
 
                 if errs[vfat][elink][phase] == 0:
                     print (Colors.GREEN + "Phase: %d, VFAT %02d SBit ELINK %02d: nr. of channel errors=%d"%(phase, vfat, elink, errs[vfat][elink][phase]) + Colors.ENDC)
