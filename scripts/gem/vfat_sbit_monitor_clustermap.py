@@ -168,12 +168,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                         multiple_cluster_counts = 1
             result_str += "  "
             n_clusters = 0
+            large_cluster = 0
             for i in range(0,8):
                 if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff and s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 0x7):
                     continue
                 n_clusters += 1
+                if s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] > 1:
+                    large_cluster = 1
                 result_str += "%d,%03d  "%(s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i], s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i])
-            if n_clusters > 1 or multiple_cluster_counts == 1:
+            if n_clusters > 1 or large_cluster = 1 or multiple_cluster_counts == 1:
                 bad_mapping_str += "  VFAT %02d, Channel %02d\n"%(vfat, channel)
                 bad_mapping_count += 1
             result_str += "\n"

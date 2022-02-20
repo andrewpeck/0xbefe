@@ -180,7 +180,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                             break
                         channel_sbit_counter_final[sbit] = gem_utils.read_backend_reg(channel_sbit_counter_node)
 
-                        if channel_sbit_counter_final[sbit] > 0:
+                        if channel_sbit_counter_final[sbit] == nl1a:
                             if sbit_channel_match == 1:
                                 # Multiple S-bits registered hits for calpulse on this channel
                                 s_bit_channel_mapping[vfat][elink][channel] = -9999
@@ -198,10 +198,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                                     # S-bit matched to a different channel than the previous one
                                     s_bit_channel_mapping[vfat][elink][channel] = -9999
                                     break
-                            if channel_sbit_counter_final[sbit] != nl1a:
-                                # S-bit counter doesn't match with number of L1A's
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
-                                break
                             s_bit_channel_mapping[vfat][elink][channel] = sbit
                             sbit_channel_match = 1
                             s_bit_matches[sbit] += 1
