@@ -110,9 +110,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                     l1a_counter = read_backend_reg(l1a_node)
                     calpulse_counter = read_backend_reg(calpulse_node)
 
-                    if system!="dryrun" and l1a_counter != nl1a:
-                        print (Colors.RED + "ERROR: Number of L1As incorrect" + Colors.ENDC)
-                        rw_terminate()
+                    if system!="dryrun" and calpulse_counter != nl1a:
+                        print (Colors.RED + "ERROR: Number of Calpulses incorrect" + Colors.ENDC)
+                        terminate()
                     if system!="dryrun" and elink_sbit_counter_final == 0:
                         print (Colors.YELLOW + "WARNING: Elink %02d did not register any S-bit for calpulse on channel %02d"%(elink, channel) + Colors.ENDC)
                         s_bit_channel_mapping[vfat][elink][channel] = -9999

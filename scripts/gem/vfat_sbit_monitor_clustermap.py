@@ -107,9 +107,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             l1a_counter = read_backend_reg(l1a_node)
             calpulse_counter = read_backend_reg(calpulse_node)
 
-            if system!="dryrun" and l1a_counter != nl1a:
-                print (Colors.RED + "ERROR: Number of L1As incorrect" + Colors.ENDC)
-                rw_terminate()
+            if system!="dryrun" and calpulse_counter != nl1a:
+                print (Colors.RED + "ERROR: Number of Calpulses incorrect" + Colors.ENDC)
+                terminate()
 
             for i in range(0,8):
                 s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i]))

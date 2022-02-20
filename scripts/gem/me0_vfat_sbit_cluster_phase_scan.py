@@ -161,8 +161,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
                 l1a_counter = gem_utils.read_backend_reg(l1a_node)
                 calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
 
-                if system!="dryrun" and l1a_counter != nl1a:
-                    print (Colors.RED + "ERROR: Number of L1As incorrect" + Colors.ENDC)
+                if system!="dryrun" and calpulse_counter != nl1a:
+                    print (Colors.RED + "ERROR: Number of Calpulses incorrect" + Colors.ENDC)
                     rw_terminate()
 
                 for i in range(0,8):
