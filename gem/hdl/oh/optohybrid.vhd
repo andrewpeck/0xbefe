@@ -284,7 +284,7 @@ begin
                     generic map (
                         g_REG_INPUT => true,
                         g_REG_OUTPUT => true,
-                        g_DEBUG => false
+                        g_DEBUG => g_DEBUG
                     )
                     port map(
                         reset_i             => reset_i,
