@@ -8,7 +8,7 @@ import json
 import glob
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping):
     print ("LPGBT VFAT S-Bit Cluster Mapping\n")
 
     gem_link_reset()
@@ -18,7 +18,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
 
     # Configure TTC generator
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    if calpulse_only:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 1)
+    else:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), nl1a)
     if l1a_bxgap >= 40:
@@ -81,9 +86,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             elink = int(channel/16)
             sbit = 0
             if gem == "ME0":
+                if str(vfat) not in s_bit_channel_mapping:
+                    print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
+                    sbit = -9999
                 sbit = s_bit_channel_mapping[str(vfat)][str(elink)][str(channel)]
             s_bit_cluster_mapping[vfat][channel] = {}
             s_bit_cluster_mapping[vfat][channel]["sbit"] = sbit
+            s_bit_cluster_mapping[vfat][channel]["calpulse_counter"] = 0
             s_bit_cluster_mapping[vfat][channel]["cluster_count"] = []
             s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"] = []
             s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"] = []
@@ -107,11 +116,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             l1a_counter = read_backend_reg(l1a_node)
             calpulse_counter = read_backend_reg(calpulse_node)
 
-            if system!="dryrun" and calpulse_counter != nl1a:
-                print (Colors.RED + "ERROR: Number of Calpulses incorrect" + Colors.ENDC)
-                terminate()
-
             for i in range(0,8):
+                s_bit_cluster_mapping[vfat][channel]["calpulse_counter"] = calpulse_counter
                 s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i]))
                 sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
                 sbit_cluster_address = sbit_monitor_value & 0x7ff
@@ -128,7 +134,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
         configureVfat(0, vfat, oh_select, 0)
         print ("")
         # End of VFAT loop
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
+    if calpulse_only:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
+    else:
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
 
     resultDir = "results"
     try:
@@ -160,7 +169,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, l1a_bxgap, set_cal_mode, 
             multiple_cluster_counts = 0
             for i in range(1,8):
                 result_str += "%d,"%s_bit_cluster_mapping[vfat][channel]["cluster_count"][i]
-                if i != 1:
+                if i == 1:
+                    if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != s_bit_cluster_mapping[vfat][channel]["calpulse_counter"]:
+                        multiple_cluster_counts = 1
+                else:
                     if s_bit_cluster_mapping[vfat][channel]["cluster_count"][i] != 0:
                         multiple_cluster_counts = 1
             result_str += "  "
@@ -199,6 +211,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
+    parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", default = "1000", help="nl1a = fixed number of L1A cycles")
+    parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
+    parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     args = parser.parse_args()
@@ -255,8 +270,6 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
-    nl1a = 100 # Nr. of L1As
-    l1a_bxgap = 20 # Gap between 2 L1As in nr. of BXs
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
         
@@ -267,7 +280,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, nl1a, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(nl1a), args.calpulse_only, int(l1a_bxgap), set_cal_mode, cal_dac, s_bit_channel_mapping)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

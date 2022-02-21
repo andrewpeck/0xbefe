@@ -113,6 +113,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
             elink = int(sbit/8)
             channel_list = []
+            if str(vfat) not in s_bit_channel_mapping:
+                print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
+                continue
             for c in s_bit_channel_mapping[str(vfat)][str(elink)]:
                 if sbit == s_bit_channel_mapping[str(vfat)][str(elink)][c]:
                     channel_list.append(int(c))
