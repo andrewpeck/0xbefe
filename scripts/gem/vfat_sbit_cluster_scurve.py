@@ -151,7 +151,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
         for channel in channel_list:
             print ("VFAT: %02d  Channel: %d"%(vfat, channel))
 
-            if str(vfat) not in s_bit_cluster_mapping:
+            if vfat not in s_bit_cluster_mapping:
                 print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
                 continue
             if s_bit_cluster_mapping[vfat][channel]["cluster_address"] == -9999:
