@@ -44,6 +44,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     # Configure all VFATs
     for vfat in vfat_list:
         print("Configuring VFAT %02d" % (vfat))
+        gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
+        check_gbt_link_ready(oh_select, gbt_select)
+
+        link_good = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))
+        sync_err = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat)))
+        if system!="dryrun" and (link_good == 0 or sync_err > 0):
+            print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
+            terminate()
+            
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
             write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
@@ -65,15 +74,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     for vfat in vfat_list:
         print ("Testing VFAT#: %02d" %(vfat))
         print ("")
-        gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
-        check_gbt_link_ready(oh_select, gbt_select)
-
-        link_good = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))
-        sync_err = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat)))
-        if system!="dryrun" and (link_good == 0 or sync_err > 0):
-            print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
-            terminate()
-
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
 
         s_bit_channel_mapping[vfat] = {}
