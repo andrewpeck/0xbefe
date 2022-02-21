@@ -164,6 +164,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     for vfat in vfat_list:
         print("Unconfiguring VFAT %02d" % (vfat))
         configureVfat(0, vfat, oh_select, 0)
+        print ("")
     if calpulse_only:
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     else:
