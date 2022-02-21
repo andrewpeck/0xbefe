@@ -583,7 +583,7 @@ if __name__ == '__main__':
         raw_input("")
 
         dongle = dongle_connect()
-        run_all_tests(dongle, board_sn, gbt_id, is_fused)
+        run_all_tests(dongle, board_sn, gbt_id, True)
 
     dongle.disconnect()
 
