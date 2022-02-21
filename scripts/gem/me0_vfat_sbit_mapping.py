@@ -41,23 +41,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     channel_sbit_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
     reset_sbit_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
 
-    s_bit_channel_mapping = {}
-
+    # Configure all VFATs
     for vfat in vfat_list:
-        print ("Testing VFAT#: %02d" %(vfat))
-        print ("")
-        gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
-        check_gbt_link_ready(oh_select, gbt_select)
-
-        link_good = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))
-        sync_err = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat)))
-        if system!="dryrun" and (link_good == 0 or sync_err > 0):
-            print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
-            terminate()
-
-        write_backend_reg(get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
-
-        # Configure the pulsing VFAT
         print("Configuring VFAT %02d" % (vfat))
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
@@ -73,6 +58,23 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         for i in range(128):
             enableVfatchannel(vfat, oh_select, i, 1, 0) # mask all channels and disable calpulsing
         print ("")
+    print ("")
+
+    # Starting VFAT loop
+    s_bit_channel_mapping = {}
+    for vfat in vfat_list:
+        print ("Testing VFAT#: %02d" %(vfat))
+        print ("")
+        gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
+        check_gbt_link_ready(oh_select, gbt_select)
+
+        link_good = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat)))
+        sync_err = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat)))
+        if system!="dryrun" and (link_good == 0 or sync_err > 0):
+            print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
+            terminate()
+
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
 
         s_bit_channel_mapping[vfat] = {}
         # Looping over all 8 elinks
@@ -115,6 +117,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                     l1a_counter = read_backend_reg(l1a_node)
                     calpulse_counter = read_backend_reg(calpulse_node)
 
+                    if calpulse_counter == 0:
+                        # Calpulse Counter is 0
+                        s_bit_channel_mapping[vfat][elink][channel] = -9999
+                        break
+
                     if system!="dryrun" and elink_sbit_counter_final != calpulse_counter:
                         print (Colors.YELLOW + "WARNING: Elink %02d did not register any S-bit for calpulse on channel %02d"%(elink, channel) + Colors.ENDC)
                         s_bit_channel_mapping[vfat][elink][channel] = -9999
@@ -150,12 +157,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
 
             print ("")
         # End of Elink loop
+        print ("")
+    # End of VFAT loop
 
-        # Unconfigure the pulsing VFAT
+    # Unconfigure all VFATs
+    for vfat in vfat_list:
         print("Unconfiguring VFAT %02d" % (vfat))
         configureVfat(0, vfat, oh_select, 0)
-        print ("")
-        # End of VFAT loop
     if calpulse_only:
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     else:
