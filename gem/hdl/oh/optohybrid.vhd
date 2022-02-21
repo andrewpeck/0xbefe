@@ -398,8 +398,8 @@ begin
     end generate;        
         
     g_no_trig_links : if g_GEM_STATION = 0 or g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_NONE generate
-        sbit_links_status_o <= (others => (sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '0', not_in_table => '0'));
-        sbit_clusters_o <= (others => (address => "111" & x"FA", size => "000"));
+        sbit_links_status_o <= (others => NULL_SBIT_LINK);
+        sbit_clusters_o <= (others => NULL_SBIT_CLUSTER);
     end generate;
             
     --============================--
