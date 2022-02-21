@@ -109,7 +109,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             else:
                 if gem == "ME0":
                     if str(vfat) not in s_bit_cluster_mapping:
-                        print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
+                        print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
                         continue
                     for c in s_bit_cluster_mapping[vfat]:
                         if sbit == s_bit_cluster_mapping[vfat][c]["sbit"]:

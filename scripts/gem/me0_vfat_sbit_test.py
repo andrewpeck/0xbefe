@@ -422,7 +422,7 @@ if __name__ == "__main__":
         if args.channels is None:
             for c in range(0,16):
                 if str(vfat) not in s_bit_channel_mapping:
-                    print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
+                    print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
                     continue
                 sbit_input_file = s_bit_channel_mapping[str(vfat)][str(elink)][str(elink*16 + c)]
                 if sbit_input_file == -9999:

@@ -153,7 +153,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
             elink = int(channel/16)
 
             if str(vfat) not in s_bit_channel_mapping:
-                print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(channel_read,vfat) + Colors.ENDC)
+                print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
                 continue
             if s_bit_channel_mapping[str(vfat)][str(elink)][str(channel)] == -9999:
                 print (Colors.YELLOW + "    Bad channel (from S-bit mapping) %02d on VFAT %02d"%(channel,vfat) + Colors.ENDC)

@@ -133,6 +133,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         sleep(0.1)
 
     s_bit_cluster_mapping = {}
+    print ("")
     # Start VFAT loop
     for vfat in vfat_list:
         print ("VFAT %02d: "%vfat)
