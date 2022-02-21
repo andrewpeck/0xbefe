@@ -112,6 +112,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             gem_utils.terminate()
 
         # Configure the pulsing VFAT
+        print("Configuring VFAT %d" % (vfat))
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
@@ -225,6 +226,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
 
     # Unconfigure all VFATs
     for vfat in vfat_list:
+        print("Unconfiguring VFAT %d" % (vfat))
         configureVfat(0, vfat, oh_select, 0)
         sleep(0.1)
 
