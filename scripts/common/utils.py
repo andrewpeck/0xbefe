@@ -132,3 +132,22 @@ def parse_int(string):
         return int(string, 2)
     else:
         return int(string)
+
+def array_to_string(arr):
+    s = "["
+    for i in range(len(arr)):
+        if i != 0:
+            s += ", "
+        s += str(arr[i])
+    s += "]"
+    return s
+
+def bitmask_to_array(bitmask):
+    ids = []
+    id = 0
+    while bitmask != 0:
+        if bitmask & 1 == 1:
+            ids.append(id)
+        bitmask = bitmask >> 1
+        id += 1
+    return ids
