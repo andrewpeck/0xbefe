@@ -295,6 +295,7 @@ begin
                         sbit_cluster1_o     => sbit_clusters_o(i * 4 + 1),
                         sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
                         sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
+                        bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
                         sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
                         missed_comma_err_o  => sbit_links_status_o(i).missed_comma,
                         not_in_table_err_o  => sbit_links_status_o(i).not_in_table,
@@ -357,6 +358,7 @@ begin
                         sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
                         sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
                         sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
+                        bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
                         missed_comma_err_o  => sbit_links_status_o(i).missed_comma
                     );
                     
@@ -366,7 +368,8 @@ begin
     end generate;
         
     g_gbt_trig_links : if g_GEM_STATION = 2 and g_OH_VERSION >= 2 and g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_GBT generate
-    
+        signal bc0 : std_logic;
+    begin
         i_link_rx_trigger_ge21 : entity work.link_rx_trigger_ge21
             generic map(
                 g_DEBUG        => g_DEBUG,
@@ -378,7 +381,7 @@ begin
                 ttc_clk_40_i    => ttc_clk_i.clk_40,
                 rx_data_i       => ge21_gbt_trig_data_i,
                 sbit_clusters_o => sbit_clusters_o,
-                bc0_o           => open,
+                bc0_o           => bc0,
                 resync_o        => open,
                 sbit_overflow_o => sbit_links_status_o(0).sbit_overflow,
                 ecc_err_o       => open,
@@ -386,10 +389,11 @@ begin
                 protocol_err_o  => sbit_links_status_o(0).missed_comma
             );
     
+        sbit_links_status_o(0).bc0_marker <= bc0;
         sbit_links_status_o(0).underflow <= '0';
         sbit_links_status_o(0).overflow <= '0';
         sbit_links_status_o(0).not_in_table <= '0';
-        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0', not_in_table => '0');
+        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0', not_in_table => '0', bc0_marker => bc0);
 
     end generate;        
         

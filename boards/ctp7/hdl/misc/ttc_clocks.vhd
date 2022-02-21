@@ -96,15 +96,11 @@ END COMPONENT  ;
     --============================================================================
     --                                                         Signal declarations
     --============================================================================
+    signal clk_40_ttc_ibufgds   : std_logic;
+    signal clk_40_ttc_bufg      : std_logic;
 
     signal clkin                : std_logic;
 
-    -- phase shifting MMCM
-    signal ps_clkfbout          : std_logic;
-    signal ps_clkfbin           : std_logic;
-    signal psmmcm_locked        : std_logic;
-
-    -- main MMCM
     signal clkfbout             : std_logic;
     signal clkfbin              : std_logic;    
 
@@ -112,12 +108,7 @@ END COMPONENT  ;
     signal clk_80               : std_logic;
     signal clk_120              : std_logic;
     signal clk_160              : std_logic;
-    signal clk_200              : std_logic;
     signal clk_320              : std_logic;
-
-    -- output clocks
-    signal clk_40_ttc_ibufgds   : std_logic;
-    signal clk_40_ttc_bufg      : std_logic;
 
     signal ttc_clocks_bufg      : t_ttc_clks;
     
@@ -281,10 +272,10 @@ begin
             I => clk_40_ttc_ibufgds
         );
         
-    -- Phase shift MMCM
-    i_ps_mmcm : MMCME2_ADV
+    -- Main MMCM
+    i_main_mmcm : MMCME2_ADV
         generic map(
-            BANDWIDTH            => "OPTIMIZED", -- TODO: try HIGH and/or LOW
+            BANDWIDTH            => "OPTIMIZED",
             CLKOUT4_CASCADE      => false,
             COMPENSATION         => "ZHOLD",
             STARTUP_WAIT         => false,
@@ -292,23 +283,45 @@ begin
             CLKFBOUT_MULT_F      => CFG_CLKFBOUT_MULT,
             CLKFBOUT_PHASE       => 0.000,
             CLKFBOUT_USE_FINE_PS => true,
-            CLKOUT0_DIVIDE_F     => 3.000,
+            CLKOUT0_DIVIDE_F     => 24.000,
             CLKOUT0_PHASE        => 0.000,
             CLKOUT0_DUTY_CYCLE   => 0.500,
             CLKOUT0_USE_FINE_PS  => false,
-            CLKOUT1_DIVIDE       => 6,
+            CLKOUT1_DIVIDE       => 12,
             CLKOUT1_PHASE        => 0.000,
             CLKOUT1_DUTY_CYCLE   => 0.500,
             CLKOUT1_USE_FINE_PS  => false,
+            CLKOUT2_DIVIDE       => 8,
+            CLKOUT2_PHASE        => 0.000,
+            CLKOUT2_DUTY_CYCLE   => 0.500,
+            CLKOUT2_USE_FINE_PS  => false,
+            CLKOUT3_DIVIDE       => 6,
+            CLKOUT3_PHASE        => 0.000,
+            CLKOUT3_DUTY_CYCLE   => 0.500,
+            CLKOUT3_USE_FINE_PS  => false,
+            CLKOUT4_DIVIDE       => 3,
+            CLKOUT4_PHASE        => 0.000,
+            CLKOUT4_DUTY_CYCLE   => 0.500,
+            CLKOUT4_USE_FINE_PS  => false,
             CLKIN1_PERIOD        => CFG_CLKIN1_PERIOD,
             REF_JITTER1          => 0.010)
         port map(
             -- Output clocks
-            CLKFBOUT     => ps_clkfbout,
-            CLKOUT0      => clk_320,
-            CLKOUT1      => clk_160,
+            CLKFBOUT     => clkfbout,
+            CLKFBOUTB    => open,
+            CLKOUT0      => clk_40,
+            CLKOUT0B     => open,
+            CLKOUT1      => clk_80,
+            CLKOUT1B     => open,
+            CLKOUT2      => clk_120,
+            CLKOUT2B     => open,
+            CLKOUT3      => clk_160,
+            CLKOUT3B     => open,
+            CLKOUT4      => clk_320,
+            CLKOUT5      => open,
+            CLKOUT6      => open,
             -- Input clock control
-            CLKFBIN      => ps_clkfbin,
+            CLKFBIN      => clkfbin,
             CLKIN1       => clkin,
             CLKIN2       => '0',
             -- Tied to always select the primary input clock
@@ -328,82 +341,11 @@ begin
             PSINCDEC     => (mmcm_ps_incdec and not ctrl_psclk.pa_manual_shift_ovrd) or (ctrl_psclk.pa_manual_shift_dir and ctrl_psclk.pa_manual_shift_ovrd),
             PSDONE       => mmcm_ps_done,
             -- Other control and status signals
-            LOCKED       => psmmcm_locked,
-            CLKINSTOPPED => open,
-            CLKFBSTOPPED => open,
-            PWRDWN       => '0',
-            RST          => ctrl_psclk.reset_mmcm
-        );
-    
-    ps_clkfbin <= ps_clkfbout; -- use internal feedback for better performance, because we don't care about the skew
-    
-        
-    -- Main MMCM for frequency synthesis (we are using fractional divider here, so dynamic phase shifting is not allowed)
-    -- VCO freq = 1200MHz
-    i_main_mmcm : MMCME2_ADV
-        generic map(
-            BANDWIDTH            => "OPTIMIZED",
-            CLKOUT4_CASCADE      => false,
-            COMPENSATION         => "ZHOLD",
-            STARTUP_WAIT         => false,
-            DIVCLK_DIVIDE        => 1,
-            CLKFBOUT_MULT_F      => 3.750, -- 1200MHz VCO freq
-            CLKFBOUT_PHASE       => 0.000,
-            CLKFBOUT_USE_FINE_PS => false,
-            CLKOUT0_DIVIDE_F     => 6.000,
-            CLKOUT0_PHASE        => 0.000,
-            CLKOUT0_DUTY_CYCLE   => 0.500,
-            CLKOUT0_USE_FINE_PS  => false,
-            CLKOUT1_DIVIDE       => 10,
-            CLKOUT1_PHASE        => 0.000,
-            CLKOUT1_DUTY_CYCLE   => 0.500,
-            CLKOUT1_USE_FINE_PS  => false,
-            CLKOUT2_DIVIDE       => 15,
-            CLKOUT2_PHASE        => 0.000,
-            CLKOUT2_DUTY_CYCLE   => 0.500,
-            CLKOUT2_USE_FINE_PS  => false,
-            CLKOUT3_DIVIDE       => 30,
-            CLKOUT3_PHASE        => 0.000,
-            CLKOUT3_DUTY_CYCLE   => 0.500,
-            CLKOUT3_USE_FINE_PS  => false,
-            CLKIN1_PERIOD        => 3.125, -- 320MHz in
-            REF_JITTER1          => 0.010)
-        port map(
-            -- Output clocks
-            CLKFBOUT     => clkfbout,
-            CLKOUT0      => clk_200,
-            CLKOUT1      => clk_120,
-            CLKOUT2      => clk_80,
-            CLKOUT3      => clk_40,
-            CLKOUT4      => open,
-            CLKOUT5      => open,
-            CLKOUT6      => open,
-            -- Input clock control
-            CLKFBIN      => clkfbin,
-            CLKIN1       => ttc_clocks_bufg.clk_320,
-            CLKIN2       => '0',
-            -- Tied to always select the primary input clock
-            CLKINSEL     => '1',
-
-            -- Ports for dynamic reconfiguration
-            DADDR        => (others => '0'),
-            DCLK         => '0',
-            DEN          => '0',
-            DI           => (others => '0'),
-            DO           => open,
-            DRDY         => open,
-            DWE          => '0',
-            -- Ports for dynamic phase shift
-            PSCLK        => mmcm_ps_clk,
-            PSEN         => '0',
-            PSINCDEC     => '0',
-            PSDONE       => open,
-            -- Other control and status signals
             LOCKED       => mmcm_locked_raw,
             CLKINSTOPPED => open,
             CLKFBSTOPPED => open,
             PWRDWN       => '0',
-            RST          => not psmmcm_locked
+            RST          => ctrl_psclk.reset_mmcm
         );
 
     -- Output buffering
@@ -433,12 +375,6 @@ begin
             I => clk_160
         );
 
-    i_bufg_clk_200 : BUFG
-        port map(
-            O => ttc_clocks_bufg.clk_200,
-            I => clk_200
-        );
-
     i_bufg_clk_320 : BUFG
         port map(
             O => ttc_clocks_bufg.clk_320,
@@ -454,15 +390,7 @@ begin
     -- In case of the MGT refclk as the source, we have to align the MMCM 40MHz output to the backplane 40MHz clk manually. This has better clock performance, but the phase management can be tricky in CMS conditions
 
     clkin <= clk_gbt_mgt_txout_i;
-    
-    -- we need the clocks of the second MMCM to be in phase with the first one, so using a BUFG feedback path
-    i_clkfb_bufg : BUFG
-        port map(
-            O => clkfbout,
-            I => clkfbin
-        );
-    
---    clkfbin <= clkfbout; -- use internal feedback for better performance, because we don't care about the skew
+    clkfbin <= clkfbout; -- use internal feedback for better performance, because we don't care about the skew
 
     ----------------------------------------------------------
     --------- Phase Alignment to TTC backplane clock ---------

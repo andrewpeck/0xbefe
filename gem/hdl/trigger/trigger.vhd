@@ -82,6 +82,7 @@ architecture trigger_arch of trigger is
     
     -- OH counters
     signal sbit_overflow_cnt    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
+    signal bc0_misalign_cnt     : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal missed_comma_cnt     : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_overflow_cnt    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_underflow_cnt   : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
@@ -176,6 +177,7 @@ begin
                 trigger_o            => oh_triggers(i),
                 num_valid_clusters_o => oh_num_valid_arr(i),
                 sbit_overflow_cnt_o  => sbit_overflow_cnt(i),
+                bc0_misalign_cnt_o   => bc0_misalign_cnt(i),
                 missed_comma_cnt_o   => missed_comma_cnt(i),
                 link_overflow_cnt_o  => link_overflow_cnt(i),
                 link_underflow_cnt_o => link_underflow_cnt(i),

@@ -37,6 +37,7 @@ entity link_rx_trigger_ge11_4g is
         sbit_cluster2_o     : out t_sbit_cluster;
         sbit_cluster3_o     : out t_sbit_cluster;
         sbit_overflow_o     : out std_logic;
+        bc0_marker_o        : out std_logic;
         
         missed_comma_err_o  : out std_logic;
         not_in_table_err_o  : out std_logic;
@@ -74,6 +75,7 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal frame_40             : std_logic_vector(84 downto 0); -- 80 data bits + 1 bit for error (not in table) + 2 bits for charisk + 2 bits for chariscomma (from the comma state only)
     
     signal fifo_wr_en           : std_logic;
+    signal fifo_empty           : std_logic;
     signal fifo_valid           : std_logic;
     signal fifo_ovf_200         : std_logic;
     signal fifo_ovf             : std_logic;
@@ -84,6 +86,7 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal frame_counter_valid  : std_logic := '0'; -- this is set on reset, and deasserted when the first frame marker comes and a valid initial value is assigned to the frame_counter
     signal missed_comma_err     : std_logic := '0'; -- asserted if a comma character is not found when FSM is in COMMA state
     signal sbit_overflow        : std_logic := '0'; -- asserted when an overflow K-char is detected at the BX boundary (0xFC)
+    signal bc0_marker           : std_logic := '0';
     signal not_in_table_err     : std_logic := '0';  
 
     signal sbit_cluster0        : t_sbit_cluster;
@@ -130,6 +133,7 @@ begin
                 sbit_cluster2_o    <= sbit_cluster2;
                 sbit_cluster3_o    <= sbit_cluster3;
                 sbit_overflow_o    <= sbit_overflow;
+                bc0_marker_o       <= bc0_marker;
                 missed_comma_err_o <= missed_comma_err;
                 not_in_table_err_o <= not_in_table_err;           
             end if;
@@ -143,6 +147,7 @@ begin
         sbit_cluster2_o    <= sbit_cluster2;
         sbit_cluster3_o    <= sbit_cluster3;
         sbit_overflow_o    <= sbit_overflow;
+        bc0_marker_o       <= bc0_marker;
         missed_comma_err_o <= missed_comma_err;
         not_in_table_err_o <= not_in_table_err;           
     end generate;
@@ -252,10 +257,10 @@ begin
             FIFO_MEMORY_TYPE    => "auto",
             FIFO_WRITE_DEPTH    => 16,
             WRITE_DATA_WIDTH    => 85,
-            READ_MODE           => "std",
-            FIFO_READ_LATENCY   => 1,
+            READ_MODE           => "fwft",
+            FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => "1101", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+            USE_ADV_FEATURES    => "0101", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
             READ_DATA_WIDTH     => 85,
             CDC_SYNC_STAGES     => 2,
             DOUT_RESET_VALUE    => "0"
@@ -271,10 +276,12 @@ begin
             rd_en         => '1',
             dout          => frame_40,
             underflow     => fifo_unf,
-            data_valid    => fifo_valid,
+            empty         => fifo_empty,
             injectsbiterr => '0',
             injectdbiterr => '0'
         );    
+    
+    fifo_valid <= not fifo_empty;
     
     i_sync_fifo_ovf : entity work.synch generic map(N_STAGES => 3) port map(async_i => fifo_ovf_200, clk_i => ttc_clk_40_i, sync_o => fifo_ovf);
     
@@ -315,7 +322,8 @@ begin
             if check_errors_40 = '0' then
                 missed_comma_err <= '0'; 
                 sbit_overflow <= '0';
-                not_in_table_err <= '0';                   
+                not_in_table_err <= '0';
+                bc0_marker <= '0';                   
             else
                 not_in_table_err <= frame_40(84);
                 
@@ -324,7 +332,13 @@ begin
                 else
                     sbit_overflow <= '0';
                 end if;
-                
+
+                if frame_40(7 downto 0) = BC0_FRAME_MARKER then
+                    bc0_marker <= '1';
+                else
+                    bc0_marker <= '0';
+                end if;
+
                 if (frame_40(7 downto 0) /= FRAME_MARKERS(frame_counter)) and (frame_40(7 downto 0) /= OVERFLOW_FRAME_MARKER) and (frame_40(7 downto 0) /= BC0_FRAME_MARKER) and (frame_40(7 downto 0) /= RESYNC_FRAME_MARKER) then
                     missed_comma_err <= '1';
                 else
@@ -356,5 +370,35 @@ begin
             end if;
         end if;
     end process;
+    
+    -- DEBUG
+    gen_debug : if g_DEBUG generate
+        component ila_trig_4g_decoder
+            port(
+                clk    : in std_logic;
+                probe0 : in std_logic;
+                probe1 : in std_logic_vector(84 downto 0);
+                probe2 : in std_logic;
+                probe3 : in std_logic;
+                probe4 : in std_logic;
+                probe5 : in std_logic;
+                probe6 : in std_logic;
+                probe7 : in std_logic
+            );
+        end component;
+    begin
+        i_ila : ila_trig_4g_decoder
+            port map(
+                clk    => ttc_clk_40_i,
+                probe0 => reset_40,
+                probe1 => frame_40,
+                probe2 => fifo_unf,
+                probe3 => fifo_empty,
+                probe4 => check_errors_40,
+                probe5 => missed_comma_err,
+                probe6 => not_in_table_err,
+                probe7 => bc0_marker
+            );
+    end generate;
     
 end Behavioral;

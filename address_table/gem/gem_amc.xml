@@ -71,6 +71,10 @@
           description="Trigger count -- this trigger fires whenever there's at least one valid sbit cluster"
           fw_signal="trigger_cnt(${OH_IDX})"
           sw_monitor_warn_min_threshold="1000000"/>
+    <node id="BC0_MISALIGN_CNT" address="0x2" permission="r"
+          description="This counter is incremented whenever the BC0 marker value doesn't match between the two trigger links (GE1/1 only)"
+          fw_signal="bc0_misalign_cnt(${OH_IDX})"
+          sw_val_good="self == 0"/>
     <node id="CLUSTER_COUNT_${CS_IDX}_RATE" address="0x10" permission="r"
           description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
           fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
@@ -90,34 +94,46 @@
     <node id="LINK0_MISSED_COMMA_CNT" address="0xa1" mask="0x0000ffff" permission="r"
           description="Count of missed comma character at the expected time for link 0 (this indicates an out-of-sync condition)"
           fw_signal="missed_comma_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_MISSED_COMMA_CNT" address="0xa1" mask="0xffff0000" permission="r"
           description="Count of missed comma character at the expected time for link 1 (this indicates an out-of-sync condition)"
           fw_signal="missed_comma_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK0_OVERFLOW_CNT" address="0xa3" mask="0x0000ffff" permission="r"
           description="Count of overflow occurances in the sync FIFO for link 0"
           fw_signal="link_overflow_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
+          sw_val_warn="self &lt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_OVERFLOW_CNT" address="0xa3" mask="0xffff0000" permission="r"
           description="Count of overflow occurances in the sync FIFO for link 1"
           fw_signal="link_overflow_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
+          sw_val_warn="self &lt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK0_UNDERFLOW_CNT" address="0xa4" mask="0x0000ffff" permission="r"
           description="Count of underflow occurances in the sync FIFO for link 0"
           fw_signal="link_underflow_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
+          sw_val_warn="self &lt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_UNDERFLOW_CNT" address="0xa4" mask="0xffff0000" permission="r"
           description="Count of underflow occurances in the sync FIFO for link 1"
           fw_signal="link_underflow_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
+          sw_val_warn="self &lt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK0_NOT_IN_TABLE_CNT" address="0xa5" mask="0x0000ffff" permission="r"
           description="Count of 8b10b not_in_table errors for link 0"
           fw_signal="not_in_table_err_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_NOT_IN_TABLE_CNT" address="0xa5" mask="0xffff0000" permission="r"
           description="Count of 8b10b not_in_table errors for link 1"
           fw_signal="not_in_table_err_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
           sw_monitor_error_min_threshold="1"/>
   </node>
 

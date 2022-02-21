@@ -35,6 +35,7 @@ entity trigger_input_processor is
         -- counters
         sbit_overflow_cnt_o : out std_logic_vector(31 downto 0);
         missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
+        bc0_misalign_cnt_o  : out std_logic_vector(31 downto 0);
         link_overflow_cnt_o : out std_logic_vector(31 downto 0);
         link_underflow_cnt_o: out std_logic_vector(31 downto 0);
         not_in_table_cnt_o  : out std_logic_vector(31 downto 0);
@@ -52,6 +53,7 @@ architecture trigger_input_processor_arch of trigger_input_processor is
     signal trigger          : std_logic;
     signal cluster_cnt_strb : std_logic_vector(8 downto 0);
     signal num_valid_cls    : integer range 0 to 8;
+    signal bc0_misaligned   : std_logic := '0';
 
 begin
 
@@ -142,6 +144,25 @@ begin
             en_i      => trigger,
             count_o   => trigger_cnt_o
         );
+    
+    process(clk_i)
+    begin
+        if rising_edge(clk_i) then
+            bc0_misaligned <= link_status_i(0).bc0_marker xor link_status_i(1).bc0_marker;
+        end if;
+    end process;
+    
+    i_bc0_misalign_cnt: entity work.counter
+        generic map(
+            g_COUNTER_WIDTH  => 32,
+            g_ALLOW_ROLLOVER => FALSE
+        )
+        port map(
+            ref_clk_i => clk_i,
+            reset_i   => reset_i or reset_cnt_i,
+            en_i      => bc0_misaligned,
+            count_o   => bc0_misalign_cnt_o
+        );    
     
     g_link_status_counters:
     for i in 0 to 1 generate

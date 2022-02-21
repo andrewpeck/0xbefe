@@ -32,6 +32,7 @@ entity link_rx_trigger_ge11_3p2g is
         sbit_cluster2_o     : out t_sbit_cluster;
         sbit_cluster3_o     : out t_sbit_cluster;
         sbit_overflow_o     : out std_logic;
+        bc0_marker_o        : out std_logic;
         
         missed_comma_err_o  : out std_logic
     );
@@ -55,6 +56,7 @@ architecture Behavioral of link_rx_trigger_ge11_3p2g is
     signal reset_cntdown        : unsigned(7 downto 0) := x"ff"; -- after a reset this is count down every clock cycle and errors are counted only after this reaches 0 
     signal missed_comma_err     : std_logic := '0'; -- asserted if a comma character is not found when FSM is in COMMA state
     signal sbit_overflow        : std_logic := '0'; -- asserted when an overflow K-char is detected at the BX boundary (0xFC)
+    signal bc0_marker           : std_logic := '0';
 
     signal frame_buf            : std_logic_vector(39 downto 0);
 
@@ -98,6 +100,7 @@ begin
                 reset_cntdown <= x"ff";
                 missed_comma_err <= '0';
                 sbit_overflow <= '0';
+                bc0_marker <= '0';
             else
                 
                 if (reset_cntdown /= x"00") then
@@ -114,6 +117,11 @@ begin
                                 sbit_overflow <= '1';
                             else
                                 sbit_overflow <= '0';
+                            end if;
+                            if (rx_data_i.rxdata(7 downto 0) = BC0_FRAME_MARKER) then
+                                bc0_marker <= '1';
+                            else
+                                bc0_marker <= '0';
                             end if;
                             frame_buf(7 downto 0) <= rx_data_i.rxdata(15 downto 8);
                         elsif (reset_cntdown = x"00") then
@@ -133,6 +141,7 @@ begin
                         sbit_cluster3_o.address  <= rx_data_i.rxdata(12 downto 2);                        
                         sbit_cluster3_o.size     <= rx_data_i.rxdata(15 downto 13);                        
                         sbit_overflow_o <= sbit_overflow;
+                        bc0_marker_o <= bc0_marker;
                 end case;
             end if;
         end if;

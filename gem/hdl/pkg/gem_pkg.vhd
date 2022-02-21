@@ -96,6 +96,7 @@ package gem_pkg is
     type t_oh_clusters_arr is array(integer range <>) of t_oh_clusters;
 
     type t_sbit_link_status is record
+        bc0_marker      : std_logic;
         sbit_overflow   : std_logic;
         missed_comma    : std_logic;
         underflow       : std_logic;
