@@ -11,6 +11,7 @@ RESERVED_REFCLK1 = []
 # RESERVED_ARF6 = ["J12"]
 RESERVED_ARF6 = []
 NUM_SLR = 4
+USE_QSFPDD = True
 
 ###############################################################
 ########################## GEM / CSC ##########################
@@ -806,6 +807,177 @@ for qsfp_idx in range(30):
         qsfp_entry.append(qsfp_chan_entry)
     QSFP_TO_MGT.append(qsfp_entry)
 
+######### when using QSFP-DD optical module with UCLA cables, the map is just hard-coded using UCLA's map #########
+######### NOTE: in this case only half of the channels are available                                      #########
+if USE_QSFPDD:
+    QSFP_TO_MGT = [
+        ########## QSFP 0 ##########
+        [
+            {'mgt': 220, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
+            {'mgt': 221, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
+            {'mgt': 220, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
+            {'mgt': 220, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
+            {'mgt': 221, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
+            {'mgt': 220, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
+            {'mgt': 221, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J18'},
+            {'mgt': 220, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J18'}
+        ],
+        ########## QSFP 1 ##########
+        [
+            {'mgt': 223, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
+            {'mgt': 222, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
+            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J17'},
+            {'mgt': 223, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J17'}
+        ],
+        ########## QSFP 2 ##########
+        [
+            {'mgt': 224, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J7'}
+        ],
+        ########## QSFP 3 ##########
+        [
+            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J10'}
+        ],
+        ########## QSFP 4 ##########
+        [
+            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J14'}
+        ],
+        ########## QSFP 5 ##########
+        [
+            {'mgt': 231, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J13'}
+        ],
+        ########## QSFP 6 ##########
+        [
+            {'mgt': 232, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
+            {'mgt': 235, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J4'}
+        ],
+        ########## QSFP 7 ##########
+        [
+            {'mgt': 234, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
+            {'mgt': 234, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
+            {'mgt': 234, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
+            {'mgt': 235, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J3'},
+            {'mgt': 234, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J3'}
+        ],
+        ########## QSFP 8 ##########
+        [
+            {'mgt': 134, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
+            {'mgt': 134, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
+            {'mgt': 135, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
+            {'mgt': 135, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J5'},
+            {'mgt': 135, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J5'}
+        ],
+        ########## QSFP 9 ##########
+        [
+            {'mgt': 132, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
+            {'mgt': 132, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
+            {'mgt': 135, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J6'},
+            {'mgt': 132, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J6'}
+        ],
+        ########## QSFP 10 ##########
+        [
+            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J15'}
+        ],
+        ########## QSFP 11 ##########
+        [
+            {'mgt': 128, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J16'}
+        ],
+        ########## QSFP 12 ##########
+        [
+            {'mgt': 124, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J11'}
+        ],
+        ########## QSFP 13 ##########
+        [
+            {'mgt': 123, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
+            {'mgt': 122, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J19'}
+        ],
+        ########## QSFP 14 ##########
+        [
+            {'mgt': 120, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
+            {'mgt': 121, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
+            {'mgt': 121, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
+            {'mgt': 121, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J20'},
+            {'mgt': 120, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J20'}
+        ]
+    ]
+
 # print the cable map
 print("")
 print("============================================================")
@@ -853,7 +1025,7 @@ for qsfp_idx in range(len(QSFP_TO_MGT)):
         print_green("==> This QSFP is fully mapped to a single MGT quad")
     else:
         print_color("==> This QSFP is mapped to multiple MGT quads", Colors.YELLOW)
-exit()
+
 ###############################################################
 ############ MGT & LINK CODE GENERATIONS FUNCTIONS ############
 ###############################################################
