@@ -1,6 +1,7 @@
 #import numpy as np
 from common.utils import *
 import datetime
+from subprocess import check_output
 
 N_PHASES = 15
 N_SBIT = 8
@@ -16,19 +17,23 @@ class XML_HEADER:
 class HW_Info:
 
     def __init__(self):
-        self.KIND_OF_PART = 'GEM Opto Hybrid V3'
+        self.KIND_OF_PART = 'GE21 Opto Hybrid'
         self.OH_SERIAL_NUMBER = raw_input("What board number are you testing? ")
         self.VERSION = 3
         self.PRODUCTION_OH = True
         self.FPGA_DNA = 12310230131230
         self.SCA_SERIAL = 1141
         self.GEB_ID = 10101
-        self.FUSING_DATE = '20210606'
+        self.FUSING_DATE = '2021-06-06'
         if(raw_input("Did you fuse this board today? ")=="y"):
-            today=datetime.datetime.now()
-            self.FUSING_DATE=today.strftime("%Y%m%d")
+            #today=datetime.datetime.now()
+            #self.FUSING_DATE=today.strftime("%Y%m%d")
+            self.FUSING_DATE = check_output(['date','+%Y-%m-%d'])
+            #print("\n####\n")
+            print(self.FUSING_DATE)
+            #print("\n####\n")
         else:
-            self.FUSING_DATE=input("When was it fused (enter as YYYYMMDD eg 20210615)? ")
+            self.FUSING_DATE=input("When was it fused (enter as YYYY-MM-DD eg 2021-06-15)? ")
         self.GBT_0_SERIAL = 1123409
         self.GBT_1_SERIAL = 2530992
         self.GBT_0_FUSE_FILE = 'GBTX_GE21_OHv2_GBT_0_minimal_2020-01-17.txt'
@@ -192,8 +197,11 @@ class Test_Result:
         return self.PROMLESS_LOAD_PATH_GOOD
 
     def Validate_VTTX_Optical_Link(self, VTTX_Link_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        self.VTTX_OPTICAL_LINK_GOOD = True
+        # !!!!! Test ME !!! (Feb. 15 2022)
+        self.VTTX_OPTICAL_LINK_GOOD = VTTX_Link_Result[0]
+        if not VTTX_Link_Result[0]: # If Failed, Print Error Messages
+            for str in VTTX_Link_Result[1]:
+                print(str)
         return
 
     def Validate_ADC_Reading(self, ADC_Result):
@@ -202,33 +210,78 @@ class Test_Result:
         return self.ADC_READINGS_GOOD
 
     def Validate_VFAT_ELINK_Phase(self, ELINK, VFAT_Phase_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!  Test ME !!!! (Feb. 15 2022)
         self.VFAT_ELINK_PHASE_SCAN_GOOD = VFAT_Phase_Result
         return self.VFAT_ELINK_PHASE_SCAN_GOOD
 
     def Validate_FPGA_ELINK_Phase(self, FPGA_Phase_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!! UNUSED !!!!!!!!!!!!!!!!!!!!
         self.FPGA_ELINK_PRBS_GOOD = True
         return Best_Phases
 
-    def Validate_PRBS_BER(self, BER_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        self.FPGA_ELINK_PRBS_GOOD = True
+    def Validate_PRBS_BER(self, BER_Result, BER_acceptance_limit=10**-12):
+        # !!!!!  Test ME !!!! (Feb. 15 2022)
+        PF_Flag = True
+        for elink in BER_Result:
+            PF_Flag = (PF_Flag) and (elink.BER <= BER_acceptance_limit)
+        self.FPGA_ELINK_PRBS_GOOD = PF_Flag
         return
 
     def Validate_SBIT(self, SBIT_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.ALL_SBIT_GOOD = True
+        for vfat in SBIT_Result:
+            if (vfat.SBIT_WIDTH < 5):
+                self.ALL_SBIT_GOOD = False
         return
 
     def Validate_ALL_Tests(self):
         self.All_TEST_PASSED = ((self.CTP7_COMM_GOOD))
+        if not (self.CTP7_COMM_GOOD):
+            print(Colors.RED + 'FAIL: CTP7 COMM' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: CTP7 COMM' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.VTTX_OPTICAL_LINK_GOOD))
+        if not (self.VTTX_OPTICAL_LINK_GOOD):
+            print(Colors.RED + 'FAIL: VTTX_OPTICAL_LINK_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: VTTX_OPTICAL_LINK_GOOD' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.PROMLESS_LOAD_PATH_GOOD))
+        if not (self.PROMLESS_LOAD_PATH_GOOD):
+            print(Colors.RED + 'FAIL: PROMLESS_LOAD_PATH_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: PROMLESS_LOAD_PATH_GOOD' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.ADC_READINGS_GOOD))
+        if not (self.ADC_READINGS_GOOD):
+            print(Colors.RED + 'FAIL: ADC_READINGS_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: ADC_READINGS_GOOD' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.VFAT_ELINK_PHASE_SCAN_GOOD))
+        if not (self.VFAT_ELINK_PHASE_SCAN_GOOD):
+            print(Colors.RED + 'FAIL: VFAT_ELINK_PHASE_SCAN_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: VFAT_ELINK_PHASE_SCAN_GOOD' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.FPGA_ELINK_PRBS_GOOD))
+        if not (self.FPGA_ELINK_PRBS_GOOD):
+            print(Colors.RED + 'FAIL: FPGA_ELINK_PRBS_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: FPGA_ELINK_PRBS_GOOD' + Colors.ENDC)
+
         self.All_TEST_PASSED = (self.All_TEST_PASSED and (self.ALL_SBIT_GOOD))
+        if not (self.ALL_SBIT_GOOD):
+            print(Colors.RED + 'FAIL: ALL_SBIT_GOOD' + Colors.ENDC)
+        else:
+            print(Colors.GREEN + 'PASS: ALL_SBIT_GOOD' + Colors.ENDC)
+
+        print('------------------------------------')
+        if self.All_TEST_PASSED:
+            print(Colors.GREEN + 'ALL TESTS PASSED' + Colors.ENDC)
+        else:
+            print(Colors.RED + 'SOME TEST(S) FAILED' + Colors.ENDC)
         return self.All_TEST_PASSED
 
 class GBT_ELINK:

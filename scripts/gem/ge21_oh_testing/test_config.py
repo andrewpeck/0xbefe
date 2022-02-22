@@ -1,9 +1,11 @@
 import sys
 import os
 
-# 10^12 = 8*10^6[MegaWord] * 0.125*10^6
-BER_Acceptance_Criteria = 12500
+# number of words to check in PRBS loopback test, NOTE: UNITS ARE IN 1 MILLION WORDS
 MWRD_LIMIT = 125000
+
+# BER acceptance
+BER_Acceptance_Criteria = 10 ** -12
 
 # Number of iterations for testing OH FPGA Loading Path
 PROMless_Load_Iters = 1000
