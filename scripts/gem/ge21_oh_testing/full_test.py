@@ -34,6 +34,16 @@ test_conditions=Test_Condition()
 VERBOSE = True
 COLD_BOOT = False
 
+MWRD_LIMIT = MWRD_LIMIT_FULL
+PROMless_Load_Iters = PROMless_Load_Iters_FULL
+VTTX_testing_time = VTTX_testing_time_FULL
+
+if len(sys.argv) > 1:
+	if sys.argv[1] == "PARTIAL":
+		print("=========================== Running in partial testing mode ===========================")
+		MWRD_LIMIT = MWRD_LIMIT_REDUCED
+		PROMless_Load_Iters = PROMless_Load_Iters_REDUCED
+		VTTX_testing_time = VTTX_testing_time_REDUCED
 
 def main():
 	# Set the Serial Number based on User Input from Test_Condition Constructor

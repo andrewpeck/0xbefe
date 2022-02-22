@@ -3,20 +3,20 @@ import os
 
 ##################### FULL TEST #################################
 # number of words to check in PRBS loopback test, NOTE: UNITS ARE IN 1 MILLION WORDS
-MWRD_LIMIT = 125000
+MWRD_LIMIT_FULL = 125000
 # Number of iterations for testing OH FPGA Loading Path
-PROMless_Load_Iters = 1000
+PROMless_Load_Iters_FULL = 1000
 # VTTX link testing time: number of seconds to wait after resetting the error counters
-VTTX_testing_time = 300
+VTTX_testing_time_FULL = 300
 #################################################################
 
 ##################### REDUCED TEST #################################
 # number of words to check in PRBS loopback test, NOTE: UNITS ARE IN 1 MILLION WORDS
-# MWRD_LIMIT = 1250
+MWRD_LIMIT_REDUCED = 1250
 # Number of iterations for testing OH FPGA Loading Path
-# PROMless_Load_Iters = 100
+PROMless_Load_Iters_REDUCED = 100
 # VTTX link testing time: number of seconds to wait after resetting the error counters
-# VTTX_testing_time = 30
+VTTX_testing_time_REDUCED = 30
 #################################################################
 
 # BER acceptance
