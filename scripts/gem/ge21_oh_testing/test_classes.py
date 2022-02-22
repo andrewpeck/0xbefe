@@ -230,8 +230,9 @@ class Test_Result:
     def Validate_SBIT(self, SBIT_Result):
         self.ALL_SBIT_GOOD = True
         for vfat in SBIT_Result:
-            if (vfat.SBIT_WIDTH < 5):
-                self.ALL_SBIT_GOOD = False
+            for ibit in range(8):
+                if (vfat.SBIT_WIDTH[ibit] < 5):
+                    self.ALL_SBIT_GOOD = False
         return
 
     def Validate_ALL_Tests(self):
