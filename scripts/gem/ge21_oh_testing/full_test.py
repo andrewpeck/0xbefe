@@ -70,7 +70,7 @@ def main():
 
 	# Check VTTX Optical Link Health
 	# print_red("Skipping VTTX optical link test since OTMB receivers are not implemented in CVP13")
-	VTTX_Optical_Result = Check_VTTX_Optical_Link(VERBOSE)
+	VTTX_Optical_Result = Check_VTTX_Optical_Link(VERBOSE, VTTX_testing_time)
 	print(VTTX_Optical_Result)
 	testStatus.Validate_VTTX_Optical_Link(VTTX_Optical_Result)
 
@@ -167,13 +167,14 @@ def Check_CTP7_OH_Comm(verbose=False):
 	# Return Results of GBTx & SCA Status Checks
 	return [GBT_Results , SCA_Results]
 
-def Check_VTTX_Optical_Link(verbose=False):
+def Check_VTTX_Optical_Link(verbose=False, testing_time=300):
+	print("Testing VTTX optical link")
 
 	# Reset Trigger Module
 	Trigger_reset()
 
 	# read relevant VTTX Registers
-	sleep(300)
+	sleep(testing_time)
 	VTTX_Reading = read_vttx_optical_link(verbose)
 	# Check that VTTX readings were good
 	VTTX_Test_Result = check_vttx_optical_link_result(VTTX_Reading, verbose)
@@ -211,6 +212,7 @@ def VFAT_Phase_Scan(verbose=False):
 
 
 def PRBS_Loopback_Test(Verbose = False):
+	print("Running PRBS loopback test")
 	FPGA_ELINKS = []	# Container for Output ELINK Objects
 	# SCA Reset for Extra Safety
 	resetSca()
