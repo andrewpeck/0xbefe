@@ -24,8 +24,7 @@ def read_vttx_optical_link(verbose=False):
     Link_CNT.append(read_reg(get_node('BEFE.GEM_AMC.TRIGGER.OH0.LINK1_UNDERFLOW_CNT')))
     if verbose:
         print('VTTX Optical Link Readings First Read:')
-        print_red("NEED TO IMPLEMENT READKW!")
-        # readKW('BEFE.GEM_AMC.TRIGGER.OH0') # prints status for log file
+        readKW('BEFE.GEM_AMC.TRIGGER.OH0') # prints status for log file
 
     sleep(3)
     Delta_Link_CNT.append(read_reg(get_node('BEFE.GEM_AMC.TRIGGER.OH0.LINK0_MISSED_COMMA_CNT')) - Link_CNT[0])
@@ -36,8 +35,7 @@ def read_vttx_optical_link(verbose=False):
     Delta_Link_CNT.append(read_reg(get_node('BEFE.GEM_AMC.TRIGGER.OH0.LINK1_UNDERFLOW_CNT')) - Link_CNT[5])
     if verbose:
         print('VTTX Optical Link Readings Second Read (3s Delay):')
-        print_red("NEED TO IMPLEMENT READKW!")
-        # readKW('BEFE.GEM_AMC.TRIGGER.OH0') # prints status for log file
+        readKW('BEFE.GEM_AMC.TRIGGER.OH0') # prints status for log file
     return [Link_CNT , Delta_Link_CNT]
 
 def check_vttx_optical_link_result(VTTX_Result, verbose=False):

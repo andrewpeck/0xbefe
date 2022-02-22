@@ -125,11 +125,6 @@ def check_SCA_ASIC():
     return passFAIL
 
 def readKW(args):
-    """Read all registers containing the RegName supplied. USAGE: read <RegName>"""
-    if args is None or args == "":
-        print("No arguments given to readKW()")
-        return
-
     nodes = get_nodes_containing(args)
     if nodes is not None:
         for reg in nodes:
