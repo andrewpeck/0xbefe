@@ -31,7 +31,7 @@ OutputPath = WORKING_DIR+"/database/"
 xml_head = XML_HEADER()
 hw_info = HW_Info()
 test_conditions=Test_Condition()
-VERBOSE = True
+VERBOSE = False
 COLD_BOOT = False
 
 MWRD_LIMIT = MWRD_LIMIT_FULL
@@ -119,7 +119,7 @@ def main():
 	ELINKS = ELINKS + BER_Result
 
 	# Perform VFAT S-bits Tests
-	VFATS = sbit_phase_scan(0, 0, 11, VERBOSE, VERBOSE)
+	VFATS = sbit_phase_scan(0, 0, 11, VERBOSE, True)
 	testStatus.Validate_SBIT(VFATS)
 
 	# Do Final Check All Tests Passed
