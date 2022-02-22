@@ -416,6 +416,7 @@ def fuse(dongle, address, value):
         value_read = dongle.read_register(240)
 
         if addr_l_read == addr_l and addr_h_read == addr_h and value_read == value:
+            print_normal("Fusing data register readback for address %d is correct: addr_l readback = %s expected = %s, addr_h readback = %s expected %s, value readback = %s expected %s" % (address, hex8(addr_l_read), hex8(addr_l), hex8(addr_h_read), hex8(addr_h), hex8(value_read), hex8(value)))
             ready = True
         else:
             print_yellow("Attempt #%d to load fusing data for address %d failed: addr_l readback = %s expected = %s, addr_h readback = %s expected %s, value readback = %s expected %s" % (attempt_cnt, address, hex8(addr_l_read), hex8(addr_l), hex8(addr_h_read), hex8(addr_h), hex8(value_read), hex8(value)))
