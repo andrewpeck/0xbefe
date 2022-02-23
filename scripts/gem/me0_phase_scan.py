@@ -235,7 +235,7 @@ def find_phase_center(err_list):
     ngood_center = 0
 
     # Removing phase 15 from the calculation
-    err_list_temp = err_list
+    err_list_temp = err_list.copy()
     err_list_temp.pop()
 
     # duplicate the err_list to handle the wraparound

@@ -295,12 +295,12 @@ def find_phase_center(err_list):
     ngood_center = 0
 
     # Removing phase 15 from the calculation
-    err_list_doubled = err_list_temp + err_list_temp
-    phase_max = len(err_list_temp)-1
+    err_list_temp = err_list.copy()
+    err_list_temp.pop()
 
     # duplicate the err_list to handle the wraparound
-    err_list_doubled = err_list + err_list
-    phase_max = len(err_list)-1
+    err_list_doubled = err_list_temp + err_list_temp
+    phase_max = len(err_list_temp)-1
 
     for phase in range(0,len(err_list_doubled)):
         if (err_list_doubled[phase] == 0):
