@@ -262,7 +262,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         widths  = 8*[0]
         for elink in range(0,8):
             centers[elink], widths[elink] = find_phase_center(errs[vfat][elink])
-            if centers[elink] == 7 and widths[elink]==15:
+            if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
                 if elink!=0:
                     centers[elink] = centers[elink-1]
 
