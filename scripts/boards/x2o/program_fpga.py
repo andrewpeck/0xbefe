@@ -50,7 +50,6 @@ else:
     print("VU13P FPGA detected")
 
 ######## configure clocks ########
-heading("Configuring %s clock synthesizer" % top_bot)
 subheading("Configuring sync clocks with 160.32MHz...")
 m.load_clock_file(sync_clock_config)
 
