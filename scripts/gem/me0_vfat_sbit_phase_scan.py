@@ -266,8 +266,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                 if elink!=0:
                     centers[elink] = centers[elink-1]
 
-
-
         print ("\nVFAT %02d :" %(vfat))
         file_out_data.write("\nVFAT %02d :\n" %(vfat))
         for elink in range(0,8):
@@ -320,7 +318,8 @@ def find_phase_center(err_list):
     ngood_center = 0
 
     # Removing phase 15 from the calculation
-    err_list.pop()
+    err_list_doubled = err_list_temp + err_list_temp
+    phase_max = len(err_list_temp)-1
 
     # duplicate the err_list to handle the wraparound
     err_list_doubled = err_list + err_list
