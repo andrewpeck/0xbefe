@@ -49,13 +49,9 @@ CONFIG_RWREG_APEX = [
 
 CONFIG_RWREG_X2O = [
     {
-        'DEVICE': 'FPGA0',  # for APEX set this to either FPGA0 or FPGA1
+        'DEVICE': 'FPGA1',  # for KU15P set this to either FPGA0 or FPGA1, for VU13P should use FPGA1
         'BASE_ADDR': 0
     },
-    {
-        'DEVICE': 'FPGA1',  # for APEX set this to either FPGA0 or FPGA1
-        'BASE_ADDR': 0
-    }
 ]
 
 CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX, "x2o": CONFIG_RWREG_X2O}
@@ -82,6 +78,14 @@ CONFIG_APEX_GE11_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_ge11.bit"
 CONFIG_APEX_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_ge21.bit"
 CONFIG_APEX_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_me0.bit"
 CONFIG_APEX_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_csc.bit"
+
+# X2O specific
+CONFIG_X2O_GE11_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_ge11.bit"
+CONFIG_X2O_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_ge21.bit"
+CONFIG_X2O_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_me0.bit"
+CONFIG_X2O_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_csc.bit"
+
+CONFIG_X2O_SYNC_CLOCK_CONFIG = BEFE_SCRIPTS_DIR + "/resources/x2o_sync_clock_config.txt"
 
 # =================================================================================================
 #            GE1/1 configuration

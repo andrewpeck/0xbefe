@@ -6,79 +6,66 @@ import signal
 import subprocess
 import time
 from os import path
+from board.manager import *
 
 ######## gather the config params ########
 board_type = os.environ.get('BOARD_TYPE')
-if board_type.lower() != "apex":
+if board_type.lower() != "x2o":
     print("BOARD_TYPE is not set to apex: please source the env.sh script with correct parameters. Exiting...")
     exit(1)
 
 flavor = os.environ.get('BEFE_FLAVOR')
 fpga_idx = int(os.environ.get('BOARD_IDX'))
-top_bot = "top" if fpga_idx == 0 else "bot" if fpga_idx == 1 else "UNKNOWN"
-x2o_sw_dir = get_config("CONFIG_X2O_SW_DIR")
 bitfile = None
 if flavor.lower() == "ge11":
-    bitfile = get_config("CONFIG_APEX_GE11_BITFILE")
+    bitfile = get_config("CONFIG_X2O_GE11_BITFILE")
 elif flavor.lower() == "ge21":
-    bitfile = get_config("CONFIG_APEX_GE21_BITFILE")
+    bitfile = get_config("CONFIG_X2O_GE21_BITFILE")
 elif flavor.lower() == "me0":
-    bitfile = get_config("CONFIG_APEX_ME0_BITFILE")
+    bitfile = get_config("CONFIG_X2O_ME0_BITFILE")
 elif flavor.lower() == "csc":
-    bitfile = get_config("CONFIG_APEX_CSC_BITFILE")
+    bitfile = get_config("CONFIG_X2O_CSC_BITFILE")
 
 if not path.exists(bitfile):
-    print_red("Could not find the bitfile: %s" % bitfile)
+    print_red("ERROR: Could not find the bitfile: %s" % bitfile)
     exit()
 
-######## check if XVC is already running, and if so, ask the user to kill it ########
-#
-# pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
-# xvc_pids = []
-# xvc_cmds = []
-#
-# for pid in pids:
-#     try:
-#         cmdfile = open(os.path.join('/proc', pid, 'cmdline'), 'r')
-#         cmd = cmdfile.read()
-#         cmdfile.close()
-#         if "xvc" in cmd:
-#             xvc_pids.append(pid)
-#             xvc_cmds.append(cmd)
-#     except IOError: # proc has already terminated
-#         continue
+sync_clock_config = get_config("CONFIG_X2O_SYNC_CLOCK_CONFIG")
+if not path.exists(sync_clock_config):
+    print_red("ERROR: Could not find the sync clock config file: %s" % sync_clock_config)
+    exit()
+
+
+######## create the board manager, and check if we can detect the FPGA, and power up if needed ########
+m=manager()
+fpgas = m.detect_fpgas()
+if not ("Xilinx VU13P" in fpgas):
+    print("Powering up...")
+    m.power_up()
+fpgas = m.detect_fpgas()
+if not ("Xilinx VU13P" in fpgas):
+    print_red("ERROR: could not detect VU13P FPGA")
+    exit()
+else:
+    print("VU13P FPGA detected")
 
 ######## configure clocks ########
-heading("Configuring %s clock synthesizers" % top_bot)
+heading("Configuring %s clock synthesizer" % top_bot)
 subheading("Configuring sync clocks with 160.32MHz...")
-cmd = "cd %s/clock/clock_sync && %s/clock/clock_sync/clock_sync_160M_noref %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
-print(cmd)
-sync_clk_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-while sync_clk_proc.poll() is None:
-    time.sleep(0.1)
-
-subheading("Configuring async clocks with 156.25MHz on GTYs and 250MHz on GTHs...")
-cmd = "cd %s/clock/clock_async && %s/clock/clock_async/clock_async_Y156_H250 %s/clock/clock_async/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
-print(cmd)
-async_clk_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-while async_clk_proc.poll() is None:
-    time.sleep(0.1)
+m.load_clock_file(sync_clock_config)
 
 ######## program FPGA ########
-heading("Programming %s FPGA with %s firmware" % (top_bot, flavor))
-cmd = "cd %s && %s/fw_program_%s.sh %s" % (x2o_sw_dir, x2o_sw_dir, top_bot, bitfile)
-print(cmd)
-program_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-while program_proc.poll() is None:
-    time.sleep(1)
+heading("Programming VU13P FPGA with %s firmware" % flavor)
+m.load_firmware_vup(bitfile)
 
 ######## reset C2C ########
 heading("Resetting C2C")
-cmd = "cd %s && %s/c2c_reset_%s.sh" % (x2o_sw_dir, x2o_sw_dir, top_bot)
-print(cmd)
-c2c_reset_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-while c2c_reset_proc.poll() is None:
-    time.sleep(0.1)
+c2c_up = m.reset_c2c_bridge()
+if c2c_up:
+    print_green("C2C is up!")
+else:
+    print_red("C2C is down...")
+
 time.sleep(0.5)
 
 ######## check reg access ########
