@@ -47,7 +47,7 @@ if not ("Xilinx VU13P" in fpgas):
     print_red("ERROR: could not detect VU13P FPGA")
     exit()
 else:
-    print("VU13P FPGA detected")
+    print_green("VU13P FPGA detected")
 
 ######## configure clocks ########
 subheading("Configuring sync clocks with 160.32MHz...")
