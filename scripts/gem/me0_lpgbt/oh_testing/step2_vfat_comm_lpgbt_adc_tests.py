@@ -161,7 +161,7 @@ if __name__ == "__main__":
     logfile = open(filename, "a")
     time.sleep(5)
     
-    print (Colors.BLUE + "Running ADC Calibration Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nRunning ADC Calibration Scan\n" + Colors.ENDC)
     logfile.write("Running ADC Calibration Scan\n\n")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 0")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 1")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         os.system("cp %s %s/adc_calib_slot2_sub.pdf"%(latest_file, dataDir))
     time.sleep(5)
     
-    print (Colors.BLUE + "Running RSSI Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
     logfile.write("Running RSSI Scan\n\n")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 1 -v 2.56 -m 5")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 3 -v 2.56 -m 5")
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         os.system("cp %s %s/rssi_slot2.pdf"%(latest_file, dataDir))
     time.sleep(5)
     
-    print (Colors.BLUE + "Running GEB Current and Temperature Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running GEB Current and Temperature Scan\n\n")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 0 -m 5")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 2 -m 5")
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         os.system("cp %s %s/rt_voltage_slot2.pdf"%(latest_file, dataDir))
     time.sleep(5)
     
-    print (Colors.BLUE + "Running OH Temperature Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nRunning OH Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running OH Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t OH -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t OH -m 5")
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         os.system("cp %s %s/oh_temp_slot2.pdf"%(latest_file, dataDir))
     time.sleep(5)
     
-    print (Colors.BLUE + "Running VTRx+ Temperature Scan\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan\n" + Colors.ENDC)
     logfile.write("Running VTRx+ Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t VTRX -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t VTRX -m 5")
@@ -249,7 +249,7 @@ if __name__ == "__main__":
         os.system("cp %s %s/vtrx+_temp_slot2.pdf"%(latest_file, dataDir))
     time.sleep(5)
     
-    print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
+    print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
     logfile.close()
     os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 0 >> %s"%filename)    
