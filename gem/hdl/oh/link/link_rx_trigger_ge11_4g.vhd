@@ -353,7 +353,7 @@ begin
     process(ttc_clk_40_i)
     begin
         if rising_edge(ttc_clk_40_i) then
-            if reset_40 = '0' or fifo_valid = '0' then
+            if reset_40 = '1' or fifo_valid = '0' then
                 sbit_cluster0 <= NULL_SBIT_CLUSTER;
                 sbit_cluster1 <= NULL_SBIT_CLUSTER;
                 sbit_cluster2 <= NULL_SBIT_CLUSTER;
@@ -365,8 +365,8 @@ begin
                 sbit_cluster1.size    <= frame_40(35 downto 33);
                 sbit_cluster2.address <= frame_40(46 downto 36);
                 sbit_cluster2.size    <= frame_40(49 downto 47);
-                sbit_cluster2.address <= frame_40(60 downto 50);
-                sbit_cluster2.size    <= frame_40(63 downto 61);                
+                sbit_cluster3.address <= frame_40(60 downto 50);
+                sbit_cluster3.size    <= frame_40(63 downto 61);                
             end if;
         end if;
     end process;

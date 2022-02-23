@@ -62,10 +62,10 @@ begin
 
     g_valid_clusters:
     for i in 0 to 7 generate
-        g_ge11 : if g_GEM_STATION = 2 generate
+        g_ge21 : if g_GEM_STATION = 2 generate
             valid_clusters(i) <= '0' when sbit_clusters_i(i).address(8 downto 0) = "111111111" else '1';
         end generate;   
-        g_ge21 : if g_GEM_STATION /= 2 generate
+        g_ge11 : if g_GEM_STATION /= 2 generate
             valid_clusters(i) <= '0' when sbit_clusters_i(i).address(7 downto 0) = x"ff" else '1';
         end generate;   
     end generate;
