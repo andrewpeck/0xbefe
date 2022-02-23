@@ -28,7 +28,8 @@ class HW_Info:
         if(raw_input("Did you fuse this board today? ")=="y"):
             #today=datetime.datetime.now()
             #self.FUSING_DATE=today.strftime("%Y%m%d")
-            self.FUSING_DATE = check_output(['date','+%Y-%m-%d'])
+            self.FUSING_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
+            # self.FUSING_DATE = check_output(['date','+%Y-%m-%d'])
             #print("\n####\n")
             print(self.FUSING_DATE)
             #print("\n####\n")

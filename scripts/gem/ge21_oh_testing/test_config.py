@@ -1,6 +1,8 @@
 import sys
 import os
 
+TEST_STAND_LOCATION = "TAMU-CVP13"
+
 ##################### FULL TEST #################################
 # number of words to check in PRBS loopback test, NOTE: UNITS ARE IN 1 MILLION WORDS
 MWRD_LIMIT_FULL = 125000

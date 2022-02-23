@@ -31,6 +31,7 @@ OutputPath = WORKING_DIR+"/database/"
 xml_head = XML_HEADER()
 hw_info = HW_Info()
 test_conditions=Test_Condition()
+test_conditions.LOCATION = TEST_STAND_LOCATION
 VERBOSE = False
 COLD_BOOT = False
 
