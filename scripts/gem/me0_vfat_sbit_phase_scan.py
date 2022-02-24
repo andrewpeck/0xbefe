@@ -329,7 +329,7 @@ def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
     for elink in range(0, 8):
         center, width = find_phase_center(err_list_elink[elink])
         if width >= 5:
-            aligned_phases_center[elink] = center
+            aligned_phases_center[vfat][elink] = center
 
 def find_phase_center(err_list):
     # find the centers
