@@ -339,7 +339,8 @@ def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
 
         good_phases[elink] = [phase for phase in range(max_pos, max_pos + max_len)]
 
-    print (good_phases)
+        print (good_phases[elink])
+        print ("")
 
 
 def find_phase_center(err_list):
