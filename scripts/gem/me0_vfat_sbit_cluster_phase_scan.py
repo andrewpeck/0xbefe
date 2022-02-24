@@ -231,7 +231,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         configureVfat(0, vfat, oh_select, 0)
         sleep(0.1)
 
-    aligned_phases_center = [[0 for elink in range(8)] for vfat in range(24)]
+    aligned_phases_center = [[-9999 for elink in range(8)] for vfat in range(24)]
     for vfat in vfat_list:
          find_aligned_phase_center(vfat, errs[vfat], aligned_phases_center)
 
@@ -246,7 +246,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
             if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
                 if elink!=0:
                     centers[elink] = centers[elink-1]
-            if align_phases:
+            if align_phases and aligned_phases_center[vfat][elink] != -9999:
                 centers[elink] = aligned_phases_center[vfat][elink]
 
         print ("\nVFAT %02d :" %(vfat))

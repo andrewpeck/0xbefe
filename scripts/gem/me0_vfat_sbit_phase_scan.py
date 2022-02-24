@@ -254,7 +254,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         configureVfat(0, vfat, oh_select, 0)
         sleep(0.1)
 
-    aligned_phases_center = [[0 for elink in range(8)] for vfat in range(24)]
+    aligned_phases_center = [[-9999 for elink in range(8)] for vfat in range(24)]
     for vfat in vfat_list:
          find_aligned_phase_center(vfat, errs[vfat], aligned_phases_center)
 
@@ -269,7 +269,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
             if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
                 if elink!=0:
                     centers[elink] = centers[elink-1]
-            if align_phases:
+            if align_phases and aligned_phases_center[vfat][elink] != -9999:
                 centers[elink] = aligned_phases_center[vfat][elink]
 
         print ("\nVFAT %02d :" %(vfat))
@@ -317,34 +317,19 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
 
 def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
-    good_phases = {}
-    for elink in range(0,8):
-        err_list_temp = err_list[elink].copy()
-        err_list_temp.pop()
-        err_list_doubled = err_list_temp + err_list_temp
-        size = 0
-        pos = 0
-        max_size = 0
-        max_pos = 0
-        for phase in range(0, len(err_list_doubled)):
-            if err_list_doubled[phase] == 0:
-                if size == 0:
-                    pos = phase
-                size += 1
-            else:
-                if size > max_size:
-                    max_pos = pos
-                    max_size = size
-                size = 0
-        if max_size == 0:
-            max_pos = pos
-            max_size = size
-
-        good_phases[elink] = [phase for phase in range(max_pos, max_pos + max_size)]
-
-        print (elink, good_phases[elink])
-        print ("")
-
+    err_list_elink = {}
+    for elink in range(0, 8):
+        err_list_elink[elink] = err_list[elink].copy()
+        err_list_elink[elink].pop()
+    for elink in range(0, 8):
+        for phase in range(0, len(err_list_elink[elink])):
+            if err_list_elink[elink][phase] != 0:
+                for elink_2 in range(0, 8):
+                    err_list_elink[elink2][phase] = err_list_elink[elink][phase]
+    for elink in range(0, 8):
+        center, width = find_phase_center(err_list_elink[elink])
+        if width >= 5:
+            aligned_phases_center[elink] = center
 
 def find_phase_center(err_list):
     # find the centers
