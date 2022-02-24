@@ -243,17 +243,19 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         widths  = 8*[0]
         for elink in range(0,8):
             centers[elink], widths[elink] = find_phase_center(errs[vfat][elink])
-            if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
-                if elink!=0:
-                    centers[elink] = centers[elink-1]
-            if align_phases and aligned_phases_center[vfat][elink] != -9999:
+            if not align_phases:
+                if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
+                    if elink!=0:
+                        centers[elink] = centers[elink-1]
+            else:
                 new_center = aligned_phases_center[vfat][elink]
-                if centers[elink] > new_center:
-                    centers[elink] = new_center + 1
-                elif centers[elink] < new_center:
-                    centers[elink] = new_center - 1
-                else:
-                    centers[elink] = new_center
+                if new_center != -9999:
+                    if centers[elink] > new_center:
+                        centers[elink] = new_center + 1
+                    elif centers[elink] < new_center:
+                        centers[elink] = new_center - 1
+                    else:
+                        centers[elink] = new_center
 
         print ("\nVFAT %02d :" %(vfat))
         file_out_data.write("\nVFAT %02d :\n" %(vfat))
