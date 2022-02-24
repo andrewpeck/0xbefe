@@ -28,7 +28,7 @@ def getConfig (filename):
     return reg_map
 
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, bestphase_list):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
     if bestphase_list!={}:
@@ -231,6 +231,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         configureVfat(0, vfat, oh_select, 0)
         sleep(0.1)
 
+    aligned_phases_center = [[0 for elink in range(8)] for vfat in range(24)]
+    for vfat in vfat_list:
+         find_aligned_phase_center(vfat, errs[vfat], aligned_phases_center)
+
     bestphase_vfat_elink = [[0 for elink in range(8)] for vfat in range(24)]
     print ("\nPhase Scan Results:")
     file_out_data.write("\nPhase Scan Results:\n")
@@ -242,6 +246,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
                 if elink!=0:
                     centers[elink] = centers[elink-1]
+            if align_phases:
+                centers[elink] = aligned_phases_center[vfat][elink]
 
         print ("\nVFAT %02d :" %(vfat))
         file_out_data.write("\nVFAT %02d :\n" %(vfat))
@@ -378,6 +384,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", default = "1000", help="nl1a = fixed number of L1A cycles")
     parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
+    parser.add_argument("-a", "--align_phases", action="store_true", dest="align_phases", help="align_phases = whether to align phases of all elinks")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
@@ -480,7 +487,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, bestphase_list)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
