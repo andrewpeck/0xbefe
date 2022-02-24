@@ -319,7 +319,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
     good_phases = {}
     for elink in range(0,8):
-        err_list_temp = err_list[elink].pop()
+        err_list_temp = err_list[elink].copy()
+        err_list_temp.pop()
         err_list_doubled = err_list_temp + err_list_temp
         good_phases[elink] = []
         len = 0
