@@ -247,7 +247,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 if elink!=0:
                     centers[elink] = centers[elink-1]
             if align_phases and aligned_phases_center[vfat][elink] != -9999:
-                centers[elink] = aligned_phases_center[vfat][elink]
+                new_center = aligned_phases_center[vfat][elink]
+                if centers[elink] > new_center:
+                    centers[elink] = new_center + 1
+                if centers[elink] < new_center:
+                    centers[elink] = new_center - 1
+                else:
+                    centers[elink] = new_center
 
         print ("\nVFAT %02d :" %(vfat))
         file_out_data.write("\nVFAT %02d :\n" %(vfat))
@@ -292,6 +298,21 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     print ("\nS-bit phase scan done\n")
 
+
+def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
+    err_list_elink = {}
+    for elink in range(0, 8):
+        err_list_elink[elink] = err_list[elink].copy()
+        err_list_elink[elink].pop()
+    for elink in range(0, 8):
+        for phase in range(0, len(err_list_elink[elink])):
+            if err_list_elink[elink][phase] != 0:
+                for elink2 in range(0, 8):
+                    err_list_elink[elink2][phase] = err_list_elink[elink][phase]
+    for elink in range(0, 8):
+        center, width = find_phase_center(err_list_elink[elink])
+        if width >= 5:
+            aligned_phases_center[vfat][elink] = center
 
 def find_phase_center(err_list):
     # find the centers
