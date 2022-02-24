@@ -276,7 +276,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                     if centers[elink] > new_center:
                         centers[elink] = new_center + 1
                     elif centers[elink] < new_center:
-                        centers[elink] = new_center - 1
+                        if new_center != 0:
+                            centers[elink] = new_center - 1
+                        else:
+                            centers[elink] = new_center
                     else:
                         centers[elink] = new_center
 
