@@ -292,7 +292,7 @@
     <node id="ENABLE" address="0x1" mask="0x00000001" permission="rw"
           description="Enable TTC generator module. Note that all real TTC commands are suppressed when the generator module is enabled"
           fw_signal="gen_enable" fw_default="0b0"
-           sw_units="bool"/>
+          sw_units="bool"/>
     <node id="ENABLE_CALPULSE_ONLY" address="0x1" mask="0x00000004" permission="rw"
           description="Enable TTC generator calpulse signal only. Having ENABLE = 0 and ENABLE_CALPULSE_ONLY = 1 will result in using all TTC commands from AMC13 except calpulse, which will be taken from the generator. This is a debugging feature used for synthetic tests which can emulate data coming from the VFATs. If the ENABLE is set to 1, then this register is ignored, and all TTC commands will be taken from the generator."
           fw_signal="gen_enable_cal_only" fw_default="0b0"
