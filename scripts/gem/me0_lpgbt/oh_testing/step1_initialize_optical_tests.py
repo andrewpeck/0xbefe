@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
     print (Colors.BLUE + "Running S-bit Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l")
+    os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
