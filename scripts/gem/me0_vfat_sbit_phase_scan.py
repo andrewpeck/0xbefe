@@ -323,22 +323,22 @@ def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
         err_list_temp.pop()
         err_list_doubled = err_list_temp + err_list_temp
         good_phases[elink] = []
-        len = 0
+        size = 0
         pos = 0
-        max_len = 0
+        max_size = 0
         max_pos = 0
         for phase in range(0, len(err_list_doubled)):
             if err_list_doubled[phase] == 0:
-                if len == 0:
+                if size == 0:
                     pos = phase
-                len += 1
+                size += 1
             else:
-                if len > max_len:
+                if size > max_size:
                     max_pos = pos
-                    max_len = len
-                len = 0
+                    max_size = size
+                size = 0
 
-        good_phases[elink] = [phase for phase in range(max_pos, max_pos + max_len)]
+        good_phases[elink] = [phase for phase in range(max_pos, max_pos + max_size)]
 
         print (good_phases[elink])
         print ("")
