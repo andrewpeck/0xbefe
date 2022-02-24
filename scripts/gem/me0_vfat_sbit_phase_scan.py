@@ -324,7 +324,7 @@ def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
     for elink in range(0, 8):
         for phase in range(0, len(err_list_elink[elink])):
             if err_list_elink[elink][phase] != 0:
-                for elink_2 in range(0, 8):
+                for elink2 in range(0, 8):
                     err_list_elink[elink2][phase] = err_list_elink[elink][phase]
     for elink in range(0, 8):
         center, width = find_phase_center(err_list_elink[elink])
