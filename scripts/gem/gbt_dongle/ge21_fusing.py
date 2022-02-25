@@ -590,13 +590,18 @@ if __name__ == '__main__':
 
     print("")
     print_yellow("As the last step, please check that the GBT is ready on the backend using reg_interface.py:")
-    print_yellow("    1) write BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET 1")
-    print_yellow("    2) wait 10s")
-    print_yellow("    3) read BEFE.GEM_AMC.OH_LINKS.OH0.GBT%d_READY" % gbt_id)
+    for backend in ["CTP7", "CVP13"]:
+        befe_str = "BEFE." if backend == "CVP13" else ""
+        print_color("==================== Instructions for %s ====================" % backend, Colors.CYAN)
+        print_yellow("    1) write %sGEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET 1" % befe_str)
+        print_yellow("    2) wait 10s")
+        print_yellow("    3) read %sGEM_AMC.OH_LINKS.OH0.GBT%d_READY" % (befe_str, gbt_id))
+        print_yellow("    4) read %sGEM_AMC.OH_LINKS.OH0.GBT%d_WAS_NOT_READY" % (befe_str, gbt_id))
+
+    print("")
     print_yellow("Please enter the GBT READY value you read: ")
     gbt_ready_str = raw_input("")
     gbt_ready = parse_int(gbt_ready_str)
-    print_yellow("    4) read BEFE.GEM_AMC.OH_LINKS.OH0.GBT%d_WAS_NOT_READY" % gbt_id)
     print_yellow("Please enter the GBT WAS NOT READY value you read: ")
     gbt_was_not_ready_str = raw_input("")
     gbt_was_not_ready = parse_int(gbt_was_not_ready_str)
