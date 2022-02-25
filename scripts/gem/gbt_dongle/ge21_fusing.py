@@ -21,7 +21,7 @@ import datetime
 # LOG everything!
 
 ######################### USER DEFINED CONSTANTS #########################
-DRY_RUN = True # if this is set to true, the script will not fuse the chip, and also the tests will not terminate if they encounter an error
+DRY_RUN = False # if this is set to true, the script will not fuse the chip, and also the tests will not terminate if they encounter an error
 CONFIG_FILES = ["../../resources/ge21_gbt0_config.txt", "../../resources/ge21_gbt1_config.txt"] # config file paths for GBT0 and GBT1
 FUSING_TEST = False # setting this to true will only fuse the lowest bit of the serial number
 ###########################################################################
