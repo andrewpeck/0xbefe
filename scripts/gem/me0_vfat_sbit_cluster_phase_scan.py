@@ -251,10 +251,29 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 new_center = aligned_phases_center[vfat][elink]
                 if new_center != -9999:
                     if centers[elink] > new_center:
-                        centers[elink] = new_center + 1
+                        if new_center != 14:
+                            bad_phase = -9999
+                            for p in range(new_center, centers[elink]+1):
+                                if errs[vfat][elink][p] != 0:
+                                    bad_phase = p
+                                    break
+                            if bad_phase != -9999:
+                                centers[elink] = new_center + 1
+                            else:
+                                centers[elink] = new_center
+                        else:
+                            centers[elink] = new_center
                     elif centers[elink] < new_center:
                         if new_center != 0:
-                            centers[elink] = new_center - 1
+                            bad_phase = -9999
+                            for p in range(centers[elink], new_center+1):
+                                if errs[vfat][elink][p] != 0:
+                                    bad_phase = p
+                                    break
+                            if bad_phase != -9999:
+                                centers[elink] = new_center - 1
+                            else:
+                                centers[elink] = new_center
                         else:
                             centers[elink] = new_center
                     else:
