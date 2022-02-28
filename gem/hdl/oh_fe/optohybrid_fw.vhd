@@ -49,6 +49,11 @@ entity optohybrid_fw is
     CON_VER : std_logic_vector (31 downto 0) := x"00000000";
     CON_SHA : std_logic_vector (31 downto 0) := x"00000000";
 
+    -- ignored generic for GE11, needed since planAhead crashes if
+    -- non-existent generics are set
+    NULL_VER : std_logic_vector (31 downto 0) := x"00000000";
+    NULL_SHA : std_logic_vector (31 downto 0) := x"00000000";
+
     FLAVOUR : integer := 0
     );
   port(

@@ -1,11 +1,8 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: 'Hog2021.1'
+      ref: '332e771b'
 
-    - local: '/Top/csc_apex/gitlab-ci.yml'
-    - local: '/Top/csc_cvp13/gitlab-ci.yml'
-    - local: '/Top/ge11_ctp7/gitlab-ci.yml'
     - local: '/Top/ge21_apex/gitlab-ci.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci.yml'
     - local: '/Top/ge21_cvp13/gitlab-ci.yml'
@@ -13,6 +10,9 @@ include:
     - local: '/Top/me0_cvp13/gitlab-ci.yml'
     - local: '/Top/oh_ge11/gitlab-ci.yml'
     - local: '/Top/oh_ge21.200/gitlab-ci.yml'
+    - local: '/Top/csc_apex/gitlab-ci.yml'
+    - local: '/Top/csc_cvp13/gitlab-ci.yml'
+    - local: '/Top/ge11_ctp7/gitlab-ci.yml'
 
     # intermediate (devel) builds
     # - local: '/Top/csc_apex/gitlab-ci-devel.yml'

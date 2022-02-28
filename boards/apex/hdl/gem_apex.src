@@ -1,7 +1,6 @@
 # -*- mode: TCL;-*-
 
-boards/apex/hdl/gem_apex.vhd
+boards/apex/hdl/gem_apex.vhd top=gem_apex
 boards/apex/hdl/system/clk_bufs.vhd
 boards/apex/hdl/pkg/gem_board_config_pkg.vhd
 boards/apex/hdl/pkg/ipb_sys_addr_decode.vhd
-
