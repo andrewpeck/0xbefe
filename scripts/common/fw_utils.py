@@ -85,6 +85,26 @@ class Mgt:
             write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRE_CURSOR" % self.idx, tx_pre_cursor)
             write_reg("BEFE.MGTS.MGT%d.CTRL.TX_POST_CURSOR" % self.idx, tx_post_cursor)
 
+    def set_prbs_mode(self, mode):
+        write_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name), mode)
+
+    def get_prbs_mode(self):
+        return read_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name))
+
+    def reset_prbs_err_cnt(self):
+        if self.txrx == MgtTxRx.RX:
+            write_reg("BEFE.MGTS.MGT%d.CTRL.RX_PRBS_CNT_RESET" % self.idx, 1)
+
+    def force_prbs_err(self):
+        if self.txrx == MgtTxRx.TX:
+            write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_FORCE_ERR" % self.idx, 1)
+
+    def get_prbs_err_cnt(self):
+        if self.txrx == MgtTxRx.RX:
+            return read_reg("BEFE.MGTS.MGT%d.STATUS.PRBS_ERROR_CNT" % self.idx)
+        else:
+            return None
+
     def reset(self, include_pll_reset=False):
         if include_pll_reset:
             self.pll.reset()
@@ -139,6 +159,35 @@ class Link:
             return self.tx_mgt
         elif txrx == MgtTxRx.RX:
             return self.rx_mgt
+        else:
+            return None
+
+    def set_prbs_mode(self, txrx, mode):
+        mgt = self.get_mgt(txrx)
+        if mgt is not None:
+            mgt.set_prbs_mode(mode)
+
+    def get_prbs_mode(self, txrx):
+        mgt = self.get_mgt(txrx)
+        if mgt is not None:
+            return mgt.get_prbs_mode()
+        else:
+            return None
+
+    def reset_prbs_err_cnt(self):
+        mgt = self.get_mgt(MgtTxRx.RX)
+        if mgt is not None:
+            mgt.reset_prbs_err_cnt()
+
+    def force_prbs_err(self):
+        mgt = self.get_mgt(MgtTxRx.TX)
+        if mgt is not None:
+            mgt.force_prbs_err()
+
+    def get_prbs_err_cnt(self):
+        mgt = self.get_mgt(MgtTxRx.RX)
+        if mgt is not None:
+            return mgt.get_prbs_err_cnt()
         else:
             return None
 

@@ -320,6 +320,27 @@ begin
     slink_mgt_ref_clk <= refclk0(24);
 
     --================================--
+    -- PROMless
+    --================================--
+
+    i_promless : entity work.promless
+        generic map(
+            g_NUM_CHANNELS => CFG_NUM_SLRS,
+            g_MAX_SIZE_BYTES   => 8_388_608,
+            g_MEMORY_PRIMITIVE => "ultra",
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+        )
+        port map(
+            reset_i         => '0',
+            to_promless_i   => to_promless,
+            from_promless_o => from_promless,
+            ipb_reset_i     => ipb_reset,
+            ipb_clk_i       => ipb_clk,
+            ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
+            ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
+        );
+        
+    --================================--
     -- Board System registers
     --================================--
 
@@ -372,6 +393,15 @@ begin
         signal csc_dmb_rx_data_arr      : t_mgt_16b_rx_data_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
         signal csc_dmb_rx_status_arr    : t_mgt_status_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
         
+        -- GBT links
+        signal csc_gbt_rx_data_arr   : t_std40_array(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_tx_data_arr   : t_std40_array(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_rx_clk_arr    : std_logic_vector(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_tx_clk_arr    : std_logic_vector(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+    
+        signal csc_gbt_ctrl_arr      : t_mgt_ctrl_arr(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        signal csc_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
+        
         -- Spy readout link
         signal csc_spy_usrclk           : std_logic;
         signal csc_spy_rx_data          : t_mgt_16b_rx_data;
@@ -384,6 +414,7 @@ begin
             generic map(
                 g_SLR               => slr,
                 g_NUM_OF_DMBs       => CFG_NUM_DMBS(slr),
+                g_NUM_GBT_LINKS     => CFG_NUM_GBT_LINKS(slr),
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQLINK_CLK_FREQ  => 100_000_000,
@@ -408,6 +439,16 @@ begin
                 csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
                 csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
                 csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+    
+                -- GBT links
+                gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
+                gbt_tx_data_arr_o       => csc_gbt_tx_data_arr,
+                gbt_rx_clk_arr_i        => csc_gbt_rx_clk_arr,
+                gbt_tx_clk_arr_i        => csc_gbt_tx_clk_arr,
+                gbt_rx_common_clk_i     => mgt_master_rxusrclk.gbt,
+
+                gbt_status_arr_i        => csc_gbt_status_arr,
+                gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
                 csc_spy_usrclk_i        => csc_spy_usrclk,
@@ -435,7 +476,7 @@ begin
                 from_promless_i         => from_promless(slr)          
             );
 
-        -- CSC link mapping (for now only single link DMBs are supported)
+        -- DMB link mapping (for now only single link DMBs are supported)
         g_csc_dmb_links : for i in 0 to CFG_NUM_DMBS(slr) - 1 generate
             csc_dmb_rx_usrclk_arr(i)               <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
             csc_dmb_rx_data_arr(i).rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxdata(15 downto 0);
@@ -450,6 +491,20 @@ begin
             
             -- send some dummy data on the TX of the same fiber
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= (txdata => x"00000000000050bc", txcharisk => x"01", txchardispmode => x"00", txchardispval => x"00");
+        end generate; 
+
+        g_csc_gbt_links : for gbt in 0 to CFG_NUM_GBT_LINKS(slr) - 1 generate
+            csc_gbt_rx_data_arr(gbt) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxdata(39 downto 0);
+            csc_gbt_rx_clk_arr(gbt) <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).txdata(39 downto 0) <= csc_gbt_tx_data_arr(gbt);
+            csc_gbt_tx_clk_arr(gbt) <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx);
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).txreset <= csc_gbt_ctrl_arr(gbt).txreset;
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxreset <= csc_gbt_ctrl_arr(gbt).rxreset;
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rxslide <= csc_gbt_ctrl_arr(gbt).rxslide;
+            csc_gbt_status_arr(gbt).tx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).tx_reset_done;
+            csc_gbt_status_arr(gbt).tx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).tx_fiber).tx).tx_pll_locked;
+            csc_gbt_status_arr(gbt).rx_reset_done  <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_reset_done;
+            csc_gbt_status_arr(gbt).rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_pll_locked;
         end generate; 
 
         -- spy link mapping
@@ -483,6 +538,9 @@ begin
     -- TTC TX links
     g_use_ttc_links : if CFG_USE_TTC_TX_LINK generate
         g_ttc_links : for i in CFG_TTC_LINKS'range generate 
+            signal rx_link_data     : t_mgt_16b_rx_data;
+            signal rx_link_status   : t_mgt_status; 
+        begin
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispmode <= (others => '0');
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispval <= (others => '0');
@@ -490,6 +548,24 @@ begin
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txreset <= '0';
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxreset <= '0';
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxslide <= '0';
+            
+            rx_link_data.rxdata <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxdata(15 downto 0);
+            rx_link_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxbyteisaligned;
+            rx_link_data.rxbyterealign <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxbyterealign;
+            rx_link_data.rxcommadet <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxcommadet;
+            rx_link_data.rxdisperr <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxdisperr(1 downto 0);  
+            rx_link_data.rxnotintable <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxnotintable(1 downto 0);  
+            rx_link_data.rxchariscomma <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxchariscomma(1 downto 0);  
+            rx_link_data.rxcharisk <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxcharisk(1 downto 0);     
+            
+            rx_link_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx);     
+                        
+            i_ila_ttc_rx_link : entity work.gt_rx_link_ila_wrapper
+                port map(
+                    clk_i        => mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx),
+                    rx_data_i    => rx_link_data,
+                    mgt_status_i => rx_link_status
+                );            
         end generate;
     end generate;
 

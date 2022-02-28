@@ -8,8 +8,6 @@ RESERVED_GTYS = [126, 127, 230] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = [126, 127]
 # RESERVED_REFCLK1 = [125]
 RESERVED_REFCLK1 = []
-# RESERVED_ARF6 = ["J12"]
-RESERVED_ARF6 = []
 NUM_SLR = 4
 USE_QSFPDD = True
 
@@ -17,10 +15,17 @@ USE_QSFPDD = True
 ########################## GEM / CSC ##########################
 ###############################################################
 
+# FULL CONFIG
+# GE11_NUM_OH = 0
+# GE21_NUM_OH = 40
+# ME0_NUM_OH = 12
+# CSC_NUM_DMB = 56
+
+# CONFIG FOR QSFP-DD
 GE11_NUM_OH = 0
-GE21_NUM_OH = 40
-ME0_NUM_OH = 12
-CSC_NUM_DMB = 56
+GE21_NUM_OH = 20
+ME0_NUM_OH = 6
+CSC_NUM_DMB = 28
 
 ###############################################################
 ########################## REF CLKS ###########################
@@ -1063,40 +1068,38 @@ def generate_fiber_to_mgt_vhdl():
     fiber_to_slr = {}
     print("constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (")
     fiber_idx = 0
-    for arf6_idx in range(len(ARF6_TO_MGT)):
-        if ARF6_J_LABELS[arf6_idx] in RESERVED_ARF6:
-            continue
-        arf6 = ARF6_TO_MGT[arf6_idx]
+    for qsfp_idx in range(len(QSFP_TO_MGT)):
+        qsfp = QSFP_TO_MGT[qsfp_idx]
         first = True
-        for arf6_chan_idx in range(0, len(arf6), 2):
-            arf6_tx_chan = arf6[arf6_chan_idx]
-            arf6_rx_chan = arf6[arf6_chan_idx + 1]
-            if arf6_tx_chan["mgt"] not in GTYS and arf6_rx_chan["mgt"] not in GTYS:
+        for qsfp_chan_idx in range(0, len(qsfp), 2):
+            qsfp_tx_chan = qsfp[qsfp_chan_idx]
+            qsfp_rx_chan = qsfp[qsfp_chan_idx + 1]
+            if qsfp_tx_chan["mgt"] not in GTYS and qsfp_rx_chan["mgt"] not in GTYS:
                 continue
             if first:
-                print("    --========= ARF6 #%d (%s) =========--" % (arf6_idx, ARF6_J_LABELS[arf6_idx]))
+                print("    --========= QSFP #%d =========--" % (qsfp_idx))
                 first = False
 
-            if arf6_tx_chan["dir"] != "TX" or arf6_rx_chan["dir"] != "RX":
-                print_red("ERROR: unexpected arf6 channel direction (ARF6 #%d chan #%d)" % (arf6_idx, arf6_chan_idx))
+            if qsfp_tx_chan["dir"] != "TX" or qsfp_rx_chan["dir"] != "RX":
+                print_red("ERROR: unexpected QSFP channel direction (QSFP #%d chan #%d)" % (qsfp_idx, qsfp_chan_idx))
                 return
 
-            tx_gty_idx = GTYS.index(arf6_tx_chan["mgt"])
-            rx_gty_idx = GTYS.index(arf6_rx_chan["mgt"])
-            tx_gty_chan_idx = tx_gty_idx * 4  + arf6_tx_chan["mgt_chan"]
-            rx_gty_chan_idx = rx_gty_idx * 4 + arf6_rx_chan["mgt_chan"]
+            tx_gty_idx = GTYS.index(qsfp_tx_chan["mgt"])
+            rx_gty_idx = GTYS.index(qsfp_rx_chan["mgt"])
+            tx_gty_chan_idx = tx_gty_idx * 4  + qsfp_tx_chan["mgt_chan"]
+            rx_gty_chan_idx = rx_gty_idx * 4 + qsfp_rx_chan["mgt_chan"]
 
             gty_chan_to_fiber[tx_gty_chan_idx]["tx"] = fiber_idx
             gty_chan_to_fiber[rx_gty_chan_idx]["rx"] = fiber_idx
-            slr = GTY_SLR[arf6_tx_chan["mgt"]]
-            if slr != GTY_SLR[arf6_rx_chan["mgt"]]:
+            slr = GTY_SLR[qsfp_tx_chan["mgt"]]
+            if slr != GTY_SLR[qsfp_rx_chan["mgt"]]:
                 print_red("Mixed SLR on TX and RX fiber pair!")
                 return
 
             fiber_to_slr[fiber_idx] = slr
 
             # fiber_idx = arf6_idx * 8 + arf6_chan_idx / 2
-            print("    (%03d, %03d, %s, %s), -- fiber %d (SLR %d)" % (tx_gty_chan_idx, rx_gty_chan_idx, bool_str_lower(arf6_tx_chan["inv"]), bool_str_lower(arf6_rx_chan["inv"]), fiber_idx, slr))
+            print("    (%03d, %03d, %s, %s), -- fiber %d (SLR %d)" % (tx_gty_chan_idx, rx_gty_chan_idx, bool_str_lower(qsfp_tx_chan["inv"]), bool_str_lower(qsfp_rx_chan["inv"]), fiber_idx, slr))
             fiber_idx += 1
 
     print("    --=== DUMMY fiber - use for unconnected channels ===--")
@@ -1155,8 +1158,8 @@ def generate_loc_constraints():
 
 # also returns MGT types needed
 def generate_gem_oh_link_map(fiber_to_slr):
-    NUM_LINKS = len(GTYS) * 4
-    MAX_OHS = 48 if NUM_LINKS >= 96 else 4 if NUM_LINKS <= 16 else None # use 48 OHs on VU13P (max GE21 OHs), and 4 OHs on VU27P
+    NUM_LINKS = len(QSFP_TO_MGT) * 4
+    MAX_OHS = 48 if NUM_LINKS >= 60 else 4 if NUM_LINKS <= 16 else None # use 48 OHs on VU13P (max GE21 OHs), and 4 OHs on VU27P
 
     ## GE11 (dummy for now)
     ge11_link_types = []
@@ -1229,7 +1232,7 @@ def generate_gem_oh_link_map(fiber_to_slr):
 
 # also returns MGT types needed
 def generate_csc_dmb_link_map(fiber_to_slr):
-    NUM_LINKS = len(GTYS) * 4
+    NUM_LINKS = len(QSFP_TO_MGT) * 4
     MAX_DMBS = 56 if NUM_LINKS >= 96 else 4 if NUM_LINKS <= 16 else None # use 56 DMBs on VU13P, and 4 DMBs on VU27P
 
     ## GE21

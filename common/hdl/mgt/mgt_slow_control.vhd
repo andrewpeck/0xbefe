@@ -114,7 +114,7 @@ begin
         rx_slow_ctrl_arr(chan).rxbufreset <= '0';
 
         -- prbs error counting
-        i_sync_prbs_err_reset : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => prbs_err_reset_arr(chan), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => prbs_err_reset_sync_arr(chan));        
+        i_sync_prbs_err_reset : entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => prbs_err_reset_arr(chan), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => prbs_err_reset_sync_arr(chan));        
         i_prbs_cnt : entity work.counter
             generic map(
                 g_COUNTER_WIDTH  => 32,
@@ -129,7 +129,7 @@ begin
         
         i_sync_prbs_err_cnt : xpm_cdc_gray
             generic map(
-                DEST_SYNC_FF          => 2,
+                DEST_SYNC_FF          => 8,
                 WIDTH                 => 32
             )
             port map(
@@ -153,17 +153,17 @@ begin
             );
        
        -- CDC
-       i_sync_rxpolarity:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => rxpolarity_arr_async(chan), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxpolarity);
-       i_sync_rxprbssel0:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(0), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(0));
-       i_sync_rxprbssel1:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(1), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(1));
-       i_sync_rxprbssel2:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(2), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(2));
-       i_sync_txinhibit:      entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txinhibit_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txinhibit);
-       i_sync_txpolarity:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txpolarity_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txpolarity);
-       i_sync_txprbssel0:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(0), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(0));
-       i_sync_txprbssel1:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(1), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(1));
-       i_sync_txprbssel2:     entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(2), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(2));
-       i_sync_txprbsforceerr: entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txprbsforceerr_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbsforceerr);
-       i_sync_txpd:           entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txpd_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => txpd_arr(chan));
+       i_sync_rxpolarity:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => rxpolarity_arr_async(chan), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxpolarity);
+       i_sync_rxprbssel0:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(0), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(0));
+       i_sync_rxprbssel1:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(1), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(1));
+       i_sync_rxprbssel2:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => rxprbssel_arr_async(chan)(2), clk_i => mgt_clks_arr_i(chan).rxusrclk2, sync_o  => rx_slow_ctrl_arr(chan).rxprbssel(2));
+       i_sync_txinhibit:      entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txinhibit_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txinhibit);
+       i_sync_txpolarity:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txpolarity_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txpolarity);
+       i_sync_txprbssel0:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(0), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(0));
+       i_sync_txprbssel1:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(1), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(1));
+       i_sync_txprbssel2:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(2), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(2));
+       i_sync_txprbsforceerr: entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbsforceerr_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbsforceerr);
+       i_sync_txpd:           entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txpd_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => txpd_arr(chan));
        
     end generate;
 
