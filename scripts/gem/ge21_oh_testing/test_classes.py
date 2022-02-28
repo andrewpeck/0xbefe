@@ -7,6 +7,14 @@ N_PHASES = 15
 N_SBIT = 8
 N_VFAT = 12
 
+# VTRX RSSI                                                                                                                                                                                       
+RSSI_WARN = 150 # uA                                                                                                                                                                              
+# Temperature:                                                                                                                                                                                    
+TEMP_WARN = 50
+# Voltage:    
+VOLT_WARN = 0.05  # 5% range for Warning                                                                                                                                                                   
+VOLT_NOM  = [1.0, 1.0, 1.2, 1.8, 1.5, 2.5]
+
 class XML_HEADER:
     def __init__(self):
         self.ET_NAME = "OH_QC"
@@ -206,8 +214,20 @@ class Test_Result:
         return
 
     def Validate_ADC_Reading(self, ADC_Result):
-        # FIX ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Test ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.ADC_READINGS_GOOD = True
+        RSSI_Arr=ADC_Result[0]
+        Temp_Arr=ADC_Result[1]
+        Volt_Arr=ADC_Result[2]
+        for i in range(len(RSSI_Arr)):
+            if((RSSI_Arr[i] < RSSI_WARN)):
+                self.ADC_READINGS_GOOD = False
+        for i in range(len(Temp_Arr)):
+            if((Temp_Arr[i] > TEMP_WARN)):
+                self.ADC_READINGS_GOOD = False
+        for i in range(len(Volt_Arr)):
+            if((Volt_Arr[i] > VOLT_NOM[i]*(1+VOLT_WARN)) or (Volt_Arr[i] < VOLT_NOM[i]*(1-VOLT_WARN))):
+                self.ADC_READINGS_GOOD = False
         return self.ADC_READINGS_GOOD
 
     def Validate_VFAT_ELINK_Phase(self, ELINK, VFAT_Phase_Result):
@@ -234,7 +254,7 @@ class Test_Result:
             for ibit in range(8):
                 if (vfat.SBIT_WIDTH[ibit] < 5):
                     self.ALL_SBIT_GOOD = False
-        return
+        return self.ALL_SBIT_GOOD
 
     def Validate_ALL_Tests(self):
         self.All_TEST_PASSED = ((self.CTP7_COMM_GOOD))
@@ -287,17 +307,18 @@ class Test_Result:
         return self.All_TEST_PASSED
 
 class GBT_ELINK:
-    def __init__(self,gbt,elink,arg_1, arg_2):
+    def __init__(self,gbt,elink,arg_1, arg_2, arg_3):
         self.GBT = gbt
         self.ELINK = elink
 
         if elink > 5:
             self.BER = arg_1
-        elif len(arg_1) < N_PHASES or len(arg_2) < N_PHASES or len(arg_1) != len(arg_2):
+        elif len(arg_1) < N_PHASES or len(arg_2) < N_PHASES or len(arg_1) != len(arg_2) or len(arg_3) < N_PHASES or len(arg_1) != len(arg_3):
             print('Error Invalid size of Phase Arrays!')
         else:
             self.LINK_GOOD = arg_1
             self.SYNC_ERR_CNT = arg_2
+            self.DAQ_CRC_ERR_CNT=arg_3
         return
 
 def QContinue(flag):

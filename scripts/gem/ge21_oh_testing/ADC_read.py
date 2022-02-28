@@ -134,7 +134,7 @@ def ADC_Test():
         TEMP_Val[5] = adc_u8_temp
 
         curr_Mirror_Cal = (readScaAdc(OH_NUM,17))
-
+ 
         sleep(READ_WAIT_SEC)
         iter += 1
 

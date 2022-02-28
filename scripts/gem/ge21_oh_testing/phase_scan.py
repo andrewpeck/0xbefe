@@ -24,8 +24,9 @@ V3B_GBT1_ELINK_TO_VFAT = {1: 4, 2: 2, 3: 3, 4: 8, 5: 0, 6: 6, 7: 16, 8: 5, 9: 1}
 V3B_GBT2_ELINK_TO_VFAT = {1: 9, 2: 20, 3: 21, 4: 11, 5: 10, 6: 18, 7: 19, 8: 17, 9: 22}
 V3B_GBT_ELINK_TO_VFAT = [V3B_GBT0_ELINK_TO_VFAT, V3B_GBT1_ELINK_TO_VFAT, V3B_GBT2_ELINK_TO_VFAT]
 
-GE21_GBT0_ELINK_TO_VFAT = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
-GE21_GBT1_ELINK_TO_VFAT = {0: 6, 1: 7, 2: 8, 3: 9, 4: 10, 5: 11}
+# NEW map from CTP7 v3.12.0 -- this is using the VFAT numbers on the GEB silkscreen as opposed to the J numbers                                                                                             
+GE21_GBT0_ELINK_TO_VFAT = {0: 2, 1: 0, 2: 4, 3: 10, 4: 6, 5: 8}
+GE21_GBT1_ELINK_TO_VFAT = {0: 9, 1: 11, 2: 7, 3: 1, 4: 5, 5: 3}
 GE21_GBT_ELINK_TO_VFAT = [GE21_GBT0_ELINK_TO_VFAT, GE21_GBT1_ELINK_TO_VFAT]
 
 GE21_GBT0_ELINK_TO_FPGA = [6, 7, 8, 9]
@@ -68,8 +69,8 @@ def scan_VFAT_integrated(verbose = False):
     Gbt_0_PhaseRes = Gbt_0_PhaseRes_ScanResult[0]
     Gbt_1_PhaseRes = Gbt_1_PhaseRes_ScanResult[0]
 
-    Gbt_0_Return_Data = [Gbt_0_PhaseRes_ScanResult[1], Gbt_0_PhaseRes_ScanResult[2]]
-    Gbt_1_Return_Data = [Gbt_1_PhaseRes_ScanResult[1], Gbt_1_PhaseRes_ScanResult[2]]
+    Gbt_0_Return_Data = [Gbt_0_PhaseRes_ScanResult[1], Gbt_0_PhaseRes_ScanResult[2], Gbt_0_PhaseRes_ScanResult[3]]
+    Gbt_1_Return_Data = [Gbt_1_PhaseRes_ScanResult[1], Gbt_1_PhaseRes_ScanResult[2], Gbt_1_PhaseRes_ScanResult[3]]
 
     if verbose:
         print(Colors.MAGENTA+'Gbt_0_PhaseRes Content : (from scan_VFAT_integrated, in phase_scan.py)'+Colors.ENDC)
@@ -396,7 +397,7 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
     PhaseResult = [[False] * 15 for x in range(len(GE21_GBT_ELINK_TO_VFAT[gbtSelect]))]
     LINK_GOOD_Arr = [[-1] * 15 for x in range(len(GE21_GBT_ELINK_TO_VFAT[gbtSelect]))]
     SYNC_ERR_CNT_Arr = [[-1] * 15 for x in range(len(GE21_GBT_ELINK_TO_VFAT[gbtSelect]))]
-
+    DAQ_CRC_ERR_CNT_Arr = [[-1] * 15 for x in range(len(GE21_GBT_ELINK_TO_VFAT[gbtSelect]))]
     if verbose:
         heading("Hello, I'm you GBT controller :)")
 
@@ -421,6 +422,21 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
 
     totalTime = clock() - timeStart
     print('time took = ' + str(totalTime) + 's')
+
+
+    # setup the TTC generator for a DAQ test
+    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
+    genEn = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"))
+    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    calpulseGap = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"))
+    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
+    l1aCnt = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"))
+    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), NUM_DAQ_PACKETS)
+    l1aGap = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"))
+    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
+
+
+
 
     # Phase Scanning:
     initVfatRegAddrs()
@@ -453,20 +469,38 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
             #sleep(0.5)
             linkGood = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
             syncErrCnt = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+            # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
+            daqCrcErrCnt = -1
+            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
+                if NUM_DAQ_PACKETS <= 0:
+                    wReg(cfgAddr, 0) # set the VFAT to sleep mode
+                else:
+                    wReg(cfgAddr, 1) # set the VFAT to run mode
+                    write_reg(get_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+                    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    genRunning = 1
+                    while genRunning == 1:
+                        genRunning = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING"))
+                    daqCrcErrCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
+                    daqEvtCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
+                    if daqEvtCnt == 0:
+                        daqCrcErrCnt = 999
+
+            # print the results
             color = Colors.GREEN
             prefix = 'GOOD: '
-            LINK_GOOD_Arr[elink][phase] = linkGood
-            SYNC_ERR_CNT_Arr[elink][phase] = syncErrCnt
-
-            if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
+            if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0) or (daqCrcErrCnt > 0):
                 color = Colors.RED
                 prefix = '>>>>>>>> BAD <<<<<<<< '
             else:
                 PhaseResult[elink][phase] = True
-            print(color, prefix, 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood), Colors.ENDC)
+            print(color + prefix + 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt) + Colors.ENDC)
+            LINK_GOOD_Arr[elink][phase] = linkGood
+            SYNC_ERR_CNT_Arr[elink][phase] = syncErrCnt
+            DAQ_CRC_ERR_CNT_Arr[elink][phase]=daqCrcErrCnt
 
     # End of Phase Scanning
-    return [PhaseResult, LINK_GOOD_Arr, SYNC_ERR_CNT_Arr]
+    return [PhaseResult, LINK_GOOD_Arr, SYNC_ERR_CNT_Arr, DAQ_CRC_ERR_CNT_Arr]
 
 def downloadConfig(ohIdx, gbtIdx, filename):
     f = open(filename, 'r')
