@@ -3,11 +3,21 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
+  ipgui::add_param $IPINST -name "GT_AXI_DIVIDER" -parent ${Page_0}
   ipgui::add_param $IPINST -name "GT_CLK_DIVIDER" -parent ${Page_0}
   ipgui::add_param $IPINST -name "GT_RX_POLARITY" -parent ${Page_0}
   ipgui::add_param $IPINST -name "GT_TX_POLARITY" -parent ${Page_0}
 
 
+}
+
+proc update_PARAM_VALUE.GT_AXI_DIVIDER { PARAM_VALUE.GT_AXI_DIVIDER } {
+	# Procedure called to update GT_AXI_DIVIDER when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.GT_AXI_DIVIDER { PARAM_VALUE.GT_AXI_DIVIDER } {
+	# Procedure called to validate GT_AXI_DIVIDER
+	return true
 }
 
 proc update_PARAM_VALUE.GT_CLK_DIVIDER { PARAM_VALUE.GT_CLK_DIVIDER } {
@@ -51,5 +61,10 @@ proc update_MODELPARAM_VALUE.GT_RX_POLARITY { MODELPARAM_VALUE.GT_RX_POLARITY PA
 proc update_MODELPARAM_VALUE.GT_CLK_DIVIDER { MODELPARAM_VALUE.GT_CLK_DIVIDER PARAM_VALUE.GT_CLK_DIVIDER } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.GT_CLK_DIVIDER}] ${MODELPARAM_VALUE.GT_CLK_DIVIDER}
+}
+
+proc update_MODELPARAM_VALUE.GT_AXI_DIVIDER { MODELPARAM_VALUE.GT_AXI_DIVIDER PARAM_VALUE.GT_AXI_DIVIDER } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.GT_AXI_DIVIDER}] ${MODELPARAM_VALUE.GT_AXI_DIVIDER}
 }
 

@@ -159,7 +159,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>be14f780</spirit:value>
+            <spirit:value>30a825eb</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -178,7 +178,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>be14f780</spirit:value>
+            <spirit:value>30a825eb</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -192,7 +192,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>1d485286</spirit:value>
+            <spirit:value>b139e715</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -443,17 +443,22 @@
       <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
         <spirit:name>GT_TX_POLARITY</spirit:name>
         <spirit:displayName>Gt Tx Polarity</spirit:displayName>
-        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_TX_POLARITY" spirit:bitStringLength="2">&quot;00&quot;</spirit:value>
+        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_TX_POLARITY" spirit:bitStringLength="1">&quot;0&quot;</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>GT_RX_POLARITY</spirit:name>
         <spirit:displayName>Gt Rx Polarity</spirit:displayName>
-        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_RX_POLARITY" spirit:bitStringLength="2">&quot;11&quot;</spirit:value>
+        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_RX_POLARITY" spirit:bitStringLength="1">&quot;0&quot;</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>GT_CLK_DIVIDER</spirit:name>
         <spirit:displayName>Gt Clk Divider</spirit:displayName>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_CLK_DIVIDER">3</spirit:value>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>GT_AXI_DIVIDER</spirit:name>
+        <spirit:displayName>Gt Axi Divider</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.GT_AXI_DIVIDER">3</spirit:value>
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
@@ -479,7 +484,7 @@
       <spirit:file>
         <spirit:name>src/c2c_phy_hb.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_cfba5d7b</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_89126c01</spirit:userFileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -532,7 +537,7 @@
       <spirit:file>
         <spirit:name>xgui/ChipToChipPhy_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_1d485286</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_b139e715</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -542,17 +547,22 @@
     <spirit:parameter>
       <spirit:name>GT_TX_POLARITY</spirit:name>
       <spirit:displayName>Gt Tx Polarity</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_TX_POLARITY" spirit:bitStringLength="2">&quot;00&quot;</spirit:value>
+      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_TX_POLARITY" spirit:bitStringLength="1">&quot;0&quot;</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>GT_RX_POLARITY</spirit:name>
       <spirit:displayName>Gt Rx Polarity</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_RX_POLARITY" spirit:bitStringLength="2">&quot;11&quot;</spirit:value>
+      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_RX_POLARITY" spirit:bitStringLength="1">&quot;0&quot;</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>GT_CLK_DIVIDER</spirit:name>
       <spirit:displayName>Gt Clk Divider</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_CLK_DIVIDER">3</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>GT_AXI_DIVIDER</spirit:name>
+      <spirit:displayName>Gt Axi Divider</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.GT_AXI_DIVIDER">3</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
@@ -571,15 +581,15 @@
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:vendorDisplayName>University of Florida</xilinx:vendorDisplayName>
       <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-08-25T16:39:36Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2022-02-22T13:55:24Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2021.1</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="ba291a30"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="4f0d907c"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="209d1254"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="4ddfabef"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="465d9fa6"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="3bb2fcb5"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="ed0d1c87"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="0bad26c9"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

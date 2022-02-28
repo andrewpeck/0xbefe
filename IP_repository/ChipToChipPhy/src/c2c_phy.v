@@ -7,9 +7,11 @@
 // =====================================================================================================================
 
 module c2c_phy#(
-parameter GT_TX_POLARITY= 2'b00,
-parameter GT_RX_POLARITY= 2'b11,
-parameter GT_CLK_DIVIDER= 3 )
+parameter GT_TX_POLARITY= 1'b0,
+parameter GT_RX_POLARITY= 1'b0,
+parameter GT_CLK_DIVIDER= 3,
+parameter GT_AXI_DIVIDER= 3
+ )
 (
 
   // Differential reference clock inputs
@@ -35,22 +37,10 @@ parameter GT_CLK_DIVIDER= 3 )
   output wire 	     c2c_link_reset
 );
 
-
-
-   wire [1:0] 	     gt_rxn_in;
-   
-   wire [1:0] 	     gt_rxp_in;
-   
-   wire [1:0] 	     gt_txn_out;
-   
-   wire [1:0] 	     gt_txp_out;
-
-   
-
-   
   wire link_down_latched_reset_in = 1'b0; // unused
   reg  link_down_latched_out = 1'b1; // unused
   wire hb_gtwiz_reset_clk_freerun_in = freerun_clk;
+
   // ===================================================================================================================
   // PER-CHANNEL SIGNAL ASSIGNMENTS
   // ===================================================================================================================
@@ -159,238 +149,174 @@ parameter GT_CLK_DIVIDER= 3 )
   assign hb0_gtwiz_reset_rx_done_int = gtwiz_reset_rx_done_int[0:0];
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [63:0] gtwiz_userdata_tx_int;
+  wire [31:0] gtwiz_userdata_tx_int;
   wire [31:0] hb0_gtwiz_userdata_tx_int;
-  wire [31:0] hb1_gtwiz_userdata_tx_int;
   assign gtwiz_userdata_tx_int[31:0] = hb0_gtwiz_userdata_tx_int;
-  assign gtwiz_userdata_tx_int[63:32] = hb1_gtwiz_userdata_tx_int;
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [63:0] gtwiz_userdata_rx_int;
+  wire [31:0] gtwiz_userdata_rx_int;
   wire [31:0] hb0_gtwiz_userdata_rx_int;
-  (* mark_debug *) wire [31:0] hb1_gtwiz_userdata_rx_int;
   assign hb0_gtwiz_userdata_rx_int = gtwiz_userdata_rx_int[31:0];
-  assign hb1_gtwiz_userdata_rx_int = gtwiz_userdata_rx_int[63:32];
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [19:0] drpaddr_int;
+  wire [9:0] drpaddr_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] drpclk_int;
+  wire [0:0] drpclk_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] drpdi_int;
+  wire [15:0] drpdi_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] drpen_int;
+  wire [0:0] drpen_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] drpwe_int;
+  wire [0:0] drpwe_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] eyescanreset_int;
+  wire [0:0] eyescanreset_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] gtrefclk0_int;
+  wire [0:0] gtrefclk0_int;
   wire [0:0] ch0_gtrefclk0_int;
-  wire [0:0] ch1_gtrefclk0_int;
   assign gtrefclk0_int[0:0] = ch0_gtrefclk0_int;
-  assign gtrefclk0_int[1:1] = ch1_gtrefclk0_int;
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rx8b10ben_int;
+  wire [0:0] rx8b10ben_int;
   wire [0:0] ch0_rx8b10ben_int = 1'b1;
-  wire [0:0] ch1_rx8b10ben_int = 1'b1;
   assign rx8b10ben_int[0:0] = ch0_rx8b10ben_int;
-  assign rx8b10ben_int[1:1] = ch1_rx8b10ben_int;
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxcommadeten_int;
+  wire [0:0] rxcommadeten_int;
   wire [0:0] ch0_rxcommadeten_int = 1'b1;
-  wire [0:0] ch1_rxcommadeten_int = 1'b1;
   assign rxcommadeten_int[0:0] = ch0_rxcommadeten_int;
-  assign rxcommadeten_int[1:1] = ch1_rxcommadeten_int;
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxlpmen_int;
+  wire [0:0] rxlpmen_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxmcommaalignen_int;
+  wire [0:0] rxmcommaalignen_int;
   wire [0:0] ch0_rxmcommaalignen_int = 1'b0;
-  wire [0:0] ch1_rxmcommaalignen_int = 1'b0;
   assign rxmcommaalignen_int[0:0] = ch0_rxmcommaalignen_int;
-  assign rxmcommaalignen_int[1:1] = ch1_rxmcommaalignen_int;
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxpcommaalignen_int;
+  wire [0:0] rxpcommaalignen_int;
   wire [0:0] ch0_rxpcommaalignen_int = 1'b1;
-  wire [0:0] ch1_rxpcommaalignen_int = 1'b1;
   assign rxpcommaalignen_int[0:0] = ch0_rxpcommaalignen_int;
-  assign rxpcommaalignen_int[1:1] = ch1_rxpcommaalignen_int;
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [7:0] rxprbssel_int;
+  wire [3:0] rxprbssel_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [5:0] rxrate_int;
+  wire [2:0] rxrate_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] tx8b10ben_int;
+  wire [0:0] tx8b10ben_int;
   wire [0:0] ch0_tx8b10ben_int = 1'b1;
-  wire [0:0] ch1_tx8b10ben_int = 1'b1;
   assign tx8b10ben_int[0:0] = ch0_tx8b10ben_int;
-  assign tx8b10ben_int[1:1] = ch1_tx8b10ben_int;
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] txctrl0_int;
+  wire [15:0] txctrl0_int;
   wire [15:0] ch0_txctrl0_int;
-  wire [15:0] ch1_txctrl0_int;
   assign txctrl0_int[15:0] = ch0_txctrl0_int;
-  assign txctrl0_int[31:16]= ch1_txctrl0_int;
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] txctrl1_int;
+  wire [15:0] txctrl1_int;
   wire [15:0] ch0_txctrl1_int;
-  wire [15:0] ch1_txctrl1_int;
   assign txctrl1_int[15:0] = ch0_txctrl1_int;
-  assign txctrl1_int[31:16] = ch1_txctrl1_int;
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [15:0] txctrl2_int;
+  wire [7:0] txctrl2_int;
   wire [7:0] ch0_txctrl2_int;
-  wire [7:0] ch1_txctrl2_int;
   assign txctrl2_int[7:0] = ch0_txctrl2_int;
-  assign txctrl2_int[15:8] = ch1_txctrl2_int;
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [9:0] txdiffctrl_int;
+  wire [5:0] txdiffctrl_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] txpolarity_int;
-  wire [0:0] ch0_txpolarity_int = 1'b0;
-  wire [0:0] ch1_txpolarity_int = 1'b0;
-  assign txpolarity_int[0:0] = ch0_txpolarity_int;
-  assign txpolarity_int[1:1] = ch1_txpolarity_int;
-
-  //--------------------------------------------------------------------------------------------------------------------
-  wire [9:0] txpostcursor_int;
+  wire [4:0] txpostcursor_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [7:0] txprbssel_int;
+  wire [3:0] txprbssel_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [9:0] txprecursor_int;
+  wire [4:0] txprecursor_int;
   // This vector is not sliced because it is directly assigned in a debug core instance below
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] drpdo_int;
+  wire [15:0] drpdo_int;
   wire [15:0] ch0_drpdo_int;
-  wire [15:0] ch1_drpdo_int;
   assign ch0_drpdo_int = drpdo_int[15:0];
-  assign ch1_drpdo_int = drpdo_int[31:16];
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] drprdy_int;
+  wire [0:0] drprdy_int;
   wire [0:0] ch0_drprdy_int;
-  wire [0:0] ch1_drprdy_int;
   assign ch0_drprdy_int = drprdy_int[0:0];
-  assign ch1_drprdy_int = drprdy_int[1:1];
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] gtpowergood_int;
+  wire [0:0] gtpowergood_int;
   wire [0:0] ch0_gtpowergood_int;
-  wire [0:0] ch1_gtpowergood_int;
   assign ch0_gtpowergood_int = gtpowergood_int[0:0];
-  assign ch1_gtpowergood_int = gtpowergood_int[1:1];
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxbyteisaligned_int;
+  wire [0:0] rxbyteisaligned_int;
   wire [0:0] ch0_rxbyteisaligned_int;
-  wire [0:0] ch1_rxbyteisaligned_int;
   assign ch0_rxbyteisaligned_int = rxbyteisaligned_int[0:0];
-  assign ch1_rxbyteisaligned_int = rxbyteisaligned_int[1:1];
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxbyterealign_int;
+  wire [0:0] rxbyterealign_int;
   wire [0:0] ch0_rxbyterealign_int;
-  wire [0:0] ch1_rxbyterealign_int;
   assign ch0_rxbyterealign_int = rxbyterealign_int[0:0];
-  assign ch1_rxbyterealign_int = rxbyterealign_int[1:1];
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxcommadet_int;
+  wire [0:0] rxcommadet_int;
   wire [0:0] ch0_rxcommadet_int;
-  wire [0:0] ch1_rxcommadet_int;
   assign ch0_rxcommadet_int = rxcommadet_int[0:0];
-  assign ch1_rxcommadet_int = rxcommadet_int[1:1];
-
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] rxctrl0_int;
+  wire [15:0] rxctrl0_int;
   wire [15:0] ch0_rxctrl0_int;
-  wire [15:0] ch1_rxctrl0_int;
   assign ch0_rxctrl0_int = rxctrl0_int[15:0];
-  assign ch1_rxctrl0_int = rxctrl0_int[31:16];
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [31:0] rxctrl1_int;
+  wire [15:0] rxctrl1_int;
   wire [15:0] ch0_rxctrl1_int;
-  wire [15:0] ch1_rxctrl1_int;
   assign ch0_rxctrl1_int = rxctrl1_int[15:0];
-  assign ch1_rxctrl1_int = rxctrl1_int[31:16];
-
   //--------------------------------------------------------------------------------------------------------------------
-  (* mark_debug *) wire [15:0] rxctrl2_int;
+  wire [7:0] rxctrl2_int;
   wire [7:0] ch0_rxctrl2_int;
-  wire [7:0] ch1_rxctrl2_int;
   assign ch0_rxctrl2_int = rxctrl2_int[7:0];
-  assign ch1_rxctrl2_int = rxctrl2_int[15:8];
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [15:0] rxctrl3_int;
+  wire [7:0] rxctrl3_int;
   wire [7:0] ch0_rxctrl3_int;
-  wire [7:0] ch1_rxctrl3_int;
   assign ch0_rxctrl3_int = rxctrl3_int[7:0];
-  assign ch1_rxctrl3_int = rxctrl3_int[15:8];
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [255:0] rxdata_int;
-  wire [127:0] ch0_rxdata_int;
-  wire [127:0] ch1_rxdata_int;
-  assign ch0_rxdata_int = rxdata_int[127:0];
-  assign ch1_rxdata_int = rxdata_int[255:128];
-
-  //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxpmaresetdone_int;
+  wire [0:0] rxpmaresetdone_int;
   wire [0:0] ch0_rxpmaresetdone_int;
-  wire [0:0] ch1_rxpmaresetdone_int;
   assign ch0_rxpmaresetdone_int = rxpmaresetdone_int[0:0];
-  assign ch1_rxpmaresetdone_int = rxpmaresetdone_int[1:1];
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] rxprbserr_int;
+  wire [0:0] rxprbserr_int;
   wire [0:0] ch0_rxprbserr_int;
-  wire [0:0] ch1_rxprbserr_int;
   assign ch0_rxprbserr_int = rxprbserr_int[0:0];
-  assign ch1_rxprbserr_int = rxprbserr_int[1:1];
+
 
   //--------------------------------------------------------------------------------------------------------------------
-  wire [1:0] txpmaresetdone_int;
+  wire [0:0] txpmaresetdone_int;
   wire [0:0] ch0_txpmaresetdone_int;
-  wire [0:0] ch1_txpmaresetdone_int;
   assign ch0_txpmaresetdone_int = txpmaresetdone_int[0:0];
-  assign ch1_txpmaresetdone_int = txpmaresetdone_int[1:1];
 
 
   // ===================================================================================================================
@@ -438,13 +364,13 @@ parameter GT_CLK_DIVIDER= 3 )
    );
    BUFG_GT mgtrefclk_bufg_original
    (
-      .O       (axi_clk),  // 1-bit output: Buffer
-      .CE      (1'b1),             // 1-bit input: Buffer enable
-      .CEMASK  (1'b0),             // 1-bit input: CE Mask
-      .CLR     (1'b0),             // 1-bit input: Asynchronous clear
-      .CLRMASK (1'b0),             // 1-bit input: CLR Mask
-      .DIV     (3'd0),             // 3-bit input: Dynamic divide Value
-      .I       (mgtrefclk_odiv2_b) // 1-bit input: Buffer
+    .O       (axi_clk),  // 1-bit output: Buffer
+    .CE      (1'b1),             // 1-bit input: Buffer enable
+    .CEMASK  (1'b0),             // 1-bit input: CE Mask
+    .CLR     (1'b0),             // 1-bit input: Asynchronous clear
+    .CLRMASK (1'b0),             // 1-bit input: CLR Mask
+    .DIV     (GT_AXI_DIVIDER),             // 3-bit input: Dynamic divide Value
+    .I       (mgtrefclk_odiv2_b) // 1-bit input: Buffer
    );
   assign ch0_gtrefclk0_int = mgtrefclk1_x0y5_int;
   assign ch1_gtrefclk0_int = mgtrefclk1_x0y5_int;
@@ -551,7 +477,7 @@ parameter GT_CLK_DIVIDER= 3 )
   // ===================================================================================================================
 
   // Synchronize gtpowergood into the free-running clock domain for VIO usage
-  wire [1:0] gtpowergood_vio_sync;
+  wire [0:0] gtpowergood_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
   c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtpowergood_0_inst (
@@ -560,15 +486,9 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (gtpowergood_vio_sync[0])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_gtpowergood_1_inst (
-    .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
-    .i_in   (gtpowergood_int[1]),
-    .o_out  (gtpowergood_vio_sync[1])
-  );
 
   // Synchronize txpmaresetdone into the free-running clock domain for VIO usage
-  wire [1:0] txpmaresetdone_vio_sync;
+  wire [0:0] txpmaresetdone_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
   c2c_mgt_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_0_inst (
@@ -577,12 +497,6 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (txpmaresetdone_vio_sync[0])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txpmaresetdone_1_inst (
-    .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
-    .i_in   (txpmaresetdone_int[1]),
-    .o_out  (txpmaresetdone_vio_sync[1])
-  );
 
   // Synchronize rxpmaresetdone into the free-running clock domain for VIO usage
   wire [1:0] rxpmaresetdone_vio_sync;
@@ -594,12 +508,6 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (rxpmaresetdone_vio_sync[0])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxpmaresetdone_1_inst (
-    .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
-    .i_in   (rxpmaresetdone_int[1]),
-    .o_out  (rxpmaresetdone_vio_sync[1])
-  );
 
   // Synchronize gtwiz_reset_tx_done into the free-running clock domain for VIO usage
   wire [0:0] gtwiz_reset_tx_done_vio_sync;
@@ -622,7 +530,7 @@ parameter GT_CLK_DIVIDER= 3 )
   );
 
   // Synchronize rxprbserr into the free-running clock domain for VIO usage
-  wire [1:0] rxprbserr_vio_sync;
+  wire [0:0] rxprbserr_vio_sync;
 
   (* DONT_TOUCH = "TRUE" *)
   c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbserr_0_inst (
@@ -631,15 +539,8 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (rxprbserr_vio_sync[0])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbserr_1_inst (
-    .clk_in (hb_gtwiz_reset_clk_freerun_buf_int),
-    .i_in   (rxprbserr_int[1]),
-    .o_out  (rxprbserr_vio_sync[1])
-  );
-
   // Synchronize txprbssel into the TXUSRCLK2 clock domain from VIO usage
-  wire [7:0] txprbssel_vio_async;
+  wire [3:0] txprbssel_vio_async;
 
   (* DONT_TOUCH = "TRUE" *)
   c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_0_inst (
@@ -666,33 +567,9 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (txprbssel_int[3])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_4_inst (
-    .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
-    .i_in   (txprbssel_vio_async[4]),
-    .o_out  (txprbssel_int[4])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_5_inst (
-    .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
-    .i_in   (txprbssel_vio_async[5]),
-    .o_out  (txprbssel_int[5])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_6_inst (
-    .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
-    .i_in   (txprbssel_vio_async[6]),
-    .o_out  (txprbssel_int[6])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_txprbssel_7_inst (
-    .clk_in (hb0_gtwiz_userclk_tx_usrclk2_int),
-    .i_in   (txprbssel_vio_async[7]),
-    .o_out  (txprbssel_int[7])
-  );
 
   // Synchronize rxprbssel into the RXUSRCLK2 clock domain from VIO usage
-  wire [7:0] rxprbssel_vio_async;
+  wire [3:0] rxprbssel_vio_async;
 
   (* DONT_TOUCH = "TRUE" *)
   c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_0_inst (
@@ -719,31 +596,6 @@ parameter GT_CLK_DIVIDER= 3 )
     .o_out  (rxprbssel_int[3])
   );
 
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_4_inst (
-    .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
-    .i_in   (rxprbssel_vio_async[4]),
-    .o_out  (rxprbssel_int[4])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_5_inst (
-    .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
-    .i_in   (rxprbssel_vio_async[5]),
-    .o_out  (rxprbssel_int[5])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_6_inst (
-    .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
-    .i_in   (rxprbssel_vio_async[6]),
-    .o_out  (rxprbssel_int[6])
-  );
-  (* DONT_TOUCH = "TRUE" *)
-  c2c_mgt_bit_synchronizer bit_synchronizer_vio_rxprbssel_7_inst (
-    .clk_in (hb0_gtwiz_userclk_rx_usrclk2_int),
-    .i_in   (rxprbssel_vio_async[7]),
-    .o_out  (rxprbssel_int[7])
-  );
-
 
    assign hb_gtwiz_reset_all_vio_int = 1'b0;
    assign hb0_gtwiz_reset_tx_pll_and_datapath_int = 1'b0;
@@ -751,24 +603,24 @@ parameter GT_CLK_DIVIDER= 3 )
    assign hb_gtwiz_reset_rx_pll_and_datapath_vio_int = 1'b0;
    assign hb_gtwiz_reset_rx_datapath_vio_int =1'b0;
    assign link_down_latched_reset_vio_int = 1'b0;
-   assign txprbssel_vio_async = 8'd0;
-   assign rxprbssel_vio_async = 8'd0;
+   assign txprbssel_vio_async = 4'd0;
+   assign rxprbssel_vio_async = 4'd0;
    
 
 
-   assign drpclk_int = {2{hb_gtwiz_reset_clk_freerun_buf_int}};
-   assign eyescanreset_int = 2'b00;
-   assign rxrate_int = 6'b000000;
-   assign txdiffctrl_int = {2{5'b11000}};
-   assign txprecursor_int = {2{5'b00000}};
-   assign txpostcursor_int = {2{5'b00000}};
-   assign rxlpmen_int = 2'b11;
+   assign drpclk_int = hb_gtwiz_reset_clk_freerun_buf_int;
+   assign eyescanreset_int = 1'b0;
+   assign rxrate_int = 3'b000;
+   assign txdiffctrl_int = 5'b11000;
+   assign txprecursor_int = 5'b00000;
+   assign txpostcursor_int = 5'b00000;
+   assign rxlpmen_int = 1'b1;
 
 
    
 
-   (* mark_debug *) wire [5 : 0] rxbufstatus_out;
-   (* mark_debug *) wire [3 : 0] rxclkcorcnt_out;
+   wire [2 : 0] rxbufstatus_out;
+   wire [1 : 0] rxclkcorcnt_out;
   // ===================================================================================================================
   // EXAMPLE WRAPPER INSTANCE
   // ===================================================================================================================
@@ -870,8 +722,8 @@ always @(posedge gtwiz_userclk_tx_usrclk2_int)
         .mgt_rx_data   (hb0_gtwiz_userdata_rx_int),
         .mgt_rx_k      (ch0_rxctrl0_int[3:0]),
         .rx_aligned    (ch0_rxbyteisaligned_int),        
-        .mgt_tx_data   (hb1_gtwiz_userdata_tx_int),
-        .mgt_tx_k      (ch1_txctrl2_int[3:0])
+        .mgt_tx_data   (hb0_gtwiz_userdata_tx_int),
+        .mgt_tx_k      (ch0_txctrl2_int[3:0])
     );
 
 assign c2c_tx_axis_tready      = 1'b1; // always ready
@@ -880,5 +732,4 @@ assign c2c_channel_up          = ch0_rxbyteisaligned_int;
 assign c2c_phy_clk             = gtwiz_userclk_tx_usrclk2_int;
 assign c2c_rxbufstatus         = rxbufstatus_out [2:0];
 assign c2c_rxclkcorcnt         = rxclkcorcnt_out [1:0];
-
 endmodule
