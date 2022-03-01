@@ -39,6 +39,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
 
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
     reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
+    reset_sbit_cluster_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
     sbit_monitor_nodes = []
     cluster_count_nodes = []
     for i in range(0,8):
@@ -103,6 +104,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             # Reset L1A, CalPulse and S-bit monitor
             write_backend_reg(ttc_reset_node, 1)
             write_backend_reg(reset_sbit_monitor_node, 1)
+            write_backend_reg(reset_sbit_cluster_node, 1)
 
             # Start the cyclic generator
             write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
