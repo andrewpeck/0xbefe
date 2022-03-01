@@ -26,6 +26,9 @@ use work.registers.all;
 entity promless is
     port (
         reset_i             : in  std_logic;
+
+        clk125_i            : in  std_logic;
+        clk200_i            : in  std_logic;
         
         -- QDR interface
         qdriip_cq_p_i       : in  std_logic;
@@ -41,9 +44,8 @@ entity promless is
         qdriip_dll_off_n_o  : out std_logic;        
         
         -- user interface
-        clk40_i             : in  std_logic;
-        to_gem_loader_i     : in  t_to_gem_loader;
-        from_gem_loader_o   : out t_from_gem_loader;        
+        to_promless_i       : in  t_to_promless;
+        from_promless_o     : out t_from_promless;        
         
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -55,131 +57,119 @@ end promless;
 
 architecture promless_arch of promless is
 
-    signal qdr_k_clk        : std_logic;
-    signal qdr_cq_clk       : std_logic;
-    signal qdr_q            : std_logic_vector(35 downto 0);
-    signal qdr_d            : std_logic_vector(35 downto 0);
+    component mig_qdr2p
+        port(
+            -- Single-ended system clock
+            sys_clk_i           : in    std_logic;
+            -- Single-ended iodelayctrl clk (reference clock)
+            clk_ref_i           : in    std_logic; --Memory Interface Ports
+            qdriip_cq_p         : in    std_logic;
+            qdriip_cq_n         : in    std_logic;
+            qdriip_q            : in    std_logic_vector(17 downto 0);
+            qdriip_k_p          : inout std_logic;
+            qdriip_k_n          : inout std_logic;
+            qdriip_d            : out   std_logic_vector(17 downto 0);
+            qdriip_sa           : out   std_logic_vector(18 downto 0);
+            qdriip_w_n          : out   std_logic;
+            qdriip_r_n          : out   std_logic;
+            qdriip_bw_n         : out   std_logic_vector(1 downto 0);
+            qdriip_dll_off_n    : out   std_logic;
+            -- User Interface signals of Channel-0
+            app_wr_cmd0         : in    std_logic;
+            app_wr_addr0        : in    std_logic_vector(18 downto 0);
+            app_wr_data0        : in    std_logic_vector(71 downto 0);
+            app_wr_bw_n0        : in    std_logic_vector(7 downto 0);
+            app_rd_cmd0         : in    std_logic;
+            app_rd_addr0        : in    std_logic_vector(18 downto 0);
+            app_rd_valid0       : out   std_logic;
+            app_rd_data0        : out   std_logic_vector(71 downto 0);
+            -- User Interface signals of Channel-1. It is useful only for BL2 designs.
+            -- All inputs of Channel-1 can be grounded for BL4 designs.
+            app_wr_cmd1         : in    std_logic;
+            app_wr_addr1        : in    std_logic_vector(18 downto 0);
+            app_wr_data1        : in    std_logic_vector(35 downto 0);
+            app_wr_bw_n1        : in    std_logic_vector(3 downto 0);
+            app_rd_cmd1         : in    std_logic;
+            app_rd_addr1        : in    std_logic_vector(18 downto 0);
+            app_rd_valid1       : out   std_logic;
+            app_rd_data1        : out   std_logic_vector(35 downto 0);
+            clk                 : out   std_logic;
+            rst_clk             : out   std_logic;
+            init_calib_complete : out   std_logic;
+            sys_rst             : in    std_logic
+        );
+    end component mig_qdr2p;
 
-    type t_qdr_state is (IDLE, WRITE1, WRITE2, READ_WAIT, READ1, READ2);
+    constant RAM_MAX_ADDRESS    : integer := 2097151;
+    constant RAM_SC_DATA_WIDTH  : integer := 18;
 
-    signal qdr_write_data   : std_logic_vector(17 downto 0);
-    signal qdr_read_data    : std_logic_vector(71 downto 0);
-    signal qdr_bw           : std_logic_vector(3 downto 0);
+    --=========== Generic signals ===========--
+    signal reset            : std_logic;
+    signal reset_local      : std_logic;
+    signal ram_reset_cntdwn : unsigned(7 downto 0) := (others => '1');
     
-    -- slow control signals
-    signal sc_write_addr    : std_logic_vector(18 downto 0);
-    signal sc_read_addr     : std_logic_vector(18 downto 0);
-    signal sc_qdr_addr      : std_logic_vector(18 downto 0);
-    signal sc_write_req     : std_logic;
-    signal sc_read_req      : std_logic;
-    signal sc_addr_reset    : std_logic;
-    signal sc_bw            : std_logic_vector(3 downto 0);
-    signal sc_wps           : std_logic;
-    signal sc_rps           : std_logic;
-    
-    -- streaming signals
-    signal streaming_mode   : std_logic;
-    
-    signal st_rps           : std_logic;
-    signal st_addr          : std_logic_vector(18 downto 0);
+    --=========== RAM signals ===========--
+    signal ram_ready        : std_logic;                        
+                            
+    signal ram_clk          : std_logic;
+    signal ram_wr_cmd       : std_logic;
+    signal ram_wr_addr      : std_logic_vector(18 downto 0);
+    signal ram_wr_data      : std_logic_vector(71 downto 0);
+    signal ram_wr_bw        : std_logic_vector(7 downto 0);
+    signal ram_rd_cmd       : std_logic;
+    signal ram_rd_addr      : std_logic_vector(18 downto 0);
+    signal ram_rd_data      : std_logic_vector(71 downto 0);
+    signal ram_rd_valid     : std_logic;
 
     ------ Register signals begin (this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py -- do not edit)
     ------ Register signals end ----------------------------------------------
-        
+    
 begin
 
-    -- I/O buffers
-
-    qdr_k_clk <= clk40_i;
-    qdriip_dll_off_n_o <= '0'; -- turn off the PLL on the chip, and use it in QDR I mode
-    qdriip_sa_o <= sc_qdr_addr when streaming_mode = '0' else st_addr;
-    qdriip_w_n_o <= not sc_wps when streaming_mode = '0' else '1';
-    qdriip_r_n_o <= not sc_rps when streaming_mode = '0' else st_rps;
-
-    i_cq_clk_ibuf : IBUFGDS
-        generic map(
-            DIFF_TERM        => true,
-            IBUF_LOW_PWR     => false
-        )
+    i_qdr_mig : mig_qdr2p
         port map(
-            O  => qdr_cq_clk,
-            I  => qdriip_cq_p_i,
-            IB => qdriip_cq_n_i
+            sys_clk_i           => clk125_i,
+            
+            clk_ref_i           => clk200_i,
+            qdriip_cq_p         => qdriip_cq_p_i,
+            qdriip_cq_n         => qdriip_cq_n_i,
+            qdriip_q            => qdriip_q_i,
+            qdriip_k_p          => qdriip_k_p_o,
+            qdriip_k_n          => qdriip_k_n_o,
+            qdriip_d            => qdriip_d_o,
+            qdriip_sa           => qdriip_sa_o,
+            qdriip_w_n          => qdriip_w_n_o,
+            qdriip_r_n          => qdriip_r_n_o,
+            qdriip_bw_n         => qdriip_bw_n_o,
+            qdriip_dll_off_n    => qdriip_dll_off_n_o,
+            
+            app_wr_cmd0         => ram_wr_cmd,
+            app_wr_addr0        => ram_wr_addr,
+            app_wr_data0        => ram_wr_data,
+            app_wr_bw_n0        => not ram_wr_bw,
+            app_rd_cmd0         => ram_rd_cmd,
+            app_rd_addr0        => ram_rd_addr,
+            app_rd_valid0       => ram_rd_valid,
+            app_rd_data0        => ram_rd_data,
+            
+            app_wr_cmd1         => '0',
+            app_wr_addr1        => (others => '0'),
+            app_wr_data1        => (others => '0'),
+            app_wr_bw_n1        => (others => '0'),
+            app_rd_cmd1         => '0',
+            app_rd_addr1        => (others => '0'),
+            app_rd_valid1       => open,
+            app_rd_data1        => open,
+            
+            clk                 => ram_clk,
+            rst_clk             => open,
+            init_calib_complete => ram_ready,
+            sys_rst             => '0'
         );
-
-    i_k_clk_obuf : OBUFDS
-        port map(
-            O  => qdriip_k_p_o,
-            OB => qdriip_k_n_o,
-            I  => qdr_k_clk
-        );
-
-    g_data_bus_buf: for i in 0 to 17 generate
-        i_q_iddr : IDDR
-            generic map(
-                DDR_CLK_EDGE => "SAME_EDGE"
-            )
-            port map(
-                q1 => qdr_q(i),
-                q2 => qdr_q(i+18),
-                c  => qdr_cq_clk,
-                ce => '1',
-                d  => qdriip_q_i(i),
-                r  => '0',
-                s  => '0'
-            );    
     
-        i_d_oddr : ODDR
-            generic map(
-                DDR_CLK_EDGE => "SAME_EDGE"
-            )
-            port map(
-                q  => qdriip_d_o(i),
-                c  => qdr_k_clk,
-                ce => '1',
-                d1 => qdr_d(i),
-                d2 => qdr_d(i+18),
-                r  => '0',
-                s  => '0'
-            );
-    end generate;
 
-    g_bw_buf: for i in 0 to 1 generate
-        i_bw_oddr : ODDR
-            generic map(
-                DDR_CLK_EDGE => "SAME_EDGE"
-            )
-            port map(
-                q  => qdriip_bw_n_o(i),
-                c  => qdr_k_clk,
-                ce => '1',
-                d1 => not qdr_bw(i),
-                d2 => not qdr_bw(i+2),
-                r  => '0',
-                s  => '0'
-            );
-    end generate;
-
-    process (qdr_k_clk)
-    begin
-        if rising_edge(qdr_k_clk) then
-            if (reset_i = '1' or sc_addr_reset = '1') then
-                sc_write_addr <= (others => '0');
-                sc_read_addr <= (others => '0');
-                sc_qdr_addr <= (others => '0');
-                sc_bw <= (others => '0');
-                sc_wps <= '0';
-                sc_rps <= '0';
-            else
-                if (sc_write_req = '1') then
-                    sc_qdr_addr <= sc_write_addr;
-                    -- ok, dropped it at this point since we seem to have gotten gemloader to work.. can pick it up here at a later date
-                else
-                end if;
-            end if;
-        end if;
-    end process;
-
+    
+    
     --===============================================================================================
     -- this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py (do not edit) 
     --==== Registers begin ==========================================================================
