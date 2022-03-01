@@ -1,5 +1,5 @@
 <!--sbit_me0 module -->
-<node id="SBIT_ME0"  address="0x00d00000"
+<node id="SBIT_ME0" address="0x00d00000"
       description="Sbit me0 module handles everything related to sbit clusterizating for ME0"
       fw_is_module="true"
       fw_module_file="../gem/hdl/trigger/sbit_me0.vhd"

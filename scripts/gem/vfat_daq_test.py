@@ -65,9 +65,13 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
         file_out.write("Configuring VFAT %d\n" % (vfat))
         if calpulse:
             configureVfat(1, vfat, oh_select, 0)
+            for channel in range(128):
+                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels and disable calpulsing
             enableVfatchannel(vfat, oh_select, 0, 0, 1) # enable calpulsing on channel 0 for this VFAT
         else:
             configureVfat(1, vfat, oh_select, 1) # configure with 0 threshold to get noise
+            for channel in range(128):
+                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels and disable calpulsing
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_LATENCY"% (oh_select, vfat)), 18)
         if set_cal_mode == "voltage":
             write_backend_reg(get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
@@ -90,6 +94,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             terminate()
         daq_event_count_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (oh_select, vfat))
         daq_crc_error_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat))
+
+    sleep(1)
 
     # Configure TTC generator
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -275,15 +281,15 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             print ("")
             file_out.write("\n")
         print ("")
-        file_out.write("\n")
+        file_out.write("\n\n")
 
     # Disable channels on VFATs
     for vfat in vfat_list:
         enable_channel = 0
         print("Unconfiguring VFAT %d" % (vfat))
         file_out.write("Unconfiguring VFAT %d\n" % (vfat))
-        if calpulse:
-            enableVfatchannel(vfat, oh_select, 0, 0, 0) # disable calpulsing on channel 0 for this VFAT
+        for channel in range(128):
+            enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels and disable calpulsing
         configureVfat(0, vfat, oh_select, 0)
 
     file_out.close()

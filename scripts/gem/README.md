@@ -28,6 +28,8 @@ Use -h option for any script to check usage
 
 ```me0_lpgbt_efuse.py```: fuse registers on lpGBT for ME0 Optohyrbid
 
+```me0_lpgbt_elink_eq.py```: Set equalization settings for elinks on lpGBT for ME0 Optohyrbid
+
 ```me0_lpgbt_rw_register.py```: read/write to any register on lpGBT for ME0 Optohyrbid
 
 ```me0_lpgbt_status.py```: check status of lpGBT for ME0 Optohyrbid
