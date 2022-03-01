@@ -146,6 +146,7 @@ architecture Behavioral of optohybrid_fw is
   signal mmcm_locked : std_logic;
   signal clocks      : clocks_t;
   signal async_clock : std_logic := '0';
+  signal ttc_rx      : ttc_t;
   signal ttc         : ttc_t;
 
   signal vtrx_mabs : std_logic_vector (1 downto 0);
@@ -277,7 +278,7 @@ begin
       elink_o_n => elink_o_n,
 
       -- decoded TTC
-      ttc_o => ttc
+      ttc_o => ttc_rx
       );
 
   --------------------------------------------------------------------------------
@@ -375,7 +376,8 @@ begin
       clocks        => clocks,
       async_clock_o => async_clock,
       reset         => system_reset,
-      ttc_i         => ttc,
+      ttc_i         => ttc_rx,
+      ttc_o         => ttc,
 
       -- to drive LED controller only
       mgts_ready => mgts_ready,
