@@ -882,7 +882,7 @@
             fw_signal="input_status_arr(${OH_IDX}).evtfifo_empty"/>
     </node>
 
-    <node id="COUNTERS">
+    <node id="COUNTERS" address="0x0">
       <node id="CORRUPT_VFAT_BLK_CNT"  address="0x1" permission="r"
             description="This counter is incremented when a VFAT block does not
                          conform to the pattern of Axxx Cxxx Exxx... (see VFAT
@@ -1333,23 +1333,17 @@
                   generate="true" generate_size="128" generate_address_step="0x1" generate_idx_var="CHANNEL_IDX">
 
               <node id="CALPULSE_ENABLE"  address="0x0" mask="0x00008000"  permission="rw"
-                    description="Enable the calibration pulse to the channel input">
-              </node>
+                    description="Enable the calibration pulse to the channel input"/>
               <node id="MASK"  address="0x0" mask="0x00004000"  permission="rw"
-                    description="Mask the channel output for trigger and readout">
-              </node>
+                    description="Mask the channel output for trigger and readout"/>
               <node id="ZCC_TRIM_POLARITY"  address="0x0" mask="0x00002000"  permission="rw"
-                    description="Zero Crossing Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)">
-              </node>
+                    description="Zero Crossing Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)"/>
               <node id="ZCC_TRIM_AMPLITUDE"  address="0x0" mask="0x00001f80"  permission="rw"
-                    description="Zero Crossing Comparator threshold trimming: correction amplitude (steps of 0.5mV)">
-              </node>
+                    description="Zero Crossing Comparator threshold trimming: correction amplitude (steps of 0.5mV)"/>
               <node id="ARM_TRIM_POLARITY"  address="0x0" mask="0x00000040"  permission="rw"
-                    description="Arming Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)">
-              </node>
+                    description="Arming Comparator threshold trimming: correction polarity (0 = positive, 1 = negative)"/>
               <node id="ARM_TRIM_AMPLITUDE"  address="0x0" mask="0x0000003f"  permission="rw"
-                    description="Arming Comparator threshold trimming: correction amplitude (steps of 0.5mV)">
-              </node>
+                    description="Arming Comparator threshold trimming: correction amplitude (steps of 0.5mV)"/>
 
             </node>
           </node> <!-- end of VFATChannels -->
@@ -1357,200 +1351,140 @@
           <!-- a catch-all for all config registers (individual bits are extracted below), may want to use these registers for faster configuration to set all 32 bits at once instead of individual pieces -->
           <node id="CFG_${CFG_REG_IDX}"  address="0x81"  permission="rw"
                 description="VFAT control register number ${CFG_REG_IDX}"
-                generate="true" generate_size="17" generate_address_step="0x1" generate_idx_var="CFG_REG_IDX">
-          </node>
+                generate="true" generate_size="17" generate_address_step="0x1" generate_idx_var="CFG_REG_IDX"/>
           <!-- -->
 
           <node id="CFG_PULSE_STRETCH"  address="0x81" mask="0x0000e000"  permission="rw"
-                description="Pulse Stretcher control. Range is from 1 to 8 clock cycles (0 means 1 cycle, 7 means 8 cycles)">
-          </node>
+                description="Pulse Stretcher control. Range is from 1 to 8 clock cycles (0 means 1 cycle, 7 means 8 cycles)"/>
           <node id="CFG_SYNC_LEVEL_MODE"  address="0x81" mask="0x00000004"  permission="rw"
-                description="Switch the input synchronizer from edge to level mode (0 = edge, 1 = level)">
-          </node>
+                description="Switch the input synchronizer from edge to level mode (0 = edge, 1 = level)"/>
           <node id="CFG_SELF_TRIGGER_MODE"  address="0x81" mask="0x00000002"  permission="rw"
-                description="Enable self trigger mode (0 = disable, 1 = enable)">
-          </node>
+                description="Enable self trigger mode (0 = disable, 1 = enable)"/>
           <node id="CFG_DDR_TRIGGER_MODE"  address="0x81" mask="0x00000001"  permission="rw"
-                description="Enable DDR trigger output mode (0 = SDR, 1 = DDR)">
-          </node>
+                description="Enable DDR trigger output mode (0 = SDR, 1 = DDR)"/>
 
           <node id="CFG_SPZS_SUMMARY_ONLY"  address="0x82" mask="0x00008000"  permission="rw"
-                description="When set high, the SPZS mode will send only the 16bit partition summary (no sub-partition data at all)">
-          </node>
+                description="When set high, the SPZS mode will send only the 16bit partition summary (no sub-partition data at all)"/>
           <node id="CFG_SPZS_MAX_PARTITIONS"  address="0x82" mask="0x00003c00"  permission="rw"
-                description="Maximum number of sub-partition data to send in SPZS mode (range: 1-16)">
-          </node>
+                description="Maximum number of sub-partition data to send in SPZS mode (range: 1-16)"/>
           <node id="CFG_SPZS_ENABLE"  address="0x82" mask="0x00000100"  permission="rw"
-                description="Enable SPZS zero suppression mode">
-          </node>
+                description="Enable SPZS zero suppression mode"/>
           <node id="CFG_SZP_ENABLE"  address="0x82" mask="0x00000080"  permission="rw"
-                description="Enable SZP zero suppression mode (suppress zero packets -- only send the header)">
-          </node>
+                description="Enable SZP zero suppression mode (suppress zero packets -- only send the header)"/>
           <node id="CFG_SZD_ENABLE"  address="0x82" mask="0x00000040"  permission="rw"
-                description="Enable SZD zero suppression mode (suppress zero data only -- still send header, EC, BC and CRC)">
-          </node>
+                description="Enable SZD zero suppression mode (suppress zero data only -- still send header, EC, BC and CRC)"/>
           <node id="CFG_TIME_TAG"  address="0x82" mask="0x00000030"  permission="rw"
-                description="Time tag format (00 = EC and BC, 01 = EC, 10 = BC, 11 = EC+BC)">
-          </node>
+                description="Time tag format (00 = EC and BC, 01 = EC, 10 = BC, 11 = EC+BC)"/>
           <node id="CFG_EC_BYTES"  address="0x82" mask="0x00000006"  permission="rw"
-                description="Event counter bytes (00 = 1B, 01 = 2B, 10 = 3B, 11 = 1B)">
-          </node>
+                description="Event counter bytes (00 = 1B, 01 = 2B, 10 = 3B, 11 = 1B)"/>
           <node id="CFG_BC_BYTES"  address="0x82" mask="0x00000001"  permission="rw"
-                description="Bunch counter bytes (0 = 2B, 1 = 3B)">
-          </node>
+                description="Bunch counter bytes (0 = 2B, 1 = 3B)"/>
           <node id="CFG_FP_FE"  address="0x83" mask="0x000000e0"  permission="rw"
-                description="Front end peaking time (000 = 25ns, 001 = 50ns, 011 = 75ns, 111 = 100ns)">
-          </node>
+                description="Front end peaking time (000 = 25ns, 001 = 50ns, 011 = 75ns, 111 = 100ns)"/>
           <node id="CFG_RES_PRE"  address="0x83" mask="0x0000001c"  permission="rw"
-                description="Preamplifier resistance set (001 = high gain, 010 = middle gain, 100 = low gain)">
-          </node>
+                description="Preamplifier resistance set (001 = high gain, 010 = middle gain, 100 = low gain)"/>
           <node id="CFG_CAP_PRE"  address="0x83" mask="0x00000003"  permission="rw"
-                description="Preamplifier capacity set (00 = high gain, 01 = middle gain, 11 = low gain)">
-          </node>
+                description="Preamplifier capacity set (00 = high gain, 01 = middle gain, 11 = low gain)"/>
           <node id="CFG_PT"  address="0x84" mask="0x000003c0"  permission="rw"
-                description="CFD Time Constant (0001 = 25ns, 0011 = 50ns, 0111 = 75ns, 1111 = 100ns)">
-          </node>
+                description="CFD Time Constant (0001 = 25ns, 0011 = 50ns, 0111 = 75ns, 1111 = 100ns)"/>
           <node id="CFG_EN_HYST"  address="0x84" mask="0x00000020"  permission="rw"
-                description="Arming comparator hysteresis (0 = disable, 1 = enable)">
-          </node>
+                description="Arming comparator hysteresis (0 = disable, 1 = enable)"/>
           <node id="CFG_SEL_POL"  address="0x84" mask="0x00000010"  permission="rw"
-                description="CFD input charge polarity (0 = positive, 1 = negative/GEM )">
-          </node>
+                description="CFD input charge polarity (0 = positive, 1 = negative/GEM )"/>
           <node id="CFG_FORCE_EN_ZCC"  address="0x84" mask="0x00000008"  permission="rw"
-                description="Debug and calibration: force ZCC output, independent from arming comp (0 = disable, 1 = enable)">
-          </node>
+                description="Debug and calibration: force ZCC output, independent from arming comp (0 = disable, 1 = enable)"/>
           <node id="CFG_FORCE_TH"  address="0x84" mask="0x00000004"  permission="rw"
-                description="Debug: force active ZCC threshold (0 = disable, 1 = enable)">
-          </node>
+                description="Debug: force active ZCC threshold (0 = disable, 1 = enable)"/>
           <node id="CFG_SEL_COMP_MODE"  address="0x84" mask="0x00000003"  permission="rw"
-                description="CFD output mode (00 = normal, 01 = arming, 10 = ZCC, 11 = 0)">
-          </node>
+                description="CFD output mode (00 = normal, 01 = arming, 10 = ZCC, 11 = 0)"/>
           <node id="CFG_VREF_ADC"  address="0x85" mask="0x00000300"  permission="rw"
-                description="ADC internal reference tuning, 50mV steps to adjust to 1.0V during production calibration (range: 0-3)">
-          </node>
+                description="ADC internal reference tuning, 50mV steps to adjust to 1.0V during production calibration (range: 0-3)"/>
           <node id="CFG_MON_GAIN"  address="0x85" mask="0x00000080"  permission="rw"
-                description="Gain of ADC monitoring buffer (0 = gain 1, 1 = gain 5)">
-          </node>
+                description="Gain of ADC monitoring buffer (0 = gain 1, 1 = gain 5)"/>
           <node id="CFG_MONITOR_SELECT"  address="0x85" mask="0x0000003f"  permission="rw"
-                description="Monitoring selection (0 = Imon Iref, 1 = Imon Calib IDC, 2 = Imon Preamp InpTran, 3 = Imon Preamp LC, 4 = Imon Preamp SF, 5 = Imon Shap FC, 6 = Imon Shap Inpair, 7 = Imon SD Inpair, 8 = Imon SD FC, 9 = Imon SD SF, 10 = Imon CFD Bias1, 11 = Imon CFD Bias2, 12 = Imon CFD Hyst, 13 = Imon CFD Ireflocal, 14 = Imon CFD ThArm, 15 = Imon CFD ThZcc, 16 = Imon SLVS Ibias, 32 = Vmon BGR, 33 = Vmon Calib Vstep, 34 = Vmon Preamp Vref, 35 = Vmon Vth Arm, 36 = Vmon Vth ZCC, 37 = V Tsens Int, 38 = V Tsens Ext, 39 = ADC ref, 40 = ADC VinM, 41 = SLVS Vref">
-          </node>
+                description="Monitoring selection (0 = Imon Iref, 1 = Imon Calib IDC, 2 = Imon Preamp InpTran, 3 = Imon Preamp LC, 4 = Imon Preamp SF, 5 = Imon Shap FC, 6 = Imon Shap Inpair, 7 = Imon SD Inpair, 8 = Imon SD FC, 9 = Imon SD SF, 10 = Imon CFD Bias1, 11 = Imon CFD Bias2, 12 = Imon CFD Hyst, 13 = Imon CFD Ireflocal, 14 = Imon CFD ThArm, 15 = Imon CFD ThZcc, 16 = Imon SLVS Ibias, 32 = Vmon BGR, 33 = Vmon Calib Vstep, 34 = Vmon Preamp Vref, 35 = Vmon Vth Arm, 36 = Vmon Vth ZCC, 37 = V Tsens Int, 38 = V Tsens Ext, 39 = ADC ref, 40 = ADC VinM, 41 = SLVS Vref"/>
           <node id="CFG_IREF"  address="0x86" mask="0x0000003f"  permission="rw"
-                description="Tuning of global reference current generated by Bandgap reference circuit. Target value: 10uA. Nominal: 310nA/bit">
-          </node>
+                description="Tuning of global reference current generated by Bandgap reference circuit. Target value: 10uA. Nominal: 310nA/bit"/>
 
           <node id="CFG_THR_ZCC_DAC"  address="0x87" mask="0x0000ff00" permission="rw"
-                description="ZCC global threshold: nominal 0.5mV/bit (range: 0x00-0xff)">
-          </node>
+                description="ZCC global threshold: nominal 0.5mV/bit (range: 0x00-0xff)"/>
           <node id="CFG_THR_ARM_DAC"  address="0x87" mask="0x000000ff" permission="rw"
-                description="Arming global threshold: nominal 2mV/bit (range: 0x00-0xff)">
-          </node>
+                description="Arming global threshold: nominal 2mV/bit (range: 0x00-0xff)"/>
 
           <node id="CFG_HYST"  address="0x88" mask="0x0000003f" permission="rw"
-                description="Global hysteresis DAC: nominal 0.4mV/bit (range: 0x00-0x3f)">
-          </node>
+                description="Global hysteresis DAC: nominal 0.4mV/bit (range: 0x00-0x3f)"/>
 
           <node id="CFG_LATENCY"  address="0x89" mask="0x0000ffff" permission="rw"
-                description="Internal L1A latency (range: 0-1023)">
-          </node>
+                description="Internal L1A latency (range: 0-1023)"/>
 
           <node id="CFG_CAL_SEL_POL"  address="0x8a" mask="0x00004000" permission="rw"
-                description="Calibration pulse polarity (0 = positive, 1 = negative)">
-          </node>
+                description="Calibration pulse polarity (0 = positive, 1 = negative)"/>
           <node id="CFG_CAL_PHI"  address="0x8a" mask="0x00003800" permission="rw"
-                description="Pulse phase in 1/320MHz (3.125ns) delay (range: 0-7, where 0 = no delay and 7 = 21.87ns)">
-          </node>
+                description="Pulse phase in 1/320MHz (3.125ns) delay (range: 0-7, where 0 = no delay and 7 = 21.87ns)"/>
           <node id="CFG_CAL_EXT"  address="0x8a" mask="0x00000400" permission="rw"
-                description="External analog voltage step (0 = disable, 1 = enable)">
-          </node>
+                description="External analog voltage step (0 = disable, 1 = enable)"/>
           <node id="CFG_CAL_DAC"  address="0x8a" mask="0x000003fc" permission="rw"
-                description="CAL DAC: amplitude of current pulse. 256-CAL DAC: amplitude of voltage step. Range: 0-255">
-          </node>
+                description="CAL DAC: amplitude of current pulse. 256-CAL DAC: amplitude of voltage step. Range: 0-255"/>
           <node id="CFG_CAL_MODE"  address="0x8a" mask="0x00000003" permission="rw"
-                description="Cal pulse mode (00 = disabled, 01 = voltage pulse, 1x = current pulse">
-          </node>
+                description="Cal pulse mode (00 = disabled, 01 = voltage pulse, 1x = current pulse"/>
           <node id="CFG_CAL_FS"  address="0x8b" mask="0x00000600" permission="rw"
-                description="Cal current pulse scale factor. Q = CAL DUR[s] * CAL DAC * 10nA * CAL FS[%] (00 = 25%, 01 = 50%, 10 = 75%, 11 = 100%)">
-          </node>
+                description="Cal current pulse scale factor. Q = CAL DUR[s] * CAL DAC * 10nA * CAL FS[%] (00 = 25%, 01 = 50%, 10 = 75%, 11 = 100%)"/>
           <node id="CFG_CAL_DUR"  address="0x8b" mask="0x000001ff" permission="rw"
-                description="Cal pulse duration in 40MHz clock cycles (range: 0-0x1ff)">
-          </node>
+                description="Cal pulse duration in 40MHz clock cycles (range: 0-0x1ff)"/>
 
           <node id="CFG_BIAS_CFD_DAC_2"  address="0x8c" mask="0x00000fc0" permission="rw"
-                description="CFD Bias 2 (current). Range: 0-0x3f (default = 0x28)">
-          </node>
+                description="CFD Bias 2 (current). Range: 0-0x3f (default = 0x28)"/>
           <node id="CFG_BIAS_CFD_DAC_1"  address="0x8c" mask="0x0000003f" permission="rw"
-                description="CFD Bias 1 (current). Range: 0-0x3f (default = 0x28)">
-          </node>
+                description="CFD Bias 1 (current). Range: 0-0x3f (default = 0x28)"/>
           <node id="CFG_BIAS_PRE_I_BSF"  address="0x8d" mask="0x00003f00" permission="rw"
-                description="Preamplifier bias source follower (current). Range: 0-0x3f (default = 1 = 2uA)">
-          </node>
+                description="Preamplifier bias source follower (current). Range: 0-0x3f (default = 1 = 2uA)"/>
           <node id="CFG_BIAS_PRE_I_BIT"  address="0x8d" mask="0x000000ff" permission="rw"
-                description="Preamplifier bias input transistor (current). Range: 0-0xff (default = 1 = 1uA)">
-          </node>
+                description="Preamplifier bias input transistor (current). Range: 0-0xff (default = 1 = 1uA)"/>
           <node id="CFG_BIAS_PRE_I_BLCC"  address="0x8e" mask="0x00003f00" permission="rw"
-                description="Preamplifier bias leakage compensation (current). Range: 0-0x3f (default = 15 = 15nA)">
-          </node>
+                description="Preamplifier bias leakage compensation (current). Range: 0-0x3f (default = 15 = 15nA)"/>
           <node id="CFG_BIAS_PRE_VREF"  address="0x8e" mask="0x000000ff" permission="rw"
-                description="Preamplifier VREF. Range: 0-0xff (default = 86 = 430mV)">
-          </node>
+                description="Preamplifier VREF. Range: 0-0xff (default = 86 = 430mV)"/>
           <node id="CFG_BIAS_SH_I_BFCAS"  address="0x8f" mask="0x0000ff00" permission="rw"
-                description="Shaper folded cascode (current). Range: 0-0xff (default = 1 = 100nA)">
-          </node>
+                description="Shaper folded cascode (current). Range: 0-0xff (default = 1 = 100nA)"/>
           <node id="CFG_BIAS_SH_I_BDIFF"  address="0x8f" mask="0x000000ff" permission="rw"
-                description="Shaper input pair (current). Range: 0-0xff (default = 1 = 100nA)">
-          </node>
+                description="Shaper input pair (current). Range: 0-0xff (default = 1 = 100nA)"/>
           <node id="CFG_BIAS_SH_I_BFAMP"  address="0x90" mask="0x00003f00" permission="rw"
-                description="Shaper feed amplifier (current). Range: 0-0x3f (default = 1 = 1nA)">
-          </node>
+                description="Shaper feed amplifier (current). Range: 0-0x3f (default = 1 = 1nA)"/>
           <node id="CFG_BIAS_SD_I_BDIFF"  address="0x90" mask="0x000000ff" permission="rw"
-                description="SD input pair (current). Range: 0-0xff (default = 1 = 100nA)">
-          </node>
+                description="SD input pair (current). Range: 0-0xff (default = 1 = 100nA)"/>
           <node id="CFG_BIAS_SD_I_BSF"  address="0x91" mask="0x00003f00" permission="rw"
-                description="SD source follower (current). Range: 0-0x3f (default = 1 = 2uA)">
-          </node>
+                description="SD source follower (current). Range: 0-0x3f (default = 1 = 2uA)"/>
           <node id="CFG_BIAS_SD_I_BFCAS"  address="0x91" mask="0x000000ff" permission="rw"
-                description="SD folded cascode (current). Range: 0-0xff (default = 1 = 100nA)">
-          </node>
+                description="SD folded cascode (current). Range: 0-0xff (default = 1 = 100nA)"/>
 
           <node id="CFG_RUN" address="0x300" mask="0x00000001" permission="rw"
-                description="SLEEP/RUN mode (0 = SLEEP, 1 = RUN)">
-          </node>
+                description="SLEEP/RUN mode (0 = SLEEP, 1 = RUN)"/>
 
           <node id="HW_ID"  address="0x100"  permission="r"
-                description="Device hardware ID register. Reports 0x56464154 (ASCII 'VFAT') on read.">
-          </node>
+                description="Device hardware ID register. Reports 0x56464154 (ASCII 'VFAT') on read."/>
           <node id="HW_ID_VER"  address="0x101"  permission="r"
-                description="Hardware version. Reports 0x00030000 (v3.0.0) on read.">
-          </node>
+                description="Hardware version. Reports 0x00030000 (v3.0.0) on read."/>
           <node id="TEST_REG"  address="0x102"  permission="rw"
-                description="General purpose read/write register.">
-          </node>
+                description="General purpose read/write register."/>
           <node id="HW_CHIP_ID"  address="0x103"  permission="r"
-                description="Chip ID from eFuses.">
-          </node>
+                description="Chip ID from eFuses."/>
 
           <!-- probably better to leave these out as they should only be used during fusing
           <node id="HW_PROG_TIME"  address="0x104" mask="0x0007ff00" permission="w"
-                description="eFuse: program time in 25ns units. Range: 0-0x7ff">
-          </node>
+                description="eFuse: program time in 25ns units. Range: 0-0x7ff"/>
           <node id="HW_PROG_BIT_ADDR"  address="0x104" mask="0x0000001f" permission="w"
-                description="eFuse: address of the bit to be programmed. Range: 0-0x1f">
-          </node>
+                description="eFuse: address of the bit to be programmed. Range: 0-0x1f"/>
           -->
 
           <node id="ADC0_CACHED"  address="0x280" mask="0x000003ff" permission="r"
-                description="Primary ADC read (using the internal reference). Note, this value is returned from CTP7's cache (last known value of ADC0 for this VFAT since ADC0_UPDATE was called). To update the cache, read or write ADC0_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)">
-          </node>
+                description="Primary ADC read (using the internal reference). Note, this value is returned from CTP7's cache (last known value of ADC0 for this VFAT since ADC0_UPDATE was called). To update the cache, read or write ADC0_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)"/>
           <node id="ADC0_UPDATE"  address="0x200" mask="0x00000001" permission="rw"
-                description="Reading or writing this register will trigger a read of the ADC0 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC0_CACHED">
-          </node>
+                description="Reading or writing this register will trigger a read of the ADC0 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC0_CACHED"/>
 
           <node id="ADC1_CACHED"  address="0x281" mask="0x000003ff" permission="r"
-                description="ADC1 read (using the external reference). Note, this value is returned from CTP7's cache. To update the cache, read or write ADC1_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)">
-          </node>
+                description="ADC1 read (using the external reference). Note, this value is returned from CTP7's cache. To update the cache, read or write ADC1_UPDATE, and wait at least 20us before reading this register to take the updated value (note that value of 0 indicates a read error)"/>
           <node id="ADC1_UPDATE"  address="0x201" mask="0x00000001" permission="rw"
-                description="Reading or writing this register will trigger a read of the ADC1 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC1_CACHED">
-          </node>
+                description="Reading or writing this register will trigger a read of the ADC1 value form this VFAT and update of the cache. The read from the VFAT takes aroun 11us, so it's advised to wait for 20us to be sure that the cache was already updated before reading ADC1_CACHED"/>
 
 
         </node>
@@ -1567,8 +1501,7 @@
 
   <node id="CTRL" address="0x0">
     <node id="BLASTER_ENABLE" address="0x0" mask="0x00000001" permission="rw"
-          description="Set this to 1 to enable the configuration blasting after the hard reset. By default this is disabled, because config RAM is empty on startup, so only enable this after the config RAM has been written with valid config data.">
-    </node>
+          description="Set this to 1 to enable the configuration blasting after the hard reset. By default this is disabled, because config RAM is empty on startup, so only enable this after the config RAM has been written with valid config data."/>
   </node>
 
   <node id="STATUS" address="0x100">

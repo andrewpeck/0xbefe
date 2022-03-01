@@ -39,11 +39,21 @@ def vfat_reset(system, oh_select, vfat_list):
             select_ic_link(oh_select, gbt_select)
         elif system=="chc":
             config_initialize_chc(oh_ver, boss)
-        check_lpgbt_ready(oh_select, gbt_select)
-                     
         if system!="dryrun":
-            check_rom_readback(oh_select, gbt_select)
-            check_lpgbt_mode(boss, oh_select, gbt_select)   
+            if oh_ver == 1:
+                if mpeek(0x1c7)!=18:
+                    print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
+                    rw_terminate()
+                if mpeek(0x1c5)!=0xA5:
+                    print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
+                    rw_terminate()
+            elif oh_ver == 2:
+                if mpeek(0x1d9)!=19:
+                    print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
+                    rw_terminate()
+                if mpeek(0x1d7)!=0xA6:
+                    print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
+                    rw_terminate()
 
         dir_enable = convert_gpio_reg(gpio)
         dir_disable = 0x00

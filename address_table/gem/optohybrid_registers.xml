@@ -7,7 +7,7 @@
 <!-- END: GLOBALS DO NOT EDIT -->
 
 <!--  The tags attribute is a free test attribute which meaning is defined by the uHAL user -->
-<node id="FPGA">
+<node id="FPGA" address="0x0">
     <!--Control module -->
     <node id="CONTROL"  address="0x0000"
           description="Implements various control and monitoring functions of the Optohybrid"
@@ -22,7 +22,6 @@
           fw_reg_addr_lsb="0">
 
         <node id="LOOPBACK" address="0x0" description="Loopback data register for testing read/write communication with the Optohybrid FPGA">
-            description="Loopback Test Register" fw_signal="loopback">
             <node id="DATA" address="0x0" permission="rw"
                   description="Write/Read Data Port"
                   fw_signal="loopback"

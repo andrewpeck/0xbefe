@@ -213,7 +213,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--voltage", action="store", dest="voltage", default = "2.5", help="voltage = exact value of the 2.5V input voltage to OH")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
-    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for RSSI ADC: 2, 8, 16, 32")
+    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
 
     if args.system == "chc":

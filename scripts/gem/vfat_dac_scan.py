@@ -153,6 +153,8 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, lower, upper_list
             for reg in range(lower, MAX_DAC_SIZE[dac] + 1, step):
                 dac_scan_errors[vfat][dac][reg] = -9999
 
+    sleep(1)
+
     # Loop over VFATs
     for vfat in vfat_list:
         print ("VFAT %02d"%vfat)

@@ -11,11 +11,13 @@ import sys
 DEBUG = False
 
 ADDR_IC_ADDR = None
+ADDR_IC_READ_DATA = None
 ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
 
 NODE_IC_ADDR = None
+NODE_IC_READ_DATA = None
 NODE_IC_WRITE_DATA = None
 NODE_IC_EXEC_WRITE = None
 NODE_IC_EXEC_READ = None
@@ -111,6 +113,13 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
             print(color + "Charge pump current = %d  ------ GBT status = %s" % (curr, statusText) + Colors.ENDC)
             if wasNotReady != 0:
                 break
+
+    elif command == 'read-config':
+        filename = command_args[0]
+        if filename[-3:] != "txt":
+            print_red("Seems like the file %s is not a txt file, please provide a txt file for output" % filename)
+            return
+        readConfig(ohSelect, gbtSelect, filename)
 
     elif (command == 'config') or (command == 'v3b-phase-scan') or (command == 'ge21-phase-scan') or ('ge21-fpga-phase-scan' in command) or (command == 'ge21-program-phases'):
         if len(command_args) < 1:
@@ -399,6 +408,27 @@ def getBestPhase(goodPhases):
     print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
     return bestPhase
 
+def readConfig(ohIdx, gbtIdx, filename):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+
+    n_rw_reg = 0
+    if gem_station == 0:
+        if gbt_ver == 0:
+            n_rw_reg = (0x13C+1)
+        elif gbt_ver == 1:
+            n_rw_reg = (0x14F+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
+    f = open(filename, 'w')
+    for reg in range(0, n_rw_reg):
+        wReg(ADDR_IC_ADDR, addr)
+        wReg(ADDR_IC_EXEC_READ, 1)
+        value = rReg(ADDR_IC_READ_DATA)
+        f.write("0x%03X  0x%02X"%(reg, value))
+    f.close()
+
 def downloadConfig(ohIdx, gbtIdx, filename):
     gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
@@ -471,21 +501,25 @@ def destroyConfig():
 
 def initGbtRegAddrs():
     global ADDR_IC_ADDR
+    global ADDR_IC_READ_DATA
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
 
     global NODE_IC_ADDR
+    global NODE_IC_READ_DATA
     global NODE_IC_WRITE_DATA
     global NODE_IC_EXEC_WRITE
     global NODE_IC_EXEC_READ
 
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
+    ADDR_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
 
     NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
+    NODE_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA')
     NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
     NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
     NODE_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ')
@@ -528,6 +562,13 @@ def writeGbtRegAddrs(reg, val):
     write_reg(NODE_IC_EXEC_WRITE, 1)
     sleep(0.000001) # writing is too fast for CVP13 :)
 
+def readGbtRegAddrs(reg):
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_EXEC_READ, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
+    data = read_reg(NODE_IC_READ_DATA) & 0xFF
+    return data
+
 def signal_handler(sig, frame):
     print("Exiting..")
     write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
@@ -545,6 +586,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 4:
         print('Usage: gbt.py <oh_num> <gbt_num> <command>')
         print('available commands:')
+        print('  read-config <config_filename_txt>:   Reads the configuration of the GBT and writes it to the given config file (must use the txt version of the config file)')
         print('  config <config_filename_txt>:   Configures the GBT with the given config file (must use the txt version of the config file, can be generated with the GBT programmer software)')
         print('  v3b-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  ge21-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
