@@ -1,6 +1,6 @@
 # -*- mode: TCL;-*-
 
-boards/ctp7/hdl/gem_ctp7.vhd
+boards/ctp7/hdl/gem_ctp7.vhd top=gem_ctp7
 boards/ctp7/hdl/misc/ttc_clocks.vhd
 
 boards/ctp7/hdl/pkg/gem_board_config_pkg.vhd

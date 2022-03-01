@@ -19,9 +19,11 @@ module led_control
 
    input             reset,
 
-   input [10:0]      cluster_count_i,
+   input [10:0]      cluster_count_masked_i,
+   input [10:0]      cluster_count_unmasked_i,
 
-   output [31:0]     cluster_rate,
+   output [31:0]     cluster_rate_masked,
+   output [31:0]     cluster_rate_unmasked,
 
    output            async_clock_o,
 
@@ -89,10 +91,11 @@ module led_control
    //----------------------------------------------------------------------------------------------------------------------
 
    wire [7:0] progress_bar;
-   reg [10:0] cluster_count;
+   reg [10:0] cluster_count_masked, cluster_count_unmasked;
 
    always @(posedge clock) begin
-      cluster_count <= cluster_count_i;
+      cluster_count_masked   <= cluster_count_masked_i;
+      cluster_count_unmasked <= cluster_count_unmasked_i;
    end
 
    progress_bar
@@ -105,12 +108,31 @@ module led_control
        .g_PROGRESS_BAR_STEP     (32'd100), // each bar is 100 Hz
        .g_SPEEDUP_FACTOR        (32'd4)    // update 16 times per second
        )
-   u_rate_cnt
+   u_rate_cnt_masked
      (
       .clk_i           (clock),
       .reset_i         (reset),
-      .increment_i     (cluster_count),
-      .rate_o          (cluster_rate),
+      .increment_i     (cluster_count_masked),
+      .rate_o          (cluster_rate_masked),
+      .progress_bar_o  ()
+      );
+
+   progress_bar
+     #(
+       .g_LOGARITHMIC           (32'd1), // 1 for LOG scale (ignores step )
+       .g_CLK_FREQUENCY         (32'd40079000), // 40MHz LHC frequency
+       .g_COUNTER_WIDTH         (32'd32),
+       .g_INCREMENTER_WIDTH     (32'd11),
+       .g_PROGRESS_BAR_WIDTH    (32'd8),   // we'll have 8 LEDs as a rate progress bar
+       .g_PROGRESS_BAR_STEP     (32'd100), // each bar is 100 Hz
+       .g_SPEEDUP_FACTOR        (32'd4)    // update 16 times per second
+       )
+   u_rate_cnt_unmasked
+     (
+      .clk_i           (clock),
+      .reset_i         (reset),
+      .increment_i     (cluster_count_unmasked),
+      .rate_o          (cluster_rate_unmasked),
       .progress_bar_o  (progress_bar)
       );
 
@@ -127,7 +149,7 @@ module led_control
    always @(posedge clock) begin
       if (ttc_resync || reset)
         first_sbit_seen <= 1'b0;
-      else if (cluster_count > 0)
+      else if (cluster_count_masked > 0)
         first_sbit_seen <= 1'b1;
    end
 

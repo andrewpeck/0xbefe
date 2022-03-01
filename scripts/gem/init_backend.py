@@ -47,6 +47,7 @@ def init_gem_backend():
             return
         promless_load(oh_bitfile)
 
+    sleep(1.5)
     print("Initializing frontend..")
     init_gem_frontend()
 

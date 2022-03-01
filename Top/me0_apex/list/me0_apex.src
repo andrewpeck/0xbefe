@@ -12,6 +12,9 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
+# ME0 Trigger source
+gem/hdl/sbit_me0.src
+
 # GEM APEX source
 boards/apex/hdl/apex_common.src
 boards/apex/hdl/gem_apex.src
@@ -27,6 +30,7 @@ gem/hdl/oh/generated/me0_apex/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_apex/daq.vhd
 gem/hdl/slow_control/generated/me0_apex/slow_control.vhd
 gem/hdl/trigger/generated/me0_apex/trigger.vhd
+gem/hdl/trigger/generated/me0_apex/sbit_me0.vhd
 
 common/hdl/slink_rocket/generated/me0_apex/slink_rocket.vhd
 common/hdl/slink_rocket.src

@@ -13,6 +13,7 @@ common/hdl/utils/bitslip.vhd
 common/hdl/utils/latch.vhd
 common/hdl/utils/i2c_slave.vhd
 common/hdl/utils/rate_counter.vhd
+common/hdl/utils/rate_counter32_multi.vhd
 common/hdl/utils/crc16.vhd
 common/hdl/utils/crc_vfat3_daq.v
 common/hdl/utils/counter.vhd

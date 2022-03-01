@@ -8,3 +8,4 @@ gem/ip/vio_debug_link_selector/vio_debug_link_selector.xci
 gem/ip/ila_trigger/ila_trigger.xci
 gem/ip/ila_ge21_trigger_link/ila_ge21_trigger_link.xci
 gem/ip/ila_trig_4g_decoder/ila_trig_4g_decoder.xci
+gem/ip/ila_sbit_me0/ila_sbit_me0.xci

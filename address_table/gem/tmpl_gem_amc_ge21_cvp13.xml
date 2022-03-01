@@ -14,12 +14,12 @@
 <!ENTITY ADDRESS_TABLE_TTC SYSTEM "../befe/ttc.xml">
 <!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
 ]>
-<node id="BEFE" xmlns:xi="http://www.w3.org/2001/XInclude">
+<node id="BEFE" address="0x0" xmlns:xi="http://www.w3.org/2001/XInclude">
   &ADDRESS_TABLE_SYSTEM;
   &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_PROMLESS;
   &ADDRESS_TABLE_PCIE;
-  <node id="GEM_AMC">
+  <node id="GEM_AMC" address="0x0">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
   </node>

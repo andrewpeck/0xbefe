@@ -11,9 +11,16 @@ import sys
 DEBUG = False
 
 ADDR_IC_ADDR = None
+ADDR_IC_READ_DATA = None
 ADDR_IC_WRITE_DATA = None
 ADDR_IC_EXEC_WRITE = None
 ADDR_IC_EXEC_READ = None
+
+NODE_IC_ADDR = None
+NODE_IC_READ_DATA = None
+NODE_IC_WRITE_DATA = None
+NODE_IC_EXEC_WRITE = None
+NODE_IC_EXEC_READ = None
 
 ADDR_LINK_RESET = None
 
@@ -55,7 +62,8 @@ ME0_GBT1_SPICY_ELINK_TO_VFAT = {18: 2, 3: 4, 17: 5}
 ME0_SPICY_ELINK_TO_VFAT = [ME0_GBT0_SPICY_ELINK_TO_VFAT, ME0_GBT1_SPICY_ELINK_TO_VFAT]
 ME0_PIZZA_ELINK_TO_VFAT = [ME0_CLASSIC_ELINK_TO_VFAT, ME0_SPICY_ELINK_TO_VFAT]
 
-LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0cc
+LPGBT_V0_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0CC
+LPGBT_V1_ELINK_SAMPLING_PHASE_BASE_ADDR = 0x0D0
 ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT = [0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0xa, 0xa, 0xa, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0x3]
 ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT = [0x2, 0xa, 0x2, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0xa, 0xa, 0x2, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0xa, 0x2, 0xa, 0xa, 0xa, 0x2, 0xa, 0x3]
 
@@ -65,6 +73,7 @@ PHASE_SCAN_L1A_GAP = 40 # 1MHz
 
 def gbt_command(oh_idx, gbt_idx, command, command_args):
 
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
     ohSelect = oh_idx
     gbtSelect = gbt_idx
 
@@ -81,11 +90,14 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
 
     heading("Hello, I'm your GBT controller :)")
 
-    if (checkGbtReady(ohSelect, gbtSelect) == 1):
+    if gem_station == 0: # ME0
         selectGbt(ohSelect, gbtSelect)
-    else:
-        print_red("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
-        return
+    else: # GE1/1 or GE2/1
+        if (checkGbtReady(ohSelect, gbtSelect) == 1):
+            selectGbt(ohSelect, gbtSelect)
+        else:
+            print_red("Sorry, OH%d GBT%d link is not ready.. check the following: your OH is on, the fibers are plugged in correctly, the CTP7 TX polarity is correct, and muy importante, check that your GBTX is fused with at least the minimal config.." % (ohSelect, gbtSelect))
+            return
 
     if command == "charge-pump-current-scan":
         write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
@@ -101,6 +113,13 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
             print(color + "Charge pump current = %d  ------ GBT status = %s" % (curr, statusText) + Colors.ENDC)
             if wasNotReady != 0:
                 break
+
+    elif command == 'read-config':
+        filename = command_args[0]
+        if filename[-3:] != "txt":
+            print_red("Seems like the file %s is not a txt file, please provide a txt file for output" % filename)
+            return
+        readConfig(ohSelect, gbtSelect, filename)
 
     elif (command == 'config') or (command == 'v3b-phase-scan') or (command == 'ge21-phase-scan') or ('ge21-fpga-phase-scan' in command) or (command == 'ge21-program-phases'):
         if len(command_args) < 1:
@@ -254,10 +273,6 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
     print("bye now..")
 
 def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowControlTransactions, numDaqPackets):
-    if isLpGbt:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
-    else:
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
 
     # setup the TTC generator for a DAQ test
     write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -277,7 +292,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
         goodPhases = []
         for phase in range(0, 15):
-            setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase)
+            setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase)
 
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
@@ -330,7 +345,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         # select the best phase for this elink
         bestPhase = getBestPhase(goodPhases)
         print("Setting phase = %d" % bestPhase)
-        setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, bestPhase)
+        setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, bestPhase)
 
     # restore the TTC generator settings
     write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
@@ -343,11 +358,16 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     sleep(0.1)
     write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
 
-def setElinkPhase(isLpGbt, gbtSelect, gbtRegs, elink, phase):
+def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
     # set phase
     if isLpGbt: # LpGBT
+        gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohSelect][gbtSelect]
         isMaster = gbtSelect % 2 == 0
         ctrlRegDefault = ME0_MASTER_GBT_ELINK_CTRL_REG_DEFAULT[elink] if isMaster else ME0_SLAVE_GBT_ELINK_CTRL_REG_DEFAULT[elink]
+        if gbt_ver == 0:
+            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_V0_ELINK_SAMPLING_PHASE_BASE_ADDR
+        elif gbt_ver == 1:
+            LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR = LPGBT_V1_ELINK_SAMPLING_PHASE_BASE_ADDR
         addr = LPGBT_ELINK_SAMPLING_PHASE_BASE_ADDR + elink
         value = (phase << 4) + ctrlRegDefault
         wReg(ADDR_IC_ADDR, addr)
@@ -392,36 +412,92 @@ def getBestPhase(goodPhases):
     print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
     return bestPhase
 
+def readConfig(ohIdx, gbtIdx, filename):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+
+    n_rw_reg = 0
+    if gem_station == 0:
+        if gbt_ver == 0:
+            n_rw_reg = (0x13C+1)
+        elif gbt_ver == 1:
+            n_rw_reg = (0x14F+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
+    f = open(filename, 'w')
+    for reg in range(0, n_rw_reg):
+        wReg(ADDR_IC_ADDR, addr)
+        wReg(ADDR_IC_EXEC_READ, 1)
+        value = rReg(ADDR_IC_READ_DATA)
+        f.write("0x%03X  0x%02X"%(reg, value))
+    f.close()
+
 def downloadConfig(ohIdx, gbtIdx, filename):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+
+    n_rw_reg = 0
+    if gem_station == 0:
+        if gbt_ver == 0:
+            n_rw_reg = (0x13C+1)
+        elif gbt_ver == 1:
+            n_rw_reg = (0x14F+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
     f = open(filename, 'r')
-
-    #for now we'll operate with 8 bit words only
-    write_reg(get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
-
     ret = []
-
     lines = 0
     addr = 0
+
     for line in f:
-        value = int(line, 16)
-        wReg(ADDR_IC_ADDR, addr)
-        wReg(ADDR_IC_WRITE_DATA, value)
-        wReg(ADDR_IC_EXEC_WRITE, 1)
+        if gem_station == 0: # ME0
+            value = int(line.split()[1],16)
+            if addr <= 0x007: # CHIP ID and USER ID
+                value = -9999
+            if gbt_ver == 1:
+                if addr in range(0xfc, 0x100): # CRC
+                    value = -9999
+            if gbt_ver == 0:
+                if addr in range(0x0f0, 0x105): # I2C Masters
+                    value = 0x00
+            elif gbt_ver == 1:
+                if addr in range(0x100, 0x115): # I2C Masters
+                    value = 0x00
+        elif gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
+            value = int(line, 16)
+        if value != -9999: # Do not write these registers (keeping fused values)
+            wReg(ADDR_IC_ADDR, addr)
+            wReg(ADDR_IC_WRITE_DATA, value)
+            wReg(ADDR_IC_EXEC_WRITE, 1)
+            value = 0x00
         sleep(0.000001) # writing is too fast for CVP13 :)
         addr += 1
         lines += 1
         ret.append(value)
 
     print("Wrote %d registers to OH%d GBT%d" % (lines, ohIdx, gbtIdx))
-    if lines < 366:
-        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain 366 registers")
+    if lines < n_rw_reg:
+        print_red("looks like you gave me an incomplete file, since I found only %d registers, while a complete config should contain %d registers"%(lines, n_rw_reg))
 
     f.close()
-
     return ret
 
 def destroyConfig():
-    for i in range(0, 369):
+    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+
+    n_rw_reg = 0
+    if gem_station == 0:
+        if gbt_ver == 1:
+            n_rw_reg = (0x13C+1)
+        elif gbt_ver == 2:
+            n_rw_reg = (0x14F+1)
+    elif gem_station == 1 or gem_station == 2:
+        n_rw_reg = 366
+
+    for i in range(0, n_rw_reg):
         wReg(ADDR_IC_ADDR, i)
         wReg(ADDR_IC_WRITE_DATA, 0)
         wReg(ADDR_IC_EXEC_WRITE, 1)
@@ -429,13 +505,28 @@ def destroyConfig():
 
 def initGbtRegAddrs():
     global ADDR_IC_ADDR
+    global ADDR_IC_READ_DATA
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
+
+    global NODE_IC_ADDR
+    global NODE_IC_READ_DATA
+    global NODE_IC_WRITE_DATA
+    global NODE_IC_EXEC_WRITE
+    global NODE_IC_EXEC_READ
+
     ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
+    ADDR_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA').address
     ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
     ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
     ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
+
+    NODE_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS')
+    NODE_IC_READ_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA')
+    NODE_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA')
+    NODE_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE')
+    NODE_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ')
 
 def initVfatRegAddrs():
     global ADDR_LINK_RESET
@@ -448,10 +539,39 @@ def selectGbt(ohIdx, gbtIdx):
 
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
+    if station == 0:
+        gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VERSION'), gbt_ver)
+        if gbt_ver == 0:
+            write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+        elif gbt_ver == 1:
+            if gbtIdx%2 == 0:
+                write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+            else:
+                write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x71)
+    else:
+        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+
+    #for now we'll operate with 8 bit words only
+    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH'), 1)
+
     return 0
 
 def checkGbtReady(ohIdx, gbtIdx):
     return read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx)))
+
+def writeGbtRegAddrs(reg, val):
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_WRITE_DATA, val)
+    write_reg(NODE_IC_EXEC_WRITE, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
+
+def readGbtRegAddrs(reg):
+    write_reg(NODE_IC_ADDR, reg)
+    write_reg(NODE_IC_EXEC_READ, 1)
+    sleep(0.000001) # writing is too fast for CVP13 :)
+    data = read_reg(NODE_IC_READ_DATA) & 0xFF
+    return data
 
 def signal_handler(sig, frame):
     print("Exiting..")
@@ -470,6 +590,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 4:
         print('Usage: gbt.py <oh_num> <gbt_num> <command>')
         print('available commands:')
+        print('  read-config <config_filename_txt>:   Reads the configuration of the GBT and writes it to the given config file (must use the txt version of the config file)')
         print('  config <config_filename_txt>:   Configures the GBT with the given config file (must use the txt version of the config file, can be generated with the GBT programmer software)')
         print('  v3b-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))
         print('  ge21-phase-scan <base_config_filename_txt> [num_slow_control] [num_daq_packets]:   Configures the GBT with the given config file, and performs an elink phase scan while checking the VFAT communication for each phase. Optionally the number of slow control transactions (default %d) and the number of daq packets (default %d) to check can be provided.'  % (PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS, PHASE_SCAN_DEFAULT_NUM_DAQ_PACKETS))

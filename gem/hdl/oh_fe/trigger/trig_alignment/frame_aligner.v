@@ -12,6 +12,7 @@
 // 2017/07/24 -- Initial
 // 2018/09/18 -- Modifications for light optohybrid
 // 2018/10/10 -- Rewrite/simplification based on new oversampler / dru module
+// 2021/10/01 -- Use bitslip_fast
 //--------------------------------------------------------------------------------
 
 module frame_aligner
@@ -66,8 +67,8 @@ module frame_aligner
   generate
   for (I=0; I<8; I=I+1'b1) begin  : Iloop
 
-  bitslip #(.g_EN_TMR (EN_BITSLIP_TMR)) data_bitslip (
-    .fabric_clk   (clock),
+  bitslip_fast data_bitslip (
+    .clock        (clock),
     .reset        (1'b0), //(reset || mask_i || ~sot_is_aligned),
     .bitslip_cnt  (bitslip_cnt),
     .din          (sbits_i[8*(I+1)-1 : 8*I]),
@@ -77,8 +78,8 @@ module frame_aligner
   end
   endgenerate
 
-  bitslip #(.g_EN_TMR (EN_BITSLIP_TMR)) sot_bitslip (
-    .fabric_clk   (clock),
+  bitslip_fast sot_bitslip (
+    .clock        (clock),
     .reset        (reset),
     .bitslip_cnt  (bitslip_cnt),
     .din          (start_of_frame_reg),

@@ -2,6 +2,10 @@
 
 # GBT slow control
 common/hdl/slow_control/gbt_ic_controller.vhd
+common/hdl/slow_control/gbt_ic_rx.vhd
+common/hdl/slow_control/ic_rx.vhd
+common/hdl/slow_control/ic_rx_fifo.vhd
+common/hdl/slow_control/ic_deserializer.vhd
 
 # Tests
 common/hdl/tests/gbt_loopback_test.vhd

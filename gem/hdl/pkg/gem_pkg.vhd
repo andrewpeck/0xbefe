@@ -113,7 +113,8 @@ package gem_pkg is
     --==  ME0 trigger  ==--
     --===================--
     
-    type t_vfat_trigger_cnt_arr is array(integer range<>) of t_std16_array(5 downto 0);
+    type t_vfat_trigger_cnt_arr is array(integer range<>) of t_std16_array(23 downto 0);
+    type t_vfat_trigger_rate_arr is array(integer range<>) of t_std32_array(23 downto 0);
 
     --====================--
     --== DAQ data input ==--

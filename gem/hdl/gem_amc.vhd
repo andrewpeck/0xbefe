@@ -31,7 +31,7 @@ entity gem_amc is
         g_NUM_OF_OHs         : integer;
         g_OH_VERSION         : integer;
         g_GBT_WIDEBUS        : integer;
-        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;        
+        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;
         g_NUM_GBTS_PER_OH    : integer;
         g_NUM_VFATS_PER_OH   : integer;
         g_USE_TRIG_TX_LINKS  : boolean := true;  -- if true, then trigger output links will be instantiated
@@ -182,6 +182,9 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
+    signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
+
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     signal lpgbt_tx_data_arr            : t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -267,11 +270,6 @@ architecture gem_amc_arch of gem_amc is
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
-
-    -- to prevent sbits from being optimized out
-    signal vfat_triggers : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-    signal oh_triggers   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
-    signal trigger_test  : std_logic;
 
 begin
 
@@ -429,7 +427,7 @@ begin
 
                 vfat3_daq_links_o       => vfat3_daq_link_arr(i),
 
-                sbit_clusters_o         => sbit_clusters_arr(i),
+                sbit_clusters_o         => ge_clusters_arr(i),
                 sbit_links_status_o     => sbit_links_status_arr(i),
                 ge21_gbt_trig_data_i    => ge21_gbt_trig_data_arr(i),
                 gth_rx_trig_data_i(0)   => gt_trig0_rx_data_arr_i(i),
@@ -452,10 +450,45 @@ begin
     --================================--
     -- Trigger
     --================================--
+    --if GE11 or GE21 import clusters from OH into trigger module
+    ge_trigger : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
+        sbit_clusters_arr <= ge_clusters_arr;
+    end generate;
 
+    -- ME0 Clusters --
+
+    me0_trigger : if (g_GEM_STATION = 0) generate
+        i_clusters : for i in 0 to g_NUM_OF_OHs - 1 generate
+            me0_cluster: entity work.sbit_me0
+                generic map(
+                    g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
+                    g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                    g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                    g_DEBUG             => CFG_DEBUG_SBIT_ME0
+                )
+                port map(
+                    reset_i             => reset_i,
+                    ttc_clk_i           => ttc_clocks_i,
+                    ttc_cmds_i          => ttc_cmd,
+                    vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
+                    ipb_reset_i         => ipb_reset,
+                    ipb_clk_i           => ipb_clk_i,
+                    ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
+                    me0_cluster_count_o => open,
+                    me0_clusters_o      => me0_clusters_arr(i),
+                    ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
+                );
+        end generate;
+
+        -- import clusters from ME0 cluster module to trigger module--
+        sbit_clusters_arr <= me0_clusters_arr;
+
+    end generate;
+
+    -- Trigger module --
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_OF_OHs => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -475,7 +508,6 @@ begin
             ipb_miso_o         => ipb_miso_arr(C_IPB_SLV.trigger),
             ipb_mosi_i         => ipb_mosi_arr_i(C_IPB_SLV.trigger)
         );
-
     --================================--
     -- EMTF Transmitters (LpGBT TX)
     --================================--
@@ -506,64 +538,6 @@ begin
 
     g_emtf_links_disabled : if not g_USE_TRIG_TX_LINKS generate
         gt_trig_tx_data_arr_o <= (others => (others => '0'));
-    end generate;
-
-    --================================--
-    -- ME0 Trigger
-    --================================--
-
---    i_trigger : entity work.trigger
---        generic map(
---            g_NUM_OF_OHs => g_NUM_OF_OHs,
---            g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
---            g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS
---        )
---        port map(
---            reset_i            => reset or link_reset,
---            ttc_clk_i          => ttc_clocks_i,
---            ttc_cmds_i         => ttc_cmd,
---            sbit_clusters_i    => sbit_clusters_arr,
---            sbit_link_status_i => sbit_links_status_arr,
---            trig_led_o         => led_trigger_o,
---            tx_link_clk_i      => gt_trig_tx_clk_i,
---            trig_tx_data_arr_o => gt_trig_tx_data_arr_o,
---            ipb_reset_i        => ipb_reset,
---            ipb_clk_i          => ipb_clk_i,
---            ipb_miso_o         => ipb_miso_arr(C_IPB_SLV.trigger),
---            ipb_mosi_i         => ipb_mosi_arr_i(C_IPB_SLV.trigger)
---        );
---
---me0_vfat3_sbits_arr
-
-    g_sbit_test : if True generate
-    begin
-        
-        trigger_test <= or_reduce(oh_triggers);
-        
-        g_sbit_test_ohs : for oh in 0 to g_NUM_OF_OHs - 1 generate
-
-            process(ttc_clocks_i.clk_40)
-            begin
-                if rising_edge(ttc_clocks_i.clk_40) then
-                    for vfat in 0 to 23 loop
-                        vfat_triggers(oh)(vfat) <= or_reduce(me0_vfat3_sbits_arr(oh)(vfat));
-                    end loop; 
-                end if;
-            end process;
-
-            process(ttc_clocks_i.clk_40)
-            begin
-                if rising_edge(ttc_clocks_i.clk_40) then
-                    oh_triggers(oh) <= or_reduce(vfat_triggers(oh));
-                end if;
-            end process;
-        
-            g_vfats : for vfat in 0 to 23 generate
-            
-            
-            end generate;
-        
-        end generate; 
     end generate;
 
     --================================--
@@ -970,7 +944,7 @@ begin
                     probe2  => dbg_gbt_link_status.gbt_rx_ready,
                     probe3  => dbg_gbt_link_status.gbt_rx_gearbox_ready,
                     probe4  => dbg_gbt_link_status.gbt_rx_header_locked,
-                    probe5  => trigger_test,
+                    probe5  => '0',
                     probe6  => dbg_gbt_link_status.gbt_tx_gearbox_ready,
                     probe7  => dbg_lpgbt_tx_data.tx_ic_data,
                     probe8  => dbg_lpgbt_tx_data.tx_ec_data,

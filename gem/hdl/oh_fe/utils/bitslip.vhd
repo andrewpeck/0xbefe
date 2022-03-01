@@ -45,20 +45,15 @@ begin
 
   cluster_packer_loop : for I in 0 to 2*g_EN_TMR generate
   begin
+
     process(fabric_clk)
     begin
       if (rising_edge(fabric_clk)) then
-
         buf(I) <= buf(I)(g_WORD_SIZE-1 downto 0) & din(g_WORD_SIZE-1 downto 0);
-
-        if (reset = '1') then
-          data(I) <= (others => '0');
-        else
-          data(I) <= buf(I)(g_WORD_SIZE-1 + cnt downto cnt);
-        end if;
-
       end if;
     end process;
+
+    data(I) <= buf(I)(g_WORD_SIZE-1 + cnt downto cnt) when reset='0' else (others => '0');
 
   end generate;
 

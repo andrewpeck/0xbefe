@@ -62,6 +62,7 @@ package board_config_package is
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
     constant CFG_DEBUG_DAQ                  : boolean := true;
     constant CFG_DEBUG_TRIGGER              : boolean := true;
+    constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
     
     -- oh link mapping is in the project pkg file
     

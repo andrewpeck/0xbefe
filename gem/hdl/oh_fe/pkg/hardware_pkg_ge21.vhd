@@ -33,7 +33,6 @@ package hardware_pkg is
 
   -- Cluster finding Settings
 
-  constant REMAP_STRIPS      : boolean := false;
   constant INVERT_PARTITIONS : boolean := false;
 
   constant REVERSE_VFAT_SBITS : std_logic_vector (NUM_VFATS-1 downto 0) := x"000";

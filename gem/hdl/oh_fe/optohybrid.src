@@ -8,7 +8,7 @@ gem/hdl/oh_fe/control/led_control.v
 gem/hdl/oh_fe/control/startup_reset.vhd 93
 gem/hdl/oh_fe/control/vio_ipb_master.vhd 93
 gem/hdl/oh_fe/control/startup.vhd 93
-gem/hdl/oh_fe/control/ttc.v
+gem/hdl/oh_fe/control/ttc.vhd 93
 gem/hdl/oh_fe/control/ttc_tmr.vhd 93
 
 # GBT
@@ -45,16 +45,16 @@ common/hdl/utils/yahamm/matrix_pkg.vhd 93
 common/hdl/utils/yahamm/yahamm_enc.vhd 93
 common/hdl/utils/yahamm/yahamm_pkg.vhd 93
 
-gem/hdl/oh_fe/utils/6b8b.vhd 93
-gem/hdl/oh_fe/utils/6b8b_pkg.vhd 93
-gem/hdl/oh_fe/utils/8b6b.vhd 93
+gem/hdl/oh/link/6b8b.vhd 93
+gem/hdl/oh/link/6b8b_pkg.vhd 93
+gem/hdl/oh/link/8b6b.vhd 93
 gem/hdl/oh_fe/utils/dru.vhd 93
 gem/hdl/oh_fe/utils/dru_tmr.vhd 93
 gem/hdl/oh_fe/utils/oversample.vhd 93
 gem/hdl/oh_fe/utils/bitslip.vhd 93
+gem/hdl/oh_fe/utils/bitslip_fast.vhd 93
 gem/hdl/oh_fe/utils/clock_strobe.vhd 93
 gem/hdl/oh_fe/utils/clocking.vhd 93
-gem/hdl/oh_fe/utils/counter.vhd 93
 gem/hdl/oh_fe/utils/counter_snap.vhd 93
 gem/hdl/oh_fe/utils/counter_snap_tmr.vhd 93
 gem/hdl/oh_fe/utils/cylon.v

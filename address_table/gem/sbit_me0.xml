@@ -1,0 +1,63 @@
+<!--sbit_me0 module -->
+<node id="SBIT_ME0" address="0x00d00000"
+      description="Sbit me0 module handles everything related to sbit clusterizating for ME0"
+      fw_is_module="true"
+      fw_module_file="../gem/hdl/trigger/sbit_me0.vhd"
+      fw_user_clock_signal="ttc_clk_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="16"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0"
+        description="Trigger control">
+    <node id="MODULE_RESET" address="0x0" permission="w"
+          description="Trigger module reset"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="CNT_RESET" address="0x1" permission="w"
+          description="Trigger counter reset"
+          fw_write_pulse_signal="reset_cnt"
+          sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
+    <node id="SBIT_TEST_RESET" address="0x2" permission="w"
+          description="Reset all the SBIT counters"
+          fw_write_pulse_signal="sbit_test_reset"
+          sw_ctrl_configure_set="0x1"/>
+  </node>
+
+
+  <node id="ME0_CLUSTER_COUNT" address="0x12" mask="0x000007ff" permission="r"
+        description="output of sbit clusterizer for me0"
+        fw_signal="me0_cluster_count"/>
+
+
+  <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x30" permission="r"
+	mask="0xffffffff"
+	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
+	fw_signal="vfat_trigger_rate_arr(0)(${VFAT_CNT_ID})"
+	generate="true"
+	generate_size="&NUM_VFATS_PER_OH;"
+	generate_address_step="0x1"
+	generate_idx_var="VFAT_CNT_ID"/>
+
+
+  <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit0xs_count_me0"/>
+  <node id="TEST_SBIT0XE_COUNT_ME0" address="0x21" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit0xe_count_me0"/>
+  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
+  
+
+</node>
+<!--end sbit_me0 module -->

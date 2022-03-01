@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 6.5 bx as of 2021/06/02
+-- latency = 4.0 bx as of 2021/08/17
 
 entity cluster_packer is
   generic (
@@ -26,11 +26,15 @@ entity cluster_packer is
     clk_40   : in std_logic;
     clk_fast : in std_logic;
 
+    mask_output_i : in std_logic;
+
     sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0);
 
-    cluster_count_o : out std_logic_vector (10 downto 0);
-    clusters_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    overflow_o      : out std_logic
+    cluster_count_o        : out std_logic_vector (10 downto 0);
+    cluster_count_masked_o : out std_logic_vector (10 downto 0);
+    clusters_o             : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    clusters_masked_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    overflow_o             : out std_logic
     );
 end cluster_packer;
 
@@ -44,6 +48,7 @@ architecture behavioral of cluster_packer is
 
   signal latch_pulse_s0 : std_logic;
   signal latch_pulse_s1 : std_logic;
+  signal latch_pulse_s2 : std_logic;
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -55,9 +60,9 @@ architecture behavioral of cluster_packer is
   signal vpfs     : std_logic_vector (NUM_VFATS*MXSBITS-1 downto 0);
   signal cnts     : std_logic_vector (NUM_VFATS*MXSBITS*MXCNTB-1 downto 0);
 
-  signal overflow           : std_logic;
-  signal cluster_count      : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY : natural := 1;
+  signal overflow                           : std_logic;
+  signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
+  constant OVERFLOW_LATENCY                 : natural := 2;
 
   signal cluster_latch : std_logic;
 
@@ -112,6 +117,7 @@ begin
   begin
     if (rising_edge(clk_fast)) then
       latch_pulse_s1 <= latch_pulse_s0;
+      latch_pulse_s2 <= latch_pulse_s1;
     end if;
   end process;
 
@@ -163,6 +169,7 @@ begin
       partitions_i(7) <= sbits_i(23) & sbits_i(15) & sbits_i(7);
     end generate;
   end generate;
+
   --------------------------------------------------------------------------------
   -- Oneshot
   --------------------------------------------------------------------------------
@@ -252,8 +259,11 @@ begin
     port map (
       clock  => clk_fast,
       data_i => cluster_count,
-      data_o => cluster_count_o
+      data_o => cluster_count_delay
       );
+
+  cluster_count_o <= cluster_count_delay;
+  cluster_count_masked_o <= (others => '0') when mask_output_i = '1' else cluster_count_delay;
 
   overflow_delay : entity work.fixed_delay
     generic map (
@@ -281,7 +291,7 @@ begin
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => latch_pulse_s1,
+      latch_i    => latch_pulse_s2,
       latch_o    => cluster_latch
       );
 
@@ -289,14 +299,22 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
-  process (clk_40)
+  process (clk_fast) is
   begin
-    if (rising_edge(clk_40)) then
+    if (rising_edge(clk_fast)) then
+
       if (reset = '1') then
-        clusters_o <= (others => NULL_CLUSTER);
-      else
         clusters_o <= clusters;
+      else
+        clusters_o <= (others => NULL_CLUSTER);
       end if;
+
+      if (reset = '1' or mask_output_i = '1') then
+        clusters_masked_o <= clusters;
+      else
+        clusters_masked_o <= (others => NULL_CLUSTER);
+      end if;
+
     end if;
   end process;
 

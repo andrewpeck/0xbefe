@@ -12,6 +12,9 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
+# Trigger Source
+gem/hdl/sbit_me0.src
+
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
 
@@ -27,6 +30,10 @@ gem/hdl/daq/generated/me0_cvp13/daq.vhd
 gem/hdl/slow_control/generated/me0_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/trigger.vhd
 boards/cvp13/hdl/system/generated/me0_cvp13/pcie_slow_control.vhd
+gem/hdl/trigger/generated/me0_cvp13/sbit_me0.vhd
+#gem/hdl/trigger/generated/me0_cvp13/sbit_monitor.vhd
+
+>>>>>>> devel
 
 #dummy promless just to keep compiler happy
 common/hdl/misc/promless_bram.vhd
@@ -36,4 +43,3 @@ gem/ip/gem_common_ip.src
 
 # CVP13 IP
 boards/cvp13/ip/gem_cvp13_ip.src
-

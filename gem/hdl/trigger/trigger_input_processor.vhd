@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
+--
 -- Create Date:    14:15 2016-05-10
 -- Module Name:    trigger_input_processor
--- Description:    This module handles trigger data from one OH (monitoring, rate counting, etc)  
+-- Description:    This module handles trigger data from one OH (monitoring, rate counting, etc)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -27,11 +27,11 @@ entity trigger_input_processor is
         sbit_clusters_i     : in t_oh_clusters;
         link_status_i       : in t_oh_sbit_links;
         masked_i            : in std_logic;
-        
+
         -- this flag is asserted whenever there are any valid sbit clusters
         trigger_o           : out std_logic;
         num_valid_clusters_o: out std_logic_vector(3 downto 0);
-        
+
         -- counters
         sbit_overflow_cnt_o : out std_logic_vector(31 downto 0);
         missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
@@ -43,12 +43,12 @@ entity trigger_input_processor is
         cluster_cnt_o       : out t_std32_array(8 downto 0);
         trigger_rate_o      : out std_logic_vector(31 downto 0);
         trigger_cnt_o       : out std_logic_vector(31 downto 0)
-        
+
     );
 end trigger_input_processor;
 
 architecture trigger_input_processor_arch of trigger_input_processor is
-    
+
     signal valid_clusters   : std_logic_vector(7 downto 0);
     signal trigger          : std_logic;
     signal cluster_cnt_strb : std_logic_vector(8 downto 0);
@@ -64,12 +64,12 @@ begin
     for i in 0 to 7 generate
         g_ge21 : if g_GEM_STATION = 2 generate
             valid_clusters(i) <= '0' when sbit_clusters_i(i).address(8 downto 0) = "111111111" else '1';
-        end generate;   
-        g_ge11 : if g_GEM_STATION /= 2 generate
+        end generate;
+        g_ge11_me0 : if g_GEM_STATION /= 2 generate
             valid_clusters(i) <= '0' when sbit_clusters_i(i).address(7 downto 0) = x"ff" else '1';
-        end generate;   
+        end generate;
     end generate;
-    
+
     num_valid_cls <= count_ones(valid_clusters);
 
 --    p_trigger:
@@ -79,18 +79,18 @@ begin
 --            trigger <= or_reduce(valid_clusters) and not masked_i;
 --        end if;
 --    end process;
-    
+
     trigger <= or_reduce(valid_clusters) and not masked_i;
-    
+
     p_cluster_size_strb:
     process (clk_i)
     begin
         if (rising_edge(clk_i)) then
             cluster_cnt_strb <= (others => '0');
             cluster_cnt_strb(num_valid_cls) <= '1';
-        end if;    
+        end if;
     end process;
-    
+
     g_cluster_size_rate_cnt:
     for i in 0 to 8 generate
 
@@ -106,7 +106,7 @@ begin
             en_i    => cluster_cnt_strb(i),
             rate_o  => cluster_cnt_rate_o(i)
         );
-        
+
         -- cluster size count
         i_cluster_size_cnt: entity work.counter
             generic map(
@@ -120,7 +120,7 @@ begin
                 count_o   => cluster_cnt_o(i)
             );
     end generate;
-    
+
     i_trigger_rate_cnt: entity work.rate_counter
     generic map(
         g_CLK_FREQUENCY => C_TTC_CLK_FREQUENCY_SLV,
@@ -132,7 +132,7 @@ begin
         en_i    => trigger,
         rate_o  => trigger_rate_o
     );
-    
+
     i_trigger_cnt: entity work.counter
         generic map(
             g_COUNTER_WIDTH  => 32,
@@ -144,14 +144,14 @@ begin
             en_i      => trigger,
             count_o   => trigger_cnt_o
         );
-    
+
     process(clk_i)
     begin
         if rising_edge(clk_i) then
             bc0_misaligned <= link_status_i(0).bc0_marker xor link_status_i(1).bc0_marker;
         end if;
     end process;
-    
+
     i_bc0_misalign_cnt: entity work.counter
         generic map(
             g_COUNTER_WIDTH  => 32,
@@ -162,25 +162,25 @@ begin
             reset_i   => reset_i or reset_cnt_i,
             en_i      => bc0_misaligned,
             count_o   => bc0_misalign_cnt_o
-        );    
-    
+        );
+
     g_link_status_counters:
     for i in 0 to 1 generate
-    
+
         i_not_valid_cnt: entity work.counter
         generic map(
-            g_COUNTER_WIDTH => 16            
+            g_COUNTER_WIDTH => 16
         )
         port map(
             ref_clk_i => clk_i,
             reset_i   => reset_i or reset_cnt_i,
             en_i      => link_status_i(i).sbit_overflow,
-            count_o   => sbit_overflow_cnt_o(((i + 1) * 16) - 1 downto i * 16) 
+            count_o   => sbit_overflow_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
-            
+
         i_missed_comma_cnt: entity work.counter
         generic map(
-            g_COUNTER_WIDTH => 16            
+            g_COUNTER_WIDTH => 16
         )
         port map(
             ref_clk_i => clk_i,
@@ -188,10 +188,10 @@ begin
             en_i      => link_status_i(i).missed_comma,
             count_o   => missed_comma_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
-             
+
         i_link_ovf_cnt: entity work.counter
         generic map(
-            g_COUNTER_WIDTH => 16            
+            g_COUNTER_WIDTH => 16
         )
         port map(
             ref_clk_i => clk_i,
@@ -199,10 +199,10 @@ begin
             en_i      => link_status_i(i).overflow,
             count_o   => link_overflow_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
-            
+
         i_link_unf_cnt: entity work.counter
         generic map(
-            g_COUNTER_WIDTH => 16            
+            g_COUNTER_WIDTH => 16
         )
         port map(
             ref_clk_i => clk_i,
@@ -213,7 +213,7 @@ begin
 
         i_not_in_table_cnt: entity work.counter
         generic map(
-            g_COUNTER_WIDTH => 16            
+            g_COUNTER_WIDTH => 16
         )
         port map(
             ref_clk_i => clk_i,
@@ -221,8 +221,7 @@ begin
             en_i      => link_status_i(i).not_in_table,
             count_o   => not_in_table_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
-            
-    end generate;
-    
-end trigger_input_processor_arch;
 
+    end generate;
+
+end trigger_input_processor_arch;
