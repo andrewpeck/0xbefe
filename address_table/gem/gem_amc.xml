@@ -58,6 +58,27 @@
     <node id="L1A_DELAY" address="0xa" mask="0xffffffff" permission="r"
           description="Number of BX between this sbit and the subsequent L1A"
           fw_signal="sbitmon_l1a_delay"/>
+
+    <node id="FIFO_EMPTY" address="0xb" mask="0x1" permission="r"
+          description="S-bit monitor FIFO is empty"
+          fw_signal="sbitmon_fifo_empty"/>
+    <node id="FIFO_EN_L1A_TRIGGER" address="0xb" mask="0x2" permission="rw"
+          description="Enable L1A trigger for S-bit DAQ"
+          fw_default="0x0"
+          fw_signal="sbitmon_fifo_en_l1a_trigger"/>
+    <node id="FIFO_EN_SBIT_TRIGGER" address="0xb" mask="0x4" permission="rw"
+          description="Enable L1A trigger for S-bit DAQ"
+          fw_default="0x1"
+          fw_signal="sbitmon_fifo_en_sbit_trigger"/>
+    <node id="FIFO_TRIGGER_DELAY" address="0xb" mask="0x0000ffc0" permission="rw"
+          description="Number of bx to delay the trigger (1-1024)"
+          fw_default="0x7f"
+          fw_signal="sbitmon_fifo_trigger_delay"/>
+    <node id="FIFO_DATA" address="0xc" mask="0xffffffff" permission="r"
+          fw_read_pulse_signal="sbitmon_fifo_rd_en"
+          fw_read_ready_signal="sbitmon_fifo_valid"
+          description="Read from the S-bit cluster FIFO, 2 clusters at a time"
+          fw_signal="sbitmon_fifo_data"/>
   </node>
 
   <node id="OH${OH_IDX}" address="0x100"

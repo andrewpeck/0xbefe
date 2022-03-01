@@ -71,10 +71,18 @@ architecture trigger_arch of trigger is
     signal oh_num_valid_arr     : t_std4_array(g_NUM_OF_OHs - 1 downto 0);
     signal or_trigger           : std_logic;
         
-    signal sbitmon_reset        : std_logic;
-    signal sbitmon_sbits        : t_oh_clusters;
-    signal sbitmon_l1a_delay    : std_logic_vector(31 downto 0);
-    signal sbitmon_link_select  : std_logic_vector(3 downto 0);
+    signal sbitmon_reset       : std_logic;
+    signal sbitmon_sbits       : t_oh_clusters;
+    signal sbitmon_l1a_delay   : std_logic_vector(31 downto 0);
+    signal sbitmon_link_select : std_logic_vector(3 downto 0);
+
+    signal sbitmon_fifo_en_sbit_trigger : std_logic;
+    signal sbitmon_fifo_en_l1a_trigger  : std_logic;
+    signal sbitmon_fifo_rd_en           : std_logic;
+    signal sbitmon_fifo_valid           : std_logic;
+    signal sbitmon_fifo_empty           : std_logic;
+    signal sbitmon_fifo_data            : std_logic_vector (31 downto 0);
+    signal sbitmon_fifo_trigger_delay   : std_logic_vector (9 downto 0);
     
     -- counters
     signal or_trigger_rate      : std_logic_vector(31 downto 0); 
@@ -194,13 +202,21 @@ begin
         )
         port map(
             reset_i         => sbitmon_reset,
-            ttc_clk_i       => ttc_clk_i,
-            ttc_cmds_i      => ttc_cmds_i,
+            clock           => ttc_clk_i.clk_40,
+            l1a_i           => ttc_cmds_i.l1a,
             link_select_i   => sbitmon_link_select,
             sbit_clusters_i => sbit_clusters_i,
             sbit_trigger_i  => oh_triggers,
             frozen_sbits_o  => sbitmon_sbits,
-            l1a_dealy_o     => sbitmon_l1a_delay
+            l1a_delay_o     => sbitmon_l1a_delay,
+
+            fifo_trigger_delay_i   => sbitmon_fifo_trigger_delay,
+            fifo_en_sbit_trigger_i => sbitmon_fifo_en_sbit_trigger,
+            fifo_en_l1a_trigger_i  => sbitmon_fifo_en_l1a_trigger,
+            fifo_rd_en_i           => sbitmon_fifo_rd_en,
+            fifo_valid_o           => sbitmon_fifo_valid,
+            fifo_empty_o           => sbitmon_fifo_empty,
+            fifo_data_o            => sbitmon_fifo_data
         );
     
     --== Output ==--
