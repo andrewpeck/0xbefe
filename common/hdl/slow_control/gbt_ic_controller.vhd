@@ -44,8 +44,9 @@ entity gbt_ic_controller is
         ic_write_req_i          : in std_logic;
         ic_write_done_o         : out std_logic;
         ic_read_req_i           : in std_logic;
-        ic_read_valid_o         : out std_logic
-        --ic_read_ready_o         : out std_logic
+        ic_read_valid_o         : out std_logic;
+        ic_read_done_o          : out std_logic;
+        ic_read_stat_o          : out std_logic_vector(5 downto 0)
 
     );
 end gbt_ic_controller;
@@ -99,7 +100,7 @@ architecture Behavioral of gbt_ic_controller is
     signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
     signal ic_r_valid            : std_logic;
     signal ic_rx_empty           : std_logic;
-    -- IC rx debug
+    -- IC rx error status
     signal wr                    : std_logic;
     signal ic_err                : std_logic;
     signal ic_uplink_parity_ok   : std_logic; 
@@ -357,7 +358,40 @@ begin
             uplink_parity_ok_o      => ic_uplink_parity_ok,
             downlink_parity_ok_o    => ic_downlink_parity_ok,
             err_o                   => ic_err,
-            valid_o                 => ic_read_valid_o                                    
+            valid_o                 => ic_r_valid                                
         );      
+
+    -- IC rx error control
+    process(gbt_clk_i, ic_r_valid)
+    begin
+	if (rising_edge(gbt_clk_i)) then
+
+            if (ic_write_req_i = '1' or ic_read_req_i = '1') then
+                ic_read_done_o    <= '0';
+		ic_read_stat_o    <= (others => '0');
+            end if;
+
+            if (ic_r_valid = '1') then
+	        ic_read_done_o    <= '1';
+	        ic_read_stat_o(0) <= not ic_err;
+	        ic_read_stat_o(1) <= ic_uplink_parity_ok;
+	        ic_read_stat_o(2) <= ic_downlink_parity_ok;
+            end if;
+
+            if (ic_chip_adr = gbtx_i2c_address) then
+		ic_read_stat_o(3) <= '1';
+	    end if;
+
+	    if (ic_length(2 downto 0) = ic_rw_length_i) then
+		ic_read_stat_o(4) <= '1';
+	    end if;
+
+	    if (ic_reg_adr = ic_rw_address_i) then
+         	ic_read_stat_o(5) <= '1';
+            end if;
+        end if;
+    end process;
+
+    ic_read_valid_o <= ic_read_done_o and (and_reduce(ic_read_stat_o));
 
 end Behavioral;

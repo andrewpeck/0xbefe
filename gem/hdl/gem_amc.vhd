@@ -639,7 +639,8 @@ begin
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_DEBUG             => false
+            g_DEBUG             => false,
+            g_DEBUG_IC          => CFG_DEBUG_IC_RX
         )
         port map(
             reset_i             => reset,
