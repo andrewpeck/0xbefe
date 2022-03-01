@@ -17,15 +17,15 @@ use work.common_pkg.all;
 entity gbt_ic_controller is
     generic(
         g_DEBUG			: boolean
---        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
-        );
+        --        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
+    );
     port(
         -- reset
         reset_i                 : in  std_logic;
 
         -- clocks
         gbt_clk_i               : in std_logic;
-        
+
         -- lpGBT version 0 or 1
         gbt_version_i             : in std_logic;
 
@@ -55,23 +55,23 @@ architecture Behavioral of gbt_ic_controller is
 
     COMPONENT ila_ic_rx
 
-    PORT (
-	clk : IN STD_LOGIC;
+        PORT (
+            clk : IN STD_LOGIC;
 
-	probe0 : IN STD_LOGIC; 
-	probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0); 
-	probe2 : IN STD_LOGIC_VECTOR(7 DOWNTO 0); 
-	probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-	probe4 : IN STD_LOGIC; 
-	probe5 : IN STD_LOGIC;
-	probe6 : IN STD_LOGIC;
-	probe7 : IN STD_LOGIC; 
-	probe8 : IN STD_LOGIC; 
-	probe9 : IN STD_LOGIC; 
-	probe10 : IN STD_LOGIC_VECTOR(6 DOWNTO 0); 
-	probe11 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-	probe12 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
-    );
+            probe0 : IN STD_LOGIC;
+            probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            probe2 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+            probe4 : IN STD_LOGIC;
+            probe5 : IN STD_LOGIC;
+            probe6 : IN STD_LOGIC;
+            probe7 : IN STD_LOGIC;
+            probe8 : IN STD_LOGIC;
+            probe9 : IN STD_LOGIC;
+            probe10 : IN STD_LOGIC_VECTOR(6 DOWNTO 0);
+            probe11 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            probe12 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+        );
     END COMPONENT  ;
 
     constant SOF_EOF            : std_logic_vector(7 downto 0) := x"7e";
@@ -103,8 +103,8 @@ architecture Behavioral of gbt_ic_controller is
     -- IC rx error status
     signal wr                    : std_logic;
     signal ic_err                : std_logic;
-    signal ic_uplink_parity_ok   : std_logic; 
-    signal ic_downlink_parity_ok : std_logic; 
+    signal ic_uplink_parity_ok   : std_logic;
+    signal ic_downlink_parity_ok : std_logic;
     signal ic_chip_adr           : std_logic_vector(6 downto 0);
     signal ic_length             : std_logic_vector(15 downto 0);
     signal ic_reg_adr            : std_logic_vector(15 downto 0);
@@ -137,21 +137,21 @@ begin
                             -- Frames are different for lpGBT version 0 and 1
                             if gbt_version_i = '0' then
                                 tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                        x"01" &                                             -- CMD
-                                                        gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
-                                                        x"00" & -- ???? hmm, this is not documented, but saw this in another guy's code...
-                                                        SOF_EOF;                                            -- SOF
+                                                         x"01" &                                             -- CMD
+                                                         gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                         x"00" & -- ???? hmm, this is not documented, but saw this in another guy's code...
+                                                         SOF_EOF;                                            -- SOF
                                 tx_frame(127 downto 48) <= (others => '1');
                                 ser_frame_pos <= 48;
-				ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
+                                ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             else
                                 tx_frame(39 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                        x"01" &                                             -- CMD
-                                                        gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
-                                                        SOF_EOF;                                            -- SOF                           
+                                                         x"01" &                                             -- CMD
+                                                         gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                         SOF_EOF;                                            -- SOF                           
                                 tx_frame(127 downto 40) <= (others => '1');
                                 ser_frame_pos <= 40;
-				ser_parity <= ((((gbtx_i2c_address & not ic_write_req_i) xor x"01") xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
+                                ser_parity <= ((((gbtx_i2c_address & not ic_write_req_i) xor x"01") xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             end if;
                             ser_word_pos <= 0;
                             ser_set_bit_cnt <= 0;
@@ -285,29 +285,29 @@ begin
         end if;
     end process;
     --========= IC RX =========--
-   
+
     -- ILA Debug IC RX --
     ila_enable : if g_DEBUG generate
 
-	ic_r_valid <= ic_read_valid_o;
+        ic_r_valid <= ic_read_valid_o;
 
-    	i_gbt_ila_ix_rx : ila_ic_rx
+        i_gbt_ila_ix_rx : ila_ic_rx
             PORT MAP (
-	    	clk => gbt_clk_i,
+                clk => gbt_clk_i,
 
-	    	probe0 => ic_rx_empty, 
-	    	probe1 => gbt_rx_ic_elink_i, 
-	    	probe2 => rx_data_from_gbtx, 
-	    	probe3 => ic_r_data_o,
-	    	probe4 => ic_r_valid,
-	    	probe5 => ic_read_req_i,
-            	probe6 => ic_write_req_i,
-		probe7 => ic_err, 
-		probe8 => ic_uplink_parity_ok, 
-		probe9 => ic_downlink_parity_ok, 
-		probe10 => ic_chip_adr, 
-		probe11 => ic_length,
-		probe12 => ic_reg_adr
+                probe0 => ic_rx_empty,
+                probe1 => gbt_rx_ic_elink_i,
+                probe2 => rx_data_from_gbtx,
+                probe3 => ic_r_data_o,
+                probe4 => ic_r_valid,
+                probe5 => ic_read_req_i,
+                probe6 => ic_write_req_i,
+                probe7 => ic_err,
+                probe8 => ic_uplink_parity_ok,
+                probe9 => ic_downlink_parity_ok,
+                probe10 => ic_chip_adr,
+                probe11 => ic_length,
+                probe12 => ic_reg_adr
             );
 
     end generate;
@@ -328,7 +328,7 @@ begin
 
             -- Status>
             --rx_empty_o      => ic_rx_empty,
-	    wr_o            => wr,
+            wr_o            => wr,
 
             -- Internal FIFO
             rd_clk_i        => gbt_clk_i,
@@ -337,14 +337,14 @@ begin
 
             -- IC line
             rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
-            
+
         );
     -- gbt_ic_rx module is finite state machine for rx frame
     i_gbt_ic_rx : entity work.gbt_ic_rx
         port map(
             clock_i                 => gbt_clk_i,
             reset_i                 => reset_i,
-                                    
+
             frame_i                 => rx_data_from_gbtx,
             valid_i                 => wr,
 
@@ -358,36 +358,36 @@ begin
             uplink_parity_ok_o      => ic_uplink_parity_ok,
             downlink_parity_ok_o    => ic_downlink_parity_ok,
             err_o                   => ic_err,
-            valid_o                 => ic_r_valid                                
-        );      
+            valid_o                 => ic_r_valid
+        );
 
     -- IC rx error control
     process(gbt_clk_i, ic_r_valid)
     begin
-	if (rising_edge(gbt_clk_i)) then
+        if (rising_edge(gbt_clk_i)) then
 
             if (ic_write_req_i = '1' or ic_read_req_i = '1') then
                 ic_read_done_o    <= '0';
-		ic_read_stat_o    <= (others => '0');
+                ic_read_stat_o    <= (others => '0');
             end if;
 
             if (ic_r_valid = '1') then
-	        ic_read_done_o    <= '1';
-	        ic_read_stat_o(0) <= not ic_err;
-	        ic_read_stat_o(1) <= ic_uplink_parity_ok;
-	        ic_read_stat_o(2) <= ic_downlink_parity_ok;
+                ic_read_done_o    <= '1';
+                ic_read_stat_o(0) <= not ic_err;
+                ic_read_stat_o(1) <= ic_uplink_parity_ok;
+                ic_read_stat_o(2) <= ic_downlink_parity_ok;
             end if;
 
             if (ic_chip_adr = gbtx_i2c_address) then
-		ic_read_stat_o(3) <= '1';
-	    end if;
+                ic_read_stat_o(3) <= '1';
+            end if;
 
-	    if (ic_length(2 downto 0) = ic_rw_length_i) then
-		ic_read_stat_o(4) <= '1';
-	    end if;
+            if (ic_length(2 downto 0) = ic_rw_length_i) then
+                ic_read_stat_o(4) <= '1';
+            end if;
 
-	    if (ic_reg_adr = ic_rw_address_i) then
-         	ic_read_stat_o(5) <= '1';
+            if (ic_reg_adr = ic_rw_address_i) then
+                ic_read_stat_o(5) <= '1';
             end if;
         end if;
     end process;
