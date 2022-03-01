@@ -232,11 +232,11 @@ begin
 
   sbit_inject_gen : for I in 0 to (NUM_VFATS-1) generate
     process (clocks.clk40) is
-      variable inj_cnt : integer range 0 to 255 := 0;
+      variable inj_cnt : integer range 0 to 296 := 0;
     begin
 
       if (rising_edge(clocks.clk40)) then
-        if (inj_cnt = 255) then
+        if (inj_cnt = 296 or ttc.bc0='1') then
           inj_cnt := 0;
         else
           inj_cnt := inj_cnt + 1;
