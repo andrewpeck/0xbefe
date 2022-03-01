@@ -85,6 +85,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         cluster_count_nodes.append(gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
 
     # Configure TTC generator
+    ttc_reset_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
@@ -134,21 +135,25 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
     s_bit_cluster_mapping = {}
     print ("")
-    # Start VFAT loop
-    for vfat in vfat_list:
-        print ("VFAT %02d: "%vfat)
-        print ("Checking errors: ")
-        s_bit_cluster_mapping[vfat] = {}
-        for phase in range(0, 16):
-            # set phases for elinks in the vfat
+
+    # Starting Phase loop
+    for phase in range(0, 16):
+        print ("Scanning phase %d"%phase)
+        # set phases for all elinks in all vfats
+        for vfat in vfat_list:
             sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
             for elink in range(0,8):
                 setVfatSbitPhase(system, oh_select, vfat, sbit_elinks[elink], phase)
 
-            # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
-            sleep(0.1)
-            gem_utils.gem_link_reset()
-            sleep(0.1)
+        # Reset the link, give some time to accumulate any sync errors and then check VFAT comms
+        sleep(0.1)
+        gem_utils.gem_link_reset()
+        sleep(0.1)
+
+        print ("Checking errors: ")
+        # Starting VFAT loop
+        for vfat in vfat_list:
+            s_bit_cluster_mapping[vfat] = {}
 
             # Looping over all channels
             for channel in range(0,128):
@@ -162,7 +167,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
 
                 # Reset L1A, CalPulse and S-bit monitor
-                gem_utils.global_reset()
+                gem_utils.write_backend_reg(ttc_reset_node, 1)
                 gem_utils.write_backend_reg(reset_sbit_monitor_node, 1)
 
                 # Start the cyclic generator
@@ -218,8 +223,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
             # End of Elink loop
             print ("")
         print ("")
-        # End of Phase loop
-    # End of VFAT loop
+        # End of VFAT loop
+    # End of Phase loop
     if calpulse_only:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     else:
@@ -411,8 +416,8 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + sbit_elink
-    #value = (config[addr] & 0x0f) | (phase << 4)
-    value = (mpeek(addr) & 0x0f) | (phase << 4)
+    value = (config[addr] & 0x0f) | (phase << 4)
+    #value = (mpeek(addr) & 0x0f) | (phase << 4)
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
     mpoke(addr, value)

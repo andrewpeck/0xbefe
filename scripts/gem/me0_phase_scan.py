@@ -301,8 +301,8 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
-    #value = (config[addr] & 0x0f) | (phase << 4)
-    value = (mpeek(addr) & 0x0f) | (phase << 4)
+    value = (config[addr] & 0x0f) | (phase << 4)
+    #value = (mpeek(addr) & 0x0f) | (phase << 4)
 
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
