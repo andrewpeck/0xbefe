@@ -61,8 +61,8 @@ module   gem_data_out
 
    generate
       if (FPGA_TYPE_IS_VIRTEX6 == 1) begin
-         // links 0 & 1 are CSC
-         // links 2 & 3 are GEM
+         // links 0 & 1 are CSC and run at 3.2 Gbps
+         // links 2 & 3 are GEM and run at 4.0 Gbps
          initial begin
             CLOCK_MULT [3] = 5;
             CLOCK_MULT [2] = 5;
@@ -92,9 +92,7 @@ module   gem_data_out
    // Transmit data
    //----------------------------------------------------------------------------------------------------------------------
 
-   reg [3:0] overflow_reg;
    wire [3:0] overflow;
-   reg [111:0] gem_data_reg [3:0];
    wire [111:0] gem_data_sync [3:0];
 
    wire [N_MGTS-1:0] mgt_reset;
@@ -381,7 +379,7 @@ module   gem_data_out
              )
          xpm_fifo_async_inst
            (
-            .din           ({gem_data[0],     bc0_i, resync_i, bxn_counter_i[1:0],  overflow_i}),
+            .din           ({gem_data,        bc0_i, resync_i, bxn_counter_i[1:0],  overflow_i}),
             .dout          ({gem_data_sync[0],bc0,   resync,   bxn_counter_lsbs,    overflow[0]}),
             .wr_clk        (clock_40), // write at 40
             .rd_clk        (txoutclk), // read at  160/200
@@ -465,12 +463,10 @@ module   gem_data_out
 
          for (ilink=0; ilink < N_MGTS; ilink=ilink+1) begin: linkgen3
             always @(posedge usrclks[ilink]) begin
-               gem_data_reg[ilink]  <= gem_data;
-               overflow_reg[ilink]  <= overflow_i;
-               ready       [ilink]  <= tx_sync_done[ilink] && tx_fsm_reset_done[ilink] && pll_lock[ilink];
+               ready [ilink] <= tx_sync_done[ilink] && tx_fsm_reset_done[ilink] && pll_lock[ilink];
             end
-            assign gem_data_sync[ilink] = gem_data_reg[ilink];
-            assign overflow[ilink]      = overflow_reg[ilink];
+            assign gem_data_sync[ilink] = gem_data;
+            assign overflow[ilink]      = overflow_i;
          end
 
          assign reset            = reset_i;
