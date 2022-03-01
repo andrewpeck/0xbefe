@@ -461,7 +461,16 @@ begin
 
     end generate;
 
-    clusters_o <= clusters_rev when reverse_partitions = '1' else clusters_norev;
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        if (reverse_partitions = '1') then
+          clusters_o <= clusters_rev;
+        else
+          clusters_o <=  clusters_norev;
+        end if;
+      end if;
+    end process;
 
     process (clocks.clk40) is
     begin
