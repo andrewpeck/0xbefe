@@ -27,6 +27,7 @@ endif
 PROJECT_LIST = $(patsubst %/,%,$(patsubst Top/%,%,$(dir $(dir $(shell find Top/ -name hog.conf)))))
 CREATE_LIST = $(addprefix create_,$(PROJECT_LIST))
 IMPL_LIST = $(addprefix impl_,$(PROJECT_LIST))
+IMPL_ONLY_LIST = $(addprefix impl_only_,$(PROJECT_LIST))
 OPEN_LIST = $(addprefix open_,$(PROJECT_LIST))
 UPDATE_LIST = $(addprefix update_,$(PROJECT_LIST))
 
@@ -39,11 +40,15 @@ $(CREATE_LIST):
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
 	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
 
+$(IMPL_ONLY_LIST):
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@echo Launching Hog Workflow $(patsubst impl_only_%,%,$@) with njobs = $(NJOBS)        $(COLORIZE)
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@time Hog/LaunchWorkflow.sh $(patsubst impl_only_%,%,$@) -njobs $(NJOBS)               $(COLORIZE)
+
 $(IMPL_LIST):
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@echo Launching Hog Workflow $(patsubst impl_%,%,$@) with njobs = $(NJOBS)             $(COLORIZE)
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchWorkflow.sh $(patsubst impl_%,%,$@) -njobs $(NJOBS)                    $(COLORIZE)
+	@make $(patsubst impl_%,create_%,$@)
+	@make $(patsubst impl_%,impl_only_%,$@)
 
 $(UPDATE_LIST): config
 
