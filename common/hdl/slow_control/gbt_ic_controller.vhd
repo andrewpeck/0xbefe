@@ -376,19 +376,21 @@ begin
                 ic_read_stat_o(0) <= not ic_err;
                 ic_read_stat_o(1) <= ic_uplink_parity_ok;
                 ic_read_stat_o(2) <= ic_downlink_parity_ok;
-            end if;
 
-            if (ic_chip_adr = gbtx_i2c_address) then
-                ic_read_stat_o(3) <= '1';
+                if (ic_chip_adr = gbtx_i2c_address) then
+                    ic_read_stat_o(3) <= '1';
+                end if;
+    
+                if (ic_length(2 downto 0) = ic_rw_length_i) then
+                    ic_read_stat_o(4) <= '1';
+                end if;
+    
+                if (ic_reg_adr = ic_rw_address_i) then
+                    ic_read_stat_o(5) <= '1';
+                end if;
+                
             end if;
-
-            if (ic_length(2 downto 0) = ic_rw_length_i) then
-                ic_read_stat_o(4) <= '1';
-            end if;
-
-            if (ic_reg_adr = ic_rw_address_i) then
-                ic_read_stat_o(5) <= '1';
-            end if;
+            
         end if;
     end process;
 
