@@ -1,0 +1,72 @@
+<!-- TTC TX module -->
+<node id="TTC_TX"  address="0x00040000"
+      description="This module controls the TTC transmitter"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/misc/ttc_tx.vhd"
+      fw_user_clock_signal="ttc_clocks_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module, this makes the TTC TX output stay at constant 0 for 65k cycles"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="REVERSE_OUT_BITS" address="0x1" mask="0x00000001" permission="rw"
+          description="Experimental feature to reverse the bits going to the MGT (this may fix the link in case they are actually being sent in reverse order than what I thought)"
+          fw_signal="ttc_out_reverse" fw_default="0b0"/>
+    <node id="TEST_PATTERN_EN" address="0x1" mask="0x00000002" permission="rw"
+          description="Setting this to 1 will make the MGT send a test pattern defined in the TEST_PATTERN_DATA register (note: it is sent at 640Mb/s)"
+          fw_signal="ttc_out_test_en" fw_default="0b0"/>
+    <node id="TEST_PATTERN_DATA" address="0x1" mask="0xffff0000" permission="rw"
+          description="This pattern will be sent to the MGT when TEST_PATTERN_EN is set to 1 (note: it is sent at 640Mb/s)"
+          fw_signal="ttc_out_test_pattern" fw_default="0xf0f0"/>
+    <node id="SEND_MANUAL_BCMD" address="0x2" mask="0x000000ff" permission="w"
+          description="Writing data here will send a broadcast command with that data"
+          fw_signal="req_man_bcmd_data" fw_write_pulse_signal="req_man_bcmd_stb" fw_default="0x00"/>
+    <node id="SEND_MANUAL_ADDR_CMD" address="0x3" permission="w"
+          description="Writing data here will send an individually addressed command with that data. Bits [31:18] = TTCrx address, bit [17] = internal/external addr, bit [16] must be set to 1, bits [15:8] = subaddr, bits [7:0] = data"
+          fw_signal="req_man_lcmd_data" fw_write_pulse_signal="req_man_lcmd_stb" fw_default="0x00000000"/>
+    <node id="SEND_MANUAL_L1A" address="0x4" permission="w"
+          description="Writing to this register will trigger a single L1A"
+          fw_write_pulse_signal="req_l1a_manual"/>
+
+    <node id="TTC_RX" address="0x5">
+      <node id="L1A_EN" address="0x0" mask="0x00000002" permission="rw"
+            description="Setting this to 1 will enable sending L1As received from the TTC receiver or the TTC generator"
+            fw_signal="ttc_rx_l1a_en" fw_default="0b0"/>
+      <node id="BCMD_EN" address="0x0" mask="0x00000004" permission="rw"
+            description="Setting this to 1 will enable sending broadcast commands received from the TTC receiver or the TTC generator"
+            fw_signal="ttc_rx_bcmd_en" fw_default="0b0"/>
+      <node id="CFG_BC0_DATA" address="0x1" mask="0x000000ff" permission="rw"
+            description="BC0 command data"
+            fw_signal="ttc_bgo_encoding.cmd_bc0" fw_default="0x04"/>
+      <node id="CFG_OC0_DATA" address="0x1" mask="0x0000ff00" permission="rw"
+            description="OC0 command data"
+            fw_signal="ttc_bgo_encoding.cmd_oc0" fw_default="0x08"/>
+      <node id="CFG_EC0_DATA" address="0x1" mask="0x00ff0000" permission="rw"
+            description="EC0 command data"
+            fw_signal="ttc_bgo_encoding.cmd_ec0" fw_default="0x02"/>
+      <node id="CFG_CALPULSE_DATA" address="0x1" mask="0xff000000" permission="rw"
+            description="Calpulse command data"
+            fw_signal="ttc_bgo_encoding.cmd_calpulse" fw_default="0x14"/>
+      <node id="CFG_HARD_RESET_DATA" address="0x2" mask="0x000000ff" permission="rw"
+            description="Hard-reset command data"
+            fw_signal="ttc_bgo_encoding.cmd_hard_reset" fw_default="0x10"/>
+      <node id="CFG_RESYNC_DATA" address="0x2" mask="0x0000ff00" permission="rw"
+            description="Resync command data"
+            fw_signal="ttc_bgo_encoding.cmd_resync" fw_default="0x0c"/>
+    </node>
+  </node>
+
+  <node id="STATUS" address="0x50">
+    <node id="NUM_CANCELLED_CMD" address="0x0" mask="0x0000ffff" permission="r"
+          description="Number of cancelled B channel commands due to request overlapping with another command being sent"
+          fw_signal="std_logic_vector(num_cancelled_cmd)"
+          sw_val_warn="self > 0" sw_val_good="self == 0"/>
+  </node>
+
+</node> <!-- End of TTC TX module -->

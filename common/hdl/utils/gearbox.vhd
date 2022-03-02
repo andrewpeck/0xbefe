@@ -19,7 +19,8 @@ entity gearbox is
         g_IMPL_TYPE         : string  := "FIFO"; -- for now only a FIFO implementation is available, a more latency optimized version will be implemented later if needed
         g_INPUT_DATA_WIDTH  : integer := 8;
         g_OUTPUT_DATA_WIDTH : integer := 16;
-        g_HIGH_WORD_FIRST   : boolean := true -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior) 
+        g_HIGH_WORD_FIRST   : boolean := true; -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior)
+        g_REGISTER_OUTPUT   : boolean := false 
     );
     port(
         reset_i     : in  std_logic;
@@ -39,16 +40,39 @@ architecture gearbox_arch of gearbox is
     constant GEAR_DOWN_RATIO    : integer := g_OUTPUT_DATA_WIDTH / g_INPUT_DATA_WIDTH;
     constant GEAR_UP_RATIO      : integer := g_INPUT_DATA_WIDTH / g_OUTPUT_DATA_WIDTH;
 
-    signal din      : std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
-    signal dout     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
-    signal reset    : std_logic;
+    signal din          : std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
+    signal dout         : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+    signal reset        : std_logic;
+
+    signal dout_reg     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+    signal valid_reg    : std_logic;
+    signal underflow_reg: std_logic;
 
 begin
+
+    g_out_reg : if g_REGISTER_OUTPUT generate
+        
+        process(rd_clk_i)
+        begin
+            if rising_edge(rd_clk_i) then
+                dout_o <= dout_reg;
+                valid_o <= valid_reg;
+                underflow_o <= underflow_reg;
+            end if;
+        end process;
+        
+    end generate;
+
+    g_out_no_reg : if not g_REGISTER_OUTPUT generate
+        dout_o <= dout_reg;
+        valid_o <= valid_reg;
+        underflow_o <= underflow_reg;
+    end generate;
 
     -- do not change the word order
     g_low_word_first_wiring : if not g_HIGH_WORD_FIRST generate
         din <= din_i;
-        dout_o <= dout;
+        dout_reg <= dout;
     end generate;
     
     -- sync reset on write clock
@@ -59,12 +83,12 @@ begin
         g_gear_down : if g_OUTPUT_DATA_WIDTH >= g_INPUT_DATA_WIDTH generate
             din <= din_i;
             g_gear_down_words : for i in 0 to GEAR_DOWN_RATIO - 1 generate
-                dout_o((i+1) * g_INPUT_DATA_WIDTH - 1 downto i * g_INPUT_DATA_WIDTH) <= dout((GEAR_DOWN_RATIO - i) * g_INPUT_DATA_WIDTH - 1 downto (GEAR_DOWN_RATIO - i - 1) * g_INPUT_DATA_WIDTH);
+                dout_reg((i+1) * g_INPUT_DATA_WIDTH - 1 downto i * g_INPUT_DATA_WIDTH) <= dout((GEAR_DOWN_RATIO - i) * g_INPUT_DATA_WIDTH - 1 downto (GEAR_DOWN_RATIO - i - 1) * g_INPUT_DATA_WIDTH);
             end generate;
         end generate;
 
         g_gear_up : if g_INPUT_DATA_WIDTH > g_OUTPUT_DATA_WIDTH generate
-            dout_o <= dout;
+            dout_reg <= dout;
             g_gear_up_words : for i in 0 to GEAR_UP_RATIO - 1 generate
                 din((i+1) * g_OUTPUT_DATA_WIDTH - 1 downto i * g_OUTPUT_DATA_WIDTH) <= din_i((GEAR_UP_RATIO - i) * g_OUTPUT_DATA_WIDTH - 1 downto (GEAR_UP_RATIO - i - 1) * g_OUTPUT_DATA_WIDTH);
             end generate;
@@ -104,10 +128,10 @@ begin
                 empty         => open,
                 prog_empty    => open,
                 rd_data_count => open,
-                underflow     => underflow_o,
+                underflow     => underflow_reg,
                 rd_rst_busy   => open,
                 almost_empty  => open,
-                data_valid    => valid_o,
+                data_valid    => valid_reg,
                 injectsbiterr => '0',
                 injectdbiterr => '0',
                 sbiterr       => open,

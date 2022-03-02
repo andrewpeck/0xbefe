@@ -27,6 +27,7 @@ gem/hdl/oh/generated/ge21_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/ge21_cvp13/daq.vhd
 gem/hdl/slow_control/generated/ge21_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/ge21_cvp13/trigger.vhd
+boards/cvp13/hdl/system/generated/ge21_cvp13/pcie_slow_control.vhd
 
 # GEM IP
 gem/ip/gem_common_ip.src

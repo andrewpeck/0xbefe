@@ -14,6 +14,18 @@ CONFIG_RWREG_CVP13 = [
         'DEVICE': 'auto',
         #    'DEVICE'                        : '/sys/bus/pci/devices/0000:05:00.0/resource2', # for CVP13 set this to the BAR2 resource of appropriate bus e.g. /sys/bus/pci/devices/0000:05:00.0/resource2 (see lspci to find the correct bus). For other boards this parameter is not yet used
         'BASE_ADDR': 0
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x04000000
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x08000000
+    },
+    {
+        'DEVICE': 'auto',
+        'BASE_ADDR': 0x0c000000
     }
 ]
 
@@ -21,13 +33,6 @@ CONFIG_RWREG_CTP7 = [
     {
         'DEVICE': '',
         'BASE_ADDR': 0x64000000
-    }
-]
-
-CONFIG_RWREG_APEX0 = [
-    {
-        'DEVICE': 'FPGA0',  # for APEX set this to either FPGA0 or FPGA1
-        'BASE_ADDR': 0
     }
 ]
 
@@ -42,7 +47,14 @@ CONFIG_RWREG_APEX = [
     }
 ]
 
-CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX}
+CONFIG_RWREG_X2O = [
+    {
+        'DEVICE': 'FPGA1',  # for KU15P set this to either FPGA0 or FPGA1, for VU13P should use FPGA1
+        'BASE_ADDR': 0
+    },
+]
+
+CONFIG_RWREG = {"cvp13": CONFIG_RWREG_CVP13, "ctp7": CONFIG_RWREG_CTP7, "apex": CONFIG_RWREG_APEX, "x2o": CONFIG_RWREG_X2O}
 
 CONFIG_USE_TCDS = False
 
@@ -67,6 +79,14 @@ CONFIG_APEX_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_ge21.bit"
 CONFIG_APEX_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_me0.bit"
 CONFIG_APEX_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/apex_csc.bit"
 
+# X2O specific
+CONFIG_X2O_GE11_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_ge11.bit"
+CONFIG_X2O_GE21_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_ge21.bit"
+CONFIG_X2O_ME0_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_me0.bit"
+CONFIG_X2O_CSC_BITFILE = BEFE_SCRIPTS_DIR + "/resources/x2o_csc.bit"
+
+CONFIG_X2O_SYNC_CLOCK_CONFIG = BEFE_SCRIPTS_DIR + "/resources/x2o_sync_clock_config.txt"
+
 # =================================================================================================
 #            GE1/1 configuration
 # =================================================================================================
@@ -90,6 +110,7 @@ CONFIG_GE11_VFAT_HDLC_ADDRESSES = [0] * 24
 
 # OH firmware bitfile (same file is loaded to all OHs)
 CONFIG_GE21_OH_BITFILE = BEFE_SCRIPTS_DIR + "/resources/ge21_oh.bit"
+CONFIG_GE21_OH_LOOPBACK_BITFILE = BEFE_SCRIPTS_DIR + "/resources/ge21_oh_loopback.bit"
 # GBT0 and GBT1 config files: these are arrays that should have a length of at least how many OHs are connected
 # NOTE: the example below is using the same config for all OHs, while in a real system you will likely need different files for each OH (e.g. containing correct phases for the GEB that they're installed on)
 # To specify config files individually for each OH just make each element of the two arrays refer to the configs of the particular OH (and remove the * 16 at the end)
@@ -121,3 +142,21 @@ CONFIG_ME0_GBT_VER = {
     3: [0, 0, 0, 0, 0, 0, 0, 0]  # lpGBT ver for 8 GBTs for OH3
 }
 
+# =================================================================================================
+#            CSC configuration
+# =================================================================================================
+
+CONFIG_CSC_PROMLESS_BITFILE = BEFE_SCRIPTS_DIR + "/resources/csc_promless.bit"
+
+# =================================================================================================
+#            DAQ configuration
+# =================================================================================================
+
+CONFIG_DAQ_INPUT_EN_MASK = 0x1   # enabled DAQ input channels
+CONFIG_DAQ_IGNORE_DAQLINK = 1    # ignore DAQlink (AMC13 / SlinkRocket) -- if set to 1 then only local DAQ readout is used
+CONFIG_DAQ_WAIT_FOR_RESYNC = 0   # keep DAQ in reset until the first resync
+CONFIG_DAQ_FREEZE_ON_ERROR = 0   # freeze DAQ if TTS error is set
+CONFIG_DAQ_FED_ID          = 830 # FED ID, sent to DAQLink
+CONFIG_DAQ_BOARD_ID        = 1   # Board ID, used in local DAQ (RUI ID in CSC)
+CONFIG_DAQ_SPY_PRESCALE    = 1   # prescale on the local DAQ path
+CONFIG_DAQ_SPY_SKIP_EMPTY  = 1   # skip empty events on the local DAQ path

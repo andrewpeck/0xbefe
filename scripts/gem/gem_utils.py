@@ -1,6 +1,6 @@
 from common.rw_reg import *
 from common.utils import *
-import common.tables.tableformatter as tf
+import tableformatter as tf
 import sys
 
 try:

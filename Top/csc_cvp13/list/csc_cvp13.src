@@ -20,10 +20,12 @@ common/hdl/mgt/generated/csc_cvp13/mgt_slow_control.vhd
 common/hdl/ttc/generated/csc_cvp13/ttc.vhd
 common/hdl/misc/generated/csc_cvp13/promless_bram.vhd
 common/hdl/misc/generated/csc_cvp13/board_system.vhd
+common/hdl/misc/generated/csc_cvp13/ttc_tx.vhd
 csc/hdl/system/generated/csc_cvp13/system_regs.vhd
 csc/hdl/system/generated/csc_cvp13/link_monitor.vhd
 csc/hdl/tests/generated/csc_cvp13/csc_tests.vhd
 csc/hdl/daq/generated/csc_cvp13/daq.vhd
+boards/cvp13/hdl/system/generated/csc_cvp13/pcie_slow_control.vhd
 
 # CSC IP
 csc/ip/csc_common_ip.src

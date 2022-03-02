@@ -15,8 +15,8 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 
 package mgt_pkg is
 
-    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156, QPLL_GBE_156);
+    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE, MGT_TTC);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156, QPLL_GBE_156, QPLL_3P2G, QPLL0_3P2G_QPLL1_GBTX);
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -41,11 +41,13 @@ package mgt_pkg is
         mgt_type                : t_mgt_type_config;    -- MGT type configuration
         qpll_inst_type          : t_mgt_qpll_type;      -- defines which type of QPLL should be instantiated on this MGT channel number (only one per quad should be set to a non QPLL_NULL value)
         qpll_idx                : integer;              -- defines which QPLL index to use on this channel (e.g. if MGT #4 has a non QPLL_NULL value for qpll_inst_type, this should be set to 4 on that channel and also 4 on the other 3 channels that belong to the same quad)
+        refclk0_idx             : integer;              -- defines the index of the refclk0 to use on this MGT
+        refclk1_idx             : integer;              -- defines the index of the refclk1 to use on this MGT
         is_master               : boolean;              -- if true, the TXOUTCLK from this MGT is used to drive the TXUSRCLK of all the other MGTs of the same type (this can only be set to true on one channel of any given type)
         ibert_inst              : boolean;              -- if true, an in-system ibert will be instantiated for this channel
     end record;
 
-    constant CFG_MGT_NULL : t_mgt_config := (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL, qpll_idx => 0, is_master => false, ibert_inst => false);
+    constant CFG_MGT_NULL : t_mgt_config := (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => false);
 
     -- NOTE t_mgt_config_arr type should be defined in the board package with the correct length
 

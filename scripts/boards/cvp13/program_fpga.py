@@ -29,6 +29,25 @@ elif flavor.lower() == "me0":
 elif flavor.lower() == "csc":
     bitfile = get_config("CONFIG_CVP13_CSC_BITFILE")
 
+heading("Unloading XDMA driver")
+subprocess.Popen("modprobe -r xdma", shell=True, executable="/bin/bash")
+
+heading("Removing the CVP13 from the PCIe bus if present")
+cvp13s = cvp13.detect_cvp13_cards()
+if len(cvp13s) == 0:
+    print_color("No CVP13 card was found on the PCIe bus, but will try to program anyway, and see then..", Colors.YELLOW)
+elif len(cvp13s) > 1:
+    print_red("You have more than one CVP13 in the system, not sure which one to configure.. exiting..")
+    exit()
+else:
+    cvp13_dev_path = cvp13s[0]
+    print("Found CVP13 on this bus: %s, removing" % cvp13_dev_path)
+    remove_cmd = "echo 1 > %s/remove" % cvp13_dev_path
+    subprocess.Popen(remove_cmd, shell=True, executable="/bin/bash")
+    time.sleep(1)
+    if len(cvp13.detect_cvp13_cards()) > 0:
+        print_color("Hmm the CVP13 is still on the PCIe bus after removal..", Colors.YELLOW)
+
 vivado_dir = get_config("CONFIG_VIVADO_DIR")
 
 if not path.exists(bitfile):
@@ -57,29 +76,31 @@ program_proc = subprocess.Popen(program_cmd, shell=True, executable="/bin/bash")
 while program_proc.poll() is None:
     time.sleep(1)
 
-heading("Programming done, applying the PCIe config")
+print("Programming DONE")
+
+## may need to do a hot reset before the rescan: https://unix.stackexchange.com/questions/73908/how-to-reset-cycle-power-to-a-pcie-device/474378#474378
+
+heading("Rescanning the PCIe bus")
+rescan_cmd = "echo 1 > /sys/bus/pci/rescan"
+subprocess.Popen(rescan_cmd, shell=True, executable="/bin/bash")
+time.sleep(1)
+
 cvp13s = cvp13.detect_cvp13_cards()
 if len(cvp13s) == 0:
-    print_red("Hmm no CVP13 running 0xBEFE firmware was found on the system.. exiting..")
+    print_red("ERROR: No CVP13 running 0xBEFE firmware was found on the PCIe bus.. exiting..")
     exit()
 elif len(cvp13s) > 1:
     print_red("You have more than one CVP13 in the system, not sure which one to configure.. exiting..")
     exit()
 
 cvp13_dev_path = cvp13s[0]
-pcie_config = get_config("CONFIG_CVP13_PCIE_CONFIG")
+print_green("Found CVP13 on this bus: %s" % cvp13_dev_path)
 
-if not path.exists(pcie_config):
-    print_red("Could not find the CVP13 PCIe config: %s" % pcie_config)
-    print_red("If you don't have it, program the PROM of the CVP13 with 0xBEFE firmware, and power-cycle the computer (not just reboot, but power off and power on), and then make a copy of %s/config, and link it to where the CONFIG_CVP13_PCIE_CONFIG in befe_config.py is pointing to." % cvp13_dev_path)
-    exit()
-
-print("Found CVP13 on this bus: %s" % cvp13_dev_path)
-print("Applying this config: %s" % pcie_config)
-config_cmd = "cp %s %s" % (pcie_config, cvp13_dev_path + "/config")
-subprocess.Popen(config_cmd, shell=True, executable="/bin/bash")
+heading("Loading XDMA driver")
+subprocess.Popen("modprobe xdma", shell=True, executable="/bin/bash")
 
 heading("Checking register access and firmware version")
+time.sleep(1.1)
 parse_xml()
 befe_print_fw_info()
 

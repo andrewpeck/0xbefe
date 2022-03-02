@@ -24,6 +24,7 @@ entity daqlink_wrapper is
         
         GTX_REFCLK_p   : in  std_logic;
         GTX_REFCLK_n   : in  std_logic;
+        GTX_REFCLK_OUT : out std_logic;
         GTX_RXN        : in  std_logic;
         GTX_RXP        : in  std_logic;
         GTX_TXN        : out std_logic;
@@ -44,6 +45,7 @@ architecture daqlink_wrapper_arch of daqlink_wrapper is
             DONT_RESET_ON_DATA_ERROR_IN : in  std_logic;
             Q2_CLK0_GTREFCLK_PAD_N_IN   : in  std_logic;
             Q2_CLK0_GTREFCLK_PAD_P_IN   : in  std_logic;
+            Q2_CLK0_GTREFCLK_OUT        : out std_logic;
             GT0_TX_FSM_RESET_DONE_OUT   : out std_logic;
             GT0_RX_FSM_RESET_DONE_OUT   : out std_logic;
             GT0_DATA_VALID_IN           : in  std_logic;
@@ -305,7 +307,6 @@ begin
     tied_to_ground_vec_i   <= x"0000000000000000";
     tied_to_vcc_i          <= '1';
     tied_to_vcc_vec_i      <= "11111111";
-    q2_clk0_refclk_i       <= '0';
     daqlink_UsrClk         <= gt0_txusrclk2_i;
     daqlink_cplllock       <= gt0_cplllock_i;
     daqlink_RxResetDone    <= gt0_rxresetdone_i;
@@ -317,6 +318,8 @@ begin
     daqlink_RXDATA        <= gt0_rxdata_i;
     gt0_txcharisk_i       <= daqlink_TXCHARISK;
     gt0_txdata_i          <= daqlink_TXDATA;
+
+    GTX_REFCLK_OUT        <= q2_clk0_refclk_i;
 
     gth_amc13_support_i : gth_amc13_support
         generic map(
@@ -330,6 +333,7 @@ begin
             DONT_RESET_ON_DATA_ERROR_IN => tied_to_ground_i,
             Q2_CLK0_GTREFCLK_PAD_N_IN   => GTX_REFCLK_n,
             Q2_CLK0_GTREFCLK_PAD_P_IN   => GTX_REFCLK_p,
+            Q2_CLK0_GTREFCLK_OUT        => q2_clk0_refclk_i,
             GT0_TX_FSM_RESET_DONE_OUT   => gt0_txfsmresetdone_i,
             GT0_RX_FSM_RESET_DONE_OUT   => gt0_rxfsmresetdone_i,
             GT0_DATA_VALID_IN           => '1',
@@ -491,8 +495,8 @@ begin
             EventData_valid   => daq_to_daqlink.event_valid,
             EventData_header  => daq_to_daqlink.event_header,
             EventData_trailer => daq_to_daqlink.event_trailer,
-            EventData         => daq_to_daqlink.event_data,
-            AlmostFull        => daqlink_to_daq.almost_full,
+            EventData         => daq_to_daqlink.event_data(63 downto 0),
+            AlmostFull        => daqlink_to_daq.backpressure,
             Ready             => daqlink_to_daq.ready,
             sysclk            => tied_to_ground_i,
             L1A_DATA_we       => open,

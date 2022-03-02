@@ -281,6 +281,8 @@ type Align_serdes_state is (	ST_Start,
 								ST_link_up 
 							);
 signal Align_serdes:Align_serdes_state;
+attribute fsm_encoding : string;
+attribute fsm_encoding of Align_serdes : signal is "one_hot";
  
 component  reset_serdes is
  Generic (
@@ -625,7 +627,7 @@ tx_clock_ready      <= gtx_userclk_tx_active_in;
 status(31)		<= '1' when Align_serdes = ST_link_up else '0';
 status(30)		<= '1' when Align_serdes = ST_wait_Idle_from_other_side else '0';  
 status(29)		<= '1' when Align_serdes = ST_send_idle else '0';  
-status(28)		<= '1' ;--when Align_serdes =  else '0';  
+status(28)		<= '0' ;--when Align_serdes =  else '0';  
 status(27)		<= '1' when Align_serdes = ST_wait_slip_done else '0';  
 status(26)		<= '1' when Align_serdes = ST_slip_state else '0';  
 status(25)		<= '1' when Align_serdes = ST_check_pattern  else '0';  
@@ -642,6 +644,11 @@ status(16)		<= reset_rx_done;
 
 status(15)		<= gtpowergood_out;
 status(14)		<= qpll_reset_cell; 
+
+status(3)		<= txprgdivresetdone;
+status(2)		<= txpmaresetdone;
+status(1)		<= rxprgdivresetdone; 
+status(0)		<= rxpmaresetdone;
 
 --///////////////////////////////////////////////////////////////////////////////// 
 -- 
@@ -697,11 +704,6 @@ rx_header							<= rx_header_rg;
 rx_header_valid						<= rx_header_valid_rg;
 rx_data								<= rx_data_reg;
 SERDES_ready						<= '1' when Align_serdes = ST_link_up else '0';
-
-status(0)							<= rxpmaresetdone;
-status(1)							<= rxprgdivresetdone; 
-status(2)							<= txpmaresetdone;
-status(3)							<= txprgdivresetdone;
 
 --///////////////////////////////////////////////////////////////////////////////// 
  -- looking for Idle
@@ -895,29 +897,20 @@ begin
 			-- If NO we have to slip the word in the gearbox
 			-- if YES the alignemnt is done
 			when ST_check_pattern => 
-				-- if pattern_found = '1'  then
-					-- Align_serdes       <= ST_Check_valid;
-				-- else
-					-- Align_serdes       <= ST_Check_unvalid;
-				-- end if;
-	 
+
 			-- increment counters valid and check
-			--when ST_Check_valid =>
-				-- if test_shift = '1' and Shift_counter < Shift_counter_max then
-					-- Align_serdes 	<= ST_check_pattern;
 				if 	    pattern_found = '1' and Shift_counter = Shift_counter_max and Shift_inv_counter = "00000" then 
 					Align_serdes 	<= ST_send_idle;
 				elsif  pattern_found = '1' and Shift_counter = Shift_counter_max and Shift_inv_counter > "00000" then
+					--some pattern(s) are not correct
 					Align_serdes 	<= ST_Reset_counters;
-				-- end if;
-				
+		
 			-- increment counters unvalid and check
-			--when ST_Check_unvalid => 
-				-- if test_shift = '1' and Shift_counter < Shift_counter_max and Shift_inv_counter < Shift_inv_counter_max and STATE_link = LINK_UP then -- ???
-					-- Align_serdes 	<= ST_check_pattern;
 				elsif pattern_found = '0' and (Shift_inv_counter = Shift_inv_counter_max or STATE_link = LINK_DOWN) then 
+					-- need a bit shift
 					Align_serdes 	<= ST_slip_state;
 				elsif pattern_found = '0' and Shift_counter = Shift_counter_max and Shift_inv_counter < Shift_inv_counter_max and STATE_link = LINK_UP  then
+					-- lost the link reset counters
 					Align_serdes 	<= ST_Reset_counters;
 				end if;				
 			

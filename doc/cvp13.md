@@ -86,6 +86,8 @@ You can also use the GUI version:
 * Right click on the FPGA and choose "Erase"
 * Right click on "Flash 0: User" and choose "Erase".. wait..
 * Right click on the "Flash 0: User" again and choose "Load" and select your favorite CVP13 0xBEFE bitstream file (available in releases section).
+* Right click on the FPGA and choose "Start: load from default boot source"
+* Reboot the computer
 
 If you want to only load a bitstream for temporary use (e.g. for testing), you can just load it directly to the FPGA instead of writing the flash, but it will be lost after a power-cycle. This is faster, so it's nice for firmware developers, but regular users should just write flash. Note that FPGA programming seems to be only supported in the GUI mode :(
 
@@ -160,16 +162,24 @@ Mapping to ME0 OHs is the following:
 | OH0 GBT7 TX |       | 4     |       |       |
 
 CSC Fiber mapping (for now only one QSFP is used):
-|          | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
-|----------|-------|-------|-------|-------|
-| DMB0     | 1&12  |       |       |       |
-| DMB1     | 2&11  |       |       |       |
-| Spy GbE  | 3&10  |       |       |       |
+|                  | QSFP0 | QSFP1 | QSFP2 | QSFP3 |
+|------------------|-------|-------|-------|-------|
+| DMB0             | 1&12  |       |       |       |
+| DMB1             | 2&11  |       |       |       |
+| GBT for PROMless |       | 1&12  |       |       |
+| GBT for PROMless |       | 2&11  |       |       |
+| GBT for PROMless |       | 3&10  |       |       |
+| GBT for PROMless |       | 4&9   |       |       |
+| TTC TX           |       |       | 12    |       |
+| TTC TX           |       |       | 11    |       |
+| TTC TX           |       |       | 10    |       |
+| TTC TX           |       |       | 9     |       |
+| Spy GbE          |       |       |       | 1&12  |
 
 ## PROMless
-The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless_load.py``` script e.g.:
+The frontend FPGAs are programmed by the backend on every TTC hard-reset command. For this to work the backend firmware has to have access to the frontend FPGA bitstream data, so you have to upload it to the CVP13 RAM, which is done by the ```common/promless.py``` script e.g.:
 ```
-sudo python common/promless_load.py ~/oh_fw/oh_ge21.200-v4.0.2-23-gf349814-dirty.bit
+python3 common/promless.py ~/oh_fw/oh_ge21.200-v4.0.2-23-gf349814-dirty.bit
 ```
 (this is equivalent to calling the gemloader_configure.sh script on CTP7)
 To trigger the hard-reset manually in order to program the frontend you can use the built-in TTC generator module e.g. by running these commands using the ```common/reg_interface.py```:
@@ -179,7 +189,7 @@ write GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET 1
 ```
 
 ## CSC operation
-First of all, initialize the firmware by running: ```sudo boards/cvp13/cvp13_init_csc.py```
+First of all, initialize the firmware by running: ```python3 csc/init.py```. This resets and configures the firmware, and also loads the frontend bitstream to the FPGA RAM to be used with PROMless loading (the path to the bitstream file is defined by the CONFIG_CSC_PROMLESS_BITFILE constant in the befe_config.py)
 Then you can start the DAQ by running the ```csc/csc_daq.py``` application, which will ask a series of self explanatory questions for which for the most part defaults are going to be fine, but if no TCDS is used you have to make sure to answer "no" to "Should we keep the DAQ in reset until a resync" and "yes" to "Should we use local L1A generation based on DAQ data".
 For now the readout through PCIe is not yet implemented, so one has to use the Spy GbE port connected to a compatible NIC and running the CSC DAQ driver + RUI application. The spy output is identical to the DDU output, except that it is sending fully ethernet compliant packets (a modification to the offset in the driver is needed when using the ethernet-compliant option which is normally meant for ODMB "PC" port readout).
 There's also a script to send some dummy ethernet packets to the spy GbE port for testing the readout application on the DAQ machine: ```csc/csc_eth_packet_test.py```

@@ -398,51 +398,6 @@ begin
     s_gth_gt_clk_in_arr(n).txusrclk2 <= s_clk_gth_tx_usrclk2_arr(n);
 
 
-    gen_gth_3p2g : if c_gth_config_arr(n).gth_link_type = gth_3p2g generate
-
-      s_gth_tx_data_arr(n) <= gth_tx_data_arr_i(n);
-      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
-      s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
-      s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
-      s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
-      s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
-
-      i_gth_single_3p2g : entity work.gth_single_3p2g
-        generic map
-        (
-          g_REFCLK_01 => 0,
-                                        -- Simulation attributes
-          g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
-          )
-        port map
-        (
-          gth_rx_serial_i => s_gth_rx_serial_arr(n),
-          gth_tx_serial_o => s_gth_tx_serial_arr(n),
-          gth_gt_clk_i    => s_gth_gt_clk_in_arr(n),
-          gth_gt_clk_o    => s_gth_gt_clk_out_arr(n),
-
-          gth_cpll_ctrl_i   => s_gth_cpll_ctrl_arr(n),
-          gth_cpll_init_i   => s_gth_cpll_init_arr(n),
-          gth_cpll_status_o => s_gth_cpll_status_arr(n),
-
-          gth_gt_drp_i      => s_gth_gt_drp_in_arr(n),
-          gth_gt_drp_o      => s_gth_gt_drp_out_arr(n),
-          gth_tx_ctrl_i     => s_gth_tx_ctrl_arr(n),
-          gth_tx_init_i     => s_gth_tx_init_arr(n),
-          gth_tx_status_o   => s_gth_tx_status_arr(n),
-          gth_rx_ctrl_i     => s_gth_rx_ctrl_arr(n),
-          gth_rx_ctrl_2_i   => s_gth_rx_ctrl_2_arr(n),
-          gth_rx_init_i     => s_gth_rx_init_arr(n),
-          gth_rx_status_o   => s_gth_rx_status_arr(n),
-          gth_misc_ctrl_i   => s_gth_misc_ctrl_arr(n),
-          gth_misc_status_o => s_gth_misc_status_arr(n),
-          gth_tx_data_i     => s_gth_tx_data_arr(n),
-          gth_rx_data_o     => s_gth_rx_data_arr(n)
-          );
-        
-    end generate;
-
-
     gen_gth_4p8g : if c_gth_config_arr(n).gth_link_type = gth_4p8g generate
 
       -------------  GT txdata_i Assignments for 20 bit datapath  -------  
@@ -490,7 +445,7 @@ begin
       i_gth_single_4p8g : entity work.gth_single_4p8g
         generic map
         (
-          g_REFCLK_01 => 0,
+          g_REFCLK_01 => 1,
                                         -- Simulation attributes
           g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
           )
@@ -531,7 +486,7 @@ begin
         generic map
         (
           g_USE_QPLL => TRUE,
-          g_REFCLK_01 => 1,
+          g_REFCLK_01 => 0,
           g_RX_BUS_WIDTH => 32,
           g_TX_BUS_WIDTH => 32,
                                         -- Simulation attributes
@@ -564,7 +519,7 @@ begin
           );        
     end generate;
 
-    gen_gth_tx_10p24g_rx_3p2g : if c_gth_config_arr(n).gth_link_type = gth_tx_10p24g_rx_3p2g generate
+    gen_gth_tx_10p24g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_10p24g_rx_4p0g generate
       
       gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
       s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
@@ -574,11 +529,55 @@ begin
             
       s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr_i(n).txdata;
             
-      i_gth_single_tx_10p24g_rx_3p2g : entity work.gth_single_tx_10p24g_rx_3p2g
+      i_gth_single_tx_10p24g_rx_4p0g : entity work.gth_single_tx_10p24g_rx_4p0g
         generic map
         (
-          g_RX_REFCLK_01 => 0,
+          g_TX_REFCLK_01 => 0,
           g_TX_BUS_WIDTH => 64,
+                                        -- Simulation attributes
+          g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
+          )
+        port map
+        (
+          gth_rx_serial_i => s_gth_rx_serial_arr(n),
+          gth_tx_serial_o => s_gth_tx_serial_arr(n),
+          gth_gt_clk_i    => s_gth_gt_clk_in_arr(n),
+          gth_gt_clk_o    => s_gth_gt_clk_out_arr(n),
+
+          gth_cpll_ctrl_i   => s_gth_cpll_ctrl_arr(n),
+          gth_cpll_init_i   => s_gth_cpll_init_arr(n),
+          gth_cpll_status_o => s_gth_cpll_status_arr(n),
+
+          gth_gt_drp_i      => s_gth_gt_drp_in_arr(n),
+          gth_gt_drp_o      => s_gth_gt_drp_out_arr(n),
+          gth_tx_ctrl_i     => s_gth_tx_ctrl_arr(n),
+          gth_tx_init_i     => s_gth_tx_init_arr(n),
+          gth_tx_status_o   => s_gth_tx_status_arr(n),
+          gth_rx_ctrl_i     => s_gth_rx_ctrl_arr(n),
+          gth_rx_ctrl_2_i   => s_gth_rx_ctrl_2_arr(n),
+          gth_rx_init_i     => s_gth_rx_init_arr(n),
+          gth_rx_status_o   => s_gth_rx_status_arr(n),
+          gth_misc_ctrl_i   => s_gth_misc_ctrl_arr(n),
+          gth_misc_status_o => s_gth_misc_status_arr(n),
+          gth_tx_data_i     => s_gth_tx_data_arr(n),
+          gth_rx_data_o     => s_gth_rx_data_arr(n)
+          );        
+    end generate;
+
+    gen_gth_tx_1p25g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_1p25g_rx_4p0g generate
+      
+      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
+      s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
+      s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
+      s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
+      s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
+            
+      s_gth_tx_data_arr(n) <= gth_tx_data_arr_i(n); 
+            
+      i_gth_single_tx_1p25g_rx_4p0g : entity work.gth_single_tx_1p25g_rx_4p0g
+        generic map
+        (
+          g_TX_REFCLK_01 => 1,
                                         -- Simulation attributes
           g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
           )
@@ -617,7 +616,7 @@ begin
       i_gth_single_2p56g : entity work.gth_single_2p56g
         generic map
         (
-          g_REFCLK_01 => 1,
+          g_REFCLK_01 => 0,
                                         -- Simulation attributes
           g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
           )
@@ -656,28 +655,45 @@ begin
 
   s_gth_common_clk_in_arr(0).GTREFCLK1 <= s_refclk_F_1(3);
   s_gth_common_clk_in_arr(1).GTREFCLK1 <= s_refclk_F_1(3);
+  s_gth_common_clk_in_arr(0).GTREFCLK0 <= s_refclk_F_0(3);
+  s_gth_common_clk_in_arr(1).GTREFCLK0 <= s_refclk_F_0(3);
 
   s_gth_common_clk_in_arr(2).GTREFCLK1 <= s_refclk_F_1(2);
   s_gth_common_clk_in_arr(3).GTREFCLK1 <= s_refclk_F_1(2);
   s_gth_common_clk_in_arr(4).GTREFCLK1 <= s_refclk_F_1(2);
+  s_gth_common_clk_in_arr(2).GTREFCLK0 <= s_refclk_F_0(2);
+  s_gth_common_clk_in_arr(3).GTREFCLK0 <= s_refclk_F_0(2);
+  s_gth_common_clk_in_arr(4).GTREFCLK0 <= s_refclk_F_0(2);
 
   s_gth_common_clk_in_arr(5).GTREFCLK1 <= s_refclk_F_1(1);
   s_gth_common_clk_in_arr(6).GTREFCLK1 <= s_refclk_F_1(1);
   s_gth_common_clk_in_arr(7).GTREFCLK1 <= s_refclk_F_1(1);
+  s_gth_common_clk_in_arr(5).GTREFCLK0 <= s_refclk_F_0(1);
+  s_gth_common_clk_in_arr(6).GTREFCLK0 <= s_refclk_F_0(1);
+  s_gth_common_clk_in_arr(7).GTREFCLK0 <= s_refclk_F_0(1);
 
   s_gth_common_clk_in_arr(8).GTREFCLK1 <= s_refclk_F_1(0);
   s_gth_common_clk_in_arr(9).GTREFCLK1 <= s_refclk_F_1(0);
+  s_gth_common_clk_in_arr(8).GTREFCLK0 <= s_refclk_F_0(0);
+  s_gth_common_clk_in_arr(9).GTREFCLK0 <= s_refclk_F_0(0);
 
 
   s_gth_common_clk_in_arr(10).GTREFCLK1 <= s_refclk_B_1(3);
   s_gth_common_clk_in_arr(11).GTREFCLK1 <= s_refclk_B_1(3);
+  s_gth_common_clk_in_arr(10).GTREFCLK0 <= s_refclk_B_0(3);
+  s_gth_common_clk_in_arr(11).GTREFCLK0 <= s_refclk_B_0(3);
 
   s_gth_common_clk_in_arr(12).GTREFCLK1 <= s_refclk_B_1(2);
   s_gth_common_clk_in_arr(13).GTREFCLK1 <= s_refclk_B_1(2);
   s_gth_common_clk_in_arr(14).GTREFCLK1 <= s_refclk_B_1(2);
+  s_gth_common_clk_in_arr(12).GTREFCLK0 <= s_refclk_B_0(2);
+  s_gth_common_clk_in_arr(13).GTREFCLK0 <= s_refclk_B_0(2);
+  s_gth_common_clk_in_arr(14).GTREFCLK0 <= s_refclk_B_0(2);
 
   s_gth_common_clk_in_arr(15).GTREFCLK1 <= s_refclk_B_1(1);
   s_gth_common_clk_in_arr(16).GTREFCLK1 <= s_refclk_B_1(1);
+  s_gth_common_clk_in_arr(15).GTREFCLK0 <= s_refclk_B_0(1);
+  s_gth_common_clk_in_arr(16).GTREFCLK0 <= s_refclk_B_0(1);
 
   gth_common_status_arr_o <= s_gth_common_status_arr;
   gth_cpll_status_arr_o   <= s_gth_cpll_status_arr;
@@ -699,8 +715,9 @@ begin
       generic map
       (
                                         -- Simulation attributes
-        g_QPLL_FBDIV_TOP => 32,
-        g_REFCLK_01 => 1,
+        g_QPLL_FBDIV_TOP => c_gth_config_arr(n*4).qpll_mult,
+        g_QPLL_REFCLK_DIV => c_gth_config_arr(n*4).qpll_div,
+        g_REFCLK_01 => 0,
         g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP,  -- Set to "true" to speed up sim reset
         g_STABLE_CLOCK_PERIOD    => g_STABLE_CLOCK_PERIOD  -- Period of the stable clock driving this state-machine, unit is [ns]
         )
@@ -728,11 +745,11 @@ begin
           EXAMPLE_SIMULATION     => g_EXAMPLE_SIMULATION,
           STABLE_CLOCK_PERIOD    => g_STABLE_CLOCK_PERIOD,  -- Period of the stable clock driving this state-machine, unit is [ns]
           RETRY_COUNTER_BITWIDTH => 8,
-          TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_3p2g),  -- the TX and RX Reset FSMs must
-          RX_QPLL_USED           => c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g,  -- share these two generic values
-          PHASE_ALIGNMENT_MANUAL => true  -- Decision if a manual phase-alignment is necessary or the automatic
-                                          -- is enough. For single-lane applications the automatic alignment is
-                                          -- sufficient
+          TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g),  -- the TX and RX Reset FSMs must
+          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g),  -- share these two generic values
+          PHASE_ALIGNMENT_MANUAL => not (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g)  -- Decision if a manual phase-alignment is necessary or the automatic
+                                                                                                        -- is enough. For single-lane applications the automatic alignment is
+                                                                                                        -- sufficient
           )
         port map (
           STABLE_CLOCK      => clk_stable_i,
@@ -763,8 +780,8 @@ begin
           EQ_MODE                => "LPM",  --Rx Equalization Mode - Set to DFE or LPM
           STABLE_CLOCK_PERIOD    => g_STABLE_CLOCK_PERIOD,  --Period of the stable clock driving this state-machine, unit is [ns]
           RETRY_COUNTER_BITWIDTH => 8,
-          TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_3p2g),  -- the TX and RX Reset FSMs must
-          RX_QPLL_USED           => c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g,  -- share these two generic values
+          TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g),  -- the TX and RX Reset FSMs must
+          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g),  -- share these two generic values
           PHASE_ALIGNMENT_MANUAL => false  -- Decision if a manual phase-alignment is necessary or the automatic
                                            -- is enough. For single-lane applications the automatic alignment is
                                            -- sufficient

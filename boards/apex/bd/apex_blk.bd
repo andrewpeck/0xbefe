@@ -6,7 +6,7 @@
       "name": "apex_blk",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2020.2",
+      "tool_version": "2021.1",
       "validated": "true"
     },
     "design_tree": {
@@ -27,8 +27,8 @@
     "interface_ports": {
       "user_axil": {
         "mode": "Master",
+        "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
         "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-        "memory_map_ref": "user_axil",
         "parameters": {
           "ADDR_WIDTH": {
             "value": "32"
@@ -150,7 +150,8 @@
             "value": "0",
             "value_src": "user_prop"
           }
-        }
+        },
+        "memory_map_ref": "user_axil"
       }
     },
     "ports": {
@@ -398,21 +399,22 @@
             "value": "0"
           }
         },
-        "addressing": {
-          "address_spaces": {
-            "MAXI": {
-              "range": "4G",
-              "width": "32"
-            }
-          }
-        },
         "interface_ports": {
           "m_axi": {
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
             "mode": "Master",
             "address_space_ref": "MAXI",
             "base_address": {
               "minimum": "0x00000000",
               "maximum": "0xFFFFFFFF",
+              "width": "32"
+            }
+          }
+        },
+        "addressing": {
+          "address_spaces": {
+            "MAXI": {
+              "range": "4G",
               "width": "32"
             }
           }
@@ -431,11 +433,19 @@
         "interface_ports": {
           "S00_AXI": {
             "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
           },
           "M00_AXI": {
             "mode": "Master",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "CLK_DOMAIN": {
+                "value": "apex_blk_clk_wiz_0_clk_out1",
+                "value_src": "undefined"
+              }
+            }
           }
         },
         "ports": {
@@ -490,10 +500,12 @@
             "interface_ports": {
               "M_AXI": {
                 "mode": "Master",
+                "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
                 "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
               },
               "S_AXI": {
                 "mode": "Slave",
+                "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
                 "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
               }
             },
@@ -547,6 +559,7 @@
                 },
                 "interface_ports": {
                   "S_AXI": {
+                    "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
                     "mode": "Slave",
                     "bridges": [
                       "M_AXI"
@@ -586,32 +599,20 @@
           }
         },
         "interface_nets": {
-          "s00_couplers_to_axi_interconnect_0": {
-            "interface_ports": [
-              "M00_AXI",
-              "s00_couplers/M_AXI"
-            ]
-          },
           "axi_interconnect_0_to_s00_couplers": {
             "interface_ports": [
               "S00_AXI",
               "s00_couplers/S_AXI"
             ]
+          },
+          "s00_couplers_to_axi_interconnect_0": {
+            "interface_ports": [
+              "M00_AXI",
+              "s00_couplers/M_AXI"
+            ]
           }
         },
         "nets": {
-          "axi_interconnect_0_ACLK_net": {
-            "ports": [
-              "M00_ACLK",
-              "s00_couplers/M_ACLK"
-            ]
-          },
-          "axi_interconnect_0_ARESETN_net": {
-            "ports": [
-              "M00_ARESETN",
-              "s00_couplers/M_ARESETN"
-            ]
-          },
           "S00_ACLK_1": {
             "ports": [
               "S00_ACLK",
@@ -622,6 +623,18 @@
             "ports": [
               "S00_ARESETN",
               "s00_couplers/S_ARESETN"
+            ]
+          },
+          "axi_interconnect_0_ACLK_net": {
+            "ports": [
+              "M00_ACLK",
+              "s00_couplers/M_ACLK"
+            ]
+          },
+          "axi_interconnect_0_ARESETN_net": {
+            "ports": [
+              "M00_ARESETN",
+              "s00_couplers/M_ARESETN"
             ]
           }
         }
@@ -716,6 +729,10 @@
               "FREQ_HZ": {
                 "value": "93750000",
                 "value_src": "user_prop"
+              },
+              "PHASE": {
+                "value": "0.000",
+                "value_src": "default_prop"
               },
               "CLK_DOMAIN": {
                 "value": "apex_blk_c2c_phy_clk",
@@ -822,15 +839,6 @@
       }
     },
     "nets": {
-      "rst_clk_wiz_100M_peripheral_aresetn": {
-        "ports": [
-          "rst_clk_wiz_100M/peripheral_aresetn",
-          "axi_reset_b_o",
-          "axi_interconnect_0/ARESETN",
-          "axi_interconnect_0/S00_ARESETN",
-          "axi_interconnect_0/M00_ARESETN"
-        ]
-      },
       "axi_c2c_config_error_out": {
         "ports": [
           "axi_chip2chip_0/axi_c2c_config_error_out",
@@ -875,31 +883,45 @@
           }
         }
       },
-      "xlconstant_1_dout": {
+      "axi_chip2chip_0_aurora_do_cc": {
         "ports": [
-          "xlconstant_0/dout",
-          "rst_clk_wiz_100M/mb_debug_sys_rst",
-          "clk_wiz/reset"
+          "axi_chip2chip_0/aurora_do_cc",
+          "c2c_do_cc",
+          "ila_0/probe8"
         ]
       },
-      "clk_wiz_locked": {
+      "axi_chip2chip_0_aurora_pma_init_out": {
         "ports": [
-          "clk_wiz/locked",
-          "rst_clk_wiz_100M/dcm_locked"
+          "axi_chip2chip_0/aurora_pma_init_out",
+          "c2c_pma_init",
+          "ila_0/probe9"
         ]
       },
-      "clk_wiz_clk_out1": {
+      "axi_chip2chip_0_aurora_reset_pb": {
         "ports": [
-          "clk_wiz/clk_out1",
-          "axi_chip2chip_0/m_aclk",
-          "axi_interconnect_0/ACLK",
-          "axi_interconnect_0/S00_ACLK",
-          "clk_100_o",
-          "user_axil_clk_o",
-          "rst_clk_wiz_100M/slowest_sync_clk",
-          "axi_chip2chip_0/aurora_init_clk",
-          "axi_interconnect_0/M00_ACLK",
-          "xpm_cdc_gen_0/dest_clk"
+          "axi_chip2chip_0/aurora_reset_pb",
+          "ila_0/probe10"
+        ]
+      },
+      "axi_chip2chip_0_axi_c2c_aurora_tx_tdata": {
+        "ports": [
+          "axi_chip2chip_0/axi_c2c_aurora_tx_tdata",
+          "c2c_tx_tdata",
+          "ila_0/probe5"
+        ]
+      },
+      "axi_chip2chip_0_axi_c2c_aurora_tx_tvalid": {
+        "ports": [
+          "axi_chip2chip_0/axi_c2c_aurora_tx_tvalid",
+          "c2c_tx_tvalid",
+          "ila_0/probe7"
+        ]
+      },
+      "c2c_channel_up_1": {
+        "ports": [
+          "c2c_channel_up",
+          "axi_chip2chip_0/axi_c2c_aurora_tx_tready",
+          "ila_0/probe2"
         ]
       },
       "c2c_init_clk_1": {
@@ -914,11 +936,11 @@
           "c2c_reset_fsm_0/reset_command"
         ]
       },
-      "xlconstant_1_dout1": {
+      "c2c_mmcm_unlocked_1": {
         "ports": [
-          "vio_0/probe_out0",
-          "c2c_reset_fsm_0/manual_reset",
-          "ila_0/probe14"
+          "c2c_mmcm_unlocked",
+          "axi_chip2chip_0/aurora_mmcm_not_locked",
+          "ila_0/probe4"
         ]
       },
       "c2c_phy_clk_1": {
@@ -944,11 +966,10 @@
           "xpm_cdc_gen_0/src_arst"
         ]
       },
-      "c2c_mmcm_unlocked_1": {
+      "c2c_reset_fsm_0_state": {
         "ports": [
-          "c2c_mmcm_unlocked",
-          "axi_chip2chip_0/aurora_mmcm_not_locked",
-          "ila_0/probe4"
+          "c2c_reset_fsm_0/state",
+          "ila_0/probe19"
         ]
       },
       "c2c_rx_data_1": {
@@ -965,66 +986,6 @@
           "ila_0/probe1"
         ]
       },
-      "axi_chip2chip_0_aurora_do_cc": {
-        "ports": [
-          "axi_chip2chip_0/aurora_do_cc",
-          "c2c_do_cc",
-          "ila_0/probe8"
-        ]
-      },
-      "axi_chip2chip_0_axi_c2c_aurora_tx_tvalid": {
-        "ports": [
-          "axi_chip2chip_0/axi_c2c_aurora_tx_tvalid",
-          "c2c_tx_tvalid",
-          "ila_0/probe7"
-        ]
-      },
-      "axi_chip2chip_0_axi_c2c_aurora_tx_tdata": {
-        "ports": [
-          "axi_chip2chip_0/axi_c2c_aurora_tx_tdata",
-          "c2c_tx_tdata",
-          "ila_0/probe5"
-        ]
-      },
-      "axi_chip2chip_0_aurora_pma_init_out": {
-        "ports": [
-          "axi_chip2chip_0/aurora_pma_init_out",
-          "c2c_pma_init",
-          "ila_0/probe9"
-        ]
-      },
-      "c2c_channel_up_1": {
-        "ports": [
-          "c2c_channel_up",
-          "axi_chip2chip_0/axi_c2c_aurora_tx_tready",
-          "ila_0/probe2"
-        ]
-      },
-      "vio_0_probe_out1": {
-        "ports": [
-          "vio_0/probe_out1",
-          "axi_chip2chip_0/aurora_pma_init_in",
-          "ila_0/probe3"
-        ]
-      },
-      "c2c_tx_ready_1": {
-        "ports": [
-          "c2c_tx_ready",
-          "ila_0/probe6"
-        ]
-      },
-      "axi_chip2chip_0_aurora_reset_pb": {
-        "ports": [
-          "axi_chip2chip_0/aurora_reset_pb",
-          "ila_0/probe10"
-        ]
-      },
-      "c2c_reset_fsm_0_state": {
-        "ports": [
-          "c2c_reset_fsm_0/state",
-          "ila_0/probe19"
-        ]
-      },
       "c2c_rxbufstatus_1": {
         "ports": [
           "c2c_rxbufstatus",
@@ -1037,10 +998,66 @@
           "ila_0/probe16"
         ]
       },
+      "c2c_tx_ready_1": {
+        "ports": [
+          "c2c_tx_ready",
+          "ila_0/probe6"
+        ]
+      },
+      "clk_wiz_clk_out1": {
+        "ports": [
+          "clk_wiz/clk_out1",
+          "axi_chip2chip_0/m_aclk",
+          "axi_interconnect_0/ACLK",
+          "axi_interconnect_0/S00_ACLK",
+          "clk_100_o",
+          "user_axil_clk_o",
+          "rst_clk_wiz_100M/slowest_sync_clk",
+          "axi_chip2chip_0/aurora_init_clk",
+          "axi_interconnect_0/M00_ACLK",
+          "xpm_cdc_gen_0/dest_clk"
+        ]
+      },
       "clk_wiz_clk_out2": {
         "ports": [
           "clk_wiz/clk_out2",
           "clk_50_o"
+        ]
+      },
+      "clk_wiz_locked": {
+        "ports": [
+          "clk_wiz/locked",
+          "rst_clk_wiz_100M/dcm_locked"
+        ]
+      },
+      "rst_clk_wiz_100M_peripheral_aresetn": {
+        "ports": [
+          "rst_clk_wiz_100M/peripheral_aresetn",
+          "axi_reset_b_o",
+          "axi_interconnect_0/ARESETN",
+          "axi_interconnect_0/S00_ARESETN",
+          "axi_interconnect_0/M00_ARESETN"
+        ]
+      },
+      "vio_0_probe_out1": {
+        "ports": [
+          "vio_0/probe_out1",
+          "axi_chip2chip_0/aurora_pma_init_in",
+          "ila_0/probe3"
+        ]
+      },
+      "xlconstant_1_dout": {
+        "ports": [
+          "xlconstant_0/dout",
+          "rst_clk_wiz_100M/mb_debug_sys_rst",
+          "clk_wiz/reset"
+        ]
+      },
+      "xlconstant_1_dout1": {
+        "ports": [
+          "vio_0/probe_out0",
+          "c2c_reset_fsm_0/manual_reset",
+          "ila_0/probe14"
         ]
       },
       "xpm_cdc_gen_0_dest_arst": {

@@ -13,6 +13,9 @@ csc/hdl/pkg/csc_pkg.vhd
 #csc/hdl/daq/daq.vhd <-- use the generated version specific to the project
 csc/hdl/daq/input_processor.vhd
 
+# Misc
+csc/hdl/misc/gbt_link_mux_csc.vhd
+
 # System
 #csc/hdl/system/system_regs.vhd           <-- use the generated version specific to the project
 #csc/hdl/system/link_monitor.vhd          <-- use the generated version specific to the project
