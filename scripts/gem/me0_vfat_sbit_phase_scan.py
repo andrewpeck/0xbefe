@@ -83,7 +83,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     reset_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
 
     # Configure TTC generator
-    ttc_reset_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
+    ttc_cnt_reset_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
@@ -175,7 +175,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                     # Looping over all S-bits in that elink
                     for sbit in range(elink*8,elink*8+8):
                         # Reset L1A, CalPulse and S-bit counters
-                        gem_utils.write_backend_reg(ttc_reset_node, 1)
+                        gem_utils.write_backend_reg(ttc_cnt_reset_node, 1)
                         gem_utils.write_backend_reg(reset_sbit_counter_node, 1)
 
                         gem_utils.write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter

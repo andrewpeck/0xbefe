@@ -86,7 +86,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         cluster_count_nodes.append(gem_utils.get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
 
     # Configure TTC generator
-    ttc_reset_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
+    ttc_cnt_reset_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
@@ -168,7 +168,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
 
                 # Reset L1A, CalPulse and S-bit monitor
-                gem_utils.write_backend_reg(ttc_reset_node, 1)
+                gem_utils.write_backend_reg(ttc_cnt_reset_node, 1)
                 gem_utils.write_backend_reg(reset_sbit_monitor_node, 1)
                 gem_utils.write_backend_reg(reset_sbit_cluster_node, 1)
 

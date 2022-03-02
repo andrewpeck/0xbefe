@@ -16,7 +16,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     # Configure TTC generator
-    ttc_reset_node = get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
+    ttc_cnt_reset_node = get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
@@ -100,7 +100,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                 # Looping over all s-bits in that elink
                 for sbit in range(elink*8,elink*8+8):
                     # Reset L1A, CalPulse and S-bit counters
-                    write_backend_reg(ttc_reset_node, 1)
+                    write_backend_reg(ttc_cnt_reset_node, 1)
                     write_backend_reg(reset_sbit_counter_node, 1)
 
                     write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
