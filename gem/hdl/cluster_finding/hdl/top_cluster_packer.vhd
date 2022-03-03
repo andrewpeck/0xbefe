@@ -6,15 +6,16 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency v0 sorter = 4.75 bx as of 2022/03/03
--- latency v1 sorter = 4.25 bx as of 2022/03/03
+-- latency v0 sorter = 4.50 bx as of 2022/03/03
+-- latency v1 sorter = 4.00 bx as of 2022/03/03
 
 entity cluster_packer is
   generic (
-    DEADTIME          : integer := 0;
-    ONESHOT           : boolean := false;
-    SPLIT_CLUSTERS    : integer := 0;
-    INVERT_PARTITIONS : boolean := false;
+    MXSBITS           : integer := 64;     -- number of sbits / vfat
+    PHASE_OFFSET      : integer := 0;      -- set to 0 if inputs are synchronous to the LHC clock
+    ONESHOT           : boolean := true;   -- set to 1 to trim pulses to be rising edge sensitive only
+    SPLIT_CLUSTERS    : integer := 0;      -- set to 1 will split large clusters in 2 instead of truncating
+    INVERT_PARTITIONS : boolean := false;  -- changes 0-->7 vs. 7-->0 for partition ordering
 
     NUM_VFATS      : integer := 24;
     NUM_PARTITIONS : integer := 8;
@@ -41,15 +42,15 @@ end cluster_packer;
 
 architecture behavioral of cluster_packer is
 
-  constant MXSBITS         : integer := 64;
   constant PARTITION_WIDTH : integer := NUM_VFATS/NUM_PARTITIONS;
+
+  constant INPUT_LATENCY : integer := 1;
 
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
-  signal latch_pulse_s0 : std_logic;
-  signal latch_pulse_s1 : std_logic;
-  signal latch_pulse_s2 : std_logic;
+  signal strobe     : std_logic;
+  signal strobe_dly : std_logic;
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -63,7 +64,7 @@ architecture behavioral of cluster_packer is
 
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 7;
+  constant OVERFLOW_LATENCY                 : natural := 6;
 
   signal cluster_latch : std_logic;
 
@@ -76,6 +77,7 @@ architecture behavioral of cluster_packer is
       );
     port (
       clock      : in  std_logic;
+      latch      : in  std_logic;
       vpfs_i     : in  std_logic_vector;
       cnt_o      : out std_logic_vector;
       overflow_o : out std_logic
@@ -114,14 +116,6 @@ begin
   --            __________                    __________
   -- valid    __|        |____________________|        |______
 
-  process (clk_fast)
-  begin
-    if (rising_edge(clk_fast)) then
-      latch_pulse_s1 <= latch_pulse_s0;
-      latch_pulse_s2 <= latch_pulse_s1;
-    end if;
-  end process;
-
   clock_strobe_inst : entity work.clock_strobe
     generic map(
       RATIO => 4
@@ -129,7 +123,20 @@ begin
     port map (
       fast_clk_i => clk_fast,
       slow_clk_i => clk_40,
-      strobe_o   => latch_pulse_s0
+      strobe_o   => strobe
+      );
+
+  -- Delay the strobe by a programmable amount which relates to the difference in phase between
+  -- the 40MHz clock and when the cluster finder receives processed clusters
+  strobe_delay : entity work.fixed_delay
+    generic map (
+      DELAY => PHASE_OFFSET+INPUT_LATENCY,
+      WIDTH => 1
+      )
+    port map (
+      clock     => clk_fast,
+      data_i(0) => strobe,
+      data_o(0) => strobe_dly
       );
 
   ------------------------------------------------------------------------------------------------------------------------
@@ -187,25 +194,18 @@ begin
     os_vfatloop : for ipartition in 0 to (NUM_PARTITIONS - 1) generate
       os_sbitloop : for isbit in 0 to (MXSBITS*PARTITION_WIDTH - 1) generate
         sbit_oneshot : entity work.sbit_oneshot
-          generic map (DEADTIME => DEADTIME)
           port map (
             d   => partitions_i(ipartition)(isbit),
             q   => partitions_os(ipartition)(isbit),
-            clk => clk_40
+            clk => clk_fast
             );
       end generate;
     end generate;
   end generate;
 
-  -- without the oneshot, just have a ff
   flatten_partitions : for iprt in 0 to NUM_PARTITIONS-1 generate
-    process (clk_fast) is
-    begin
-      if (rising_edge(clk_fast)) then
-        sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
-          <= partitions_os(iprt);
-      end if;
-    end process;
+    sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
+      <= partitions_os(iprt);
   end generate;
 
   ----------------------------------------------------------------------------------
@@ -242,15 +242,15 @@ begin
   --
   -- You should be able to just tweak the # of pipelines stages in the counter module
   --
-  -- Timed in on 2022/02/24
+  -- Timed in on 2022/03/23
+  --
   count_clusters_inst : count_clusters
     generic map (
       overflow_thresh => NUM_OUTPUT_CLUSTERS,
-      size            => NUM_VFATS*MXSBITS
-
-      )
+      size            => NUM_VFATS*MXSBITS)
     port map (
       clock      => clk_fast,
+      latch      => strobe_dly,
       vpfs_i     => vpfs,
       cnt_o      => cluster_count,
       overflow_o => overflow
@@ -266,7 +266,7 @@ begin
       data_o => cluster_count_delay
       );
 
-  cluster_count_o <= cluster_count_delay;
+  cluster_count_o        <= cluster_count_delay;
   cluster_count_masked_o <= (others => '0') when mask_output_i = '1' else cluster_count_delay;
 
   overflow_delay : entity work.fixed_delay
@@ -295,7 +295,7 @@ begin
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => latch_pulse_s2,
+      latch_i    => strobe_dly,
       latch_o    => cluster_latch
       );
 
