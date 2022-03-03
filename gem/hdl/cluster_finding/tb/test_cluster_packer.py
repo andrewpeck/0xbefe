@@ -25,11 +25,9 @@ def print_clusters(clusters):
             )
         )
 
-
 @cocotb.test()
 async def random_data(dut, nloops=1000, nhits=128):
     await run_test(dut, "RANDOM", nloops, nhits)
-
 
 @cocotb.test()
 async def walking1(dut):
@@ -46,7 +44,7 @@ async def edges(dut, nloops=1000, nhits=32):
     await run_test(dut, "EDGES", nloops, nhits)
 
 
-async def run_test(dut, test, nloops=1000, nhits=128, verbose=False):
+async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
     """Test for priority encoder with randomized data on all inputs"""
 
     # extract detector parameters
@@ -329,7 +327,8 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
         os.path.join(rtl_dir, f"find_cluster_primaries.v"),
         os.path.join(rtl_dir, f"count.v"),
         os.path.join(rtl_dir, f"consecutive_count.v"),
-        os.path.join(rtl_dir, f"priority.v"),
+        os.path.join(rtl_dir, f"sorter16.v"),
+        os.path.join(rtl_dir, f"priority.v")
     ]
 
     parameters = {}

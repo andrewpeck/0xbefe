@@ -180,6 +180,6 @@ def find_clusters(vpfs, cnts, width, nmax, encoder_size):
             found[iclst]  = null
 
 
-    found = sorted(found, key=lambda x: x.vpf << 13 | x.prt << 9 | x.adr, reverse=True)
+    found = sorted(found, key=lambda x: x.prt << 10 | x.adr, reverse=False)
 
     return found

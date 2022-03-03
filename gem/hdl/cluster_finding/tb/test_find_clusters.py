@@ -62,6 +62,8 @@ async def random_clusters(dut):
             channel = random.randint(0, width - 1)
             partitions[iprt] |= 1 << channel
             cnts[iprt] |= size << (channel * cntb)
+            partitions[iprt] |= 1 << channel
+            cnts[iprt] |= size << (channel * cntb)
 
         vpfs_i = 0
         cnts_i = 0
@@ -77,8 +79,17 @@ async def random_clusters(dut):
         # sort the found keys by {valid , partition, adr}
         #expect = sorted(expect, key=lambda x: x.vpf << 12 | x.prt << 8 | x.adr, reverse=True)
 
+        adr = -1
+        prt = -1
+
         # for ioutput, _ in enumerate(expect):
         #   print("expected: i=%02d %s" % (ioutput, str(expect[ioutput])))
+
+            # assert expect[ioutput].prt >= prt
+            # if (expect[ioutput].prt == prt):
+            #     assert expect[ioutput].adr >= adr
+            # adr = expect[ioutput].adr
+            # prt = expect[ioutput].prt
 
         dut.vpfs_i.value = vpfs_i
         dut.cnts_i.value = cnts_i
@@ -134,7 +145,8 @@ def test_find_clusters(station, num_found_clusters):
     ]
 
     verilog_sources = [
-        os.path.join(rtl_dir, f"priority.v")
+        os.path.join(rtl_dir, f"priority.v"),
+        os.path.join(rtl_dir, f"sorter16.v"),
     ]
 
     parameters = {}
@@ -162,4 +174,4 @@ def test_find_clusters(station, num_found_clusters):
 
 
 if __name__ == "__main__":
-    test_find_clusters(0, 16)
+    test_find_clusters(1, 16)
