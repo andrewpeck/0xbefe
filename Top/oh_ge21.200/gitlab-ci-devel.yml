@@ -5,4 +5,4 @@ GEN:oh_ge21.200_devel:
       PROJECT_NAME: oh_ge21.200
       INTERMEDIATE_BUILD: "1"
     tags:
-        - vivado_2020_2
+        - vivado_2021_1
