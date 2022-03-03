@@ -379,7 +379,6 @@ begin
 
       cluster_packer_inst : entity work.cluster_packer
         generic map (
-          DEADTIME       => 0,
           ONESHOT        => true,
           NUM_VFATS      => NUM_VFATS,
           NUM_PARTITIONS => NUM_PARTITIONS,

@@ -312,7 +312,6 @@ begin
 
             cluster_packer_inst : entity work.cluster_packer
               generic map (
-                DEADTIME          => 0,
                 ONESHOT           => true,
                 SPLIT_CLUSTERS    => 0,
                 INVERT_PARTITIONS => false,
