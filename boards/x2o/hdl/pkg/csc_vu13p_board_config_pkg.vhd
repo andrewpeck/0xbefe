@@ -156,7 +156,7 @@ package board_config_package is
         (004, 000, false, true ), -- fiber 54 (SLR 0)
         (005, 003, true , false), -- fiber 55 (SLR 0)
         --=== DUMMY fiber - use for unconnected channels ===--
-        (MGT_NULL, MGT_NULL, false, false)
+        others => (MGT_NULL, MGT_NULL, false, false)
     );
     
     --================================--
