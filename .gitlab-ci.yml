@@ -4,6 +4,7 @@ include:
       ref: '332e771b'
 
     - local: '/Top/ge21_apex/gitlab-ci.yml'
+    - local: '/Top/ge21_x2o/gitlab-ci.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci.yml'
     - local: '/Top/ge21_cvp13/gitlab-ci.yml'
     - local: '/Top/me0_apex/gitlab-ci.yml'

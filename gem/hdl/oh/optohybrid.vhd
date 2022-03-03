@@ -22,6 +22,7 @@ entity optohybrid is
     generic(
         g_GEM_STATION       : integer;
         g_OH_VERSION        : integer;
+        g_OH_TRIG_LINK_TYPE : t_oh_trig_link_type;
         g_OH_IDX            : std_logic_vector(3 downto 0);
         g_IPB_CLK_PERIOD_NS : integer;
         g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted
@@ -273,68 +274,102 @@ begin
     --==   RX Trigger Link   ==--
     --=========================--
 
-    g_8b10b_trig_links : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
+    g_8b10b_trig_links : if ((g_GEM_STATION = 1) or (g_GEM_STATION = 2)) and ((g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_3P2G) or (g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_4P0G)) generate
     
         gen_trig_links: for i in 0 to 1 generate
-    
-            -- Sync FIFO
-            i_sync_rx_trig : entity work.gearbox
-                generic map(
-                    g_IMPL_TYPE         => "FIFO",
-                    g_INPUT_DATA_WIDTH  => 24,
-                    g_OUTPUT_DATA_WIDTH => 24
-                )
-                port map(
-                    reset_i     => reset_i,
-                    wr_clk_i    => gth_rx_trig_usrclk_i(i),
-                    rd_clk_i    => ttc_clk_i.clk_160,
-                    din_i       => sync_trig_rx_din_arr(i),
-                    valid_i     => '1',
-                    dout_o      => sync_trig_rx_dout_arr(i),
-                    valid_o     => open,
-                    overflow_o  => sync_trig_rx_ovf_arr(i),
-                    underflow_o => sync_trig_rx_unf_arr(i)
-                );
+
+            g_trig_link_4p0g : if g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_4P0G generate
+
+                i_link_rx_trigger_ge11 : entity work.link_rx_trigger_ge11_4g
+                    generic map (
+                        g_REG_INPUT => true,
+                        g_REG_OUTPUT => true,
+                        g_DEBUG => g_DEBUG
+                    )
+                    port map(
+                        reset_i             => reset_i,
+                        ttc_clk_40_i        => ttc_clk_i.clk_40,
+                        rx_usrclk_i         => gth_rx_trig_usrclk_i(i),
+                        rx_data_i           => gth_rx_trig_data_i(i),
+                        sbit_cluster0_o     => sbit_clusters_o(i * 4 + 0),
+                        sbit_cluster1_o     => sbit_clusters_o(i * 4 + 1),
+                        sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
+                        sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
+                        bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
+                        sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
+                        missed_comma_err_o  => sbit_links_status_o(i).missed_comma,
+                        not_in_table_err_o  => sbit_links_status_o(i).not_in_table,
+                        fifo_ovf_o          => sbit_links_status_o(i).overflow,
+                        fifo_unf_o          => sbit_links_status_o(i).underflow
+                    );
+                      
+            end generate;
+            
+            g_trig_link_3p2g : if g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_3P2G generate
+            
+                -- Sync FIFO
+                i_sync_rx_trig : entity work.gearbox
+                    generic map(
+                        g_IMPL_TYPE         => "FIFO",
+                        g_INPUT_DATA_WIDTH  => 24,
+                        g_OUTPUT_DATA_WIDTH => 24,
+                        g_REGISTER_OUTPUT   => true
+                    )
+                    port map(
+                        reset_i     => reset_i,
+                        wr_clk_i    => gth_rx_trig_usrclk_i(i),
+                        rd_clk_i    => ttc_clk_i.clk_160,
+                        din_i       => sync_trig_rx_din_arr(i),
+                        valid_i     => '1',
+                        dout_o      => sync_trig_rx_dout_arr(i),
+                        valid_o     => open,
+                        overflow_o  => sync_trig_rx_ovf_arr(i),
+                        underflow_o => sync_trig_rx_unf_arr(i)
+                    );
+                    
+                sync_trig_rx_din_arr(i) <= gth_rx_trig_data_i(i).rxdisperr(1 downto 0) & 
+                                           gth_rx_trig_data_i(i).rxnotintable(1 downto 0) & 
+                                           gth_rx_trig_data_i(i).rxchariscomma(1 downto 0) & 
+                                           gth_rx_trig_data_i(i).rxcharisk(1 downto 0) & 
+                                           gth_rx_trig_data_i(i).rxdata(15 downto 0);
+                                           
+                sync_trig_rx_gth_data_arr(i).rxdata(15 downto 0) <= sync_trig_rx_dout_arr(i)(15 downto 0);
+                sync_trig_rx_gth_data_arr(i).rxcharisk(1 downto 0) <= sync_trig_rx_dout_arr(i)(17 downto 16);
+                sync_trig_rx_gth_data_arr(i).rxchariscomma(1 downto 0) <= sync_trig_rx_dout_arr(i)(19 downto 18);
+                sync_trig_rx_gth_data_arr(i).rxnotintable(1 downto 0) <= sync_trig_rx_dout_arr(i)(21 downto 20);
+                sync_trig_rx_gth_data_arr(i).rxdisperr(1 downto 0) <= sync_trig_rx_dout_arr(i)(23 downto 22);
                 
-            sync_trig_rx_din_arr(i) <= gth_rx_trig_data_i(i).rxdisperr(1 downto 0) & 
-                                       gth_rx_trig_data_i(i).rxnotintable(1 downto 0) & 
-                                       gth_rx_trig_data_i(i).rxchariscomma(1 downto 0) & 
-                                       gth_rx_trig_data_i(i).rxcharisk(1 downto 0) & 
-                                       gth_rx_trig_data_i(i).rxdata(15 downto 0);
-                                       
-            sync_trig_rx_gth_data_arr(i).rxdata(15 downto 0) <= sync_trig_rx_dout_arr(i)(15 downto 0);
-            sync_trig_rx_gth_data_arr(i).rxcharisk(1 downto 0) <= sync_trig_rx_dout_arr(i)(17 downto 16);
-            sync_trig_rx_gth_data_arr(i).rxchariscomma(1 downto 0) <= sync_trig_rx_dout_arr(i)(19 downto 18);
-            sync_trig_rx_gth_data_arr(i).rxnotintable(1 downto 0) <= sync_trig_rx_dout_arr(i)(21 downto 20);
-            sync_trig_rx_gth_data_arr(i).rxdisperr(1 downto 0) <= sync_trig_rx_dout_arr(i)(23 downto 22);
+                i_sync_link_ovf : entity work.synch generic map(N_STAGES => 3) port map(async_i => sync_trig_rx_ovf_arr(i), clk_i => ttc_clk_i.clk_160, sync_o => sbit_links_status_o(i).overflow);
+                sbit_links_status_o(i).underflow <= sync_trig_rx_unf_arr(i);
+                
+                -- TODO: report rxnotintable
+                
+                i_link_rx_trigger_ge11 : entity work.link_rx_trigger_ge11_3p2g
+                    generic map (
+                        g_DEBUG => g_DEBUG
+                    )
+                    port map(
+                        reset_i             => reset_i,
+                        ttc_clk_40_i        => ttc_clk_i.clk_40,
+                        ttc_clk_160_i       => ttc_clk_i.clk_160,
+                        rx_data_i           => sync_trig_rx_gth_data_arr(i),
+                        sbit_cluster0_o     => sbit_clusters_o(i * 4 + 0),
+                        sbit_cluster1_o     => sbit_clusters_o(i * 4 + 1),
+                        sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
+                        sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
+                        sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
+                        bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
+                        missed_comma_err_o  => sbit_links_status_o(i).missed_comma
+                    );
+                    
+            end generate;
             
-            i_sync_link_ovf : entity work.synch generic map(N_STAGES => 3) port map(async_i => sync_trig_rx_ovf_arr(i), clk_i => ttc_clk_i.clk_160, sync_o => sbit_links_status_o(i).overflow);
-            sbit_links_status_o(i).underflow <= sync_trig_rx_unf_arr(i);
-            
-            -- TODO: report rxnotintable
-            
-            i_link_rx_trigger_ge11 : entity work.link_rx_trigger_ge11
-                generic map (
-                    g_DEBUG => false
-                )
-                port map(
-                    reset_i             => reset_i,
-                    ttc_clk_40_i        => ttc_clk_i.clk_40,
-                    ttc_clk_160_i       => ttc_clk_i.clk_160,
-                    rx_data_i           => sync_trig_rx_gth_data_arr(i),
-                    sbit_cluster0_o     => sbit_clusters_o(i * 4 + 0),
-                    sbit_cluster1_o     => sbit_clusters_o(i * 4 + 1),
-                    sbit_cluster2_o     => sbit_clusters_o(i * 4 + 2),
-                    sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
-                    sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
-                    missed_comma_err_o  => sbit_links_status_o(i).missed_comma
-                );        
-        
         end generate;
     end generate;
         
-    g_gbt_trig_links : if g_GEM_STATION = 2 and g_OH_VERSION >= 2 generate
-    
+    g_gbt_trig_links : if g_GEM_STATION = 2 and g_OH_VERSION >= 2 and g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_GBT generate
+        signal bc0 : std_logic;
+    begin
         i_link_rx_trigger_ge21 : entity work.link_rx_trigger_ge21
             generic map(
                 g_DEBUG        => g_DEBUG,
@@ -346,7 +381,7 @@ begin
                 ttc_clk_40_i    => ttc_clk_i.clk_40,
                 rx_data_i       => ge21_gbt_trig_data_i,
                 sbit_clusters_o => sbit_clusters_o,
-                bc0_o           => open,
+                bc0_o           => bc0,
                 resync_o        => open,
                 sbit_overflow_o => sbit_links_status_o(0).sbit_overflow,
                 ecc_err_o       => open,
@@ -354,15 +389,17 @@ begin
                 protocol_err_o  => sbit_links_status_o(0).missed_comma
             );
     
+        sbit_links_status_o(0).bc0_marker <= bc0;
         sbit_links_status_o(0).underflow <= '0';
         sbit_links_status_o(0).overflow <= '0';
-        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0');
+        sbit_links_status_o(0).not_in_table <= '0';
+        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0', not_in_table => '0', bc0_marker => bc0);
 
     end generate;        
         
-    g_no_trig_links : if g_GEM_STATION = 0 generate
-        sbit_links_status_o <= (others => (sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '0'));
-        sbit_clusters_o <= (others => (address => "111" & x"FA", size => "000"));
+    g_no_trig_links : if g_GEM_STATION = 0 or g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_NONE generate
+        sbit_links_status_o <= (others => NULL_SBIT_LINK);
+        sbit_clusters_o <= (others => NULL_SBIT_CLUSTER);
     end generate;
             
     --============================--
@@ -406,11 +443,17 @@ begin
                 probe15 => dbg_vfat3_cnt_crc_errors
             );
         
-        g_debug_ge11_trig_link : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2 and g_OH_VERSION < 2) generate
+        g_debug_ge11_trig_link : if g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_3P2G or g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_4P0G generate
             i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
                 port map(
                     clk_i        => gth_rx_trig_usrclk_i(0),
                     rx_data_i    => gth_rx_trig_data_i(0),
+                    mgt_status_i => MGT_STATUS_NULL
+                );
+            i_ila_trig1_link : entity work.gt_rx_link_ila_wrapper
+                port map(
+                    clk_i        => gth_rx_trig_usrclk_i(1),
+                    rx_data_i    => gth_rx_trig_data_i(1),
                     mgt_status_i => MGT_STATUS_NULL
                 );
        end generate;

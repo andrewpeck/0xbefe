@@ -3,3 +3,5 @@ GEN:csc_apex:
     variables:
       extends: .vars
       PROJECT_NAME: csc_apex
+    tags:
+      - vivado_2021_1

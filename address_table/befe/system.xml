@@ -15,6 +15,14 @@
     <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
           description="User programmable board ID that gets embedded in the DAQ data stream"
           fw_signal="board_id" fw_default="0xbefe"/>
+    <node id="EXT_TRIG_ENABLE" address="0x3" mask="0x10000000" permission="rw"
+          description="When set to 1 external trigger is enabled"
+          fw_signal="ext_trig_en" fw_default="0b0"
+          sw_units="bool"/>
+    <node id="EXT_TRIG_DEADTIME" address="0x3" mask="0x00000fff" permission="rw"
+          description="Sets the minimum separation of consecutive external triggers in BX (any trigger that comes in earlier after last trigger than the set value will be discarded). Default is set to 400 to limit the rate to 100kHz"
+          fw_signal="ext_trig_deadtime" fw_default="0x190"
+          sw_units="BX"/>
   </node>
 
   <node id="RELEASE" address="0x50">

@@ -92,7 +92,7 @@ def main():
     heading("Hola, I'm SCA controller tester :)")
 
     if 'r' not in instructions:
-        if not checkStatus(ohList):
+        if not checkScaStatus(ohList):
             exit()
 
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
@@ -100,7 +100,7 @@ def main():
     if instructions == 'r':
         subheading('Reseting the SCA')
         write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
-        checkStatus(ohList)
+        checkScaStatus(ohList)
     elif instructions == 'hh':
         sleep(0.01)
         subheading('Asserting FPGA Hard Reset (and keeping it in reset)')
@@ -394,7 +394,8 @@ def main():
                 if (res > 0xfff):
                     print_red("ERROR: ADC returned a reading above 0xfff!!")
                 res_mv = ((1.0 / 0xfff) * float(res)) * 1000
-                print("Channel %d OH %d: %d counts (%s) = %fmV" % (ch, oh, res, hex(res), res_mv))
+                res_x4_v = (res_mv * 4) / 1000.0
+                print("Channel %d OH %d: %d counts (%s) = %fmV, x4 = %fV" % (ch, oh, res, hex(res), res_mv, res_x4_v))
                 #print "curr = %s" % hex(curr[oh])
             sleep(0.001)
 
@@ -701,6 +702,7 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
     write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+    sleep(0.00015) # max ADC conversion time
     reply = []
     if doRead:
         for i in ohList:
@@ -710,7 +712,7 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
 def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
 
-def checkStatus(ohList):
+def checkScaStatus(ohList):
     rxReady       = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
     criticalError = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
@@ -721,6 +723,10 @@ def checkStatus(ohList):
             statusGood = False
 
     return statusGood
+
+def resetSca():
+    # reset SCA
+    write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 1)
 
 def debug(string):
     if DEBUG:

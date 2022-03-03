@@ -12,6 +12,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_misc.all;
 
 library xpm;
 use xpm.vcomponents.all;
@@ -24,6 +25,7 @@ use work.registers.all;
 
 entity promless is
     generic(
+        g_NUM_CHANNELS      : integer;        
         g_MAX_SIZE_BYTES    : integer; -- NOTE: must be a multiple of 32KB (kilobytes) if g_MEMORY_PRIMITIVE is set to "ultra" (using UltraRAM)
         g_MEMORY_PRIMITIVE  : string := "ultra";
         g_IPB_CLK_PERIOD_NS : integer
@@ -31,8 +33,8 @@ entity promless is
     port (
         reset_i             : in  std_logic;
         
-        to_promless_i       : in  t_to_promless;
-        from_promless_o     : out t_from_promless;        
+        to_promless_i       : in  t_to_promless_arr(g_NUM_CHANNELS - 1 downto 0);
+        from_promless_o     : out t_from_promless_arr(g_NUM_CHANNELS - 1 downto 0);        
         
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -43,6 +45,12 @@ entity promless is
 end promless;
 
 architecture promless_arch of promless is
+
+    signal reset_local          : std_logic;
+    signal ram_ready            : std_logic := '1';
+    
+    constant RAM_MAX_ADDRESS    : integer := g_MAX_SIZE_BYTES / 8;
+    constant RAM_SC_DATA_WIDTH  : integer := 32;
 
     ----==== RAM signals ====----
     
@@ -85,8 +93,18 @@ architecture promless_arch of promless is
         
 begin
 
-    loader_clk <= to_promless_i.clk;
-    loader_en_req <= to_promless_i.en;
+    -- TODO fix the hack of merging all the promless requests into one and only using the clock from the first one
+    loader_clk <= to_promless_i(0).clk;
+    process(loader_clk)
+        variable en_all : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+    begin
+        if rising_edge(loader_clk) then
+            for i in 0 to g_NUM_CHANNELS - 1 loop
+                en_all(i) := to_promless_i(i).en;
+            end loop;
+            loader_en_req <= or_reduce(en_all);
+        end if;
+    end process;
 
     ----==== RAM instantiation ====----    
 
@@ -293,7 +311,9 @@ begin
     process(loader_clk)
     begin
         if rising_edge(loader_clk) then
-            from_promless_o <= from_promless;
+            for i in 0 to g_NUM_CHANNELS - 1 loop
+                from_promless_o(i) <= from_promless;
+            end loop;
         end if;
     end process;
 

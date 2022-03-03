@@ -9,6 +9,17 @@ import struct
 import sys
 
 SCAN_RANGE = 18
+N_SBIT = 8
+
+class VFAT_SBIT:
+    def __init__(self,vfat,center,best_dly,width):
+        if len(center) != N_SBIT or len(best_dly) != N_SBIT or len(width) != N_SBIT:
+            pritn("ERROR Entries DO NOT match number of S-bits!")
+        else:
+            self.VFAT = vfat
+            self.SBIT_CENTER = center
+            self.SBIT_BEST_DLY = best_dly
+            self.SBIT_WIDTH = width
 
 def configureVfatForPulsing(vfatN, ohN):
 
@@ -172,11 +183,17 @@ def main():
         print_red("The given VFAT index (%d) is out of range (must be 0-23)" % vfatN)
         return
 
-    verbose = 0
+    verbose = False
     if (vfatNMin == vfatNMax):
-        verbose = 1
+        verbose = True
 
     parse_xml()
+    sbit_phase_scan(ohN, vfatNMin, vfatNMax, verbose, True)
+
+# if print_result is set to False, all prints are suppressed
+def sbit_phase_scan(ohN, vfatNMin = 0, vfatNMax=11, verbose=False, print_result=True):
+
+    VFAT_SBITS_out = []
 
     addrSbitMonReset = get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.TRIG.SBIT_MONITOR.RESET' % ohN)
     write_reg(get_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), ohN)
@@ -187,11 +204,12 @@ def main():
 
     for vfatN in range (vfatNMin, vfatNMax+1):
 
-        print("")
-        print("####################################################################################################")
-        print("Scanning VFAT %i" % vfatN)
-        print("####################################################################################################")
-        print("")
+        if print_result:
+            print("")
+            print("####################################################################################################")
+            print("Scanning VFAT %i" % vfatN)
+            print("####################################################################################################")
+            print("")
 
         write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
         gem.gem_hard_reset()
@@ -372,13 +390,15 @@ def main():
                     line = line + Colors.RED + "x "
 
             line = line + Colors.ENDC
-            print(line)
+            if print_result:
+                print(line)
 
         ################################################################################
         # Printout Summary
         ################################################################################
 
-        print("min center = %i" % min_center)
+        if print_result:
+            print("min center = %i" % min_center)
 
         best_sot_tap_delay = 99
         if (min_center - SCAN_RANGE < 0):
@@ -386,22 +406,21 @@ def main():
         else:
             best_sot_tap_delay = min_center
 
-        print("sot :           best_dly=% 2d" % ( best_sot_tap_delay))
+        if print_result:
+            print("sot :           best_dly=% 2d" % ( best_sot_tap_delay))
+        ngood_center_offset = []
         for ibit in range(8):
             best_tap_delay [ibit] = ngood_center[ibit] - min_center
-            print("bit%i: center=% 2d best_dly=% 2d width=% 2d (%f ns)" % (ibit, ngood_center[ibit]-SCAN_RANGE, best_tap_delay[ibit], ngood_width[ibit], ngood_width[ibit]*78./1000))
+            if print_result:
+                print("bit%i: center=% 2d best_dly=% 2d width=% 2d (%f ns)" % (ibit, ngood_center[ibit]-SCAN_RANGE, best_tap_delay[ibit], ngood_width[ibit], ngood_width[ibit]*78./1000))
+            ngood_center_offset.append(ngood_center[ibit] - SCAN_RANGE)
+        VFAT_SBITS_out.append(VFAT_SBIT(vfatN, ngood_center_offset, best_tap_delay, ngood_width))
 
+    if print_result:
+        print("")
+        print("bye now..")
 
-    print("")
-    print("bye now..")
-
-def debug(string):
-    if DEBUG:
-        print('DEBUG: ' + string)
-
-def debugCyan(string):
-    if DEBUG:
-        print_cyan('DEBUG: ' + string)
+    return VFAT_SBITS_out
 
 if __name__ == '__main__':
     main()

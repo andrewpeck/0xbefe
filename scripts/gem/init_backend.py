@@ -11,7 +11,7 @@ def init_gem_backend():
 
     fw_info = befe_print_fw_info()
 
-    if fw_info["fw_flavor_str"] != "GEM_AMC":
+    if fw_info["fw_flavor"].to_string() != "GEM_AMC":
         print_red("The board is not running GEM firmware (flavor = %s). Exiting.." % fw_info["fw_flavor_str"])
         return
 

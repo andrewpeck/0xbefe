@@ -35,6 +35,7 @@ use work.gem_pkg.all;
 --============================================================================
 entity system is
   generic (
+    g_GEM_STATION               : integer range 0 to 2;
     C_DATE_CODE      : std_logic_vector (31 downto 0) := x"00000000";
     C_GITHASH_CODE   : std_logic_vector (31 downto 0) := x"00000000";
     C_GIT_REPO_DIRTY : std_logic                      := '0'
@@ -95,6 +96,7 @@ entity system is
     ----------------- AMC13 DAQLink ------------------------
     amc13_gth_refclk_p             : in  std_logic;
     amc13_gth_refclk_n             : in  std_logic;
+    amc13_gth_refclk_out           : out std_logic;
     amc_13_gth_rx_n                : in  std_logic;
     amc_13_gth_rx_p                : in  std_logic;
     amc13_gth_tx_n                 : out std_logic;
@@ -344,7 +346,12 @@ begin
   clk_200_o  <= s_clk_200;
   
   i_ttc_clocks : entity work.ttc_clocks
+          generic map (
+              g_CLK_STABLE_FREQ => 50_000_000,
+              g_GEM_STATION => g_GEM_STATION
+          )
       port map(
+          clk_stable_i          => s_clk_50,
           clk_40_ttc_p_i        => clk_40_ttc_p_i,
           clk_40_ttc_n_i        => clk_40_ttc_n_i,
           clk_gbt_mgt_txout_i   => gbt_mgt_txoutclk,
@@ -573,6 +580,7 @@ begin
           clk_50_i       => s_clk_50,
           GTX_REFCLK_p   => amc13_gth_refclk_p,
           GTX_REFCLK_n   => amc13_gth_refclk_n,
+          GTX_REFCLK_OUT => amc13_gth_refclk_out,
           GTX_RXN        => amc_13_gth_rx_n,
           GTX_RXP        => amc_13_gth_rx_p,
           GTX_TXN        => amc13_gth_tx_n,

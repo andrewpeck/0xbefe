@@ -18,9 +18,12 @@ use work.gem_pkg.all;
 use work.registers.all;
 use work.ttc_pkg.all;
 use work.board_config_package.all;
+use work.project_config.all;
 
 entity gem_system_regs is
 generic(
+    g_SLR                    : integer;
+    g_GEM_STATION            : integer;
     g_NUM_IPB_MON_SLAVES     : integer;
     g_IPB_CLK_PERIOD_NS      : integer
 );
@@ -54,6 +57,8 @@ end gem_system_regs;
 
 architecture gem_system_regs_arch of gem_system_regs is
 
+    constant VFAT3_HDLC_ADDRESSES : t_std4_array(23 downto 0) := get_vfat_hdlc_addresses(g_GEM_STATION);
+    
     signal reset_cnt                : std_logic := '0';
     
     signal loopback_gbt_test_en     : std_logic;

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE node [
 <!ENTITY NUM_DMBS "2">
+<!ENTITY NUM_GBT_LINKS "4">
 <!ENTITY NUM_OPTICAL_LINKS "72">
 <!ENTITY NUM_MGTS "64">
 <!ENTITY ADDRESS_TABLE_SYSTEM SYSTEM "../befe/system.xml">

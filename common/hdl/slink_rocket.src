@@ -19,6 +19,4 @@ common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gthe3_common.v
 common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gthe4_common.v
 common/hdl/slink_rocket/qpll/SR_gtwizard_ultrascale_v1_7_gtye4_common.v
 
-common/hdl/slink_rocket/FED_Fragment_CRC16_D128b.vhd
-
 #common/hdl/slink_rocket/slink_rocket.vhd <-- add the generated version of this file to your src
