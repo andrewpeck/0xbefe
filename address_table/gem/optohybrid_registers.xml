@@ -479,12 +479,6 @@
                   fw_signal="vfat_mask"
                   fw_default="0x0"/>
 
-            <node id="SBIT_DEADTIME" address="0x0" permission="rw"
-                  description="Set programmable oneshot deadtime which applies to retriggers on individual VFAT channels"
-                  fw_signal="trig_deadtime"
-                  mask="0x0f000000"
-                  fw_default="0x7"/>
-
             <node id="ACTIVE_VFATS" address="0x1" permission="r"
                   description="&NUM_VFATS_PER_OH; bit list of VFATs with hits in this BX"
                   mask="&VFAT_BITMASK;"

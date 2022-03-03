@@ -5,12 +5,10 @@
 -- A. Peck
 ----------------------------------------------------------------------------------
 -- Description:
+--
 --   This module wraps up all the functionality for deserializing 320 MHz S-bits
 --   as well as the cluster packer
-----------------------------------------------------------------------------------
--- 2017/11/01 -- Add description / comments
--- 2018/04/17 -- Add options for "light" oh firmware
--- 2018/09/18 -- Add module for S-bit remapping in firmware
+--
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -55,8 +53,6 @@ entity sbits is
     tu_mask_i    : in std_logic_vector (NUM_VFATS*8-1 downto 0);  -- 192 or 96
 
     aligned_count_to_ready : in std_logic_vector (11 downto 0);
-
-    trigger_deadtime_i : in std_logic_vector (3 downto 0);
 
     sbits_p : in std_logic_vector (NUM_VFATS*8-1 downto 0);
     sbits_n : in std_logic_vector (NUM_VFATS*8-1 downto 0);
