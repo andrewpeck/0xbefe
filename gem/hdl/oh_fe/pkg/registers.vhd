@@ -362,11 +362,6 @@ package registers is
     constant REG_TRIG_CTRL_VFAT_MASK_LSB     : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_DEFAULT : std_logic_vector(11 downto 0) := x"000";
 
-    constant REG_TRIG_CTRL_SBIT_DEADTIME_ADDR    : std_logic_vector(8 downto 0) := '0' & x"00";
-    constant REG_TRIG_CTRL_SBIT_DEADTIME_MSB    : integer := 27;
-    constant REG_TRIG_CTRL_SBIT_DEADTIME_LSB     : integer := 24;
-    constant REG_TRIG_CTRL_SBIT_DEADTIME_DEFAULT : std_logic_vector(27 downto 24) := x"7";
-
     constant REG_TRIG_CTRL_ACTIVE_VFATS_ADDR    : std_logic_vector(8 downto 0) := '0' & x"01";
     constant REG_TRIG_CTRL_ACTIVE_VFATS_MSB    : integer := 11;
     constant REG_TRIG_CTRL_ACTIVE_VFATS_LSB     : integer := 0;

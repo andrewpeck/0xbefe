@@ -93,7 +93,6 @@ architecture Behavioral of trigger is
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
   signal vfat_mask     : std_logic_vector (NUM_VFATS-1 downto 0);
-  signal trig_deadtime : std_logic_vector (3 downto 0);
 
   signal sbits_comparator_over_threshold : std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -320,7 +319,6 @@ begin
       sot_invert_i           => sot_invert (NUM_VFATS-1 downto 0),
       tu_invert_i            => tu_invert,
       tu_mask_i              => tu_mask,
-      trigger_deadtime_i     => trig_deadtime,
       sot_tap_delay          => sot_tap_delay,
       trig_tap_delay         => trig_tap_delay,
 
@@ -528,7 +526,6 @@ begin
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
-    regs_read_arr(0)(REG_TRIG_CTRL_SBIT_DEADTIME_MSB downto REG_TRIG_CTRL_SBIT_DEADTIME_LSB) <= trig_deadtime;
     regs_read_arr(1)(REG_TRIG_CTRL_ACTIVE_VFATS_MSB downto REG_TRIG_CTRL_ACTIVE_VFATS_LSB) <= active_vfats;
     regs_read_arr(2)(REG_TRIG_CTRL_CNT_OVERFLOW_MSB downto REG_TRIG_CTRL_CNT_OVERFLOW_LSB) <= cnt_sbit_overflow;
     regs_read_arr(2)(REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_MSB downto REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_LSB) <= aligned_count_to_ready;
@@ -746,7 +743,6 @@ begin
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);
-    trig_deadtime <= regs_write_arr(0)(REG_TRIG_CTRL_SBIT_DEADTIME_MSB downto REG_TRIG_CTRL_SBIT_DEADTIME_LSB);
     aligned_count_to_ready <= regs_write_arr(2)(REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_MSB downto REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_LSB);
     sot_invert <= regs_write_arr(6)(REG_TRIG_CTRL_INVERT_SOT_INVERT_MSB downto REG_TRIG_CTRL_INVERT_SOT_INVERT_LSB);
     TU_INVERT (7 downto 0) <= regs_write_arr(7)(REG_TRIG_CTRL_INVERT_VFAT0_TU_INVERT_MSB downto REG_TRIG_CTRL_INVERT_VFAT0_TU_INVERT_LSB);
@@ -1303,7 +1299,6 @@ begin
 
     -- Defaults
     regs_defaults(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= REG_TRIG_CTRL_VFAT_MASK_DEFAULT;
-    regs_defaults(0)(REG_TRIG_CTRL_SBIT_DEADTIME_MSB downto REG_TRIG_CTRL_SBIT_DEADTIME_LSB) <= REG_TRIG_CTRL_SBIT_DEADTIME_DEFAULT;
     regs_defaults(2)(REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_MSB downto REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_LSB) <= REG_TRIG_CTRL_ALIGNED_COUNT_TO_READY_DEFAULT;
     regs_defaults(6)(REG_TRIG_CTRL_INVERT_SOT_INVERT_MSB downto REG_TRIG_CTRL_INVERT_SOT_INVERT_LSB) <= REG_TRIG_CTRL_INVERT_SOT_INVERT_DEFAULT;
     regs_defaults(7)(REG_TRIG_CTRL_INVERT_VFAT0_TU_INVERT_MSB downto REG_TRIG_CTRL_INVERT_VFAT0_TU_INVERT_LSB) <= REG_TRIG_CTRL_INVERT_VFAT0_TU_INVERT_DEFAULT;
