@@ -363,7 +363,8 @@ begin
     attribute DONT_TOUCH of cluster_count_unmasked : signal is "true";
     attribute DONT_TOUCH of overflow               : signal is "true";
 
-    signal cluster_tmr_err : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0);
+    signal cluster_tmr_err     : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0);
+    signal cluster_tmr_err_reg : std_logic;
 
     signal tmr_err_inj : std_logic := '0';
 
@@ -461,6 +462,10 @@ begin
 
     end generate;
 
+    --------------------------------------------------------------------------------
+    -- Cluster Outputs
+    --------------------------------------------------------------------------------
+
     process (clocks.clk160_0) is
     begin
       if (rising_edge(clocks.clk160_0)) then
@@ -472,10 +477,24 @@ begin
       end if;
     end process;
 
+    --------------------------------------------------------------------------------
+    -- Cluster TMR Output
+    --------------------------------------------------------------------------------
+
+    -- register on the 160 MHz clock the or_reduce
+    -- then transfer to the 40MHz clock
+
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        cluster_tmr_err_reg <= or_reduce(cluster_tmr_err);
+      end if;
+    end process;
+
     process (clocks.clk40) is
     begin
       if (rising_edge(clocks.clk40)) then
-        cluster_tmr_err_o <= or_reduce(cluster_tmr_err);
+        cluster_tmr_err_o <= cluster_tmr_err_reg;
       end if;
     end process;
 
