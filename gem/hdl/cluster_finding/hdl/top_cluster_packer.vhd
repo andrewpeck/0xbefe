@@ -6,7 +6,8 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 4.75 bx as of 2022/03/02
+-- latency v0 sorter = 4.75 bx as of 2022/03/03
+-- latency v1 sorter = 4.25 bx as of 2022/03/03
 
 entity cluster_packer is
   generic (
@@ -15,9 +16,9 @@ entity cluster_packer is
     SPLIT_CLUSTERS    : integer := 0;
     INVERT_PARTITIONS : boolean := false;
 
-    NUM_VFATS      : integer := 0;
-    NUM_PARTITIONS : integer := 0;
-    STATION        : integer := 0
+    NUM_VFATS      : integer := 24;
+    NUM_PARTITIONS : integer := 8;
+    STATION        : integer := 1
     );
   port(
 

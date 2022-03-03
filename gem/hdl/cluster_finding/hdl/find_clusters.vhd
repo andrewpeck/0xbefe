@@ -8,6 +8,7 @@ use work.cluster_pkg.all;
 
 entity find_clusters is
   generic (
+    SORTER_TYPE        : integer := 1;
     MXSBITS            : integer := 64;
     NUM_VFATS          : integer := 24;
     NUM_FOUND_CLUSTERS : integer := 0;
@@ -270,7 +271,7 @@ begin
   -- we get up to 16 clusters / bx but only get to send a few so we put them in order of priority
   -- (should choose lowest addr first--- highest addr is invalid)
 
-  sorter : if (true) generate
+  bitonic_sorter : if (sorter_type=0) generate
 
     constant size : integer := 1+MXADRB+MXCNTB+MXPRTB;
 
@@ -375,6 +376,316 @@ begin
         O_UP      => open,
         I_INFO(0) => latch_s2,
         O_INFO(0) => latch_o
+        );
+
+  end generate;
+
+  fast_sorter : if (sorter_type=1) generate
+
+    component sorter16
+      generic (
+        MXADRB : integer;
+        MXCNTB : integer;
+        MXVPFB : integer;
+        MXPRTB : integer;
+        SKIPB  : integer
+        );
+      port (
+        adr_in0 : in std_logic_vector;
+        adr_in1 : in std_logic_vector;
+        adr_in2 : in std_logic_vector;
+        adr_in3 : in std_logic_vector;
+        adr_in4 : in std_logic_vector;
+        adr_in5 : in std_logic_vector;
+        adr_in6 : in std_logic_vector;
+        adr_in7 : in std_logic_vector;
+        adr_in8 : in std_logic_vector;
+        adr_in9 : in std_logic_vector;
+        adr_in10 : in std_logic_vector;
+        adr_in11 : in std_logic_vector;
+        adr_in12 : in std_logic_vector;
+        adr_in13 : in std_logic_vector;
+        adr_in14 : in std_logic_vector;
+        adr_in15 : in std_logic_vector;
+
+        prt_in0 : in std_logic_vector;
+        prt_in1 : in std_logic_vector;
+        prt_in2 : in std_logic_vector;
+        prt_in3 : in std_logic_vector;
+        prt_in4 : in std_logic_vector;
+        prt_in5 : in std_logic_vector;
+        prt_in6 : in std_logic_vector;
+        prt_in7 : in std_logic_vector;
+        prt_in8 : in std_logic_vector;
+        prt_in9 : in std_logic_vector;
+        prt_in10 : in std_logic_vector;
+        prt_in11 : in std_logic_vector;
+        prt_in12 : in std_logic_vector;
+        prt_in13 : in std_logic_vector;
+        prt_in14 : in std_logic_vector;
+        prt_in15 : in std_logic_vector;
+
+        vpf_in0 : in std_logic_vector;
+        vpf_in1 : in std_logic_vector;
+        vpf_in2 : in std_logic_vector;
+        vpf_in3 : in std_logic_vector;
+        vpf_in4 : in std_logic_vector;
+        vpf_in5 : in std_logic_vector;
+        vpf_in6 : in std_logic_vector;
+        vpf_in7 : in std_logic_vector;
+        vpf_in8 : in std_logic_vector;
+        vpf_in9 : in std_logic_vector;
+        vpf_in10 : in std_logic_vector;
+        vpf_in11 : in std_logic_vector;
+        vpf_in12 : in std_logic_vector;
+        vpf_in13 : in std_logic_vector;
+        vpf_in14 : in std_logic_vector;
+        vpf_in15 : in std_logic_vector;
+
+        cnt_in0 : in std_logic_vector;
+        cnt_in1 : in std_logic_vector;
+        cnt_in2 : in std_logic_vector;
+        cnt_in3 : in std_logic_vector;
+        cnt_in4 : in std_logic_vector;
+        cnt_in5 : in std_logic_vector;
+        cnt_in6 : in std_logic_vector;
+        cnt_in7 : in std_logic_vector;
+        cnt_in8 : in std_logic_vector;
+        cnt_in9 : in std_logic_vector;
+        cnt_in10 : in std_logic_vector;
+        cnt_in11 : in std_logic_vector;
+        cnt_in12 : in std_logic_vector;
+        cnt_in13 : in std_logic_vector;
+        cnt_in14 : in std_logic_vector;
+        cnt_in15 : in std_logic_vector;
+
+        adr_out0 : out std_logic_vector;
+        adr_out1 : out std_logic_vector;
+        adr_out2 : out std_logic_vector;
+        adr_out3 : out std_logic_vector;
+        adr_out4 : out std_logic_vector;
+        adr_out5 : out std_logic_vector;
+        adr_out6 : out std_logic_vector;
+        adr_out7 : out std_logic_vector;
+        adr_out8 : out std_logic_vector;
+        adr_out9 : out std_logic_vector;
+        adr_out10 : out std_logic_vector;
+        adr_out11 : out std_logic_vector;
+        adr_out12 : out std_logic_vector;
+        adr_out13 : out std_logic_vector;
+        adr_out14 : out std_logic_vector;
+        adr_out15 : out std_logic_vector;
+
+        prt_out0 : out std_logic_vector;
+        prt_out1 : out std_logic_vector;
+        prt_out2 : out std_logic_vector;
+        prt_out3 : out std_logic_vector;
+        prt_out4 : out std_logic_vector;
+        prt_out5 : out std_logic_vector;
+        prt_out6 : out std_logic_vector;
+        prt_out7 : out std_logic_vector;
+        prt_out8 : out std_logic_vector;
+        prt_out9 : out std_logic_vector;
+        prt_out10 : out std_logic_vector;
+        prt_out11 : out std_logic_vector;
+        prt_out12 : out std_logic_vector;
+        prt_out13 : out std_logic_vector;
+        prt_out14 : out std_logic_vector;
+        prt_out15 : out std_logic_vector;
+
+        vpf_out0 : out std_logic_vector;
+        vpf_out1 : out std_logic_vector;
+        vpf_out2 : out std_logic_vector;
+        vpf_out3 : out std_logic_vector;
+        vpf_out4 : out std_logic_vector;
+        vpf_out5 : out std_logic_vector;
+        vpf_out6 : out std_logic_vector;
+        vpf_out7 : out std_logic_vector;
+        vpf_out8 : out std_logic_vector;
+        vpf_out9 : out std_logic_vector;
+        vpf_out10 : out std_logic_vector;
+        vpf_out11 : out std_logic_vector;
+        vpf_out12 : out std_logic_vector;
+        vpf_out13 : out std_logic_vector;
+        vpf_out14 : out std_logic_vector;
+        vpf_out15 : out std_logic_vector;
+
+        cnt_out0 : out std_logic_vector;
+        cnt_out1 : out std_logic_vector;
+        cnt_out2 : out std_logic_vector;
+        cnt_out3 : out std_logic_vector;
+        cnt_out4 : out std_logic_vector;
+        cnt_out5 : out std_logic_vector;
+        cnt_out6 : out std_logic_vector;
+        cnt_out7 : out std_logic_vector;
+        cnt_out8 : out std_logic_vector;
+        cnt_out9 : out std_logic_vector;
+        cnt_out10 : out std_logic_vector;
+        cnt_out11 : out std_logic_vector;
+        cnt_out12 : out std_logic_vector;
+        cnt_out13 : out std_logic_vector;
+        cnt_out14 : out std_logic_vector;
+        cnt_out15 : out std_logic_vector;
+
+        pulse_in : in std_logic;
+        pulse_out : out std_logic;
+
+        clock : in std_logic
+
+        );
+    end component;
+
+    begin
+
+    sorter16_inst : sorter16
+      generic map (
+        MXADRB => clusters_s1(0).adr'length,
+        MXCNTB => clusters_s1(0).cnt'length,
+        MXPRTB => clusters_s1(0).prt'length,
+        MXVPFB => 1,
+        SKIPB  => clusters_s1(0).cnt'length -- don't sort on the count bits
+        )
+      port map (
+        clock => clock,
+
+        pulse_in  => latch_out_s1(0),
+        pulse_out => latch_o,
+
+        adr_in0  => clusters_s1(0).adr,
+        adr_in1  => clusters_s1(1).adr,
+        adr_in2  => clusters_s1(2).adr,
+        adr_in3  => clusters_s1(3).adr,
+        adr_in4  => clusters_s1(4).adr,
+        adr_in5  => clusters_s1(5).adr,
+        adr_in6  => clusters_s1(6).adr,
+        adr_in7  => clusters_s1(7).adr,
+        adr_in8  => clusters_s1(8).adr,
+        adr_in9  => clusters_s1(9).adr,
+        adr_in10 => clusters_s1(10).adr,
+        adr_in11 => clusters_s1(11).adr,
+        adr_in12 => clusters_s1(12).adr,
+        adr_in13 => clusters_s1(13).adr,
+        adr_in14 => clusters_s1(14).adr,
+        adr_in15 => clusters_s1(15).adr,
+
+        vpf_in0(0)  => clusters_s1(0).vpf,
+        vpf_in1(0)  => clusters_s1(1).vpf,
+        vpf_in2(0)  => clusters_s1(2).vpf,
+        vpf_in3(0)  => clusters_s1(3).vpf,
+        vpf_in4(0)  => clusters_s1(4).vpf,
+        vpf_in5(0)  => clusters_s1(5).vpf,
+        vpf_in6(0)  => clusters_s1(6).vpf,
+        vpf_in7(0)  => clusters_s1(7).vpf,
+        vpf_in8(0)  => clusters_s1(8).vpf,
+        vpf_in9(0)  => clusters_s1(9).vpf,
+        vpf_in10(0) => clusters_s1(10).vpf,
+        vpf_in11(0) => clusters_s1(11).vpf,
+        vpf_in12(0) => clusters_s1(12).vpf,
+        vpf_in13(0) => clusters_s1(13).vpf,
+        vpf_in14(0) => clusters_s1(14).vpf,
+        vpf_in15(0) => clusters_s1(15).vpf,
+
+        cnt_in0  => clusters_s1(0).cnt,
+        cnt_in1  => clusters_s1(1).cnt,
+        cnt_in2  => clusters_s1(2).cnt,
+        cnt_in3  => clusters_s1(3).cnt,
+        cnt_in4  => clusters_s1(4).cnt,
+        cnt_in5  => clusters_s1(5).cnt,
+        cnt_in6  => clusters_s1(6).cnt,
+        cnt_in7  => clusters_s1(7).cnt,
+        cnt_in8  => clusters_s1(8).cnt,
+        cnt_in9  => clusters_s1(9).cnt,
+        cnt_in10 => clusters_s1(10).cnt,
+        cnt_in11 => clusters_s1(11).cnt,
+        cnt_in12 => clusters_s1(12).cnt,
+        cnt_in13 => clusters_s1(13).cnt,
+        cnt_in14 => clusters_s1(14).cnt,
+        cnt_in15 => clusters_s1(15).cnt,
+
+        prt_in0  => clusters_s1(0).prt,
+        prt_in1  => clusters_s1(1).prt,
+        prt_in2  => clusters_s1(2).prt,
+        prt_in3  => clusters_s1(3).prt,
+        prt_in4  => clusters_s1(4).prt,
+        prt_in5  => clusters_s1(5).prt,
+        prt_in6  => clusters_s1(6).prt,
+        prt_in7  => clusters_s1(7).prt,
+        prt_in8  => clusters_s1(8).prt,
+        prt_in9  => clusters_s1(9).prt,
+        prt_in10 => clusters_s1(10).prt,
+        prt_in11 => clusters_s1(11).prt,
+        prt_in12 => clusters_s1(12).prt,
+        prt_in13 => clusters_s1(13).prt,
+        prt_in14 => clusters_s1(14).prt,
+        prt_in15 => clusters_s1(15).prt,
+
+        adr_out0  => clusters_o(0).adr,
+        adr_out1  => clusters_o(1).adr,
+        adr_out2  => clusters_o(2).adr,
+        adr_out3  => clusters_o(3).adr,
+        adr_out4  => clusters_o(4).adr,
+        adr_out5  => clusters_o(5).adr,
+        adr_out6  => clusters_o(6).adr,
+        adr_out7  => clusters_o(7).adr,
+        adr_out8  => clusters_o(8).adr,
+        adr_out9  => clusters_o(9).adr,
+        adr_out10 => clusters_o(10).adr,
+        adr_out11 => clusters_o(11).adr,
+        adr_out12 => clusters_o(12).adr,
+        adr_out13 => clusters_o(13).adr,
+        adr_out14 => clusters_o(14).adr,
+        adr_out15 => clusters_o(15).adr,
+
+        vpf_out0(0)  => clusters_o(0).vpf,
+        vpf_out1(0)  => clusters_o(1).vpf,
+        vpf_out2(0)  => clusters_o(2).vpf,
+        vpf_out3(0)  => clusters_o(3).vpf,
+        vpf_out4(0)  => clusters_o(4).vpf,
+        vpf_out5(0)  => clusters_o(5).vpf,
+        vpf_out6(0)  => clusters_o(6).vpf,
+        vpf_out7(0)  => clusters_o(7).vpf,
+        vpf_out8(0)  => clusters_o(8).vpf,
+        vpf_out9(0)  => clusters_o(9).vpf,
+        vpf_out10(0) => clusters_o(10).vpf,
+        vpf_out11(0) => clusters_o(11).vpf,
+        vpf_out12(0) => clusters_o(12).vpf,
+        vpf_out13(0) => clusters_o(13).vpf,
+        vpf_out14(0) => clusters_o(14).vpf,
+        vpf_out15(0) => clusters_o(15).vpf,
+
+        cnt_out0  => clusters_o(0).cnt,
+        cnt_out1  => clusters_o(1).cnt,
+        cnt_out2  => clusters_o(2).cnt,
+        cnt_out3  => clusters_o(3).cnt,
+        cnt_out4  => clusters_o(4).cnt,
+        cnt_out5  => clusters_o(5).cnt,
+        cnt_out6  => clusters_o(6).cnt,
+        cnt_out7  => clusters_o(7).cnt,
+        cnt_out8  => clusters_o(8).cnt,
+        cnt_out9  => clusters_o(9).cnt,
+        cnt_out10 => clusters_o(10).cnt,
+        cnt_out11 => clusters_o(11).cnt,
+        cnt_out12 => clusters_o(12).cnt,
+        cnt_out13 => clusters_o(13).cnt,
+        cnt_out14 => clusters_o(14).cnt,
+        cnt_out15 => clusters_o(15).cnt,
+
+        prt_out0  => clusters_o(0).prt,
+        prt_out1  => clusters_o(1).prt,
+        prt_out2  => clusters_o(2).prt,
+        prt_out3  => clusters_o(3).prt,
+        prt_out4  => clusters_o(4).prt,
+        prt_out5  => clusters_o(5).prt,
+        prt_out6  => clusters_o(6).prt,
+        prt_out7  => clusters_o(7).prt,
+        prt_out8  => clusters_o(8).prt,
+        prt_out9  => clusters_o(9).prt,
+        prt_out10 => clusters_o(10).prt,
+        prt_out11 => clusters_o(11).prt,
+        prt_out12 => clusters_o(12).prt,
+        prt_out13 => clusters_o(13).prt,
+        prt_out14 => clusters_o(14).prt,
+        prt_out15 => clusters_o(15).prt
         );
 
   end generate;

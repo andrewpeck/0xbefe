@@ -5,8 +5,7 @@ class Cluster:
     vpf = 0
 
     def __str__(self):
-        return "adr=%02x cnt=%x prt=%x vpf=%x" % (self.adr, self.cnt, self.prt, self.vpf)
-
+        return "adr=% 3d cnt=%d prt=%d vpf=%d" % (self.adr, self.cnt, self.prt, self.vpf)
 
 def equal(a, b):
     return a.adr == b.adr and a.cnt == b.cnt and a.prt == b.prt and a.vpf == b.vpf

@@ -26,7 +26,7 @@ async def latch_in(dut):
 async def random_clusters(dut):
     """Test for priority encoder with randomized data on all inputs"""
 
-    random.seed(10)
+    random.seed(13)
 
     nloops = 1000
     nhits = 14
@@ -62,6 +62,8 @@ async def random_clusters(dut):
             channel = random.randint(0, width - 1)
             partitions[iprt] |= 1 << channel
             cnts[iprt] |= size << (channel * cntb)
+            partitions[iprt] |= 1 << channel
+            cnts[iprt] |= size << (channel * cntb)
 
         vpfs_i = 0
         cnts_i = 0
@@ -75,19 +77,20 @@ async def random_clusters(dut):
                                dut.ENCODER_SIZE.value)
 
         # sort the found keys by {valid , partition, adr}
-        expect = sorted(expect, key=lambda x: x.vpf << 13 | x.prt << 10 | x.adr, reverse=True)
+        expect = sorted(expect, key=lambda x: (1 ^ x.vpf) << 13 | x.prt << 10 | x.adr, reverse=False)
 
-        adr = 9999
-        prt = 9999
+        adr = -1
+        prt = -1
 
         for ioutput, _ in enumerate(expect):
             print("generate: i=%02d %s" % (ioutput, str(expect[ioutput])))
 
-            assert expect[ioutput].prt <= prt
+            assert expect[ioutput].prt >= prt
             if (expect[ioutput].prt == prt):
-                assert expect[ioutput].adr <= adr
+                assert expect[ioutput].adr >= adr
             adr = expect[ioutput].adr
             prt = expect[ioutput].prt
+
         dut.vpfs_i.value = vpfs_i
         dut.cnts_i.value = cnts_i
 
@@ -147,7 +150,8 @@ def test_find_clusters(station, num_found_clusters):
     ]
 
     verilog_sources = [
-        os.path.join(rtl_dir, f"priority.v")
+        os.path.join(rtl_dir, f"priority.v"),
+        os.path.join(rtl_dir, f"sorter16.v"),
     ]
 
     parameters = {}
@@ -165,7 +169,7 @@ def test_find_clusters(station, num_found_clusters):
         verilog_sources=verilog_sources,
         vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
-       #compile_args=["-2008"],
+        #compile_args=["-2008"],
         toplevel="find_clusters",            # top level HDL
         toplevel_lang="vhdl",
         parameters=parameters,
@@ -174,4 +178,4 @@ def test_find_clusters(station, num_found_clusters):
 
 
 if __name__ == "__main__":
-    test_find_clusters(0, 16)
+    test_find_clusters(1, 16)

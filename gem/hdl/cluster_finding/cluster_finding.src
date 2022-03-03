@@ -4,6 +4,7 @@ gem/hdl/cluster_finding/hdl/count.v
 gem/hdl/cluster_finding/hdl/priority.v
 gem/hdl/cluster_finding/hdl/consecutive_count.v
 gem/hdl/cluster_finding/hdl/find_cluster_primaries.v
+gem/hdl/cluster_finding/hdl/sorter16.v
 
 # set to vhdl 93 to make sure it is compatible with ge11...
 gem/hdl/cluster_finding/hdl/sbit_oneshot.vhd 93

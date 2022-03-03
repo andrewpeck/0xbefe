@@ -32,6 +32,7 @@ async def random_clusters(dut):
     cocotb.fork(Clock(dut.clk_fast,10,  units="ns").start())  # Create a clock
 
     station = dut.STATION.value
+    dut.mask_output_i.value = 0
 
     # if station in [0, 1]:
     #     n_partitions = 8
@@ -151,6 +152,7 @@ def test_cluster_packer(station, oneshot, deadtime):
         os.path.join(rtl_dir, f"find_cluster_primaries.v"),
         os.path.join(rtl_dir, f"count.v"),
         os.path.join(rtl_dir, f"consecutive_count.v"),
+        os.path.join(rtl_dir, f"sorter16.v"),
         os.path.join(rtl_dir, f"priority.v")
     ]
 
@@ -180,7 +182,7 @@ def test_cluster_packer(station, oneshot, deadtime):
         parameters=parameters,
         # sim_args = ["do cluster_packer_wave.do"],
         # extra_env = {"SIM": "questa"},
-        gui=0
+        gui=1
     )
 
 
