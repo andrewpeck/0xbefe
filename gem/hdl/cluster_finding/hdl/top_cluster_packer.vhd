@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 4.25 bx as of 2022/02/24
+-- latency = 4.75 bx as of 2022/03/02
 
 entity cluster_packer is
   generic (
@@ -62,7 +62,7 @@ architecture behavioral of cluster_packer is
 
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 5;
+  constant OVERFLOW_LATENCY                 : natural := 7;
 
   signal cluster_latch : std_logic;
 
