@@ -290,11 +290,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         file_out_data.write("\nVFAT %02d :\n" %(vfat))
         for elink in range(0,8):
             phase_print = "  ELINK %02d: " % (elink)
+            min_errors = min(errs[vfat][elink])
+            if min_errors > min_error_limit:
+                min_errors = 0
             for phase in range(0, 16):
                 if (widths[elink]>0 and phase==centers[elink]):
                     char=Colors.GREEN + "+" + Colors.ENDC
                     bestphase_vfat_elink[vfat][elink] = phase
-                elif (errs[vfat][elink][phase]):
+                elif (errs[vfat][elink][phase] > min_errors):
                     char=Colors.RED + "-" + Colors.ENDC
                 else:
                     char = Colors.YELLOW + "x" + Colors.ENDC
