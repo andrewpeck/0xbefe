@@ -100,6 +100,7 @@ architecture Behavioral of gbt_ic_controller is
     signal rx_data_from_gbtx     : std_logic_vector(7 downto 0);
     signal ic_r_valid            : std_logic;
     signal ic_rx_empty           : std_logic;
+    signal ic_r_data           : std_logic_vector(31 downto 0);
     -- IC rx error status
     signal wr                    : std_logic;
     signal ic_err                : std_logic;
@@ -298,7 +299,7 @@ begin
                 probe0 => ic_rx_empty,
                 probe1 => gbt_rx_ic_elink_i,
                 probe2 => rx_data_from_gbtx,
-                probe3 => ic_r_data_o,
+                probe3 => ic_r_data,
                 probe4 => ic_r_valid,
                 probe5 => ic_read_req_i,
                 probe6 => ic_write_req_i,
@@ -352,7 +353,7 @@ begin
 
             -- Control
             chip_adr_o              => ic_chip_adr,
-            data_o                  => ic_r_data_o,
+            data_o                  => ic_r_data,
             length_o                => ic_length,
             reg_adr_o               => ic_reg_adr,
             uplink_parity_ok_o      => ic_uplink_parity_ok,
@@ -360,6 +361,8 @@ begin
             err_o                   => ic_err,
             valid_o                 => ic_r_valid
         );
+
+    ic_r_data_o <= ic_r_data;
 
     -- IC rx error control
     process(gbt_clk_i, ic_r_valid)
