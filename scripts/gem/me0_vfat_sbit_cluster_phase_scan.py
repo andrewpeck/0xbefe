@@ -28,7 +28,7 @@ def getConfig (filename):
     return reg_map
 
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, , min_error_limit, bestphase_list):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, min_error_limit, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
     if bestphase_list!={}:
