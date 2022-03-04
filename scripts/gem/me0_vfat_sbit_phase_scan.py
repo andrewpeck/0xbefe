@@ -28,7 +28,7 @@ def getConfig (filename):
     return reg_map
 
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, bestphase_list):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, , min_error_limit, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
     if bestphase_list!={}:
@@ -259,7 +259,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
     aligned_phases_center = [[-9999 for elink in range(8)] for vfat in range(24)]
     for vfat in vfat_list:
-         find_aligned_phase_center(vfat, errs[vfat], aligned_phases_center)
+         find_aligned_phase_center(vfat, errs[vfat], aligned_phases_center, min_error_limit)
 
     bestphase_vfat_elink = [[0 for elink in range(8)] for vfat in range(24)]
     print ("\nPhase Scan Results:")
@@ -268,7 +268,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         centers = 8*[0]
         widths  = 8*[0]
         for elink in range(0,8):
-            centers[elink], widths[elink] = find_phase_center(errs[vfat][elink])
+            centers[elink], widths[elink] = find_phase_center(errs[vfat][elink], min_error_limit)
             if not align_phases:
                 if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
                     if elink!=0:
@@ -349,21 +349,24 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     print ("\nS-bit phase scan done\n")
 
 
-def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
+def find_aligned_phase_center(vfat, err_list, aligned_phases_center, min_error_limit):
     err_list_elink = {}
     for elink in range(0, 8):
         err_list_elink[elink] = err_list[elink].copy()
     for elink in range(0, 8):
+        min_errors = min(err_list_elink[elink])
+        if min_errors > min_error_limit:
+            min_errors = 0
         for phase in range(0, len(err_list_elink[elink])):
-            if err_list_elink[elink][phase] != 0:
+            if err_list_elink[elink][phase] != min_errors:
                 for elink2 in range(0, 8):
                     err_list_elink[elink2][phase] = err_list_elink[elink][phase]
     for elink in range(0, 8):
-        center, width = find_phase_center(err_list_elink[elink])
+        center, width = find_phase_center(err_list_elink[elink], min_error_limit)
         if width >= 5:
             aligned_phases_center[vfat][elink] = center
 
-def find_phase_center(err_list):
+def find_phase_center(err_list, min_error_limit):
     # find the centers
     ngood        = 0
     ngood_max    = 0
@@ -374,12 +377,16 @@ def find_phase_center(err_list):
     err_list_temp = err_list.copy()
     err_list_temp.pop()
 
+    min_errors = min(err_list_temp)
+    if min_errors > min_error_limit:
+        min_errors = 0
+
     # duplicate the err_list to handle the wraparound
     err_list_doubled = err_list_temp + err_list_temp
     phase_max = len(err_list_temp)-1
 
     for phase in range(0,len(err_list_doubled)):
-        if (err_list_doubled[phase] == 0):
+        if (err_list_doubled[phase] == min_errors):
             ngood+=1
         else: # hit an edge
             if (ngood > 0 and ngood >= ngood_max):
@@ -457,6 +464,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
     parser.add_argument("-a", "--align_phases", action="store_true", dest="align_phases", help="align_phases = whether to align phases of all elinks")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
+    parser.add_argument("-m", "--min", action="store", dest="min", default = "4", help="min = Upper limit of the minimum number of errors allowed")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
@@ -525,6 +533,10 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
+    if int(args.min) > 16:
+        print (Colors.YELLOW + "Maximum number of errors can be 16" + Colors.ENDC)
+        sys.exit()
+
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
 
@@ -558,7 +570,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, bestphase_list)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, int(args.min), bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
