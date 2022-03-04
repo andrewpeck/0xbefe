@@ -26,8 +26,12 @@ use work.lpgbtfpga_package.all;
 
 entity gem_amc is
     generic(
+        g_SLR                : integer;
         g_GEM_STATION        : integer;
         g_NUM_OF_OHs         : integer;
+        g_OH_VERSION         : integer;
+        g_GBT_WIDEBUS        : integer;
+        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;
         g_NUM_GBTS_PER_OH    : integer;
         g_NUM_VFATS_PER_OH   : integer;
         g_USE_TRIG_TX_LINKS  : boolean := true;  -- if true, then trigger output links will be instantiated
@@ -36,6 +40,7 @@ entity gem_amc is
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQ_CLK_FREQ       : integer;
+        g_IS_SLINK_ROCKET    : boolean;
         g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
     );
     port(
@@ -48,6 +53,7 @@ entity gem_amc is
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
         ttc_data_p_i            : in  std_logic;      -- TTC protocol backplane signals
         ttc_data_n_i            : in  std_logic;
+        external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
 
         -- Trigger RX GTX / GTH links (3.2Gbs, 16bit @ 160MHz w/ 8b10b encoding)
         gt_trig0_rx_clk_arr_i   : in  std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
@@ -175,7 +181,7 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_clusters_arr        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
-    
+
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
@@ -264,7 +270,6 @@ architecture gem_amc_arch of gem_amc is
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
-    
 
 begin
 
@@ -323,7 +328,8 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
-            local_l1a_req_i     => '0',
+            local_l1a_req_i     => external_trigger_i,
+            local_l1a_reset_i   => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
             ttc_status_o        => ttc_status,
@@ -385,10 +391,11 @@ begin
         i_optohybrid_single : entity work.optohybrid
             generic map(
                 g_GEM_STATION       => g_GEM_STATION,
-                g_OH_VERSION        => CFG_OH_VERSION,
+                g_OH_VERSION        => g_OH_VERSION,
+                g_OH_TRIG_LINK_TYPE => g_OH_TRIG_LINK_TYPE,
                 g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_DEBUG             => CFG_DEBUG_OH and (i = 0)
+                g_DEBUG             => CFG_DEBUG_OH and ((i = 0) or (i = 1))
             )
             port map(
                 reset_i                 => reset or link_reset,
@@ -543,6 +550,7 @@ begin
             g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO  => false,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_IS_SLINK_ROCKET   => g_IS_SLINK_ROCKET,
             g_DEBUG             => CFG_DEBUG_DAQ
         )
         port map(
@@ -577,6 +585,8 @@ begin
 
     i_gem_system : entity work.gem_system_regs
         generic map(
+            g_SLR                => g_SLR,
+            g_GEM_STATION        => g_GEM_STATION,
             g_NUM_IPB_MON_SLAVES => g_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS  => g_IPB_CLK_PERIOD_NS
         )
@@ -636,6 +646,7 @@ begin
 
     i_slow_control : entity work.slow_control
         generic map(
+            g_GEM_STATION       => g_GEM_STATION,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -698,7 +709,7 @@ begin
                 RX_OPTIMIZATION     => 0,
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
-                RX_ENCODING_ODD     => CFG_GBT_WIDEBUS,
+                RX_ENCODING_ODD     => g_GBT_WIDEBUS,
                 g_USE_RX_SYNC_FIFOS => false
             )
             port map(
@@ -798,7 +809,7 @@ begin
             generic map(
                 g_NUM_OF_OHs        => g_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
-                g_OH_VERSION        => CFG_OH_VERSION
+                g_OH_VERSION        => g_OH_VERSION
             )
             port map(
                 gbt_frame_clk_i             => ttc_clocks_i.clk_40,
@@ -933,7 +944,7 @@ begin
                     probe2  => dbg_gbt_link_status.gbt_rx_ready,
                     probe3  => dbg_gbt_link_status.gbt_rx_gearbox_ready,
                     probe4  => dbg_gbt_link_status.gbt_rx_header_locked,
-                    probe5  => dbg_gbt_link_status.gbt_tx_ready,
+                    probe5  => '0',
                     probe6  => dbg_gbt_link_status.gbt_tx_gearbox_ready,
                     probe7  => dbg_lpgbt_tx_data.tx_ic_data,
                     probe8  => dbg_lpgbt_tx_data.tx_ec_data,

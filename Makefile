@@ -120,11 +120,12 @@ gitconfig:
 update_cvp13: update_ge21_cvp13 update_me0_cvp13 update_csc_cvp13
 update_ctp7: update_ge11_ctp7 update_ge21_ctp7 update_me0_ctp7 update_csc_ctp7
 update_apex: update_ge21_apex update_me0_apex update_csc_apex
+update_x2o: update_ge21_x2o update_me0_x2o update_csc_x2o
 
 update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
-update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex
-update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex
-update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex
+update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex update_ge21_x2o
+update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex update_me0_x2o
+update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex update_csc_x2o
 
 update: update_ge11 update_ge21 update_me0 update_csc
 
@@ -140,11 +141,12 @@ update_oh: update_oh_base update_oh_ge21.200 update_oh_ge21.75 update_oh_ge11
 create_cvp13: create_ge11_cvp13 create_ge21_cvp13 create_me0_cvp13 create_csc_cvp13
 create_ctp7: create_ge11_ctp7 create_ge21_ctp7 create_me0_ctp7
 create_apex: create_ge11_apex create_ge21_apex create_me0_apex create_csc_apex
+create_x2o: create_ge11_x2o create_ge21_x2o create_me0_x2o create_csc_x2o
 
-create_ge11: create_ge11_cvp13 create_ge11_ctp7 create_ge11_apex
-create_ge21: create_ge21_cvp13 create_ge21_ctp7 create_ge21_apex
-create_me0: create_me0_cvp13 create_me0_ctp7 create_me0_apex
-create_csc: create_csc_cvp13 create_csc_apex
+create_ge11: create_ge11_cvp13 create_ge11_ctp7 create_ge11_apex create_ge11_x2o
+create_ge21: create_ge21_cvp13 create_ge21_ctp7 create_ge21_apex create_ge21_x2o
+create_me0: create_me0_cvp13 create_me0_ctp7 create_me0_apex create_me0_x2o
+create_csc: create_csc_cvp13 create_csc_apex create_csc_x2o
 
 create: create_ge11 create_ge21 create_me0 create_csc
 
@@ -155,11 +157,12 @@ create: create_ge11 create_ge21 create_me0 create_csc
 cvp13: impl_ge11_cvp13 impl_ge21_cvp13 impl_me0_cvp13 impl_csc_cvp13
 ctp7: impl_ge11_ctp7 impl_ge21_ctp7 impl_me0_ctp7
 apex: impl_ge11_apex impl_ge21_apex impl_me0_apex impl_csc_apex
+x2o: impl_ge11_x2o impl_ge21_x2o impl_me0_x2o impl_csc_x2o
 
-ge11: impl_ge11_cvp13 impl_ge11_ctp7 impl_ge11_apex
-ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex
-me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex
-csc: impl_csc_cvp13 impl_csc_apex
+ge11: impl_ge11_cvp13 impl_ge11_ctp7 impl_ge11_apex impl_ge11_x2o
+ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex impl_ge21_x2o
+me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex impl_me0_x2o
+csc: impl_csc_cvp13 impl_csc_apex impl_csc_x2o
 
 all:  update create synth impl
 #all: ge11 ge21 me0 csc

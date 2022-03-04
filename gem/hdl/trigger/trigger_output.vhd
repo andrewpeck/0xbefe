@@ -48,6 +48,7 @@ architecture trigger_output_arch of trigger_output is
     signal trig_tx_data_arr     : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
     signal oh_triggers          : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal bc0_markers          : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_num_valid       : t_std4_array(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_clusters        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
@@ -57,6 +58,7 @@ begin
 
     g_oh_mask : for i in 0 to g_NUM_OF_OHs - 1 generate
         oh_triggers(i) <= oh_triggers_i(i) and not oh_mask_i(i);
+        bc0_markers(i) <= sbit_link_status_i(i)(0).bc0_marker and not oh_mask_i(i); -- take the BC0 marker from the first link, alignment of the two links is checked elsewhere
         sbit_num_valid(i) <= sbit_num_valid_i(i) when oh_mask_i(i) = '0' else x"0";
         sbit_clusters(i) <= sbit_clusters_i(i) when oh_mask_i(i) = '0' else (others => NULL_SBIT_CLUSTER);
     end generate;
@@ -71,28 +73,32 @@ begin
                     trig_tx_data_arr(i) <= "01" & sector_id_i & std_logic_vector(to_unsigned(i, 4)) & x"ffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
                 else
                     -- BC0
-                    trig_tx_data_arr(i)(0) <= ttc_cmds_i.bc0;
+                    trig_tx_data_arr(i)(0) <= bc0_markers(i*2 + 0);
+                    trig_tx_data_arr(i)(1) <= bc0_markers(i*2 + 1);
                     
                     -- if there are no valid clusters from both chambers, transmit link ID
                     if (oh_triggers(i*2 + 1 downto i*2) = "00") then
-                        trig_tx_data_arr(i)(1) <= '1';
-                        trig_tx_data_arr(i)(5 downto 2) <= sector_id_i;
-                        trig_tx_data_arr(i)(9 downto 6) <= std_logic_vector(to_unsigned(i, 4));
-                    else -- otherwise transmit cluster counts
-                        trig_tx_data_arr(i)(1) <= '0';
+                        trig_tx_data_arr(i)(9 downto 2) <= (others => '1'); -- this marks the frame as metadata frame
+                        trig_tx_data_arr(i)(13 downto 10) <= sector_id_i;
+                        trig_tx_data_arr(i)(17 downto 14) <= std_logic_vector(to_unsigned(i, 4));
+                        trig_tx_data_arr(i)(233 downto 18) <= (others => '1'); -- unused
+                        
+                    -- otherwise transmit cluster counts
+                    else
                         trig_tx_data_arr(i)(5 downto 2) <= sbit_num_valid(i*2);
                         trig_tx_data_arr(i)(9 downto 6) <= sbit_num_valid(i*2+1);
+                        
+                        -- sbits for layer 1                    
+                        for sbit in 0 to 7 loop
+                            trig_tx_data_arr(i)(sbit * 14 + 23 downto sbit * 14 + 10) <= sbit_clusters(i*2)(sbit).size & sbit_clusters(i*2)(sbit).address;
+                        end loop;
+    
+                        -- sbits for layer 2
+                        for sbit in 0 to 7 loop
+                            trig_tx_data_arr(i)(sbit * 14 + 135 downto sbit * 14 + 122) <= sbit_clusters(i*2+1)(sbit).size & sbit_clusters(i*2+1)(sbit).address;
+                        end loop;
+                        
                     end if;
-
-                    -- sbits for layer 1                    
-                    for sbit in 0 to 7 loop
-                        trig_tx_data_arr(i)(sbit * 14 + 23 downto sbit * 14 + 10) <= sbit_clusters(i*2)(sbit).size & sbit_clusters(i*2)(sbit).address;
-                    end loop;
-
-                    -- sbits for layer 2
-                    for sbit in 0 to 7 loop
-                        trig_tx_data_arr(i)(sbit * 14 + 135 downto sbit * 14 + 122) <= sbit_clusters(i*2+1)(sbit).size & sbit_clusters(i*2+1)(sbit).address;
-                    end loop;
                      
                 end if;
             end if;

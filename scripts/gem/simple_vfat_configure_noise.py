@@ -112,8 +112,12 @@ def main():
 
     # configure all vfats
     for i in range(12):
-        print("Configuring VFAT %d" % i)
-        configureVfat(i, ohN, threshold)
+        cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (ohN, i), False)
+        if cfg_run == 0xdeaddead:
+            print("Skipping VFAT %d, because it's not reachable via slow control" % i)
+        else:
+            print("Configuring VFAT %d" % i)
+            configureVfat(i, ohN, threshold)
 
     write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 

@@ -1,4 +1,5 @@
 import sys
+import os
 
 # bright colors:
 class Colors:
@@ -9,6 +10,7 @@ class Colors:
     YELLOW  = '\033[93m'
     GREEN   = '\033[92m'
     RED     = '\033[91m'
+    ORANGE  = '\033[38;5;208m'
     ENDC    = '\033[39m'
 
 # normal colors:
@@ -27,21 +29,29 @@ if sys.version_info < (3, 6):
     print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
     exit()
 
-import common.tables.tableformatter as tf
+if sys.version_info >= (3, 6):
+    def raw_input(s):
+        return input(s)
+
+import tableformatter as tf
 import imp
 
 try:
     imp.find_module('befe_config')
     import befe_config as befe_config
 except ImportError:
-    print_red("befe_config.py not found")
-    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
-    print_red("In most cases the example config without modifications will work as a starting point")
+    print(Colors.RED + "befe_config.py not found" + Colors.ENDC)
+    print(Colors.RED + "Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup" + Colors.ENDC)
+    print(Colors.RED + "In most cases the example config without modifications will work as a starting point" + Colors.ENDC)
     exit(1)
 
 
 FULL_TABLE_GRID_STYLE = tf.FancyGrid()
 DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
+
+def get_befe_scripts_dir():
+    scripts_dir = os.environ.get('BEFE_SCRIPT_DIR')
+    return scripts_dir
 
 def get_config(config_name):
     return eval("befe_config." + config_name)
@@ -122,3 +132,22 @@ def parse_int(string):
         return int(string, 2)
     else:
         return int(string)
+
+def array_to_string(arr):
+    s = "["
+    for i in range(len(arr)):
+        if i != 0:
+            s += ", "
+        s += str(arr[i])
+    s += "]"
+    return s
+
+def bitmask_to_array(bitmask):
+    ids = []
+    id = 0
+    while bitmask != 0:
+        if bitmask & 1 == 1:
+            ids.append(id)
+        bitmask = bitmask >> 1
+        id += 1
+    return ids

@@ -34,11 +34,12 @@ else
     else
         echo "Setting up environment for $STATION on $BOARD"
         export LD_LIBRARY_PATH=$SCRIPT_DIR/boards/$BOARD/rwreg:$LD_LIBRARY_PATH
-        export PYTHONPATH=$SCRIPT_DIR
+        export PYTHONPATH=$SCRIPT_DIR:$SCRIPT_DIR/ext/tables:$SCRIPT_DIR/ext/python-prompt-toolkit
         export ADDRESS_TABLE=$ADDR_TBL
         export BOARD_TYPE=$BOARD
         export BOARD_IDX
         export BEFE_FLAVOR=$STATION
+        export BEFE_SCRIPT_DIR=$SCRIPT_DIR
         echo "0xBEFE GEM environment setup done!"
     fi
 

@@ -37,13 +37,13 @@ port(
     infifo_empty_o              : out std_logic;
     infifo_valid_o              : out std_logic;
     infifo_underflow_o          : out std_logic;
-    infifo_data_cnt_o           : out std_logic_vector(13 downto 0);
+    infifo_data_cnt_o           : out std_logic_vector(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0);
     evtfifo_dout_o              : out std_logic_vector(59 downto 0);
     evtfifo_rd_en_i             : in std_logic;
     evtfifo_empty_o             : out std_logic;
     evtfifo_valid_o             : out std_logic;
     evtfifo_underflow_o         : out std_logic;
-    evtfifo_data_cnt_o          : out std_logic_vector(11 downto 0);
+    evtfifo_data_cnt_o          : out std_logic_vector(CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH - 1 downto 0);
 
     -- Input data
     input_clk_i                 : in std_logic;

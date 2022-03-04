@@ -12,7 +12,8 @@ boards/ctp7/hdl/system/gth_single_AUTO_PHASE_ALIGN.vhd
 boards/ctp7/hdl/system/gth_clk_bufs.vhd
 boards/ctp7/hdl/system/gth_single_10p24g.vhd
 boards/ctp7/hdl/system/gth_single_TX_STARTUP_FSM.vhd
-boards/ctp7/hdl/system/gth_single_tx_10p24g_rx_3p2g.vhd
+boards/ctp7/hdl/system/gth_single_tx_10p24g_rx_4p0g.vhd
+boards/ctp7/hdl/system/gth_single_tx_1p25g_rx_4p0g.vhd
 boards/ctp7/hdl/system/gth_single_2p56g.vhd
 boards/ctp7/hdl/system/drp_controller.vhd
 boards/ctp7/hdl/system/gth_single_sync_block.vhd
@@ -44,3 +45,5 @@ boards/ctp7/hdl/daqlink/daqlink_v1.17_7s/RAM32x6Db.vhd
 boards/ctp7/hdl/daqlink/daqlink_v1.17_7s/EthernetCRCD32.vhd
 boards/ctp7/hdl/daqlink/daqlink_v1.17_7s/crc16D16.vhd
 boards/ctp7/hdl/daqlink/daqlink_v1.17_7s/Hamming.vhd
+
+common/hdl/misc/promless_qdriip.vhd

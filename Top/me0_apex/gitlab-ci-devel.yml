@@ -4,3 +4,5 @@ generate_project:me0_apex_devel:
       extends: .vars
       PROJECT_NAME: me0_apex
       INTERMEDIATE_BUILD: "1"
+    tags:
+      - vivado_2021_1

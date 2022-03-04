@@ -20,7 +20,7 @@ wReg.argtypes = [c_uint, c_uint]
 regInitExists = False
 try:
     regInit = lib.rwreg_init
-    regInit.argtypes = [c_char_p]
+    regInit.argtypes = [c_char_p, c_uint]
     regInitExists = True
 except:
     print("WARNING: rwreg_init() function does not exist.. if you're running on CTP7, you can safely ignore this warning.")
@@ -92,7 +92,7 @@ class Node:
 class RegVal(int):
     STATE_NEUTRAL = "NEUTRAL"
     STATE_GOOD = Colors.GREEN
-    STATE_WARN = Colors.YELLOW
+    STATE_WARN = Colors.ORANGE
     STATE_BAD = Colors.RED
 
     reg = None
@@ -115,6 +115,8 @@ class RegVal(int):
         elif self.reg.sw_val_good is not None and self.reg.sw_val_bad is None:
             return self.STATE_BAD
         elif self.reg.sw_val_bad is not None and self.reg.sw_val_good is None:
+            return self.STATE_GOOD
+        elif self.reg.sw_val_warn is not None and self.reg.sw_val_good is None:
             return self.STATE_GOOD
         else:
             return self.STATE_NEUTRAL
@@ -178,9 +180,9 @@ class RegVal(int):
                         val = "%d%s" % (self, self.reg.sw_units)
                 else:
                     if hex:
-                        val += " (%f%s)" % (val_pretty, self.reg.sw_units)
+                        val += " (%.3f%s)" % (val_pretty, self.reg.sw_units)
                     else:
-                        val = "%f%s" % (val_pretty, self.reg.sw_units)
+                        val = "%.3f%s" % (val_pretty, self.reg.sw_units)
         elif not hex:
             val = "%d" % self
 
@@ -196,7 +198,7 @@ class RegVal(int):
 
 def parse_xml():
     if regInitExists:
-        regInit(DEVICE)
+        regInit(DEVICE, BASE_ADDR)
     addressTable = os.environ.get('ADDRESS_TABLE')
     if addressTable is None:
         print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
@@ -258,7 +260,7 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
     if node.get('address') is not None:
         address = baseAddress + parse_int(node.get('address'))
     newNode.local_address = address
-    newNode.address = (address << 2) + BASE_ADDR
+    newNode.address = (address << 2)
     newNode.permission = node.get('permission')
     if newNode.permission is None:
         newNode.permission = ""

@@ -7,8 +7,8 @@
 ------------------------------------------------------
 --  Move the logic to 10Gb interface (XGMII) & 
 --  !!!! ATTENTION la data event arrive 1 clock plus tard ... a tester!!!!!!!!!!!
--- 
---  
+-- 24/06/2021  change the state elsif pckt_type(1) = '1' then 		-- DATA in state "start_of_frame"
+--  go to last_bits is already wc = 0 (1 word to be transmit)
 ------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
@@ -252,7 +252,11 @@ begin
 						if 	pckt_type(0) = '1' then			-- INIT (short packet NXT last_bits)
 							packet 			<= last_bits;
 						elsif pckt_type(1) = '1' then 		-- DATA
-							packet 			<= data;
+						    if wc_val = x"0000" then			--if the packet size <128b (ex 64b) go directly tolast_bits
+						         packet     <= last_bits;
+							else
+							     packet 	<= data;
+					        end if;
 						elsif pckt_type(2) = '1' then 		-- ACK (short packet NXT last_bits)
 							packet 			<= last_bits;
 						end if;

@@ -17,6 +17,12 @@ use work.sca_pkg.all;
 use work.sca_config_pkg.all;
 
 entity sca_controller is
+    generic(
+        g_SCA_CONFIG_SEQUENCE     : t_sca_command_array;
+        g_SCA_DEFAULT_GPIO_OUT    : std_logic_vector (31 downto 0);
+        g_SCA_DEFAULT_GPIO_OUT_HR : std_logic_vector (31 downto 0);
+        g_DEBUG                   : boolean := false
+    );
     port(
         -- reset
         reset_i                 : in  std_logic;
@@ -94,7 +100,7 @@ architecture sca_controller_arch of sca_controller is
 
     -- top fsm signals
     signal top_state            : top_state_t;
-    signal sca_config_idx       : integer range SCA_CONFIG_SEQUENCE'range;
+    signal sca_config_idx       : integer range g_SCA_CONFIG_SEQUENCE'range;
     signal user_reply_valid     : std_logic;
     
     -- command request signals
@@ -131,7 +137,10 @@ architecture sca_controller_arch of sca_controller is
     signal rx_sca_reply         : t_sca_reply;
     signal rx_transaction_id    : std_logic_vector(7 downto 0);
     signal rx_not_ready_pulse   : std_logic;
-
+    signal rx_err_cnt           : std_logic_vector(15 downto 0);
+    signal rx_seq_num_err_cnt   : std_logic_vector(15 downto 0);
+    signal rx_crc_err_cnt       : std_logic_vector(15 downto 0);
+            
     -- sca tx
     signal tx_command_en        : std_logic;
     signal tx_sca_reset_en      : std_logic;
@@ -165,6 +174,9 @@ begin
     trans_done_cnt_o <= std_logic_vector(trans_done_cnt);
     last_sca_error_o <= last_sca_error;
     critical_error_o <= '1' when top_state = ERROR else '0'; 
+    rx_err_cnt_o <= rx_err_cnt;
+    rx_seq_num_err_cnt_o <= rx_seq_num_err_cnt;
+    rx_crc_err_cnt_o <= rx_crc_err_cnt;
 
     --========= RX =========--
     
@@ -175,9 +187,9 @@ begin
             sd_rx_i           => sd_rx,
             ready_o           => rx_ready,
             seq_num_o         => rx_seq_num,
-            rx_err_cnt_o      => rx_err_cnt_o,
-            seq_num_err_cnt_o => rx_seq_num_err_cnt_o,
-            crc_err_cnt_o     => rx_crc_err_cnt_o,
+            rx_err_cnt_o      => rx_err_cnt,
+            seq_num_err_cnt_o => rx_seq_num_err_cnt,
+            crc_err_cnt_o     => rx_crc_err_cnt,
             sca_reply_o       => rx_sca_reply,
             transaction_id_o  => rx_transaction_id,
             packet_valid_o    => rx_packet_valid,
@@ -241,11 +253,11 @@ begin
                     when SCA_CONFIGURE =>
                         if (trans_done = '0') and (trans_error = '0') then
                             trans_en <= '1';
-                            tx_sca_command <= SCA_CONFIG_SEQUENCE(sca_config_idx);
+                            tx_sca_command <= g_SCA_CONFIG_SEQUENCE(sca_config_idx);
                         elsif (trans_error = '1') then
                             top_state <= ERROR;
                             trans_en <= '0';
-                        elsif (sca_config_idx < SCA_CONFIG_SEQUENCE'right) then
+                        elsif (sca_config_idx < g_SCA_CONFIG_SEQUENCE'right) then
                             trans_en <= '0';
                             if (trans_en = '1') then
                                 sca_config_idx <= sca_config_idx + 1;
@@ -272,7 +284,7 @@ begin
                             tx_sca_command.channel <= SCA_CHANNEL_GPIO;
                             tx_sca_command.command <= SCA_CMD_GPIO_SET_OUT;
                             tx_sca_command.length <= x"04";
-                            tx_sca_command.data <= SCA_DEFAULT_GPIO_OUT_HR;
+                            tx_sca_command.data <= g_SCA_DEFAULT_GPIO_OUT_HR;
                         elsif (trans_error = '1') then
                             top_state <= ERROR;
                             trans_en <= '0';
@@ -289,7 +301,7 @@ begin
                             tx_sca_command.channel <= SCA_CHANNEL_GPIO;
                             tx_sca_command.command <= SCA_CMD_GPIO_SET_OUT;
                             tx_sca_command.length <= x"04";
-                            tx_sca_command.data <= SCA_DEFAULT_GPIO_OUT;
+                            tx_sca_command.data <= g_SCA_DEFAULT_GPIO_OUT;
                         elsif (trans_error = '1') then
                             top_state <= ERROR;
                             trans_en <= '0';
@@ -750,4 +762,79 @@ begin
             clk_i   => clk_80_i,
             sync_o  => user_command_en_i_sync
         );
+        
+    --========= DEBUG =========--
+    gen_debug : if g_DEBUG generate
+        component ila_sca
+            port(
+                clk     : in std_logic;
+                probe0  : in std_logic;
+                probe1  : in std_logic_vector(3 downto 0);
+                probe2  : in std_logic_vector(2 downto 0);
+                probe3  : in std_logic;
+                probe4  : in std_logic;
+                probe5  : in std_logic;
+                probe6  : in std_logic_vector(7 downto 0);
+                probe7  : in std_logic_vector(7 downto 0);
+                probe8  : in std_logic_vector(7 downto 0);
+                probe9  : in std_logic_vector(7 downto 0);
+                probe10 : in std_logic_vector(31 downto 0);
+                probe11 : in std_logic;
+                probe12 : in std_logic_vector(2 downto 0);
+                probe13 : in std_logic;
+                probe14 : in std_logic;
+                probe15 : in std_logic;
+                probe16 : in std_logic_vector(15 downto 0);
+                probe17 : in std_logic_vector(15 downto 0);
+                probe18 : in std_logic_vector(31 downto 0);
+                probe19 : in std_logic_vector(6 downto 0);
+                probe20 : in std_logic_vector(15 downto 0);
+                probe21 : in std_logic_vector(15 downto 0);
+                probe22 : in std_logic_vector(15 downto 0);
+                probe23 : in std_logic_vector(7 downto 0);
+                probe24 : in std_logic_vector(7 downto 0);
+                probe25 : in std_logic_vector(7 downto 0);
+                probe26 : in std_logic_vector(31 downto 0);
+                probe27 : in std_logic_vector(7 downto 0);
+                probe28 : in std_logic
+            );
+        end component;        
+    begin
+    
+        i_sca_ila : ila_sca
+            port map(
+                clk     => clk_80_i,
+                probe0  => reset_i,
+                probe1  => std_logic_vector(to_unsigned(top_state_t'pos(top_state), 4)),
+                probe2  => std_logic_vector(to_unsigned(transaction_state_t'pos(trans_state), 3)),
+                probe3  => sca_reset_req,
+                probe4  => hard_reset_req,
+                probe5  => user_command_req,
+                probe6  => tx_transaction_id,
+                probe7  => tx_sca_command.channel,
+                probe8  => tx_sca_command.command,
+                probe9  => tx_sca_command.length,
+                probe10 => tx_sca_command.data,
+                probe11 => rx_ready,
+                probe12 => rx_seq_num,
+                probe13 => tx_sca_reset_en,
+                probe14 => tx_command_en,
+                probe15 => tx_busy,
+                probe16 => trans_timeout_cnt,
+                probe17 => trans_fail_cnt,
+                probe18 => std_logic_vector(trans_done_cnt),
+                probe19 => last_sca_error,
+                probe20 => rx_err_cnt,
+                probe21 => rx_seq_num_err_cnt,
+                probe22 => rx_crc_err_cnt,
+                probe23 => rx_sca_reply.channel,
+                probe24 => rx_sca_reply.length,
+                probe25 => rx_sca_reply.error,
+                probe26 => rx_sca_reply.data,
+                probe27 => rx_transaction_id,
+                probe28 => rx_packet_valid
+            );
+    
+    end generate;       
+        
 end sca_controller_arch;

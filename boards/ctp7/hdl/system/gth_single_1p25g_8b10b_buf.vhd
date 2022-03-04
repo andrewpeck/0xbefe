@@ -755,7 +755,7 @@ begin
       TXPIPPMEN                  => '0',
       TXPIPPMOVRDEN              => '0',
       TXPIPPMPD                  => '0',
-      TXPIPPMSEL                 => '0',
+      TXPIPPMSEL                 => '1',
       TXPIPPMSTEPSIZE            => "00000",
       ---------------------- Transceiver Reset Mode Operation --------------------
       GTRESETSEL                 => '0',
