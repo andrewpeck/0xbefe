@@ -140,7 +140,7 @@ begin
                                 tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
                                                          x"01" &                                             -- CMD
                                                          gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
-                                                         x"00" & -- ???? hmm, this is not documented, but saw this in another guy's code...
+                                                         x"00" &                                             -- RSVD, reserved byte should be set to 0
                                                          SOF_EOF;                                            -- SOF
                                 tx_frame(127 downto 48) <= (others => '1');
                                 ser_frame_pos <= 48;
@@ -289,8 +289,6 @@ begin
 
     -- ILA Debug IC RX --
     ila_enable : if g_DEBUG generate
-
-        ic_r_valid <= ic_read_valid_o;
 
         i_gbt_ila_ix_rx : ila_ic_rx
             PORT MAP (
