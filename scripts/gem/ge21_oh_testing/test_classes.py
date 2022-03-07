@@ -13,7 +13,7 @@ RSSI_WARN = 150 # uA
 TEMP_WARN = 50
 # Voltage:    
 VOLT_WARN = 0.05  # 5% range for Warning                                                                                                                                                                   
-VOLT_NOM  = [1.0, 1.0, 1.2, 1.8, 1.5, 2.5]
+VOLT_NOM  = [1.0, 1.0, 1.2, 1.84, 1.5, 2.5]
 
 class XML_HEADER:
     def __init__(self):
