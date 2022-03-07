@@ -64,8 +64,9 @@ def init_gem_frontend():
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
                 selectGbt(oh, gbt)
+                gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if gbt%2 != 0:
-                    if gbt_ver == 0:
+                    if gbt_ver == 0 and gbt_ready == 1:
                         for i in range(0,10):
                             read_data = readGbtRegAddrs(0x00)
                 else:
@@ -105,7 +106,7 @@ def init_gem_frontend():
                 data = 0x03
                 vtrx_slave_addr = 0x50
                 old_vtrx = 0
-                if gbt_ver == 0:
+                if oh_ver == 1:
                     # Read first to check if old VTRx+
                     writeGbtRegAddrs(0x100, control_register_data_check)
                     writeGbtRegAddrs(0x104, 0x0)
@@ -148,31 +149,33 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x0FF, 0x0)
                         writeGbtRegAddrs(0x104, 0x0)
                         sleep(0.01)
-                elif gbt_ver == 1:
+                elif oh_ver == 2:
+                    # Assuming OHv2 never connected to an old VTRx+
+
                     # Read first to check if old VTRx+
-                    writeGbtRegAddrs(0x110, control_register_data_check)
-                    writeGbtRegAddrs(0x114, 0x0)
-                    sleep(0.01)
-                    writeGbtRegAddrs(0x110, check_reg_addr)
-                    writeGbtRegAddrs(0x114, 0x8)
-                    sleep(0.01)
-                    writeGbtRegAddrs(0x10F, vtrx_slave_addr)
-                    writeGbtRegAddrs(0x114, 0xC)
-                    sleep(0.01)
-                    writeGbtRegAddrs(0x110, control_register_data_check)
-                    writeGbtRegAddrs(0x114, 0x0)
-                    sleep(0.01)
-                    writeGbtRegAddrs(0x10F, vtrx_slave_addr)
-                    writeGbtRegAddrs(0x114, 0xD)
-                    sleep(0.01)
-                    vtrx_data = readGbtRegAddrs(0x1AD)
-                    if vtrx_data == 0x01:
-                        old_vtrx = 1
-                    writeGbtRegAddrs(0x110, 0x0)
-                    writeGbtRegAddrs(0x111, 0x0)
-                    writeGbtRegAddrs(0x10F, 0x0)
-                    writeGbtRegAddrs(0x114, 0x0)
-                    sleep(0.01)
+                    #writeGbtRegAddrs(0x110, control_register_data_check)
+                    #writeGbtRegAddrs(0x114, 0x0)
+                    #sleep(0.01)
+                    #writeGbtRegAddrs(0x110, check_reg_addr)
+                    #writeGbtRegAddrs(0x114, 0x8)
+                    #sleep(0.01)
+                    #writeGbtRegAddrs(0x10F, vtrx_slave_addr)
+                    #writeGbtRegAddrs(0x114, 0xC)
+                    #sleep(0.01)
+                    #writeGbtRegAddrs(0x110, control_register_data_check)
+                    #writeGbtRegAddrs(0x114, 0x0)
+                    #sleep(0.01)
+                    #writeGbtRegAddrs(0x10F, vtrx_slave_addr)
+                    #writeGbtRegAddrs(0x114, 0xD)
+                    #sleep(0.01)
+                    #vtrx_data = readGbtRegAddrs(0x1AD)
+                    #if vtrx_data == 0x01:
+                    #    old_vtrx = 1
+                    #writeGbtRegAddrs(0x110, 0x0)
+                    #writeGbtRegAddrs(0x111, 0x0)
+                    #writeGbtRegAddrs(0x10F, 0x0)
+                    #writeGbtRegAddrs(0x114, 0x0)
+                    #sleep(0.01)
 
                     # Write
                     if not old_vtrx:

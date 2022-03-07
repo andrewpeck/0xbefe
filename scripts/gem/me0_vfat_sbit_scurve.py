@@ -96,6 +96,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
     
     # Configure TTC generator
     #write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET"), 1)
+    ttc_cnt_reset_node = get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:
         write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
@@ -173,7 +174,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
                 write_backend_reg(dac_node[vfat], c)
 
                 # Start the cyclic generator
-                global_reset()
+                write_backend_reg(ttc_cnt_reset_node, 1)
                 write_backend_reg(reset_sbit_counter_node, 1)
                 write_backend_reg(ttc_cyclic_start_node, 1)
                 cyclic_running = 1
