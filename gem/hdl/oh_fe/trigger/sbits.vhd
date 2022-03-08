@@ -37,8 +37,8 @@ entity sbits is
     l1a_mask_delay : in std_logic_vector(4 downto 0);
     l1a_mask_width : in std_logic_vector(4 downto 0);
 
-    reverse_partitions : in std_logic                     := '0';
-    sbit_map_sel       : in std_logic_vector (1 downto 0) := (others => '0');
+    reverse_partitions_i : in std_logic                     := '0';
+    sbit_map_sel         : in std_logic_vector (1 downto 0) := (others => '0');
 
     vfat_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -352,6 +352,8 @@ begin
 
     signal overflow : std_logic_vector (2 downto 0);
 
+    signal reverse_partitions : std_logic := '0';
+
     attribute DONT_TOUCH                           : string;
     attribute DONT_TOUCH of clusters_unmasked_tmr  : signal is "true";
     attribute DONT_TOUCH of clusters_masked_tmr    : signal is "true";
@@ -460,6 +462,13 @@ begin
     --------------------------------------------------------------------------------
     -- Cluster Outputs
     --------------------------------------------------------------------------------
+
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        reverse_partitions <= reverse_partitions_i;
+      end if;
+    end process;
 
     process (clocks.clk160_0) is
     begin
