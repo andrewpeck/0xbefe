@@ -300,9 +300,9 @@ architecture Behavioral of daq is
     signal chmb_evtfifos_rd_en  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_infifos_rd_en   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_tts_states      : t_std4_array(0 to g_NUM_OF_OHs - 1) := (others => (others => '0'));
-    signal chmb_tts_err_arr     : std_logic_vector(0 to g_NUM_OF_OHs - 1) := (others => '0');
-    signal chmb_tts_warn_arr    : std_logic_vector(0 to g_NUM_OF_OHs - 1) := (others => '0');
-    signal chmb_tts_oos_arr     : std_logic_vector(0 to g_NUM_OF_OHs - 1) := (others => '0');
+    signal chmb_tts_err_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_warn_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_oos_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
     signal chmb_infifo_underflow: std_logic;
     
     signal err_event_too_big    : std_logic;
@@ -990,9 +990,9 @@ begin
                 tts_start_cntdwn_chmb <= x"ff";
             else
                 if (tts_start_cntdwn_chmb = x"00") then
-                    tts_chmb_critical <= or_reduce(chmb_tts_err_arr and input_mask);
-                    tts_chmb_out_of_sync <= or_reduce(chmb_tts_oos_arr and input_mask);
-                    tts_chmb_warning <= or_reduce(chmb_tts_warn_arr and input_mask);
+                    tts_chmb_critical <= or_reduce(chmb_tts_err_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_out_of_sync <= or_reduce(chmb_tts_oos_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_warning <= or_reduce(chmb_tts_warn_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
                 else
                     tts_start_cntdwn_chmb <= tts_start_cntdwn_chmb - 1;
                     tts_chmb_critical <= '0';
