@@ -41,11 +41,22 @@ end channel_to_strip;
 
 architecture Behavioral of channel_to_strip is
 
+  signal mapping_reg  : natural range 0 to 2;
   signal channels     : sbits_array_t(NUM_VFATS-1 downto 0) := (others => (others => '0'));
   signal identity_map : sbits_array_t(NUM_VFATS-1 downto 0) := (others => (others => '0'));
   signal strips       : sbits_array_t(NUM_VFATS-1 downto 0) := (others => (others => '0'));
 
+  attribute SHREG_EXTRACT             : string;
+  attribute SHREG_EXTRACT of channels : signal is "NO";
+
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      mapping_reg <= mapping;
+    end if;
+  end process;
 
   reg_input_gen : if (REGISTER_INPUT) generate
     process (clock) is
@@ -102,7 +113,7 @@ begin
     end generate;
 
     dynamic_gen : if (USE_DYNAMIC_MAPPING) generate
-      strips <= select_mapping_ge11 (mapping, identity_map, short_map, long_map);
+      strips <= select_mapping_ge11 (mapping_reg, identity_map, short_map, long_map);
     end generate;
 
     --------------------------------------------------------------------------------
