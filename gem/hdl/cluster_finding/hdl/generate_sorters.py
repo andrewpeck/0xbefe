@@ -48,7 +48,7 @@ disclaimer += "\n"
 
 def sorter16 (list1, list2):
 
-    def swap_pairs (alist, a, b):
+    def swap_pairs(alist, a, b):
         tmp = alist[a]
         alist[a] = alist[b]
         alist[b] = tmp
@@ -60,41 +60,41 @@ def sorter16 (list1, list2):
     ################################################################################
 
     if (alist[8] > alist[0]):
-        swap_pairs (alist, 8, 0)
+        swap_pairs(alist, 8, 0)
 
     if (alist[9] > alist[1]):
-        swap_pairs (alist, 9, 1)
+        swap_pairs(alist, 9, 1)
 
     if (alist[10] > alist[2]):
-        swap_pairs (alist, 10, 2)
+        swap_pairs(alist, 10, 2)
 
     if (alist[11] > alist[3]):
-        swap_pairs (alist, 11, 3)
+        swap_pairs(alist, 11, 3)
 
     if (alist[12] > alist[4]):
-        swap_pairs (alist, 12, 4)
+        swap_pairs(alist, 12, 4)
 
     if (alist[13] > alist[5]):
-        swap_pairs (alist, 13, 5)
+        swap_pairs(alist, 13, 5)
 
     if (alist[14] > alist[6]):
-        swap_pairs (alist, 14, 6)
+        swap_pairs(alist, 14, 6)
 
     if (alist[15] > alist[7]):
-        swap_pairs (alist, 15, 7)
+        swap_pairs(alist, 15, 7)
 
     ################################################################################
     # s1
     ################################################################################
 
     if (alist[8] > alist[4]):
-        swap_pairs (alist, 4, 8)
+        swap_pairs(alist, 4, 8)
     if (alist[9] > alist[5]):
-        swap_pairs (alist, 5, 9)
+        swap_pairs(alist, 5, 9)
     if (alist[10] > alist[6]):
-        swap_pairs (alist, 6, 10)
+        swap_pairs(alist, 6, 10)
     if (alist[11] > alist[7]):
-        swap_pairs (alist, 7, 11)
+        swap_pairs(alist, 7, 11)
 
 
     ################################################################################
@@ -102,51 +102,51 @@ def sorter16 (list1, list2):
     ################################################################################
 
     if (alist[8] > alist[2]):
-        swap_pairs (alist, 8, 2)
+        swap_pairs(alist, 8, 2)
 
     if (alist[9] > alist[3]):
-        swap_pairs (alist, 9, 3)
+        swap_pairs(alist, 9, 3)
 
     if (alist[12] > alist[6]):
-        swap_pairs (alist, 12, 6)
+        swap_pairs(alist, 12, 6)
 
     if (alist[13] > alist[7]):
-        swap_pairs (alist, 13, 7)
+        swap_pairs(alist, 13, 7)
 
     ################################################################################
     # s3
     ################################################################################
 
     if (alist[4] > alist[2]):
-        swap_pairs (alist, 4, 2)
+        swap_pairs(alist, 4, 2)
     if (alist[5] > alist[3]):
-        swap_pairs (alist, 5, 3)
+        swap_pairs(alist, 5, 3)
 
     if (alist[8] > alist[6]):
-        swap_pairs (alist, 8, 6)
+        swap_pairs(alist, 8, 6)
     if (alist[9] > alist[7]):
-        swap_pairs (alist, 9, 7)
+        swap_pairs(alist, 9, 7)
 
     if (alist[12] > alist[10]):
-        swap_pairs (alist, 12, 10)
+        swap_pairs(alist, 12, 10)
     if (alist[13] > alist[11]):
-        swap_pairs (alist, 13, 11)
+        swap_pairs(alist, 13, 11)
 
     ################################################################################
     # s4
     ################################################################################
 
     if (alist[8] > alist[1]):
-        swap_pairs (alist, 8, 1)
+        swap_pairs(alist, 8, 1)
 
     if (alist[10] > alist[3]):
-        swap_pairs (alist, 10, 3)
+        swap_pairs(alist, 10, 3)
 
     if (alist[12] > alist[5]):
-        swap_pairs (alist, 12, 5)
+        swap_pairs(alist, 12, 5)
 
     if (alist[14] > alist[7]):
-        swap_pairs (alist, 14, 7)
+        swap_pairs(alist, 14, 7)
 
 
     ################################################################################
@@ -154,22 +154,22 @@ def sorter16 (list1, list2):
     ################################################################################
 
     if (alist[4] > alist[1]):
-        swap_pairs (alist, 4, 1)
+        swap_pairs(alist, 4, 1)
 
     if (alist[6] > alist[3]):
-        swap_pairs (alist, 6, 3)
+        swap_pairs(alist, 6, 3)
 
     if (alist[8] > alist[5]):
-        swap_pairs (alist, 8, 5)
+        swap_pairs(alist, 8, 5)
 
     if (alist[10] > alist[7]):
-        swap_pairs (alist, 10, 7)
+        swap_pairs(alist, 10, 7)
 
     if (alist[12] > alist[9]):
-        swap_pairs (alist, 12, 9)
+        swap_pairs(alist, 12, 9)
 
     if (alist[14] > alist[11]):
-        swap_pairs (alist, 14, 11)
+        swap_pairs(alist, 14, 11)
 
 
     ################################################################################
@@ -177,25 +177,25 @@ def sorter16 (list1, list2):
     ################################################################################
 
     if (alist[2] > alist[1]):
-        swap_pairs (alist, 2, 1)
+        swap_pairs(alist, 2, 1)
 
     if (alist[4] > alist[3]):
-        swap_pairs (alist, 4, 3)
+        swap_pairs(alist, 4, 3)
 
     if (alist[6] > alist[5]):
-        swap_pairs (alist, 6, 5)
+        swap_pairs(alist, 6, 5)
 
     if (alist[8] > alist[7]):
-        swap_pairs (alist, 8, 7)
+        swap_pairs(alist, 8, 7)
 
     if (alist[10] > alist[9]):
-        swap_pairs (alist, 10, 9)
+        swap_pairs(alist, 10, 9)
 
     if (alist[12] > alist[11]):
-        swap_pairs (alist, 12, 11)
+        swap_pairs(alist, 12, 11)
 
     if (alist[14] > alist[13]):
-        swap_pairs (alist, 14, 13)
+        swap_pairs(alist, 14, 13)
 
     return alist
 
@@ -390,7 +390,7 @@ def generate_sorter (filename, number_of_inputs, number_of_outputs, sort_high, l
     s+="//----------------------------------------------------------------------------------------------------------------------\n"
 
     print(s)
-    f = open (filename, "w+")
+    f = open(filename, "w+")
     f.write(s)
 
 # the first few stages can be disabled because the lists already come pre-sorted...
@@ -399,5 +399,5 @@ generate_sorter(filename="sorter16.v",
                 number_of_inputs=16,
                 number_of_outputs=16,
                 sort_high=False,
-                latch_list=[0, 3, 5, 7, 9, 10],
+                latch_list=[2, 3, 4, 6, 7, 8, 9, 10],
                 disable_list=[0, 1])

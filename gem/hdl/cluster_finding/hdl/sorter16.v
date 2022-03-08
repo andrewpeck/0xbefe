@@ -200,7 +200,7 @@ parameter INV = 1<<DATB-1;
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s0 [15:0];
 reg pulse_s0;
 
-always @(posedge clock) begin
+always @(*) begin
     data_s0[0 ]  <=  {~vpf_in0 , prt_in0 , adr_in0 , cnt_in0 };
     data_s0[1 ]  <=  {~vpf_in1 , prt_in1 , adr_in1 , cnt_in1 };
     data_s0[2 ]  <=  {~vpf_in2 , prt_in2 , adr_in2 , cnt_in2 };
@@ -228,7 +228,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s2 [15:0];
 reg pulse_s2;
 
-always @(*) begin
+always @(posedge clock) begin
     {data_s2[0 ], data_s2 [2 ]} <= (data_s0[2 ][DATB-1:SKIPB] < data_s0[0 ][DATB-1:SKIPB]) ? {data_s0[2 ], data_s0[0 ]} :{data_s0[0 ], data_s0[2 ]};
     {data_s2[1 ], data_s2 [3 ]} <= (data_s0[3 ][DATB-1:SKIPB] < data_s0[1 ][DATB-1:SKIPB]) ? {data_s0[3 ], data_s0[1 ]} :{data_s0[1 ], data_s0[3 ]};
     {data_s2[4 ], data_s2 [6 ]} <= (data_s0[6 ][DATB-1:SKIPB] < data_s0[4 ][DATB-1:SKIPB]) ? {data_s0[6 ], data_s0[4 ]} :{data_s0[4 ], data_s0[6 ]};
@@ -264,7 +264,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s4 [15:0];
 reg pulse_s4;
 
-always @(*) begin
+always @(posedge clock) begin
     {data_s4[0 ], data_s4 [8 ]} <= (data_s3[8 ][DATB-1:SKIPB] < data_s3[0 ][DATB-1:SKIPB]) ? {data_s3[8 ], data_s3[0 ]} :{data_s3[0 ], data_s3[8 ]};
     {data_s4[1 ], data_s4 [9 ]} <= (data_s3[9 ][DATB-1:SKIPB] < data_s3[1 ][DATB-1:SKIPB]) ? {data_s3[9 ], data_s3[1 ]} :{data_s3[1 ], data_s3[9 ]};
     {data_s4[2 ], data_s4 [10]} <= (data_s3[10][DATB-1:SKIPB] < data_s3[2 ][DATB-1:SKIPB]) ? {data_s3[10], data_s3[2 ]} :{data_s3[2 ], data_s3[10]};
@@ -282,7 +282,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s5 [15:0];
 reg pulse_s5;
 
-always @(posedge clock) begin
+always @(*) begin
     {data_s5[4 ], data_s5 [8 ]} <= (data_s4[8 ][DATB-1:SKIPB] < data_s4[4 ][DATB-1:SKIPB]) ? {data_s4[8 ], data_s4[4 ]} :{data_s4[4 ], data_s4[8 ]};
     {data_s5[5 ], data_s5 [9 ]} <= (data_s4[9 ][DATB-1:SKIPB] < data_s4[5 ][DATB-1:SKIPB]) ? {data_s4[9 ], data_s4[5 ]} :{data_s4[5 ], data_s4[9 ]};
     {data_s5[6 ], data_s5 [10]} <= (data_s4[10][DATB-1:SKIPB] < data_s4[6 ][DATB-1:SKIPB]) ? {data_s4[10], data_s4[6 ]} :{data_s4[6 ], data_s4[10]};
@@ -304,7 +304,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s6 [15:0];
 reg pulse_s6;
 
-always @(*) begin
+always @(posedge clock) begin
     {data_s6[2 ], data_s6 [8 ]} <= (data_s5[8 ][DATB-1:SKIPB] < data_s5[2 ][DATB-1:SKIPB]) ? {data_s5[8 ], data_s5[2 ]} :{data_s5[2 ], data_s5[8 ]};
     {data_s6[3 ], data_s6 [9 ]} <= (data_s5[9 ][DATB-1:SKIPB] < data_s5[3 ][DATB-1:SKIPB]) ? {data_s5[9 ], data_s5[3 ]} :{data_s5[3 ], data_s5[9 ]};
     {data_s6[6 ], data_s6 [12]} <= (data_s5[12][DATB-1:SKIPB] < data_s5[6 ][DATB-1:SKIPB]) ? {data_s5[12], data_s5[6 ]} :{data_s5[6 ], data_s5[12]};
@@ -346,7 +346,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s8 [15:0];
 reg pulse_s8;
 
-always @(*) begin
+always @(posedge clock) begin
     {data_s8[1 ], data_s8 [8 ]} <= (data_s7[8 ][DATB-1:SKIPB] < data_s7[1 ][DATB-1:SKIPB]) ? {data_s7[8 ], data_s7[1 ]} :{data_s7[1 ], data_s7[8 ]};
     {data_s8[3 ], data_s8 [10]} <= (data_s7[10][DATB-1:SKIPB] < data_s7[3 ][DATB-1:SKIPB]) ? {data_s7[10], data_s7[3 ]} :{data_s7[3 ], data_s7[10]};
     {data_s8[5 ], data_s8 [12]} <= (data_s7[12][DATB-1:SKIPB] < data_s7[5 ][DATB-1:SKIPB]) ? {data_s7[12], data_s7[5 ]} :{data_s7[5 ], data_s7[12]};
