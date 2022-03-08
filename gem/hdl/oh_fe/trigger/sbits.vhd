@@ -98,6 +98,8 @@ architecture Behavioral of sbits is
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_40m          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_160m         : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
   constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
@@ -186,6 +188,20 @@ begin
   -- Channel to Strip Mapping
   --------------------------------------------------------------------------------------------------------------------
 
+  process (clocks.clk160_0) is
+  begin
+    if (rising_edge(clocks.clk160_0)) then
+      vfat_sbits_160m <= vfat_sbits_raw;
+    end if;
+  end process;
+
+  process (clocks.clk40) is
+  begin
+    if (rising_edge(clocks.clk40)) then
+      vfat_sbits_40m <= vfat_sbits_raw;
+    end if;
+  end process;
+
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
 
@@ -215,12 +231,13 @@ begin
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
       USE_DYNAMIC_MAPPING => true,
-      REGISTER_OUTPUT     => true
+      REGISTER_OUTPUT     => true,
+      REGISTER_INPUT      => true
       )
     port map (
       clock       => clocks.clk160_0,
       mapping     => to_integer (unsigned (sbit_map_sel)),
-      channels_in => vfat_sbits_raw,
+      channels_in => vfat_sbits_160m,
       strips_out  => vfat_sbits_strip_mapped
       );
 
@@ -274,7 +291,7 @@ begin
   process (clocks.clk40)
   begin
     if (rising_edge(clocks.clk40)) then
-      sbits_mux_s0 <= vfat_sbits_raw(to_integer(unsigned(sbits_mux_sel)));
+      sbits_mux_s0 <= vfat_sbits_40m(to_integer(unsigned(sbits_mux_sel)));
       sbits_mux_s1 <= sbits_mux_s0;
       sbits_mux    <= sbits_mux_s1;
       sbits_mux_o  <= sbits_mux;
@@ -293,7 +310,7 @@ begin
       clock_i   => clocks.clk40,
       reset_i   => hitmap_reset_i,
       acquire_i => hitmap_acquire_i,
-      sbits_i   => vfat_sbits_raw,
+      sbits_i   => vfat_sbits_40m,
       hitmap_o  => hitmap_sbits_o
       );
 
@@ -380,7 +397,7 @@ begin
           ONESHOT        => true,
           NUM_VFATS      => NUM_VFATS,
           NUM_PARTITIONS => NUM_PARTITIONS,
-          PHASE_OFFSET   => 1,
+          PHASE_OFFSET   => 3,
           STATION        => STATION
           )
         port map (
