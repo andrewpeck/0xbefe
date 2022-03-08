@@ -399,5 +399,5 @@ generate_sorter(filename="sorter16.v",
                 number_of_inputs=16,
                 number_of_outputs=16,
                 sort_high=False,
-                latch_list=[2, 3, 4, 6, 7, 8, 9, 10],
+                latch_list=[2, 3, 4, 5, 6, 7, 8, 9, 10],
                 disable_list=[0, 1])

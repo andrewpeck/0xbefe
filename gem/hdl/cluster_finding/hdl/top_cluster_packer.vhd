@@ -6,8 +6,8 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency v0 sorter = 4.75 bx as of 2022/03/03
--- latency v1 sorter = 4.50 bx as of 2022/03/03
+-- latency v0 sorter = 4.75 bx as of 2022/03/08
+-- latency v1 sorter = 4.75 bx as of 2022/03/08
 
 entity cluster_packer is
   generic (
@@ -64,7 +64,7 @@ architecture behavioral of cluster_packer is
 
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 6;
+  constant OVERFLOW_LATENCY                 : natural := 8;
 
   signal cluster_latch : std_logic;
 

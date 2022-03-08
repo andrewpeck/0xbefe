@@ -282,7 +282,7 @@ end
 reg [MXADRB+MXCNTB+MXVPFB+MXPRTB+0-1:0] data_s5 [15:0];
 reg pulse_s5;
 
-always @(*) begin
+always @(posedge clock) begin
     {data_s5[4 ], data_s5 [8 ]} <= (data_s4[8 ][DATB-1:SKIPB] < data_s4[4 ][DATB-1:SKIPB]) ? {data_s4[8 ], data_s4[4 ]} :{data_s4[4 ], data_s4[8 ]};
     {data_s5[5 ], data_s5 [9 ]} <= (data_s4[9 ][DATB-1:SKIPB] < data_s4[5 ][DATB-1:SKIPB]) ? {data_s4[9 ], data_s4[5 ]} :{data_s4[5 ], data_s4[9 ]};
     {data_s5[6 ], data_s5 [10]} <= (data_s4[10][DATB-1:SKIPB] < data_s4[6 ][DATB-1:SKIPB]) ? {data_s4[10], data_s4[6 ]} :{data_s4[6 ], data_s4[10]};
