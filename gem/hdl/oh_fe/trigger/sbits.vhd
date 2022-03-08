@@ -189,6 +189,8 @@ begin
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
 
+    -- deserializer --> sbits --> vfat_sbits_raw -->
+    --     vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
 
     -- optionally reverse the sbit order... needed for some slots on ge11 ?
 
@@ -216,7 +218,7 @@ begin
       REGISTER_OUTPUT     => true
       )
     port map (
-      clock       => clocks.clk40,
+      clock       => clocks.clk160_0,
       mapping     => to_integer (unsigned (sbit_map_sel)),
       channels_in => vfat_sbits_raw,
       strips_out  => vfat_sbits_strip_mapped
@@ -380,6 +382,7 @@ begin
           ONESHOT        => true,
           NUM_VFATS      => NUM_VFATS,
           NUM_PARTITIONS => NUM_PARTITIONS,
+          PHASE_OFFSET   => 1,
           STATION        => STATION
           )
         port map (
