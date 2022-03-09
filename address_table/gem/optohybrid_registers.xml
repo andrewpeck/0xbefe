@@ -581,26 +581,6 @@
                 <!-- END: INVERT_REGS DO NOT EDIT -->
             </node> <!--INVERT-->
 
-            <node id="SBITS_MUX" address="0xf" description="Multiplexed copy of Sbits from a selected VFAT">
-
-                <node id="SBIT_MUX_SEL" address="0x0" permission="rw"
-                      description="Select a VFAT which will connect to the S-bit multiplexer"
-                      fw_signal="sbits_mux_sel"
-                      mask="0x1f0"
-                      fw_default="0x10"/>
-
-                <node id="SBITS_MUX_LSB" address="0x1" permission="r"
-                      description="Multiplexed S-bits 31 to 0"
-                      fw_signal="sbits_mux(31 downto 0)"
-                      mask="0xffffffff"/>
-
-                <node id="SBITS_MUX_MSB" address="0x2" permission="r"
-                      description="Multiplexed S-bits 63 to 32"
-                      fw_signal="sbits_mux(63 downto 32)"
-                      mask="0xffffffff"/>
-
-            </node> <!--SBITS_MUX-->
-
             <node id="TU_MASK" address="0x12" description = "VFAT Trigger Unit Mask \\ Set a pair to 1 to invert it">
 
                 <!-- START: TU_MASK DO NOT EDIT -->
