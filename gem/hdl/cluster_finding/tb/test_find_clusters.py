@@ -26,9 +26,7 @@ async def latch_in(dut):
 async def random_clusters(dut):
     """Test for priority encoder with randomized data on all inputs"""
 
-    random.seed(10)
-
-    nloops = 1000
+    nloops = 100
     nhits = 14
 
     cocotb.fork(Clock(dut.clock, 40, units="ns").start())  # Create a clock
@@ -75,19 +73,11 @@ async def random_clusters(dut):
                                dut.ENCODER_SIZE.value)
 
         # sort the found keys by {valid , partition, adr}
-        expect = sorted(expect, key=lambda x: x.vpf << 13 | x.prt << 10 | x.adr, reverse=True)
-
-        adr = 9999
-        prt = 9999
+        expect = sorted(expect, key=lambda x: x.vpf << 12 | x.prt << 8 | x.adr, reverse=True)
 
         for ioutput, _ in enumerate(expect):
             print("generate: i=%02d %s" % (ioutput, str(expect[ioutput])))
 
-            assert expect[ioutput].prt <= prt
-            if (expect[ioutput].prt == prt):
-                assert expect[ioutput].adr <= adr
-            adr = expect[ioutput].adr
-            prt = expect[ioutput].prt
         dut.vpfs_i.value = vpfs_i
         dut.cnts_i.value = cnts_i
 
@@ -111,17 +101,12 @@ async def random_clusters(dut):
 
         for j, _ in enumerate(found):
             cluster_a = expect[j]
-            cluster_b = found[j]
-            is_eq = equal(cluster_a, cluster_b)
-            if (not is_eq):
-                print(" >> clst%d a: %s" % (j, str(cluster_a)))
-                print(" >> clst%d b: %s" % (j, str(cluster_b)))
-            assert is_eq==1
-
-            # for k, _ in enumerate(found):
-            #     if equal(cluster_a, cluster_b):
-            #         found_a = True
-            # assert found_a, "Failed to find cluster %s" % str(cluster_a)
+            found_a = False
+            for k, _ in enumerate(found):
+                cluster_b = found[k]
+                if equal(cluster_a, cluster_b):
+                    found_a = True
+            assert found_a, "Failed to find cluster %s" % str(cluster_a)
 
         assert len(found) == len(expect)
 
