@@ -39,7 +39,7 @@ CSC_DMB_QSFPS = [[4]]
 CSC_LDAQ_QSFPS = [[4]]
 CSC_LDAQ_QSFP_CHANS = [[3]]
 CSC_GBT_QSFPS = [[10, 11]]
-CSC_TTC_TX_QSFPS = [6] # global, not per SLR
+CSC_TTC_TX_QSFPS = [12] # global, not per SLR
 
 
 ###############################################################
@@ -1096,6 +1096,7 @@ def generate_fiber_to_mgt_vhdl():
     fiber_idx = 0
     for qsfp_idx in range(len(QSFP_TO_MGT)):
         qsfp = QSFP_TO_MGT[qsfp_idx]
+        qsfp_cage = qsfp[0]["qsfp_idx"]
         first = True
         for qsfp_chan_idx in range(0, len(qsfp), 2):
             qsfp_tx_chan = qsfp[qsfp_chan_idx]
@@ -1103,7 +1104,7 @@ def generate_fiber_to_mgt_vhdl():
             if qsfp_tx_chan["mgt"] not in GTYS and qsfp_rx_chan["mgt"] not in GTYS:
                 continue
             if first:
-                print("    --========= QSFP #%d =========--" % (qsfp_idx))
+                print("    --========= QSFP cage #%d =========--" % (qsfp_cage))
                 first = False
 
             if qsfp_tx_chan["dir"] != "TX" or qsfp_rx_chan["dir"] != "RX":
@@ -1129,7 +1130,7 @@ def generate_fiber_to_mgt_vhdl():
             fiber_idx += 1
 
     print("    --=== DUMMY fiber - use for unconnected channels ===--")
-    print("    (MGT_NULL, MGT_NULL, false, false)")
+    print("    others => (MGT_NULL, MGT_NULL, false, false)")
     print(");")
 
     return gty_chan_to_fiber, fiber_to_slr
