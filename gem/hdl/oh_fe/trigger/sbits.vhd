@@ -280,7 +280,7 @@ begin
   active_vfats_inst : entity work.active_vfats
     port map (
       clock          => clocks.clk40,
-      sbits_i        => sbits,
+      sbits_i        => vfat_sbits_40m,
       active_vfats_o => active_vfats
       );
 
