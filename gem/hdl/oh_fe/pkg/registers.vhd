@@ -535,10 +535,6 @@ package registers is
     constant REG_TRIG_CTRL_SBIT_MAP_SEL_LSB     : integer := 0;
     constant REG_TRIG_CTRL_SBIT_MAP_SEL_DEFAULT : std_logic_vector(1 downto 0) := "00";
 
-    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_ADDR    : std_logic_vector(8 downto 0) := '0' & x"18";
-    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_BIT    : integer := 4;
-    constant REG_TRIG_CTRL_REVERSE_PARTITIONS_DEFAULT : std_logic := '0';
-
     constant REG_TRIG_CNT_VFAT0_SBITS_ADDR    : std_logic_vector(8 downto 0) := '0' & x"20";
     constant REG_TRIG_CNT_VFAT0_SBITS_MSB    : integer := 31;
     constant REG_TRIG_CNT_VFAT0_SBITS_LSB     : integer := 0;
