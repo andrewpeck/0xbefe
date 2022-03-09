@@ -1046,7 +1046,7 @@ begin
             else
                 if (tts_start_cntdwn_chmb = x"00") then
                     for i in 0 to (g_NUM_OF_DMBs - 1) loop
-                        tts_chmb_critical_arr(i) <= chmb_tts_states(i)(2) and input_mask(i);
+                        tts_chmb_critical_arr(i) <= chmb_tts_states(i)(2) and chmb_tts_states(i)(3) and input_mask(i);
                         tts_chmb_oos_arr(i) <= chmb_tts_states(i)(1) and input_mask(i);
                         tts_chmb_warning_arr(i) <= chmb_tts_states(i)(0) and input_mask(i);
                     end loop;                

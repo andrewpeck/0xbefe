@@ -294,7 +294,6 @@ begin
 
     i_slink_rocket : entity work.slink_rocket
         generic map(
-            g_FPGA_FAMILY       => "virtex",
             g_NUM_CHANNELS      => CFG_NUM_GEM_BLOCKS,
             g_LINE_RATE         => "25.78125",
             q_REF_CLK_FREQ      => "156.25",

@@ -4,3 +4,5 @@ generate_project:csc_apex_devel:
       extends: .vars
       PROJECT_NAME: csc_apex
       INTERMEDIATE_BUILD: "1"
+    tags:
+      - vivado_2021_1      

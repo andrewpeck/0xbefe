@@ -299,7 +299,10 @@ architecture Behavioral of daq is
     signal chmb_evtfifos_empty  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '1'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_evtfifos_rd_en  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_infifos_rd_en   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
-    signal chmb_tts_states      : t_std4_array(0 to g_NUM_OF_OHs - 1);
+    signal chmb_tts_states      : t_std4_array(0 to g_NUM_OF_OHs - 1) := (others => (others => '0'));
+    signal chmb_tts_err_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_warn_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_oos_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
     signal chmb_infifo_underflow: std_logic;
     
     signal err_event_too_big    : std_logic;
@@ -967,6 +970,9 @@ begin
         chamber_evtfifos(i).rd_en <= chmb_evtfifos_rd_en(i);
         chamber_infifos(i).rd_en <= chmb_infifos_rd_en(i);
         chmb_tts_states(i) <= input_status_arr(i).tts_state;
+        chmb_tts_err_arr(i) <= input_status_arr(i).tts_state(2) and input_status_arr(i).tts_state(3);
+        chmb_tts_oos_arr(i) <= input_status_arr(i).tts_state(1);
+        chmb_tts_warn_arr(i) <= input_status_arr(i).tts_state(0);
         
     end generate;
         
@@ -983,14 +989,15 @@ begin
                 tts_chmb_warning <= '0';
                 tts_start_cntdwn_chmb <= x"ff";
             else
-                if (tts_start_cntdwn_chmb /= x"00") then
-                    for I in 0 to (g_NUM_OF_OHs - 1) loop
-                        tts_chmb_critical <= tts_chmb_critical or (chmb_tts_states(I)(2) and input_mask(I));
-                        tts_chmb_out_of_sync <= tts_chmb_out_of_sync or (chmb_tts_states(I)(1) and input_mask(I));
-                        tts_chmb_warning <= tts_chmb_warning or (chmb_tts_states(I)(0) and input_mask(I));
-                    end loop;                
+                if (tts_start_cntdwn_chmb = x"00") then
+                    tts_chmb_critical <= or_reduce(chmb_tts_err_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_out_of_sync <= or_reduce(chmb_tts_oos_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_warning <= or_reduce(chmb_tts_warn_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
                 else
                     tts_start_cntdwn_chmb <= tts_start_cntdwn_chmb - 1;
+                    tts_chmb_critical <= '0';
+                    tts_chmb_out_of_sync <= '0';
+                    tts_chmb_warning <= '0';
                 end if;
             end if;
         end if;
@@ -1011,7 +1018,7 @@ begin
                 tts_busy <= '1';
                 tts_start_cntdwn <= x"ff";
             else
-                if (tts_start_cntdwn /= x"00") then
+                if (tts_start_cntdwn = x"00") then
                     tts_busy <= '0';
                     tts_critical_error <= err_l1afifo_full or tts_chmb_critical_tts_clk or err_daqfifo_full_tts_clk;
                     tts_out_of_sync <= tts_chmb_out_of_sync_tts_clk;
