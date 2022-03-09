@@ -36,7 +36,7 @@ package project_config is
     --========================--
 
     constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => true);
-    constant CFG_SPY_LINK : t_spy_link_config := (0 => 36);
+    constant CFG_SPY_LINK : t_spy_link_config := (0 => 36, others => TXRX_NULL);
 
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));
 
@@ -45,8 +45,10 @@ package project_config is
         ( ------------------------------------------------ SLR0 ------------------------------------------------
             (((032, 032), (TXRX_NULL, 033), (033, 034), (TXRX_NULL, 035), (034, 028), (TXRX_NULL, 029), (035, 030), (TXRX_NULL, 031)), (LINK_NULL, LINK_NULL)), -- OH0, SLR 0
             others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
-        )
+        ),
+        others => (others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)))
     );
+
 
     --================================--
     -- MGT configuration

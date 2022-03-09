@@ -1198,15 +1198,19 @@ def generate_loc_constraints():
 def bool_to_vhdl(value):
     return "true" if value else "false"
 
-def arr_to_vhdl_map(arr):
+def arr_to_vhdl_map(arr, required_vhdl_length=None, others_value=None):
     s = "("
     if len(arr) == 1:
         s += "0 => %s" % str(arr[0])
+        if required_vhdl_length is not None and required_vhdl_length > len(arr):
+            s += ", others => %s" % others_value
     else:
         for i in range(len(arr)):
             s += "%s" % (str(arr[i]))
             if i < len(arr) - 1:
                 s += ", "
+            elif required_vhdl_length is not None and required_vhdl_length > len(arr):
+                s += ", others => %s" % others_value
     s += ")"
     return s
 
@@ -1261,7 +1265,7 @@ def generate_gem_oh_link_map(fiber_to_slr, station):
     print("    --========================--")
     print("")
     print("    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
-    print("    constant CFG_SPY_LINK : t_spy_link_config := %s;" % arr_to_vhdl_map(ldaq_fibers))
+    print("    constant CFG_SPY_LINK : t_spy_link_config := %s;" % arr_to_vhdl_map(ldaq_fibers, 4, "TXRX_NULL"))
     print("")
     print("    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));")
     print("")
@@ -1310,7 +1314,12 @@ def generate_gem_oh_link_map(fiber_to_slr, station):
 
         if num_ohs < GEM_MAX_OHS:
             print("            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))")
-        print("        )")
+
+        comma = "," if slr < 4 else ""
+        print("        )%s" % comma)
+
+    if CSC_NUM_SLR < 4:
+        print("        others => (others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)))")
     print("    );")
 
     return fiber_types

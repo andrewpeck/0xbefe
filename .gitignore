@@ -22,6 +22,8 @@ cxl_error.log
 **/ip_custom/*/src/*/*
 !**/ip_custom/*/src/*/*.xci
 
+/ge11_ctp7.gen
+
 /scripts/befe_config.py
 /scripts/results
 
