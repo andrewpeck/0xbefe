@@ -94,6 +94,8 @@ architecture Behavioral of sbits is
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_40m          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_160m         : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
@@ -153,11 +155,29 @@ begin
   -- Channel to Strip Mapping
   --------------------------------------------------------------------------------------------------------------------
 
+  process (clocks.clk160_0) is
+  begin
+    if (rising_edge(clocks.clk160_0)) then
+      vfat_sbits_160m <= vfat_sbits_raw;
+    end if;
+  end process;
+
+  process (clocks.clk40) is
+  begin
+    if (rising_edge(clocks.clk40)) then
+      vfat_sbits_40m <= vfat_sbits_raw;
+    end if;
+  end process;
+
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
 
-    -- deserializer --> sbits --> vfat_sbits_raw -->
-    --     vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
+    -- deserializer --> sbits --> reverse? --> vfat_sbits_raw -->
+    --
+    --  raw --> vfat_sbits_40m --> active vfats / hitmap
+    --
+    --  raw --> vfat_sbits_160m --> vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
+    --
 
     -- optionally reverse the sbit order... needed for some slots on ge11 ?
 
@@ -182,12 +202,13 @@ begin
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
       USE_DYNAMIC_MAPPING => true,
+      REGISTER_INPUT      => false,
       REGISTER_OUTPUT     => true
       )
     port map (
       clock       => clocks.clk160_0,
       mapping     => to_integer (unsigned (sbit_map_sel)),
-      channels_in => vfat_sbits_raw,
+      channels_in => vfat_sbits_160m,
       strips_out  => vfat_sbits_strip_mapped
       );
 
@@ -230,7 +251,7 @@ begin
   active_vfats_inst : entity work.active_vfats
     port map (
       clock          => clocks.clk40,
-      sbits_i        => sbits,
+      sbits_i        => vfat_sbits_40m,
       active_vfats_o => active_vfats
       );
 
@@ -243,7 +264,7 @@ begin
       clock_i   => clocks.clk40,
       reset_i   => hitmap_reset_i,
       acquire_i => hitmap_acquire_i,
-      sbits_i   => vfat_sbits_raw,
+      sbits_i   => vfat_sbits_40m,
       hitmap_o  => hitmap_sbits_o
       );
 
