@@ -35,4 +35,5 @@ gem/hdl/oh/generated/me0_x2o/oh_link_regs.vhd
 gem/hdl/daq/generated/me0_x2o/daq.vhd
 gem/hdl/slow_control/generated/me0_x2o/slow_control.vhd
 gem/hdl/trigger/generated/me0_x2o/trigger.vhd
+gem/hdl/trigger/generated/me0_x2o/sbit_me0.vhd
 common/hdl/slink_rocket/generated/me0_x2o/slink_rocket.vhd
