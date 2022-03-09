@@ -204,10 +204,10 @@ begin
 
     stripgen : for J in 0 to 63 generate
     begin
-      inj : if (J = 0) generate
+      inj : if (J = 23 or J=24 or J=25) generate
         vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
       end generate;
-      noinj : if (J /= 0) generate
+      noinj : if (J /= 23 and J/=24 and J/=25) generate
         vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J);
       end generate;
     end generate;
