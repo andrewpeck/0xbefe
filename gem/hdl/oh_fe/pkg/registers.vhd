@@ -354,7 +354,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 107;
+    constant REG_TRIG_NUM_REGS : integer := 104;
     constant REG_TRIG_ADDRESS_MSB : integer := 8;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(8 downto 0) := '0' & x"00";
@@ -451,19 +451,6 @@ package registers is
     constant REG_TRIG_CTRL_INVERT_VFAT11_TU_INVERT_MSB    : integer := 31;
     constant REG_TRIG_CTRL_INVERT_VFAT11_TU_INVERT_LSB     : integer := 24;
     constant REG_TRIG_CTRL_INVERT_VFAT11_TU_INVERT_DEFAULT : std_logic_vector(31 downto 24) := x"dd";
-
-    constant REG_TRIG_CTRL_SBITS_MUX_SBIT_MUX_SEL_ADDR    : std_logic_vector(8 downto 0) := '0' & x"0f";
-    constant REG_TRIG_CTRL_SBITS_MUX_SBIT_MUX_SEL_MSB    : integer := 8;
-    constant REG_TRIG_CTRL_SBITS_MUX_SBIT_MUX_SEL_LSB     : integer := 4;
-    constant REG_TRIG_CTRL_SBITS_MUX_SBIT_MUX_SEL_DEFAULT : std_logic_vector(8 downto 4) := '1' & x"0";
-
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_LSB_ADDR    : std_logic_vector(8 downto 0) := '0' & x"10";
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_LSB_MSB    : integer := 31;
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_LSB_LSB     : integer := 0;
-
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_MSB_ADDR    : std_logic_vector(8 downto 0) := '0' & x"11";
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_MSB_MSB    : integer := 31;
-    constant REG_TRIG_CTRL_SBITS_MUX_SBITS_MUX_MSB_LSB     : integer := 0;
 
     constant REG_TRIG_CTRL_TU_MASK_VFAT0_TU_MASK_ADDR    : std_logic_vector(8 downto 0) := '0' & x"12";
     constant REG_TRIG_CTRL_TU_MASK_VFAT0_TU_MASK_MSB    : integer := 7;

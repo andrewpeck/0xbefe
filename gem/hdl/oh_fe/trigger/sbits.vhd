@@ -45,9 +45,6 @@ entity sbits is
     inject_sbits_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
     inject_sbits_i      : in std_logic;
 
-    sbits_mux_sel_i : in  std_logic_vector (4 downto 0);
-    sbits_mux_o     : out std_logic_vector (63 downto 0);
-
     sot_invert_i : in std_logic_vector (NUM_VFATS-1 downto 0);    -- 24 or 12
     tu_invert_i  : in std_logic_vector (NUM_VFATS*8-1 downto 0);  -- 192 or 96
     tu_mask_i    : in std_logic_vector (NUM_VFATS*8-1 downto 0);  -- 192 or 96
@@ -111,32 +108,7 @@ architecture Behavioral of sbits is
 
   signal active_vfats_s1 : std_logic_vector (NUM_VFATS*8-1 downto 0);
 
-  signal sbits_mux_s0 : std_logic_vector (63 downto 0);
-  signal sbits_mux_s1 : std_logic_vector (63 downto 0);
-  signal sbits_mux    : std_logic_vector (63 downto 0);
-  signal aff_mux      : std_logic;
-
-  signal sbits_mux_sel : std_logic_vector (4 downto 0);
-
-  -- multiplex together the 1536 s-bits into a single chip-scope accessible register
-  -- don't want to affect timing, so do it through a couple of flip-flop stages
-
-  attribute mark_debug              : string;
-  attribute mark_debug of sbits_mux : signal is "TRUE";
-  attribute mark_debug of aff_mux   : signal is "TRUE";
-
 begin
-
-  process (clocks.clk40)
-  begin
-    if (rising_edge(clocks.clk40)) then
-      if (unsigned(sbits_mux_sel_i) > to_unsigned(NUM_VFATS, sbits_mux_sel_i'length)-1) then
-        sbits_mux_sel <= (others => '0');
-      else
-        sbits_mux_sel <= sbits_mux_sel_i;
-      end if;
-    end if;
-  end process;
 
   active_vfats_o <= active_vfats;
 
@@ -279,23 +251,6 @@ begin
       sbits_i        => vfat_sbits_40m,
       active_vfats_o => active_vfats
       );
-
-  --------------------------------------------------------------------------------------------------------------------
-  -- Sbits Monitor Multiplexer
-  --------------------------------------------------------------------------------------------------------------------
-
-  process (clocks.clk40)
-  begin
-    if (rising_edge(clocks.clk40)) then
-      sbits_mux_s0 <= vfat_sbits_40m(to_integer(unsigned(sbits_mux_sel)));
-      sbits_mux_s1 <= sbits_mux_s0;
-      sbits_mux    <= sbits_mux_s1;
-      sbits_mux_o  <= sbits_mux;
-
-      aff_mux <= active_vfats(to_integer(unsigned(sbits_mux_sel)));
-
-    end if;
-  end process;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Sbits hitmap
