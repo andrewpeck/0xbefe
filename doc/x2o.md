@@ -10,8 +10,8 @@ Link numbers are sequential from bottom to top, but skipping the QSFP cages dedi
 | Cage #14     | SLR 0 | 120, 121 | 52-55     |                                  |                            |
 | Cage #13     | SLR 0 | 123, 122 | 48-51     |                                  |                            |
 | Cage #12     | SLR 1 | 124      | 44-47     | CSC TTC TX                       | SFP+ 1G to ME2/1 CCB       |
-| Cage #11     | SLR 2 | 128      | 40-43     | CSC GBTX (PROMless)              |                            |
-| Cage #10     | SLR 2 | 131      | 36-39     | CSC GBTX (PROMless)              | FS 40G (?) to ODMB7        |
+| Cage #11     | SLR 2 | 128      | 40-43     | CSC GBTX (PROMless)              | FS 40G (?) to ODMB7        |
+| Cage #10     | SLR 2 | 131      | 36-39     | GEM LDAQ                         |                            |
 | Cage #9      | SLR 3 | 132, 135 | 32-35     | ME0 LpGBT                        |                            |
 | Cage #8      | SLR 3 | 134, 135 | 28-31     | ME0 LpGBT                        |                            |
 | Cage #7      | SLR 3 | 234, 235 | 24-27     | GE21 GBTX                        |                            |

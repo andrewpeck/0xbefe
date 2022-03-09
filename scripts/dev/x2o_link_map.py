@@ -8,12 +8,11 @@ RESERVED_GTYS = [126, 127, 231] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = [126, 127]
 # RESERVED_REFCLK1 = [125]
 RESERVED_REFCLK1 = []
-NUM_SLR = 4
 USE_QSFPDD = True
 RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH)
 
 ###############################################################
-########################## GEM / CSC ##########################
+############################# GEM #############################
 ###############################################################
 
 # FULL CONFIG
@@ -23,22 +22,35 @@ RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH)
 # CSC_NUM_DMB = 56
 
 # CONFIG FOR QSFP-DD
+GEM_NUM_SLR = 1
+GEM_MAX_OHS = 12
+
 GE11_NUM_OH = 0
-GE21_NUM_OH = 20
-ME0_NUM_OH = 6
-GEM_OH_QSFPS = []
+GE21_NUM_OH = 4 #20
+ME0_NUM_OH = 1 #6
+
+# QSFP assignment per GEM BLOCK
+GE21_OH_QSFPS = [[7, 6]]
+ME0_OH_QSFPS = [[9, 8]]
+GEM_USE_LDAQ = True
+GEM_LDAQ_QSFPS = [[10]]
+GEM_LDAQ_QSFP_CHANS = [[0]]
+
+###############################################################
+############################## CSC ############################
+###############################################################
 
 
 CSC_NUM_SLR = 1
 CSC_NUM_DMB = 2
-CSC_NUM_GBT = 8
+CSC_NUM_GBT = 4
 
 # QSFP assignment per CSC BLOCK
 CSC_DTH_QSFPS = [[5]]
 CSC_DMB_QSFPS = [[4]]
 CSC_LDAQ_QSFPS = [[4]]
 CSC_LDAQ_QSFP_CHANS = [[3]]
-CSC_GBT_QSFPS = [[10, 11]]
+CSC_GBT_QSFPS = [[11]]
 CSC_TTC_TX_QSFPS = [12] # global, not per SLR
 
 
@@ -1183,80 +1195,6 @@ def generate_loc_constraints():
 ################# GEM/CSC CODE GEN FUNCTIONS ##################
 ###############################################################
 
-# also returns MGT types needed
-def generate_gem_oh_link_map(fiber_to_slr):
-    NUM_LINKS = len(QSFP_TO_MGT) * 4
-    MAX_OHS = 48 if NUM_LINKS >= 60 else 4 if NUM_LINKS <= 16 else None # use 48 OHs on VU13P (max GE21 OHs), and 4 OHs on VU27P
-
-    ## GE11 (dummy for now)
-    ge11_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (")
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        ge11_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
-        print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-    print("    );")
-    print("")
-
-    ## GE21
-    ge21_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (")
-    if GE21_NUM_OH % NUM_SLR != 0:
-        print_red("ERROR: number of GE21 OHs (%d) is not divisible by number of SLRs (%d)" % (GE21_NUM_OH, NUM_SLR))
-        return
-    oh_per_slr = int(GE21_NUM_OH / NUM_SLR)
-    fiber = 0
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        if oh >= GE21_NUM_OH or fiber >= NUM_LINKS:
-            # fill the rest with dummies
-            print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-            continue
-
-        slr = int(oh / oh_per_slr)
-        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr:
-            fiber += 2
-            ge21_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
-
-        gbt_tx = [fiber, fiber + 1]
-        gbt_rx = gbt_tx
-        fiber += 2
-        ge21_link_types.extend(["CFG_MGT_GBTX"] * 2)
-        print("        (((%03d, %03d), (%03d, %03d), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" % (gbt_tx[0], gbt_rx[0], gbt_tx[1], gbt_rx[1], comma, oh, slr))
-
-    print("    );")
-    print("")
-
-    ## ME0
-    me0_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (")
-    if ME0_NUM_OH % NUM_SLR != 0:
-        print_red("ERROR: number of ME0 OHs (%d) is not divisible by number of SLRs (%d)" % (ME0_NUM_OH, NUM_SLR))
-        return
-    oh_per_slr = int(ME0_NUM_OH / NUM_SLR)
-    fiber = 0
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        if oh >= ME0_NUM_OH or fiber >= NUM_LINKS:
-            # fill the rest with dummies
-            print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-            continue
-
-        slr = int(oh / oh_per_slr)
-        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr or fiber_to_slr[fiber + 2] != slr or fiber_to_slr[fiber + 3] != slr or fiber_to_slr[fiber + 4] != slr or fiber_to_slr[fiber + 5] != slr or fiber_to_slr[fiber + 6] != slr or fiber_to_slr[fiber + 7] != slr:
-            fiber += 8
-            me0_link_types.extend(["CFG_MGT_TYPE_NULL"] * 8)
-
-        gbt_tx = [fiber, fiber + 1, fiber + 2, fiber + 3]
-        gbt_rx = [fiber, fiber + 1, fiber + 2, fiber + 3, fiber + 4, fiber + 5, fiber + 6, fiber + 7]
-        fiber += 8
-        me0_link_types.extend(["CFG_MGT_LPGBT"] * 8)
-        print("        (((%03d, %03d), (TXRX_NULL, %03d), (%03d, %03d),  (TXRX_NULL, %03d),  (%03d, %03d),   (TXRX_NULL, %03d),  (%03d, %03d),  (TXRX_NULL, %03d)), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" %
-              (gbt_tx[0], gbt_rx[0], gbt_rx[1], gbt_tx[1], gbt_rx[2], gbt_rx[3], gbt_tx[2], gbt_rx[4], gbt_rx[5], gbt_tx[3], gbt_rx[6], gbt_rx[7], comma, oh, slr))
-    print("    );")
-
-    return ge11_link_types, ge21_link_types, me0_link_types
-
 def bool_to_vhdl(value):
     return "true" if value else "false"
 
@@ -1271,6 +1209,111 @@ def arr_to_vhdl_map(arr):
                 s += ", "
     s += ")"
     return s
+
+# also returns MGT types needed
+def generate_gem_oh_link_map(fiber_to_slr, station):
+
+    if station not in [0, 2]:
+        print_red("ERROR: unsupported station: %d" % station)
+        exit()
+
+    fiber_types = ["CFG_MGT_TYPE_NULL"] * (len(QSFP_TO_MGT) * 4)
+
+    ldaq_fibers = []
+    for slr in range(GEM_NUM_SLR):
+        fiber = get_qsfp_fiber_idx(GEM_LDAQ_QSFPS[slr][0], GEM_LDAQ_QSFP_CHANS[slr][0])
+        ldaq_fibers.append(fiber)
+        fiber_types[fiber] = "CFG_MGT_GBE"
+
+    oh_version = 2 if station == 2 else 1 if station == 0 else None
+    num_ohs = GE21_NUM_OH if station == 2 else ME0_NUM_OH if station == 0 else None
+    num_gbts_per_oh = 2 if station == 2 else 8 if station == 0 else None
+    num_vfats_per_oh = 12 if station == 2 else 24 if station == 0 else None
+    gbt_widebus = 1 if station == 2 else 0 if station == 0 else None
+    trig_link_type = "OH_TRIG_LINK_TYPE_GBT" if station == 2 else "OH_TRIG_LINK_TYPE_NONE" if station == 0 else None
+    oh_qsfps = GE21_OH_QSFPS if station == 2 else ME0_OH_QSFPS if station == 0 else None
+
+    print("    --================================--")
+    print("    -- GEM blocks and associated types  ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_NUM_GEM_BLOCKS         : integer := %d; -- total number of GEM blocks to instanciate" % GEM_NUM_SLR)
+    print("    type t_int_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of integer;")
+    print("    type t_oh_trig_link_type_arr is array (0 to CFG_NUM_GEM_BLOCKS - 1) of t_oh_trig_link_type;")
+    print("")
+    print("    --================================--")
+    print("    -- GEM configuration                ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_GEM_STATION            : t_int_per_gem := (others => %d);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1" % station)
+    print("    constant CFG_OH_VERSION             : t_int_per_gem := (others => %d);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode" % oh_version)
+    print("    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => %d); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)" % num_ohs)
+    print("    constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (others => %d);  -- number of GBTs per OH" % num_gbts_per_oh)
+    print("    constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (others => %d); -- number of VFATs per OH" % num_vfats_per_oh)
+    print("    constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => %d);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)" % gbt_widebus)
+    print("")
+    print("    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (others => %s); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21" % trig_link_type)
+    print("    constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)")
+    print("    constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF")
+    print("")
+    print("    --========================--")
+    print("    --== Link configuration ==--")
+    print("    --========================--")
+    print("")
+    print("    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
+    print("    constant CFG_SPY_LINK : t_spy_link_config := %s;" % arr_to_vhdl_map(ldaq_fibers))
+    print("")
+    print("    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));")
+    print("")
+
+    # =============== OHs ===============
+    print("    constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (")
+    for slr in range(CSC_NUM_SLR):
+        print("        %d =>" % slr)
+        print("        ( ------------------------------------------------ SLR%d ------------------------------------------------" % slr)
+
+        rxs = []
+        txs = []
+        qsfp_idx = 0
+        for qsfp in oh_qsfps[slr]:
+            for chan in range(4):
+                rxs.append({"qsfp": qsfp, "chan": chan})
+                # for ME0 throw out TXs from every other QSFP
+                if station != 0 or qsfp_idx % 2 == 0:
+                    txs.append({"qsfp": qsfp, "chan": chan})
+            qsfp_idx += 1
+
+        for oh in range(num_ohs):
+            links = []
+            for gbt in range(8):
+                if gbt < num_gbts_per_oh:
+                    # RX
+                    rx_qsfp = rxs.pop(0)
+                    rx_fiber = get_qsfp_fiber_idx(rx_qsfp["qsfp"], rx_qsfp["chan"])
+                    rx_fiber_str = "%03d" % rx_fiber
+                    fiber_types[rx_fiber] = "CFG_MGT_GBTX" if station == 2 else "CFG_MGT_LPGBT" if station == 0 else None
+
+                    # TX
+                    tx_fiber_str = "TXRX_NULL"
+                    if station != 0 or gbt % 2 == 0:
+                        tx_qsfp = txs.pop(0)
+                        tx_fiber = get_qsfp_fiber_idx(tx_qsfp["qsfp"], tx_qsfp["chan"])
+                        tx_fiber_str = "%03d" % tx_fiber
+
+                    link = "(%s, %s)" % (tx_fiber_str, rx_fiber_str)
+                    links.append(link)
+                else:
+                    links.append("LINK_NULL")
+
+            comma = "," if oh < GEM_MAX_OHS - 1 else ""
+            print("            ((%s, %s, %s, %s, %s, %s, %s, %s), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" % (links[0], links[1], links[2], links[3], links[4], links[5], links[6], links[7], comma, oh, slr))
+
+        if num_ohs < GEM_MAX_OHS:
+            print("            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))")
+        print("        )")
+    print("    );")
+
+    return fiber_types
 
 # also returns MGT types needed
 def generate_csc_dmb_link_map(fiber_to_slr):
@@ -1453,12 +1496,15 @@ if __name__ == '__main__':
     heading("fiber to MGT map")
     gty_chan_to_fiber, fiber_to_slr = generate_fiber_to_mgt_vhdl()
 
-    # heading("GEM OH link map")
-    # ge11_link_types, ge21_link_types, me0_link_types = generate_gem_oh_link_map(fiber_to_slr)
-    # heading("GEM MGT configuration")
-    # generate_mgt_config("CFG_MGT_LINK_CONFIG_GE11", ge11_link_types, gty_chan_to_fiber)
-    # generate_mgt_config("CFG_MGT_LINK_CONFIG_GE21", ge21_link_types, gty_chan_to_fiber)
-    # generate_mgt_config("CFG_MGT_LINK_CONFIG_ME0", me0_link_types, gty_chan_to_fiber)
+    heading("GE2/1 OH link map")
+    ge21_link_types = generate_gem_oh_link_map(fiber_to_slr, 2)
+    heading("GE2/1 MGT configuration")
+    generate_mgt_config("CFG_MGT_LINK_CONFIG", ge21_link_types, gty_chan_to_fiber)
+
+    heading("ME0 OH link map")
+    me0_link_types = generate_gem_oh_link_map(fiber_to_slr, 0)
+    heading("ME0 MGT configuration")
+    generate_mgt_config("CFG_MGT_LINK_CONFIG", me0_link_types, gty_chan_to_fiber)
 
     heading("CSC OH link map")
     csc_link_types = generate_csc_dmb_link_map(fiber_to_slr)
