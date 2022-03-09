@@ -213,7 +213,7 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
 
         if (command == 'ge21-fpga-slow-control-phase-scan'):
             numScTrans = PHASE_SCAN_DEFAULT_NUM_SC_TRANSACTIONS if len(command_args) < 2 else parse_int(command_args[1])
-            
+
 
         if (command == 'ge21-program-phases'):
             initVfatRegAddrs()
@@ -287,6 +287,17 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
 
     # start the scan
     initVfatRegAddrs()
+
+    subheading('Checking if elink phase setting is working (setting all elink phases to 15, which turns off the elink, and making sure that communication does not work)')
+    for elink, vfat in elinkToVfatMap[gbtSelect].items():
+        setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, 15)
+        cfgRunGood, linkGood, syncErrCnt, daqCrcErrCnt = checkVfatElinkPhase(ohSelect, vfat, numSlowControlTransactions, numDaqPackets)
+        if (cfgRunGood == 1) or (linkGood == 1) or (syncErrCnt == 0) or (daqCrcErrCnt == 0):
+            print_red("ERROR: Phase setting is not working! After setting phase 15 on elink corresponding to VFAT %d, the link is still working, which should not be the case. Please cross check that the OH switches are configured correctly to enable GBT IC." % vfat)
+            exit()
+
+    print_green("All elinks respond to phase setting, will start the scan now")
+
     subheading('Starting GBT%d phase scan checking %d slow control transactions and %d daq data packets on each phase' % (gbtSelect, numSlowControlTransactions, numDaqPackets))
     for elink, vfat in elinkToVfatMap[gbtSelect].items():
         subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
@@ -294,42 +305,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
         for phase in range(0, 15):
             setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase)
 
-            # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
-            sleep(0.1)
-            write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
-            sleep(0.001)
-
-            # check slow control to the VFAT
-            cfgRunGood = 1
-            cfgAddr = get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
-            for i in range(numSlowControlTransactions):
-                #ret = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
-                ret = rReg(cfgAddr)
-                #if (ret != '0x00000000' and ret != '0x00000001'):
-                if (ret != 0 and ret != 1):
-                    cfgRunGood = 0
-                    break
-
-            # check sync status
-            linkGood = read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat)))
-            syncErrCnt = read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat)))
-
-            # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
-            daqCrcErrCnt = -1
-            if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
-                if numDaqPackets <= 0:
-                    wReg(cfgAddr, 0) # set the VFAT to sleep mode
-                else:
-                    wReg(cfgAddr, 1) # set the VFAT to run mode
-                    write_reg(get_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
-                    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
-                    genRunning = 1
-                    while genRunning == 1:
-                        genRunning = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING"))
-                    daqCrcErrCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
-                    daqEvtCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
-                    if daqEvtCnt == 0:
-                        daqCrcErrCnt = 999
+            cfgRunGood, linkGood, syncErrCnt, daqCrcErrCnt = checkVfatElinkPhase(ohSelect, vfat, numSlowControlTransactions, numDaqPackets)
 
             # print the results
             color = Colors.GREEN
@@ -357,6 +333,46 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     # reset the links
     sleep(0.1)
     write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+
+def checkVfatElinkPhase(ohSelect, vfat, numSlowControlTransactions, numDaqPackets):
+    # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
+    sleep(0.1)
+    write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+    sleep(0.001)
+
+    # check slow control to the VFAT
+    cfgRunGood = 1
+    cfgAddr = get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
+    for i in range(numSlowControlTransactions):
+        #ret = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+        ret = rReg(cfgAddr)
+        #if (ret != '0x00000000' and ret != '0x00000001'):
+        if (ret != 0 and ret != 1):
+            cfgRunGood = 0
+            break
+
+    # check sync status
+    linkGood = read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat)))
+    syncErrCnt = read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat)))
+
+    # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
+    daqCrcErrCnt = -1
+    if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
+        if numDaqPackets <= 0:
+            wReg(cfgAddr, 0) # set the VFAT to sleep mode
+        else:
+            wReg(cfgAddr, 1) # set the VFAT to run mode
+            write_reg(get_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+            write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+            genRunning = 1
+            while genRunning == 1:
+                genRunning = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING"))
+            daqCrcErrCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
+            daqEvtCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
+            if daqEvtCnt == 0:
+                daqCrcErrCnt = 999
+
+    return cfgRunGood, linkGood, syncErrCnt, daqCrcErrCnt
 
 def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
     # set phase
