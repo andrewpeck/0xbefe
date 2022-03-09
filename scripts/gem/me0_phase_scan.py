@@ -269,7 +269,8 @@ def find_phase_center(err_list):
         else:
             ngood_center = ngood_edge - int(ngood_max/2) - 1;
 
-    ngood_center = ngood_center % phase_max - 1
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
 
     if (ngood_max==0):
         ngood_center=0
@@ -301,8 +302,8 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
-    #value = (config[addr] & 0x0f) | (phase << 4)
-    value = (mpeek(addr) & 0x0f) | (phase << 4)
+    value = (config[addr] & 0x0f) | (phase << 4)
+    #value = (mpeek(addr) & 0x0f) | (phase << 4)
 
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13

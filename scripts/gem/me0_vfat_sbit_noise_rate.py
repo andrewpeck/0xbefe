@@ -73,6 +73,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     elink_sbit_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink
     channel_sbit_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
     reset_sbit_counter_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
+    reset_sbit_vfat_node = get_backend_node("BEFE.GEM_AMC.SBIT_ME0.CTRL.MODULE_RESET")  # To reset VFAT S-bit rate registers
 
     dac_node = {}
     vfat_counter_node = {}
@@ -178,7 +179,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for vfat in vfat_list:
             write_backend_reg(dac_node[vfat], thr)
             sleep(1e-3)
-        global_reset()
+        write_backend_reg(reset_sbit_vfat_node, 1)
         sleep(1.1)
         for vfat in vfat_list:
             sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime

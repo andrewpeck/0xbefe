@@ -39,7 +39,7 @@ TEMP_MAX  = 60
 # Voltage:
 VOLT_WARN = 0.05  # 5% range for Warning
 VOLT_MAX  = 0.10  # 10% range for Error
-VOLT_NOM  = [1.0, 1.0, 1.2, 1.8, 1.5, 2.5]
+VOLT_NOM  = [1.0, 1.0, 1.2, 1.84, 1.5, 2.5]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~CMD Line Output Headers~~~~~~~~~~~~~~~~
 SEM_HEAD = ["SEM_CNT", "SEM_D", "CRIT_CNT", "CRIT_D"]

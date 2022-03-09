@@ -69,6 +69,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     # Nodes for Sbit counters
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
     reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
+    reset_sbit_cluster_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
     sbit_monitor_nodes = []
     cluster_count_nodes = []
     for i in range(0,8):
@@ -138,7 +139,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
                 # Count number of clusters for VFATs in given time
                 write_backend_reg(reset_sbit_monitor_node, 1)
-                global_reset()
+                write_backend_reg(reset_sbit_cluster_node, 1)
                 sleep(runtime)
 
                 cluster_counts = []
