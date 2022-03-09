@@ -16,9 +16,9 @@ VTTX_testing_time_FULL = 300
 # number of words to check in PRBS loopback test, NOTE: UNITS ARE IN 1 MILLION WORDS
 MWRD_LIMIT_REDUCED = 1250
 # Number of iterations for testing OH FPGA Loading Path
-PROMless_Load_Iters_REDUCED = 100
+PROMless_Load_Iters_REDUCED = 10
 # VTTX link testing time: number of seconds to wait after resetting the error counters
-VTTX_testing_time_REDUCED = 30
+VTTX_testing_time_REDUCED = 5
 #################################################################
 
 # BER acceptance
