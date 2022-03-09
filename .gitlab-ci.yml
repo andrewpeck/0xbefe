@@ -16,7 +16,7 @@ include:
     - local: '/Top/ge11_ctp7/gitlab-ci.yml'
 
     # intermediate (devel) builds
-    # - local: '/Top/csc_apex/gitlab-ci-devel.yml'
+    - local: '/Top/csc_x2o/gitlab-ci-devel.yml'
     - local: '/Top/csc_cvp13/gitlab-ci-devel.yml'
     - local: '/Top/ge11_ctp7/gitlab-ci-devel.yml'
     # - local: '/Top/ge21_apex/gitlab-ci-devel.yml'
