@@ -88,21 +88,22 @@ end sbits;
 
 architecture Behavioral of sbits is
 
+  signal reverse_partitions : std_logic := '0';
+
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
   signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
   signal mask_l1a     : std_logic;
 
-  signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
-  signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
+  signal inject_sbits : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
+  -- deserializer --> sbits --> vfat_sbits_raw --> vfat_sbits_40/160m -->
+  --     vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_40m          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_160m         : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
-
-  constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
 
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
@@ -188,6 +189,14 @@ begin
   -- Channel to Strip Mapping
   --------------------------------------------------------------------------------------------------------------------
 
+  sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
+  begin
+    -- optionally reverse the sbit order... needed for some slots on ge11 ?
+    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS)
+                          when REVERSE_VFAT_SBITS(I) = '0'
+                          else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
+  end generate;
+
   process (clocks.clk160_0) is
   begin
     if (rising_edge(clocks.clk160_0)) then
@@ -201,32 +210,6 @@ begin
       vfat_sbits_40m <= vfat_sbits_raw;
     end if;
   end process;
-
-  sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
-  begin
-
-    -- deserializer --> sbits --> vfat_sbits_raw -->
-    --     vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
-
-    -- optionally reverse the sbit order... needed for some slots on ge11 ?
-
-    vfat_sbits_raw (I) <= sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS)
-                          when REVERSE_VFAT_SBITS(I) = '0'
-                          else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
-
-    -- inject sbits into the 0th channel
-
-    stripgen : for J in 0 to 63 generate
-    begin
-      inj : if (J = 0) generate
-        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
-      end generate;
-      noinj : if (J /= 0) generate
-        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J);
-      end generate;
-    end generate;
-
-  end generate;
 
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
@@ -246,12 +229,25 @@ begin
   --------------------------------------------------------------------------------
 
   sbit_inject_gen : for I in 0 to (NUM_VFATS-1) generate
+
+    stripgen : for J in 0 to 63 generate
+    begin
+      inj : if (J = 0) generate
+        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
+      end generate;
+      noinj : if (J /= 0) generate
+        vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J);
+      end generate;
+    end generate;
+
     process (clocks.clk40) is
       variable inj_cnt : integer range 0 to 296 := 0;
     begin
 
+      -- inject sbits into the 0th channel
+
       if (rising_edge(clocks.clk40)) then
-        if (inj_cnt = 296 or ttc.bc0='1') then
+        if (inj_cnt = 296 or ttc.bc0 = '1') then
           inj_cnt := 0;
         else
           inj_cnt := inj_cnt + 1;
@@ -494,7 +490,7 @@ begin
         if (reverse_partitions = '1') then
           clusters_o <= clusters_rev;
         else
-          clusters_o <=  clusters_norev;
+          clusters_o <= clusters_norev;
         end if;
       end if;
     end process;
