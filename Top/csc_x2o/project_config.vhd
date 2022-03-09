@@ -21,7 +21,7 @@ package project_config is
     --================================--
 
     constant CFG_NUM_DMBS       : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => 2);
-    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => 8);
+    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => 4);
     constant CFG_USE_SPY_LINK : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;
     constant CFG_USE_TTC_TX_LINK : boolean := true;
@@ -46,14 +46,10 @@ package project_config is
     constant CFG_GBT_LINK_CONFIG_ARR : t_gbt_link_config_arr_per_slr(0 to CFG_NUM_SLRS - 1)(0 to CFG_MAX_GBTS - 1) := (
         0 =>
         ( ------------------------------------------------ SLR0 ------------------------------------------------
-            (tx_fiber => 36, rx_fiber => 36), -- GBT0, SLR 0
-            (tx_fiber => 37, rx_fiber => 37), -- GBT1, SLR 0
-            (tx_fiber => 38, rx_fiber => 38), -- GBT2, SLR 0
-            (tx_fiber => 39, rx_fiber => 39), -- GBT3, SLR 0
-            (tx_fiber => 40, rx_fiber => 40), -- GBT4, SLR 0
-            (tx_fiber => 41, rx_fiber => 41), -- GBT5, SLR 0
-            (tx_fiber => 42, rx_fiber => 42), -- GBT6, SLR 0
-            (tx_fiber => 43, rx_fiber => 43), -- GBT7, SLR 0
+            (tx_fiber => 40, rx_fiber => 40), -- GBT0, SLR 0
+            (tx_fiber => 41, rx_fiber => 41), -- GBT1, SLR 0
+            (tx_fiber => 42, rx_fiber => 42), -- GBT2, SLR 0
+            (tx_fiber => 43, rx_fiber => 43), -- GBT3, SLR 0
             others => (tx_fiber => CFG_BOARD_MAX_LINKS, rx_fiber => CFG_BOARD_MAX_LINKS)
         )
     );
@@ -109,10 +105,10 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 032, refclk0_idx => 08, refclk1_idx => 2, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 032, refclk0_idx => 08, refclk1_idx => 2, is_master => false, ibert_inst => false),
         ----------------------------- quad 131 (SLR 2) -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, ibert_inst => false),
         ----------------------------- quad 132 (SLR 3) -----------------------------
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 040, refclk0_idx => 10, refclk1_idx => 3, is_master => false, ibert_inst => false),
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 040, refclk0_idx => 10, refclk1_idx => 3, is_master => false, ibert_inst => false),
