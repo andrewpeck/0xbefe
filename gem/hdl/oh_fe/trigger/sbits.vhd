@@ -85,8 +85,6 @@ end sbits;
 
 architecture Behavioral of sbits is
 
-  signal reverse_partitions : std_logic := '0';
-
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
   signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
@@ -314,8 +312,6 @@ begin
 
     signal clusters_masked   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal clusters_unmasked : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    signal clusters_rev      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    signal clusters_norev    : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
     signal cluster_count_masked   : t_std11_array (2 downto 0);
     signal cluster_count_unmasked : t_std11_array (2 downto 0);
@@ -404,51 +400,11 @@ begin
       cluster_count_unmasked_o <= cluster_count_unmasked(0);
     end generate;
 
-    reverse_gen : for I in clusters_o'range generate
-
-      --------------------------------------------------------------------------------
-      -- Reversed
-      --------------------------------------------------------------------------------
-
-      clusters_rev(I).vpf <= clusters_masked(I).vpf;
-      clusters_rev(I).cnt <= clusters_masked(I).cnt;
-      clusters_rev(I).prt <= clusters_masked(I).prt;
-      --new_address = 384 - (address + size)  (GE21)
-      --new_address = 191 - (address + size)  (GE11)
-      clusters_rev(I).adr <=
-        std_logic_vector(to_unsigned(MXSBITS*PARTITION_SIZE-1 -
-                                     (to_integer(unsigned(clusters_masked(I).adr)) +
-                                      to_integer(unsigned(clusters_masked(I).cnt))), clusters_rev(I).adr'length));
-
-      --------------------------------------------------------------------------------
-      -- Non-reversed
-      --------------------------------------------------------------------------------
-
-      clusters_norev(I) <= clusters_masked(I);
-
-    end generate;
-
     --------------------------------------------------------------------------------
     -- Cluster Outputs
     --------------------------------------------------------------------------------
 
-    process (clocks.clk160_0) is
-    begin
-      if (rising_edge(clocks.clk160_0)) then
-        reverse_partitions <= reverse_partitions_i;
-      end if;
-    end process;
-
-    process (clocks.clk160_0) is
-    begin
-      if (rising_edge(clocks.clk160_0)) then
-        if (reverse_partitions = '1') then
-          clusters_o <= clusters_rev;
-        else
-          clusters_o <= clusters_norev;
-        end if;
-      end if;
-    end process;
+    clusters_o <= clusters_masked;
 
     --------------------------------------------------------------------------------
     -- Cluster TMR Output
