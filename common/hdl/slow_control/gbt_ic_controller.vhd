@@ -363,7 +363,7 @@ begin
     ic_r_data_o <= ic_r_data;
 
     -- IC rx error control
-    process(gbt_clk_i, ic_r_valid)
+    process(gbt_clk_i)
     begin
         if (rising_edge(gbt_clk_i)) then
 

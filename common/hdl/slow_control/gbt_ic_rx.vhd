@@ -153,7 +153,13 @@ begin
                     if (valid_i = '1') then
                         rx_state               <= LENGTH0;
                         downlink_parity_ok_int <= frame_i(0);
-                        parity_int             <= parity_int xor frame_i;
+
+                        if (lpgbt_version = '0') then
+                            parity_int         <= frame_i;
+                        elsif (lpgbt_version = '1') then
+                            parity_int         <= parity_int xor frame_i;
+                        end if;
+
                     end if;
 
                 when LENGTH0 =>
