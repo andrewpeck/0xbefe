@@ -1472,6 +1472,7 @@ def generate_mgt_config(name, link_types, gty_chan_to_fiber):
             if qpll_type is None and qpll_type_needed != "QPLL_NULL":
                 qpll_type = qpll_type_needed
                 qpll_inst = qpll_type_needed
+                qpll_idx = idx
             elif qpll_type is not None and qpll_type_needed != "QPLL_NULL" and qpll_type != qpll_type_needed and qpll_type not in MGT_TYPE_COMPATIBLE_QPLLS[mgt_type]:
                 print_red("QPLL type conflict on MGT channel #%d (quad %d): qpll type needed = %s, but the quad has instantiated type %s" % (idx, quad, qpll_type_needed, qpll_type))
                 return
@@ -1484,8 +1485,8 @@ def generate_mgt_config(name, link_types, gty_chan_to_fiber):
             refclk0_idx = GTY_REFCLK_IDX[0][quad_idx]
             refclk1_idx = GTY_REFCLK_IDX[1][quad_idx]
 
-            print("        (mgt_type => %s, qpll_inst_type => %s, qpll_idx => %03d, refclk0_idx => %02d, refclk1_idx => %d, is_master => %s, ibert_inst => %s)%s" %
-                  (mgt_type.ljust(mgt_type_chars), qpll_inst.ljust(qpll_type_chars), qpll_idx, refclk0_idx, refclk1_idx, is_master, ibert_inst, comma))
+            print("        (mgt_type => %s, qpll_inst_type => %s, qpll_idx => %03d, refclk0_idx => %02d, refclk1_idx => %d, is_master => %s, ibert_inst => %s)%s -- MGT %d" %
+                  (mgt_type.ljust(mgt_type_chars), qpll_inst.ljust(qpll_type_chars), qpll_idx, refclk0_idx, refclk1_idx, is_master, ibert_inst, comma, idx))
 
     print("    );")
 
