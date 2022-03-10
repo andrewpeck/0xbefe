@@ -82,8 +82,8 @@ package board_config_package is
 
     -- defines the MGT TX and RX index for each fiber index
     -- each line here corresponds to a logical link number (starting at 0), where the first element refers to the TX MGT number, and the second element refers to the RX MGT number (inversions are always noted in the comments)    
-    -- DUMMY: fiber 16 - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
-    -- note that GTH channel #16 is used as a placeholder for fiber links that are not connected to the FPGA
+    -- DUMMY: last fiber - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
+    -- note that MGT_NULL is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
         --========= QSFP cage #0 =========--
         (059, 061, false, true ), -- fiber 0 (SLR 0)
