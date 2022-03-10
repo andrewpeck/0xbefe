@@ -1415,10 +1415,30 @@
           fw_signal="ic_link_select" fw_default="0b000000"/>
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
-          fw_signal="ic_read_data"/>
+          fw_signal="ic_read_data" fw_read_ready_signal="ic_read_valid"/>
     <node id="GBT_VERSION" address="0x8" mask ="0x00000001" permission="rw"
           description="lpGBT version 0 or 1"
           fw_signal="gbt_version" fw_default="0x00"/>      
+    <node id="READ_STATUS" address="0x10">
+      <node id="READ_DONE" address="0x0" mask="0x00000001" permission="r"
+	  description="IC read/write transaction is complete (reset for every execute)"
+	  fw_signal="ic_read_done"/>
+      <node id="UPLINK_PARITY" address="0x0" mask="0x00000002" permission="r"
+          description="Set to '1' if uplink parity check passes"
+          fw_signal="ic_read_stat(1)"/>
+      <node id="DOWNLINK_PARITY" address="0x0" mask="0x00000004" permission="r"
+          description="Set to '1' if downlink parity check passes"
+          fw_signal="ic_read_stat(2)"/>
+      <node id="GBTX_ADDRESS" address="0x0" mask="0x00000008" permission="r"
+          description="Set to '1' if gbt chip address received matches value written"
+          fw_signal="ic_read_stat(3)"/>
+      <node id="RW_LENGTH" address="0x0" mask="0x00000010" permission="r"
+          description="Set to '1' if number of data words received matches rw length chosen"
+          fw_signal="ic_read_stat(4)"/>
+      <node id="REG_ADDRESS" address="0x0" mask="0x00000020" permission="r"
+          description="Set to '1' if register address received matches address sent"
+          fw_signal="ic_read_stat(5)"/>
+    </node>
   </node>
 
   <node id="VFAT3" address="0x4000">
