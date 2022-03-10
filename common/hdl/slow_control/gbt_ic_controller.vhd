@@ -395,6 +395,6 @@ begin
         end if;
     end process;
 
-    ic_read_valid_o <= ic_read_done_o and (and_reduce(ic_read_stat_o));
+    ic_read_valid_o <= ic_read_done_o and ic_read_stat_o(0) and ic_read_stat_o(1) and ic_read_stat_o(3) and ic_read_stat_o(4) and ic_read_stat_o(5);
 
 end Behavioral;
