@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: TTC_CLOCKS
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Given a jitter cleaned TTC clock (160MHz, coming from MGT ref) and a reference 40MHz TTC clock from the backplane, this module   
 --              generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks that are phase aligned with the reference TTC clock from the backplane.
 --              All clocks are generated from the jitter cleaned clock and then phase shifted to match the reference, using PLL to check for phase alignment.
