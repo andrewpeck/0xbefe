@@ -42,9 +42,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
     link_good_node = {}
     sync_error_node = {}
     reg_node = {}
-    sc_transactions_node = get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.VFAT3.TRANSACTION_CNT")
-    sc_crc_error_node = get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.VFAT3.CRC_ERROR_CNT")
-    sc_timeout_error_node = get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.VFAT3.TIMEOUT_ERROR_CNT")
+    sc_transactions_node = get_backend_node("BEFE.GEM.SLOW_CONTROL.VFAT3.TRANSACTION_CNT")
+    sc_crc_error_node = get_backend_node("BEFE.GEM.SLOW_CONTROL.VFAT3.CRC_ERROR_CNT")
+    sc_timeout_error_node = get_backend_node("BEFE.GEM.SLOW_CONTROL.VFAT3.TIMEOUT_ERROR_CNT")
     initial_sc_transaction_count = read_backend_reg(sc_transactions_node)
     initial_sc_crc_error_count = read_backend_reg(sc_crc_error_node)
     initial_sc_timeout_error_count = read_backend_reg(sc_timeout_error_node)
@@ -55,8 +55,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
         check_gbt_link_ready(oh_select, gbt_select)
 
-        link_good_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
-        sync_error_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
+        link_good_node[vfat] = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
+        sync_error_node[vfat] = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
         link_good = read_backend_reg(link_good_node[vfat])
         sync_err = read_backend_reg(sync_error_node[vfat])
         if system!="dryrun" and (link_good == 0 or sync_err > 0):
@@ -65,7 +65,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
 
         reg_node[vfat] = {}
         for reg in reg_list:
-            reg_node[vfat][reg] = get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.%s" % (oh_select, vfat, reg))
+            reg_node[vfat][reg] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.%s" % (oh_select, vfat, reg))
 
     # Loop over registers
     for reg in reg_list:

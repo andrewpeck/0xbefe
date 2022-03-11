@@ -555,7 +555,7 @@ class TopScreenDaq(TopScreen):
         if self.is_csc:
             num_inputs = rw.read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS", verbose=False)
         elif self.is_gem:
-            num_inputs = rw.read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH", verbose=False)
+            num_inputs = rw.read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH", verbose=False)
         else:
             raise ValueError("It's not GEM nor CSC hmm")
 

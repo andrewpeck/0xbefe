@@ -268,13 +268,13 @@ def befe_get_all_links():
     ############### GEM ###############
     if flavor.to_string() == "GEM_AMC": # GEM
         ### OH links ###
-        num_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-        num_gbts = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+        num_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+        num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
         for oh in range(num_ohs):
             # GBT links
             for gbt in range(num_gbts):
-                tx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_TX" % (oh, gbt))
-                rx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_RX" % (oh, gbt))
+                tx_link = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_TX" % (oh, gbt))
+                rx_link = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_RX" % (oh, gbt))
                 gbt_label = color_string("OH%d GBT%d" % (oh, gbt), Colors.GREEN)
                 if tx_link < num_links:
                     tx_usage[tx_link] = gbt_label
@@ -282,17 +282,17 @@ def befe_get_all_links():
                     rx_usage[rx_link] = gbt_label
 
         ### trigger TX links ###
-        use_trig_tx = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.USE_TRIG_TX_LINKS")
-        num_trig_tx = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_TRIG_TX_LINKS")
+        use_trig_tx = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.USE_TRIG_TX_LINKS")
+        num_trig_tx = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_TRIG_TX_LINKS")
         for trig_tx in range(num_trig_tx):
-            tx_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.TRIG_TX_LINK_CONFIG.TX%d_LINK" % trig_tx)
+            tx_link = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.TRIG_TX_LINK_CONFIG.TX%d_LINK" % trig_tx)
             if tx_link < num_links:
                 tx_usage[tx_link] = color_string("TRIG TX%d" % trig_tx, Colors.GREEN)
 
         ### Local DAQ ###
-        use_ldaq_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.USE_LOCAL_DAQ_LINK")
+        use_ldaq_link = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.USE_LOCAL_DAQ_LINK")
         if use_ldaq_link != 0:
-            ldaq_link = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.LOCAL_DAQ_LINK")
+            ldaq_link = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.LOCAL_DAQ_LINK")
             if ldaq_link < num_links:
                 tx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
                 rx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
@@ -355,7 +355,7 @@ def befe_config_links(loopback_test=False):
     gbt_rx_invert = False
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     if flavor == 0 and not loopback_test: # GEM
-        gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+        gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
         if gem_station == 1:
             gbt_tx_invert = True
         elif gem_station == 2:
@@ -392,10 +392,10 @@ def befe_get_fw_info():
 
     flavor_str = "UNKNOWN FLAVOR"
     if fw_flavor == 0:
-        gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+        gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
         flavor_str = "GE1/1" if gem_station == 1 else "GE2/1" if gem_station == 2 else "ME0" if gem_station == 0 else "UNKNOWN GEM STATION"
-        oh_version = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_VERSION")
-        num_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+        oh_version = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.OH_VERSION")
+        num_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         flavor_str += " (%d OHv%d)" % (num_ohs, oh_version)
     elif fw_flavor == 1:
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")

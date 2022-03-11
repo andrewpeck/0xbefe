@@ -66,7 +66,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     daq_crc_error      = [[0 for phase in range(16)] for vfat in range(24)]
     errs         = [[0 for phase in range(16)] for vfat in range(24)]
 
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
@@ -74,7 +74,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
         #print("Configuring VFAT %d" % (vfat))
-        #hwid_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
+        #hwid_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
         #output = gem_utils.simple_read_backend_reg(hwid_node, -9999)
         #if output == -9999:
         #    setVfatRxPhase(system, oh_select, vfat, 6)
@@ -89,15 +89,15 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         #configureVfat(1, vfat, oh_select, 0)
         #for i in range(128):
         #    enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
-        #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 0)
+        #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 0)
 
     # Configure TTC Generator
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), 500) # 80 kHz
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0) # Disable Calpulse
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), 10000)
-    cyclic_running_node = gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING")
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), 500) # 80 kHz
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0) # Disable Calpulse
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), 10000)
+    cyclic_running_node = gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
     for phase in range(0, 16):
         print("Scanning phase %d" % phase)
@@ -117,7 +117,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
             sleep(0.1)
 
             # Check Slow Control
-            cfg_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat))
+            cfg_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat))
             for iread in range(depth):
                 vfat_cfg_run = gem_utils.simple_read_backend_reg(cfg_node, 9999)
                 if vfat_cfg_run != 0 and vfat_cfg_run != 1:
@@ -126,8 +126,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                 #cfg_run[vfat][phase] += (vfat_cfg_run != 0 and vfat_cfg_run != 1)
 
             # Check Link Good and Sync Errors
-            link_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
-            sync_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
+            link_node = gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
+            sync_node = gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
             link_good[vfat][phase]    = gem_utils.simple_read_backend_reg(link_node, 0)
             sync_err_cnt[vfat][phase] = gem_utils.simple_read_backend_reg(sync_node, 9999)
 
@@ -136,27 +136,27 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
             if daq_err:
                 if system == "dryrun" or (link_good[vfat][phase]==1 and sync_err_cnt[vfat][phase]==0 and cfg_run[vfat][phase]==0):
                     configureVfat(1, vfat, oh_select, 1) # configure VFAT with low threshold
-                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), 0) # low threshold for random data
-                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 1)
+                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), 0) # low threshold for random data
+                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 1)
                     for i in range(128):
                         enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
 
                     # Send L1A to get DAQ events from VFATs
-                    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
                     cyclic_running = 1
                     while cyclic_running:
                         cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
-                    daq_event_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (oh_select, vfat)))
+                    daq_event_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (oh_select, vfat)))
                     if system == "dryrun":
-                        daq_crc_error[vfat][phase] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
+                        daq_crc_error[vfat][phase] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
                     else:
                         if daq_event_counter == 10000%(2**16):
-                            daq_crc_error[vfat][phase] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
+                            daq_crc_error[vfat][phase] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
                         else:
                             print (Colors.YELLOW + "\tProblem with DAQ event counter=%d"%(daq_event_counter) + Colors.ENDC)
                     configureVfat(0, vfat, oh_select, 0) # unconfigure VFAT
-                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 0)
+                    #write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_RUN"%(oh_select,vfat)), 0)
             else:
                 daq_crc_error[vfat][phase]=0
 
@@ -171,9 +171,9 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                 result_str += "\tResults of VFAT#%02d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (vfat, link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase])
             result_str += Colors.ENDC
             print(result_str)
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
 
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
     centers = 24*[0]
     widths  = 24*[0]
 

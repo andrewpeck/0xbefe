@@ -30,7 +30,7 @@ def read_rx_power(channel):
 
 def read_rx_power_from_gbt(oh, gbt):
     # get the optical channel for this OH and GBT
-    chan = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_RX" % (oh, gbt))
+    chan = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.OH_LINK_CONFIG.OH%d.GBT%d_RX" % (oh, gbt))
     return read_rx_power(chan)
 
 def read_rx_power_all():
