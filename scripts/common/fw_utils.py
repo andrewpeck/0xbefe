@@ -266,7 +266,7 @@ def befe_get_all_links():
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
 
     ############### GEM ###############
-    if flavor.to_string() == "GEM_AMC": # GEM
+    if flavor.to_string() == "GEM":
         ### OH links ###
         num_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")

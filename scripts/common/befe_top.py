@@ -59,7 +59,7 @@ class TopScreen:
     app = None        # set by the pap
     screen_idx = None # set by the app
 
-    gem_csc = None    # "GEM_AMC" or "CSC_FED"
+    gem_csc = None    # "GEM" or "CSC_FED"
     is_gem = None     # bool
     is_csc = None     # bool
 

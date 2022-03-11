@@ -48,7 +48,7 @@ def promless_load(bitfile_name, verify=True):
 
     write_reg(get_node("BEFE.PROMLESS.FIRMWARE_SIZE"), len(bytes))
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
-    if fw_flavor.to_string() == "GEM_AMC":
+    if fw_flavor.to_string() == "GEM":
         write_reg(get_node("BEFE.GEM.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
     elif fw_flavor.to_string() == "CSC_FED":
         write_reg(get_node("BEFE.CSC_FED.CSC_SYSTEM.PROMLESS.FIRMWARE_SIZE"), len(bytes))
