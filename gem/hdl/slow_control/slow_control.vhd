@@ -26,7 +26,8 @@ entity slow_control is
         g_NUM_OF_OHs        : integer;
         g_NUM_GBTS_PER_OH   : integer;
         g_IPB_CLK_PERIOD_NS : integer;
-        g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted here and in gbt_ic_controller.vhd
+        g_DEBUG             : boolean := false; -- if this is set to true, some chipscope cores will be inserted here and in gbt_ic_controller.vhd
+        g_DEBUG_IC          : boolean
     );
     port(
         -- reset
@@ -144,8 +145,10 @@ architecture slow_control_arch of slow_control is
     signal ic_rw_length         : std_logic_vector(2 downto 0);
     signal ic_write_req         : std_logic;
     signal ic_write_done        : std_logic;
-    signal ic_read_req          : std_logic; 
+    signal ic_read_req          : std_logic;
+    signal ic_read_valid        : std_logic; 
     signal ic_read_done         : std_logic;
+    signal ic_read_stat         : std_logic_vector(5 downto 0);-- := (others => '1');
     signal ic_gbtx_i2c_addr     : std_logic_vector(6 downto 0);
     --signal ic_r_valid           : std_logic;
     signal gbt_version		: std_logic;
@@ -256,7 +259,7 @@ begin
     
     i_ic_controller : entity work.gbt_ic_controller
         generic map(
-	    g_DEBUG	      => g_DEBUG
+	    g_DEBUG	      => g_DEBUG_IC
 --            g_GBTX_I2C_ADDRESS => x"1"
         )
         port map(
@@ -273,7 +276,10 @@ begin
             ic_write_req_i    => ic_write_req,
             ic_write_done_o   => ic_write_done,
             ic_read_req_i     => ic_read_req,
-            ic_read_valid_o   => ic_read_done
+            ic_read_valid_o   => ic_read_valid,
+	    ic_read_done_o    => ic_read_done,
+            ic_read_stat_o    => ic_read_stat
+
         );
     
     ic_rx_elink <= gbt_rx_ic_elinks_i(to_integer(unsigned(ic_link_select)));

@@ -92,80 +92,80 @@ package board_config_package is
     -- each line here corresponds to a logical link number (starting at 0), where the first element refers to the TX MGT number, and the second element refers to the RX MGT number (inversions are always noted in the comments)
     -- DUMMY: last fiber - use this for unconnected channels (e.g. the non-existing GBT#2 in GE2/1)
     -- note that MGT_NULL is used as a placeholder for fiber links that are not connected to the FPGA
-	constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
-	    --========= QSFP cage #0 =========--
-	    (059, 061, false, true ), -- fiber 0 (SLR 0)
-	    (058, 056, true , false), -- fiber 1 (SLR 0)
-	    (061, 059, false, true ), -- fiber 2 (SLR 0)
-	    (060, 058, true , false), -- fiber 3 (SLR 0)
-	    --========= QSFP cage #1 =========--
-	    (070, 070, true , false), -- fiber 4 (SLR 0)
-	    (071, 065, false, true ), -- fiber 5 (SLR 0)
-	    (068, 068, false, false), -- fiber 6 (SLR 0)
-	    (069, 071, false, true ), -- fiber 7 (SLR 0)
-	    --========= QSFP cage #2 =========--
-	    (073, 073, false, true ), -- fiber 8 (SLR 1)
-	    (072, 072, false, false), -- fiber 9 (SLR 1)
-	    (075, 075, false, true ), -- fiber 10 (SLR 1)
-	    (074, 074, false, false), -- fiber 11 (SLR 1)
-	    --========= QSFP cage #3 =========--
-	    (086, 086, false, false), -- fiber 12 (SLR 1)
-	    (087, 087, false, true ), -- fiber 13 (SLR 1)
-	    (084, 084, false, false), -- fiber 14 (SLR 1)
-	    (085, 085, false, true ), -- fiber 15 (SLR 1)
-	    --========= QSFP cage #4 =========--
-	    (089, 089, false, false), -- fiber 16 (SLR 2)
-	    (088, 088, false, true ), -- fiber 17 (SLR 2)
-	    (091, 091, false, false), -- fiber 18 (SLR 2)
-	    (090, 090, false, true ), -- fiber 19 (SLR 2)
-	    --========= QSFP cage #6 =========--
-	    (101, 101, true , false), -- fiber 20 (SLR 3)
-	    (100, 100, false, true ), -- fiber 21 (SLR 3)
-	    (103, 103, true , false), -- fiber 22 (SLR 3)
-	    (114, 102, false, true ), -- fiber 23 (SLR 3)
-	    --========= QSFP cage #7 =========--
-	    (110, 114, false, true ), -- fiber 24 (SLR 3)
-	    (111, 109, true , false), -- fiber 25 (SLR 3)
-	    (112, 112, false, true ), -- fiber 26 (SLR 3)
-	    (113, 111, true , false), -- fiber 27 (SLR 3)
-	    --========= QSFP cage #8 =========--
-	    (051, 049, false, true ), -- fiber 28 (SLR 3)
-	    (050, 050, true , false), -- fiber 29 (SLR 3)
-	    (053, 051, false, true ), -- fiber 30 (SLR 3)
-	    (052, 052, true , false), -- fiber 31 (SLR 3)
-	    --========= QSFP cage #9 =========--
-	    (040, 040, true , false), -- fiber 32 (SLR 3)
-	    (041, 041, false, true ), -- fiber 33 (SLR 3)
-	    (054, 042, true , false), -- fiber 34 (SLR 3)
-	    (043, 043, false, true ), -- fiber 35 (SLR 3)
-	    --========= QSFP cage #10 =========--
-	    (039, 039, true , true ), -- fiber 36 (SLR 2)
-	    (038, 038, true , false), -- fiber 37 (SLR 2)
-	    (037, 037, true , true ), -- fiber 38 (SLR 2)
-	    (036, 036, true , false), -- fiber 39 (SLR 2)
-	    --========= QSFP cage #11 =========--
-	    (024, 024, true , false), -- fiber 40 (SLR 2)
-	    (025, 025, true , true ), -- fiber 41 (SLR 2)
-	    (026, 026, true , false), -- fiber 42 (SLR 2)
-	    (027, 027, true , true ), -- fiber 43 (SLR 2)
-	    --========= QSFP cage #12 =========--
-	    (016, 016, false, true ), -- fiber 44 (SLR 1)
-	    (017, 017, false, false), -- fiber 45 (SLR 1)
-	    (018, 018, false, true ), -- fiber 46 (SLR 1)
-	    (019, 019, false, false), -- fiber 47 (SLR 1)
-	    --========= QSFP cage #13 =========--
-	    (015, 009, true , false), -- fiber 48 (SLR 0)
-	    (014, 014, false, true ), -- fiber 49 (SLR 0)
-	    (013, 015, true , false), -- fiber 50 (SLR 0)
-	    (012, 012, true , true ), -- fiber 51 (SLR 0)
-	    --========= QSFP cage #14 =========--
-	    (002, 002, false, true ), -- fiber 52 (SLR 0)
-	    (003, 005, true , false), -- fiber 53 (SLR 0)
-	    (004, 000, false, true ), -- fiber 54 (SLR 0)
-	    (005, 003, true , false), -- fiber 55 (SLR 0)
-	    --=== DUMMY fiber - use for unconnected channels ===--
-	    others => (MGT_NULL, MGT_NULL, false, false)
-	);
+    constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
+        --========= QSFP cage #0 =========--
+        (059, 061, false, true ), -- fiber 0 (SLR 0)
+        (058, 056, true , false), -- fiber 1 (SLR 0)
+        (061, 059, false, true ), -- fiber 2 (SLR 0)
+        (060, 058, true , false), -- fiber 3 (SLR 0)
+        --========= QSFP cage #1 =========--
+        (070, 070, true , false), -- fiber 4 (SLR 0)
+        (071, 065, false, true ), -- fiber 5 (SLR 0)
+        (068, 068, false, false), -- fiber 6 (SLR 0)
+        (069, 071, false, true ), -- fiber 7 (SLR 0)
+        --========= QSFP cage #2 =========--
+        (073, 073, false, true ), -- fiber 8 (SLR 1)
+        (072, 072, false, false), -- fiber 9 (SLR 1)
+        (075, 075, false, true ), -- fiber 10 (SLR 1)
+        (074, 074, false, false), -- fiber 11 (SLR 1)
+        --========= QSFP cage #3 =========--
+        (086, 086, false, false), -- fiber 12 (SLR 1)
+        (087, 087, false, true ), -- fiber 13 (SLR 1)
+        (084, 084, false, false), -- fiber 14 (SLR 1)
+        (085, 085, false, true ), -- fiber 15 (SLR 1)
+        --========= QSFP cage #4 =========--
+        (089, 089, false, false), -- fiber 16 (SLR 2)
+        (088, 088, false, true ), -- fiber 17 (SLR 2)
+        (091, 091, false, false), -- fiber 18 (SLR 2)
+        (090, 090, false, true ), -- fiber 19 (SLR 2)
+        --========= QSFP cage #6 =========--
+        (101, 101, true , false), -- fiber 20 (SLR 3)
+        (100, 100, false, true ), -- fiber 21 (SLR 3)
+        (103, 103, true , false), -- fiber 22 (SLR 3)
+        (114, 102, false, true ), -- fiber 23 (SLR 3)
+        --========= QSFP cage #7 =========--
+        (110, 114, false, true ), -- fiber 24 (SLR 3)
+        (111, 109, true , false), -- fiber 25 (SLR 3)
+        (112, 112, false, true ), -- fiber 26 (SLR 3)
+        (113, 111, true , false), -- fiber 27 (SLR 3)
+        --========= QSFP cage #8 =========--
+        (051, 049, false, true ), -- fiber 28 (SLR 3)
+        (050, 050, true , false), -- fiber 29 (SLR 3)
+        (053, 051, false, true ), -- fiber 30 (SLR 3)
+        (052, 052, true , false), -- fiber 31 (SLR 3)
+        --========= QSFP cage #9 =========--
+        (040, 040, true , false), -- fiber 32 (SLR 3)
+        (041, 041, false, true ), -- fiber 33 (SLR 3)
+        (054, 042, true , false), -- fiber 34 (SLR 3)
+        (043, 043, false, true ), -- fiber 35 (SLR 3)
+        --========= QSFP cage #10 =========--
+        (039, 039, true , true ), -- fiber 36 (SLR 2)
+        (038, 038, true , false), -- fiber 37 (SLR 2)
+        (037, 037, true , true ), -- fiber 38 (SLR 2)
+        (036, 036, true , false), -- fiber 39 (SLR 2)
+        --========= QSFP cage #11 =========--
+        (024, 024, true , false), -- fiber 40 (SLR 2)
+        (025, 025, true , true ), -- fiber 41 (SLR 2)
+        (026, 026, true , false), -- fiber 42 (SLR 2)
+        (027, 027, true , true ), -- fiber 43 (SLR 2)
+        --========= QSFP cage #12 =========--
+        (016, 016, false, true ), -- fiber 44 (SLR 1)
+        (017, 017, false, false), -- fiber 45 (SLR 1)
+        (018, 018, false, true ), -- fiber 46 (SLR 1)
+        (019, 019, false, false), -- fiber 47 (SLR 1)
+        --========= QSFP cage #13 =========--
+        (015, 009, true , false), -- fiber 48 (SLR 0)
+        (014, 014, false, true ), -- fiber 49 (SLR 0)
+        (013, 015, true , false), -- fiber 50 (SLR 0)
+        (012, 012, true , true ), -- fiber 51 (SLR 0)
+        --========= QSFP cage #14 =========--
+        (002, 002, false, true ), -- fiber 52 (SLR 0)
+        (003, 005, true , false), -- fiber 53 (SLR 0)
+        (004, 000, false, true ), -- fiber 54 (SLR 0)
+        (005, 003, true , false), -- fiber 55 (SLR 0)
+        --=== DUMMY fiber - use for unconnected channels ===--
+        others => (MGT_NULL, MGT_NULL, false, false)
+    );
     
     --================================--
     -- MGT configuration
