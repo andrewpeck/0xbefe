@@ -18,6 +18,9 @@ use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.ttc_pkg.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity sbit_monitor is
   generic(
     g_NUM_OF_OHs : integer := 1;
@@ -308,7 +311,7 @@ begin
       end if;
     end process;
 
-    xpm_fifo_sync_inst : entity work.xpm_fifo_sync
+    xpm_fifo_sync_inst : xpm_fifo_sync
       generic map (
         DOUT_RESET_VALUE    => "0",       -- String
         ECC_MODE            => "en_ecc",  -- String
