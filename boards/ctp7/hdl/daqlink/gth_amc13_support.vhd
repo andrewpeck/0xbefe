@@ -17,6 +17,7 @@ entity gth_amc13_support is
         DONT_RESET_ON_DATA_ERROR_IN : in  std_logic;
         Q2_CLK0_GTREFCLK_PAD_N_IN   : in  std_logic;
         Q2_CLK0_GTREFCLK_PAD_P_IN   : in  std_logic;
+        Q2_CLK0_GTREFCLK_OUT        : out std_logic;
         GT0_TX_FSM_RESET_DONE_OUT   : out std_logic;
         GT0_RX_FSM_RESET_DONE_OUT   : out std_logic;
         GT0_DATA_VALID_IN           : in  std_logic;
@@ -414,6 +415,7 @@ begin
 
     sysclk_in_i <= drp_clk_i;
 
+    Q2_CLK0_GTREFCLK_OUT <= q2_clk0_refclk_i;
     DRP_CLK_O <= sysclk_in_i;
 
     common0_i : gth_amc13_common

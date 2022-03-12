@@ -1,0 +1,14 @@
+# -*- mode: TCL;-*-
+
+#### C2C ####
+boards/x2o/hdl/c2c/c2c_gth_tux.sv
+boards/x2o/hdl/c2c/c2c_adapter.sv
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_bit_sync.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_gtwiz_reset.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_gtwiz_userclk_rx.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_gtwiz_userclk_tx.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_init.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_reset_inv_sync.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_reset_sync.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_wrapper_functions.v
+boards/x2o/hdl/c2c/mgt/c2c_gth_example_wrapper.v

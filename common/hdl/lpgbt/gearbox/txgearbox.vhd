@@ -88,7 +88,7 @@ begin                 --========####   Architecture Body   ####========--
     begin
         if rst_gearbox_i = '1' then
             rst_gearbox_s <= '1';
-            rst_gearbox_dly_s <= rst_gearbox_dly_s;
+            rst_gearbox_dly_s <= c_reset_dly;
 
         elsif rising_edge(clk_inClk_i) then
             if clk_clkEn_i = '1' and rst_gearbox_dly_s = 0 then

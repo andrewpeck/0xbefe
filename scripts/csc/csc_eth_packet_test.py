@@ -13,8 +13,12 @@ import zlib
 DEBUG = False
 
 # SOURCE_MAC = 0x00151714809e
-SOURCE_MAC = 0xdbdbdbdbdbdb
-DESTINATION_MAC = 0x00151714809e
+# SOURCE_MAC = 0xdbdbdbdbdbdb
+SOURCE_MAC = 0x3cfdfeee4ba0
+
+# DESTINATION_MAC = 0x00151714809e
+# DESTINATION_MAC = 0xa0369f14c8c0
+DESTINATION_MAC = 0x3cfdfeee4ba0
 
 class Colors:
     WHITE   = '\033[97m'
@@ -32,7 +36,7 @@ REG_EMPTY_BUSY = None
 REG_MANUAL_READ = None
 REG_PREFIX_GEM = "BEFE.GEM_AMC.GEM_TESTS"
 REG_PREFIX_CSC = "BEFE.CSC_FED.TEST"
-REG_PREFIX = REG_PREFIX_GEM
+REG_PREFIX = REG_PREFIX_CSC
 
 def main():
 
@@ -42,9 +46,10 @@ def main():
     logFilename = None
 
     if (len(sys.argv) > 1) and ('help' in sys.argv[1]):
-        print('Usage: csc_eth_packet_test.py [local_daq_data_file] [local_daq_event_number_to_start_from] [local_daq_number_of_events_to_send] [raw_log_file]')
+        print('Usage: csc_eth_packet_test.py [local_daq_data_file or ila_dump_csv_file] [local_daq_event_number_to_start_from] [local_daq_number_of_events_to_send] [raw_log_file]')
         print('if no arguments are given, a dummy eth packet will be sent')
         print('if local daq data file is supplied but no event number is supplied, the whole file will be read and sent out event by event')
+        print('if ila_dump_csv_file is supplied the whole file will be read and sent out event by event')
         print('if local_daq_event_number_to_start_from is supplied and local_daq_number_of_events_to_send, it will send this many events starting at the given position')
         print('if local_daq_number_of_events_to_send is ommited, it will send the whole file starting at local_daq_event_number_to_start_from')
         return
@@ -66,9 +71,71 @@ def main():
     initRegAddrs()
 
     if localDaqFilename is None:
-        sendAutoNegAckPacket()
+        # sendAutoNegAckPacket()
         # sendDummyEmptyDduPacket()
-        # sendDummyEthPacket()
+        sendDummyEthPacket()
+        return
+
+    if localDaqFilename[-4:] == ".csv":
+        print("Sending the data from the CSV file")
+        f = open(localDaqFilename)
+        packet = []
+        for line in f:
+            if "csc_fed" in line or "HEX" in line:
+                continue
+            split = line.split(",")
+            word = int(split[3], 16)
+            kchar = int(split[4], 16)
+            if word == 0x50bc:
+                continue
+            word = word + (kchar << 16)
+            packet.append(word)
+        f.close()
+
+        # packet[4] = 0xdbdb
+        # packet[5] = 0xdbdb
+        # packet[6] = 0xdbdb
+        # packet[4] = 0x36a0
+        # packet[5] = 0x149f
+        # packet[6] = 0xc0c8
+        # packet[7] = 0x36a0
+        # packet[8] = 0x149f
+        # packet[9] = 0xc0c8
+        # packet[10] = 0x0008
+        # packet[10] = 0x7088
+        # packet[10] = 0x8870
+        # packet[10] = 0x0000
+
+        # packet = packet[:756] + packet[-10:]
+        # packet = packet[:758] + packet[-10:]
+        # packet = packet[:200] + packet[-10:]
+
+        crc_sent = (packet[-3] << 16) + packet[-4]
+        frame_payload = ""
+        for word in packet[4:-4]:
+            frame_payload += chr(word & 0xff) + chr((word >> 8) & 0xff)
+        calc_crc = zlib.crc32(frame_payload.encode("8859")) & 0xffffffff
+
+        # replace the CRC
+        packet[-3] = calc_crc >> 16
+        packet[-4] = calc_crc & 0xffff
+
+        # packet = packet[:-1]
+        # packet[-1] = 0x3f7fd
+
+        print("Sent CRC: " + hex32(crc_sent))
+        print("Calculated CRC: " + hex32(calc_crc))
+        if crc_sent != calc_crc:
+            print_red("CRC mismatch!")
+        else:
+            print_green("CRC matches")
+
+        # send the frame
+        write_reg(get_node('BEFE.CSC_FED.TEST.GBE_TEST.ENABLE'), 0x1)
+        for word in packet[0:]:
+            pushGbeWord16(word)
+        write_reg(get_node('BEFE.CSC_FED.TEST.GBE_TEST.START_TRANSMIT'), 0x1)
+
         return
 
     localDaqFile = open(localDaqFilename, 'rb')
@@ -172,13 +239,19 @@ def sendStandardEthPacket(payload_words64, ethType = 0x0800, payload_words16 = N
 
     ########## source MAC ##########
     s += pushGbeWord16(((SOURCE_MAC >> 24) & 0xff00) + (SOURCE_MAC >> 40))
+    print(hex(((SOURCE_MAC >> 24) & 0xff00) + (SOURCE_MAC >> 40)))
     s += pushGbeWord16(((SOURCE_MAC >> 8) & 0xff00) + ((SOURCE_MAC >> 24) & 0xff))
+    print(hex(((SOURCE_MAC >> 8) & 0xff00) + ((SOURCE_MAC >> 24) & 0xff)))
     s += pushGbeWord16(((SOURCE_MAC & 0xff) << 8) + ((SOURCE_MAC >> 8) & 0xff))
+    print(hex(((SOURCE_MAC & 0xff) << 8) + ((SOURCE_MAC >> 8) & 0xff)))
 
     ########## destination MAC (simply use the same as source) ##########
     s += pushGbeWord16(((DESTINATION_MAC >> 24) & 0xff00) + (DESTINATION_MAC >> 40))
+    print(hex(((DESTINATION_MAC >> 24) & 0xff00) + (DESTINATION_MAC >> 40)))
     s += pushGbeWord16(((DESTINATION_MAC >> 8) & 0xff00) + ((DESTINATION_MAC >> 24) & 0xff))
+    print(hex(((DESTINATION_MAC >> 8) & 0xff00) + ((DESTINATION_MAC >> 24) & 0xff)))
     s += pushGbeWord16(((DESTINATION_MAC & 0xff) << 8) + ((DESTINATION_MAC >> 8) & 0xff))
+    print(hex(((DESTINATION_MAC & 0xff) << 8) + ((DESTINATION_MAC >> 8) & 0xff)))
 
     ########## ETH type ##########
     s += pushGbeWord16(((ethType & 0xff) << 8) + (ethType >> 8))
@@ -200,7 +273,7 @@ def sendStandardEthPacket(payload_words64, ethType = 0x0800, payload_words16 = N
         print_red("No payload provided to the sendEthPacket() function! exiting..")
         exit(1)
 
-    crc = zlib.crc32(s) & 0xffffffff
+    crc = zlib.crc32(s.encode("8859")) & 0xffffffff
     # print("CRC: " + hex(crc))
 
     ########## CRC ##########
@@ -261,7 +334,7 @@ def sendDduEthPacket(payload_words64, packet_counter, add_idles = False, send = 
 
     s += pushGbeWord16(packet_counter, log_file)
 
-    crc = zlib.crc32(s) & 0xffffffff
+    crc = zlib.crc32(s.encode("8859")) & 0xffffffff
     # print("CRC: " + hex(crc))
 
     ########## CRC ##########
@@ -331,9 +404,9 @@ def sendAutoNegAckPacket():
     words16_2 = [0x195bc, 0xb5b5] * 10000
     # words16 = [0x3fefe] * 100
 
-    write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.GBE_TEST.ENABLE'), 0x1)
-    pushNode = get_node('BEFE.GEM_AMC.GEM_TESTS.GBE_TEST.PUSH_GBE_DATA')
-    transmitNode = get_node('BEFE.GEM_AMC.GEM_TESTS.GBE_TEST.START_TRANSMIT')
+    write_reg(get_node('BEFE.' + REG_PREFIX + '.GEM_TESTS.GBE_TEST.ENABLE'), 0x1)
+    pushNode = get_node('BEFE.' + REG_PREFIX + '.GEM_TESTS.GBE_TEST.PUSH_GBE_DATA')
+    transmitNode = get_node('BEFE.' + REG_PREFIX + '.GEM_TESTS.GBE_TEST.START_TRANSMIT')
     for i in range(100000):
         # for word in words16_1:
         #     write_reg(pushNode, word)
@@ -345,10 +418,11 @@ def sendAutoNegAckPacket():
 
 def sendDummyEthPacket():
     words16 = []
-    for i in range(0, 23):
+    # for i in range(0, 23):
+    for i in range(0, 64):
         words16.append(0x0000)
 
-    sendEthPacket(None, False, 0, 0x800, words16)
+    sendStandardEthPacket(None, 0x800, words16)
 
 def sendDummyEmptyDduPacket():
     preamble = [0x155fb, 0x5555, 0x5555, 0xd555]
@@ -357,6 +431,7 @@ def sendDummyEmptyDduPacket():
     padding = [0xff30, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff]
     packet_cnt = [0x04cf]
     crc = [0x30ba, 0xe514]
+    # crc = [0xca63, 0xb596]
     eofHmm = [0x3f7fd, 0x1c5bc]
 
     packetPayload = dduHeader + dduTrailer + padding + packet_cnt
@@ -380,7 +455,7 @@ def sendDummyEmptyDduPacket():
     for word in eofHmm:
         pushGbeWord16(word)
 
-    calcCrc = zlib.crc32(s) & 0xffffffff
+    calcCrc = zlib.crc32(s.encode("8859")) & 0xffffffff
     print("Calculated CRC: " + hex(calcCrc))
 
 

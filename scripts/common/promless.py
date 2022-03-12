@@ -9,7 +9,7 @@ def bytesToWord(bytes, idx):
     return (bytes[idx + 3] << 24) | (bytes[idx + 2] << 16) | (bytes[idx + 1] << 8) | (bytes[idx])
     # return (bytes[idx + 0] << 24) | (bytes[idx + 1] << 16) | (bytes[idx + 2] << 8) | (bytes[idx + 3])
 
-def promless_load(bitfile_name):
+def promless_load(bitfile_name, verify=True):
 
     fname = bitfile_name
     if not path.exists(fname):
@@ -18,7 +18,7 @@ def promless_load(bitfile_name):
 
     write_reg(get_node("BEFE.PROMLESS.RESET_ADDR"), 1)
 
-    print("Opening file %s" % fname)
+    print("Opening firmware bitstream file %s" % fname)
     f = open(fname, "rb")
 
     dataStr = f.read(MAX_FW_SIZE)
@@ -37,9 +37,9 @@ def promless_load(bitfile_name):
 
     numWords = int(len(bytes) / 4)
 
-    print("Got %d bytes (%d words):" % (len(bytes), numWords))
+    print("Firmware bitstream size: %d bytes (%d words):" % (len(bytes), numWords))
 
-    print("Writing...")
+    print("Writing PROMless firmware...")
     wDataAddr = get_node("BEFE.PROMLESS.WRITE_DATA").address
     for i in range(numWords):
         bidx = i * 4
@@ -55,15 +55,16 @@ def promless_load(bitfile_name):
     else:
         printRed("Unknown firmware flavor (%s), firmware size is not set in the promless loader (normally BEFE.GEM_AMC.GEM_SYSTEM.PROMLESS.FIRMWARE_SIZE or BEFE.CSC_FED.CSC_SYSTEM.PROMLESS.FIRMWARE_SIZE)" % fw_flavor.to_string(False))
 
-    print("Verifying...")
-    rDataAddr = get_node("BEFE.PROMLESS.READ_DATA").address
-    for i in range(numWords):
-        wordReadback = rReg(rDataAddr)
-        bidx = i * 4
-        wordExpect = bytesToWord(bytes, bidx)
-        if wordReadback != wordExpect:
-            print_red("ERROR: word %d is corrupted, readback value = %s, expected value = %s" % (i, hex(wordReadback), hex(wordExpect)))
-            return
+    if verify:
+        print("Verifying PROMless firmware...")
+        rDataAddr = get_node("BEFE.PROMLESS.READ_DATA").address
+        for i in range(numWords):
+            wordReadback = rReg(rDataAddr)
+            bidx = i * 4
+            wordExpect = bytesToWord(bytes, bidx)
+            if wordReadback != wordExpect:
+                print_red("ERROR: word %d is corrupted, readback value = %s, expected value = %s" % (i, hex(wordReadback), hex(wordExpect)))
+                return
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

@@ -27,7 +27,8 @@ gem/hdl/oh/link/6b8b.vhd
 gem/hdl/oh/link/link_oh_fpga.vhd
 gem/hdl/oh/link/8b6b.vhd
 gem/hdl/oh/link/link_oh_fpga_tx.vhd
-gem/hdl/oh/link/link_rx_trigger_ge11.vhd
+gem/hdl/oh/link/link_rx_trigger_ge11_3p2g.vhd
+gem/hdl/oh/link/link_rx_trigger_ge11_4g.vhd
 gem/hdl/oh/link/link_rx_trigger_ge21.vhd
 
 # Slow control

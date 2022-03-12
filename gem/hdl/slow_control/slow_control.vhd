@@ -15,16 +15,19 @@ use ieee.std_logic_misc.all;
 use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.sca_pkg.all;
+use work.sca_config_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
 
 entity slow_control is
     generic(
+        g_GEM_STATION       : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_GBTS_PER_OH   : integer;
         g_IPB_CLK_PERIOD_NS : integer;
-        g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted here and in gbt_ic_controller.vhd
+        g_DEBUG             : boolean := false; -- if this is set to true, some chipscope cores will be inserted here and in gbt_ic_controller.vhd
+        g_DEBUG_IC          : boolean
     );
     port(
         -- reset
@@ -60,6 +63,23 @@ end slow_control;
 
 architecture slow_control_arch of slow_control is
 
+    --------------------------------- constants ---------------------------------    
+
+    constant SCA_DEFAULT_GPIO_DIR           : std_logic_vector(31 downto 0) := select_slv32_by_station(g_GEM_STATION, x"00000000", SCA_DEFAULT_GPIO_DIR_GE11, SCA_DEFAULT_GPIO_DIR_GE21);
+    constant SCA_DEFAULT_GPIO_OUT           : std_logic_vector(31 downto 0) := select_slv32_by_station(g_GEM_STATION, x"00000000", SCA_DEFAULT_GPIO_OUT_GE11, SCA_DEFAULT_GPIO_OUT_GE21);
+    constant SCA_DEFAULT_GPIO_OUT_HR        : std_logic_vector(31 downto 0) := select_slv32_by_station(g_GEM_STATION, x"00000000", SCA_DEFAULT_GPIO_OUT_HR_GE11, SCA_DEFAULT_GPIO_OUT_HR_GE21);
+
+    -- the messages in this array are executed in sequence after SCA CONTOLLER reset followed by SCA chip reset
+    constant SCA_CONFIG_SEQUENCE : t_sca_command_array(0 to 6) := (
+        (channel => SCA_CHANNEL_CONFIG, command => SCA_CMD_CONFIG_WRITE_CRB, length => x"01", data => x"00000004"),         -- enable GPIO
+        (channel => SCA_CHANNEL_CONFIG, command => SCA_CMD_CONFIG_WRITE_CRC, length => x"01", data => x"00000000"),         -- disable I2C
+        (channel => SCA_CHANNEL_CONFIG, command => SCA_CMD_CONFIG_WRITE_CRD, length => x"01", data => x"00000018"),         -- 0x18 enable JTAG and ADC
+        (channel => SCA_CHANNEL_GPIO, command => SCA_CMD_GPIO_SET_DIR, length => x"04", data => SCA_DEFAULT_GPIO_DIR),      -- set GPIO direction to default
+        (channel => SCA_CHANNEL_GPIO, command => SCA_CMD_GPIO_SET_OUT, length => x"04", data => SCA_DEFAULT_GPIO_OUT),      -- set GPIO ouputs to default
+        (channel => SCA_CHANNEL_JTAG, command => SCA_CMD_JTAG_SET_CTRL_REG, length => x"04", data => SCA_CFG_JTAG_CTRL_REG),-- set JTAG control reg defaults
+        (channel => SCA_CHANNEL_JTAG, command => SCA_CMD_JTAG_SET_FREQ, length => x"04", data => SCA_CFG_JTAG_FREQ)         -- set default JTAG clk frequency
+    );
+    
     --------------------------------- signals ---------------------------------    
 
     --============ SCA ============--
@@ -125,8 +145,10 @@ architecture slow_control_arch of slow_control is
     signal ic_rw_length         : std_logic_vector(2 downto 0);
     signal ic_write_req         : std_logic;
     signal ic_write_done        : std_logic;
-    signal ic_read_req          : std_logic; 
+    signal ic_read_req          : std_logic;
+    signal ic_read_valid        : std_logic; 
     signal ic_read_done         : std_logic;
+    signal ic_read_stat         : std_logic_vector(5 downto 0);-- := (others => '1');
     signal ic_gbtx_i2c_addr     : std_logic_vector(6 downto 0);
     --signal ic_r_valid           : std_logic;
     signal gbt_version		: std_logic;
@@ -139,6 +161,12 @@ begin
     
     g_sca_controllers : for i in 0 to g_NUM_OF_OHs - 1 generate
         i_sca_controller : entity work.sca_controller
+            generic map (
+                g_SCA_CONFIG_SEQUENCE     => SCA_CONFIG_SEQUENCE,
+                g_SCA_DEFAULT_GPIO_OUT    => SCA_DEFAULT_GPIO_OUT,
+                g_SCA_DEFAULT_GPIO_OUT_HR => SCA_DEFAULT_GPIO_OUT_HR,
+                g_DEBUG => false --(i = 0)
+            )
             port map(
                 reset_i                     => reset_i or (sca_reset and sca_reset_mask(i)),
                 gbt_clk_40_i                => ttc_clk_i.clk_40,
@@ -231,7 +259,7 @@ begin
     
     i_ic_controller : entity work.gbt_ic_controller
         generic map(
-	    g_DEBUG	      => g_DEBUG
+	    g_DEBUG	      => g_DEBUG_IC
 --            g_GBTX_I2C_ADDRESS => x"1"
         )
         port map(
@@ -248,7 +276,10 @@ begin
             ic_write_req_i    => ic_write_req,
             ic_write_done_o   => ic_write_done,
             ic_read_req_i     => ic_read_req,
-            ic_read_valid_o   => ic_read_done
+            ic_read_valid_o   => ic_read_valid,
+	    ic_read_done_o    => ic_read_done,
+            ic_read_stat_o    => ic_read_stat
+
         );
     
     ic_rx_elink <= gbt_rx_ic_elinks_i(to_integer(unsigned(ic_link_select)));

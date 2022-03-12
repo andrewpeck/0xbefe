@@ -1,6 +1,6 @@
 from common.rw_reg import *
 from common.utils import *
-import common.tables.tableformatter as tf
+import tableformatter as tf
 from enum import Enum
 
 try:
@@ -85,10 +85,33 @@ class Mgt:
             write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRE_CURSOR" % self.idx, tx_pre_cursor)
             write_reg("BEFE.MGTS.MGT%d.CTRL.TX_POST_CURSOR" % self.idx, tx_post_cursor)
 
+    def set_prbs_mode(self, mode):
+        write_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name), mode)
+
+    def get_prbs_mode(self):
+        return read_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name))
+
+    def reset_prbs_err_cnt(self):
+        if self.txrx == MgtTxRx.RX:
+            write_reg("BEFE.MGTS.MGT%d.CTRL.RX_PRBS_CNT_RESET" % self.idx, 1)
+
+    def force_prbs_err(self):
+        if self.txrx == MgtTxRx.TX:
+            write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_FORCE_ERR" % self.idx, 1)
+
+    def get_prbs_err_cnt(self):
+        if self.txrx == MgtTxRx.RX:
+            return read_reg("BEFE.MGTS.MGT%d.STATUS.PRBS_ERROR_CNT" % self.idx)
+        else:
+            return None
+
     def reset(self, include_pll_reset=False):
         if include_pll_reset:
             self.pll.reset()
         write_reg("BEFE.MGTS.MGT%d.CTRL.%s_RESET" % (self.idx, self.txrx.name), 1)
+        if self.txrx.name.lower() == "rx":
+            write_reg("BEFE.MGTS.MGT%d.CTRL.RX_PRBS_CNT_RESET" % (self.idx), 1)
+
 
 class Link:
     idx = None
@@ -136,6 +159,35 @@ class Link:
             return self.tx_mgt
         elif txrx == MgtTxRx.RX:
             return self.rx_mgt
+        else:
+            return None
+
+    def set_prbs_mode(self, txrx, mode):
+        mgt = self.get_mgt(txrx)
+        if mgt is not None:
+            mgt.set_prbs_mode(mode)
+
+    def get_prbs_mode(self, txrx):
+        mgt = self.get_mgt(txrx)
+        if mgt is not None:
+            return mgt.get_prbs_mode()
+        else:
+            return None
+
+    def reset_prbs_err_cnt(self):
+        mgt = self.get_mgt(MgtTxRx.RX)
+        if mgt is not None:
+            mgt.reset_prbs_err_cnt()
+
+    def force_prbs_err(self):
+        mgt = self.get_mgt(MgtTxRx.TX)
+        if mgt is not None:
+            mgt.force_prbs_err()
+
+    def get_prbs_err_cnt(self):
+        mgt = self.get_mgt(MgtTxRx.RX)
+        if mgt is not None:
+            return mgt.get_prbs_err_cnt()
         else:
             return None
 
@@ -296,12 +348,13 @@ def befe_reset_all_plls():
         write_reg("BEFE.MGTS.MGT%d.CTRL.QPLL0_RESET" % i, 1)
         write_reg("BEFE.MGTS.MGT%d.CTRL.QPLL1_RESET" % i, 1)
 
-def befe_config_links():
+# if loopback test is set to true, links will not be inverted regardless of the station
+def befe_config_links(loopback_test=False):
     # check if we need to invert GBT TX or RX
     gbt_tx_invert = False
     gbt_rx_invert = False
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
-    if flavor == 0: # GEM
+    if flavor == 0 and not loopback_test: # GEM
         gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
         if gem_station == 1:
             gbt_tx_invert = True
@@ -329,7 +382,7 @@ def befe_config_links():
 
     return links
 
-def befe_print_fw_info():
+def befe_get_fw_info():
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
     board_type = read_reg("BEFE.SYSTEM.RELEASE.BOARD_TYPE")
     fw_version = read_reg("BEFE.SYSTEM.RELEASE.VERSION").to_string(use_color=False)
@@ -348,9 +401,14 @@ def befe_print_fw_info():
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         flavor_str = "CSC (%d DMBs)" % num_dmbs
 
-    heading("BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, fw_version, board_type, fw_date, fw_time, fw_git_sha))
+    description = "BEFE %s %s running on %s (built on %s at %s, git SHA: %08x)" % (flavor_str, fw_version, board_type, fw_date, fw_time, fw_git_sha)
 
-    return {"fw_flavor": fw_flavor, "fw_flavor_str": fw_flavor.to_string(), "board_type": board_type.to_string(), "fw_version": fw_version, "fw_date": fw_date, "fw_time": fw_time, "fw_git_sha": fw_git_sha}
+    return {"fw_flavor": fw_flavor, "fw_flavor_str": flavor_str, "board_type": board_type.to_string(), "fw_version": fw_version, "fw_date": fw_date, "fw_time": fw_time, "fw_git_sha": fw_git_sha, "description": description}
+
+def befe_print_fw_info():
+    fw_info = befe_get_fw_info()
+    heading(fw_info["description"])
+    return fw_info
 
 if __name__ == '__main__':
     parse_xml()

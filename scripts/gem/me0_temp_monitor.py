@@ -8,6 +8,7 @@ import os, glob
 import datetime
 import math
 import numpy as np
+from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
@@ -23,7 +24,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain, plot, temp_cal):
 
     # PT-100 is an RTD (Resistance Temperature Detector) sensor
     # PT (ie platinum) has linear temperature-resistance relationship
@@ -79,15 +80,19 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     fig, ax = plt.subplots()
     ax.set_xlabel('minutes')
     ax.set_ylabel('T (C)')
-
+    
     if device == "OH":
         channel = 6
-    else:
+    elif device == "VTRX":
         channel = 0
-    DAC = 20
+    DAC = 0
+    if temp_cal == "10k":
+        DAC = 20
+    elif temp_cal == "1k":
+        DAC = 60
     LSB = 3.55e-06
     I = DAC * LSB
-    find_temp = temp_res_fit()
+    find_temp = temp_res_fit(temp_cal=temp_cal)
 
     reg_data = convert_adc_reg(channel)
     writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  # Enables current DAC.
@@ -143,24 +148,34 @@ def convert_adc_reg(adc):
     reg_data |= (0x01 << bit)
     return reg_data
 
-def temp_res_fit(power=2):
+def temp_res_fit(temp_cal="10k", power=2):
 
-    B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+: NTCG063UH103HTBX
-    T_list = [50, 75, 85, 100]
+    if temp_cal=="10k":
+        B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+ 10k: NTCG063UH103HTBX
+        T_list = [50, 75, 85, 100]
+    elif temp_cal=="1k": 
+        B_list = [3500, 3539, 3545, 3560]  # VTRX+ 1k: NCP03XM102E05RL
+        T_list = [50, 80, 85, 100]
     R_list = []
 
     for i in range(len(T_list)):
-        T_list[i] = T_list[i] + 272.15
+        T_list[i] = T_list[i] + 273.15
 
     for B, T in zip(B_list, T_list):
-        R = 10e3 * math.exp(-B * ((1/298.15) - (1/T)))
+        if temp_cal=="10k":
+            R = 10e3 * math.exp(-B * ((1/298.15) - (1/T)))
+        elif temp_cal=="1k":
+            R = 1e3 * math.exp(-B * ((1/298.15) - (1/T)))
         R_list.append(R)
 
     T_list = [298.15] + T_list
-    R_list = [10000] + R_list
-
+    if temp_cal=="10k":
+        R_list = [10000] + R_list
+    elif temp_cal=="1k": 
+        R_list = [1000] + R_list
+        
     for i in range(len(T_list)):
-        T_list[i] = T_list[i] - 272.15
+        T_list[i] = T_list[i] - 273.15
 
     poly_coeffs = np.polyfit(np.log10(R_list), T_list, power)
     fit = np.poly1d(poly_coeffs)
@@ -244,7 +259,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
-    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for RSSI ADC: 2, 8, 16, 32")
+    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -278,6 +293,7 @@ if __name__ == "__main__":
     oh_ver = get_oh_ver(args.ohid, args.gbtid)
     if oh_ver == 1:
         print(Colors.YELLOW + "Only OH-v2 is allowed" + Colors.ENDC)
+        sys.exit()
     boss = None
     if int(args.gbtid)%2 == 0:
         boss = 1
@@ -292,7 +308,24 @@ if __name__ == "__main__":
         sys.exit()
     gain = int(args.gain)
 
-    # Initialization 
+    # Check VTRx+ version if reading VTRx+ temperature
+    temp_cal = ""
+    if args.temp == "VTRX":
+        gbtid_sub = int(args.gbtid)
+        gbtid_boss = str(gbtid_sub-1)
+        rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, gbtid_boss)
+        vtrx_id1 = i2cmaster_read(system, oh_ver, 0x16)
+        vtrx_id2 = i2cmaster_read(system, oh_ver, 0x17)
+        vtrx_id3 = i2cmaster_read(system, oh_ver, 0x18)
+        vtrx_id4 = i2cmaster_read(system, oh_ver, 0x19)
+        if vtrx_id1 == 0 and vtrx_id2 == 0 and vtrx_id3 == 0 and vtrx_id4 == 0:
+            temp_cal = "10k"
+        else:
+            temp_cal = "1k"
+    elif args.temp == "OH":
+        temp_cal = "10k"
+
+    # Initialization
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
@@ -305,7 +338,7 @@ if __name__ == "__main__":
     check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, gain, args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, gain, args.plot, temp_cal)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

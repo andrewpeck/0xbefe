@@ -8,7 +8,7 @@ import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
-def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list, parallel, set_cal_mode, cal_dac, nl1a, runtime, l1a_bxgap):
+def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list, parallel, set_cal_mode, cal_dac, nl1a, calpulse_only, runtime, l1a_bxgap):
     
     resultDir = "results"
     try:
@@ -49,8 +49,14 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
         terminate()
 
     # Configure TTC generator
+    ttc_cnt_reset_node = get_backend_node("BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET")
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+    if calpulse_only:
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 1)
+    else:
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)
     write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), nl1a)
     if l1a_bxgap >= 40:
@@ -119,6 +125,8 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
         for channel in range(0, 128):
             enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
 
+    sleep(1)
+
     for elink in elink_list:
         print ("Channel List in ELINK# %02d:" %(elink))
         file_out.write("Channel List in ELINK# %02d:\n" %(elink))
@@ -151,7 +159,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
             write_backend_reg(channel_sbit_select_node, sbit_read) # Select S-bit for S-bit counter
 
             # Reset L1A, CalPulse and S-bit counters
-            global_reset()
+            write_backend_reg(ttc_cnt_reset_node, 1)
             write_backend_reg(reset_sbit_counter_node, 1)
             write_backend_reg(reset_sbit_monitor_node, 1)
 
@@ -226,7 +234,10 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
 
         print ("")
         file_out.write("\n")
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
+    if calpulse_only:
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
+    else:
+        write_backend_reg(get_backend_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 0)
 
     # Unconfigure the pulsing VFAT
     print("Disabling pulsing on all channels in VFAT# %02d" % (vfat))
@@ -330,6 +341,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", help="nl1a = fixed number of L1A cycles")
+    parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
     parser.add_argument("-t", "--time", action="store", dest="time", help="time = time for which to run the S-bit testing (in minutes)")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
     args = parser.parse_args()
@@ -410,6 +422,9 @@ if __name__ == "__main__":
 
         if args.channels is None:
             for c in range(0,16):
+                if str(vfat) not in s_bit_channel_mapping:
+                    print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
+                    continue
                 sbit_input_file = s_bit_channel_mapping[str(vfat)][str(elink)][str(elink*16 + c)]
                 if sbit_input_file == -9999:
                     print (Colors.YELLOW + "Channel %02d is bad, skipping"%(elink*16 + c) + Colors.ENDC)
@@ -497,7 +512,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat, elink_list, channel_list, sbit_list, args.parallel, cal_mode, cal_dac, nl1a, runtime, l1a_bxgap)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat, elink_list, channel_list, sbit_list, args.parallel, cal_mode, cal_dac, nl1a, args.calpulse_only, runtime, l1a_bxgap)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

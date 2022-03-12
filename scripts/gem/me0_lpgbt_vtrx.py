@@ -150,7 +150,6 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     reg_addr_string = "0x%02X" % (reg_addr)
     data_string = "0x%02X" % (data)
     print ("Successful read from slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
-    return data
 
     # Reset the I2C Master registers
     writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, 0)
@@ -158,7 +157,7 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
     writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
     sleep(0.01)
-    
+    return data
 
 def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
 

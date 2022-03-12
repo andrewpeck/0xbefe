@@ -76,6 +76,7 @@ architecture lpgbt_10g_tx_arch of lpgbt_10g_tx is
     --------- TX datapath ---------
     signal tx_dp_reset      : std_logic;
     signal tx_dp_frame      : std_logic_vector(255 downto 0);
+    signal tx_dp_frame_reg  : std_logic_vector(255 downto 0);
     signal tx_data          : std_logic_vector(233 downto 0);
     
     --------- TX gearbox ---------
@@ -152,6 +153,14 @@ begin
     
     tx_data <= tx_data_i;
     
+    -- register the frame on the way from upLinkTxDataPath to the txGearbox to ease timing
+    process(clk40_i)
+    begin
+        if rising_edge(clk40_i) then
+            tx_dp_frame_reg <= tx_dp_frame;
+        end if;
+    end process;
+    
     --------- TX gearbox ---------
     
     i_tx_gearbox: entity work.txGearbox
@@ -167,7 +176,7 @@ begin
             clk_clkEn_i                   => '1',
             clk_outClk_i                  => mgt_tx_usrclk_i,
             rst_gearbox_i                 => tx_gb_reset,
-            dat_inFrame_i                 => tx_dp_frame,
+            dat_inFrame_i                 => tx_dp_frame_reg,
             dat_outFrame_o                => tx_gb_out_data,
             sta_gbRdy_o                   => tx_gb_ready
         );

@@ -5,3 +5,6 @@ boards/ctp7/ip/gth_amc13_1/gth_amc13_1.xci
 boards/ctp7/ip/ila_ttc_clocks/ila_ttc_clocks.xci
 boards/ctp7/ip/vio_lpgbt_loopback/vio_lpgbt_loopback.xci
 boards/ctp7/ip/vio_ttc_clocks/vio_ttc_clocks.xci
+boards/ctp7/ip/vio_clk_freq/vio_clk_freq.xci
+boards/ctp7/ip/mig_qdr2p/mig_qdr2p.xci
+boards/ctp7/ip/mig_qdr2p/mig_a.prj

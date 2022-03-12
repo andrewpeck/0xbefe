@@ -1,0 +1,70 @@
+<node id="PCIE"  address="0x00030000"
+      description="This module provides status and control of the PCIe module"
+      fw_is_module="true"
+      fw_module_file="../boards/cvp13/hdl/system/pcie_slow_control.vhd"
+      fw_user_clock_signal="axi_clk"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="11"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module"
+          fw_write_pulse_signal="pcie_daq_control.reset"/>
+    <node id="FLUSH" address="0x1" mask="0x00000001" permission="rw"
+          description="Set this to 1 at the end of the run to flush the remaining data in the buffer. This is also done automatically when DAQ ENABLE is set to 0."
+          fw_signal="pcie_daq_control.flush" fw_default="0b0"
+          sw_units="bool"/>
+    <node id="PCIE_PACKET_SIZE" address="0x2" mask="0x00ffffff" permission="rw"
+          description="Sets the PCIe packet size in bytes for CVP13 DAQ -- this should match the read size in the DAQ application. Higher size should result in higher throughput."
+          fw_signal="pcie_daq_control.packet_size_bytes" fw_default="0x100000"
+          sw_units="bytes"/>
+  </node>
+
+  <node id="STATUS" address="0x100">
+    <node id="C2H_READY" address="0x0" mask="0x00000001" permission="r"
+          description="Card-to-host interface is ready. This goes high whenever there's an active read on the device from the software."
+          fw_signal="pcie_daq_status.c2h_ready"
+          sw_units="bool"
+          sw_val_warn="self == 0"/>
+    <node id="CDC_HAD_OVF" address="0x0" mask="0x00000002" permission="r"
+          description="CDC FIFO had overflow (this flag is latched until reset)"
+          fw_signal="pcie_daq_status.cdc_had_ovf"
+          sw_val_bad="self == 1"/>
+    <node id="BUF_HAD_OVF" address="0x0" mask="0x00000004" permission="r"
+          description="AXI stream FIFO had overflow (this flag is latched until reset)"
+          fw_signal="pcie_daq_status.buf_had_ovf"
+          sw_val_bad="self == 1"/>
+    <node id="BUF_OVF" address="0x0" mask="0x00000008" permission="r"
+          description="AXI stream FIFO is currently in overflow"
+          fw_signal="pcie_daq_status.buf_ovf"
+          sw_val_bad="self == 1"/>
+    <node id="C2H_WRITE_ERR" address="0x0" mask="0x00000010" permission="r"
+          description="This flag is set high if a write to C2H happened when the C2H_READY was low (can happen due to FIFO read latency)"
+          fw_signal="pcie_daq_status.c2h_write_err"
+          sw_val_bad="self == 1"/>
+    <node id="WORD_SIZE_BYTES" address="0x0" mask="0x00000fe0" permission="r"
+          description="Word size in bytes"
+          fw_signal="pcie_daq_status.word_size_bytes"
+          sw_units="bytes"/>
+    <node id="BUF_WORDS" address="0x0" mask="0xfffff000" permission="r"
+          description="Number of words currently available in the AXI stream FIFO"
+          fw_signal="pcie_daq_status.buf_words"
+          sw_to_string="'%d bytes' % (self * read_reg_cache('BEFE.PCIE.STATUS.WORD_SIZE_BYTES'))"/>
+    <node id="WORD_RATE" address="0x1" mask="0x0fffffff" permission="r"
+          description="Rate of words being sent to the PCIe in Hz"
+          fw_signal="pcie_daq_status.word_rate"
+          sw_to_string="'%.2f MB/s' % ((float(self) * float(read_reg_cache('BEFE.PCIE.STATUS.WORD_SIZE_BYTES'))) / 1048576.0)"/>
+    <node id="WORDS_SENT_MSBS" address="0x2" mask="0x00000fff" permission="r"
+          description="Upper 12 bits of the number of words sent to PCIe"
+          fw_signal="pcie_daq_status.words_sent(43 downto 32)"/>
+    <node id="WORDS_SENT_LSBS" address="0x3" permission="r"
+          description="Lower 32 bits of the number of words sent to PCIe"
+          fw_signal="pcie_daq_status.words_sent(31 downto 0)"
+          sw_to_string="'%.3f GB' % ((float(self + (read_reg('BEFE.PCIE.STATUS.WORDS_SENT_MSBS') &lt;&lt; 32)) * float(read_reg_cache('BEFE.PCIE.STATUS.WORD_SIZE_BYTES'))) / 1073741824.0)"/>
+  </node>
+
+</node>

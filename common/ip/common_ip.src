@@ -13,4 +13,7 @@ common/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
 common/ip/xlx_k7v7_tx_dpram/xlx_k7v7_tx_dpram.xci
 common/ip/ila_clk_phase_check/ila_clk_phase_check.xci
 common/ip/vio_ipb_bus_debug_select/vio_ipb_bus_debug_select.xci
+common/ip/ila_sca/ila_sca.xci
+common/ip/ila_ipbus_slave/ila_ipbus_slave.xci
+common/ip/ila_mgt_phasealign_multi_auto/ila_mgt_phasealign_multi_auto.xci
 common/ip/ila_ic_rx/ila_ic_rx.xci

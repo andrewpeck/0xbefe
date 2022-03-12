@@ -56,6 +56,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     now = now.replace(" ", "_")
     filename = dataDir + "/%s_OH%d_vfat_phase_scan_results_"%(gem,oh_select) + now + ".txt"
     file_out = open(filename, "w")
+    filename_data = dataDir + "/%s_OH%d_vfat_phase_scan_data_"%(gem,oh_select) + now + ".txt"
+    file_out_data = open(filename_data, "w")
     file_out.write("vfat  phase\n")
 
     link_good    = [[0 for phase in range(16)] for vfat in range(24)]
@@ -180,7 +182,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
             errs[vfat][phase] = (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
         centers[vfat], widths[vfat] = find_phase_center(errs[vfat])
 
-    print ("\nphase : 0123456789ABCDEF")
+    print ("\nPhase Scan Results:")
+    file_out_data.write("\nPhase Scan Results:\n")
     bestphase_vfat = 24*[0]
     for vfat in vfat_list:
         phase_print = "VFAT%02d: " % (vfat)
@@ -202,6 +205,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         else:
             phase_print += Colors.GREEN + " (center=%d, width=%d) GOOD" % (centers[vfat], widths[vfat]) + Colors.ENDC
         print(phase_print)
+        file_out_data.write(phase_print + "\n")
 
     # set phases for all vfats under test
     print ("\nSetting all VFAT phases to best phases: ")
@@ -216,6 +220,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     gem_utils.gem_link_reset()
     print ("")
     file_out.close()
+    file_out_data.close()
 
     # Unconfigure VFATs
     #for vfat in vfat_list:
@@ -229,9 +234,13 @@ def find_phase_center(err_list):
     ngood_edge   = 0
     ngood_center = 0
 
+    # Removing phase 15 from the calculation
+    err_list_temp = err_list.copy()
+    err_list_temp.pop()
+
     # duplicate the err_list to handle the wraparound
-    err_list_doubled = err_list + err_list
-    phase_max = len(err_list)-1
+    err_list_doubled = err_list_temp + err_list_temp
+    phase_max = len(err_list_temp)-1
 
     for phase in range(0,len(err_list_doubled)):
         if (err_list_doubled[phase] == 0):
@@ -260,7 +269,8 @@ def find_phase_center(err_list):
         else:
             ngood_center = ngood_edge - int(ngood_max/2) - 1;
 
-    ngood_center = ngood_center % phase_max - 1
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
 
     if (ngood_max==0):
         ngood_center=0
@@ -272,6 +282,7 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
     print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
+    select_ic_link(oh_select, gbt_select)
 
     if gbt == "boss":
         if oh_ver == 1:
@@ -292,8 +303,8 @@ def setVfatRxPhase(system, oh_select, vfat, phase):
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink
     value = (config[addr] & 0x0f) | (phase << 4)
+    #value = (mpeek(addr) & 0x0f) | (phase << 4)
 
-    select_ic_link(oh_select, gbt_select)
     mpoke(addr, value)
     sleep(0.000001) # writing too fast for CVP13
     
@@ -324,7 +335,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-d", "--depth", action="store", dest="depth", default="10000", help="depth = number of times to check for cfg_run error")
-    parser.add_argument("-b", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
+    parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
     parser.add_argument("-f", "--bestphase_file", action="store", dest="bestphase_file", help="bestphase_file = Text file with best value of the elinkRX phase for each VFAT (in hex), calculated from phase scan by default")
     args = parser.parse_args()
 

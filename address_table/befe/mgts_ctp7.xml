@@ -6,7 +6,7 @@
 
   <node id="MGT${MGT}" address="0x0"
         description="MGT channel ${MGT} control and status. Note: these are MGT channles, which do not correspond 1-to-1 with the fiber numbering. Please refer here for MGT channel to fiber mapping: https://docs.google.com/spreadsheets/d/1-AE7GeeU10GfLB-9FYOMN4k0-Z7bVkiQpLfXC4G2irI"
-        generate="true" generate_size="&NUM_OPTICAL_LINKS;" generate_address_step="0x00000040" generate_idx_var="MGT">
+        generate="true" generate_size="&NUM_MGTS;" generate_address_step="0x00000040" generate_idx_var="MGT">
 
     <node id="RESET" address="0x1"
           description="Writing 1 to bit 0 will trigger MGT TX channel reset, and writing 1 to bit 1 will trigger the MGT RX channel reset (write 3 to trigger both)">
