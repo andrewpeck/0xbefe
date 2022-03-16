@@ -33,31 +33,31 @@ def read_loopback_counters():
     prbs_counters = [[[0]*2 for x in range(len(GBT_0_ELINK_PRBS))] , [[0]*2 for x in range(len(GBT_1_ELINK_PRBS))]]
     for gbtSelect in range(0,2):
         for elink in PRBS_ELINKS[gbtSelect]:
-            megaWordCnt = read_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink)))
-            errorCnt = read_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink)))
+            megaWordCnt = read_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink)))
+            errorCnt = read_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink)))
             #print(str(gbtSelect) + "  " + str(elink))
             prbs_counters[gbtSelect][elink-6] = [megaWordCnt , errorCnt]
     return prbs_counters
 
 def clear_loopback_counters():
     # reset loopback counters
-    write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
+    write_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
     sleep(0.1)
     return
 
 def enable_loopback():
     # Put CTP7 into loopback testing mode
-    write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
+    write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
     sleep(0.1)
     return
 
 def disable_loopback():
-    write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+    write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
     sleep(0.1)
     return
 
 def select_OH(oh):
     # select the OH to be used
-    write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), oh)
+    write_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), oh)
     sleep(0.1)
     return

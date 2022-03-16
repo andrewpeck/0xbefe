@@ -31,7 +31,7 @@ def main():
 
 def check_current_fw():
     oh = 0
-    print(read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False))
+    print(read_reg("BEFE.GEM.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False))
     return
 
 def load_fw_full():
@@ -54,9 +54,9 @@ def program_fw_single(verbose=False):
         if check_bit(ohMask,i):
             ohList.append(i)
 
-        write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
-        write_reg('BEFE.GEM_AMC.TTC.GENERATOR.ENABLE', 0x1)
-        write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
+        write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
+        write_reg('BEFE.GEM.TTC.GENERATOR.ENABLE', 0x1)
+        write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
         if verbose:
             subheading('Disabling monitoring')
         sleep(0.1)
@@ -103,7 +103,7 @@ def program_fw_single(verbose=False):
             sleep(0.01)
             if verbose:
                 subheading('Executing PROMless programming')
-            write_reg('BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
+            write_reg('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
             sleep(0.1)
 
             readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
@@ -128,9 +128,9 @@ def program_fw_iter(num_iter, verbose=False):
         if check_bit(ohMask,i):
             ohList.append(i)
 
-    write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
-    write_reg('BEFE.GEM_AMC.TTC.GENERATOR.ENABLE', 0x1)
-    write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
+    write_reg('BEFE.GEM.TTC.GENERATOR.ENABLE', 0x1)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
 
     sleep(0.1)
 
@@ -179,7 +179,7 @@ def program_fw_iter(num_iter, verbose=False):
 
         if verbose:
             subheading('Executing PROMless programming')
-        write_reg('BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
+        write_reg('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
         sleep(0.1)
 
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)

@@ -20,7 +20,7 @@
   &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_SLINK;
   &ADDRESS_TABLE_PROMLESS;
-  <node id="GEM_AMC" address="0x0">
+  <node id="GEM" address="0x0">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
   </node>

@@ -164,7 +164,7 @@ def program_phase(ohSelect , gbtSelect , configFile , Phases):
     totalTime = clock() - timeStart
     print('time took = ' + str(totalTime) + 's')
     # prep
-    write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
+    write_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
 
     initVfatRegAddrs()
 
@@ -183,12 +183,12 @@ def program_phase(ohSelect , gbtSelect , configFile , Phases):
             vfat = GE21_GBT_ELINK_TO_VFAT[gbtSelect][elink]
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
-            write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+            write_reg(get_node('BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
             sleep(0.001)
             cfgRunGood = 1
-            cfgAddr = get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
+            cfgAddr = get_node('BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
             for i in range(10000):
-                #ret = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+                #ret = read_reg(get_node('BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
                 ret = rReg(cfgAddr)
                 #if (ret != '0x00000000' and ret != '0x00000001'):
                 if (ret != 0 and ret != 1):
@@ -197,8 +197,8 @@ def program_phase(ohSelect , gbtSelect , configFile , Phases):
                     break
             #sleep(0.3)
             #sleep(0.5)
-            linkGood = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-            syncErrCnt = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+            linkGood = int(read_reg(get_node('BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
+            syncErrCnt = int(read_reg(get_node('BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
             color = Colors.GREEN
             prefix = 'COMMUNICATION GOOD on elink %d VFAT%d: ' % (elink, vfat)
             if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0):
@@ -337,7 +337,7 @@ def scan_fpga(ohSelect,gbtSelect,configFile):
     totalTime = clock() - timeStart
     print('time took = ' + str(totalTime) + 's')
     # prep
-    write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
+    write_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.CTRL.OH_SELECT'), ohSelect)
 
     # print the result table header
     tableColWidth = 13
@@ -349,7 +349,7 @@ def scan_fpga(ohSelect,gbtSelect,configFile):
 
     # start the scan
     for phase in range(0, 15):
-        write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+        write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
 
         # set phase on all elinks
         for elink in GE21_GBT_ELINK_TO_FPGA[gbtSelect]:
@@ -363,17 +363,17 @@ def scan_fpga(ohSelect,gbtSelect,configFile):
 
         # reset the PRBS tester, and give some time to accumulate statistics
         sleep(0.001)
-        write_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
-        write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
+        write_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.CTRL.RESET'), 1)
+        write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 1)
         sleep(PHASE_SCAN_FPGA_ACCUM_TIME)
 
         # check all elinks for errors
         ELINK_ITER = 0
         result = ("%d" % phase).ljust(tableColWidth)
         for elink in GE21_GBT_ELINK_TO_FPGA[gbtSelect]:
-            prbsLocked = int(read_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.PRBS_LOCKED' % (gbtSelect, elink))))
-            megaWordCnt = int(read_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink))))
-            errorCnt = int(read_reg(get_node('BEFE.GEM_AMC.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink))))
+            prbsLocked = int(read_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.PRBS_LOCKED' % (gbtSelect, elink))))
+            megaWordCnt = int(read_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.MEGA_WORD_CNT' % (gbtSelect, elink))))
+            errorCnt = int(read_reg(get_node('BEFE.GEM.GEM_TESTS.OH_LOOPBACK.GBT_%d.ELINK_%d.ERROR_CNT' % (gbtSelect, elink))))
 
             color = Colors.GREEN if errorCnt == 0 else Colors.RED
             res = ('%d' % errorCnt).ljust(tableColWidth)
@@ -390,7 +390,7 @@ def scan_fpga(ohSelect,gbtSelect,configFile):
             ELINK_ITER += 1
         print(result)
 
-    write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+    write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
     return PhaseResult
 
 def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
@@ -425,15 +425,15 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
 
 
     # setup the TTC generator for a DAQ test
-    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.RESET"), 1)
-    genEn = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"))
-    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE"), 1)
-    calpulseGap = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"))
-    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
-    l1aCnt = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"))
-    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_COUNT"), NUM_DAQ_PACKETS)
-    l1aGap = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"))
-    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
+    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+    genEn = read_reg(get_node("BEFE.GEM.TTC.GENERATOR.ENABLE"))
+    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
+    calpulseGap = read_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"))
+    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0)
+    l1aCnt = read_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"))
+    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), NUM_DAQ_PACKETS)
+    l1aGap = read_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"))
+    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), PHASE_SCAN_L1A_GAP)
 
 
 
@@ -454,12 +454,12 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
                 sleep(0.000001) # writing is too fast for CVP13 :)
             # reset the link, give some time to lock and accumulate any sync errors and then check VFAT comms
             sleep(0.1)
-            write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
+            write_reg(get_node('BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET'), 1)
             sleep(0.001)
             cfgRunGood = 1
-            cfgAddr = get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
+            cfgAddr = get_node('BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)).address
             for i in range(PHASE_SCAN_NUM_SLOW_CONTROL_READS):
-                #ret = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
+                #ret = read_reg(get_node('BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN' % (ohSelect, vfat)))
                 ret = rReg(cfgAddr)
                 #if (ret != '0x00000000' and ret != '0x00000001'):
                 if (ret != 0 and ret != 1):
@@ -467,8 +467,8 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
                     break
             #sleep(0.3)
             #sleep(0.5)
-            linkGood = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
-            syncErrCnt = int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
+            linkGood = int(read_reg(get_node('BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD' % (ohSelect, vfat))))
+            syncErrCnt = int(read_reg(get_node('BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT' % (ohSelect, vfat))))
             # if communication is good, set the VFAT to run mode, and do a DAQ packet CRC error test
             daqCrcErrCnt = -1
             if cfgRunGood == 1 and linkGood == 1 and syncErrCnt == 0:
@@ -476,13 +476,13 @@ def scan_vfats(ohSelect, gbtSelect, configFile, verbose=False):
                     wReg(cfgAddr, 0) # set the VFAT to sleep mode
                 else:
                     wReg(cfgAddr, 1) # set the VFAT to run mode
-                    write_reg(get_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
-                    write_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_START"), 1)
+                    write_reg(get_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_THR_ARM_DAC" % (ohSelect, vfat)), 0) # set a low threshold (TODO: this may need tuning to get more or less random data)
+                    write_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
                     genRunning = 1
                     while genRunning == 1:
-                        genRunning = read_reg(get_node("BEFE.GEM_AMC.TTC.GENERATOR.CYCLIC_RUNNING"))
-                    daqCrcErrCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
-                    daqEvtCnt = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
+                        genRunning = read_reg(get_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING"))
+                    daqCrcErrCnt = read_reg(get_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (ohSelect, vfat)))
+                    daqEvtCnt = read_reg(get_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (ohSelect, vfat)))
                     if daqEvtCnt == 0:
                         daqCrcErrCnt = 999
 
@@ -506,7 +506,7 @@ def downloadConfig(ohIdx, gbtIdx, filename):
     f = open(filename, 'r')
 
     #for now we'll operate with 8 bit words only
-    write_reg(get_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
+    write_reg(get_node("BEFE.GEM.SLOW_CONTROL.IC.READ_WRITE_LENGTH"), 1)
 
     ret = []
 
@@ -542,26 +542,26 @@ def initGbtRegAddrs():
     global ADDR_IC_WRITE_DATA
     global ADDR_IC_EXEC_WRITE
     global ADDR_IC_EXEC_READ
-    ADDR_IC_ADDR = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS').address
-    ADDR_IC_WRITE_DATA = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA').address
-    ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE').address
-    ADDR_IC_EXEC_READ = get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ').address
+    ADDR_IC_ADDR = get_node('BEFE.GEM.SLOW_CONTROL.IC.ADDRESS').address
+    ADDR_IC_WRITE_DATA = get_node('BEFE.GEM.SLOW_CONTROL.IC.WRITE_DATA').address
+    ADDR_IC_EXEC_WRITE = get_node('BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_WRITE').address
+    ADDR_IC_EXEC_READ = get_node('BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_READ').address
 
 def initVfatRegAddrs():
     global ADDR_LINK_RESET
-    ADDR_LINK_RESET = get_node('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET').address
+    ADDR_LINK_RESET = get_node('BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET').address
 
 def selectGbt(ohIdx, gbtIdx):
     linkIdx = ohIdx * 2 + gbtIdx
 
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
 
     return 0
 
 def checkGbtReady(ohIdx, gbtIdx):
-    return int(read_reg(get_node('BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx))))
+    return int(read_reg(get_node('BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY' % (ohIdx, gbtIdx))))
 
 def signal_handler(sig, frame):
     print("Exiting..")
-    write_reg(get_node('BEFE.GEM_AMC.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
+    write_reg(get_node('BEFE.GEM.GEM_SYSTEM.TESTS.GBT_LOOPBACK_EN'), 0)
     sys.exit(0)

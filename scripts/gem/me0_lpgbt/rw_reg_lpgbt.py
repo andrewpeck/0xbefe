@@ -234,15 +234,15 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         global NODE_IC_EXEC_WRITE
         global NODE_IC_EXEC_READ
         global NODE_IC_READ_DATA
-        NODE_IC_GBTX_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT")
-        NODE_IC_GBT_VER = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VERSION")
-        NODE_IC_GBTX_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR")
-        NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
-        NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS")
-        NODE_IC_WRITE_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA")
-        NODE_IC_EXEC_WRITE = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE")
-        NODE_IC_EXEC_READ = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ")
-        NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA")
+        NODE_IC_GBTX_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBTX_LINK_SELECT")
+        NODE_IC_GBT_VER = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBT_VERSION")
+        NODE_IC_GBTX_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR")
+        NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
+        NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.ADDRESS")
+        NODE_IC_WRITE_DATA = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.WRITE_DATA")
+        NODE_IC_EXEC_WRITE = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_WRITE")
+        NODE_IC_EXEC_READ = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_READ")
+        NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.READ_DATA")
 
         if ohIdx is not None and gbtIdx is not None:
             select_ic_link(ohIdx, gbtIdx)

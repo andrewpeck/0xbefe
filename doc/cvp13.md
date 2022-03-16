@@ -184,8 +184,8 @@ python3 common/promless.py ~/oh_fw/oh_ge21.200-v4.0.2-23-gf349814-dirty.bit
 (this is equivalent to calling the gemloader_configure.sh script on CTP7)
 To trigger the hard-reset manually in order to program the frontend you can use the built-in TTC generator module e.g. by running these commands using the ```common/reg_interface.py```:
 ```
-write GEM_AMC.TTC.GENERATOR.ENABLE 1
-write GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET 1
+write BEFE.GEM.TTC.GENERATOR.ENABLE 1
+write BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET 1
 ```
 
 ## CSC operation

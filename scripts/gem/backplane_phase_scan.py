@@ -26,25 +26,25 @@ def main():
 
     for round in range(ROUNDS):
         print("resetting the phase alignment")
-        write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
-        write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PHASE_ALIGNMENT_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
+        write_reg(get_node('BEFE.GEM.TTC.CTRL.PHASE_ALIGNMENT_RESET'), 1)
         sleep(0.1)
-        write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.MODULE_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.TTC.CTRL.MODULE_RESET'), 1)
         sleep(0.1)
-        phaseLocked = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_LOCKED'))
+        phaseLocked = read_reg(get_node('BEFE.GEM.TTC.STATUS.CLK.PHASE_LOCKED'))
         if phaseLocked != 1:
             print_red("Phase is not locked after realignment, exit")
             exit(0)
         print("phase monitor reading: %f" % readPhaseMonitor())
         getTtcStatus(True)
 
-        write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 1)
+        write_reg(get_node('BEFE.GEM.TTC.CTRL.PA_MANUAL_OVERRIDE'), 1)
         first_bad = -1
         bad_size = 0
         for phase in range(NUM_SHIFTS_PER_ROUND):
-            write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PA_MANUAL_SHIFT_EN'), 1)
+            write_reg(get_node('BEFE.GEM.TTC.CTRL.PA_MANUAL_SHIFT_EN'), 1)
             sleep(0.00001)
-            write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.CNT_RESET'), 1)
+            write_reg(get_node('BEFE.GEM.TTC.CTRL.CNT_RESET'), 1)
             sleep(0.001)
             good = getTtcStatus()
             if good:
@@ -56,19 +56,19 @@ def main():
                 else:
                     bad_size += 1
 
-        write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
+        write_reg(get_node('BEFE.GEM.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
         print("")
         print_cyan("Bad spot starts at %d, size of the bad spot = %d" % (first_bad, bad_size))
 
-    write_reg(get_node('BEFE.GEM_AMC.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
+    write_reg(get_node('BEFE.GEM.TTC.CTRL.PA_MANUAL_OVERRIDE'), 0)
 
 def readPhaseMonitor():
-    return read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE_MEAN')) * 18.6012
+    return read_reg(get_node('BEFE.GEM.TTC.STATUS.CLK.PHASE_MONITOR.PHASE_MEAN')) * 18.6012
 
 def getTtcStatus(verbose=False):
-    singleErr = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.TTC_SINGLE_ERROR_CNT'))
-    doubleErr = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.TTC_DOUBLE_ERROR_CNT'))
-    bc0Locked = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.BC0.LOCKED'))
+    singleErr = read_reg(get_node('BEFE.GEM.TTC.STATUS.TTC_SINGLE_ERROR_CNT'))
+    doubleErr = read_reg(get_node('BEFE.GEM.TTC.STATUS.TTC_DOUBLE_ERROR_CNT'))
+    bc0Locked = read_reg(get_node('BEFE.GEM.TTC.STATUS.BC0.LOCKED'))
 
     good = False
     if singleErr == 0 and doubleErr == 0 and bc0Locked == 1:
