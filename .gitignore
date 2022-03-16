@@ -12,7 +12,11 @@ cxl_error.log
 /gem/ip/*/*
 /csc/ip/*/*
 /boards/*/ip/*/*
+/boards/*/ip/*/*/*
+!/boards/*/ip/virtex/*
+!/boards/*/ip/kintex/*
 /common/ip/*/*
+
 !*.xci
 !*.xcix
 !*.prj
