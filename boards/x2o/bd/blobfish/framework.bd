@@ -907,6 +907,17 @@
           "GT_TX_POLARITY": {
             "value": "\"0\""
           }
+        },
+        "ports": {
+          "axi_clk": {
+            "type": "clk",
+            "direction": "O",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "156250000"
+              }
+            }
+          }
         }
       }
     },
