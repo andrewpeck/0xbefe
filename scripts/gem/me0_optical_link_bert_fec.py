@@ -65,7 +65,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
         fec_node_list = {}
         for gbt in gbt_list:
-            fec_node_list[gbt] = gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (ohid, gbt))
+            fec_node_list[gbt] = gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (ohid, gbt))
 
         if opr == "read":
             for gbt in fec_node_list:
@@ -85,12 +85,12 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             return
 
         # Reset the error counters
-        node = gem_utils.get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET")
+        node = gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET")
         gem_utils.write_backend_reg(node, 0x001)
 
         vfat_node = []
         for vfat in vfat_list:
-            vfat_node.append(gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.%s" % (ohid, vfat-6*ohid, "TEST_REG")))
+            vfat_node.append(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.%s" % (ohid, vfat-6*ohid, "TEST_REG")))
         
         # start error counting loop
         start_fec_errors = {}

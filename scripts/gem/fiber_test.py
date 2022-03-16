@@ -11,7 +11,7 @@ RX_POWER_THRESHOLD_ERR = 150
 RX_POWER_THRESHOLD_WARN = 200
 
 def check_gbt_errors(ber_power, num_oh, num_gbts_per_oh):
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+    write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET", 1)
 
     sleep_time = pow(10, ber_power) / (4.8 * pow(10, 9))
     print("Waiting for %d seconds to allow 10^%d bits to pass through for error counting..." % (sleep_time, ber_power))
@@ -26,9 +26,9 @@ def check_gbt_errors(ber_power, num_oh, num_gbts_per_oh):
     for oh in range(num_oh):
         subheading("OH%d" % oh)
         for gbt in range(num_gbts_per_oh):
-            locked = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
-            had_unlock = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (oh, gbt))
-            fec_errors = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh, gbt))
+            locked = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+            had_unlock = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (oh, gbt))
+            fec_errors = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh, gbt))
 
             color = Colors.GREEN
             pass_fail_text = "PASS"
@@ -47,8 +47,8 @@ def main(loopback):
         befe_config_links(loopback_test=True)
 
     # get the number of OHs and GBTs supported by the firmware
-    num_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-    num_gbts_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+    num_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    num_gbts_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
 
     # test optical power
     heading("Optical power test")

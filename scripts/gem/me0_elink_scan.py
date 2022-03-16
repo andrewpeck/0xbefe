@@ -43,7 +43,7 @@ def me0_elink_scan(system, oh_select, vfat_list):
             oh_ver = get_oh_ver(oh_select, gbt_select)
             gem_utils.check_gbt_link_ready(oh_select, gbt_select)
 
-            hwid_node = gem_utils.get_backend_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
+            hwid_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
             n_err = 0
             for iread in range(10):
                 hwid = gem_utils.simple_read_backend_reg(hwid_node, -9999)

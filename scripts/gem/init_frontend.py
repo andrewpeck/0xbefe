@@ -9,16 +9,16 @@ from os import path
 
 def init_gem_frontend():
 
-    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
     print("GEM station: %s" % gem_station)
 
-    max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
     if gem_station == 1 or gem_station == 2: # GE1/1 or GE2/1
         # configure GBTs
         num_gbts = 2 if gem_station == 2 else 3 if gem_station == 1 else None
         for oh in range(max_ohs):
             for gbt in range(num_gbts):
-                gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
@@ -29,13 +29,13 @@ def init_gem_frontend():
                 gbt_command(oh, gbt, "config", [gbt_config])
 
         print("Resetting SCAs")
-        write_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET", 1)
+        write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET", 1)
 
         print("Sending a hard-reset")
         gem_hard_reset()
 
     elif gem_station == 0: # ME0
-        num_gbts = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+        num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
         initGbtRegAddrs()
 
         # Reset only master lpGBTs (automatically resets slave lpGBTs)
@@ -64,7 +64,7 @@ def init_gem_frontend():
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
                 selectGbt(oh, gbt)
-                gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if gbt%2 != 0:
                     if gbt_ver == 0 and gbt_ready == 1:
                         for i in range(0,10):
@@ -82,7 +82,7 @@ def init_gem_frontend():
                     oh_ver = 1
                 elif gbt_ver == 1:
                     oh_ver = 2
-                gbt_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
                 if oh_ver == 1 and gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
@@ -200,17 +200,17 @@ def init_gem_frontend():
                     sleep(2.5)
 
     print("Setting VFAT HDLC addresses")
-    vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
+    vfats_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
     hdlc_addr = get_config("CONFIG_ME0_VFAT_HDLC_ADDRESSES") if gem_station == 0 else get_config("CONFIG_GE11_VFAT_HDLC_ADDRESSES") if gem_station == 1 else get_config("CONFIG_GE21_VFAT_HDLC_ADDRESSES") if gem_station == 2 else None
     for vfat in range(vfats_per_oh):
-        write_reg("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, hdlc_addr[vfat])
+        write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, hdlc_addr[vfat])
 
     print("Sending a link reset (also issues a SYNC command to the VFATs)")
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+    write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET", 1)
     time.sleep(0.1)
 
     print("Sending a command to VFATs to exit slow-control-only mode in case they are in this mode")
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE", 0)
+    write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE", 0)
 
     time.sleep(0.3)
     print("Frontend status:")

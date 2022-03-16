@@ -69,13 +69,13 @@ def ADC_Test():
     while(iter == 0):
         # read FPGA temperature
         sleep(1)
-        tempRaw = read_reg('BEFE.GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)
+        tempRaw = read_reg('BEFE.GEM.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)
         temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
         TEMP_Val[0] = temp
         # print("FPGA temperature: %fC" % temp)
 
         # read the SCA ADCs
-        write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', OH_MASK)
+        write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', OH_MASK)
         sleep(0.01)
         sendScaCommand([OH_NUM], 0x14, 0x60, 0x4, 0x00e00300, False) # setup current sources
         sleep(0.01)
@@ -167,7 +167,7 @@ def readRSSI():
 
 def readFPGA_Temp():
     # read FPGA temperature
-    tempRaw = read_reg('BEFE.GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)
+    tempRaw = read_reg('BEFE.GEM.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % OH_NUM)
     temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
     return temp
 
@@ -195,7 +195,7 @@ def readTEMP():
 def readVOLT():
     VOLT_Val = [0,0,0,0,0,0]
     # read the SCA ADCs
-    write_reg('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', OH_MASK)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', OH_MASK)
     sleep(0.01)
     sendScaCommand([OH_NUM], 0x14, 0x60, 0x4, 0x00e00300, False) # setup current sources
     sleep(0.01)

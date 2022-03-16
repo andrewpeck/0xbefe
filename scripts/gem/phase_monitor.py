@@ -26,16 +26,16 @@ def main():
     heading("Collecting phase data")
     f = open("phase.csv", "w")
 
-    lastSampleCnt = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
+    lastSampleCnt = read_reg(get_node('BEFE.GEM.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
     phaseArr = []
     for i in range(NUM_READS):
-        phaseRaw = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.PHASE'))
+        phaseRaw = read_reg(get_node('BEFE.GEM.TTC.STATUS.CLK.PHASE_MONITOR.PHASE'))
         phasePs = phaseRaw * PHASE_UNITS_PS
         phaseArr.append(phasePs)
         f.write("%f\n" % phasePs)
         sampleCnt = lastSampleCnt
         while sampleCnt == lastSampleCnt:
-            sampleCnt = read_reg(get_node('BEFE.GEM_AMC.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
+            sampleCnt = read_reg(get_node('BEFE.GEM.TTC.STATUS.CLK.PHASE_MONITOR.SAMPLE_COUNTER'))
             sleep(0.0001)
         lastSampleCnt = sampleCnt
         if i % 1000 == 0:

@@ -107,12 +107,12 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         return
 
 
-    REG_PATH = 'BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
+    REG_PATH = 'BEFE.GEM.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
 
     # Check for correct OH, good connection
     try:
-        oh_fw = read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW'))
+        oh_fw = read_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.STATUS.FW'))
         print 'OH FW: ',hex(oh_fw)
         if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
@@ -174,8 +174,8 @@ def map_vfat_sbits(optohybrid,vfat_slot, outfile, errfile):
         sleep(0.1)
         # Identify SBit
         subheading('Cluster Info')
-        cluster_reg = get_node('BEFE.GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.DEBUG_LAST_CLUSTER_7')
-        print 'T1 Status:',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+        cluster_reg = get_node('BEFE.GEM.TRIGGER.OH'+str(optohybrid)+'.DEBUG_LAST_CLUSTER_7')
+        print 'T1 Status:',read_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
         good_cluster_count = 0
         goodCluster = False
         for i in range(10000):
@@ -216,11 +216,11 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
         print 'Invalid input!'
         return
 
-    REG_PATH = 'BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
+    REG_PATH = 'BEFE.GEM.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.'
 
     # Check for correct OH, good connection
     try:
-        oh_fw = read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.STATUS.FW'))
+        oh_fw = read_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.STATUS.FW'))
         print 'OH FW: ',hex(oh_fw)
         if oh_fw < 1:
             print 'Error: OH FW: ',oh_fw
@@ -255,7 +255,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
 
     # Make sure T1 Controller is OFF
     T1Off(optohybrid)
-    print 'T1 Monitor: ',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+    print 'T1 Monitor: ',read_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
 
 
     # Reset Trigger Counters
@@ -306,13 +306,13 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
 
             subheading('Sending Calpulses')
             # Send CalPulses
-            print write_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.TOGGLE'),0xffffffff)
+            print write_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.T1Controller.TOGGLE'),0xffffffff)
 
 
             sleep(0.1)
-            print 'After sleep... T1 Status:',read_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
+            print 'After sleep... T1 Status:',read_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.T1Controller.MONITOR'))
             # Verify Triggers
-            nSbits = read_reg(get_node('BEFE.GEM_AMC.TRIGGER.OH'+str(optohybrid)+'.TRIGGER_CNT'))
+            nSbits = read_reg(get_node('BEFE.GEM.TRIGGER.OH'+str(optohybrid)+'.TRIGGER_CNT'))
             try:
                 parse_int(nSbits)
                 print 'SBits:',nSbits,'=',parse_int(nSbits)
@@ -353,7 +353,7 @@ def scan_vfat(optohybrid, vfat_slot, outfile, errfile):
         print '\n\n'
         outfile.write('\n\n')
 	# put VFAT to sleep mode
-	write_reg(get_node('BEFE.GEM_AMC.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.ContReg0'),0x36)
+	write_reg(get_node('BEFE.GEM.OH.OH'+str(optohybrid)+'.GEB.VFATS.VFAT'+str(vfat_slot)+'.ContReg0'),0x36)
 
 
 # def cluster_to_vfat (cluster):

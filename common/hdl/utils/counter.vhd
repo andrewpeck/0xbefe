@@ -5,7 +5,7 @@
 -- Create Date:    15:17:59 07/09/2015 
 -- Design Name:    OptoHybrid v2
 -- Module Name:    counter - Behavioral 
--- Project Name:   OptoHybrid v2
+-- Project Name:
 -- Target Devices: xc6vlx130t-1ff1156
 -- Tool versions:  ISE  P.20131013
 -- Description: 

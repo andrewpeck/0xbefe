@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 04/24/2016 04:52:35 AM
 -- Module Name: TTC
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Locks to TTC clock and decodes TTC commands from the backplane link. Also provides various controls and counters to be used for configuration, diagnostics and daq   
 -- 
 ----------------------------------------------------------------------------------

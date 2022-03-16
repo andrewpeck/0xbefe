@@ -18,7 +18,7 @@
   &ADDRESS_TABLE_SYSTEM;
   &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_PCIE;
-  <node id="GEM_AMC" address="0x0">
+  <node id="GEM" address="0x0">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;
     &ADDRESS_TABLE_SBIT_ME0;

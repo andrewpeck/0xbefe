@@ -5,7 +5,7 @@
 -- Create Date:    20:18:40 09/17/2015 
 -- Design Name:    GLIB v2
 -- Module Name:    DAQ
--- Project Name:   GLIB v2
+-- Project Name:
 -- Target Devices: xc6vlx130t-1ff1156
 -- Tool versions:  ISE  P.20131013
 -- Description:    This module buffers track data, builds events, analyses the data for consistency and ships off the events with all the needed headers and trailers to AMC13 over DAQLink

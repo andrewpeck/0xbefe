@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: TTC_CLOCKS
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Given a jitter cleaned TTC clock (160MHz), this module generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks.
 --              There's also an option to accept the same TXPROGDIVCLK (when g_TXPROGDIVCLK_USED is set to true), which is the same frequency as the MGT user clocks, which are 120MHz for GBTX and 320MHz for LpGBT
 --              This version doesn't implement phase alignment with external reference
