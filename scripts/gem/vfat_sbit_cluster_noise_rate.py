@@ -35,7 +35,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     gem_link_reset()
     global_reset()
     sleep(0.1)
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     sbit_data = {}
     # Check ready and get nodes
@@ -48,8 +48,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask all channels and disable calpulsing
 
-        link_good_node = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
-        sync_error_node = get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
+        link_good_node = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
+        sync_error_node = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
         link_good = read_backend_reg(link_good_node)
         sync_err = read_backend_reg(sync_error_node)
         if system!="dryrun" and (link_good == 0 or sync_err > 0):
@@ -67,19 +67,19 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     sleep(1)
     
     # Nodes for Sbit counters
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
-    reset_sbit_monitor_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
-    reset_sbit_cluster_node = get_backend_node("BEFE.GEM_AMC.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
+    write_backend_reg(get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
+    reset_sbit_monitor_node = get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
+    reset_sbit_cluster_node = get_backend_node("BEFE.GEM.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
     sbit_monitor_nodes = []
     cluster_count_nodes = []
     for i in range(0,8):
-        sbit_monitor_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
-        cluster_count_nodes.append(get_backend_node("BEFE.GEM_AMC.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
+        sbit_monitor_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
+        cluster_count_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
 
     dac_node = {}
     dac = "CFG_THR_ARM_DAC"
     for vfat in vfat_list:
-        dac_node[vfat] = get_backend_node("BEFE.GEM_AMC.OH.OH%i.GEB.VFAT%d.%s"%(oh_select, vfat, dac))
+        dac_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%d.%s"%(oh_select, vfat, dac))
 
     print ("\nRunning Sbit Noise Scans for VFATs:")
     print (vfat_list)
@@ -193,7 +193,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels
         configureVfat(0, vfat, oh_select, 0)
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     # Writing Results
     for vfat in vfat_list:

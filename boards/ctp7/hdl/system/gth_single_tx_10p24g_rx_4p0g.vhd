@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_TX_10p24g_RX_4p0g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: raw 10.24Gb/s TX & 8b10b 4.0Gb/s RX. The TX is intended to be used with the LpGBT core, and RX is for receiving trigger data from OH. Both TX and RX elastic buffers are bypassed, and there is no encoding on TX, and RX uses 8b10b.
 --              the TX user bus width is selectable between 32 and 64 bits using the g_TX_BUS_WIDTH and g_RX_BUS_WIDTH generics. RX user bus is 16 bits wide.
 --              the TX usrclk has to be 320.64MHz, and TX usrclk2 has to be 320.64MHz when 32 bit bus is selected, and 160MHz when 64 bit bus is selected. The RX usrclk and usrclk2 have to be 200.4MHz.

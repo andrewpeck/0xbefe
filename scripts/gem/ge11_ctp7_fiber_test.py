@@ -59,16 +59,16 @@ def main():
         parse_xml()
         # check GBT ready
         for gbt in range(0, 3):
-            gbtReady = read_reg(get_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)))
+            gbtReady = read_reg(get_node("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)))
             if gbtReady != 1:
                 print_red("GBT #%d is not locked! Abort.." % gbt)
                 return
 
-        write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
+        write_reg(get_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET"), 1)
         sleep(0.1)
 
         for vfat, id in VFAT_CHIP_IDS.iteritems():
-            idEnc = read_reg(get_node("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID" % (oh, vfat)))
+            idEnc = read_reg(get_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID" % (oh, vfat)))
             if idEnc == 0xdeaddead:
                 print_red("Unable to read the chip ID of VFAT #%d. Abort.." % vfat)
                 return

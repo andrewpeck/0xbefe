@@ -8,7 +8,7 @@ def main():
     parse_xml()
 
     #Example of writing a register
-    write_reg('BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET', 1)
+    write_reg('BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET', 1)
 
     #Example of reading a register
     result = read_reg('BEFE.SYSTEM.CTRL.BOARD_ID')

@@ -11,7 +11,7 @@ def init_gem_backend():
 
     fw_info = befe_print_fw_info()
 
-    if fw_info["fw_flavor"].to_string() != "GEM_AMC":
+    if fw_info["fw_flavor"].to_string() != "GEM":
         print_red("The board is not running GEM firmware (flavor = %s). Exiting.." % fw_info["fw_flavor_str"])
         return
 
@@ -29,14 +29,14 @@ def init_gem_backend():
     befe_print_link_status(links, MgtTxRx.RX)
 
     print("Use TCDS: %r" % get_config("CONFIG_USE_TCDS"))
-    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 0 if get_config("CONFIG_USE_TCDS") else 1)
+    write_reg("BEFE.GEM.TTC.GENERATOR.ENABLE", 0 if get_config("CONFIG_USE_TCDS") else 1)
 
     print("Resetting user logic")
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET", 1)
+    write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET", 1)
     time.sleep(0.3)
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+    write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET", 1)
 
-    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
     print("GEM station: %s" % gem_station)
 
     if gem_station == 1 or gem_station == 2:

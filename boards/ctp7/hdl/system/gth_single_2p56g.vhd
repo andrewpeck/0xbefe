@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_2p56g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: raw 2.56Gb/s TX & 2.56Gb/s RX intended to be used for LpGBT ASIC loopback tests. Both TX and RX elastic buffers are bypassed, and there is no encoding.
 --              CPLL is used, refclk is expected to be 320MHz, the usrclks have to be 80MHz, user bus width is 32 bits.
 --              only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").

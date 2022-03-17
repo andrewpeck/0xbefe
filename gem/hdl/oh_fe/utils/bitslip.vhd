@@ -19,7 +19,7 @@ entity bitslip is
     g_EN_TMR    : integer := 0
     );
   port(
-    fabric_clk  : in  std_logic;
+    clock       : in  std_logic;
     reset       : in  std_logic;
     bitslip_cnt : in  std_logic_vector(2 downto 0);
     din         : in  std_logic_vector(g_WORD_SIZE-1 downto 0);
@@ -46,14 +46,14 @@ begin
   cluster_packer_loop : for I in 0 to 2*g_EN_TMR generate
   begin
 
-    process(fabric_clk)
+    process(clock)
     begin
-      if (rising_edge(fabric_clk)) then
+      if (rising_edge(clock)) then
         buf(I) <= buf(I)(g_WORD_SIZE-1 downto 0) & din(g_WORD_SIZE-1 downto 0);
       end if;
     end process;
 
-    data(I) <= buf(I)(g_WORD_SIZE-1 + cnt downto cnt) when reset='0' else (others => '0');
+    data(I) <= buf(I)(g_WORD_SIZE-1 + cnt downto cnt) when reset = '0' else (others => '0');
 
   end generate;
 

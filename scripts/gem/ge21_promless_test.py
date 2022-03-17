@@ -28,12 +28,12 @@ def main():
 #    return
 
 #    subheading('Reseting the SCA')
-#    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
-    write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.ENABLE'), 0x1)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
+#    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
+    write_reg(get_node('BEFE.GEM.TTC.GENERATOR.ENABLE'), 0x1)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
     subheading('Disabling monitoring')
-#    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
+#    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
     sleep(0.1)
 
     gpio_dir = 0xff0fe0
@@ -75,7 +75,7 @@ def main():
         sleep(0.01)
 
         subheading('Executing PROMless programming')
-        write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
+        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
         sleep(0.1)
 
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
@@ -98,20 +98,20 @@ def sendScaCommand(ohList, sca_channel, sca_command, data_length, data, doRead):
 
     d = data
 
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
-    write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_CHANNEL'), sca_channel)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_COMMAND'), sca_command)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_LENGTH'), data_length)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_DATA'), d)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_CMD.SCA_CMD_EXECUTE'), 0x1)
     reply = []
     if doRead:
         for i in ohList:
-            reply.append(read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
+            reply.append(read_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.SCA_REPLY_OH%d.SCA_RPY_DATA' % i)))
     return reply
 
 def checkStatus(ohList):
-    rxReady       = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
-    criticalError = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
+    rxReady       = read_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.STATUS.READY'))
+    criticalError = read_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
     statusGood = True
     for i in ohList:

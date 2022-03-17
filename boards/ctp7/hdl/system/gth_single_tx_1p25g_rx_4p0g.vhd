@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_TX_1p25g_RX_4p0g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: 8b10b 1.25Gb/s TX & 8b10b 4.0Gb/s RX. The TX is intended to be used for GbE (local DAQ), and RX is for receiving trigger data from OH.
 --              RX elastic buffers are bypassed, TX is using the buffer and clock correction using 0x50BC words
 --              Both TX and RX user bus width is 16 bits

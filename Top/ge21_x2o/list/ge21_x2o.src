@@ -36,3 +36,4 @@ gem/hdl/daq/generated/ge21_x2o/daq.vhd
 gem/hdl/slow_control/generated/ge21_x2o/slow_control.vhd
 gem/hdl/trigger/generated/ge21_x2o/trigger.vhd
 common/hdl/slink_rocket/generated/ge21_x2o/slink_rocket.vhd
+common/hdl/misc/generated/ge21_x2o/promless_bram.vhd

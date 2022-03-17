@@ -724,7 +724,7 @@
           description="When this is 1, it means that AMC is in good communication
                        with AMC13. It must be 1 for AMC to be able to send data."
           fw_signal="daq_ready"
-          sw_val_neutral="read_reg('BEFE.GEM_AMC.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+          sw_val_neutral="read_reg('BEFE.GEM.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
           sw_val_bad="self == 0"
           sw_units="bool"/>
     <node id="DAQ_CLK_LOCKED"  address="0x0"  mask="0x00000002" permission="r"
@@ -743,7 +743,7 @@
                        when this bit is 1 (though events can still be built and
                        stored in the Input and Event FIFOs)"
           fw_signal="daq_backpressure"
-          sw_val_neutral="read_reg('BEFE.GEM_AMC.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+          sw_val_neutral="read_reg('BEFE.GEM.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
           sw_val_warn="self == 1"
           sw_units="bool"/>
     <node id="DAQ_OUTPUT_FIFO_HAD_OVERFLOW"       address="0x0"  mask="0x00000010" permission="r"
@@ -822,12 +822,12 @@
     <node id="NOTINTABLE_ERR"  address="0x30"  mask="0x0000ffff" permission="r"
           description="This counter is counting DAQLink GTX/GTH not-in-table errors"
           fw_signal="daq_notintable_err_cnt"
-          sw_val_neutral="read_reg('BEFE.GEM_AMC.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+          sw_val_neutral="read_reg('BEFE.GEM.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
           sw_val_bad="self != 0"/>
     <node id="DISPER_ERR"      address="0x31"  mask="0x0000ffff" permission="r"
           description="This counter is counting DAQLink GTX/GTH dispersion errors"
           fw_signal="daq_disper_err_cnt"
-          sw_val_neutral="read_reg('BEFE.GEM_AMC.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
+          sw_val_neutral="read_reg('BEFE.GEM.DAQ.CONTROL.IGNORE_DAQLINK') == 1"
           sw_val_bad="self != 0"/>
     <node id="L1AID"           address="0x32" permission="r"
           description="Current L1A ID (similar to event number, but this may be a bit ahead of
@@ -990,7 +990,7 @@
       <node id="TTS_STATE"           mask="0x0000f000" permission="r" address="0x0"
             description="Input TTS state (gets integrated into global TTS state later)"
             fw_signal="input_status_arr(${OH_IDX}).tts_state"
-            sw_val_neutral="(read_reg('BEFE.GEM_AMC.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
+            sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_good="self == 8" sw_val_warn="self == 1"
             sw_enum="['DISCONNECTED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
       <node id="INPUT_FIFO_IS_UFLOW"    mask="0x01000000" permission="r" address="0x0"
@@ -1053,9 +1053,9 @@
                          addition, event sending could stop due to DAQ FIFO being
                          almost full or DAQLink not being ready."
             fw_signal="input_status_arr(${OH_IDX}).eb_event_num"
-            sw_val_neutral="(read_reg('BEFE.GEM_AMC.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
-            sw_val_good="self &lt;= read_reg('BEFE.GEM_AMC.DAQ.STATUS.L1AID') &lt; self + 100"
-            sw_val_warn="read_reg('BEFE.GEM_AMC.DAQ.STATUS.L1AID') >= self + 100"/>
+            sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
+            sw_val_good="self &lt;= read_reg('BEFE.GEM.DAQ.STATUS.L1AID') &lt; self + 100"
+            sw_val_warn="read_reg('BEFE.GEM.DAQ.STATUS.L1AID') >= self + 100"/>
       <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00000fff" permission="r"
             description="Current number of words in the Input FIFO (current depth is 4096)"
             fw_signal="chamber_infifos(${OH_IDX}).data_cnt"/>
@@ -1065,18 +1065,18 @@
       <node id="INPUT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0x0000ffff" permission="r"
             description="Number of times Input FIFO was near-full (asserted at 75%, deasserted at 50%)"
             fw_signal="input_status_arr(${OH_IDX}).infifo_near_full_cnt"
-            sw_val_neutral="(read_reg('BEFE.GEM_AMC.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
+            sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_warn="self > 100"/>
       <node id="EVT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0xffff0000" permission="r"
             description="Number of times Event FIFO was near-full (asserted at 75%, deasserted at 50%)"
             fw_signal="input_status_arr(${OH_IDX}).evtfifo_near_full_cnt"
-            sw_val_neutral="(read_reg('BEFE.GEM_AMC.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
+            sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_warn="self > 100"/>
       <node id="VFAT_BLOCK_RATE"  address="0x6"  mask="0x00007fff" permission="r"
             description="Rate of VFAT blocks (192bit words) being written to Input FIFO in Hz (multiply by 192 to get bitrate)"
             fw_signal="input_status_arr(${OH_IDX}).infifo_wr_rate"
             sw_to_string="'%.2fMb/s' % ((float(self) * 192.0) / 1000000.0)"
-            sw_val_neutral="(read_reg('BEFE.GEM_AMC.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
+            sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_good="self &lt;= 1333333"
             sw_val_warn="self &gt; 1333333"
             sw_val_bad="self &gt; 1500000"/> <!-- warn at 80%, bad at 90% (max is 320Mb/s) -->

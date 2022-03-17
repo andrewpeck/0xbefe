@@ -1,4 +1,4 @@
-generate_project:me0_apex:
+GEN:me0_apex:
     extends: .generate_project
     variables:
       extends: .vars

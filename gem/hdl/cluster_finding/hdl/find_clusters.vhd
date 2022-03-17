@@ -285,18 +285,18 @@ begin
 
         -- pragma translate_off
         -- check vpf sorting
-        assert clusters(I).vpf >= clusters(J).vpf report
-          "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & ";  " &
-          "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters(J).vpf)
+        assert clusters_o(I).vpf >= clusters_o(J).vpf report
+          "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters_o(I).vpf) & ";  " &
+          "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters_o(J).vpf)
           severity error;
 
         -- for equal vpf, use the greater partition (lower eta)
-        prt_sort_check : if (clusters(I).vpf = '1' and (clusters(I).vpf = clusters(J).vpf)) generate
-          assert clusters(I).prt >= clusters(J).prt report
-            "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters(I).vpf) & " " &
-            "prt(" & integer'image(I) & ") = " & integer'image(to_integer(unsigned(clusters(I).prt))) & ";  " &
-            "prt(" & integer'image(J) & ") = " & integer'image(to_integer(unsigned(clusters(J).prt))) & " " &
-            "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters(J).vpf)
+        prt_sort_check : if (clusters_o(I).vpf = '1' and (clusters_o(I).vpf = clusters_o(J).vpf)) generate
+          assert clusters_o(I).prt >= clusters_o(J).prt report
+            "vpf(" & integer'image(I) & ") = " & std_logic'image(clusters_o(I).vpf) & " " &
+            "prt(" & integer'image(I) & ") = " & integer'image(to_integer(unsigned(clusters_o(I).prt))) & ";  " &
+            "prt(" & integer'image(J) & ") = " & integer'image(to_integer(unsigned(clusters_o(J).prt))) & " " &
+            "vpf(" & integer'image(J) & ") = " & std_logic'image(clusters_o(J).vpf)
             severity error;
         end generate;
         -- pragma translate_on

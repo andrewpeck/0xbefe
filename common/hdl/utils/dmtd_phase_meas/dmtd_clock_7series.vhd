@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 06.04.2020
 -- Module Name: dmtd_clock
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Generates a 39.997MHz clock from 40.00MHz, 160.00MHz, or 320MHz input, which can be used for DMTD phase measurement. This file implements the xilinx 7 series version.
 -- 
 ----------------------------------------------------------------------------------
