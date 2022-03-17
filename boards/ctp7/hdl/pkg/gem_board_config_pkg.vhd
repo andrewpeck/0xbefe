@@ -197,8 +197,8 @@ package board_config_package is
     -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors
     type t_mgt_config_arr is array (0 to 1) of t_mgt_config;
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true),   
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true)   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true),   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true)   
     );    
     
 end board_config_package;
