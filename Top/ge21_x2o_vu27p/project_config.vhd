@@ -50,25 +50,25 @@ package project_config is
 
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
         ----------------------------- quad 224 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => true , ibert_inst => true ),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => true ),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => true , chbond_master => 0, ibert_inst => true ),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true ),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 000, refclk0_idx => 00, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
         ----------------------------- quad 225 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 004, refclk0_idx => 01, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
         ----------------------------- quad 226 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 008, refclk0_idx => 02, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
         ----------------------------- quad 227 -----------------------------
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, ibert_inst => false),
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, ibert_inst => false)
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_GBTX   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_GBTX     , qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL   , qpll_idx => 012, refclk0_idx => 03, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false)
     );
 
 end package project_config;

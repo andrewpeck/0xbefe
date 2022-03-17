@@ -955,14 +955,14 @@ begin
                 );
         end generate;
 
-        i_ila_gbe_rx_link : entity work.gt_rx_link_ila_wrapper
+        i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
             port map(
                 clk_i        => spy_usrclk_i,
                 rx_data_i    => spy_rx_data_i,
                 mgt_status_i => spy_rx_status_i
             );
 
-        i_ila_gbe_tx_link : entity work.gt_tx_link_ila_wrapper
+        i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
             port map(
                 clk_i   => spy_usrclk_i,
                 kchar_i => spy_tx_data_o.txcharisk,

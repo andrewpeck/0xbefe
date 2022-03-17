@@ -473,28 +473,28 @@ begin
     -- Debug
     --================================--
 
-    i_ila_dmb0_link : entity work.gt_rx_link_ila_wrapper
+    i_ila_dmb0_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
             clk_i        => csc_dmb_rx_usrclk_arr_i(0),
             rx_data_i    => csc_dmb_rx_data_arr_i(0),
             mgt_status_i => csc_dmb_rx_status_arr_i(0)
         );
 
-    i_ila_dmb1_link : entity work.gt_rx_link_ila_wrapper
+    i_ila_dmb1_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
             clk_i        => csc_dmb_rx_usrclk_arr_i(1),
             rx_data_i    => csc_dmb_rx_data_arr_i(1),
             mgt_status_i => csc_dmb_rx_status_arr_i(1)
         );
 
-    i_ila_gbe_rx_link : entity work.gt_rx_link_ila_wrapper
+    i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
             clk_i        => csc_spy_usrclk_i,
             rx_data_i    => csc_spy_rx_data_i,
             mgt_status_i => csc_spy_rx_status_i
         );
 
-    i_ila_gbe_tx_link : entity work.gt_tx_link_ila_wrapper
+    i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
         port map(
             clk_i   => csc_spy_usrclk_i,
             kchar_i => csc_spy_tx_data_o.txcharisk,

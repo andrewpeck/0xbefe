@@ -420,9 +420,10 @@ package common_pkg is
         rx_pll_locked   : std_logic;
         rxbufstatus     : std_logic_vector(2 downto 0);
         rxclkcorcnt     : std_logic_vector(1 downto 0);
+        rxchanisaligned : std_logic; -- channel bonding status
     end record;
 
-    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
+    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00", rxchanisaligned => '0');
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
 

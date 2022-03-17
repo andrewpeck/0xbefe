@@ -444,13 +444,13 @@ begin
             );
         
         g_debug_ge11_trig_link : if g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_3P2G or g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_4P0G generate
-            i_ila_trig0_link : entity work.gt_rx_link_ila_wrapper
+            i_ila_trig0_link : entity work.ila_mgt_rx_16b_wrapper
                 port map(
                     clk_i        => gth_rx_trig_usrclk_i(0),
                     rx_data_i    => gth_rx_trig_data_i(0),
                     mgt_status_i => MGT_STATUS_NULL
                 );
-            i_ila_trig1_link : entity work.gt_rx_link_ila_wrapper
+            i_ila_trig1_link : entity work.ila_mgt_rx_16b_wrapper
                 port map(
                     clk_i        => gth_rx_trig_usrclk_i(1),
                     rx_data_i    => gth_rx_trig_data_i(1),

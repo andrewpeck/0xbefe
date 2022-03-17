@@ -13,28 +13,28 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 use work.common_pkg.all;
 
-entity gt_tx_link_ila_wrapper is
+entity ila_mgt_tx_16b_wrapper is
   port (
       
       clk_i             : in std_logic;
       kchar_i           : in std_logic_vector(1 downto 0);
       data_i            : in std_logic_vector(15 downto 0)
   );
-end gt_tx_link_ila_wrapper;
+end ila_mgt_tx_16b_wrapper;
 
-architecture Behavioral of gt_tx_link_ila_wrapper is
+architecture Behavioral of ila_mgt_tx_16b_wrapper is
     
-    component gt_tx_link_ila is
+    component ila_mgt_tx_16b is
         PORT(
             clk    : IN STD_LOGIC;
             probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
             probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
         );
-    end component gt_tx_link_ila;
+    end component ila_mgt_tx_16b;
         
 begin
 
-    i_gt_tx_link_ila : component gt_tx_link_ila
+    i_ila_mgt_tx_16b : component ila_mgt_tx_16b
         port map(
             clk    => clk_i,
             probe0 => data_i,
