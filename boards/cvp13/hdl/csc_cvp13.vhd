@@ -653,7 +653,6 @@ begin
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxreset <= '0';
             mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxslide <= '0';
             
-            link_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx);
             rx_data(32 * i + 31 downto 32 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxdata(31 downto 0);
             rx_byteisaligned(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxbyteisaligned;
             rx_byterealign(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxbyterealign;
@@ -664,6 +663,8 @@ begin
             rx_charisk(4 * i + 3 downto 4 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxcharisk(3 downto 0);
             rx_chanisaligned(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxchanisaligned;
         end generate;
+        
+        link_clk <= mgt_master_txusrclk.odmb57;
         
         -- tx logic
         process(link_clk)

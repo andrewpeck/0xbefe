@@ -20,7 +20,7 @@ package project_config is
     --================================--   
     
     constant CFG_NUM_DMBS       : t_int_array(0 to CFG_NUM_SLRS - 1) := (0 => 2);
-    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (0 => 4);
+    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (0 => 1);
 
     --================================--
     -- Link configuration
