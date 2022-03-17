@@ -204,10 +204,10 @@ begin
 
     stripgen : for J in 0 to 63 generate
     begin
-      inj : if (J = 0) generate
+      inj : if (J = 23 or J=24 or J=25) generate
         vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
       end generate;
-      noinj : if (J /= 0) generate
+      noinj : if (J /= 23 and J/=24 and J/=25) generate
         vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J);
       end generate;
     end generate;
@@ -217,7 +217,7 @@ begin
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
       USE_DYNAMIC_MAPPING => true,
-      REGISTER_OUTPUT     => false
+      REGISTER_OUTPUT     => true
       )
     port map (
       clock       => clocks.clk40,
@@ -232,11 +232,11 @@ begin
 
   sbit_inject_gen : for I in 0 to (NUM_VFATS-1) generate
     process (clocks.clk40) is
-      variable inj_cnt : integer range 0 to 255 := 0;
+      variable inj_cnt : integer range 0 to 296 := 0;
     begin
 
       if (rising_edge(clocks.clk40)) then
-        if (inj_cnt = 255) then
+        if (inj_cnt = 296 or ttc.bc0='1') then
           inj_cnt := 0;
         else
           inj_cnt := inj_cnt + 1;
@@ -303,29 +303,36 @@ begin
   -- L1A Delay
   --------------------------------------------------------------------------------
 
+  l1a_pipeline(0) <= ttc.l1a;
+  l1a_delayed     <= l1a_pipeline(to_integer(unsigned(l1a_mask_delay)));
+
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-      l1a_pipeline(0) <= ttc.l1a;
       for I in 1 to l1a_pipeline'left loop
         l1a_pipeline(I) <= l1a_pipeline(I-1);
       end loop;
     end if;
-    l1a_delayed <= l1a_pipeline(to_integer(unsigned(l1a_mask_delay)));
   end process;
 
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
+
       if (l1a_delayed = '1') then
         l1a_mask_cnt <= unsigned(l1a_mask_width);
       elsif (l1a_mask_cnt > 0) then
         l1a_mask_cnt <= l1a_mask_cnt - 1;
       end if;
+
+      if (l1a_mask_cnt > 0) then
+        mask_l1a <= '1';
+      else
+        mask_l1a <= '0';
+      end if;
+
     end if;
   end process;
-
-  mask_l1a <= '1' when l1a_mask_cnt > 0 else '0';
 
   --------------------------------------------------------------------------------------------------------------------
   -- Cluster Packer
@@ -356,7 +363,8 @@ begin
     attribute DONT_TOUCH of cluster_count_unmasked : signal is "true";
     attribute DONT_TOUCH of overflow               : signal is "true";
 
-    signal cluster_tmr_err : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0);
+    signal cluster_tmr_err     : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0);
+    signal cluster_tmr_err_reg : std_logic;
 
     signal tmr_err_inj : std_logic := '0';
 
@@ -454,12 +462,39 @@ begin
 
     end generate;
 
-    clusters_o <= clusters_rev when reverse_partitions = '1' else clusters_norev;
+    --------------------------------------------------------------------------------
+    -- Cluster Outputs
+    --------------------------------------------------------------------------------
+
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        if (reverse_partitions = '1') then
+          clusters_o <= clusters_rev;
+        else
+          clusters_o <=  clusters_norev;
+        end if;
+      end if;
+    end process;
+
+    --------------------------------------------------------------------------------
+    -- Cluster TMR Output
+    --------------------------------------------------------------------------------
+
+    -- register on the 160 MHz clock the or_reduce
+    -- then transfer to the 40MHz clock
+
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        cluster_tmr_err_reg <= or_reduce(cluster_tmr_err);
+      end if;
+    end process;
 
     process (clocks.clk40) is
     begin
       if (rising_edge(clocks.clk40)) then
-        cluster_tmr_err_o <= or_reduce(cluster_tmr_err);
+        cluster_tmr_err_o <= cluster_tmr_err_reg;
       end if;
     end process;
 

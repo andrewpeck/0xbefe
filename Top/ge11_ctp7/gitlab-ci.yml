@@ -1,4 +1,4 @@
-generate_project:ge11_ctp7:
+GEN:ge11_ctp7:
     extends: .generate_project
     variables:
       extends: .vars

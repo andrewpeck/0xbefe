@@ -10,14 +10,13 @@ gem/hdl/oh_fe/mgt/gtx/gtx_tx_sync.vhd 93
 
 gem/hdl/oh_fe/mgt/mgt_wrapper.vhd 93
 
+# gtp stuff just to make ise happy
 gem/hdl/oh_fe/mgt/gtp/gtp_common_reset.vhd 93
 gem/hdl/oh_fe/mgt/gtp/gtp_tx_startup_fsm.vhd 93
+gem/hdl/oh_fe/mgt/legacy_link/a7_gtp_wrapper.vhd 93
 
-gem/hdl/oh_fe/mgt/legacy_link/a7_gtp_wrapper.vhd
+# gtx
 gem/hdl/oh_fe/mgt/legacy_link/gem_data_out.v
-gem/hdl/oh_fe/mgt/legacy_link/gtx_wizard_4output_v6_gtx_manual.vhd
-gem/hdl/oh_fe/mgt/legacy_link/gtx_wizard_4output_v6_tx_sync.vhd
-#gem/hdl/oh_fe/mgt/legacy_link/trg_tx_buf_bypass_gtx.v
-#gem/hdl/oh_fe/mgt/legacy_link/trg_tx_buf_bypass.v
-#gem/hdl/oh_fe/mgt/legacy_link/tx_sync.v
-gem/hdl/oh_fe/mgt/legacy_link/v6_gtx_wrapper.vhd
+gem/hdl/oh_fe/mgt/gtx/gtx_single.vhd 93
+gem/hdl/oh_fe/mgt/gtx/gtx_quad.vhd 93
+gem/hdl/oh_fe/mgt/gtx/gtx_tx_sync.vhd 93

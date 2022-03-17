@@ -105,7 +105,7 @@ begin
     end if;
   end process;
 
-  bx0_local_o <= '1' when bxn_counter = 0 else '0';  -- This TMBs bxn is at 0
+  bx0_local_o <= '1' when bxn_counter = 0 else '0';  -- This OHs bxn is at 0
 
   -- single clock strobe of sync error at bx0
   bx0_sync_err_o <= '1' when

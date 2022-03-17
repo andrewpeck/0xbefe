@@ -49,7 +49,8 @@ entity control is
 
     --== TTC ==--
 
-    ttc_i  : in ttc_t;
+    ttc_i  : in  ttc_t;
+    ttc_o  : out ttc_t;
 
     -- Clock and Reset
     clocks        : in  clocks_t;
@@ -486,6 +487,10 @@ begin
   --------------------------------------------------------------------------------------------------------------------
   -- TTC
   --------------------------------------------------------------------------------------------------------------------
+
+  ttc_o.bc0    <= bx0_local;
+  ttc_o.resync <= ttc_i.resync;
+  ttc_o.l1a    <= ttc_i.l1a;
 
   ttc_inst : entity work.ttc_tmr
 
