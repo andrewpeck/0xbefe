@@ -23,10 +23,10 @@ TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 #-------------------------------------------------------------------------------
 
 # create a closed group around the mgts to keep out extra trigger logic
-INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
-AREA_GROUP "MGT_GROUP" RANGE=SLICE_X80Y125:SLICE_X105Y159;
-AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
-AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
+#INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
+#AREA_GROUP "MGT_GROUP" RANGE=SLICE_X80Y125:SLICE_X105Y159;
+#AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
+#AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
 
 #-------------------------------------------------------------------------------
 # CDC
