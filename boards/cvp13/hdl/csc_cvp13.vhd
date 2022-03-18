@@ -640,6 +640,7 @@ begin
         signal idle_cntdown         : integer range 0 to (2 ** 16) - 1 := 0;
         signal tx_counter           : unsigned(31 downto 0) := (others => '0');
         signal tx_prbs_data         : std_logic_vector(31 downto 0) := (others => '0');
+        signal tx_prbs_en           : std_logic;
         
         signal rx_prbs_data         : t_std32_array(0 to 3) := (others => (others => '0'));
         signal rx_prbs_err_bits     : t_std32_array(0 to 3) := (others => (others => '0'));
@@ -696,9 +697,11 @@ begin
                 RST      => o57_reset,
                 CLK      => link_clk,
                 DATA_IN  => x"00000000",
-                EN       => '1',
+                EN       => tx_prbs_en,
                 DATA_OUT => tx_prbs_data
             );
+        
+        tx_prbs_en <= '0' when idle_cntdown = 0 else '1';
         
         -- RX PRBS checkers
         g_prbs_chekers : for i in 0 to 3 generate
