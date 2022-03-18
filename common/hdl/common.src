@@ -43,6 +43,7 @@ common/hdl/utils/hamming_8_13.vhd
 common/hdl/utils/hamming_32_39.vhd
 common/hdl/utils/i2c_master.vhd
 common/hdl/utils/pipe.vhd
+common/hdl/utils/prbs_any.vhd
 common/hdl/utils/ila_mgt_rx_16b_wrapper.vhd
 common/hdl/utils/ila_mgt_tx_16b_wrapper.vhd
 common/hdl/utils/ila_mgt_rx_64b_wrapper.vhd

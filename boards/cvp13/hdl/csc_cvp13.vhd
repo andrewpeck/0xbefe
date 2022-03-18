@@ -583,8 +583,14 @@ begin
                 probe_in21 : in  std_logic_vector(31 downto 0);
                 probe_in22 : in  std_logic_vector(31 downto 0);
                 probe_in23 : in  std_logic_vector(31 downto 0);
+                probe_in24 : in  std_logic_vector(31 downto 0);
+                probe_in25 : in  std_logic_vector(31 downto 0);
+                probe_in26 : in  std_logic_vector(31 downto 0);
+                probe_in27 : in  std_logic_vector(31 downto 0);
                 probe_out0 : out std_logic;
-                probe_out1 : out std_logic_vector(15 downto 0)
+                probe_out1 : out std_logic_vector(15 downto 0);
+                probe_out2 : out std_logic;
+                probe_out3 : out std_logic
             );
         end component;        
         
@@ -613,6 +619,9 @@ begin
         
         signal o57_reset            : std_logic;
         signal link_clk             : std_logic;
+        signal use_prbs             : std_logic := '1';
+        signal reverse_rx_prbs      : std_logic := '1';
+        
         signal tx_data              : std_logic_vector(127 downto 0);
         signal tx_charisk           : std_logic_vector(15 downto 0);
         signal rx_data              : std_logic_vector(127 downto 0);
@@ -623,11 +632,18 @@ begin
         signal rx_notintable        : std_logic_vector(15 downto 0);
         signal rx_chariscomma       : std_logic_vector(15 downto 0);
         signal rx_charisk           : std_logic_vector(15 downto 0);
+        signal rx_charisk_d1        : std_logic_vector(15 downto 0) := (others => '1');
+        signal rx_charisk_d2        : std_logic_vector(15 downto 0) := (others => '1');
         signal rx_chanisaligned     : std_logic_vector(3 downto 0);
                                     
         signal idle_word_period     : std_logic_vector(15 downto 0);
         signal idle_cntdown         : integer range 0 to (2 ** 16) - 1 := 0;
         signal tx_counter           : unsigned(31 downto 0) := (others => '0');
+        signal tx_prbs_data         : std_logic_vector(31 downto 0) := (others => '0');
+        
+        signal rx_prbs_data         : t_std32_array(0 to 3) := (others => (others => '0'));
+        signal rx_prbs_err_bits     : t_std32_array(0 to 3) := (others => (others => '0'));
+        signal rx_prbs_err          : std_logic_vector(3 downto 0) := (others => '0');
                                     
         signal rx_counter           : unsigned(31 downto 0) := (others => '0');
         signal rx_data_err          : std_logic_vector(3 downto 0) := (others => '0');
@@ -638,6 +654,7 @@ begin
         signal rx_disperr_err_cnt   : t_std32_array(3 downto 0) := (others => (others => '0'));
         signal rx_bytealign_err_cnt : t_std32_array(3 downto 0) := (others => (others => '0'));
         signal rx_chanalign_err_cnt : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_prbs_err_cnt      : t_std32_array(3 downto 0) := (others => (others => '0'));
                                     
         constant CHAN_BOND_WORD     : std_logic_vector(31 downto 0) := x"606060BC";
         constant IDLE_WORD          : std_logic_vector(31 downto 0) := x"505050BC";
@@ -666,6 +683,68 @@ begin
         
         link_clk <= mgt_master_txusrclk.odmb57;
         
+        -- TX PRBS
+        i_tx_prbs : entity work.PRBS_ANY
+            generic map(
+                CHK_MODE    => false,
+                INV_PATTERN => true,
+                POLY_LENGHT => 31,
+                POLY_TAP    => 28,
+                NBITS       => 32
+            )
+            port map(
+                RST      => o57_reset,
+                CLK      => link_clk,
+                DATA_IN  => x"00000000",
+                EN       => '1',
+                DATA_OUT => tx_prbs_data
+            );
+        
+        -- RX PRBS checkers
+        g_prbs_chekers : for i in 0 to 3 generate
+        
+            process(link_clk) is
+            begin
+                if rising_edge(link_clk) then
+                    if reverse_rx_prbs = '1' then
+                        rx_prbs_data(i) <= reverse_bits(rx_data(32 * i + 31 downto 32 * i));
+                    else
+                        rx_prbs_data(i) <= rx_data(32 * i + 31 downto 32 * i);
+                    end if;
+                    rx_charisk_d1(4 * i + 3 downto 4 * i) <= rx_charisk(4 * i + 3 downto 4 * i);
+                    rx_charisk_d2(4 * i + 3 downto 4 * i) <= rx_charisk_d1(4 * i + 3 downto 4 * i);
+                end if;
+            end process;
+        
+            i_rx_prbs_check : entity work.PRBS_ANY
+                generic map(
+                    CHK_MODE    => true,
+                    INV_PATTERN => true,
+                    POLY_LENGHT => 31,
+                    POLY_TAP    => 28,
+                    NBITS       => 32
+                )
+                port map(
+                    RST      => o57_reset,
+                    CLK      => link_clk,
+                    DATA_IN  => rx_prbs_data(i),
+                    EN       => '1',
+                    DATA_OUT => rx_prbs_err_bits(i)
+                );
+
+            process(link_clk) is
+            begin
+                if rising_edge(link_clk) then
+                    if o57_reset = '1' then
+                        rx_prbs_err(i) <= '0';
+                    else
+                        rx_prbs_err(i) <= or_reduce(rx_prbs_err_bits(i)) and not or_reduce(rx_charisk_d2(4 * i + 3 downto 4 * i));
+                    end if;
+                end if;
+            end process;
+
+        end generate;
+        
         -- tx logic
         process(link_clk)
             variable reset_tx_char : std_logic := '0';
@@ -690,7 +769,11 @@ begin
                     else
                         idle_cntdown <= idle_cntdown - 1;
                         tx_counter <= tx_counter + 1;
-                        tx_data <= std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter);
+                        if use_prbs = '1' then
+                            tx_data <= tx_prbs_data & tx_prbs_data & tx_prbs_data & tx_prbs_data; 
+                        else
+                            tx_data <= std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter);
+                        end if;
                         tx_charisk <= x"0000";
                     end if;
                     
@@ -802,7 +885,19 @@ begin
                     en_i      => not rx_chanisaligned(i),
                     count_o   => rx_chanalign_err_cnt(i)
                 );
-        
+
+            i_prbs_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => rx_prbs_err(i),
+                    count_o   => rx_prbs_err_cnt(i)
+                );
+                        
         end generate;
     
         -- VIO
@@ -833,8 +928,14 @@ begin
                 probe_in21 => rx_chanalign_err_cnt(1),
                 probe_in22 => rx_chanalign_err_cnt(2),
                 probe_in23 => rx_chanalign_err_cnt(3),
+                probe_in24 => rx_prbs_err_cnt(0),
+                probe_in25 => rx_prbs_err_cnt(1),
+                probe_in26 => rx_prbs_err_cnt(2),
+                probe_in27 => rx_prbs_err_cnt(3),
                 probe_out0 => o57_reset,
-                probe_out1 => idle_word_period
+                probe_out1 => idle_word_period,
+                probe_out2 => use_prbs,
+                probe_out3 => reverse_rx_prbs
             );    
     
         -- TX ILA
@@ -858,6 +959,14 @@ begin
                 probe6 => or_reduce(rx_byterealign),
                 probe7 => "000", -- bufstatus
                 probe8 => "00" -- rxclkcorr
+            );
+
+        -- PRBS checker ILA
+        i_prbs_check_ila : ila_mgt_tx_128b
+            port map(
+                clk    => link_clk,
+                probe0 => rx_prbs_err_bits(3) & rx_prbs_err_bits(2) & rx_prbs_err_bits(1) & rx_prbs_err_bits(0),
+                probe1 => x"000" & rx_prbs_err(3) & rx_prbs_err(2) & rx_prbs_err(1) & rx_prbs_err(0)
             );
     
     end generate;
