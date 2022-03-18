@@ -3,7 +3,7 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
 -- Create Date:    2021-06-02
--- Module Name:    GTY_QPLL_ODMB57_200
+-- Module Name:    GTY_QPLL_ODMB57_157
 -- Description:    This is a wrapper for a GTY QPLL that can be used with an ODMB57 GTY channel.
 --                 QPLL0 requires a 200MHz refclk
 --                 QPLL1 requires a 160MHz LHC freq refclck

@@ -721,37 +721,30 @@ begin
         --============================================================--
         g_chan_odmb57_bidir : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_ODMB57_BIDIR generate
 
-            -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.odmb57;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.odmb57;
-            
             -- master clocks       
             g_master_clks : if g_LINK_CONFIG(chan).is_master generate
-                master_txoutclk.odmb57 <= chan_clks_out_arr(chan).txoutclk;
-                master_txusrclk.odmb57 <= chan_clks_in_arr(chan).txusrclk2;
-            end generate;
-            
-            -- RX master clock       
-            g_rx_master_clk : if g_LINK_CONFIG(chan).is_master generate
-                i_bufg_master_rxoutclk : BUFG_GT
+                i_bufg_master_txoutclk : BUFG_GT
                     port map(
-                        O       => master_rxoutclk.odmb57, -- 312.5MHz
+                        O       => master_txoutclk.odmb57, -- 312.5MHz
                         CE      => '1',
                         CEMASK  => '0',
                         CLR     => '0',
                         CLRMASK => '0',
                         DIV     => "000",
-                        I       => chan_clks_out_arr(chan).rxoutclk -- 312.5MHz
-                    );
-                
-                master_rxusrclk.odmb57 <= master_rxoutclk.odmb57;
-                master_rxusrclk2.odmb57 <= master_rxoutclk.odmb57;
+                        I       => chan_clks_out_arr(chan).txoutclk -- 312.5MHz
+                    );                  
+                master_txusrclk.odmb57 <= chan_clks_in_arr(chan).txusrclk2;
+                master_rxusrclk.odmb57 <= chan_clks_in_arr(chan).rxusrclk2;
             end generate;
             
-            -- ODMB57 links always use elastic buffers, so take the user clocks from the master rxoutclk
-            chan_clks_in_arr(chan).rxusrclk <= master_rxusrclk.odmb57;
-            chan_clks_in_arr(chan).rxusrclk2 <= master_rxusrclk2.odmb57;
-
+            -- TX user clocks
+            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.odmb57;
+            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.odmb57;
+            
+            -- ODMB57 links always use elastic buffers
+            chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.odmb57;
+            chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.odmb57;
+            
             -- generic control signals
             rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on DMB links
             
@@ -764,7 +757,7 @@ begin
                     g_RX_QPLL_01            => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
                     g_TX_REFCLK_FREQ        => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
                     g_RX_REFCLK_FREQ        => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
-                    g_TXOUTCLKSEL           => "011", -- straight refclk by default
+                    g_TXOUTCLKSEL           => "101", -- from TXPROGDIV (312.5MHz -- same as the required txusrclk)
                     g_RXOUTCLKSEL           => "101", -- from RXPROGDIV (same frequency as the required rxusrclk = 312.5MHz, note that rxusrclk must be half of that)
                     g_RX_CHAN_BOND_MASTER   => g_LINK_CONFIG(chan).chbond_master = chan
                 )
