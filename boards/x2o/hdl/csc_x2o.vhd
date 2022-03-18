@@ -558,7 +558,7 @@ begin
             rx_link_data.rxchariscomma <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxchariscomma(1 downto 0);  
             rx_link_data.rxcharisk <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxcharisk(1 downto 0);     
             
-            rx_link_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx);     
+            rx_link_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx);
                         
             i_ila_ttc_rx_link : entity work.ila_mgt_rx_16b_wrapper
                 port map(

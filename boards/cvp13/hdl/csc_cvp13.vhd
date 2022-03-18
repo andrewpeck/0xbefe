@@ -728,7 +728,7 @@ begin
                     RST      => o57_reset,
                     CLK      => link_clk,
                     DATA_IN  => rx_prbs_data(i),
-                    EN       => '1',
+                    EN       => not rx_charisk_d1(4 * i),
                     DATA_OUT => rx_prbs_err_bits(i)
                 );
 
@@ -747,23 +747,29 @@ begin
         
         -- tx logic
         process(link_clk)
-            variable reset_tx_char : std_logic := '0';
+            variable tx_idle_char : std_logic := '0';
         begin
             if rising_edge(link_clk) then
                 if o57_reset = '1' then
                     idle_cntdown <= to_integer(unsigned(idle_word_period));
                     tx_counter <= (others => '0');
-                    if reset_tx_char = '0' then
+                    if tx_idle_char = '0' then
                         tx_data <= CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD;
                     else
                         tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
                     end if;
                     tx_charisk <= x"1111";
-                    reset_tx_char := not reset_tx_char;
+                    tx_idle_char := not tx_idle_char;
                 else
                     
                     if idle_cntdown = 0 then
-                        tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
+                        if tx_idle_char = '0' then
+                            tx_data <= CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD;
+                        else
+                            tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
+                        end if;
+                        tx_idle_char := not tx_idle_char;
+--                        tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
                         tx_charisk <= x"1111";
                         idle_cntdown <= to_integer(unsigned(idle_word_period));
                     else
