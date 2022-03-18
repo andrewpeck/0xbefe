@@ -560,12 +560,12 @@ begin
             
             rx_link_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx);     
                         
-            i_ila_ttc_rx_link : entity work.gt_rx_link_ila_wrapper
+            i_ila_ttc_rx_link : entity work.ila_mgt_rx_16b_wrapper
                 port map(
                     clk_i        => mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx),
                     rx_data_i    => rx_link_data,
                     mgt_status_i => rx_link_status
-                );            
+                );
         end generate;
     end generate;
 
