@@ -140,6 +140,7 @@ architecture gty_channel_odmb57_bidir_arch of gty_channel_odmb57_bidir is
     
     signal rxchbondmaster   : std_logic;
     signal rxchbondi        : std_logic_vector(4 downto 0);
+    signal rxchbondlevel    : std_logic_vector(2 downto 0);
     
 begin
 
@@ -213,11 +214,13 @@ begin
     g_chan_bond_master : if g_RX_CHAN_BOND_MASTER generate
         rxchbondmaster <= '1';
         rxchbondi <= (others => '0');
+        rxchbondlevel <= "001";
     end generate;
 
     g_chan_bond_slave : if not g_RX_CHAN_BOND_MASTER generate
         rxchbondmaster <= '0';
         rxchbondi <= rx_chan_bond_i;
+        rxchbondlevel <= "000";
     end generate;
     
         
@@ -898,7 +901,7 @@ begin
             RXCDRRESET           => '0',
             RXCHBONDEN           => '1',
             RXCHBONDI            => rxchbondi,
-            RXCHBONDLEVEL        => "001",
+            RXCHBONDLEVEL        => rxchbondlevel,
             RXCHBONDMASTER       => rxchbondmaster,
             RXCHBONDSLAVE        => not rxchbondmaster,
             RXCKCALRESET         => '0',
