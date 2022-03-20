@@ -198,7 +198,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
                         cluster_count = cluster_count_i
                     sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
                     sbit_cluster_address = sbit_monitor_value & 0x7ff
-                    sbit_cluster_size = ((sbit_monitor_value >> 11) & 0x7) + 1
+                    sbit_cluster_size = ((sbit_monitor_value >> 12) & 0x7) + 1
                     if i!=0 and sbit_cluster_address!=0x7ff:
                         multiple_cluster = 1
                         break
@@ -378,10 +378,14 @@ if __name__ == "__main__":
         channel = int(line.split()[1])
         sbit = int(line.split()[2])
         cluster_count = line.split()[3]
-        cluster_size = int(line.split()[4].split(",")[0])
-        cluster_address = int(line.split()[4].split(",")[1])
-        if cluster_address == 2047:
+        cluster_address = -9999
+        cluster_size = -9999
+        if len(line.split())>4:
+            cluster_size = int(line.split()[4].split(",")[0])
+            cluster_address = int(line.split()[4].split(",")[1])
+        if cluster_address == 2047 or cluster_size == 8:
             cluster_address = -9999
+            cluster_size = -9999
         if vfat not in s_bit_cluster_mapping:
             s_bit_cluster_mapping[vfat] = {}
         s_bit_cluster_mapping[vfat][channel] = {}

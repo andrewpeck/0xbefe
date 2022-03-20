@@ -123,7 +123,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                 s_bit_cluster_mapping[vfat][channel]["cluster_count"].append(read_backend_reg(cluster_count_nodes[i]))
                 sbit_monitor_value = read_backend_reg(sbit_monitor_nodes[i])
                 sbit_cluster_address = sbit_monitor_value & 0x7ff
-                sbit_cluster_size = ((sbit_monitor_value >> 11) & 0x7) + 1
+                sbit_cluster_size = ((sbit_monitor_value >> 12) & 0x7) + 1
                 s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"].append(sbit_cluster_size)
                 s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"].append(sbit_cluster_address)
 
@@ -183,7 +183,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             n_clusters = 0
             large_cluster = 0
             for i in range(0,8):
-                if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff and s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 0x7):
+                if (s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i] == 0x7ff or s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] == 8):
                     continue
                 n_clusters += 1
                 if s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] > 1:
