@@ -13,35 +13,35 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 use work.common_pkg.all;
 
-entity gt_rx_link_ila_wrapper is
+entity ila_mgt_rx_64b_wrapper is
   port (
       
       clk_i         : in std_logic;
-      rx_data_i     : in t_mgt_16b_rx_data;
+      rx_data_i     : in t_mgt_64b_rx_data;
       mgt_status_i  : in t_mgt_status      
   );
-end gt_rx_link_ila_wrapper;
+end ila_mgt_rx_64b_wrapper;
 
-architecture Behavioral of gt_rx_link_ila_wrapper is
+architecture Behavioral of ila_mgt_rx_64b_wrapper is
     
-    component gt_rx_link_ila is
+    component ila_mgt_rx_64b is
         PORT(
             clk    : IN STD_LOGIC;
-            probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            probe1 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-            probe2 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-            probe3 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-            probe4 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            probe0 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+            probe1 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            probe2 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            probe3 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            probe4 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
             probe5 : IN STD_LOGIC;
             probe6 : IN STD_LOGIC;
             probe7 : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
             probe8 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
         );
-    end component gt_rx_link_ila;
+    end component ila_mgt_rx_64b;
         
 begin
 
-    i_gt_rx_link_ila : component gt_rx_link_ila
+    i_ila_mgt_rx_64b : component ila_mgt_rx_64b
         port map(
             clk         => clk_i,
             probe0      => rx_data_i.rxdata,

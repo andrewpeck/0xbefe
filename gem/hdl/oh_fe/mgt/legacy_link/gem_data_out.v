@@ -290,10 +290,10 @@ module   gem_data_out
    endgenerate
 
    //------------------------------------------------------------------------------
-   // we should cycle through these four K-codes:  BC, F7, FB, FD to serve as
-   // bunch sequence indicators.when we have more than 8 clusters
-   // detected on an OH (an S-bit overflow)
-   // we should send the "FC" K-code instead of the usual choice.
+   // We should cycle through these four K-codes: BC, F7, FB, FD to serve as
+   // bunch sequence indicators.
+   // When we have more than 8 clusters detected on an OH (an S-bit overflow)
+   // we should send the "FE" K-code instead of the usual choice.
    //------------------------------------------------------------------------------
 
    //  local (ttc independent) counter --------------------------------------------
@@ -311,17 +311,17 @@ module   gem_data_out
 
          always @(*) begin
             if (bc0 && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'h1C;
+              frame_sep[ilink] <= 8'h1C; // K.28.0
             else if (resync && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'h3C;
+              frame_sep[ilink] <= 8'h3C; // K.28.1
             else if (overflow[ilink] && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'hFC;
+              frame_sep[ilink] <= 8'hFE; // K.30.7
             else begin
                case (frame_sep_cnt_switch)
-                 2'd0:  frame_sep[ilink] <= 8'hBC;
-                 2'd1:  frame_sep[ilink] <= 8'hF7;
-                 2'd2:  frame_sep[ilink] <= 8'hFB;
-                 2'd3:  frame_sep[ilink] <= 8'hFD;
+                 2'd0:  frame_sep[ilink] <= 8'hBC; // K.28.5
+                 2'd1:  frame_sep[ilink] <= 8'hF7; // K.23.7
+                 2'd2:  frame_sep[ilink] <= 8'hFB; // K.27.7
+                 2'd3:  frame_sep[ilink] <= 8'hFD; // K.29.7
                endcase
             end
          end

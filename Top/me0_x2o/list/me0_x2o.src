@@ -38,3 +38,7 @@ gem/hdl/slow_control/generated/me0_x2o/slow_control.vhd
 gem/hdl/trigger/generated/me0_x2o/trigger.vhd
 gem/hdl/trigger/generated/me0_x2o/sbit_me0.vhd
 common/hdl/slink_rocket/generated/me0_x2o/slink_rocket.vhd
+
+#dummy promless just to keep compiler happy
+common/hdl/misc/promless_bram.vhd
+

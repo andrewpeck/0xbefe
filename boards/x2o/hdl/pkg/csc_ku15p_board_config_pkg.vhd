@@ -151,7 +151,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false        
     );
 
     constant CFG_MGT_TTC : t_mgt_type_config := (
@@ -167,7 +168,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => true, 
-        rx_use_buf              => false
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
     );
     
     constant CFG_MGT_DMB : t_mgt_type_config := (
@@ -183,7 +185,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
     );
 
     constant CFG_MGT_ODMB57 : t_mgt_type_config := (
@@ -199,7 +202,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 40,
         tx_multilane_phalign    => true, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => true
     );
        
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;

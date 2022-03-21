@@ -77,7 +77,7 @@ begin
                     trig_tx_data_arr(i)(1) <= bc0_markers(i*2 + 1);
                     
                     -- if there are no valid clusters from both chambers, transmit link ID
-                    if (oh_triggers(i*2 + 1 downto i*2) = "00") then
+                    if (oh_triggers(i*2 + 1 downto i*2) = "00") or (ttc_cmds_i.resync = '1') then
                         trig_tx_data_arr(i)(9 downto 2) <= (others => '1'); -- this marks the frame as metadata frame
                         trig_tx_data_arr(i)(13 downto 10) <= sector_id_i;
                         trig_tx_data_arr(i)(17 downto 14) <= std_logic_vector(to_unsigned(i, 4));
