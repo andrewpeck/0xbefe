@@ -28,7 +28,7 @@ def getConfig (filename):
     return reg_map
 
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, min_error_limit, bestphase_list):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, min_error_limit, n_allowed_missing_hits, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
     if bestphase_list!={}:
@@ -193,7 +193,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                         l1a_counter = gem_utils.read_backend_reg(l1a_node)
                         calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
 
-                        if elink_sbit_counter_final != calpulse_counter:
+                        if abs(elink_sbit_counter_final - calpulse_counter) > n_allowed_missing_hits:
                             # Elink did not register the correct number of hits
                             s_bit_channel_mapping[vfat][elink][channel] = -9999
                             break
@@ -204,7 +204,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                             s_bit_channel_mapping[vfat][elink][channel] = -9999
                             break
 
-                        if channel_sbit_counter_final[sbit] == calpulse_counter:
+                        if abs(channel_sbit_counter_final[sbit] - calpulse_counter) <= n_allowed_missing_hits:
                             if sbit_channel_match == 1:
                                 # Multiple S-bits registered hits for calpulse on this channel
                                 s_bit_channel_mapping[vfat][elink][channel] = -9999
@@ -468,6 +468,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--align_phases", action="store_true", dest="align_phases", help="align_phases = whether to align phases of all elinks")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-m", "--min", action="store", dest="min", default = "4", help="min = Upper limit of the minimum number of errors allowed")
+    parser.add_argument("-x", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
@@ -573,7 +574,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, int(args.min), bestphase_list)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, int(args.min), int(args.n_miss), bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
