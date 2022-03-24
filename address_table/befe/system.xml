@@ -15,6 +15,14 @@
     <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
           description="User programmable board ID that gets embedded in the DAQ data stream"
           fw_signal="board_id" fw_default="0xbefe"/>
+    <node id="EXT_TRIG_ENABLE" address="0x3" mask="0x10000000" permission="rw"
+          description="When set to 1 external trigger is enabled"
+          fw_signal="ext_trig_en" fw_default="0b0"
+          sw_units="bool"/>
+    <node id="EXT_TRIG_DEADTIME" address="0x3" mask="0x00000fff" permission="rw"
+          description="Sets the minimum separation of consecutive external triggers in BX (any trigger that comes in earlier after last trigger than the set value will be discarded). Default is set to 400 to limit the rate to 100kHz"
+          fw_signal="ext_trig_deadtime" fw_default="0x190"
+          sw_units="BX"/>
   </node>
 
   <node id="RELEASE" address="0x50">
@@ -35,8 +43,8 @@
           description="Firmware release git commit hash"
           fw_signal="g_FW_SHA"/>
     <node id="FW_FLAVOR" address="0x4" mask="0x0000000f" permission="r"
-          description="Firmware flavor: 0 = GEM_AMC, 1 = CSC_FED"
-          sw_enum="['GEM_AMC', 'CSC_FED']"
+          description="Firmware flavor: 0 = GEM, 1 = CSC_FED"
+          sw_enum="['GEM', 'CSC_FED']"
           fw_signal="CFG_FW_FLAVOR"/>
     <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
           description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O"

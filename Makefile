@@ -27,6 +27,7 @@ endif
 PROJECT_LIST = $(patsubst %/,%,$(patsubst Top/%,%,$(dir $(dir $(shell find Top/ -name hog.conf)))))
 CREATE_LIST = $(addprefix create_,$(PROJECT_LIST))
 IMPL_LIST = $(addprefix impl_,$(PROJECT_LIST))
+IMPL_ONLY_LIST = $(addprefix impl_only_,$(PROJECT_LIST))
 OPEN_LIST = $(addprefix open_,$(PROJECT_LIST))
 UPDATE_LIST = $(addprefix update_,$(PROJECT_LIST))
 
@@ -39,11 +40,15 @@ $(CREATE_LIST):
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
 	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
 
+$(IMPL_ONLY_LIST):
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@echo Launching Hog Workflow $(patsubst impl_only_%,%,$@) with njobs = $(NJOBS)        $(COLORIZE)
+	@echo -------------------------------------------------------------------------------- $(COLORIZE)
+	@time Hog/LaunchWorkflow.sh $(patsubst impl_only_%,%,$@) -njobs $(NJOBS)               $(COLORIZE)
+
 $(IMPL_LIST):
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@echo Launching Hog Workflow $(patsubst impl_%,%,$@) with njobs = $(NJOBS)             $(COLORIZE)
-	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchWorkflow.sh $(patsubst impl_%,%,$@) -njobs $(NJOBS)                    $(COLORIZE)
+	@make $(patsubst impl_%,create_%,$@)
+	@make $(patsubst impl_%,impl_only_%,$@)
 
 $(UPDATE_LIST): config
 
@@ -120,11 +125,12 @@ gitconfig:
 update_cvp13: update_ge21_cvp13 update_me0_cvp13 update_csc_cvp13
 update_ctp7: update_ge11_ctp7 update_ge21_ctp7 update_me0_ctp7 update_csc_ctp7
 update_apex: update_ge21_apex update_me0_apex update_csc_apex
+update_x2o: update_ge21_x2o update_me0_x2o update_csc_x2o
 
 update_ge11: update_ge11_cvp13 update_ge11_ctp7 update_ge11_apex
-update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex
-update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex
-update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex
+update_ge21: update_ge21_cvp13 update_ge21_ctp7 update_ge21_apex update_ge21_x2o
+update_me0: update_me0_cvp13 update_me0_ctp7 update_me0_apex update_me0_x2o
+update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex update_csc_x2o
 
 update: update_ge11 update_ge21 update_me0 update_csc
 
@@ -140,11 +146,12 @@ update_oh: update_oh_base update_oh_ge21.200 update_oh_ge21.75 update_oh_ge11
 create_cvp13: create_ge11_cvp13 create_ge21_cvp13 create_me0_cvp13 create_csc_cvp13
 create_ctp7: create_ge11_ctp7 create_ge21_ctp7 create_me0_ctp7
 create_apex: create_ge11_apex create_ge21_apex create_me0_apex create_csc_apex
+create_x2o: create_ge11_x2o create_ge21_x2o create_me0_x2o create_csc_x2o
 
-create_ge11: create_ge11_cvp13 create_ge11_ctp7 create_ge11_apex
-create_ge21: create_ge21_cvp13 create_ge21_ctp7 create_ge21_apex
-create_me0: create_me0_cvp13 create_me0_ctp7 create_me0_apex
-create_csc: create_csc_cvp13 create_csc_apex
+create_ge11: create_ge11_cvp13 create_ge11_ctp7 create_ge11_apex create_ge11_x2o
+create_ge21: create_ge21_cvp13 create_ge21_ctp7 create_ge21_apex create_ge21_x2o
+create_me0: create_me0_cvp13 create_me0_ctp7 create_me0_apex create_me0_x2o
+create_csc: create_csc_cvp13 create_csc_apex create_csc_x2o
 
 create: create_ge11 create_ge21 create_me0 create_csc
 
@@ -155,11 +162,12 @@ create: create_ge11 create_ge21 create_me0 create_csc
 cvp13: impl_ge11_cvp13 impl_ge21_cvp13 impl_me0_cvp13 impl_csc_cvp13
 ctp7: impl_ge11_ctp7 impl_ge21_ctp7 impl_me0_ctp7
 apex: impl_ge11_apex impl_ge21_apex impl_me0_apex impl_csc_apex
+x2o: impl_ge11_x2o impl_ge21_x2o impl_me0_x2o impl_csc_x2o
 
-ge11: impl_ge11_cvp13 impl_ge11_ctp7 impl_ge11_apex
-ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex
-me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex
-csc: impl_csc_cvp13 impl_csc_apex
+ge11: impl_ge11_cvp13 impl_ge11_ctp7 impl_ge11_apex impl_ge11_x2o
+ge21: impl_ge21_cvp13 impl_ge21_ctp7 impl_ge21_apex impl_ge21_x2o
+me0: impl_me0_cvp13 impl_me0_ctp7 impl_me0_apex impl_me0_x2o
+csc: impl_csc_cvp13 impl_csc_apex impl_csc_x2o
 
 all:  update create synth impl
 #all: ge11 ge21 me0 csc

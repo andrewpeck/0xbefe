@@ -37,22 +37,22 @@
             fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
       <node id="TX_POWERDOWN" address="0x5" mask="0x00000001" permission="rw"
             description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"
-            fw_signal="txpd_arr(${MGT})" fw_default="0b0"/>
+            fw_signal="txpd_arr_async(${MGT})" fw_default="0b0"/>
       <node id="RX_POWERDOWN" address="0x5" mask="0x00000002" permission="rw"
             description="Setting this to 1 will powerdown the RX (writes 11 to RXPD), and 0 will put it in normal power mode (writes 00 to RXPD)"
             fw_signal="rxpd_arr(${MGT})" fw_default="0b0"/>
       <node id="TX_POLARITY" address="0x5" mask="0x00000004" permission="rw"
             description="Setting this to 1 will invert the polarity of TX, setting to 0 will result in normal TX polarity"
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txpolarity" fw_default="0b0"/>
+            fw_signal="txpolarity_arr_async(${MGT})" fw_default="0b0"/>
       <node id="RX_POLARITY" address="0x5" mask="0x00000008" permission="rw"
             description="Setting this to 1 will invert the polarity of RX, setting to 0 will result in normal RX polarity"
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxpolarity" fw_default="0b0"/>
+            fw_signal="rxpolarity_arr_async(${MGT})" fw_default="0b0"/>
       <node id="LOOPBACK" address="0x5" mask="0x00000010" permission="rw"
             description="Setting this to 1 will enable the near-end PMA loopback of the MGT (sets MGT LOOPBACK port to 010). This is an expert debug feature."
             fw_signal="loopback_arr(${MGT})" fw_default="0b0"/>
       <node id="TX_INHIBIT" address="0x5" mask="0x00000020" permission="rw"
             description="Setting this to 1 will inhibit the TX channel (forces MGTHTXP to 0 and MGTHTXN to 1). This is an expert debug feature."
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txinhibit" fw_default="0b0"/>
+            fw_signal="txinhibit_arr_async(${MGT})" fw_default="0b0"/>
       <node id="RX_LOW_POWER_MODE" address="0x5" mask="0x00000040" permission="rw"
             description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."
             fw_signal="rx_slow_ctrl_arr(${MGT}).rxlpmen" fw_default="0b1"/>
@@ -70,10 +70,10 @@
             fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
       <node id="RX_PRBS_SEL" address="0x7" mask="0x00000007" permission="rw"
             description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
-            fw_signal="rx_slow_ctrl_arr(${MGT}).rxprbssel" fw_default="0b000"/>
+            fw_signal="rxprbssel_arr_async(${MGT})" fw_default="0b000"/>
       <node id="TX_PRBS_SEL" address="0x7" mask="0x00000070" permission="rw"
             description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
-            fw_signal="tx_slow_ctrl_arr(${MGT}).txprbssel" fw_default="0b000"/>
+            fw_signal="txprbssel_arr_async(${MGT})" fw_default="0b000"/>
       <node id="TX_PRBS_FORCE_ERR" address="0x8" permission="w"
             description="Writing anything here forces a PRBS error on the TX"
             fw_write_pulse_signal="tx_slow_ctrl_arr(${MGT}).txprbsforceerr"/>
@@ -102,6 +102,11 @@
             description="RX phase alignment is done (only valid for buffer bypass MGTs)"
             fw_signal="rx_phalign_done_arr_i(${MGT})"
             sw_val_neutral="read_reg_cache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_BUFFER') == 1 or read_reg_cache('BEFE.MGTS.MGT${MGT}.CONFIG.LINK_TYPE') == 0"
+            sw_val_good="self == 1"/>
+      <node id="RX_CHANNEL_BOND_ALIGNED" address="0x0" mask="0x00000080" permission="r"
+            description="RX channel is aligned (only valid for MGTs that use channel bonding)"
+            fw_signal="rxchanisaligned(${MGT})"
+            sw_val_neutral="read_reg_cache('BEFE.MGTS.MGT${MGT}.CONFIG.RX_USE_CHAN_BOND') == 0 or read_reg_cache('BEFE.MGTS.MGT${MGT}.CONFIG.LINK_TYPE') == 0"
             sw_val_good="self == 1"/>
       <node id="POWER_GOOD" address="0x0" mask="0x00000010" permission="r"
             description="Power good signal from the MGT"
@@ -164,11 +169,11 @@
       <node id="LINK_TYPE" address="0x0" mask="0x0000000f" permission="r"
             description="MGT channel type"
             fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).mgt_type.link_type), 4))"
-            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_GBE']"/>
+            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_GBE', 'MGT_TTC', 'MGT_ODMB57_BIDIR']"/>
       <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
             fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"
-            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57']"/>
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>
@@ -199,6 +204,9 @@
       <node id="RX_USE_BUFFER" address="0x0" mask="0x01000000" permission="r"
             description="Indicates whether this channel uses RX elastic buffer or not."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.rx_use_buf else '0'"/>
+      <node id="RX_USE_CHAN_BOND" address="0x0" mask="0x02000000" permission="r"
+            description="Indicates whether this channel uses RX channel bonding or not."
+            fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.rx_use_chan_bonding else '0'"/>
       <node id="IS_MASTER" address="0x0" mask="0x40000000" permission="r"
             description="Indicates whether this channel is the master channel for this type of MGTs. Master channels provide the TXUSRCLK to all MGTs of the same type. Also the TTC clocks are generated from the TXOUTCLK of the master channel of type GBTX or LpGBT."
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).is_master else '0'"/>

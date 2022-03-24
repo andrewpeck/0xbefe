@@ -2,7 +2,7 @@
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <spirit:vendor>CERN_CMS_CMD</spirit:vendor>
   <spirit:library>user</spirit:library>
-  <spirit:name>SR_sender_GLB</spirit:name>
+  <spirit:name>SR_sender_GLB_kintex</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
@@ -115,7 +115,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a0a4b6cb</spirit:value>
+            <spirit:value>f267387a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -140,7 +140,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a0a4b6cb</spirit:value>
+            <spirit:value>f267387a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1259,12 +1259,12 @@
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-03-04T10:06:38Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2021-08-03T09:17:54Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="0e0e8296"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="e558a58f"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="89bdca9b"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="9c4a6c4b"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="13a6bb6f"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="58369b1c"/>

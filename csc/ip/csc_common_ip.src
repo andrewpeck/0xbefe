@@ -1,3 +1,6 @@
 # -*- mode: TCL;-*-
 
-#gem/ip/ila_ge21_trigger_link/ila_ge21_trigger_link.xci
+csc/ip/ila_daq/ila_daq.xci
+csc/ip/vio_ttc_test/vio_ttc_test.xci
+csc/ip/vio_xdcfeb_switches/vio_xdcfeb_switches.xci
+csc/ip/vio_odmb57_loopback/vio_odmb57_loopback.xci

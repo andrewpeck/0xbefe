@@ -51,7 +51,7 @@ if not path.exists(bitfile):
 ######## configure clocks ########
 heading("Configuring %s clock synthesizers" % top_bot)
 subheading("Configuring sync clocks with 160.32MHz...")
-cmd = "cd %s/clock/clock_sync && %s/clock/clock_sync/clock_sync_160 %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
+cmd = "cd %s/clock/clock_sync && %s/clock/clock_sync/clock_sync_160M_noref %s/clock/clock_sync/CONFIGS/config_%s.toml" % (x2o_sw_dir, x2o_sw_dir, x2o_sw_dir, top_bot)
 print(cmd)
 sync_clk_proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
 while sync_clk_proc.poll() is None:

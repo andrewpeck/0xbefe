@@ -1,0 +1,38 @@
+# -*- mode: TCL;-*-
+
+# =============== Common ===============
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/sca.src
+common/hdl/slink_rocket.src
+
+# =============== GEM ===============
+gem/hdl/gem.src
+gem/ip/gem_common_ip.src
+
+# =============== X2O ===============
+boards/x2o/hdl/x2o_common.src
+boards/x2o/hdl/x2o_vu13p.src
+boards/x2o/ip/x2o_ip.src
+boards/x2o/bd/x2o_bd.src
+
+# =============== Project ===============
+Top/me0_x2o_vu27p/project_config.vhd
+boards/x2o/hdl/pkg/gem_vu27p_board_config_pkg.vhd
+boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
+
+
+# =========== Generated source ===========
+# sources with generated registers
+gem/hdl/pkg/generated/me0_x2o/registers.vhd
+common/hdl/mgt/generated/me0_x2o/mgt_slow_control.vhd
+common/hdl/ttc/generated/me0_x2o/ttc.vhd
+common/hdl/misc/generated/me0_x2o/board_system.vhd
+gem/hdl/misc/generated/me0_x2o/gem_system_regs.vhd
+gem/hdl/tests/generated/me0_x2o/gem_tests.vhd
+gem/hdl/oh/generated/me0_x2o/oh_link_regs.vhd
+gem/hdl/daq/generated/me0_x2o/daq.vhd
+gem/hdl/slow_control/generated/me0_x2o/slow_control.vhd
+gem/hdl/trigger/generated/me0_x2o/trigger.vhd
+common/hdl/slink_rocket/generated/me0_x2o/slink_rocket.vhd

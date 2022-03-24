@@ -3,6 +3,7 @@
 # Utils
 common/hdl/utils/synchronizer__xpm.vhd
 common/hdl/utils/oneshot_cross_domain__xpm.vhd
+common/hdl/slink_rocket/FED_Fragment_CRC16_D128b.vhd
 
 # GBTX
 common/hdl/gbtx/core_sources/xilinx_k7v7/xlx_k7v7_gbt_bank_package.vhd
@@ -14,14 +15,20 @@ common/hdl/ttc/ttc_clocks_ultrascale.vhd
 
 # MGT
 common/hdl/mgt/mgt_links_gty.vhd
+common/hdl/mgt/refclk_bufs.vhd
 common/hdl/mgt/gty_channel_lpgbt.vhd
 common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd
+common/hdl/mgt/gty_channel_trig_3p2.vhd
 common/hdl/mgt/gty_channel_dmb.vhd
 common/hdl/mgt/gty_channel_odmb57.vhd
+common/hdl/mgt/gty_channel_odmb57_bidir.vhd
 common/hdl/mgt/gty_channel_gbe.vhd
+common/hdl/mgt/gty_channel_ttc.vhd
 common/hdl/mgt/gty_qpll_gbtx.vhd
 common/hdl/mgt/gty_qpll_lpgbt.vhd
+common/hdl/mgt/gty_qpll_trig_3p2.vhd
+common/hdl/mgt/gty_qpll0_trig_3p2_qpll1_gbtx.vhd
 common/hdl/mgt/gty_qpll_odmb57_200.vhd
 common/hdl/mgt/gty_qpll_odmb57_156p25.vhd
 common/hdl/mgt/gty_qpll0_dmb_qpll1_gbe_156p25.vhd

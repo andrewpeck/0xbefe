@@ -23,29 +23,29 @@ def main():
 
     if DO_HARD_RESET:
         print("hard resetting the FPGA")
-        write_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
-        write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.ENABLE'), 1)
-        write_reg(get_node('BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.ENABLE'), 1)
+        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
         print("waiting for the FPGA to load")
         sleep(SLEEP_AFTER_HARD_RESET)
         print("waiting for the SEM IP to initialize")
         init = 1
         obs = 0
         while init == 1 or obs == 0:
-            init = read_reg(get_node("BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INITIALIZATION"))
-            obs = read_reg(get_node("BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION"))
+            init = read_reg(get_node("BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INITIALIZATION"))
+            obs = read_reg(get_node("BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION"))
         print("=============== SEM IP is initialized and in OBSERVATION state ===============")
 
     addr = 0
 #   if DO_SOFT_RESET:
 #       print("entering idle state")
-#       write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_LSBS'), addr)
-#       write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xe0) # enter idle state
-#       write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
+#       write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_LSBS'), addr)
+#       write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xe0) # enter idle state
+#       write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
 #       sleep(SLEEP)
 #       print("applying soft reset to the SEM IP")
-#       write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xb0) # soft reset
-#       write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
+#       write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xb0) # soft reset
+#       write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
 #       sleep(SLEEP_AFTER_SOFT_RESET)
 
     if TEST_SINGLE:
@@ -88,11 +88,11 @@ def injectSemError(address, verbose=True, injectCritical=False, injectDoubleAdja
     # enter idle state
     if verbose:
         print("entering idle state")
-    write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xe0)
-    write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
+    write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xe0)
+    write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
     idle = 0
     while idle == 0:
-        idle = read_reg(get_node("BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_IDLE"))
+        idle = read_reg(get_node("BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_IDLE"))
 
     # inject error(s)
     addresses = range(address, address + 3, 2) if injectCritical else range(address, address + 2, 1) if injectDoubleAdjacent else [address]
@@ -106,44 +106,44 @@ def injectSemError(address, verbose=True, injectCritical=False, injectDoubleAdja
             print("injecting an error at address: %d" % addresses[0])
 
     for addr in addresses:
-        write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_LSBS'), addr)
-        write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xc0)
-        write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
+        write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_LSBS'), addr)
+        write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xc0)
+        write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
         inj = 1
         while inj == 1:
-            inj = read_reg(get_node("BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INJECTION"))
+            inj = read_reg(get_node("BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INJECTION"))
 
     # enter observation state
     if verbose:
         print("entering observation state")
-    write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xa0)
-    write_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
+    write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_ADDR_MSBS'), 0xa0)
+    write_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.INJ_PULSE'), 1)
     if not injectCritical:
         obs = 0
         while obs == 0:
-            obs = read_reg(get_node("BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION"))
+            obs = read_reg(get_node("BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION"))
     sleepTime = SLEEP_AFTER_OBSERVATION_UNCORR if injectCritical else SLEEP_AFTER_OBSERVATION_TWO_ADJ if injectDoubleAdjacent else SLEEP_AFTER_OBSERVATION_SINGLE
     if verbose:
         print("Waiting %fms to allow for detection of the error, attempted correction, and classification" % (sleepTime * 1000))
     sleep(sleepTime)
 
 def readSemCounters(verbose=False):
-    corrCnt = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.CNT_SEM_CORRECTION'))
-    critCnt = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.CNT_SEM_CRITICAL'))
+    corrCnt = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.CNT_SEM_CORRECTION'))
+    critCnt = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.CNT_SEM_CRITICAL'))
     if verbose:
         print("num corrections: %d, num critical errors: %d" % (corrCnt, critCnt))
 
     return corrCnt, critCnt
 
 def readSemStatus(verbose=False):
-    init = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INITIALIZATION'))
-    obs = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION'))
-    corr = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_CORRECTION'))
-    classif = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_CLASSIFICATION'))
-    inj = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INJECTION'))
-    ess = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_ESSENTIAL'))
-    uncorr = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_UNCORRECTABLE'))
-    idle = read_reg(get_node('BEFE.GEM_AMC.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_IDLE'))
+    init = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INITIALIZATION'))
+    obs = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_OBSERVATION'))
+    corr = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_CORRECTION'))
+    classif = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_CLASSIFICATION'))
+    inj = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_INJECTION'))
+    ess = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_ESSENTIAL'))
+    uncorr = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_UNCORRECTABLE'))
+    idle = read_reg(get_node('BEFE.GEM.OH.OH0.FPGA.CONTROL.SEM.SEM_STATUS_IDLE'))
 
     if verbose:
         print("SEM status:")

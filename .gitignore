@@ -10,15 +10,23 @@ cxl_error.log
 *.DS_Store
 
 /gem/ip/*/*
+/csc/ip/*/*
 /boards/*/ip/*/*
+/boards/*/ip/*/*/*
+!/boards/*/ip/virtex/*
+!/boards/*/ip/kintex/*
 /common/ip/*/*
+
 !*.xci
 !*.xcix
+!*.prj
 
 **/ip_custom/*/drivers
 **/ip_custom/*/example_designs
 **/ip_custom/*/src/*/*
 !**/ip_custom/*/src/*/*.xci
+
+/ge11_ctp7.gen
 
 /scripts/befe_config.py
 /scripts/results
@@ -26,6 +34,8 @@ cxl_error.log
 *.so
 
 /boards/*/bd/*
+!/boards/*/bd/*/
+/boards/*/bd/*/*
 !*.bd
 !*.src
 

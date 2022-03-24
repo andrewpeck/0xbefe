@@ -18,9 +18,9 @@ static int fd;
 static void* map_base;
 static void* last_trans_err_addr; // workaround for propper error reporting
 
-extern "C" void rwreg_init(char* sysfile) {
-  char* realSysfile = sysfile;  
-  
+extern "C" void rwreg_init(char* sysfile, unsigned int base_address) {
+  char* realSysfile = sysfile;
+
   if (strcmp("auto", sysfile) == 0) {
     DIR *dp;
     struct dirent *de;
@@ -34,7 +34,7 @@ extern "C" void rwreg_init(char* sysfile) {
         if(S_ISDIR(statbuf.st_mode)) {
           if(strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0)
             continue;
-          
+
           char devFilename[40];
           strcpy(devFilename, "/sys/bus/pci/devices/");
           strcat(devFilename, de->d_name);
@@ -89,7 +89,7 @@ extern "C" void rwreg_init(char* sysfile) {
     exit(1);
   }
   printf("RWREG: %s opened.\n", realSysfile);
-  map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_address);
   if(map_base == (void *) -1) {
     printf("ERROR: mmap failed\n");
     exit(1);
@@ -123,4 +123,3 @@ extern "C" unsigned int putReg(unsigned int address, unsigned int value) {
     return 0;
   }
 }
-

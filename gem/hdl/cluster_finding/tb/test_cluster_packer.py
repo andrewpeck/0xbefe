@@ -59,9 +59,13 @@ async def random_clusters(dut):
 
         await RisingEdge(dut.clk_40)  # Synchronize with the clock
 
-        dut.sbits_i[1].value = 0x8000000000000000
-        dut.sbits_i[10].value = 0x8000000000000000
-        dut.sbits_i[19].value = 0x8000000000000000
+        dut.sbits_i[1].value = 0xF00F000F0000F000
+        dut.sbits_i[10].value = 0xF00F000F000F000F
+        dut.sbits_i[19].value = 0xF00F000F000F0000
+        dut.sbits_i[3].value = 0xF00F000F000F0000
+        dut.sbits_i[5].value = 0xF00F000F000F0000
+        dut.sbits_i[12].value = 0xF00F000F000F0000
+        dut.sbits_i[13].value = 0xF00F000F000F0000
 
         # await RisingEdge(dut.clk_40)  # Synchronize with the clock
         # #dut.sbits_i.value = vfats

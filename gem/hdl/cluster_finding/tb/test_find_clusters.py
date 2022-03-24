@@ -72,6 +72,9 @@ async def random_clusters(dut):
                                dut.NUM_FOUND_CLUSTERS.value,
                                dut.ENCODER_SIZE.value)
 
+        # sort the found keys by {valid , partition, adr}
+        expect = sorted(expect, key=lambda x: x.vpf << 12 | x.prt << 8 | x.adr, reverse=True)
+
         for ioutput, _ in enumerate(expect):
             print("generate: i=%02d %s" % (ioutput, str(expect[ioutput])))
 

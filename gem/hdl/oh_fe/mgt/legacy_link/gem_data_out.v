@@ -61,8 +61,8 @@ module   gem_data_out
 
    generate
       if (FPGA_TYPE_IS_VIRTEX6 == 1) begin
-         // links 0 & 1 are CSC
-         // links 2 & 3 are GEM
+         // links 0 & 1 are CSC and run at 3.2 Gbps
+         // links 2 & 3 are GEM and run at 4.0 Gbps
          initial begin
             CLOCK_MULT [3] = 5;
             CLOCK_MULT [2] = 5;
@@ -92,9 +92,7 @@ module   gem_data_out
    // Transmit data
    //----------------------------------------------------------------------------------------------------------------------
 
-   reg [3:0] overflow_reg;
    wire [3:0] overflow;
-   reg [111:0] gem_data_reg [3:0];
    wire [111:0] gem_data_sync [3:0];
 
    wire [N_MGTS-1:0] mgt_reset;
@@ -292,10 +290,10 @@ module   gem_data_out
    endgenerate
 
    //------------------------------------------------------------------------------
-   // we should cycle through these four K-codes:  BC, F7, FB, FD to serve as
-   // bunch sequence indicators.when we have more than 8 clusters
-   // detected on an OH (an S-bit overflow)
-   // we should send the "FC" K-code instead of the usual choice.
+   // We should cycle through these four K-codes: BC, F7, FB, FD to serve as
+   // bunch sequence indicators.
+   // When we have more than 8 clusters detected on an OH (an S-bit overflow)
+   // we should send the "FE" K-code instead of the usual choice.
    //------------------------------------------------------------------------------
 
    //  local (ttc independent) counter --------------------------------------------
@@ -313,17 +311,17 @@ module   gem_data_out
 
          always @(*) begin
             if (bc0 && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'h1C;
+              frame_sep[ilink] <= 8'h1C; // K.28.0
             else if (resync && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'h3C;
+              frame_sep[ilink] <= 8'h3C; // K.28.1
             else if (overflow[ilink] && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'hFC;
+              frame_sep[ilink] <= 8'hFE; // K.30.7
             else begin
                case (frame_sep_cnt_switch)
-                 2'd0:  frame_sep[ilink] <= 8'hBC;
-                 2'd1:  frame_sep[ilink] <= 8'hF7;
-                 2'd2:  frame_sep[ilink] <= 8'hFB;
-                 2'd3:  frame_sep[ilink] <= 8'hFD;
+                 2'd0:  frame_sep[ilink] <= 8'hBC; // K.28.5
+                 2'd1:  frame_sep[ilink] <= 8'hF7; // K.23.7
+                 2'd2:  frame_sep[ilink] <= 8'hFB; // K.27.7
+                 2'd3:  frame_sep[ilink] <= 8'hFD; // K.29.7
                endcase
             end
          end
@@ -381,7 +379,7 @@ module   gem_data_out
              )
          xpm_fifo_async_inst
            (
-            .din           ({gem_data[0],     bc0_i, resync_i, bxn_counter_i[1:0],  overflow_i}),
+            .din           ({gem_data,        bc0_i, resync_i, bxn_counter_i[1:0],  overflow_i}),
             .dout          ({gem_data_sync[0],bc0,   resync,   bxn_counter_lsbs,    overflow[0]}),
             .wr_clk        (clock_40), // write at 40
             .rd_clk        (txoutclk), // read at  160/200
@@ -465,12 +463,10 @@ module   gem_data_out
 
          for (ilink=0; ilink < N_MGTS; ilink=ilink+1) begin: linkgen3
             always @(posedge usrclks[ilink]) begin
-               gem_data_reg[ilink]  <= gem_data;
-               overflow_reg[ilink]  <= overflow_i;
-               ready       [ilink]  <= tx_sync_done[ilink] && tx_fsm_reset_done[ilink] && pll_lock[ilink];
+               ready [ilink] <= tx_sync_done[ilink] && tx_fsm_reset_done[ilink] && pll_lock[ilink];
             end
-            assign gem_data_sync[ilink] = gem_data_reg[ilink];
-            assign overflow[ilink]      = overflow_reg[ilink];
+            assign gem_data_sync[ilink] = gem_data;
+            assign overflow[ilink]      = overflow_i;
          end
 
          assign reset            = reset_i;

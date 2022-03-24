@@ -529,6 +529,10 @@ begin
   cluster_loop : for I in 0 to 7 generate
     process (clocks.clk40)
     begin
+
+      -- sync to 40MHz clock here for 40-->160/200 transition
+      -- since the clusters come in on the 160MHz clock
+
       if (rising_edge(clocks.clk40)) then
 
         legacy_overflow_o <= overflow_i;

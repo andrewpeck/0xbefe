@@ -4,6 +4,7 @@ CC ?= gcc
 
 all: librwreg.so
 
+#rwreg.o: rwreg_xdma.cc
 rwreg.o: rwreg.cc
 	$(CC) $(CCFLAGS) $(INC) -c -o $@ $<
 
@@ -12,4 +13,3 @@ librwreg.so: rwreg.o
 
 clean:
 	-rm -f *.o *~ librwreg.so
-

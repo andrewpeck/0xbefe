@@ -33,7 +33,7 @@ def main():
         temps = "%d\t" % iter
         for oh in range(12):
             if oh in ohList:
-                tempRaw = read_reg(get_node('BEFE.GEM_AMC.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % oh))
+                tempRaw = read_reg(get_node('BEFE.GEM.OH.OH%d.FPGA.ADC.CTRL.DATA_OUT' % oh))
                 temp = ((tempRaw >> 4) * 503.975 / 4096) - 273.15
                 temps += "%f\t" % temp
             else:
@@ -50,8 +50,8 @@ def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
 
 def checkStatus(ohList):
-    rxReady       = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY'))
-    criticalError = read_reg(get_node('BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
+    rxReady       = read_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.STATUS.READY'))
+    criticalError = read_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.STATUS.CRITICAL_ERROR'))
 
     statusGood = True
     for i in ohList:

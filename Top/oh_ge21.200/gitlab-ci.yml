@@ -4,4 +4,4 @@ GEN:oh_ge21.200:
       extends: .vars
       PROJECT_NAME: oh_ge21.200
     tags:
-        - vivado_2020_2
+        - vivado_2021_1

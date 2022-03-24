@@ -563,7 +563,11 @@ begin
             TXUSERRDY      <= '1';
             reset_time_out <= '0';
             if txresetdone_s3 = '1' then
-              tx_state       <= DO_PHASE_ALIGNMENT;
+              if PHASE_ALIGNMENT_MANUAL then
+                tx_state       <= DO_PHASE_ALIGNMENT;
+              else
+                tx_state       <= RESET_FSM_DONE;
+              end if;
               reset_time_out <= '1';
             end if;
 

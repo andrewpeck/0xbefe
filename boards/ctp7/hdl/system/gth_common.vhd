@@ -44,7 +44,8 @@ entity gth_common is
       -- Simulation attributes
       g_GT_SIM_GTRESET_SPEEDUP : string  := "TRUE";  -- Set to "true" to speed up sim reset 
       g_STABLE_CLOCK_PERIOD    : integer := 20;  -- Period of the stable clock driving this state-machine, unit is [ns]
-      g_QPLL_FBDIV_TOP         : integer := 32;   -- QPLL multiplier. Possible values: 16, 20, 32, 40, 64, 66, 80, 100. e.g. if refclk is 320MHz, and you need 10.24Gb/s line rate, this multiplier should be set to 32
+      g_QPLL_REFCLK_DIV        : integer := 1;   -- QPLL refclk divider. Possible values: 1, 2, 3, 4. 
+      g_QPLL_FBDIV_TOP         : integer := 32;  -- QPLL multiplier. Possible values: 16, 20, 32, 40, 64, 66, 80, 100. e.g. if refclk is 320MHz, and you need 10.24Gb/s line rate, this multiplier should be set to 32. The clock is actually always divided by 2 at the end, but line rate is twice the clock rate. Note that the clock can also be divided on the MGT by using RXOUT_DIV and TXOUT_DIV parameters. 
       g_REFCLK_01              : integer range 0 to 1 := 0
 
       );
@@ -197,7 +198,7 @@ begin
       QPLL_INIT_CFG            => (x"000006"),
       QPLL_LOCK_CFG            => (x"05E8"),
       QPLL_LPF                 => ("1111"),
-      QPLL_REFCLK_DIV          => (1),
+      QPLL_REFCLK_DIV          => (g_QPLL_REFCLK_DIV),
       RSVD_ATTR0               => (x"0000"),
       RSVD_ATTR1               => (x"0000"),
       QPLL_RP_COMP             => ('0'),

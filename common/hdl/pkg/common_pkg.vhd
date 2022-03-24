@@ -15,10 +15,18 @@ package common_pkg is
     function log2ceil(arg : positive) return natural; -- returns the number of bits needed to encode the given number
     function up_to_power_of_2(arg : positive) return natural; -- "rounds" the given number up to the closest power of 2 number (e.g. if you give 6, it will say 8, which is 2^3)
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
+    function min(arg1, arg2: integer) return integer; -- returns the lower of the two arguments
+    function max(arg1, arg2: integer) return integer; -- returns the higher of the two arguments
+    function reverse_bytes(data_in: std_logic_vector) return std_logic_vector; -- reverses byte order in the provided std_logic_vector
+    function reverse_bits(data_in: std_logic_vector) return std_logic_vector; -- reverses bit order in the provided std_logic_vector
 
     --============--
     --== Common ==--
     --============--   
+
+    type t_int_array is array(integer range <>) of integer;
+    
+    type t_bool_array is array(integer range <>) of boolean;
     
     type t_std_array is array(integer range <>) of std_logic;
 
@@ -414,9 +422,10 @@ package common_pkg is
         rx_pll_locked   : std_logic;
         rxbufstatus     : std_logic_vector(2 downto 0);
         rxclkcorcnt     : std_logic_vector(1 downto 0);
+        rxchanisaligned : std_logic; -- channel bonding status
     end record;
 
-    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
+    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00", rxchanisaligned => '0');
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
 
@@ -436,15 +445,68 @@ package common_pkg is
         event_valid     : std_logic;
         event_header    : std_logic;
         event_trailer   : std_logic;
-        event_data      : std_logic_vector(63 downto 0);
+        event_data      : std_logic_vector(127 downto 0);
+        daq_enabled     : std_logic;
     end record;
+
+    constant DAQ_TO_DAQLINK_NULL : t_daq_to_daqlink := (
+        reset           => '0',
+        ttc_clk         => '0',
+        ttc_bc0         => '0',
+        trig            => (others => '0'),
+        tts_clk         => '0',
+        tts_state       => (others => '0'),
+        resync          => '0',
+        event_clk       => '0',
+        event_valid     => '0',
+        event_header    => '0',
+        event_trailer   => '0',
+        event_data      => (others => '0'),
+        daq_enabled     => '0'
+    );
+
+    type t_daq_to_daqlink_arr is array(integer range <>) of t_daq_to_daqlink;
 
     type t_daqlink_to_daq is record
         ready           : std_logic;
-        almost_full     : std_logic;
+        backpressure    : std_logic;
         disperr_cnt     : std_logic_vector(15 downto 0);
         notintable_cnt  : std_logic_vector(15 downto 0);
     end record;
+
+    constant DAQLINK_TO_DAQ_NULL : t_daqlink_to_daq := (ready => '0', backpressure => '0', disperr_cnt => (others => '0'), notintable_cnt => (others => '0'));
+    
+    type t_daqlink_to_daq_arr is array(integer range <>) of t_daqlink_to_daq;
+
+    type t_pcie_daq_control is record
+        reset               : std_logic;
+        flush               : std_logic;
+        packet_size_bytes   : std_logic_vector(23 downto 0);
+    end record;
+
+    type t_pcie_daq_status is record
+        word_size_bytes : std_logic_vector(6 downto 0);
+        buf_words       : std_logic_vector(19 downto 0);
+        words_sent      : std_logic_vector(43 downto 0);
+        word_rate       : std_logic_vector(27 downto 0);
+        buf_ovf         : std_logic;
+        buf_had_ovf     : std_logic;
+        cdc_had_ovf     : std_logic;
+        c2h_ready       : std_logic;
+        c2h_write_err   : std_logic;
+    end record;
+
+    constant PCIE_DAQ_STATUS_NULL : t_pcie_daq_status := (
+        word_size_bytes => (others => '0'),
+        buf_words => (others => '0'),
+        words_sent => (others => '0'),
+        word_rate => (others => '0'),
+        buf_ovf => '0',
+        buf_had_ovf => '0',
+        cdc_had_ovf => '0',
+        c2h_ready => '0',
+        c2h_write_err => '0'
+    );
 
     --===============================--
     --== PROMless firmware loader ==--
@@ -455,6 +517,10 @@ package common_pkg is
         en      : std_logic;
     end record;
 
+    constant TO_PROMLESS_NULL : t_to_promless := (clk => '0', en => '0');
+
+    type t_to_promless_arr is array(integer range <>) of t_to_promless;
+
     type t_from_promless is record
         ready   : std_logic;
         valid   : std_logic;
@@ -463,6 +529,10 @@ package common_pkg is
         last    : std_logic;
         error   : std_logic;
     end record;
+   
+    constant FROM_PROMLESS_NULL : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
+    
+    type t_from_promless_arr is array(integer range <>) of t_from_promless;
    
     type t_promless_stats is record
         load_request_cnt    : std_logic_vector(15 downto 0);
@@ -479,7 +549,9 @@ package common_pkg is
 end common_pkg;
    
 package body common_pkg is
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function count_ones(s : std_logic_vector) return integer is
         variable temp : natural := 0;
     begin
@@ -491,7 +563,9 @@ package body common_pkg is
 
         return temp;
     end function count_ones;
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function bool_to_std_logic(L : BOOLEAN) return std_logic is
     begin
         if L then
@@ -500,7 +574,9 @@ package body common_pkg is
             return ('0');
         end if;
     end function bool_to_std_logic;
-    
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function log2ceil(arg : positive) return natural is
         variable tmp : positive     := 1;
         variable log : natural      := 0;
@@ -512,7 +588,9 @@ package body common_pkg is
         end loop;
         return log;
     end function;   
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function up_to_power_of_2(arg : positive) return natural is
         variable tmp : positive     := 1;
     begin
@@ -521,7 +599,9 @@ package body common_pkg is
         end loop;
         return tmp;
     end function;   
-
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
     function div_ceil(numerator, denominator : positive) return natural is
         variable tmp : positive     := denominator;
         variable ret : positive     := 1;
@@ -533,5 +613,51 @@ package body common_pkg is
         end loop;
         return ret;
     end function;  
-        
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function min(arg1, arg2: integer) return integer is
+    begin
+        if arg1 < arg2 then
+            return arg1;
+        else
+            return arg2;
+        end if;
+    end function;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function max(arg1, arg2: integer) return integer is
+    begin
+        if arg1 > arg2 then
+            return arg1;
+        else
+            return arg2;
+        end if;
+    end function;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function reverse_bytes(data_in: std_logic_vector) return std_logic_vector is
+        constant NUM_BYTES : integer := data_in'length / 8;
+        variable ret : std_logic_vector(data_in'range);
+    begin
+        assert data_in'length mod 8 = 0 report "Non byte aligned std_logic_vector length has been passed to reverse_bytes() function" severity failure;
+        for byte in 0 to NUM_BYTES - 1 loop
+            ret(ret'high - (byte * 8) downto ret'high - (byte * 8) - 7) := data_in(data_in'low + (byte * 8) + 7 downto data_in'low + (byte * 8));
+        end loop;
+        return ret;
+    end function;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function reverse_bits(data_in: std_logic_vector) return std_logic_vector is
+        variable ret : std_logic_vector(data_in'range);
+    begin
+        for i in 0 to data_in'length - 1 loop
+            ret(ret'high - i) := data_in(data_in'low + i);
+        end loop;
+        return ret;
+    end function;
+                
 end common_pkg;

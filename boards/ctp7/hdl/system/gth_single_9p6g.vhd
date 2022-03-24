@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_2p56g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: 9.6Gb/s TX & 9.6Gb/s RX using 8b10b encoding. Both TX and RX elastic buffers are bypassed.
 --              CPLL is used, refclk is expected to be 320MHz, the usrclks have to be 240MHz.
 --              only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").

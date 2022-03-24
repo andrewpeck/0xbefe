@@ -12,6 +12,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.common_pkg.all;
 
 entity gbe_tx_driver is
@@ -21,7 +24,8 @@ entity gbe_tx_driver is
         g_MAX_EVT_WORDS         : integer := 50000;-- maximum event size (nothing really gets done when this size is reached, but an error is asserted on the output port)
         g_NUM_IDLES_SMALL_EVT   : integer := 2;    -- minimum number of idle words after a "small" event
         g_NUM_IDLES_BIG_EVT     : integer := 7;    -- minimum number of idle words after a "big" event
-        g_SMALL_EVT_MAX_WORDS   : integer := 24    -- above this number of words, the event is considered "big", thus requiring g_NUM_IDLES_BIG_EVT of idles after the packet
+        g_SMALL_EVT_MAX_WORDS   : integer := 24;   -- above this number of words, the event is considered "big", thus requiring g_NUM_IDLES_BIG_EVT of idles after the packet
+        g_USE_TRAILER_FLAG_EOE  : boolean          -- uses data_trailer_i as an end-of-event indicator if this is set to true, otherwise it tries to find the end of event based on the data (only works for CSC)
     );
     port (
         -- reset
@@ -33,10 +37,14 @@ entity gbe_tx_driver is
         
         -- config
         skip_eth_header_i       : in  std_logic; -- if this is set high, the eth header will be skipped, just like in DDU, otherwise this will produce normal ETH frames of eth type 0x8870
+        dest_mac_i              : in  std_logic_vector(47 downto 0);
+        source_mac_i            : in  std_logic_vector(47 downto 0);
+        ether_type_i            : in  std_logic_vector(15 downto 0);
         
         -- control
         data_empty_i            : in  std_logic;
         data_i                  : in  std_logic_vector(15 downto 0);
+        data_trailer_i          : in  std_logic;
         data_rd_en              : out std_logic;
         last_valid_word_i       : in  std_logic; -- this indicates that this is the last valid word (almost_empty flag of the external FWFT FIFO)
         
@@ -61,11 +69,15 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
 
     constant ETH_IDLE           : std_logic_vector(15 downto 0) := x"50BC";
     constant ETH_PREAMBLE_SOF   : t_std16_array(0 to 3) := (x"55FB", x"5555", x"5555", x"D555");
-    constant ETH_HEADER         : t_std16_array(0 to 6) := (x"CFED", x"CFED", x"CFED", x"9E80", x"1417", x"1500", x"7088");
+--    constant ETH_HEADER         : t_std16_array(0 to 6) := (x"CFED", x"CFED", x"CFED", x"9E80", x"1417", x"1500", x"7088");
     constant ETH_EOF            : t_std16_array(0 to 1) := (x"F7FD", x"C5BC");
     constant DDU_EOE_WORD64     : std_logic_vector(63 downto 0) := x"8000ffff80008000";
 
     type t_eth_state is (IDLE, PREAMBLE_SOF, HEADER, PAYLOAD, FILLER, PACKET_CNT, CRC, EOF);
+    
+    signal reset                : std_logic;
+    
+    signal eth_header           : t_std16_array(0 to 6) := (others => (others => '0'));
     
     signal state                : t_eth_state;
     signal word_idx             : integer range 0 to 16383 := 0;
@@ -93,6 +105,25 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
 
 begin
 
+    i_reset_sync : entity work.synch
+        generic map(
+            N_STAGES => 4,
+            IS_RESET => true
+        )
+        port map(
+            async_i => reset_i,
+            clk_i   => gbe_clk_i,
+            sync_o  => reset
+        );
+
+    eth_header(0) <= dest_mac_i(15 downto 0);
+    eth_header(1) <= dest_mac_i(31 downto 16);
+    eth_header(2) <= dest_mac_i(47 downto 32);
+    eth_header(3) <= source_mac_i(15 downto 0);
+    eth_header(4) <= source_mac_i(31 downto 16);
+    eth_header(5) <= source_mac_i(47 downto 32);
+    eth_header(6) <= ether_type_i;
+
     gbe_tx_data_o.txchardispmode <= (others => '0');
     gbe_tx_data_o.txchardispval <= (others => '0');
     gbe_tx_data_o.txcharisk <= charisk;
@@ -105,7 +136,7 @@ begin
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
+            if (reset = '1') then
                 state <= IDLE;
                 word_idx <= 0;
                 min_idle_cnt <= 0;
@@ -178,10 +209,10 @@ begin
                         min_idle_cnt <= 0;
                         crc_reset <= '0';
                         crc_en <= '1';
-                        data <= ETH_HEADER(word_idx);
+                        data <= eth_header(word_idx);
                         charisk <= "00";
                         
-                        if (word_idx = ETH_HEADER'length - 1) then
+                        if (word_idx = eth_header'length - 1) then
                             word_idx <= 0;
                             data_rd_en <= '1';
                             state <= PAYLOAD;
@@ -191,7 +222,7 @@ begin
                             state <= HEADER;
                         end if;                        
                     
-                    --=== Send the ethernet header (source MAC, destination MAC, and ethernet type) ===--        
+                    --=== Send the ethernet payload ===--        
                     when PAYLOAD =>
 
                         data <= data_i;
@@ -319,7 +350,7 @@ begin
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
+            if (reset = '1') then
                 packet_idx <= (others => '0');
             else
                 if (state = EOF) and (word_idx = 0) then
@@ -331,46 +362,78 @@ begin
         end if;
     end process;
 
-    -- end of event detection and word count
+    -- end of event detection based on the trailer flag
+    g_eoe_from_trailer : if g_USE_TRAILER_FLAG_EOE generate
+        
+        eoe <= data_trailer_i;
+        err_eoe_not_found <= '0';
+        
+    end generate;
+
+    -- end of event detection based on data
+    g_eoe_from_data : if not g_USE_TRAILER_FLAG_EOE generate        
+        process(gbe_clk_i)
+        begin
+            if (rising_edge(gbe_clk_i)) then
+                if (reset = '1') then
+                    word64 <= (others => '0');
+                    eoe_countdown <= (others => '0');     
+                    err_eoe_not_found <= '0';
+                    eoe <= '0';
+                else
     
+                    if (state = PAYLOAD) then
+                        word64 <= data_i & word64(63 downto 16);
+                        
+                        if (word64 = DDU_EOE_WORD64) then
+                            eoe_countdown <= "111";
+                            eoe <= '0';
+                        elsif (eoe_countdown = "001") then
+                            eoe <= '1';
+                            eoe_countdown <= (others => '0');
+                        elsif (eoe_countdown = "000") then
+                            eoe <= '0';
+                            eoe_countdown <= (others => '0');
+                        else
+                            eoe <= '0';
+                            eoe_countdown <= eoe_countdown - 1;
+                        end if;
+                        
+                        if (eoe = '0') and (last_valid_word_i = '1') then
+                            err_eoe_not_found <= '1';
+                        else
+                            err_eoe_not_found <= err_eoe_not_found;
+                        end if;
+                    else
+                        word64 <= (others => '0');
+                        eoe <= '0';
+                        eoe_countdown <= (others => '0');     
+                        err_eoe_not_found <= err_eoe_not_found;                          
+                    end if;
+    
+                end if;
+            end if;
+        end process;
+    end generate;
+
+    -- event count and size check
     process(gbe_clk_i)
     begin
         if (rising_edge(gbe_clk_i)) then
-            if (reset_i = '1') then
-                word64 <= (others => '0');
+            if (reset = '1') then
                 evt_word_cnt <= (others => '0');
-                eoe_countdown <= (others => '0');     
                 err_evt_too_big <= '0';  
-                err_eoe_not_found <= '0';
                 evt_cnt <= (others => '0');
-                eoe <= '0';
             else
 
                 if (state = PAYLOAD) then
-                    word64 <= data_i & word64(63 downto 16);
-                    
-                    if (word64 = DDU_EOE_WORD64) then
-                        eoe_countdown <= "111";
-                        eoe <= '0';
-                        evt_cnt <= evt_cnt + 1;
-                    elsif (eoe_countdown = "001") then
-                        eoe <= '1';
-                        eoe_countdown <= (others => '0');
-                        evt_cnt <= evt_cnt;
-                    elsif (eoe_countdown = "000") then
-                        eoe <= '0';
-                        eoe_countdown <= (others => '0');
-                        evt_cnt <= evt_cnt;
-                    else
-                        eoe <= '0';
-                        eoe_countdown <= eoe_countdown - 1;
-                        evt_cnt <= evt_cnt;
-                    end if;
                     
                     if (eoe = '1') then
                         evt_word_cnt <= (others => '0');
+                        evt_cnt <= evt_cnt + 1;
                     else
                         evt_word_cnt <= evt_word_cnt + 1;
+                        evt_cnt <= evt_cnt;
                     end if;
                     
                     if (evt_word_cnt > to_unsigned(g_MAX_EVT_WORDS, 16)) then
@@ -379,25 +442,16 @@ begin
                         err_evt_too_big <= err_evt_too_big;
                     end if;
                     
-                    if (eoe = '0') and (last_valid_word_i = '1') then
-                        err_eoe_not_found <= '1';
-                    else
-                        err_eoe_not_found <= err_eoe_not_found;
-                    end if;
                 else
-                    word64 <= (others => '0');
                     evt_cnt <= evt_cnt;
                     evt_word_cnt <= evt_word_cnt;
-                    eoe <= '0';
-                    eoe_countdown <= (others => '0');     
                     err_evt_too_big <= err_evt_too_big;  
-                    err_eoe_not_found <= err_eoe_not_found;                          
                 end if;
 
             end if;
         end if;
-    end process;    
-    
+    end process;
+
     -- word rate
     
     not_idle <= '0' when state = IDLE else '1';
@@ -409,7 +463,7 @@ begin
         )
         port map(
             clk_i   => gbe_clk_i,
-            reset_i => reset_i,
+            reset_i => reset,
             en_i    => not_idle,
             rate_o  => word_rate_o
         );

@@ -23,16 +23,10 @@ TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO FFS TIG ;
 #-------------------------------------------------------------------------------
 
 # create a closed group around the mgts to keep out extra trigger logic
-INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
-INST "*trigger_data_formatter*" AREA_GROUP=MGT_GROUP;
-AREA_GROUP "MGT_GROUP" RANGE=SLICE_X80Y125:SLICE_X105Y159;
-# GROUP controls the packing of logic into physical components (slices) as follows.
-#     CLOSED:  Do not allow logic outside the Area Group to be combined with logic inside the Area Group.
-AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
-
-# PLACE controls the allocation of resources in the Area Group’s RANGE, as follows
-# Do not allow comps that are not members of the Area Group to be placed within the RANGE defined for the Area Group.
-AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
+#INST "*trigger_data_phy*" AREA_GROUP=MGT_GROUP;
+#AREA_GROUP "MGT_GROUP" RANGE=SLICE_X80Y125:SLICE_X105Y159;
+#AREA_GROUP "MGT_GROUP" GROUP=CLOSED;
+#AREA_GROUP "MGT_GROUP" PLACE=CLOSED;
 
 #-------------------------------------------------------------------------------
 # CDC
@@ -63,6 +57,6 @@ NET "vfat_sbits_*" TNM="iserdes_i_grp";
 NET "elink_i_*"    TNM="iserdes_i_grp";
 TIMEGRP iserdes_i_grp OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
 
-INST "gbt_inst/gbt_serdes/gbt_oversample/*ise*/*iserdes*" TNM = iserdes_grp;
-INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/*ise*/*iserdes*" TNM = iserdes_grp;
-TIMESPEC TS_ISERDES = FROM "iserdes_grp" 3.0 ns;
+INST "gbt_inst/gbt_serdes/gbt_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
+INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
+TIMESPEC TS_ISERDES = FROM "iserdes_grp" 1.75 ns; # 0.6ns in app note 12 1250MHz, no idea how the number is invented

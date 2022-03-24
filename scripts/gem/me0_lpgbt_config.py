@@ -71,8 +71,11 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, 
 
     # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
     if boss and not readback:
-        print ("Enabling TX2 channel for VTRX+")
-        i2cmaster_write(system, oh_ver, 0x00, 0x03)
+        # Check if old VTRx+
+        check_data = i2cmaster_read(system, oh_ver, 0x01)
+        if check_data == 0x00:
+            print ("Enabling TX2 channel for VTRX+")
+            i2cmaster_write(system, oh_ver, 0x00, 0x03)
 
     print("Configuration finished... asserting config done")
     # Finally, Set pll&dllConfigDone to run chip:
@@ -250,18 +253,6 @@ def configLPGBT(oh_ver, readback):
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXLOCKTHRESHOLD"), 0x5, readback)
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXRELOCKTHRESHOLD"), 0x5, readback)
         writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXUNLOCKTHRESHOLD"), 0x5, readback)
-
-    # Datapath configuration
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASDEINTERLEVEAR"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASFECDECODER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.DLDPBYPASSDESCRAMBLER"), 0x0, readback)
-    if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECERRCNTENA"), 0x1, readback)
-    elif oh_ver == 2:
-        writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSINTERLEAVER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSSCRAMBLER"), 0x0, readback)
-    writeReg(getNode("LPGBT.RW.DEBUG.ULDPBYPASSFECCODER"), 0x0, readback)
 
 def set_uplink_group_data_source(type, readback, pattern=0x55555555):
     setting = 0
