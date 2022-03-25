@@ -54,6 +54,10 @@ package project_config is
         )
     );
 
+    constant CFG_ODMB57_BIDIR_TEST : boolean := true;
+    constant CFG_ODMB7_BIDIR_TX_LINK : t_int_array(0 to 3) := (12, 13, 14, 15);
+    constant CFG_ODMB7_BIDIR_RX_LINK : t_int_array(0 to 3) := (12, 13, 14, 15);
+    
     --================================--
     -- MGT configuration
     --================================--   
@@ -165,10 +169,10 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 82
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 080, refclk0_idx => 20, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 83
         ----------------------------- quad 227 (SLR 1) -----------------------------
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 84
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 85
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 86
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 87
+        (mgt_type => CFG_MGT_ODMB57_BIDIR, qpll_inst_type => QPLL_ODMB57_156 , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 85, ibert_inst => true), -- MGT 84
+        (mgt_type => CFG_MGT_ODMB57_BIDIR, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => true , chbond_master => 85, ibert_inst => true), -- MGT 85
+        (mgt_type => CFG_MGT_ODMB57_BIDIR, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 85, ibert_inst => true), -- MGT 86
+        (mgt_type => CFG_MGT_ODMB57_BIDIR, qpll_inst_type => QPLL_NULL       , qpll_idx => 084, refclk0_idx => 21, refclk1_idx => 5, is_master => false, chbond_master => 85, ibert_inst => true), -- MGT 87
         ----------------------------- quad 228 (SLR 2) -----------------------------
         (mgt_type => CFG_MGT_DMB      , qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => true , chbond_master => 0, ibert_inst => true ), -- MGT 88
         (mgt_type => CFG_MGT_DMB      , qpll_inst_type => QPLL_NULL       , qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 89
