@@ -347,7 +347,7 @@ begin
         force_not_ready => '0',
 
         ready_o      => open,
-        pll_lock_o   => open,
+        pll_lock_o   => pll_lock,
         txfsm_done_o => open,
 
         tx_prbs_mode_0 => control(0).txprbssel,
