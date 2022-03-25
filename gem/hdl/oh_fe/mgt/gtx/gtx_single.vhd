@@ -176,7 +176,7 @@ architecture RTL of gtx_single is
 
 --******************************** Main Body of Code***************************
 
-  function txpll_cp_cfg_sel (rate : string) return bit_vector is
+  function pll_cp_cfg_sel (rate : string) return bit_vector is
   begin
     if (RATE = "3p2") then
       return x"0D";
@@ -186,7 +186,7 @@ architecture RTL of gtx_single is
     end if;
   end;
 
-  function txpll_divsel_fb_sel (rate : string) return integer is
+  function pll_divsel_fb_sel (rate : string) return integer is
   begin
     if (RATE = "3p2") then
       return 4;
@@ -234,8 +234,8 @@ begin
       TX_CLK_SOURCE      => (GTX_TX_CLK_SOURCE),
       TX_OVERSAMPLE_MODE => (false),
       TXPLL_COM_CFG      => (x"21680a"),
-      TXPLL_CP_CFG       => (txpll_cp_cfg_sel(RATE)),
-      TXPLL_DIVSEL_FB    => (txpll_divsel_fb_sel(RATE)),
+      TXPLL_CP_CFG       => (pll_cp_cfg_sel(RATE)),
+      TXPLL_DIVSEL_FB    => (pll_divsel_fb_sel(RATE)),
       TXPLL_DIVSEL_OUT   => (1),
       TXPLL_DIVSEL_REF   => (1),
       TXPLL_DIVSEL45_FB  => (5),
@@ -296,13 +296,13 @@ begin
       ----------------------------RX PLL----------------------------
       RX_OVERSAMPLE_MODE => (false),
       RXPLL_COM_CFG      => (x"21680a"),
-      RXPLL_CP_CFG       => (x"0D"),
-      RXPLL_DIVSEL_FB    => (2),
+      RXPLL_CP_CFG       => (pll_cp_cfg_sel(RATE)),
+      RXPLL_DIVSEL_FB    => (pll_divsel_fb_sel(RATE)),
       RXPLL_DIVSEL_OUT   => (1),
       RXPLL_DIVSEL_REF   => (1),
       RXPLL_DIVSEL45_FB  => (5),
       RXPLL_LKDET_CFG    => ("111"),
-      RX_CLK25_DIVIDER   => (7),
+      RX_CLK25_DIVIDER   => (4),
 
       -------------------------RX Interface-------------------------
       GEN_RXUSRCLK  => (true),
@@ -512,8 +512,7 @@ begin
       IGNORESIGDET             => tied_to_vcc_i,
       RXCDRRESET               => tied_to_ground_i,
       RXELECIDLE               => open,
-      RXEQMIX(9 downto 3)      => tied_to_ground_vec_i(6 downto 0),
-      RXEQMIX(2 downto 0)      => "000",
+      RXEQMIX                  => "0000000000",
       RXN                      => RXN_IN,
       RXP                      => RXP_IN,
       -------- Receive Ports - RX Elastic Buffer and Phase Alignment Ports -------
