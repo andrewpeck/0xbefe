@@ -59,4 +59,4 @@ TIMEGRP iserdes_i_grp OFFSET = IN 3 ns VALID 3.125 ns BEFORE "clock_p" RISING;
 
 INST "gbt_inst/gbt_serdes/gbt_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
 INST "trigger_inst/sbits/*trig_alignment/trig_loop*_oversample/ise1_*/iserdes_v6.iserdes" TNM = iserdes_grp;
-TIMESPEC TS_ISERDES = FROM "iserdes_grp" 1.50 ns; # 0.6ns in app note 12 1250MHz, no idea how the number is invented
+TIMESPEC TS_ISERDES = FROM "iserdes_grp" 1.60 ns; # 0.6ns in app note 12 1250MHz, no idea how the number is invented
