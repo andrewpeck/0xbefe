@@ -582,7 +582,7 @@ module   gem_data_out
       .reset_i   (reset_i || not_in_table_cnt_reset),
       .en_i      (|rx_notintable_0),
       .snap_i    (1),
-      .count_o   (cnt_not_in_table_0)
+      .count_o   (cnt_notintable_0)
     );
 
     counter_snap #(.g_COUNTER_WIDTH(16))
@@ -591,7 +591,7 @@ module   gem_data_out
       .reset_i   (reset_i || not_in_table_cnt_reset),
       .en_i      (|rx_notintable_1),
       .snap_i    (1),
-      .count_o   (cnt_not_in_table_1)
+      .count_o   (cnt_notintable_1)
     );
 
     counter_snap #(.g_COUNTER_WIDTH(16))
@@ -600,7 +600,7 @@ module   gem_data_out
       .reset_i   (reset_i || not_in_table_cnt_reset),
       .en_i      (|rx_notintable_2),
       .snap_i    (1),
-      .count_o   (cnt_not_in_table_2)
+      .count_o   (cnt_notintable_2)
     );
 
     counter_snap #(.g_COUNTER_WIDTH(16))
@@ -609,7 +609,7 @@ module   gem_data_out
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_3),
       .snap_i    (1),
-      .count_o   (cnt_not_in_table_3)
+      .count_o   (cnt_notintable_3)
     );
 
    endgenerate
