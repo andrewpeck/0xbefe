@@ -600,7 +600,7 @@ module   gem_data_out
       .reset_i   (reset_i || not_in_table_cnt_reset),
       .en_i      (|rx_notintable_2),
       .snap_i    (1),
-      .count_o   (cnt_not_in_table_0)
+      .count_o   (cnt_not_in_table_2)
     );
 
     counter_snap #(.g_COUNTER_WIDTH(16))
