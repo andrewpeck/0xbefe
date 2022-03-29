@@ -307,7 +307,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         #cmap_new = copy(cm.get_cmap('viridis'))
         cmap_new = cm.viridis
         cmap_new.set_under('w')
-        my_norm = mcolors.Normalize(vmin=0, vmax=1, clip=False)
+        my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
         plt.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
 
         #cf = axs.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
