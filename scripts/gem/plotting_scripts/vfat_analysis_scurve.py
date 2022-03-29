@@ -284,26 +284,31 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         plot_data_y = []
         for dac in range(0,256):
             charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
-            plot_data_y.append(charge)
-            data = []
-            data_x = []
-            data_y = []
+            #plot_data_y.append(charge)
+            #data = []
+            #data_x = []
+            #data_y = []
             for channel in range(0,128):
+`               plot_data_x.append(channel)
+                plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 elif charge not in scurve_result[vfat][channel]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 else:
-                    data.append(scurve_result[vfat][channel][charge])
-            plot_data.append(data)
-        for channel in range(0,128):
-            plot_data_x.append(channel)
+                    plot_data.append(scurve_result[vfat][channel][charge])
+                    #data.append(scurve_result[vfat][channel][charge])
+            #plot_data.append(data)
+        #for channel in range(0,128):
+        #    plot_data_x.append(channel)
 
         #cmap_new = copy(cm.get_cmap('viridis'))
         cmap_new = cm.viridis
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=.25, vmax=1000, clip=False)
-        plt.scatter(x=np.asarray(plot_data_x),y=np.asarray(plot_data_y),c=np.asarray(plot_data),cmap=cmap_new, norm=my_norm, s=2)
+        plt.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
 
         #cf = axs.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
