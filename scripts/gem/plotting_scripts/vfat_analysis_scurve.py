@@ -289,7 +289,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #data_x = []
             #data_y = []
             for channel in range(0,128):
-`               plot_data_x.append(channel)
+                plot_data_x.append(channel)
                 plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
                     plot_data.append(0)
