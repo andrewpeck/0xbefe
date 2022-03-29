@@ -317,7 +317,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
         #cbar = fig.colorbar(cf, ax=axs, pad=0.01)
         cbar = plt.colorbar()
-        cbar.ax.set_label("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=10)
+        cbar.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=10)
         #cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
         cbar.ax.tick_params(labelsize=14)
         axs.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=axs.transAxes)
