@@ -306,7 +306,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         #for channel in range(0,128):
         #    plot_data_x.append(channel)
 
-        cmap_new = cm.viridis
+        cmap_new = copy.copy(cm.get_cmap("viridis"))
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
         cf = axs.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)

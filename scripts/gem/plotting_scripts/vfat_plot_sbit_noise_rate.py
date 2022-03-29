@@ -6,8 +6,10 @@ import numpy as np
 import os, sys, glob
 import argparse
 import pandas as pd
+import copy
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Plotting VFAT Sbit Noise Rate")
@@ -124,8 +126,8 @@ if __name__ == "__main__":
         #map_plot_data_y = threshold
         map_plot_data_y = []
         z_max = 1
-        for sbit in range(0,64):
-            map_plot_data_x.append(sbit)
+        #for sbit in range(0,64):
+        #    map_plot_data_x.append(sbit)
         for thr in range(0,len(threshold)):
             #data = []
             for sbit in range(0,64):
@@ -142,7 +144,7 @@ if __name__ == "__main__":
                     z_max = noise_result[vfat][sbit][thr]/time
             #map_plot_data.append(data)
 
-        cmap_new = cm.viridis
+        cmap_new = copy.copy(cm.get_cmap("viridis"))
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
 

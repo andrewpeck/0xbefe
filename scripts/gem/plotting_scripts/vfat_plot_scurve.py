@@ -5,6 +5,7 @@ from matplotlib import cm
 import numpy as np
 import os, sys, glob
 import argparse
+import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
 
@@ -55,6 +56,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
     return charge
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Plotting VFAT SCurve")
@@ -207,7 +209,7 @@ if __name__ == "__main__":
         #for channel in range(0,128):
         #    plot_data_x.append(channel)
 
-        cmap_new = cm.viridis
+        cmap_new = copy.copy(cm.get_cmap("viridis"))
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
         cf = axs.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
