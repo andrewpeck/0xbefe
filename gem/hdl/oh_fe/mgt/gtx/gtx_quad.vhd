@@ -177,8 +177,8 @@ begin
         RXDISPERR_OUT         => open,
         RXNOTINTABLE_OUT      => rx_notintable(I),
         --------------- Receive Ports - Comma Detection and Alignment --------------
-        RXENMCOMMAALIGN_IN    => '0',
-        RXENPCOMMAALIGN_IN    => '0',
+        RXENMCOMMAALIGN_IN    => '1',
+        RXENPCOMMAALIGN_IN    => '1',
         ------------------- Receive Ports - RX Data Path interface -----------------
         RXDATA_OUT            => open,
         RXRESET_IN            => rxreset_in,
