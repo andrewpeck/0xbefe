@@ -234,8 +234,8 @@ if __name__ == "__main__":
         plt.close(fig)
 
         if numVfats == 1:
-            ax1.set_xlabel("Channel number", loc='right')
-            ax1.set_ylabel("Injected charge (fC)")
+            ax1.set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1.set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1.set_title("VFAT%02d"%vfat)
             cf1 = ax1.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
@@ -247,8 +247,8 @@ if __name__ == "__main__":
             ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1.transAxes)
             ax1.text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
         elif numVfats <= 3:
-            ax1[vfatCnt0].set_xlabel("Channel Number", loc='right')
-            ax1[vfatCnt0].set_ylabel("Injected Charge (fC)", loc='top')
+            ax1[vfatCnt0].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
             cf1[vfatCnt0] = ax1[vfatCnt0].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
@@ -260,8 +260,8 @@ if __name__ == "__main__":
             ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[vfatCnt0].transAxes)
             ax1[vfatCnt0].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
         elif numVfats <= 6:
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right')
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
