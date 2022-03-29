@@ -390,7 +390,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".png"))
-    #plt.close(fig1)
+    plt.close(fig1)
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine
