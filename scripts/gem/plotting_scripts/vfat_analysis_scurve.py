@@ -10,6 +10,7 @@ from scipy.special import erf
 from math import sqrt
 from tqdm import tqdm
 import warnings
+import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
 
