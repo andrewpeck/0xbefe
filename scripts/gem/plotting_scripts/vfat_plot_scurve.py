@@ -155,24 +155,24 @@ if __name__ == "__main__":
         cbar1 = 0
     elif numVfats <= 3:
         fig1, ax1 = plt.subplots(1, numVfats, figsize=(numVfats*10,10))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 6:
         fig1, ax1 = plt.subplots(2, 3, figsize=(30,20))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 12:
         fig1, ax1 = plt.subplots(2, 6, figsize=(60,20))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 18:
         fig1, ax1 = plt.subplots(3, 6, figsize=(60,30))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 24:
         fig1, ax1 = plt.subplots(4, 6, figsize=(60,40))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
 
     vfatCnt0 = 0
     for vfat in scurve_result:
@@ -210,17 +210,18 @@ if __name__ == "__main__":
         cmap_new = cm.viridis
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
-        plt.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
+        cf = axs.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
 
         #cf = plt.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
         #for i in range(0,len(chargeVals_mod)):
         #    chargeVals_mod[i] = DACToCharge(chargeVals_mod[i], slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
-        #cbar = fig.colorbar(cf, ax=axs, pad=0.01)
-        cbar = plt.colorbar()
-        cbar.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=10)
+        cbar = fig.colorbar(cf, ax=axs, pad=0.01)
+        #cbar = plt.colorbar()
+        cbar.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=16)
         #cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
+        cbar.ax.tick_params(labelsize=14)
         axs.set_title("VFAT%02d"%vfat)
         axs.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
         axs.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=axs.transAxes)
@@ -230,45 +231,57 @@ if __name__ == "__main__":
         plt.close(fig)
 
         if numVfats == 1:
-            ax1.set_xlabel("Channel number", loc = 'right')
-            ax1.set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1.set_xlabel("Channel number", loc='right')
+            ax1.set_ylabel("Injected charge (fC)")
             ax1.set_title("VFAT%02d"%vfat)
-            cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1 = ax1.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
-            cbar1.set_label("Fired events / total events", loc = 'top')
+            cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=16)
+            #cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
+            #cbar1.set_label("Fired events / total events", loc='top')
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1.transAxes)
-            ax1.text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1.transAxes)
+            ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1.transAxes)
+            ax1.text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
         elif numVfats <= 3:
-            ax1[vfatCnt0].set_xlabel("Channel number", loc = 'right')
-            ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[vfatCnt0].set_xlabel("Channel Number", loc='right')
+            ax1[vfatCnt0].set_ylabel("Injected Charge (fC)", loc='top')
             ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
-            cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[vfatCnt0] = ax1[vfatCnt0].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
-            cbar1[vfatCnt0].set_label("Fired events / total events",  loc = 'top')
+            cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=16)
+            #cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
+            #cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[vfatCnt0].transAxes)
-            ax1[vfatCnt0].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
         elif numVfats <= 6:
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc = 'right')
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
-            cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
-            cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc = 'top')
+            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=16)
+            #cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
-            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.015, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc = 'right')
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
-            cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
-            cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc = 'top')
+            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=16)
+            #cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.1, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
-            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
         vfatCnt0+=1
 
