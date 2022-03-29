@@ -231,7 +231,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     plt.xticks(np.arange(1, len(vfatList) + 1), vfatList) # replace ticks with vfat number
     fig.tight_layout()
     plt.savefig(directoryName + "/scurveThreshdistribution_"+oh+".pdf")
-    print("\Threshold distribution plot saved at %s" % directoryName + "/scurveThreshdistribution_"+oh+".pdf")
+    print("Threshold distribution plot saved at %s" % directoryName + "/scurveThreshdistribution_"+oh+".pdf")
     plt.close()
 
 def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_adc, current_pulse_sf, mode):
@@ -303,7 +303,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         cmap_new = cm.viridis
         cmap_new.set_under('w')
         my_norm = mcolors.Normalize(vmin=.25, vmax=1000, clip=False)
-        plt.scatter(plot_data_x,plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
+        plt.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
 
         #cf = axs.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
