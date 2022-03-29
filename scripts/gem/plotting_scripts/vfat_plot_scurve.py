@@ -186,27 +186,41 @@ if __name__ == "__main__":
         plot_data_x = []
         plot_data_y = []
         for dac in range(0,256):
-            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
-            plot_data_y.append(charge)
-            data = []
+            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
+            #plot_data_y.append(charge)
+            #data = []
+            #data_x = []
+            #data_y = []
             for channel in range(0,128):
+                plot_data_x.append(channel)
+                plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 elif charge not in scurve_result[vfat][channel]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 else:
-                    data.append(scurve_result[vfat][channel][charge])
-            plot_data.append(data)
-        for channel in range(0,128):
-            plot_data_x.append(channel)
+                    plot_data.append(scurve_result[vfat][channel][charge])
+                    #data.append(scurve_result[vfat][channel][charge])
+            #plot_data.append(data)
+        #for channel in range(0,128):
+        #    plot_data_x.append(channel)
 
-        cf = plt.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+        cmap_new = cm.viridis
+        cmap_new.set_under('w')
+        my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
+        plt.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
+
+        #cf = plt.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
         #for i in range(0,len(chargeVals_mod)):
         #    chargeVals_mod[i] = DACToCharge(chargeVals_mod[i], slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
-        cbar = fig.colorbar(cf, ax=axs, pad=0.01)
-        cbar.set_label("Fired events / total events", loc = 'top')
+        #cbar = fig.colorbar(cf, ax=axs, pad=0.01)
+        cbar = plt.colorbar()
+        cbar.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=14, labelpad=10)
+        #cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
         axs.set_title("VFAT%02d"%vfat)
         axs.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
         axs.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=axs.transAxes)
