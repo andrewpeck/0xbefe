@@ -5,6 +5,7 @@ from matplotlib import cm
 import numpy as np
 import os, sys, glob
 import argparse
+import warnings
 import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
