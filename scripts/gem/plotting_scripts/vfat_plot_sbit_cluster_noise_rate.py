@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
         cmap_new = copy.copy(cm.get_cmap("viridis"))
         cmap_new.set_under('w')
-        my_norm = mcolors.Normalize(vmin=1e-1, vmax=1e8, clip=False)
+        my_norm = mcolors.LogNorm(vmin=1e-1, vmax=1e8, clip=False)
 
         if numVfats == 1:
             ax1.set_xlabel("Threshold (DAC)", loc='right')
