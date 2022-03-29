@@ -170,6 +170,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     ax.set_title("ENC distributions")
     ax.set_xlabel("VFAT number", loc='right')
     ax.set_ylabel("S-curve ENC (fC)", loc='top')
+    ax.set_ylim(0, 4)
     ax.grid()
 
     data = []
@@ -206,6 +207,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     ax.set_title("Threshold distributions")
     ax.set_xlabel("VFAT number", loc='right')
     ax.set_ylabel("S-curve Threshold (fC)", loc='top')
+    ax.set_ylim(0, 30)
     ax.grid()
 
     data = []
@@ -387,6 +389,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
     #plt.figtext(0.8, 1.0, 'Muon R&D', fontstyle='italic', fontsize=26)
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
+    fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".png"))
     #plt.close(fig1)
 
 if __name__ == "__main__":

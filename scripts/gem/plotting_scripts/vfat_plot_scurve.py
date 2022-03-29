@@ -287,6 +287,7 @@ if __name__ == "__main__":
 
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
+    fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".png"))
     plt.close(fig1)
 
 
