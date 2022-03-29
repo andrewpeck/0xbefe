@@ -197,6 +197,42 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     print("\nENC distribution plot saved at %s" % directoryName + "/scurveENCdistribution_"+oh+".pdf")
     plt.close()
 
+def plotThresdistributions(vfatList, scurveParams, oh, directoryName):
+    """
+    Plots the Threshold distribution of all channels for each VFAT.
+    """
+    fig, ax = plt.subplots(figsize = (12,10))
+    ax.set_title("Threshold distributions")
+    ax.set_xlabel("VFAT number", loc='right')
+    ax.set_ylabel("S-curve Threshold (fC)", loc='top')
+    ax.grid()
+
+    data = []
+    for ii in range(len(vfatList)):
+        data.append(scurveParams[ii, :, 1])
+
+    ax.boxplot(data, patch_artist=True)
+
+    ax.text(-0.092, 1.01, 'CMS', fontweight='bold', fontsize=30, transform=ax.transAxes)
+    ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=28, transform=ax.transAxes)
+
+    textStr = '\n'.join((
+    r'Orange line = median',
+    r'Box = interquartile range (IQR) Q1$-$Q3',
+    r'Top whisker = Q3$+1.5$\cdot$IQR',
+    r'Bottom whisker = Q1$-$1.5$\cdot$IQR',
+    r'Circles = outliers'))
+
+    props = dict(boxstyle='round', facecolor='white', alpha=0.4)
+
+    ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
+
+    plt.xticks(np.arange(1, len(vfatList) + 1), vfatList) # replace ticks with vfat number
+    fig.tight_layout()
+    plt.savefig(directoryName + "/scurveThreshdistribution_"+oh+".pdf")
+    print("\Threshold distribution plot saved at %s" % directoryName + "/scurveThreshdistribution_"+oh+".pdf")
+    plt.close()
+
 def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_adc, current_pulse_sf, mode):
     """
     Formats data originally stored in the s-curve dictionary
@@ -262,13 +298,19 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         for channel in range(0,128):
             plot_data_x.append(channel)
 
-        cf = axs.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+        cmap_new = copy(cm.get_cmap('viridis'))
+        cmap_new.set_under('w')
+        my_norm = mcolors.Normalize(vmin=.25, vmax=1000, clip=False)
+        plt.scatter(plot_data_x,plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
+
+        #cf = axs.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
         #for i in range(0,len(chargeVals_mod)):
         #    chargeVals_mod[i] = DACToCharge(chargeVals_mod[i], slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
-        cbar = fig.colorbar(cf, ax=axs, pad=0.01)
-        cbar.set_label("Fired Events / Total Events", loc='top', fontsize=14)
+        #cbar = fig.colorbar(cf, ax=axs, pad=0.01)
+        cbar = plt.colorbar()
+        cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
         cbar.ax.tick_params(labelsize=14)
         axs.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=axs.transAxes)
         axs.text(0.03, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=axs.transAxes)
@@ -421,6 +463,7 @@ if __name__ == "__main__":
     vfatList     = list(scurve_result.keys())
     scurveParams = fit_scurve(vfatList, scurve_result, oh, directoryName, args.verbose, channel_list)
     plotENCdistributions(vfatList, scurveParams, oh, directoryName)
+    plotThreshdistributions(vfatList, scurveParams, oh, directoryName)
     plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_adc, current_pulse_sf, args.mode)
 
 
