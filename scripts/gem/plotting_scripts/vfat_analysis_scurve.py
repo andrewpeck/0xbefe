@@ -197,7 +197,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     print("\nENC distribution plot saved at %s" % directoryName + "/scurveENCdistribution_"+oh+".pdf")
     plt.close()
 
-def plotThresdistributions(vfatList, scurveParams, oh, directoryName):
+def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     """
     Plots the Threshold distribution of all channels for each VFAT.
     """
