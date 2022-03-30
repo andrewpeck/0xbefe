@@ -579,7 +579,7 @@ module   gem_data_out
     counter_snap #(.g_COUNTER_WIDTH(16))
     cnt_xtable_0 (
       .ref_clk_i (usrclks[0]),
-      .reset_i   (reset_i || not_in_table_cnt_reset),
+      .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_0),
       .snap_i    (1),
       .count_o   (cnt_notintable_0)
@@ -588,7 +588,7 @@ module   gem_data_out
     counter_snap #(.g_COUNTER_WIDTH(16))
     cnt_xtable_1 (
       .ref_clk_i (usrclks[1]),
-      .reset_i   (reset_i || not_in_table_cnt_reset),
+      .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_1),
       .snap_i    (1),
       .count_o   (cnt_notintable_1)
@@ -597,7 +597,7 @@ module   gem_data_out
     counter_snap #(.g_COUNTER_WIDTH(16))
     cnt_xtable_2 (
       .ref_clk_i (usrclks[2]),
-      .reset_i   (reset_i || not_in_table_cnt_reset),
+      .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_2),
       .snap_i    (1),
       .count_o   (cnt_notintable_2)
