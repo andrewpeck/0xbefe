@@ -10,6 +10,8 @@
 // 2018/10/11 -- Initial tested version
 //--------------------------------------------------------------------------------
 
+`default_nettype none
+
 module device_dna #(
 parameter  DNA_LENGTH = 'd57
 )
@@ -72,3 +74,5 @@ parameter  DNA_LENGTH = 'd57
   // End of DNA_PORT_inst instantiation
 
 endmodule
+
+`default_nettype wire

@@ -1,3 +1,4 @@
+`default_nettype none
 
 module sr32 (
   input CLK,
@@ -126,3 +127,5 @@ aligner
 
 
 endmodule
+
+`default_nettype wire

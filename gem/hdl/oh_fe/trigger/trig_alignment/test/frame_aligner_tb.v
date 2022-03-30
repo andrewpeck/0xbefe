@@ -1,3 +1,5 @@
+`default_nettype none
+
 module frame_aligner_tb;
 
 parameter DDR = 1;
@@ -49,3 +51,5 @@ aligner (
 
 
 endmodule
+
+`default_nettype wire

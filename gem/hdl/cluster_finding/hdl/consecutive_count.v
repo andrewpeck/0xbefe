@@ -11,6 +11,8 @@
  Note... not sure how fast this can run, but probably 160 MHz or more...
 */
 
+`default_nettype none
+
 module consecutive_count  ( // one logic step, could run at 320 MHz easy!
     clock, // This could be inverted lhc_clk or 80 MHz or a 1/4 phase shifted clk for optimal speed.
     sbit,  // Here we hand the *next 7* s-bits to this module and save the result for any s-bit i...
@@ -49,4 +51,6 @@ module consecutive_count  ( // one logic step, could run at 320 MHz easy!
 
 //------------------------------------------------------------------------------------------------------------------
 endmodule
+
+`default_nettype wire
 //------------------------------------------------------------------------------------------------------------------

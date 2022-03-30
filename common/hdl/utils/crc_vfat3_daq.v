@@ -22,6 +22,8 @@
 //-- ### Verified
 //---------------------------------------------------------------------------------------------------
 
+`default_nettype none
+
 module crc_vfat3_daq (clk, reset, SLEEP, ReSync, Data_in, Data_valid_in, Init_in, CRC_out, CRC_ok_out);
 	
 	// ---------------- PARAMETERs ---------------------	
@@ -96,3 +98,5 @@ module crc_vfat3_daq (clk, reset, SLEEP, ReSync, Data_in, Data_valid_in, Init_in
 	endfunction
 	
 endmodule
+
+`default_nettype wire

@@ -15,6 +15,8 @@
 // 2018/04/17 -- Add lite mode
 //--------------------------------------------------------------------------------
 
+`default_nettype none
+
 module external
   #(parameter GE21=0,
     parameter NUM_VFATS = 24) (
@@ -145,3 +147,5 @@ module external
   endgenerate
 
 endmodule
+
+`default_nettype wire

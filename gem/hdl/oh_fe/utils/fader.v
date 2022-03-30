@@ -1,3 +1,5 @@
+`default_nettype none
+
 module fader #(
   parameter MXFADERCNT  = 27,
   parameter MXFADERBITS = 5)
@@ -23,3 +25,5 @@ module fader #(
   assign led = pwm_cnt[4];
 
 endmodule
+
+`default_nettype wire

@@ -1,3 +1,5 @@
+`default_nettype none
+
 module led_control
   (
    input             clock,
@@ -196,3 +198,5 @@ module led_control
    assign led_logic [8]  = bc0_flash;
 
 endmodule
+
+`default_nettype wire

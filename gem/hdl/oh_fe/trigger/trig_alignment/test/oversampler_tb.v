@@ -1,3 +1,5 @@
+`default_nettype none
+
 module oversampler_tb;
 
 reg clk320 = 0;
@@ -53,3 +55,5 @@ wire d1;
 
 
   endmodule
+
+`default_nettype wire

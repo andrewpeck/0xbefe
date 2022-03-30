@@ -15,6 +15,8 @@
 // 2021/10/01 -- Use bitslip_fast
 //--------------------------------------------------------------------------------
 
+`default_nettype none
+
 module frame_aligner
   #(parameter MXSBITS=64,
     parameter EN_BITSLIP_TMR = 0,
@@ -147,3 +149,5 @@ module frame_aligner
 
 
 endmodule
+
+`default_nettype wire

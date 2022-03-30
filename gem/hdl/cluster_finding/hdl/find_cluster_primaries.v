@@ -7,6 +7,8 @@
 // 2019/05/09 -- Init description
 //--------------------------------------------------------------------------------
 
+`default_nettype none
+
 module find_cluster_primaries #(
   parameter MXPADS=1536,
   parameter MXROWS=8,
@@ -56,3 +58,5 @@ generate
   end // key_loop
 endgenerate
 endmodule
+
+`default_nettype wire

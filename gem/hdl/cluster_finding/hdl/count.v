@@ -1,3 +1,5 @@
+`default_nettype none
+
 module count_clusters #(
                         parameter OVERFLOW_THRESH = 0,
                         parameter SIZE = 768
@@ -148,3 +150,5 @@ module count_clusters #(
 `include "count1s.v"
 
 endmodule
+
+`default_nettype wire
