@@ -148,13 +148,23 @@ architecture gem_amc_arch of gem_amc is
         );
     end component;
 
+    component ila_lpgbt_10g_tx
+        port(
+            clk    : in std_logic;
+            probe0 : in std_logic_vector(233 downto 0);
+            probe1 : in std_logic;
+            probe2 : in std_logic
+        );
+    end component;
+
     component vio_debug_link_selector
         port(
             clk        : in  std_logic;
             probe_out0 : out std_logic_vector(5 downto 0);
             probe_out1 : out std_logic_vector(4 downto 0);
             probe_out2 : out std_logic;
-            probe_out3 : out std_logic
+            probe_out3 : out std_logic;
+            probe_out4 : out std_logic_vector(2 downto 0)
         );
     end component;
 
@@ -181,6 +191,8 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_clusters_arr        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal emtf_tx_ready_arr        : std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal emtf_tx_had_not_ready_arr: std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -267,9 +279,14 @@ architecture gem_amc_arch of gem_amc is
     signal dbg_gbt_wide_rx_data         : std_logic_vector(31 downto 0);
     signal dbg_gbt_rx_valid             : std_logic;
     signal dbg_gbt_link_status          : t_gbt_link_status;
+    signal dbg_emtf_data                : std_logic_vector(233 downto 0);
+    signal dbg_emtf_tx_ready            : std_logic;
+    signal dbg_emtf_tx_had_not_ready    : std_logic;
+    
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
+    signal dbg_trig_tx_link_select      : std_logic_vector(2 downto 0);
 
 begin
 
@@ -294,6 +311,9 @@ begin
     dbg_lpgbt_rx_data             <= lpgbt_rx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_rx_valid              <= gbt_rx_valid_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_link_status           <= gbt_link_status_arr(to_integer(unsigned(dbg_gbt_link_select)));
+    dbg_emtf_data                 <= emtf_data_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
+    dbg_emtf_tx_ready             <= emtf_tx_ready_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
+    dbg_emtf_tx_had_not_ready     <= emtf_tx_had_not_ready_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
 
     --================================--
     -- Power-on reset
@@ -527,8 +547,8 @@ begin
                     mgt_tx_ready_i     => gt_trig_tx_status_arr_i(i).tx_reset_done,
                     mgt_tx_data_o      => gt_trig_tx_data_arr_o(i),
                     tx_data_i          => emtf_data_arr(i),
-                    tx_ready_o         => open,
-                    tx_had_not_ready_o => open
+                    tx_ready_o         => emtf_tx_ready_arr(i),
+                    tx_had_not_ready_o => emtf_tx_had_not_ready_arr(i)
                 );
 
         end generate;
@@ -916,7 +936,8 @@ begin
             probe_out0 => dbg_gbt_link_select,
             probe_out1 => dbg_vfat_link_select,
             probe_out2 => lpgbt_reset_tx,
-            probe_out3 => lpgbt_reset_rx
+            probe_out3 => lpgbt_reset_rx,
+            probe_out4 => dbg_trig_tx_link_select
         );
 
     g_gbt_debug : if CFG_DEBUG_GBT generate
@@ -970,5 +991,17 @@ begin
             );
 
     end generate;
+
+    g_trig_tx_debug : if g_USE_TRIG_TX_LINKS and CFG_DEBUG_TRIGGER_TX generate
+        
+        i_ila_trig_tx : component ila_lpgbt_10g_tx
+            port map(
+                clk    => ttc_clocks_i.clk_40,
+                probe0 => dbg_emtf_data,
+                probe1 => dbg_emtf_tx_ready,
+                probe2 => dbg_emtf_tx_had_not_ready
+            );
+
+    end generate; 
 
 end gem_amc_arch;
