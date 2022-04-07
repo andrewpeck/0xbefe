@@ -11,8 +11,8 @@ CFG_TIME_TAG      0
 CFG_EC_BYTES      0
 CFG_BC_BYTES      0
 CFG_FP_FE         7 
-CFG_RES_PRE       1
-CFG_CAP_PRE       0
+CFG_RES_PRE       2
+CFG_CAP_PRE       1
 CFG_PT            15 
 CFG_EN_HYST       1
 CFG_SEL_POL       1 
@@ -32,7 +32,7 @@ CFG_CAL_PHI       0
 CFG_CAL_EXT       0
 CFG_CAL_DAC       100
 CFG_CAL_MODE      1 
-CFG_CAL_FS        0 
+CFG_CAL_FS        2 
 CFG_CAL_DUR       200 
 CFG_BIAS_CFD_DAC_2    40 
 CFG_BIAS_CFD_DAC_1    40 
