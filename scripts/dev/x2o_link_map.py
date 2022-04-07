@@ -22,19 +22,25 @@ RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH)
 # CSC_NUM_DMB = 56
 
 # CONFIG FOR QSFP-DD
-GEM_NUM_SLR = 1
+GEM_NUM_SLR = 4
 GEM_MAX_OHS = 12
 
 GE11_NUM_OH = 0
-GE21_NUM_OH = 4 #20
+# GE21_NUM_OH = 4 #20
+GE21_NUM_OH = 2 #20
+# ME0_NUM_OH = 1
 ME0_NUM_OH = 1 #6
 
 # QSFP assignment per GEM BLOCK
-GE21_OH_QSFPS = [[7, 6]]
-ME0_OH_QSFPS = [[9, 8]]
+# GE21_OH_QSFPS = [[7, 6], [14, 13]]
+GE21_OH_QSFPS = [[7], [6], [14], [13]]
+# ME0_OH_QSFPS = [[9, 8]]
+# ME0_OH_QSFPS = [[9, 8, 7, 6, 14, 13, 1, 0]] # monolithic 4 layer
+# ME0_OH_QSFPS = [[9, 8, 7, 6], [14, 13, 1, 0]] # 4 layer 2 SLR
+ME0_OH_QSFPS = [[9, 8], [7, 6], [14, 13], [1, 0]] # 4 layer 4 SLR
 GEM_USE_LDAQ = True
-GEM_LDAQ_QSFPS = [[10]]
-GEM_LDAQ_QSFP_CHANS = [[0]]
+GEM_LDAQ_QSFPS = [[10], [10], [10], [10]]
+GEM_LDAQ_QSFP_CHANS = [[0], [1], [2], [3]]
 
 ###############################################################
 ############################## CSC ############################
@@ -1272,7 +1278,7 @@ def generate_gem_oh_link_map(fiber_to_slr, station):
 
     # =============== OHs ===============
     print("    constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (")
-    for slr in range(CSC_NUM_SLR):
+    for slr in range(GEM_NUM_SLR):
         print("        %d =>" % slr)
         print("        ( ------------------------------------------------ SLR%d ------------------------------------------------" % slr)
 
@@ -1318,7 +1324,7 @@ def generate_gem_oh_link_map(fiber_to_slr, station):
         comma = "," if slr < 4 else ""
         print("        )%s" % comma)
 
-    if CSC_NUM_SLR < 4:
+    if GEM_NUM_SLR < 4:
         print("        others => (others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)))")
     print("    );")
 

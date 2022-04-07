@@ -43,34 +43,25 @@ extern "C" void rwreg_init(char* device, unsigned int base_address) {
         printf("ERROR: unknown device %s", device);
         exit(-1);
     }
-}
 
-uint8_t* getFpgaPtr() {
-    if (fpga == NULL) {
-        int fd = open("/dev/mem", O_RDWR | O_SYNC);
-        if (fd < 0) {
-            printf("ERROR: cannot open /dev/mem");
-            return NULL;
-        }
-
-        if (fpgaId == 0) {
-            fpga = (uint8_t *)mmap(NULL, FPGA0_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, FPGA0_BASE);
-        } else if (fpgaId == 1) {
-            fpga = (uint8_t *)mmap(NULL, FPGA1_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, FPGA1_BASE);
-        } else {
-            printf("RWREG.SO ERROR: invalid fpgaId");
-            exit(-1);
-        }
-        close(fd);
+    int fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if (fd < 0) {
+        printf("ERROR: cannot open /dev/mem");
+        exit(-1);
     }
 
-    return fpga;
+    if (fpgaId == 0) {
+        fpga = (uint8_t *)mmap(NULL, FPGA0_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, FPGA0_BASE + base_address);
+    } else if (fpgaId == 1) {
+        fpga = (uint8_t *)mmap(NULL, FPGA1_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, FPGA1_BASE + base_address);
+    } else {
+        printf("RWREG.SO ERROR: invalid fpgaId");
+        exit(-1);
+    }
+    close(fd);
 }
 
 extern "C" uint32_t getReg(uint32_t addr) {
-    if (fpga == NULL)
-        fpga = getFpgaPtr();
-
     /* Attempting to catch Bus Errors  */
     struct sigaction act;
     memset(&act,0,sizeof(act));
@@ -92,9 +83,6 @@ extern "C" uint32_t getReg(uint32_t addr) {
 }
 
 extern "C" uint32_t putReg(uint32_t addr, uint32_t val) {
-   if (fpga == NULL)
-        fpga = getFpgaPtr();
-
     /* Attempting to catch Bus Errors  */
     struct sigaction act;
     memset(&act,0,sizeof(act));
