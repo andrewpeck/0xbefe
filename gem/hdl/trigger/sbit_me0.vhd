@@ -39,7 +39,7 @@ entity sbit_me0 is
 
         -- Cluster outputs
         me0_cluster_count_o : out std_logic_vector(10 downto 0);
-        me0_clusters_o      : out t_oh_clusters;
+        me0_clusters_o      : out t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -59,16 +59,16 @@ architecture sbit_me0_arch of sbit_me0 is
         PORT (
             clk : IN STD_LOGIC;
 
-            probe0 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe1 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe2 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe3 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe4 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe5 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe6 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe7 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe8 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
-            probe9 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+            probe0  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe1  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe2  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe3  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe4  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe5  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe6  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe7  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe8  : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+            probe9  : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe10 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe11 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe12 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
@@ -113,6 +113,7 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat3_sbit0xe_test        : std_logic_vector(7 downto 0);
     signal test_sbit0xs_count_me0    : std_logic_vector(31 downto 0);
     signal vfat3_sbit0xs_test        : std_logic;
+    signal test_sel_oh_sbit_me0      : std_logic_vector(31 downto 0);
     signal test_sel_vfat_sbit_me0    : std_logic_vector(31 downto 0);
     signal test_sel_elink_sbit_me0   : std_logic_vector(31 downto 0);
     signal test_sel_sbit_me0         : std_logic_vector(31 downto 0);
@@ -268,7 +269,7 @@ begin
 
     --== COUNTER for selectable sbit ==--
     -- assigned sbit of selected vfat (x) and sbit (s) 
-    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
+    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
         generic map(
