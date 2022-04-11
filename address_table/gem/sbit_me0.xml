@@ -32,30 +32,39 @@
         fw_signal="me0_cluster_count"/>
 
 
-  <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x30" permission="r"
-	mask="0xffffffff"
-	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
-	fw_signal="vfat_trigger_rate_arr(0)(${VFAT_CNT_ID})"
+  <node id="ME0_OH${OH_CNT_ID}" address="0x30" permission="r"
+	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID} of OH ${OH_CNT_ID}"
 	generate="true"
-	generate_size="&NUM_VFATS_PER_OH;"
-	generate_address_step="0x1"
-	generate_idx_var="VFAT_CNT_ID"/>
-
+	generate_size="&NUM_OF_OHs;"
+	generate_address_step="0x20"
+	generate_idx_var="OH_CNT_ID"/>
+      <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
+            mask="0xffffffff"
+            description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
+            fw_signal="vfat_trigger_rate_arr(${OH_CNT_ID})(${VFAT_CNT_ID})"
+            generate="true"
+            generate_size="&NUM_VFATS_PER_OH;"
+            generate_address_step="0x1"
+            generate_idx_var="VFAT_CNT_ID"/>
+  </node>
 
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
         description="Test register to display count of sbit from particular OH vfat sbit"
         fw_signal="test_sbit0xs_count_me0"/>
   <node id="TEST_SBIT0XE_COUNT_ME0" address="0x21" mask="0xffffffff" permission="r"
-        description="Test register to display count of sbit from particular OH vfat sbit"
+        description="Test register to display count of sbit from particular OH vfat elink"
         fw_signal="test_sbit0xe_count_me0"/>
-  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
-        description="Test register to display count of sbit from particular OH vfat sbit"
+  <node id="TEST_SEL_OH_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
+        description="Select OH for sbit test"
+        fw_signal="test_sel_oh_sbit_me0" fw_default="0x00000000"/>      
+  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
+        description="Select VFAT for sbit test"
         fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000000"/>
-  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
-        description="Test register to display count of sbit from particular OH vfat sbit"
+  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
+        description="Select Elink for sbit test"
         fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
-  <node id="TEST_SEL_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
-        description="Test register to display count of sbit from particular OH vfat sbit"
+  <node id="TEST_SEL_SBIT_ME0" address="0x25" mask="0xffffffff" permission="w"
+        description="Select sbit for sbit test"
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
   
 
