@@ -902,7 +902,8 @@ begin
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
             g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => false
+            g_USE_TRAILER_FLAG_EOE => false,
+            g_USE_GEM_FORMAT       => false
         )
         port map(
             reset_i             => reset_daq,
