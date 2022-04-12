@@ -47,7 +47,7 @@ if {[regexp {xc7a200.*} $part]} {
     # the tools don't really optimize it well on its own so forcing the flip-flop
     # close to the serdes keeps timing consistent
     set cell [get_cells [list  gbt_inst/gbt_serdes/gbt_oversample/reset_serdes*]]
-    place_cell $cell SLICE_X0Y247
+    place_cell $cell SLICE_X1Y248
     set_property is_bel_fixed true $cell
     set_property is_loc_fixed true $cell
 }
