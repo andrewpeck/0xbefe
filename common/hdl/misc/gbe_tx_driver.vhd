@@ -25,7 +25,8 @@ entity gbe_tx_driver is
         g_NUM_IDLES_SMALL_EVT   : integer := 2;    -- minimum number of idle words after a "small" event
         g_NUM_IDLES_BIG_EVT     : integer := 7;    -- minimum number of idle words after a "big" event
         g_SMALL_EVT_MAX_WORDS   : integer := 24;   -- above this number of words, the event is considered "big", thus requiring g_NUM_IDLES_BIG_EVT of idles after the packet
-        g_USE_TRAILER_FLAG_EOE  : boolean          -- uses data_trailer_i as an end-of-event indicator if this is set to true, otherwise it tries to find the end of event based on the data (only works for CSC)
+        g_USE_TRAILER_FLAG_EOE  : boolean;         -- uses data_trailer_i as an end-of-event indicator if this is set to true, otherwise it tries to find the end of event based on the data (only works for CSC)
+        g_USE_GEM_FORMAT        : boolean          -- if set to true, the payload will be wrapped into extra header and trailer words indicating event number, packet size and number, and first/last flags
     );
     port (
         -- reset
@@ -73,24 +74,30 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
     constant ETH_EOF            : t_std16_array(0 to 1) := (x"F7FD", x"C5BC");
     constant DDU_EOE_WORD64     : std_logic_vector(63 downto 0) := x"8000ffff80008000";
 
-    type t_eth_state is (IDLE, PREAMBLE_SOF, HEADER, PAYLOAD, FILLER, PACKET_CNT, CRC, EOF);
+    type t_eth_state is (IDLE, PREAMBLE_SOF, HEADER, GEM_HEADER, PAYLOAD, FILLER, GEM_TRAILER, PACKET_CNT, CRC, EOF);
     
     signal reset                : std_logic;
     
     signal eth_header           : t_std16_array(0 to 6) := (others => (others => '0'));
     
     signal state                : t_eth_state;
+    signal state_prev           : t_eth_state;
     signal word_idx             : integer range 0 to 16383 := 0;
     signal packet_idx           : unsigned(15 downto 0) := (others => '0');
     signal min_idle_cnt         : integer range 0 to g_NUM_IDLES_BIG_EVT := 0;
     signal first_filler_word    : std_logic := '0';
     signal not_idle             : std_logic;
-    
+
     signal evt_cnt              : unsigned(31 downto 0) := (others => '0');
     signal evt_word_cnt         : unsigned(15 downto 0) := (others => '0');
+    signal evt_pkt_payload_size : unsigned(11 downto 0) := (others => '0');
+    signal evt_pkt_cnt          : unsigned(3 downto 0) := (others => '0');
+    signal evt_pkt_first        : std_logic := '1';
+    signal evt_pkt_last        : std_logic := '0';
     signal word64               : std_logic_vector(63 downto 0) := (others => '0');
     signal eoe_countdown        : unsigned(2 downto 0) := (others => '0'); 
     signal eoe                  : std_logic := '0';
+    signal eoe_prev             : std_logic := '0';
     
     signal crc_reset            : std_logic := '0';
     signal crc_en               : std_logic := '0';
@@ -214,13 +221,32 @@ begin
                         
                         if (word_idx = eth_header'length - 1) then
                             word_idx <= 0;
-                            data_rd_en <= '1';
-                            state <= PAYLOAD;
+                            if g_USE_GEM_FORMAT then
+                                state <= GEM_HEADER;
+                                data_rd_en <= '0';
+                            else
+                                state <= PAYLOAD;
+                                data_rd_en <= '1';
+                            end if;
                         else
                             word_idx <= word_idx + 1;
                             data_rd_en <= '0';
                             state <= HEADER;
                         end if;                        
+
+                    --=== Send GEM header ===--        
+                    when GEM_HEADER =>
+                    
+                        first_filler_word <= '0';
+                        min_idle_cnt <= 0;
+                        crc_reset <= '0';
+                        crc_en <= '1';
+                        data <= evt_pkt_first & "000" & std_logic_vector(evt_pkt_cnt) & std_logic_vector(evt_cnt(7 downto 0));
+                        charisk <= "00";
+                        
+                        data_rd_en <= '1';
+                        word_idx <= 0;
+                        state <= PAYLOAD;
                     
                     --=== Send the ethernet payload ===--        
                     when PAYLOAD =>
@@ -237,6 +263,8 @@ begin
                             data_rd_en <= '0';
                             if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
                                 state <= FILLER;
+                            elsif g_USE_GEM_FORMAT then
+                                state <= GEM_TRAILER;
                             else
                                 state <= PACKET_CNT;
                             end if;
@@ -271,9 +299,24 @@ begin
                                    
                         if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
                             state <= FILLER;
+                        elsif g_USE_GEM_FORMAT then
+                            state <= GEM_TRAILER;
                         else
                             state <= PACKET_CNT;
                         end if;
+
+                    --=== Send the GEM trailer ===--        
+                    when GEM_TRAILER =>
+                        
+                        data <= std_logic_vector(evt_pkt_payload_size) & "000" & evt_pkt_last;
+                        charisk <= "00";
+                        word_idx <= 0;
+                        first_filler_word <= '0';
+                        min_idle_cnt <= min_idle_cnt;
+                        crc_reset <= '0';
+                        crc_en <= '1';
+                        data_rd_en <= '0';
+                        state <= CRC;
 
                     --=== Send the packet counter ===--        
                     when PACKET_CNT =>
@@ -424,13 +467,22 @@ begin
                 evt_word_cnt <= (others => '0');
                 err_evt_too_big <= '0';  
                 evt_cnt <= (others => '0');
+                evt_pkt_cnt <= (others => '0');
+                evt_pkt_payload_size <= (others => '0');
+                evt_pkt_first <= '1';
+                evt_pkt_last <= '0';
             else
+
+                state_prev <= state;
+                eoe_prev <= eoe;
 
                 if (state = PAYLOAD) then
                     
                     if (eoe = '1') then
                         evt_word_cnt <= (others => '0');
                         evt_cnt <= evt_cnt + 1;
+                        evt_pkt_cnt <= (others => '0');
+                        evt_pkt_last <= '1';
                     else
                         evt_word_cnt <= evt_word_cnt + 1;
                         evt_cnt <= evt_cnt;
@@ -442,10 +494,25 @@ begin
                         err_evt_too_big <= err_evt_too_big;
                     end if;
                     
+                    evt_pkt_payload_size <= evt_pkt_payload_size + 1;
+                    evt_pkt_first <= '0';
+                    
                 else
+                    
+                    if (state_prev = PAYLOAD and eoe_prev = '0') then
+                        evt_pkt_cnt <= evt_pkt_cnt + 1;
+                    end if;
+                    
+                    if (state = GEM_TRAILER) then
+                        evt_pkt_payload_size <= (others => '0');
+                        evt_pkt_first <= evt_pkt_last;
+                        evt_pkt_last <= '0';
+                    end if;
+                    
                     evt_cnt <= evt_cnt;
                     evt_word_cnt <= evt_word_cnt;
-                    err_evt_too_big <= err_evt_too_big;  
+                    err_evt_too_big <= err_evt_too_big;
+                    
                 end if;
 
             end if;
