@@ -117,6 +117,8 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
                     daq_data[vfat][channel][thr]["time"] = runtime
             continue
 
+        if channel == "all":
+            continue
         print ("Channel: %d"%channel)
         for vfat in vfat_list:
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channel
@@ -155,10 +157,9 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
         for vfat in vfat_list:
             write_backend_reg(dac_node[vfat], initial_thr[vfat])
         sleep(1e-3)
-        print ("")
+        #print ("")
 
     # End of channel loop
-    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
     print ("")
 
     # Rate counters for entire VFATs
@@ -192,6 +193,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
         # End of VFAT loop
 
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
 
     # Disable channels on VFATs
     for vfat in vfat_list:
@@ -205,7 +207,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
     for vfat in vfat_list:
         for channel in channel_list:
             for thr in range(0,256,1):
-                if thr not in channel_data[vfat][sbit]:
+                if thr not in daq_data[vfat][channel]:
                     continue
                 if channel != "all":
                     file_out.write("%d    %d    %d    %f    %f\n"%(vfat, channel, thr, daq_data[vfat][channel][thr]["fired"], daq_data[vfat][channel][thr]["time"]))
@@ -265,7 +267,7 @@ if __name__ == "__main__":
             sys.exit()
         vfat_list.append(v_int)
 
-    channel_list = [i for i in range(0,64)]
+    channel_list = [i for i in range(0, 128)]
     channel_list.append("all")
 
     step = int(args.step)

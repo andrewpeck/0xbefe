@@ -187,7 +187,7 @@ if __name__ == "__main__":
             #cf5 = ax5.pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=mcolors.LogNorm(vmin=1e-1, vmax=1e8))
             #cbar5 = fig5.colorbar(cf5, ax=ax5, pad=0.01)
             #cbar5.set_label("Channel rate (Hz)", loc='top')
-            ax5.set_xticks(np.arange(0, 64, 20))
+            ax5.set_xticks(np.arange(0, 128, 20))
             ax5.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax5.transAxes)
             ax5.text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax5.transAxes)
         elif numVfats <= 3:
@@ -227,7 +227,7 @@ if __name__ == "__main__":
             #cf5[vfatCnt0] = ax5[vfatCnt0].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=mcolors.LogNorm(vmin=1e-1, vmax=1e8))
             #cbar5[vfatCnt0] = fig5.colorbar(cf5[vfatCnt0], ax=ax5[vfatCnt0], pad=0.01)
             #cbar5[vfatCnt0].set_label("Channel rate (Hz)", loc='top')
-            ax5[vfatCnt0].set_xticks(np.arange(0, 64, 20))
+            ax5[vfatCnt0].set_xticks(np.arange(0, 128, 20))
             ax5[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax5[vfatCnt0].transAxes)
             ax5[vfatCnt0].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax5[vfatCnt0].transAxes)
         elif numVfats <= 6:
@@ -267,7 +267,7 @@ if __name__ == "__main__":
             #cf5[int(vfatCnt0/3), vfatCnt0%3] = ax5[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=mcolors.LogNorm(vmin=1e-1, vmax=1e8))
             #cbar5[int(vfatCnt0/3), vfatCnt0%3] = fig5.colorbar(cf5[int(vfatCnt0/3), vfatCnt0%3], ax=ax5[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
             #cbar5[int(vfatCnt0/3), vfatCnt0%3].set_label("Channel rate (Hz)", loc='top')
-            ax5[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(0, 64, 20))
+            ax5[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(0, 128, 20))
             ax5[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax5[int(vfatCnt0/3), vfatCnt0%3].transAxes)
             ax5[int(vfatCnt0/3), vfatCnt0%3].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax5[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
@@ -307,7 +307,7 @@ if __name__ == "__main__":
             #cf5[int(vfatCnt0/6), vfatCnt0%6] = ax5[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(map_plot_data_x, map_plot_data_y, map_plot_data, cmap=cm.ocean_r, shading="nearest", norm=mcolors.LogNorm(vmin=1e-1, vmax=1e8))
             #cbar5[int(vfatCnt0/6), vfatCnt0%6] = fig5.colorbar(cf5[int(vfatCnt0/6), vfatCnt0%6], ax=ax5[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
             #cbar5[int(vfatCnt0/6), vfatCnt0%6].set_label("Channel rate (Hz)", loc='top')
-            ax5[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(0, 64, 20))
+            ax5[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(0, 128, 20))
             ax5[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax5[int(vfatCnt0/6), vfatCnt0%6].transAxes)
             ax5[int(vfatCnt0/6), vfatCnt0%6].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax5[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
@@ -324,11 +324,11 @@ if __name__ == "__main__":
             ax2[int(channel/8), channel%8].set_yscale("log")
             ax2[int(channel/8), channel%8].set_ylim(1e-1, 1e8)
             ax2[int(channel/8), channel%8].grid()
-            ax2[int(channel/8), channel%8].plot(threshold, noise_rate_sbit, "o", markersize=12)
+            ax2[int(channel/8), channel%8].plot(threshold, noise_rate_channel, "o", markersize=12)
             #leg = ax.legend(loc="center right", ncol=2)
-            ax2[int(channel/8), channel%8].set_title("VFAT%02d, Channel %02d"%(vfat, sbit))
-            ax2[int(channel/8), channel%8].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=26, transform=ax2[int(sbit/8), sbit%8].transAxes)
-            ax2[int(channel/8), channel%8].text(-0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=24, transform=ax2[int(sbit/8), sbit%8].transAxes)
+            ax2[int(channel/8), channel%8].set_title("VFAT%02d, Channel %02d"%(vfat, channel))
+            ax2[int(channel/8), channel%8].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=26, transform=ax2[int(channel/8), channel%8].transAxes)
+            ax2[int(channel/8), channel%8].text(-0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=24, transform=ax2[int(channel/8), channel%8].transAxes)
             
         #ax2.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=26, transform=ax2.transAxes)
         #ax2.text(0.03, 1.01, 'Muon R&D',fontstyle='italic', fontsize=24, transform=ax2.transAxes)
