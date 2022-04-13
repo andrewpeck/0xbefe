@@ -39,7 +39,7 @@ if __name__ == "__main__":
         if sbit!="all":
             sbit = int(sbit)
         thr = int(line.split()[2])
-        fired = int(line.split()[3])
+        fired = float(line.split()[3])
         time = float(line.split()[4])
         if vfat not in noise_result:
             noise_result[vfat] = {}
@@ -129,7 +129,8 @@ if __name__ == "__main__":
         z_max = 1
         #for sbit in range(0,64):
         #    map_plot_data_x.append(sbit)
-        for thr in range(0,len(threshold)):
+        for i in range(0,len(threshold)):
+            thr = threshold[i]
             #data = []
             for sbit in range(0,64):
                 map_plot_data_x.append(sbit)
@@ -315,7 +316,8 @@ if __name__ == "__main__":
             if sbit=="all":
                 continue
             noise_rate_sbit = []
-            for thr in range(0,len(threshold)):
+            for i in range(0,len(threshold)):
+                thr = threshold[i]
                 noise_rate_sbit.append(noise_result[vfat][sbit][thr]/time)
             ax2[int(sbit/8), sbit%8].set_xlabel("Threshold (DAC)", loc='right')
             ax2[int(sbit/8), sbit%8].set_ylabel("S-Bit rate (Hz)", loc='top')
