@@ -235,4 +235,19 @@ package mgt_pkg is
     type t_mgt_tx_init_arr is array (integer range <>) of t_mgt_tx_init;
     type t_mgt_rx_init_arr is array (integer range <>) of t_mgt_rx_init;
 
+    function is_refclk_160_lhc(freq : integer) return boolean;
+
+end mgt_pkg;
+    
+package body mgt_pkg is
+
+    function is_refclk_160_lhc(freq : integer) return boolean is
+    begin
+        if freq = 4 * C_TTC_CLK_FREQUENCY then
+            return true;
+        else
+            return false;
+        end if;
+    end function;
+
 end mgt_pkg;
