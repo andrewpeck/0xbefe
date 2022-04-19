@@ -435,16 +435,16 @@ if __name__ == "__main__":
         rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
-    # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and args.path == "downlink":
-        check_rom_readback(args.ohid, args.gbtid[0])
-        check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
-        
     # Check if GBT is READY
     if args.path == "downlink":
         for gbt in args.gbtid:
             check_lpgbt_ready(args.ohid, gbt)
 
+    # Readback rom register to make sure communication is OK
+    if args.system != "dryrun" and args.path == "downlink":
+        check_rom_readback(args.ohid, args.gbtid[0])
+        check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
+        
     try:
         check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, vfat_list, args.verbose)
     except KeyboardInterrupt:
