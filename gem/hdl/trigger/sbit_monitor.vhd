@@ -374,7 +374,7 @@ begin
 
     -- don't just directly output the empty signal, since we still have a few 32
     -- bit words to read after the fifo is empty
-    fifo_empty_o <= '1' when empty_now='1' and width_converter_state=IDLE else '0';
+    fifo_empty_o <= '1' when ((empty_now='1' and width_converter_state=IDLE) or wr_en='1') else '0';
 
   end generate;
 
