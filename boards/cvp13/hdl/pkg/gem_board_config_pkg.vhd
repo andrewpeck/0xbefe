@@ -26,7 +26,7 @@ package board_config_package is
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
     constant CFG_BOARD_MAX_OHS      : integer := 4;
     constant CFG_BOARD_MAX_SLRS     : integer := 4;
-    constant CFG_PCIE_USE_QDMA      : boolean := true;
+    constant CFG_PCIE_USE_QDMA      : boolean := false;
     
     ------------ DAQ configuration ------------
     constant CFG_DAQ_EVTFIFO_DEPTH          : integer := 4096;
