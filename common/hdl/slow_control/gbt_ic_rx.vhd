@@ -17,8 +17,8 @@
 --   The GBT-SC core strips off the header and trailer, so
 --   what we see from the lpgbt is:
 --
---   i=0, data=0xX0 or X1    -- chip adr + rw
---   i=1, data=0x00          -- rsvrd (RSVRD state only in v0)
+--   i=0, data=0x00          -- rsvrd (RSVRD state only in v0)
+--   i=1, data=0xX0 or X1    -- chip adr + rw
 --   i=2, data=0x01          -- cmd
 --   i=3, data=0x01          -- nwords [7:0]
 --   i=4, data=0x00          -- nwords [15:8] (8:8 in lPGBT v1)
@@ -70,7 +70,7 @@ end gbt_ic_rx;
 
 architecture Behavioral of gbt_ic_rx is
 
-    type rx_state_t is (IDLE, RSVRD, CMD, LENGTH0, LENGTH1, REG_ADR0, REG_ADR1,
+    type rx_state_t is (IDLE, I2C_ADR, CMD, LENGTH0, LENGTH1, REG_ADR0, REG_ADR1,
                         DATA, PARITY, OUTPUT, ERR);
 
     signal rx_state : rx_state_t := IDLE;
@@ -131,21 +131,25 @@ begin
 
                 when IDLE =>
 
-                    if (valid_i = '1') then
-                        if (lpgbt_version = '0') then
-                            rx_state   <= RSVRD;
-                        elsif (lpgbt_version = '1') then
-                            rx_state   <= CMD;
-                            parity_int <= frame_i;
-                        end if;
+                    if (valid_i = '1') and (lpgbt_version = '0') then    --first frame is RSVRD
+                        rx_state   <= I2C_ADR;
+                
+                    elsif (valid_i = '1') and (lpgbt_version = '1') then --take first frame as I2C ADR and go directly to CMD
+                        rx_state   <= CMD;
+                        parity_int <= frame_i;
+        
                         chip_adr_int <= frame_i(7 downto 1);
                         rw_bit_int   <= frame_i(0);
                     end if;
 
-                when RSVRD =>
+                when I2C_ADR =>
 
                     if (valid_i = '1') then
                         rx_state <= CMD;
+                         
+                        chip_adr_int <= frame_i(7 downto 1);
+                        rw_bit_int   <= frame_i(0);
+
                     end if;
 
                 when CMD =>
