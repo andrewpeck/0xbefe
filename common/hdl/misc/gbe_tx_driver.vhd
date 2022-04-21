@@ -123,13 +123,14 @@ begin
             sync_o  => reset
         );
 
-    eth_header(0) <= dest_mac_i(15 downto 0);
-    eth_header(1) <= dest_mac_i(31 downto 16);
-    eth_header(2) <= dest_mac_i(47 downto 32);
-    eth_header(3) <= source_mac_i(15 downto 0);
-    eth_header(4) <= source_mac_i(31 downto 16);
-    eth_header(5) <= source_mac_i(47 downto 32);
-    eth_header(6) <= ether_type_i;
+    -- bytes are swapped back at the MGT level
+    eth_header(0) <= dest_mac_i(7 downto 0) & dest_mac_i(15 downto 8);
+    eth_header(1) <= dest_mac_i(23 downto 16) & dest_mac_i(31 downto 24);
+    eth_header(2) <= dest_mac_i(39 downto 32) & dest_mac_i(47 downto 40);
+    eth_header(3) <= source_mac_i(7 downto 0) & source_mac_i(15 downto 8);
+    eth_header(4) <= source_mac_i(23 downto 16) & source_mac_i(31 downto 24);
+    eth_header(5) <= source_mac_i(39 downto 32) & source_mac_i(47 downto 40);
+    eth_header(6) <= ether_type_i(7 downto 0) & ether_type_i(15 downto 8);
 
     gbe_tx_data_o.txchardispmode <= (others => '0');
     gbe_tx_data_o.txchardispval <= (others => '0');
