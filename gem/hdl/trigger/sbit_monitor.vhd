@@ -118,21 +118,23 @@ begin
 
     constant SBIT_FIFO_DEPTH : integer := 512;
 
-    type readout_state_t is (FILLING, RUNNING, TRIGGERED, EMPTY);
-    signal readout_state : readout_state_t := FILLING;
+    type readout_state_t is (RESETTING, FILLING, RUNNING, TRIGGERED, EMPTY);
+    signal readout_state : readout_state_t := RESETTING;
 
     type width_converter_state_t is (IDLE, FETCHING, WORD_0, WORD_1, WORD_2, WORD_3);
     signal width_converter_state : width_converter_state_t := IDLE;
 
     -- fifo control / data signals
-    signal wr_en      : std_logic := '0';
-    signal rd_en      : std_logic := '0';
-    signal rd_valid   : std_logic := '0';
-    signal wr_data    : std_logic_vector (127 downto 0);
-    signal rd_data    : std_logic_vector (127 downto 0);
-    signal full_next  : std_logic := '0';
-    signal empty_next : std_logic := '0';
-    signal empty_now  : std_logic := '0';
+    signal wr_en       : std_logic := '0';
+    signal rd_en       : std_logic := '0';
+    signal rd_valid    : std_logic := '0';
+    signal wr_data     : std_logic_vector (127 downto 0);
+    signal rd_data     : std_logic_vector (127 downto 0);
+    signal full_next   : std_logic := '0';
+    signal empty_next  : std_logic := '0';
+    signal empty_now   : std_logic := '0';
+    signal wr_rst_busy : std_logic := '0';
+    signal rd_rst_busy : std_logic := '0';
 
     -- asserted to 1 when the width converter wants a new 128 bit word
     signal fetch_word      : std_logic := '0';
@@ -234,8 +236,8 @@ begin
 
         if (reset_i = '1') then
           width_converter_state <= IDLE;
-          fetch_word   <= '0';
-          fifo_valid_o <= '0';
+          fetch_word            <= '0';
+          fifo_valid_o          <= '0';
         end if;
 
       end if;
@@ -259,6 +261,15 @@ begin
     begin
       if (rising_edge(clock)) then
         case readout_state is
+
+          when RESETTING =>
+
+            wr_en <= '0';
+            rd_en <= '0';
+
+            if (reset_i = '0' and wr_rst_busy='0' and rd_rst_busy='0') then
+              readout_state <= FILLING;
+            end if;
 
           -- when we first start, fill the buffer
           when FILLING =>
@@ -304,8 +315,8 @@ begin
 
         end case;
 
-        if (reset_i = '1') then
-          readout_state <= FILLING;
+        if (reset_i = '1' or wr_rst_busy='1' or rd_rst_busy='1') then
+          readout_state <= RESETTING;
         end if;
 
       end if;
@@ -344,31 +355,31 @@ begin
         WR_DATA_COUNT_WIDTH => 1          -- DECIMAL
         )
       port map (
-        almost_empty  => empty_next, -- 1-bit output: Almost Empty : When asserted, this signal indicates that only one more read can be performed before the FIFO goes to empty.
-        empty         => empty_now,  -- 1-bit output: Empty Flag: When asserted, this signal indicates that the FIFO is empty. Read requests are ignored when the FIFO is empty, initiating a read while empty is not destructive to the FIFO.
-        almost_full   => full_next,  -- 1-bit output: Almost Full: When asserted, this signal indicates that only one more write can be performed before the FIFO is full.
-        data_valid    => rd_valid,   -- 1-bit output: Read Data Valid: When asserted, this signal indicates that valid data is available on the output bus (dout).
-        dout          => rd_data,    -- READ_DATA_WIDTH-bit output: Read Data: The output data bus is driven when reading the FIFO.
-        din           => wr_data,    -- WRITE_DATA_WIDTH-bit input: Write Data: The input data bus used when writing the FIFO.
-        rd_en         => rd_en,      -- 1-bit input: Read Enable: If the FIFO is not empty, asserting this signal causes data (on dout) to be read from the FIFO. Must be held active-low when rd_rst_busy is active high. .
-        rst           => reset_i,    -- 1-bit input: Reset: Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
-        wr_clk        => clock,      -- 1-bit input: Write clock: Used for write operation. wr_clk must be a free running clock.
-        wr_en         => wr_en,      -- 1-bit input: Write Enable: If the FIFO is not full, asserting this signal causes data (on din) to be written to the FIFO Must be held active-low when rst or wr_rst_busy or rd_rst_busy is active high
+        almost_empty  => empty_next,  -- 1-bit output: Almost Empty : When asserted, this signal indicates that only one more read can be performed before the FIFO goes to empty.
+        empty         => empty_now,   -- 1-bit output: Empty Flag: When asserted, this signal indicates that the FIFO is empty. Read requests are ignored when the FIFO is empty, initiating a read while empty is not destructive to the FIFO.
+        almost_full   => full_next,   -- 1-bit output: Almost Full: When asserted, this signal indicates that only one more write can be performed before the FIFO is full.
+        data_valid    => rd_valid,    -- 1-bit output: Read Data Valid: When asserted, this signal indicates that valid data is available on the output bus (dout).
+        dout          => rd_data,     -- READ_DATA_WIDTH-bit output: Read Data: The output data bus is driven when reading the FIFO.
+        din           => wr_data,     -- WRITE_DATA_WIDTH-bit input: Write Data: The input data bus used when writing the FIFO.
+        rd_en         => rd_en,       -- 1-bit input: Read Enable: If the FIFO is not empty, asserting this signal causes data (on dout) to be read from the FIFO. Must be held active-low when rd_rst_busy is active high. .
+        rst           => reset_i,     -- 1-bit input: Reset: Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+        wr_clk        => clock,       -- 1-bit input: Write clock: Used for write operation. wr_clk must be a free running clock.
+        wr_en         => wr_en,       -- 1-bit input: Write Enable: If the FIFO is not full, asserting this signal causes data (on din) to be written to the FIFO Must be held active-low when rst or wr_rst_busy or rd_rst_busy is active high
+        wr_rst_busy   => wr_rst_busy, -- 1-bit output: Write Reset Busy: Active-High indicator that the FIFO write domain is currently in a reset state.
+        rd_rst_busy   => rd_rst_busy, -- 1-bit output: Read Reset Busy: Active-High indicator that the FIFO read domain is currently in a reset state.
 
         wr_data_count => open, -- WR_DATA_COUNT_WIDTH-bit output: Write Data Count: This bus indicates the number of words written into the FIFO.
-        rd_data_count => open,  -- RD_DATA_COUNT_WIDTH-bit output: Read Data Count: This bus indicates the number of words read from the FIFO.
-        dbiterr       => open,  -- 1-bit output: Double Bit Error: Indicates that the ECC decoder detected a double-bit error and data in the FIFO core is corrupted.
-        full          => open,  -- 1-bit output: Full Flag: When asserted, this signal indicates that the FIFO is full. Write requests are ignored when the FIFO is full, initiating a write when the FIFO is full is not destructive to the contents of the FIFO.
-        overflow      => open,  -- 1-bit output: Overflow: This signal indicates that a write request (wren) during the prior clock cycle was rejected, because the FIFO is full. Overflowing the FIFO is not destructive to the contents of the FIFO.
-        prog_empty    => open,  -- 1-bit output: Programmable Empty: This signal is asserted when the number of words in the FIFO is less than or equal to the programmable empty threshold value. It is de-asserted when the number of words in the FIFO exceeds the programmable empty threshold value.
-        prog_full     => open,  -- 1-bit output: Programmable Full: This signal is asserted when the number of words in the FIFO is greater than or equal to the programmable full threshold value. It is de-asserted when the number of words in the FIFO is less than the programmable full threshold value.
-        rd_rst_busy   => open,  -- 1-bit output: Read Reset Busy: Active-High indicator that the FIFO read domain is currently in a reset state.
-        sbiterr       => open,  -- 1-bit output: Single Bit Error: Indicates that the ECC decoder detected and fixed a single-bit error.
-        underflow     => open,  -- 1-bit output: Underflow: Indicates that the read request (rd_en) during the previous clock cycle was rejected because the FIFO is empty. Under flowing the FIFO is not destructive to the FIFO.
-        wr_ack        => open,  -- 1-bit output: Write Acknowledge: This signal indicates that a write request (wr_en) during the prior clock cycle is succeeded.
-        wr_rst_busy   => open,  -- 1-bit output: Write Reset Busy: Active-High indicator that the FIFO write domain is currently in a reset state.
-        injectdbiterr => '0',   -- 1-bit input: Double Bit Error Injection: Injects a double bit error if the ECC feature is used on block RAMs or UltraRAM macros.
-        injectsbiterr => '0',   -- 1-bit input: Single Bit Error Injection: Injects a single bit error if the ECC feature is used on block RAMs or UltraRAM macros.
+        rd_data_count => open, -- RD_DATA_COUNT_WIDTH-bit output: Read Data Count: This bus indicates the number of words read from the FIFO.
+        dbiterr       => open, -- 1-bit output: Double Bit Error: Indicates that the ECC decoder detected a double-bit error and data in the FIFO core is corrupted.
+        full          => open, -- 1-bit output: Full Flag: When asserted, this signal indicates that the FIFO is full. Write requests are ignored when the FIFO is full, initiating a write when the FIFO is full is not destructive to the contents of the FIFO.
+        overflow      => open, -- 1-bit output: Overflow: This signal indicates that a write request (wren) during the prior clock cycle was rejected, because the FIFO is full. Overflowing the FIFO is not destructive to the contents of the FIFO.
+        prog_empty    => open, -- 1-bit output: Programmable Empty: This signal is asserted when the number of words in the FIFO is less than or equal to the programmable empty threshold value. It is de-asserted when the number of words in the FIFO exceeds the programmable empty threshold value.
+        prog_full     => open, -- 1-bit output: Programmable Full: This signal is asserted when the number of words in the FIFO is greater than or equal to the programmable full threshold value. It is de-asserted when the number of words in the FIFO is less than the programmable full threshold value.
+        sbiterr       => open, -- 1-bit output: Single Bit Error: Indicates that the ECC decoder detected and fixed a single-bit error.
+        underflow     => open, -- 1-bit output: Underflow: Indicates that the read request (rd_en) during the previous clock cycle was rejected because the FIFO is empty. Under flowing the FIFO is not destructive to the FIFO.
+        wr_ack        => open, -- 1-bit output: Write Acknowledge: This signal indicates that a write request (wr_en) during the prior clock cycle is succeeded.
+        injectdbiterr => '0',  -- 1-bit input: Double Bit Error Injection: Injects a double bit error if the ECC feature is used on block RAMs or UltraRAM macros.
+        injectsbiterr => '0',  -- 1-bit input: Single Bit Error Injection: Injects a single bit error if the ECC feature is used on block RAMs or UltraRAM macros.
         sleep         => '0'   -- 1-bit input: Dynamic power saving- If sleep is High, the memory/fifo block is in power saving mode.
         );
 
