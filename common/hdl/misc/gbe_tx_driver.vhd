@@ -60,6 +60,14 @@ end gbe_tx_driver;
 
 architecture gbe_tx_driver_arch of gbe_tx_driver is
 
+    component vio_gbe
+        port(
+            clk        : in  std_logic;
+            probe_out0 : out std_logic_vector(13 downto 0);
+            probe_out1 : out std_logic_vector(13 downto 0)
+        );
+    end component;
+
     component crc32_gbe is
         port(
             data_in          : in  std_logic_vector(15 downto 0);
@@ -109,6 +117,10 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
     
     signal data                 : std_logic_vector(15 downto 0) := ETH_IDLE;
     signal charisk              : std_logic_vector(1 downto 0) := "01";
+
+    -- temporary debug
+    signal min_payload_words    : std_logic_vector(13 downto 0);
+    signal max_payload_words    : std_logic_vector(13 downto 0);
 
 begin
 
@@ -260,9 +272,10 @@ begin
                         crc_en <= '1';
 
                         -- end of packet (either due to end of event detection, empty fifo, or packet size limit)
-                        if (eoe = '1') or (last_valid_word_i = '1') or (word_idx = g_MAX_PAYLOAD_WORDS - 1) then
+--                        if (eoe = '1') or (last_valid_word_i = '1') or (word_idx = g_MAX_PAYLOAD_WORDS - 1) then
+                        if (eoe = '1') or (last_valid_word_i = '1') or (word_idx = to_integer(unsigned(MAX_PAYLOAD_WORDS)) - 1) then
                             data_rd_en <= '0';
-                            if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
+                            if (word_idx < to_integer(unsigned(MIN_PAYLOAD_WORDS)) - 1) then
                                 state <= FILLER;
                             elsif g_USE_GEM_FORMAT then
                                 state <= GEM_TRAILER;
@@ -298,7 +311,7 @@ begin
                             data <= x"ffff";
                         end if;
                                    
-                        if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
+                        if (word_idx < to_integer(unsigned(MIN_PAYLOAD_WORDS)) - 1) then
                             state <= FILLER;
                         elsif g_USE_GEM_FORMAT then
                             state <= GEM_TRAILER;
@@ -547,5 +560,12 @@ begin
             crc_reg     => crc_reg,
             crc_current => crc_current
         );
-    
+
+    -- debug
+    i_vio_gbe : vio_gbe
+        port map(
+            clk        => gbe_clk_i,
+            probe_out0 => min_payload_words,
+            probe_out1 => max_payload_words
+        );    
 end gbe_tx_driver_arch;
