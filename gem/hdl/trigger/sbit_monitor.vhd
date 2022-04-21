@@ -194,6 +194,7 @@ begin
 
         fetch_word   <= '0';
         fifo_valid_o <= '0';
+        fifo_data_o  <= (others => '1');
 
         case width_converter_state is
 
