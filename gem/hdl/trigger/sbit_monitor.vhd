@@ -235,7 +235,7 @@ begin
 
         end case;
 
-        if (reset_i = '1') then
+        if (reset_i = '1' or wr_rst_busy='1' or rd_rst_busy='1') then
           width_converter_state <= IDLE;
           fetch_word            <= '0';
           fifo_valid_o          <= '0';
