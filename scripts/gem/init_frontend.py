@@ -58,6 +58,20 @@ def init_gem_frontend():
                 sleep(0.1)
         sleep(2)
 
+        # Do some lpGBT read operations for sub in OH-v1s to get the EC working
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            for gbt in range(num_gbts):
+                gbt_ver = gbt_ver_list[gbt]
+                selectGbt(oh, gbt)
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+                if gbt%2 != 0:
+                    if gbt_ver == 0 and gbt_ready == 1:
+                        for i in range(0,10):
+                            read_data = readGbtRegAddrs(0x00)
+                else:
+                    continue
+
         # Configure lpGBTs
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
@@ -72,13 +86,6 @@ def init_gem_frontend():
                 if oh_ver == 1 and gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
-
-                # Do some lpGBT read operations for sub to make sure the EC is working
-                if gbt%2 != 0:
-                    selectGbt(oh, gbt)
-                    for i in range(0,10):
-                        read_data = readGbtRegAddrs(0x00)
-            
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh]
                 gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1]
                 print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
