@@ -44,13 +44,10 @@ architecture Behavioral of promless_fpga_loader is
         port(
             clk    : in std_logic;
             probe0 : in std_logic;
-            probe1 : in std_logic;
+            probe1 : in std_logic_vector(7 downto 0);
             probe2 : in std_logic;
             probe3 : in std_logic;
-            probe4 : in std_logic;
-            probe5 : in std_logic;
-            probe6 : in std_logic_vector(7 downto 0);
-            probe7 : in std_logic
+            probe4 : in std_logic
         );
     end component;
     
@@ -82,7 +79,7 @@ architecture Behavioral of promless_fpga_loader is
     signal loading_started  : std_logic := '0';
     signal gap_detected     : std_logic := '0';
     
-    signal loader_en        : std_logic := '0';
+    signal loader_req       : std_logic := '0';
     signal hard_reset_local : std_logic := '0';
     signal hard_reset       : std_logic := '0';
     signal hard_reset_prev  : std_logic := '0';
@@ -91,9 +88,9 @@ architecture Behavioral of promless_fpga_loader is
     signal loader_valid     : std_logic;
     signal loader_err_os    : std_logic;
 
-    signal load_req_cnt     : unsigned(15 downto 0) := (others => '0');
+    signal request_cnt      : unsigned(15 downto 0) := (others => '0');
     signal success_cnt      : unsigned(15 downto 0) := (others => '0');
-    signal fail_cnt         : unsigned(15 downto 0) := (others => '0');
+    signal timeout_cnt      : unsigned(15 downto 0) := (others => '0');
     signal gap_det_cnt      : unsigned(15 downto 0) := (others => '0');
     signal loader_err_cnt   : std_logic_vector(15 downto 0) := (others => '0');
     
@@ -107,14 +104,14 @@ begin
             if (reset_i = '1') then
                 state <= IDLE;
                 elink_data_o <= (others => '1');
-                loader_en <= '0';
+                loader_req <= '0';
                 byte_cnt <= (others => '0');
                 wait_data_timer <= (others => '0');
                 wait_init_timer <= (others => '0');
-                fail_cnt <= (others => '0');
+                timeout_cnt <= (others => '0');
                 success_cnt <= (others => '0');
                 loading_started <= '0';
-                load_req_cnt <= (others => '0');
+                request_cnt <= (others => '0');
                 gap_det_cnt <= (others => '0');
                 firmware_size <= unsigned(promless_cfg_i.firmware_size);
             else
@@ -122,7 +119,7 @@ begin
                 case state is
                     when IDLE =>
                         elink_data_o <= (others => '1');
-                        loader_en <= '0';
+                        loader_req <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
                         byte_cnt <= (others => '0');
@@ -141,13 +138,12 @@ begin
                     -- not really used anymore since SCA controller resets the FPGA on TTC hard reset
                     when RESET_OH =>
                         elink_data_o <= (others => '1');
-                        loader_en <= '0';
+                        loader_req <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
                         byte_cnt <= (others => '0');
                         wait_data_timer <= (others => '0');
                         wait_init_timer <= (others => '0');
-                        load_req_cnt <= load_req_cnt + 1;
                         state <= WAIT_FOR_INIT; 
                         
                     -- wait for the FPGA to initialize (until INIT_B goes high)
@@ -162,10 +158,11 @@ begin
                         
                         if (wait_init_timer = WAIT_INIT_TIMEOUT) then
                             state <= PROGRAM;
-                            loader_en <= '1';
+                            loader_req <= '1';
+                            request_cnt <= request_cnt + 1;
                         else
                             state <= WAIT_FOR_INIT;
-                            loader_en <= '0';
+                            loader_req <= '0';
                         end if; 
                                                 
                         
@@ -185,26 +182,26 @@ begin
                             loading_started <= '1';
                         end if;
 
-                        if ((loader_valid = '0') and (loading_started = '1')) then
-                            gap_detected <= '1';
-                        end if;
-                        
                         if (wait_data_timer = WAIT_DATA_TIMEOUT) then
-                            fail_cnt <= fail_cnt + 1;
+                            timeout_cnt <= timeout_cnt + 1;
                             state <= IDLE;
                         end if;
                         
                         if (byte_cnt >= firmware_size) then
                             state <= IDLE;
                             success_cnt <= success_cnt + 1;
+                        else
+                            if ((loader_valid = '0') and (loading_started = '1')) then
+                                gap_detected <= '1';
+                            end if;
                         end if;
                         
-                        loader_en <= '0';
+                        loader_req <= '0';
                         wait_init_timer <= (others => '0');
                         
                     when others =>
                         state <= IDLE;
-                        loader_en <= '0';
+                        loader_req <= '0';
                         loading_started <= '0';
                         gap_detected <= '0';
                         elink_data_o <= (others => '1');
@@ -216,8 +213,8 @@ begin
         end if;
     end process;
     
-    to_promless_o.en  <= loader_en;
     to_promless_o.clk <= loader_clk_i;
+    to_promless_o.req <= loader_req;
 
     g_loader_fifo_80mhz: if g_LOADER_CLK_80_MHZ generate    
 
@@ -264,30 +261,27 @@ begin
             count_o   => loader_err_cnt
         );
 
-    promless_stats_o.load_request_cnt <= std_logic_vector(load_req_cnt);
-    promless_stats_o.success_cnt <= std_logic_vector(success_cnt);
-    promless_stats_o.fail_cnt <= std_logic_vector(fail_cnt);
-    promless_stats_o.gap_detect_cnt <= std_logic_vector(gap_det_cnt);
-    promless_stats_o.loader_ovf_unf_cnt <= loader_err_cnt;
+    promless_stats_o.request_cnt      <= std_logic_vector(request_cnt);
+    promless_stats_o.success_cnt      <= std_logic_vector(success_cnt);
+    promless_stats_o.timeout_cnt      <= std_logic_vector(timeout_cnt);
+    promless_stats_o.gap_detect_cnt   <= std_logic_vector(gap_det_cnt);
+    promless_stats_o.loader_error_cnt <= loader_err_cnt;
 
     i_ila : ila_gem_loader
         port map(
             clk    => loader_clk_i,
-            probe0 => loader_en,
-            probe1 => from_promless_i.ready,
+            probe0 => loader_req,
+            probe1 => from_promless_i.data,
             probe2 => from_promless_i.valid,
-            probe3 => from_promless_i.first,
-            probe4 => from_promless_i.last,
-            probe5 => from_promless_i.error,
-            probe6 => from_promless_i.data,
-            probe7 => gap_detected
+            probe3 => from_promless_i.error,
+            probe4 => gap_detected
         );
 
     i_vio : vio_gem_loader
         port map(
             clk        => gbt_clk_i,
             probe_in0  => std_logic_vector(success_cnt(7 downto 0)),
-            probe_in1  => std_logic_vector(fail_cnt(7 downto 0)),
+            probe_in1  => std_logic_vector(timeout_cnt(7 downto 0)),
             probe_out0 => hard_reset_local
         );
 

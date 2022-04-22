@@ -84,7 +84,7 @@ architecture promless_arch of promless is
     ----==== Loader signals ====----
     signal firmware_size            : std_logic_vector(RAM_ADDR_WIDTH + 2 downto 0) := (others => '0');
     signal loader_clk               : std_logic;
-    signal loader_en_req            : std_logic;
+    signal loader_req               : std_logic;
     signal from_promless            : t_from_promless;
     signal loader_valid_pipe        : std_logic_vector(RAM_READ_LATENCY downto 0) := (others => '0');
 
@@ -96,13 +96,13 @@ begin
     -- TODO fix the hack of merging all the promless requests into one and only using the clock from the first one
     loader_clk <= to_promless_i(0).clk;
     process(loader_clk)
-        variable en_all : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
+        variable req_all : std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
     begin
         if rising_edge(loader_clk) then
             for i in 0 to g_NUM_CHANNELS - 1 loop
-                en_all(i) := to_promless_i(i).en;
+                req_all(i) := to_promless_i(i).req;
             end loop;
-            loader_en_req <= or_reduce(en_all);
+            loader_req <= or_reduce(req_all);
         end if;
     end process;
 
@@ -228,8 +228,6 @@ begin
 
     ----==== Loader ====----    
 
-    from_promless.first <= '0';
-    from_promless.last <= '0';
     from_promless.error <= '0';
 
     process(loader_clk)
@@ -237,7 +235,6 @@ begin
         if rising_edge(loader_clk) then
             if (reset_i = '1') then
                 ramb_addr <= (others => '0');
-                from_promless.ready <= '0';
                 from_promless.valid <= '0';
                 from_promless.data <= (others => '0');
                 loader_valid_pipe <= (others => '0');
@@ -270,17 +267,15 @@ begin
                 -- IDLE
                 if (ramb_addr = std_logic_vector(to_unsigned(0, RAM_ADDR_WIDTH)) and ramb_byte_sel = "000") then
                     -- request
-                    if (loader_en_req = '1') then
+                    if (loader_req = '1') then
                         loader_valid_pipe(0) <= '1';
                         ramb_byte_sel <= std_logic_vector(unsigned(ramb_byte_sel) + 1);
                         ramb_addr <= ramb_addr;
-                        from_promless.ready <= '0';
                     --idle
                     else
                         loader_valid_pipe(0) <= '0';
                         ramb_byte_sel <= "000";
                         ramb_addr <= (others => '0');
-                        from_promless.ready <= '1';
                     end if;
                     
                 -- DONE
@@ -288,12 +283,10 @@ begin
                     loader_valid_pipe(0) <= '0';
                     ramb_addr <= (others => '0');
                     ramb_byte_sel <= (others => '0');
-                    from_promless.ready <= '1';
                 
                 -- RUNNING
                 else
                     loader_valid_pipe(0) <= '1';
-                    from_promless.ready <= '0';
                     
                     if (ramb_byte_sel = "111") then
                         ramb_byte_sel <= "000";

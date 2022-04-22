@@ -2,33 +2,8 @@
 proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
-  set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
-  set C_S_C2C_AXI_ID_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_ID_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of ID for for write address, write data, read address and read data} ${C_S_C2C_AXI_ID_WIDTH}
-  set C_S_C2C_AXI_DATA_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_DATA_WIDTH" -parent ${Page_0} -widget comboBox]
-  set_property tooltip {Width of S_AXI data bus} ${C_S_C2C_AXI_DATA_WIDTH}
-  set C_S_C2C_AXI_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_ADDR_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of S_AXI address bus} ${C_S_C2C_AXI_ADDR_WIDTH}
-  set C_S_C2C_AXI_AWUSER_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_AWUSER_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of optional user defined signal in write address channel} ${C_S_C2C_AXI_AWUSER_WIDTH}
-  set C_S_C2C_AXI_ARUSER_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_ARUSER_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of optional user defined signal in read address channel} ${C_S_C2C_AXI_ARUSER_WIDTH}
-  set C_S_C2C_AXI_WUSER_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_WUSER_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of optional user defined signal in write data channel} ${C_S_C2C_AXI_WUSER_WIDTH}
-  set C_S_C2C_AXI_RUSER_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_RUSER_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of optional user defined signal in read data channel} ${C_S_C2C_AXI_RUSER_WIDTH}
-  set C_S_C2C_AXI_BUSER_WIDTH [ipgui::add_param $IPINST -name "C_S_C2C_AXI_BUSER_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of optional user defined signal in write response channel} ${C_S_C2C_AXI_BUSER_WIDTH}
-  ipgui::add_param $IPINST -name "C_S_C2C_AXI_BASEADDR" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "C_S_C2C_AXI_HIGHADDR" -parent ${Page_0}
-  set C_S_CFG_AXI_DATA_WIDTH [ipgui::add_param $IPINST -name "C_S_CFG_AXI_DATA_WIDTH" -parent ${Page_0} -widget comboBox]
-  set_property tooltip {Width of S_AXI data bus} ${C_S_CFG_AXI_DATA_WIDTH}
-  set C_S_CFG_AXI_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_S_CFG_AXI_ADDR_WIDTH" -parent ${Page_0}]
-  set_property tooltip {Width of S_AXI address bus} ${C_S_CFG_AXI_ADDR_WIDTH}
-  ipgui::add_param $IPINST -name "C_S_CFG_AXI_BASEADDR" -parent ${Page_0}
-  ipgui::add_param $IPINST -name "C_S_CFG_AXI_HIGHADDR" -parent ${Page_0}
+  ipgui::add_page $IPINST -name "Page 0"
 
-  ipgui::add_param $IPINST -name "C_FIFO_ENDIAN_CONV_ENABLE"
 
 }
 

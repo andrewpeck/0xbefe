@@ -2,9 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity gem_loader_v_v1_0_S_C2C_AXI is
+entity gem_loader_virtex_s_c2c_axi is
   generic (
-
     -- Width of ID for for write address, write data, read address and read data
     C_S_AXI_ID_WIDTH     : integer := 1;
     -- Width of S_AXI data bus
@@ -23,9 +22,6 @@ entity gem_loader_v_v1_0_S_C2C_AXI is
     C_S_AXI_BUSER_WIDTH  : integer := 0
     );
   port (
-    fifo_wr_en_o   : out std_logic;
-    fifo_wr_data_o : out std_logic_vector(31 downto 0);
-
     -- Global Clock Signal
     S_AXI_ACLK     : in  std_logic;
     -- Global Reset Signal. This Signal is Active LOW
@@ -155,13 +151,15 @@ entity gem_loader_v_v1_0_S_C2C_AXI is
     S_AXI_RVALID   : out std_logic;
     -- Read ready. This signal indicates that the master can
     -- accept the read data and response information.
-    S_AXI_RREADY   : in  std_logic
+    S_AXI_RREADY   : in  std_logic;
+
+    fifo_wr_en_o   : out std_logic;
+    fifo_wr_data_o : out std_logic_vector(31 downto 0)
     );
-end gem_loader_v_v1_0_S_C2C_AXI;
+end gem_loader_virtex_s_c2c_axi;
 
-architecture arch_imp of gem_loader_v_v1_0_S_C2C_AXI is
+architecture arch_imp of gem_loader_virtex_s_c2c_axi is
 
-    
   -- AXI4FULL signals
   signal axi_awaddr       : std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
   signal axi_awready      : std_logic;
@@ -170,7 +168,7 @@ architecture arch_imp of gem_loader_v_v1_0_S_C2C_AXI is
   signal axi_buser        : std_logic_vector(C_S_AXI_BUSER_WIDTH-1 downto 0);
   signal axi_bvalid       : std_logic;
   signal axi_awid         : std_logic_vector(C_S_AXI_ID_WIDTH-1 downto 0);  
-  
+
   signal axi_araddr       : std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
   signal axi_arready      : std_logic;
   signal axi_rdata        : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -214,10 +212,10 @@ architecture arch_imp of gem_loader_v_v1_0_S_C2C_AXI is
   ------------------------------------------------
   ---- Signals for user logic memory space example
   --------------------------------------------------
-  
+
   signal fifo_wr_en   : std_logic;
   signal fifo_wr_data : std_logic_vector(31 downto 0);
-  
+
   signal mem_address         : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
   signal mem_select          : std_logic_vector(USER_NUM_MEM-1 downto 0);
   type word_array is array (0 to USER_NUM_MEM-1) of std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -227,20 +225,7 @@ architecture arch_imp of gem_loader_v_v1_0_S_C2C_AXI is
   signal j              : integer;
   signal mem_byte_index : integer;
   type BYTE_RAM_TYPE is array (0 to 15) of std_logic_vector(7 downto 0);
-  
-  
---  attribute mark_debug : string;
---  attribute keep : string;
-  
---  attribute mark_debug of fifo_wr_en     : signal is "true";
---  attribute mark_debug of fifo_wr_data     : signal is "true";
---  attribute mark_debug of mem_address     : signal is "true";
---  attribute mark_debug of mem_select     : signal is "true";
---  attribute mark_debug of mem_data_out     : signal is "true";
---  attribute mark_debug of i     : signal is "true";
---  attribute mark_debug of j     : signal is "true";
---  attribute mark_debug of mem_byte_index     : signal is "true";
-  
+
 begin
 
   -- I/O Connections assignments

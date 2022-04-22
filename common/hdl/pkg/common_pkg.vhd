@@ -513,33 +513,30 @@ package common_pkg is
     --===============================--
     
     type t_to_promless is record
-        clk     : std_logic;
-        en      : std_logic;
+        clk : std_logic;
+        req : std_logic;
     end record;
 
-    constant TO_PROMLESS_NULL : t_to_promless := (clk => '0', en => '0');
+    constant TO_PROMLESS_NULL : t_to_promless := (clk => '0', req => '0');
 
     type t_to_promless_arr is array(integer range <>) of t_to_promless;
 
     type t_from_promless is record
-        ready   : std_logic;
-        valid   : std_logic;
-        data    : std_logic_vector(7 downto 0);
-        first   : std_logic;
-        last    : std_logic;
-        error   : std_logic;
+        data  : std_logic_vector(7 downto 0);
+        valid : std_logic;
+        error : std_logic;
     end record;
    
-    constant FROM_PROMLESS_NULL : t_from_promless := (ready => '0', valid => '0', data => (others => '0'), first => '0', last => '0', error => '0');
+    constant FROM_PROMLESS_NULL : t_from_promless := (data => (others => '0'), valid => '0', error => '0');
     
     type t_from_promless_arr is array(integer range <>) of t_from_promless;
    
     type t_promless_stats is record
-        load_request_cnt    : std_logic_vector(15 downto 0);
-        success_cnt         : std_logic_vector(15 downto 0);
-        fail_cnt            : std_logic_vector(15 downto 0);
-        gap_detect_cnt      : std_logic_vector(15 downto 0);
-        loader_ovf_unf_cnt  : std_logic_vector(15 downto 0);
+        request_cnt      : std_logic_vector(15 downto 0);
+        success_cnt      : std_logic_vector(15 downto 0);
+        timeout_cnt      : std_logic_vector(15 downto 0);
+        gap_detect_cnt   : std_logic_vector(15 downto 0);
+        loader_error_cnt : std_logic_vector(15 downto 0);
     end record;
 
     type t_promless_cfg is record

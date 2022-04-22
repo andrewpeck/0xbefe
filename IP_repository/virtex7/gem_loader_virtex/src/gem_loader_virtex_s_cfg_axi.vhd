@@ -2,16 +2,14 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity gem_loader_v_v1_0_S_CFG_AXI is
+entity gem_loader_virtex_s_cfg_axi is
   generic (
-
     -- Width of S_AXI data bus
     C_S_AXI_DATA_WIDTH : integer := 32;
     -- Width of S_AXI address bus
     C_S_AXI_ADDR_WIDTH : integer := 5
     );
   port (
-
     -- Global Clock Signal
     S_AXI_ACLK    : in  std_logic;
     -- Global Reset Signal. This Signal is Active LOW
@@ -72,20 +70,23 @@ entity gem_loader_v_v1_0_S_CFG_AXI is
     -- Read ready. This signal indicates that the master can
     -- accept the read data and response information.
     S_AXI_RREADY  : in  std_logic;
-    
-    -- 
-    reload_master_en            : out std_logic;                        -- slv_reg0
-    reload_byte_cnt_requested   : out std_logic_vector(31 downto 0);    -- slv_reg1
-    reload_request_sw           : out std_logic;                        -- slv_reg2
-    
-    reload_granted_cnt     : in std_logic_vector(31 downto 0);          -- slv_reg3
-    fifo_overflow_cnt      : in std_logic_vector(31 downto 0);          -- slv_reg4
-    fifo_underflow_cnt     : in std_logic_vector(31 downto 0)           -- slv_reg5
-    
-    );
-end gem_loader_v_v1_0_S_CFG_AXI;
 
-architecture arch_imp of gem_loader_v_v1_0_S_CFG_AXI is
+    enable_o              : out std_logic;
+    bytes_requested_cnt_o : out std_logic_vector(31 downto 0);
+
+    status_i             : in std_logic_vector(31 downto 0);
+    request_cnt_i        : in std_logic_vector(31 downto 0);
+    axi_aw_cnt_i         : in std_logic_vector(31 downto 0);
+    axi_w_cnt_i          : in std_logic_vector(31 downto 0);
+    axi_b_cnt_i          : in std_logic_vector(31 downto 0);
+    fifo_wren_cnt_i      : in std_logic_vector(31 downto 0);
+    fifo_rden_cnt_i      : in std_logic_vector(31 downto 0);
+    fifo_overflow_cnt_i  : in std_logic_vector(31 downto 0);
+    fifo_underflow_cnt_i : in std_logic_vector(31 downto 0)
+    );
+end gem_loader_virtex_s_cfg_axi;
+
+architecture arch_imp of gem_loader_virtex_s_cfg_axi is
 
   -- AXI4LITE signals
   signal axi_awaddr  : std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
@@ -105,23 +106,31 @@ architecture arch_imp of gem_loader_v_v1_0_S_CFG_AXI is
   -- ADDR_LSB = 2 for 32 bits (n downto 2)
   -- ADDR_LSB = 3 for 64 bits (n downto 3)
   constant ADDR_LSB          : integer := (C_S_AXI_DATA_WIDTH/32)+ 1;
-  constant OPT_MEM_ADDR_BITS : integer := 2;
+  constant OPT_MEM_ADDR_BITS : integer := 3;
   ------------------------------------------------
   ---- Signals for user logic register space example
   --------------------------------------------------
-  ---- Number of Slave Registers 8
-  signal slv_reg0            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg1            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg2            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg3            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg4            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg5            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg6            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg7            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal slv_reg_rden        : std_logic;
-  signal slv_reg_wren        : std_logic;
-  signal reg_data_out        : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-  signal byte_index          : integer;
+  ---- Number of Slave Registers 16
+  signal slv_reg0             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg1             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg2             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg3             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg4             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg5             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg6             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg7             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg8             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg9             : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg10            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg11            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg12            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg13            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg14            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg15            : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal slv_reg_rden         : std_logic;
+  signal slv_reg_wren         : std_logic;
+  signal reg_data_out         : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+  signal byte_index           : integer;
 
 begin
   -- I/O Connections assignments
@@ -216,12 +225,11 @@ begin
       if S_AXI_ARESETN = '0' then
         slv_reg0 <= (others => '0');
         slv_reg1 <= (others => '0');
-        slv_reg2 <= (others => '0');
       else
         loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
         if (slv_reg_wren = '1') then
           case loc_addr is
-            when b"000" =>
+            when b"0000" =>
               for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
                 if (S_AXI_WSTRB(byte_index) = '1') then
                   -- Respective byte enables are asserted as per write strobes
@@ -229,8 +237,8 @@ begin
                   slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
                 end if;
               end loop;
-              
-            when b"001" =>
+
+            when b"0001" =>
               for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
                 if (S_AXI_WSTRB(byte_index) = '1') then
                   -- Respective byte enables are asserted as per write strobes
@@ -238,20 +246,10 @@ begin
                   slv_reg1(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
                 end if;
               end loop;
-              
-            when b"010" =>
-              for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
-                if (S_AXI_WSTRB(byte_index) = '1') then
-                  -- Respective byte enables are asserted as per write strobes
-                  -- slave registor 2
-                  slv_reg2(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
-                end if;
-              end loop;
 
             when others =>
               slv_reg0 <= slv_reg0;
               slv_reg1 <= slv_reg1;
-              slv_reg2 <= slv_reg2;
           end case;
         end if;
       end if;
@@ -345,22 +343,38 @@ begin
     -- Address decoding for reading registers
     loc_addr := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
     case loc_addr is
-      when b"000" =>
+      when b"0000" =>
         reg_data_out <= slv_reg0;
-      when b"001" =>
+      when b"0001" =>
         reg_data_out <= slv_reg1;
-      when b"010" =>
+      when b"0010" =>
         reg_data_out <= slv_reg2;
-      when b"011" =>
+      when b"0011" =>
         reg_data_out <= slv_reg3;
-      when b"100" =>
+      when b"0100" =>
         reg_data_out <= slv_reg4;
-      when b"101" =>
+      when b"0101" =>
         reg_data_out <= slv_reg5;
-      when b"110" =>
+      when b"0110" =>
         reg_data_out <= slv_reg6;
-      when b"111" =>
+      when b"0111" =>
         reg_data_out <= slv_reg7;
+      when b"1000" =>
+        reg_data_out <= slv_reg8;
+      when b"1001" =>
+        reg_data_out <= slv_reg9;
+      when b"1010" =>
+        reg_data_out <= slv_reg10;
+      when b"1011" =>
+        reg_data_out <= slv_reg11;
+      when b"1100" =>
+        reg_data_out <= slv_reg12;
+      when b"1101" =>
+        reg_data_out <= slv_reg13;
+      when b"1110" =>
+        reg_data_out <= slv_reg14;
+      when b"1111" =>
+        reg_data_out <= slv_reg15;
       when others =>
         reg_data_out <= (others => '0');
     end case;
@@ -383,13 +397,18 @@ begin
       end if;
     end if;
   end process;
-  
-  reload_master_en          <= slv_reg0(0);
-  reload_byte_cnt_requested <= slv_reg1;
-  reload_request_sw         <= slv_reg2(0);
-  
-  slv_reg3 <= reload_granted_cnt;
-  slv_reg4 <= fifo_overflow_cnt;
-  slv_reg5 <= fifo_underflow_cnt;
+
+  enable_o              <= slv_reg0(0);
+  bytes_requested_cnt_o <= slv_reg1;
+
+  slv_reg2 <= status_i;
+  slv_reg3 <= request_cnt_i;
+  slv_reg4 <= axi_aw_cnt_i;
+  slv_reg5 <= axi_w_cnt_i;
+  slv_reg6 <= axi_b_cnt_i;
+  slv_reg7 <= fifo_wren_cnt_i;
+  slv_reg8 <= fifo_rden_cnt_i;
+  slv_reg9 <= fifo_overflow_cnt_i;
+  slv_reg10 <= fifo_underflow_cnt_i;
 
 end arch_imp;

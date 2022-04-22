@@ -199,7 +199,7 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal daqlink_to_daq       : t_daqlink_to_daq;
 
     -------------------- PROMless ---------------------------------
-    signal to_promless          : t_to_promless := (clk => '0', en => '0');
+    signal to_promless          : t_to_promless := TO_PROMLESS_NULL;
     signal from_promless        : t_from_promless;
 
     -------------------- Other ---------------------------------

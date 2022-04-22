@@ -3,7 +3,7 @@
   <spirit:vendor>wisc.edu</spirit:vendor>
   <spirit:library>user</spirit:library>
   <spirit:name>gem_loader_virtex</spirit:name>
-  <spirit:version>2.8</spirit:version>
+  <spirit:version>3.6</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
       <spirit:name>S_C2C_AXI</spirit:name>
@@ -575,7 +575,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_C2C_AXI_RST.POLARITY">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_C2C_AXI_RST.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -623,7 +623,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_CFG_AXI_RST.POLARITY">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_CFG_AXI_RST.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -729,6 +729,22 @@
         </spirit:portMap>
       </spirit:portMaps>
     </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>gem_loader_clk_i</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>gem_loader_clk_i</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+    </spirit:busInterface>
   </spirit:busInterfaces>
   <spirit:memoryMaps>
     <spirit:memoryMap>
@@ -779,12 +795,12 @@
         <spirit:displayName>Synthesis</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:synthesis</spirit:envIdentifier>
         <spirit:language>vhdl</spirit:language>
-        <spirit:modelName>gem_loader_v_v1_0</spirit:modelName>
-        <spirit:fileSetRef>
-          <spirit:localName>xilinx_vhdlsynthesis_xilinx_com_ip_fifo_generator_13_1__ref_view_fileset</spirit:localName>
-        </spirit:fileSetRef>
+        <spirit:modelName>gem_loader_virtex</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_vhdlsynthesis_xilinx_com_ip_ila_6_2__ref_view_fileset</spirit:localName>
+        </spirit:fileSetRef>
+        <spirit:fileSetRef>
+          <spirit:localName>xilinx_vhdlsynthesis_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:localName>
         </spirit:fileSetRef>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_vhdlsynthesis_view_fileset</spirit:localName>
@@ -792,7 +808,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a078a0b3</spirit:value>
+            <spirit:value>156f7c13</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -801,12 +817,12 @@
         <spirit:displayName>Simulation</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:simulation</spirit:envIdentifier>
         <spirit:language>vhdl</spirit:language>
-        <spirit:modelName>gem_loader_v_v1_0</spirit:modelName>
-        <spirit:fileSetRef>
-          <spirit:localName>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_fifo_generator_13_1__ref_view_fileset</spirit:localName>
-        </spirit:fileSetRef>
+        <spirit:modelName>gem_loader_virtex</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_ila_6_2__ref_view_fileset</spirit:localName>
+        </spirit:fileSetRef>
+        <spirit:fileSetRef>
+          <spirit:localName>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:localName>
         </spirit:fileSetRef>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_vhdlbehavioralsimulation_view_fileset</spirit:localName>
@@ -814,7 +830,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a078a0b3</spirit:value>
+            <spirit:value>156f7c13</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -839,7 +855,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>59d562e9</spirit:value>
+            <spirit:value>8f05cbcb</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -860,7 +876,7 @@
     </spirit:views>
     <spirit:ports>
       <spirit:port>
-        <spirit:name>clk_reload</spirit:name>
+        <spirit:name>gem_loader_clk_i</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -873,7 +889,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_request</spirit:name>
+        <spirit:name>gem_loader_req_i</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -886,20 +902,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_start</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>reload_data</spirit:name>
+        <spirit:name>gem_loader_data_o</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
@@ -916,7 +919,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_data_valid</spirit:name>
+        <spirit:name>gem_loader_valid_o</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -929,7 +932,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_data_first</spirit:name>
+        <spirit:name>gem_loader_error_o</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -942,7 +945,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_data_last</spirit:name>
+        <spirit:name>s_c2c_request_remote</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -955,7 +958,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_ready</spirit:name>
+        <spirit:name>s_c2c_fifo_full_remote</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -968,9 +971,9 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_error</spirit:name>
+        <spirit:name>s_c2c_axi_aclk</spirit:name>
         <spirit:wire>
-          <spirit:direction>out</spirit:direction>
+          <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
             <spirit:wireTypeDef>
               <spirit:typeName>std_logic</spirit:typeName>
@@ -981,39 +984,9 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>reload_size</spirit:name>
+        <spirit:name>s_c2c_axi_aresetn</spirit:name>
         <spirit:wire>
-          <spirit:direction>out</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long">31</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>reload_request_remote</spirit:name>
-        <spirit:wire>
-          <spirit:direction>out</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>reload_fifo_full_remote</spirit:name>
-        <spirit:wire>
-          <spirit:direction>out</spirit:direction>
+          <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
             <spirit:wireTypeDef>
               <spirit:typeName>std_logic</spirit:typeName>
@@ -1166,6 +1139,23 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
+        <spirit:name>s_c2c_axi_awqos</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:vector>
+            <spirit:left spirit:format="long">3</spirit:left>
+            <spirit:right spirit:format="long">0</spirit:right>
+          </spirit:vector>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>std_logic_vector</spirit:typeName>
+              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
         <spirit:name>s_c2c_axi_awregion</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
@@ -1183,23 +1173,6 @@
           <spirit:driver>
             <spirit:defaultValue spirit:format="long">0</spirit:defaultValue>
           </spirit:driver>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>s_c2c_axi_awqos</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long">3</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
         </spirit:wire>
       </spirit:port>
       <spirit:port>
@@ -1595,6 +1568,23 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
+        <spirit:name>s_c2c_axi_arqos</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:vector>
+            <spirit:left spirit:format="long">3</spirit:left>
+            <spirit:right spirit:format="long">0</spirit:right>
+          </spirit:vector>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>std_logic_vector</spirit:typeName>
+              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
         <spirit:name>s_c2c_axi_arregion</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
@@ -1612,23 +1602,6 @@
           <spirit:driver>
             <spirit:defaultValue spirit:format="long">0</spirit:defaultValue>
           </spirit:driver>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>s_c2c_axi_arqos</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long">3</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
         </spirit:wire>
       </spirit:port>
       <spirit:port>
@@ -1812,7 +1785,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>s_c2c_axi_aclk</spirit:name>
+        <spirit:name>s_cfg_axi_aclk</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -1825,7 +1798,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>s_c2c_axi_aresetn</spirit:name>
+        <spirit:name>s_cfg_axi_aresetn</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -1842,7 +1815,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH&apos;)) - 1)">4</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH&apos;)) - 1)">5</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2005,7 +1978,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH&apos;)) - 1)">4</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH&apos;)) - 1)">5</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -2120,32 +2093,6 @@
           </spirit:wireTypeDefs>
         </spirit:wire>
       </spirit:port>
-      <spirit:port>
-        <spirit:name>s_cfg_axi_aclk</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>s_cfg_axi_aresetn</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_vhdlsynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_vhdlbehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
     </spirit:ports>
     <spirit:modelParameters>
       <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
@@ -2206,12 +2153,12 @@
         <spirit:name>C_S_CFG_AXI_ADDR_WIDTH</spirit:name>
         <spirit:displayName>C S CFG AXI ADDR WIDTH</spirit:displayName>
         <spirit:description>Width of S_AXI address bus</spirit:description>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH" spirit:order="14" spirit:rangeType="long">5</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH" spirit:order="14" spirit:rangeType="long">6</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="boolean">
         <spirit:name>C_FIFO_ENDIAN_CONV_ENABLE</spirit:name>
         <spirit:displayName>C Fifo Endian Conv Enable</spirit:displayName>
-        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_FIFO_ENDIAN_CONV_ENABLE">true</spirit:value>
+        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_FIFO_ENDIAN_CONV_ENABLE">false</spirit:value>
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
@@ -2245,32 +2192,18 @@
     <spirit:fileSet>
       <spirit:name>xilinx_vhdlsynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0_S_C2C_AXI.vhd</spirit:name>
+        <spirit:name>src/gem_loader_virtex_s_c2c_axi.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0_S_CFG_AXI.vhd</spirit:name>
+        <spirit:name>src/gem_loader_virtex_s_cfg_axi.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/gem_loader_v_fifo/gem_loader_v_fifo.xci</spirit:name>
-        <spirit:userFileType>xci</spirit:userFileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0.vhd</spirit:name>
+        <spirit:name>src/gem_loader_virtex.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_5867bc65</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_fd7f2ffb</spirit:userFileType>
       </spirit:file>
-    </spirit:fileSet>
-    <spirit:fileSet>
-      <spirit:name>xilinx_vhdlsynthesis_xilinx_com_ip_fifo_generator_13_1__ref_view_fileset</spirit:name>
-      <spirit:vendorExtensions>
-        <xilinx:subCoreRef>
-          <xilinx:componentRef xilinx:vendor="xilinx.com" xilinx:library="ip" xilinx:name="fifo_generator" xilinx:version="13.1">
-            <xilinx:mode xilinx:name="create_mode"/>
-          </xilinx:componentRef>
-        </xilinx:subCoreRef>
-      </spirit:vendorExtensions>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_vhdlsynthesis_xilinx_com_ip_ila_6_2__ref_view_fileset</spirit:name>
@@ -2283,33 +2216,29 @@
       </spirit:vendorExtensions>
     </spirit:fileSet>
     <spirit:fileSet>
-      <spirit:name>xilinx_vhdlbehavioralsimulation_view_fileset</spirit:name>
-      <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0_S_C2C_AXI.vhd</spirit:name>
-        <spirit:fileType>vhdlSource</spirit:fileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0_S_CFG_AXI.vhd</spirit:name>
-        <spirit:fileType>vhdlSource</spirit:fileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>src/gem_loader_v_fifo/gem_loader_v_fifo.xci</spirit:name>
-        <spirit:userFileType>xci</spirit:userFileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>hdl/gem_loader_v_v1_0.vhd</spirit:name>
-        <spirit:fileType>vhdlSource</spirit:fileType>
-      </spirit:file>
-    </spirit:fileSet>
-    <spirit:fileSet>
-      <spirit:name>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_fifo_generator_13_1__ref_view_fileset</spirit:name>
+      <spirit:name>xilinx_vhdlsynthesis_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:name>
       <spirit:vendorExtensions>
         <xilinx:subCoreRef>
-          <xilinx:componentRef xilinx:vendor="xilinx.com" xilinx:library="ip" xilinx:name="fifo_generator" xilinx:version="13.1">
+          <xilinx:componentRef xilinx:vendor="xilinx.com" xilinx:library="ip" xilinx:name="fifo_generator" xilinx:version="13.2">
             <xilinx:mode xilinx:name="create_mode"/>
           </xilinx:componentRef>
         </xilinx:subCoreRef>
       </spirit:vendorExtensions>
+    </spirit:fileSet>
+    <spirit:fileSet>
+      <spirit:name>xilinx_vhdlbehavioralsimulation_view_fileset</spirit:name>
+      <spirit:file>
+        <spirit:name>src/gem_loader_virtex_s_c2c_axi.vhd</spirit:name>
+        <spirit:fileType>vhdlSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>src/gem_loader_virtex_s_cfg_axi.vhd</spirit:name>
+        <spirit:fileType>vhdlSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>src/gem_loader_virtex.vhd</spirit:name>
+        <spirit:fileType>vhdlSource</spirit:fileType>
+      </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_ila_6_2__ref_view_fileset</spirit:name>
@@ -2322,11 +2251,21 @@
       </spirit:vendorExtensions>
     </spirit:fileSet>
     <spirit:fileSet>
+      <spirit:name>xilinx_vhdlbehavioralsimulation_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:name>
+      <spirit:vendorExtensions>
+        <xilinx:subCoreRef>
+          <xilinx:componentRef xilinx:vendor="xilinx.com" xilinx:library="ip" xilinx:name="fifo_generator" xilinx:version="13.2">
+            <xilinx:mode xilinx:name="create_mode"/>
+          </xilinx:componentRef>
+        </xilinx:subCoreRef>
+      </spirit:vendorExtensions>
+    </spirit:fileSet>
+    <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/gem_loader_virtex_v2_8.tcl</spirit:name>
+        <spirit:name>xgui/gem_loader_virtex_v3_6.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_59d562e9</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_8f05cbcb</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -2443,7 +2382,7 @@
       <spirit:name>C_S_CFG_AXI_ADDR_WIDTH</spirit:name>
       <spirit:displayName>C S CFG AXI ADDR WIDTH</spirit:displayName>
       <spirit:description>Width of S_AXI address bus</spirit:description>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH" spirit:order="14" spirit:rangeType="long">5</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_CFG_AXI_ADDR_WIDTH" spirit:order="14">6</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -2483,7 +2422,7 @@
     <spirit:parameter>
       <spirit:name>C_FIFO_ENDIAN_CONV_ENABLE</spirit:name>
       <spirit:displayName>C Fifo Endian Conv Enable</spirit:displayName>
-      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_FIFO_ENDIAN_CONV_ENABLE">true</spirit:value>
+      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_FIFO_ENDIAN_CONV_ENABLE">false</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
@@ -2494,8 +2433,12 @@
       <xilinx:taxonomies>
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
-      <xilinx:displayName>gem_loader_virtex</xilinx:displayName>
-      <xilinx:coreRevision>1</xilinx:coreRevision>
+      <xilinx:displayName>GEM Loader Virtex Core</xilinx:displayName>
+      <xilinx:xpmLibraries>
+        <xilinx:xpmLibrary>XPM_CDC</xilinx:xpmLibrary>
+        <xilinx:xpmLibrary>XPM_FIFO</xilinx:xpmLibrary>
+      </xilinx:xpmLibraries>
+      <xilinx:coreRevision>7</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:gem_loader_v:1.0</xilinx:canUpgradeFrom>
         <xilinx:canUpgradeFrom>user.org:user:gem_loader_v:1.4</xilinx:canUpgradeFrom>
@@ -2508,8 +2451,17 @@
         <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.5</xilinx:canUpgradeFrom>
         <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.6</xilinx:canUpgradeFrom>
         <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.7</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.8</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.9</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:2.11</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.0</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.1</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.2</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.3</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.4</xilinx:canUpgradeFrom>
+        <xilinx:canUpgradeFrom>wisc.edu:user:gem_loader_virtex:3.5</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2021-12-13T18:28:45Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2022-04-29T15:21:54Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:gem_loader_v:1.0_ARCHIVE_LOCATION">/data/alex/test/ip_repo/gem_loader_v_1.0</xilinx:tag>
         <xilinx:tag xilinx:name="user.org:user:gem_loader_v:1.1_ARCHIVE_LOCATION">/data/alex/test/ip_repo/gem_loader_v_1.0</xilinx:tag>
@@ -2559,16 +2511,236 @@
         <xilinx:tag xilinx:name="ui.data.coregen.df@7f562201_ARCHIVE_LOCATION">/data/ssd2/code/fw/0xBEFE/IP_repository/gem_loader</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.df@35252db7_ARCHIVE_LOCATION">/data/ssd2/code/fw/0xBEFE/IP_repository/gem_loader</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.df@5e76a8e5_ARCHIVE_LOCATION">/data/ssd2/code/fw/0xBEFE/IP_repository/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4daad3a0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@70cbc1d2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@53f6bbd6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6087546c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@10a11e02_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3a24e5a5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@69dc9631_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5e652367_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1ab74922_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@29de3471_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@265a238a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2193503a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4733ebaf_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@57732014_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@d86a2ac_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7446b3ea_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7aca1f24_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7157bc53_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@257cd87b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@42bacc8f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@50bea7ec_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@41201f15_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4f29aa6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@611a8962_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2906a986_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@55500c83_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2c0464d7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7b3ace4f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@9c0c2f2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5e468cfd_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7d6a8d75_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@40f97f21_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4b456570_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6134b6c7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5f0ac302_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@25a0d4fa_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@45165d97_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@177144ae_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@21b7df96_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1ff54280_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@592f4908_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@530038e0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@666e1db8_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6ff4a44c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@61f1aeb4_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7756439c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@227d5947_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@101fbef5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1f8aa466_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1fef7b88_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6d58c98f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@68b80830_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3f1daa7e_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@375f9399_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@40198001_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@64d1ab39_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5ea042ba_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3d55056a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@424613c0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@ace4ef_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1d2f3732_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7eee3a27_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6a3ac24a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6782754c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3cdac8ed_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@323464c4_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7fa0d1f4_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@36db66ec_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6103d046_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@685d32ad_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2847b8eb_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2170b734_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@305f75ab_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@533f40d9_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@760d5be7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@414d3383_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@618ef1c9_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@332ca718_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@32aded79_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@28b6b4ad_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@71215e5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3599cc9e_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4c32ea4c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5fcc341c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3ba3326c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@346eccd7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@770c3413_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@137b4c25_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4c083348_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@ec17fa0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5979fdab_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6416f64a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@71849d58_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@76fb5a19_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@362f206d_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2be661eb_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7ace298a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@749f8d8c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7384f6d5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@39959c4f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6db3313_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@492f8259_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@507fa5ff_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3768ae4a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3204fbf5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@619ceacd_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2b4c952d_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4e9d4797_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@32f81086_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@534cc6af_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@65b21ded_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5cc02d26_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@64cfd69f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@18cf9261_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6580e52d_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2f42438b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@48af8edf_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@daf56ad_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@173f42f1_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@79c32df4_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3c3a54b3_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@db70696_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@558f3348_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5f2f05d2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3ed5fe12_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6d9cfe23_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@419fa419_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@47a4f20a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3dc2e2dd_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5d18e845_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@17ef62cf_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4805d365_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@10ef5ddb_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@62b132c6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6ca48ad6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@677bb826_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1d580e9e_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@54e3cd22_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2c45fc5e_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6ba81751_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4cff2b6b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7d61364_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@73f19ea9_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3e542687_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@391c1112_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@274891fd_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6928d601_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@702f10b6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7a38c00b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6522f8a2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4435d444_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@38027080_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@51a6b08e_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4bf7bef6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@366b4043_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@346f9fc8_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@360e08ae_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@adfbc95_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6e6711ea_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@77b3c222_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4365e348_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7b6c9ae0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1a6d75c5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@701feb13_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@41596b80_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@131a1565_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3080f1b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@af4ba9c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@fd93b29_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2ee1f748_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5655e18a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@eac67ab_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1b6aff2f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4852380c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7d278b7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2c171d52_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7ed9c634_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1fe841c0_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6523c1f5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5ce98960_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7f948bb_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@50f2a731_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@47130d28_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@527739c6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@494facf1_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1ac220ed_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@497eca0f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4e6e49fa_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@52abb0ca_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3e06b55c_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@407bc09d_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3ba09f63_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@40db680f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@623279d5_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6cd576b2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@161ab17a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2c9eb930_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@122b7cb8_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1571fe62_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6ff3593b_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4937055_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7c905fd3_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4686d725_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5fdec164_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@14acf296_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@449b81d6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@565c3198_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@258a2b94_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1415e678_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5a84ddec_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4efa3eb7_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@26f86ce4_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7389a440_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1b7f379_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3e5fec86_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2928fb4f_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7b2486b6_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3a794a9a_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@b5b1db8_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@409d48a2_ARCHIVE_LOCATION">/home/lpetre/0xbefe/IP_repository/virtex7/gem_loader_virtex</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2021.1</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e665144c"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="956e38af"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="c214120a"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="a8f22226"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="bec288a1"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="28f32587"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="60bf4db1"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="21ee3f4f"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="39e672cb"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="d892c605"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="16d69597"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

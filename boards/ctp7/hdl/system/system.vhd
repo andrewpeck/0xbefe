@@ -175,17 +175,13 @@ architecture system_arch of system is
       ipb_axi_wready    : in STD_LOGIC_VECTOR ( 0 to 0 );
       ipb_axi_wstrb     : out STD_LOGIC_VECTOR ( 3 downto 0 );
       ipb_axi_wvalid    : out STD_LOGIC_VECTOR ( 0 to 0 );
-      
-      gem_loader_en     : in  std_logic;
+
       gem_loader_clk    : in  std_logic;
-      gem_loader_ready  : out std_logic;
-      gem_loader_valid  : out std_logic;
+      gem_loader_req    : in  std_logic;
       gem_loader_data   : out std_logic_vector(7 downto 0);
-      gem_loader_first  : out std_logic;
-      gem_loader_last   : out std_logic;
-      gem_loader_error  : out std_logic;
-      gem_loader_size   : out std_logic_vector(31 downto 0)
-      
+      gem_loader_valid  : out std_logic;
+      gem_loader_error  : out std_logic
+
   );
   end component v7_bd;
 
@@ -420,15 +416,11 @@ begin
       ipb_axi_wstrb     => ipb_axi_wstrb,
       ipb_axi_wvalid    => ipb_axi_wvalid,
       
-      gem_loader_en     => to_promless_i.en,
       gem_loader_clk    => to_promless_i.clk,
-      gem_loader_ready  => from_promless_o.ready,
-      gem_loader_valid  => from_promless_o.valid,
+      gem_loader_req    => to_promless_i.req,
       gem_loader_data   => from_promless_o.data,
-      gem_loader_first  => from_promless_o.first,
-      gem_loader_last   => from_promless_o.last,
-      gem_loader_error  => from_promless_o.error,
-      gem_loader_size   => open
+      gem_loader_valid  => from_promless_o.valid,
+      gem_loader_error  => from_promless_o.error
       
     );
 
