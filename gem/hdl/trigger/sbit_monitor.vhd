@@ -47,6 +47,8 @@ entity sbit_monitor is
     fifo_en_sbit_trigger_i : in std_logic;
     fifo_trigger_delay_i   : in std_logic_vector(9 downto 0);
 
+    sync_frozen_sbits_to_fifo_i : in std_logic;
+
     fifo_rd_en_i : in  std_logic;
     fifo_valid_o : out std_logic := '0';
     fifo_empty_o : out std_logic := '1';
@@ -57,6 +59,8 @@ end sbit_monitor;
 architecture sbit_monitor_arch of sbit_monitor is
 
   constant ZERO_SBITS : t_oh_clusters := (others => (address => "111" & x"ff", size => "000"));
+
+  signal ready_to_trigger : std_logic := '1';
 
   signal armed        : std_logic := '1';
   signal link_trigger : std_logic;
@@ -70,7 +74,7 @@ begin
   l1a_delay_o <= std_logic_vector(l1a_delay);
 
   -- MUX to select the link
-  link_trigger <= sbit_trigger_i(to_integer(unsigned(link_select_i)));
+  link_trigger <= ready_to_trigger and sbit_trigger_i(to_integer(unsigned(link_select_i)));
   link_sbits   <= sbit_clusters_i(to_integer(unsigned(link_select_i)));
 
   -- freeze the sbits on the output when a trigger comes
@@ -142,6 +146,10 @@ begin
     signal trigger_delayed : std_logic := '0';
 
   begin
+
+    ready_to_trigger <= '1' when
+                        sync_frozen_sbits_to_fifo_i = '0'
+                        or readout_state = RUNNING else '0';
 
     --------------------------------------------------------------------------------
     -- L1A Delay
