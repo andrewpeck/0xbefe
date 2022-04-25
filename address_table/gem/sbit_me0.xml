@@ -35,9 +35,9 @@
   <node id="ME0_OH${OH_CNT_ID}" address="0x30" permission="r"
 	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID} of OH ${OH_CNT_ID}"
 	generate="true"
-	generate_size="&NUM_OF_OHs;"
+	generate_size="&NUM_OHS;"
 	generate_address_step="0x20"
-	generate_idx_var="OH_CNT_ID"/>
+	generate_idx_var="OH_CNT_ID">
       <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
             mask="0xffffffff"
             description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
