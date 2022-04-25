@@ -74,6 +74,10 @@
           description="Number of bx to delay the trigger (1-1024)"
           fw_default="0x7f"
           fw_signal="sbitmon_fifo_trigger_delay"/>
+    <node id="FIFO_SYNC_FROZEN_CLUSTERS" address="0xb" mask="0x00010000" permission="rw"
+          description="1 for frozen s-bits to be synced to the s-bit daq"
+          fw_default="0x1"
+          fw_signal="sbitmon_sync_frozen_sbits_to_fifo"/>
     <node id="FIFO_DATA" address="0xc" mask="0xffffffff" permission="r"
           fw_read_pulse_signal="sbitmon_fifo_rd_en"
           fw_read_ready_signal="sbitmon_fifo_valid"
