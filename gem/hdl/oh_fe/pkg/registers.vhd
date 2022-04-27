@@ -1454,133 +1454,133 @@ package registers is
     constant REG_MGT_PLL_LOCK_ADDR    : std_logic_vector(5 downto 0) := "00" & x"0";
     constant REG_MGT_PLL_LOCK_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL0_TX_PRBS_MODE0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
-    constant REG_MGT_CONTROL0_TX_PRBS_MODE0_MSB    : integer := 2;
-    constant REG_MGT_CONTROL0_TX_PRBS_MODE0_LSB     : integer := 0;
-    constant REG_MGT_CONTROL0_TX_PRBS_MODE0_DEFAULT : std_logic_vector(2 downto 0) := "000";
+    constant REG_MGT_CONTROL0_TX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
+    constant REG_MGT_CONTROL0_TX_PRBS_MODE_MSB    : integer := 2;
+    constant REG_MGT_CONTROL0_TX_PRBS_MODE_LSB     : integer := 0;
+    constant REG_MGT_CONTROL0_TX_PRBS_MODE_DEFAULT : std_logic_vector(2 downto 0) := "000";
 
-    constant REG_MGT_CONTROL0_RX_PRBS_MODE0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
-    constant REG_MGT_CONTROL0_RX_PRBS_MODE0_MSB    : integer := 5;
-    constant REG_MGT_CONTROL0_RX_PRBS_MODE0_LSB     : integer := 3;
-    constant REG_MGT_CONTROL0_RX_PRBS_MODE0_DEFAULT : std_logic_vector(5 downto 3) := "000";
+    constant REG_MGT_CONTROL0_RX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
+    constant REG_MGT_CONTROL0_RX_PRBS_MODE_MSB    : integer := 5;
+    constant REG_MGT_CONTROL0_RX_PRBS_MODE_LSB     : integer := 3;
+    constant REG_MGT_CONTROL0_RX_PRBS_MODE_DEFAULT : std_logic_vector(5 downto 3) := "000";
 
-    constant REG_MGT_CONTROL0_LOOPBACK_MODE0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
-    constant REG_MGT_CONTROL0_LOOPBACK_MODE0_MSB    : integer := 8;
-    constant REG_MGT_CONTROL0_LOOPBACK_MODE0_LSB     : integer := 6;
-    constant REG_MGT_CONTROL0_LOOPBACK_MODE0_DEFAULT : std_logic_vector(8 downto 6) := "000";
+    constant REG_MGT_CONTROL0_LOOPBACK_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
+    constant REG_MGT_CONTROL0_LOOPBACK_MODE_MSB    : integer := 8;
+    constant REG_MGT_CONTROL0_LOOPBACK_MODE_LSB     : integer := 6;
+    constant REG_MGT_CONTROL0_LOOPBACK_MODE_DEFAULT : std_logic_vector(8 downto 6) := "000";
 
-    constant REG_MGT_CONTROL0_TX_DIFFCTRL0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
-    constant REG_MGT_CONTROL0_TX_DIFFCTRL0_MSB    : integer := 15;
-    constant REG_MGT_CONTROL0_TX_DIFFCTRL0_LSB     : integer := 12;
-    constant REG_MGT_CONTROL0_TX_DIFFCTRL0_DEFAULT : std_logic_vector(15 downto 12) := x"c";
+    constant REG_MGT_CONTROL0_TX_DIFFCTRL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"1";
+    constant REG_MGT_CONTROL0_TX_DIFFCTRL_MSB    : integer := 15;
+    constant REG_MGT_CONTROL0_TX_DIFFCTRL_LSB     : integer := 12;
+    constant REG_MGT_CONTROL0_TX_DIFFCTRL_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
-    constant REG_MGT_CONTROL0_GTTXRESET0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
-    constant REG_MGT_CONTROL0_GTTXRESET0_BIT    : integer := 0;
+    constant REG_MGT_CONTROL0_GTTXRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"2";
+    constant REG_MGT_CONTROL0_GTTXRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"3";
-    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR0_BIT    : integer := 0;
+    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"3";
+    constant REG_MGT_CONTROL0_TXPRBS_FORCE_ERR_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL0_TXPCSRESET0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"4";
-    constant REG_MGT_CONTROL0_TXPCSRESET0_BIT    : integer := 0;
+    constant REG_MGT_CONTROL0_TXPCSRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"4";
+    constant REG_MGT_CONTROL0_TXPCSRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL0_TXPMARESET0_ADDR    : std_logic_vector(5 downto 0) := "00" & x"5";
-    constant REG_MGT_CONTROL0_TXPMARESET0_BIT    : integer := 0;
+    constant REG_MGT_CONTROL0_TXPMARESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"5";
+    constant REG_MGT_CONTROL0_TXPMARESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL1_TX_PRBS_MODE1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
-    constant REG_MGT_CONTROL1_TX_PRBS_MODE1_MSB    : integer := 2;
-    constant REG_MGT_CONTROL1_TX_PRBS_MODE1_LSB     : integer := 0;
-    constant REG_MGT_CONTROL1_TX_PRBS_MODE1_DEFAULT : std_logic_vector(2 downto 0) := "000";
+    constant REG_MGT_CONTROL1_TX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
+    constant REG_MGT_CONTROL1_TX_PRBS_MODE_MSB    : integer := 2;
+    constant REG_MGT_CONTROL1_TX_PRBS_MODE_LSB     : integer := 0;
+    constant REG_MGT_CONTROL1_TX_PRBS_MODE_DEFAULT : std_logic_vector(2 downto 0) := "000";
 
-    constant REG_MGT_CONTROL1_RX_PRBS_MODE1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
-    constant REG_MGT_CONTROL1_RX_PRBS_MODE1_MSB    : integer := 5;
-    constant REG_MGT_CONTROL1_RX_PRBS_MODE1_LSB     : integer := 3;
-    constant REG_MGT_CONTROL1_RX_PRBS_MODE1_DEFAULT : std_logic_vector(5 downto 3) := "000";
+    constant REG_MGT_CONTROL1_RX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
+    constant REG_MGT_CONTROL1_RX_PRBS_MODE_MSB    : integer := 5;
+    constant REG_MGT_CONTROL1_RX_PRBS_MODE_LSB     : integer := 3;
+    constant REG_MGT_CONTROL1_RX_PRBS_MODE_DEFAULT : std_logic_vector(5 downto 3) := "000";
 
-    constant REG_MGT_CONTROL1_LOOPBACK_MODE1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
-    constant REG_MGT_CONTROL1_LOOPBACK_MODE1_MSB    : integer := 8;
-    constant REG_MGT_CONTROL1_LOOPBACK_MODE1_LSB     : integer := 6;
-    constant REG_MGT_CONTROL1_LOOPBACK_MODE1_DEFAULT : std_logic_vector(8 downto 6) := "000";
+    constant REG_MGT_CONTROL1_LOOPBACK_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
+    constant REG_MGT_CONTROL1_LOOPBACK_MODE_MSB    : integer := 8;
+    constant REG_MGT_CONTROL1_LOOPBACK_MODE_LSB     : integer := 6;
+    constant REG_MGT_CONTROL1_LOOPBACK_MODE_DEFAULT : std_logic_vector(8 downto 6) := "000";
 
-    constant REG_MGT_CONTROL1_TX_DIFFCTRL1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
-    constant REG_MGT_CONTROL1_TX_DIFFCTRL1_MSB    : integer := 15;
-    constant REG_MGT_CONTROL1_TX_DIFFCTRL1_LSB     : integer := 12;
-    constant REG_MGT_CONTROL1_TX_DIFFCTRL1_DEFAULT : std_logic_vector(15 downto 12) := x"c";
+    constant REG_MGT_CONTROL1_TX_DIFFCTRL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"6";
+    constant REG_MGT_CONTROL1_TX_DIFFCTRL_MSB    : integer := 15;
+    constant REG_MGT_CONTROL1_TX_DIFFCTRL_LSB     : integer := 12;
+    constant REG_MGT_CONTROL1_TX_DIFFCTRL_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
-    constant REG_MGT_CONTROL1_GTTXRESET1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"7";
-    constant REG_MGT_CONTROL1_GTTXRESET1_BIT    : integer := 0;
+    constant REG_MGT_CONTROL1_GTTXRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"7";
+    constant REG_MGT_CONTROL1_GTTXRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
-    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR1_BIT    : integer := 0;
+    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"8";
+    constant REG_MGT_CONTROL1_TXPRBS_FORCE_ERR_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL1_TXPCSRESET1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
-    constant REG_MGT_CONTROL1_TXPCSRESET1_BIT    : integer := 0;
+    constant REG_MGT_CONTROL1_TXPCSRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"9";
+    constant REG_MGT_CONTROL1_TXPCSRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL1_TXPMARESET1_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
-    constant REG_MGT_CONTROL1_TXPMARESET1_BIT    : integer := 0;
+    constant REG_MGT_CONTROL1_TXPMARESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"a";
+    constant REG_MGT_CONTROL1_TXPMARESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL2_TX_PRBS_MODE2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
-    constant REG_MGT_CONTROL2_TX_PRBS_MODE2_MSB    : integer := 2;
-    constant REG_MGT_CONTROL2_TX_PRBS_MODE2_LSB     : integer := 0;
-    constant REG_MGT_CONTROL2_TX_PRBS_MODE2_DEFAULT : std_logic_vector(2 downto 0) := "000";
+    constant REG_MGT_CONTROL2_TX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_MGT_CONTROL2_TX_PRBS_MODE_MSB    : integer := 2;
+    constant REG_MGT_CONTROL2_TX_PRBS_MODE_LSB     : integer := 0;
+    constant REG_MGT_CONTROL2_TX_PRBS_MODE_DEFAULT : std_logic_vector(2 downto 0) := "000";
 
-    constant REG_MGT_CONTROL2_RX_PRBS_MODE2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
-    constant REG_MGT_CONTROL2_RX_PRBS_MODE2_MSB    : integer := 5;
-    constant REG_MGT_CONTROL2_RX_PRBS_MODE2_LSB     : integer := 3;
-    constant REG_MGT_CONTROL2_RX_PRBS_MODE2_DEFAULT : std_logic_vector(5 downto 3) := "000";
+    constant REG_MGT_CONTROL2_RX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_MGT_CONTROL2_RX_PRBS_MODE_MSB    : integer := 5;
+    constant REG_MGT_CONTROL2_RX_PRBS_MODE_LSB     : integer := 3;
+    constant REG_MGT_CONTROL2_RX_PRBS_MODE_DEFAULT : std_logic_vector(5 downto 3) := "000";
 
-    constant REG_MGT_CONTROL2_LOOPBACK_MODE2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
-    constant REG_MGT_CONTROL2_LOOPBACK_MODE2_MSB    : integer := 8;
-    constant REG_MGT_CONTROL2_LOOPBACK_MODE2_LSB     : integer := 6;
-    constant REG_MGT_CONTROL2_LOOPBACK_MODE2_DEFAULT : std_logic_vector(8 downto 6) := "000";
+    constant REG_MGT_CONTROL2_LOOPBACK_MODE_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_MGT_CONTROL2_LOOPBACK_MODE_MSB    : integer := 8;
+    constant REG_MGT_CONTROL2_LOOPBACK_MODE_LSB     : integer := 6;
+    constant REG_MGT_CONTROL2_LOOPBACK_MODE_DEFAULT : std_logic_vector(8 downto 6) := "000";
 
-    constant REG_MGT_CONTROL2_TX_DIFFCTRL2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
-    constant REG_MGT_CONTROL2_TX_DIFFCTRL2_MSB    : integer := 15;
-    constant REG_MGT_CONTROL2_TX_DIFFCTRL2_LSB     : integer := 12;
-    constant REG_MGT_CONTROL2_TX_DIFFCTRL2_DEFAULT : std_logic_vector(15 downto 12) := x"c";
+    constant REG_MGT_CONTROL2_TX_DIFFCTRL_ADDR    : std_logic_vector(5 downto 0) := "00" & x"b";
+    constant REG_MGT_CONTROL2_TX_DIFFCTRL_MSB    : integer := 15;
+    constant REG_MGT_CONTROL2_TX_DIFFCTRL_LSB     : integer := 12;
+    constant REG_MGT_CONTROL2_TX_DIFFCTRL_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
-    constant REG_MGT_CONTROL2_GTTXRESET2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
-    constant REG_MGT_CONTROL2_GTTXRESET2_BIT    : integer := 0;
+    constant REG_MGT_CONTROL2_GTTXRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"c";
+    constant REG_MGT_CONTROL2_GTTXRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
-    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR2_BIT    : integer := 0;
+    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR_ADDR    : std_logic_vector(5 downto 0) := "00" & x"d";
+    constant REG_MGT_CONTROL2_TXPRBS_FORCE_ERR_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL2_TXPCSRESET2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
-    constant REG_MGT_CONTROL2_TXPCSRESET2_BIT    : integer := 0;
+    constant REG_MGT_CONTROL2_TXPCSRESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"e";
+    constant REG_MGT_CONTROL2_TXPCSRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL2_TXPMARESET2_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
-    constant REG_MGT_CONTROL2_TXPMARESET2_BIT    : integer := 0;
+    constant REG_MGT_CONTROL2_TXPMARESET_ADDR    : std_logic_vector(5 downto 0) := "00" & x"f";
+    constant REG_MGT_CONTROL2_TXPMARESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL3_TX_PRBS_MODE3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
-    constant REG_MGT_CONTROL3_TX_PRBS_MODE3_MSB    : integer := 2;
-    constant REG_MGT_CONTROL3_TX_PRBS_MODE3_LSB     : integer := 0;
-    constant REG_MGT_CONTROL3_TX_PRBS_MODE3_DEFAULT : std_logic_vector(2 downto 0) := "000";
+    constant REG_MGT_CONTROL3_TX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_MGT_CONTROL3_TX_PRBS_MODE_MSB    : integer := 2;
+    constant REG_MGT_CONTROL3_TX_PRBS_MODE_LSB     : integer := 0;
+    constant REG_MGT_CONTROL3_TX_PRBS_MODE_DEFAULT : std_logic_vector(2 downto 0) := "000";
 
-    constant REG_MGT_CONTROL3_RX_PRBS_MODE3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
-    constant REG_MGT_CONTROL3_RX_PRBS_MODE3_MSB    : integer := 5;
-    constant REG_MGT_CONTROL3_RX_PRBS_MODE3_LSB     : integer := 3;
-    constant REG_MGT_CONTROL3_RX_PRBS_MODE3_DEFAULT : std_logic_vector(5 downto 3) := "000";
+    constant REG_MGT_CONTROL3_RX_PRBS_MODE_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_MGT_CONTROL3_RX_PRBS_MODE_MSB    : integer := 5;
+    constant REG_MGT_CONTROL3_RX_PRBS_MODE_LSB     : integer := 3;
+    constant REG_MGT_CONTROL3_RX_PRBS_MODE_DEFAULT : std_logic_vector(5 downto 3) := "000";
 
-    constant REG_MGT_CONTROL3_LOOPBACK_MODE3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
-    constant REG_MGT_CONTROL3_LOOPBACK_MODE3_MSB    : integer := 8;
-    constant REG_MGT_CONTROL3_LOOPBACK_MODE3_LSB     : integer := 6;
-    constant REG_MGT_CONTROL3_LOOPBACK_MODE3_DEFAULT : std_logic_vector(8 downto 6) := "000";
+    constant REG_MGT_CONTROL3_LOOPBACK_MODE_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_MGT_CONTROL3_LOOPBACK_MODE_MSB    : integer := 8;
+    constant REG_MGT_CONTROL3_LOOPBACK_MODE_LSB     : integer := 6;
+    constant REG_MGT_CONTROL3_LOOPBACK_MODE_DEFAULT : std_logic_vector(8 downto 6) := "000";
 
-    constant REG_MGT_CONTROL3_TX_DIFFCTRL3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
-    constant REG_MGT_CONTROL3_TX_DIFFCTRL3_MSB    : integer := 15;
-    constant REG_MGT_CONTROL3_TX_DIFFCTRL3_LSB     : integer := 12;
-    constant REG_MGT_CONTROL3_TX_DIFFCTRL3_DEFAULT : std_logic_vector(15 downto 12) := x"c";
+    constant REG_MGT_CONTROL3_TX_DIFFCTRL_ADDR    : std_logic_vector(5 downto 0) := "01" & x"0";
+    constant REG_MGT_CONTROL3_TX_DIFFCTRL_MSB    : integer := 15;
+    constant REG_MGT_CONTROL3_TX_DIFFCTRL_LSB     : integer := 12;
+    constant REG_MGT_CONTROL3_TX_DIFFCTRL_DEFAULT : std_logic_vector(15 downto 12) := x"c";
 
-    constant REG_MGT_CONTROL3_GTTXRESET3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
-    constant REG_MGT_CONTROL3_GTTXRESET3_BIT    : integer := 0;
+    constant REG_MGT_CONTROL3_GTTXRESET_ADDR    : std_logic_vector(5 downto 0) := "01" & x"1";
+    constant REG_MGT_CONTROL3_GTTXRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"2";
-    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR3_BIT    : integer := 0;
+    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR_ADDR    : std_logic_vector(5 downto 0) := "01" & x"2";
+    constant REG_MGT_CONTROL3_TXPRBS_FORCE_ERR_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL3_TXPCSRESET3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"3";
-    constant REG_MGT_CONTROL3_TXPCSRESET3_BIT    : integer := 0;
+    constant REG_MGT_CONTROL3_TXPCSRESET_ADDR    : std_logic_vector(5 downto 0) := "01" & x"3";
+    constant REG_MGT_CONTROL3_TXPCSRESET_BIT    : integer := 0;
 
-    constant REG_MGT_CONTROL3_TXPMARESET3_ADDR    : std_logic_vector(5 downto 0) := "01" & x"4";
-    constant REG_MGT_CONTROL3_TXPMARESET3_BIT    : integer := 0;
+    constant REG_MGT_CONTROL3_TXPMARESET_ADDR    : std_logic_vector(5 downto 0) := "01" & x"4";
+    constant REG_MGT_CONTROL3_TXPMARESET_BIT    : integer := 0;
 
     constant REG_MGT_STATUS0_TXFSM_RESET_DONE0_ADDR    : std_logic_vector(5 downto 0) := "01" & x"5";
     constant REG_MGT_STATUS0_TXFSM_RESET_DONE0_BIT    : integer := 0;

@@ -1518,43 +1518,43 @@
               generate_address_step="0x5"
               generate_idx_var="GT">
 
-            <node id="TX_PRBS_MODE${GT}" address="0x0" permission="rw"
+            <node id="TX_PRBS_MODE" address="0x0" permission="rw"
                   mask="0x00000007"
                   description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
                   fw_default="0x0"
                   fw_signal="control(${GT}).txprbssel"/>
 
-            <node id="RX_PRBS_MODE${GT}" address="0x0" permission="rw"
+            <node id="RX_PRBS_MODE" address="0x0" permission="rw"
                   mask="0x00000038"
                   description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
                   fw_default="0x0"
                   fw_signal="control(${GT}).rxprbssel"/>
 
-            <node id="LOOPBACK_MODE${GT}" address="0x0" permission="rw"
+            <node id="LOOPBACK_MODE" address="0x0" permission="rw"
                   mask="0x000001c0"
                   description="GT Loopback Mode \n 0 = normal \n 1 = near end pcs \n 2 = near end pma \n4 = far end pma \n 6 = far end pcs"
                   fw_default="0x0"
                   fw_signal="control(${GT}).txloopback"/>
 
-            <node id="TX_DIFFCTRL${GT}" address="0x0" permission="rw"
+            <node id="TX_DIFFCTRL" address="0x0" permission="rw"
                   mask="0x0000f000"
                   description="TX Differential Swing Control"
                   fw_default="0xC"
                   fw_signal="control(${GT}).txdiffctrl"/>
 
-            <node id="GTTXRESET${GT}" address="0x1" permission="w"
+            <node id="GTTXRESET" address="0x1" permission="w"
                   description="GT TX Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).gttxreset"/>
 
-            <node id="TXPRBS_FORCE_ERR${GT}" address="0x2" permission="w"
+            <node id="TXPRBS_FORCE_ERR" address="0x2" permission="w"
                   description="TX PRBS Force Error" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txprbsforceerr"/>
 
-            <node id="TXPCSRESET${GT}" address="0x3" permission="w"
+            <node id="TXPCSRESET" address="0x3" permission="w"
                   description="TX PCS Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpcsreset"/>
 
-            <node id="TXPMARESET${GT}" address="0x4" permission="w"
+            <node id="TXPMARESET" address="0x4" permission="w"
                   description="TX PMA Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpmareset"/>
         </node> <!--Control-->
