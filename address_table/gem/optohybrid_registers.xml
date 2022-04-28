@@ -1566,65 +1566,62 @@
               generate_address_step="0x1"
               generate_idx_var="GT">
 
-            <node id="TXFSM_RESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TXFSM_RESET_DONE" address="0x0" permission="r"
                   mask="0x00000001"
                   description=""
                   fw_signal="status(${GT}).txfsm_reset_done"/>
 
-            <node id="TXRESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TXRESET_DONE" address="0x0" permission="r"
                   mask="0x00000002"
                   description=""
                   fw_signal="status(${GT}).txreset_done"/>
 
-            <node id="TX_PMA_RESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TX_PMA_RESET_DONE" address="0x0" permission="r"
                   mask="0x00000004"
                   description=""
                   fw_signal="status(${GT}).txpmaresetdone"/>
 
-            <node id="TX_PHALIGN_DONE${GT}" address="0x0" permission="r"
+            <node id="TX_PHALIGN_DONE" address="0x0" permission="r"
                   mask="0x00000008"
                   description=""
                   fw_signal="status(${GT}).txphaligndone"/>
         </node> <!--Status-->
 
-          <node id="RX_PLL_RESET" address="0x20" permission="w"
-                description="RX PLL Reset"
-                mask="0x1"
-                fw_write_pulse_signal="pll_rx_reset"/>
-          <node id="RX_GTX_RESET" address="0x21" permission="w"
-                description="RX GTX Reset"
-                mask="0x1"
-                fw_write_pulse_signal="gtx_rx_reset"/>
-          <node id="RX_RESET" address="0x22" permission="w"
-                description="RX Reset"
-                mask="0x1"
-                fw_write_pulse_signal="rx_reset"/>
-          <node id="RX_POWERDOWN" address="0x23" permission="rw"
-                description="RX Powerdown"
-                mask="0x1"
-                fw_default="0x1"
-                fw_signal="rx_powerdown"/>
-          <node id="RX_VALID" address="0x24" permission="r"
-                description="RX valid"
-                mask="0xf"
-                fw_signal="rx_valid"/>
+        <!-- MGT RX -->
+        <node id="RX_PLL_RESET" address="0x20" permission="w"
+              description="RX PLL Reset"
+              mask="0x1"
+              fw_write_pulse_signal="pll_rx_reset"/>
+        <node id="RX_GTX_RESET" address="0x21" permission="w"
+              description="RX GTX Reset"
+              mask="0x1"
+              fw_write_pulse_signal="gtx_rx_reset"/>
+        <node id="RX_RESET" address="0x22" permission="w"
+              description="RX Reset"
+              mask="0x1"
+              fw_write_pulse_signal="rx_reset"/>
+        <node id="RX_POWERDOWN" address="0x23" permission="rw"
+              description="RX Powerdown"
+              mask="0x1"
+              fw_default="0x1"
+              fw_signal="rx_powerdown"/>
+        <node id="RX_VALID" address="0x24" permission="r"
+              description="RX valid"
+              mask="0xf"
+              fw_signal="rx_valid"/>
 
-          <node id="NOT_IN_TABLE_CNT_RESET" address="0x2f" permission="w"
-                description="Not in table counter Reset"
-                mask="0x1"
-                fw_write_pulse_signal="notintable_cnt_reset"/>
-
-          <node id="NOT_IN_TABLE${GT}" address="0x30"
-                description="MGT ${GT} Not In Table Error Counter"
-                generate="true"
-                generate_size="4"
-                generate_address_step="0x1"
-                generate_idx_var="GT">
-            <node id="CNT" address="0x0" permission="r"
-                  mask="0x0000ffff"
-                  description="TTC BX0 Local Counter"
-                  fw_signal="cnt_notintable(${GT})"/>
-          </node>
+        <node id="NOT_IN_TABLE_CNT_RESET" address="0x2f" permission="w"
+              description="Not in table counter Reset"
+              mask="0x1"
+              fw_write_pulse_signal="notintable_cnt_reset"/>
+        <node id="NOT_IN_TABLE_CNT${GT}" address="0x30" mask="0x0000ffff" permission="r"
+              description="MGT ${GT} Not In Table Error Counter"
+              fw_signal="cnt_notintable(${GT})"
+              generate="true"
+              generate_size="4"
+              generate_address_step="0x1"
+              generate_idx_var="GT">
+        </node>
 
         <!--<node id="RX{GT}_PRBS_ERR_CNT" address="0xf" permission="r"
             mask="0xff"
