@@ -84,11 +84,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
 
 def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_list):
     vfatCounter   = 0
-    n_channels = 0
-    for vfat in vfatList:
-        n_channels = len(scurve_result[vfat])
-        break
-    scurveParams = np.ndarray((len(vfatList), n_channels, 2))
+    scurveParams = np.ndarray((len(vfatList), 128, 2))
 
     for vfat in vfatList:
         print("Fitting data for VFAT%02d" % vfat)
@@ -100,6 +96,8 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
 
         for channel in tqdm(range(128)):
             if channel not in scurve_result[vfat]:
+                scurveParams[vfatCounter, channel, 0] = 0
+                scurveParams[vfatCounter, channel, 1] = 0
                 continue
             scurveData      = dictToArray(scurve_result, vfat, channel) # transfer data from dictionary to array
             effi_mid_point = (scurveData[:,1][0] + scurveData[:,1][-1])/2.0
