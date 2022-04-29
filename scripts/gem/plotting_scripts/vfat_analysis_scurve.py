@@ -95,6 +95,8 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
         file_out.write("Channel    Mean    ENC\n")
 
         for channel in tqdm(range(128)):
+            if channel not in scurve_result[vfat]:
+                continue
             scurveData      = dictToArray(scurve_result, vfat, channel) # transfer data from dictionary to array
             effi_mid_point = (scurveData[:,1][0] + scurveData[:,1][-1])/2.0
             threshold_initial_guess = 0
