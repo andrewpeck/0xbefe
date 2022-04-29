@@ -26,6 +26,23 @@ module   gem_data_out
        input [2:0]           loopback_mode_2,
        input [2:0]           loopback_mode_3,
 
+       output [15:0]         cnt_notintable_0,
+       output [15:0]         cnt_notintable_1,
+       output [15:0]         cnt_notintable_2,
+       output [15:0]         cnt_notintable_3,
+
+       output [1:0]          rx_notintable_0,
+       output [1:0]          rx_notintable_1,
+       output [1:0]          rx_notintable_2,
+       output [1:0]          rx_notintable_3,
+
+       output [3:0]          rxvalid_out,
+       input                 rxreset_in,
+       input                 rxpowerdown_in,
+       input                 notintable_cnt_reset,
+       input                 gtxrxreset_in,
+       input                 pllrxreset_in,
+
        input [56*2-1:0]      gem_data, // 56 bit gem data
        input                 overflow_i, // 1 bit gem has more than 8 clusters
        input [11:0]          bxn_counter_i, // 12 bit bxn counter
@@ -290,7 +307,7 @@ module   gem_data_out
    endgenerate
 
    //------------------------------------------------------------------------------
-   // We should cycle through these four K-codes: BC, F7, FB, FD to serve as
+   // We should cycle through these four K-codes: 1C, F7, FB, FD to serve as
    // bunch sequence indicators.
    // When we have more than 8 clusters detected on an OH (an S-bit overflow)
    // we should send the "FE" K-code instead of the usual choice.
@@ -311,14 +328,14 @@ module   gem_data_out
 
          always @(*) begin
             if (bc0 && ALLOW_TTC_CHARS)
-              frame_sep[ilink] <= 8'h1C; // K.28.0
+              frame_sep[ilink] <= 8'hBC; // K.28.5
             else if (resync && ALLOW_TTC_CHARS)
               frame_sep[ilink] <= 8'h3C; // K.28.1
             else if (overflow[ilink] && ALLOW_TTC_CHARS)
               frame_sep[ilink] <= 8'hFE; // K.30.7
             else begin
                case (frame_sep_cnt_switch)
-                 2'd0:  frame_sep[ilink] <= 8'hBC; // K.28.5
+                 2'd0:  frame_sep[ilink] <= 8'h1C; // K.28.0
                  2'd1:  frame_sep[ilink] <= 8'hF7; // K.23.7
                  2'd2:  frame_sep[ilink] <= 8'hFB; // K.27.7
                  2'd3:  frame_sep[ilink] <= 8'hFD; // K.29.7
@@ -485,12 +502,30 @@ module   gem_data_out
              .RATE3 ("4p0"))
          gtx_quad_inst
            (
+            // rx loopback
+            .rxpowerdown_in   (rxpowerdown_in),
+
+            .rx_notintable_0  (rx_notintable_0),
+            .rx_notintable_1  (rx_notintable_1),
+            .rx_notintable_2  (rx_notintable_2),
+            .rx_notintable_3  (rx_notintable_3),
+
+            .loopback_mode_0  (loopback_mode_0),
+            .loopback_mode_1  (loopback_mode_1),
+            .loopback_mode_2  (loopback_mode_2),
+            .loopback_mode_3  (loopback_mode_3),
+
+            .rxvalid_out      (rxvalid_out),
+            .rxreset_in       (rxreset_in),
+            .gtxrxreset_in    (gtxrxreset_in),
+            .pllrxreset_in    (pllrxreset_in),
+
             .refclk_n          (refclk_n),
             .refclk_p          (refclk_p),
             .userclk           (usrclks),
             .gtx_txoutclk      (),
-            .TXN_OUT           (trg_tx_n),
-            .TXP_OUT           (trg_tx_p),
+            .txn_out           (trg_tx_n),
+            .txp_out           (trg_tx_p),
 
             .gtx0_txcharisk_in (trg_tx_isk [0]),
             .gtx1_txcharisk_in (trg_tx_isk [1]),
@@ -540,7 +575,45 @@ module   gem_data_out
             );
 
       end
+
+    counter_snap #(.g_COUNTER_WIDTH(16))
+    cnt_xtable_0 (
+      .ref_clk_i (usrclks[0]),
+      .reset_i   (reset_i || notintable_cnt_reset),
+      .en_i      (|rx_notintable_0),
+      .snap_i    (1),
+      .count_o   (cnt_notintable_0)
+    );
+
+    counter_snap #(.g_COUNTER_WIDTH(16))
+    cnt_xtable_1 (
+      .ref_clk_i (usrclks[1]),
+      .reset_i   (reset_i || notintable_cnt_reset),
+      .en_i      (|rx_notintable_1),
+      .snap_i    (1),
+      .count_o   (cnt_notintable_1)
+    );
+
+    counter_snap #(.g_COUNTER_WIDTH(16))
+    cnt_xtable_2 (
+      .ref_clk_i (usrclks[2]),
+      .reset_i   (reset_i || notintable_cnt_reset),
+      .en_i      (|rx_notintable_2),
+      .snap_i    (1),
+      .count_o   (cnt_notintable_2)
+    );
+
+    counter_snap #(.g_COUNTER_WIDTH(16))
+    cnt_xtable_3 (
+      .ref_clk_i (usrclks[3]),
+      .reset_i   (reset_i || notintable_cnt_reset),
+      .en_i      (|rx_notintable_3),
+      .snap_i    (1),
+      .count_o   (cnt_notintable_3)
+    );
+
    endgenerate
+
 
    //----------------------------------------------------------------------------------------------------------------------
 endmodule
