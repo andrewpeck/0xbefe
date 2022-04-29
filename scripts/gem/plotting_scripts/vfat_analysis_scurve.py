@@ -84,7 +84,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
 
 def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_list):
     vfatCounter   = 0 
-    scurveParams = np.ndarray((len(vfatList), 128, 2))
+    scurveParams = np.ndarray((len(vfatList), len(scurve_result[vfat]), 2))
 
     for vfat in vfatList:
         print("Fitting data for VFAT%02d" % vfat)
