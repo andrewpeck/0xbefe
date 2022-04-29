@@ -84,7 +84,11 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
 
 def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_list):
     vfatCounter   = 0
-    scurveParams = np.ndarray((len(vfatList), 128, 2))
+    n_channels = 0
+    for vfat in vfatList:
+        n_channels = len(scurve_result[vfat])
+        break
+    scurveParams = np.ndarray((len(vfatList), n_channels, 2))
 
     for vfat in vfatList:
         print("Fitting data for VFAT%02d" % vfat)
@@ -94,10 +98,9 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
         print("========= Processing data for VFAT%2d =========\n" % vfat)
         file_out.write("Channel    Mean    ENC\n")
 
+        channel_counter = 0
         for channel in tqdm(range(128)):
             if channel not in scurve_result[vfat]:
-                scurveParams[vfatCounter, channel, 0] = 0
-                scurveParams[vfatCounter, channel, 1] = 0
                 continue
             scurveData      = dictToArray(scurve_result, vfat, channel) # transfer data from dictionary to array
             effi_mid_point = (scurveData[:,1][0] + scurveData[:,1][-1])/2.0
@@ -111,8 +114,8 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
                 print ("Initial guess for threshold for fitting: %.4f (fC)"%vfat_threshold_initial_guess[vfat])
 
             file_out.write("%d    %.4f    %.4f \n" % (channel, params[2], params[3]))
-            scurveParams[vfatCounter, channel, 0] = params[3] # store channel ENC
-            scurveParams[vfatCounter, channel, 1] = params[2] # store channel mean
+            scurveParams[vfatCounter, channel_counter, 0] = params[3] # store channel ENC
+            scurveParams[vfatCounter, channel_counter, 1] = params[2] # store channel mean
             
             if verbose == True:
                 print("Channel %i Average ENC: %.4f " % (channel, scurveParams[vfatCounter, channel, 0]))
@@ -146,6 +149,7 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
                 plt.close() # clear the plot
             else:
                 pass
+            channel_counter += 1
         
         # average values for all channels    
         avgENC = np.average(scurveParams[vfatCounter, :, 0])
