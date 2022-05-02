@@ -696,6 +696,12 @@
         <node id="SPY_ETHERTYPE"      address="0x4"  mask="0x0000ffff" permission="rw"
               description="Ethertype (should be set to jumbo)"
               fw_signal="spy_gbe_ethertype" fw_default="0x7088"/>
+        <node id="MIN_PAYLOAD_SIZE"      address="0x5"  mask="0x00003fff" permission="rw"
+              description="Minimum payload size in 16bit words (not including the header and trailer)"
+              fw_signal="spy_min_payload_words" fw_default="0x15"/>
+        <node id="MAX_PAYLOAD_SIZE"      address="0x5"  mask="0x0fffc000" permission="rw"
+              description="Maximum payload size in 16bit words (not including the trailer and header)"
+              fw_signal="spy_max_payload_words" fw_default="0xfff"/>
     </node>
 
     <node id="RUN_TYPE"       address="0x40"  mask="0x0f000000" permission="rw"

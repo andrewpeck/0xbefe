@@ -19,8 +19,6 @@ use work.common_pkg.all;
 
 entity gbe_tx_driver is
     generic (
-        g_MAX_PAYLOAD_WORDS     : integer := 3976; -- max payload size in 16bit words, excluding the packet counter
-        g_MIN_PAYLOAD_WORDS     : integer := 32;   -- minimum payload size in 16bit words
         g_MAX_EVT_WORDS         : integer := 50000;-- maximum event size (nothing really gets done when this size is reached, but an error is asserted on the output port)
         g_NUM_IDLES_SMALL_EVT   : integer := 2;    -- minimum number of idle words after a "small" event
         g_NUM_IDLES_BIG_EVT     : integer := 7;    -- minimum number of idle words after a "big" event
@@ -41,7 +39,9 @@ entity gbe_tx_driver is
         dest_mac_i              : in  std_logic_vector(47 downto 0);
         source_mac_i            : in  std_logic_vector(47 downto 0);
         ether_type_i            : in  std_logic_vector(15 downto 0);
-        
+        min_payload_words_i     : in  std_logic_vector(13 downto 0); -- minimum payload size in 16bit words
+        max_payload_words_i     : in  std_logic_vector(13 downto 0); -- max payload size in 16bit words, excluding the header and trailer (if present)
+
         -- control
         data_empty_i            : in  std_logic;
         data_i                  : in  std_logic_vector(15 downto 0);
@@ -260,9 +260,9 @@ begin
                         crc_en <= '1';
 
                         -- end of packet (either due to end of event detection, empty fifo, or packet size limit)
-                        if (eoe = '1') or (last_valid_word_i = '1') or (word_idx = g_MAX_PAYLOAD_WORDS - 1) then
+                        if (eoe = '1') or (last_valid_word_i = '1') or (word_idx = to_integer(unsigned(max_payload_words_i)) - 1) then
                             data_rd_en <= '0';
-                            if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
+                            if (word_idx < to_integer(unsigned(min_payload_words_i)) - 1) then
                                 state <= FILLER;
                             elsif g_USE_GEM_FORMAT then
                                 state <= GEM_TRAILER;
@@ -298,7 +298,7 @@ begin
                             data <= x"ffff";
                         end if;
                                    
-                        if (word_idx < g_MIN_PAYLOAD_WORDS - 1) then
+                        if (word_idx < to_integer(unsigned(min_payload_words_i)) - 1) then
                             state <= FILLER;
                         elsif g_USE_GEM_FORMAT then
                             state <= GEM_TRAILER;
@@ -547,5 +547,5 @@ begin
             crc_reg     => crc_reg,
             crc_current => crc_current
         );
-    
+
 end gbe_tx_driver_arch;
