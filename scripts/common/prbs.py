@@ -4,6 +4,7 @@ import struct
 from common.utils import *
 from common.fw_utils import *
 import tableformatter as tf
+import time
 
 try:
     imp.find_module('colorama')
@@ -11,19 +12,27 @@ try:
 except:
     pass
 
-def prbs_control(prbs_mode):
-    links = befe_get_all_links()
+def prbs_control(links, prbs_mode):
     for link in links:
         link.set_prbs_mode(MgtTxRx.TX, prbs_mode)
+        if prbs_mode == 0:
+            link.config_tx(False) # no inversion
+            link.reset_tx()
+
+    for link in links:
         link.set_prbs_mode(MgtTxRx.RX, prbs_mode)
+        if prbs_mode == 0:
+            link.config_rx(False) # no inversion
+            link.reset_rx()
+
+    time.sleep(0.1)
 
     for link in links:
         link.reset_prbs_err_cnt()
 
-def prbs_status():
+def prbs_status(links):
     cols = ["Link", "RX Usage", "RX Type", "RX MGT", "RX PRBS Mode", "TX PRBS Mode", "PRBS Error Count"]
     rows = []
-    links = befe_get_all_links()
     for link in links:
         rx_mgt = link.get_mgt(MgtTxRx.RX)
         tx_mgt = link.get_mgt(MgtTxRx.TX)
@@ -49,11 +58,17 @@ if __name__ == '__main__':
 
     parse_xml()
 
+    links = befe_get_all_links()
+
     if command == "enable":
-        prbs_control(5) # 5 means PRBS-31
+        prbs_control(links, 5) # 5 means PRBS-31
         print("PRBS-31 has been enabled on all links (TX and RX)")
+        print("NOTE: TX and RX polarity is set to be non-inverted")
+        prbs_status(links)
     elif command == "disable":
-        prbs_control(0) # 0 means normal mode
+        prbs_control(links, 0) # 0 means normal mode
         print("PRBS mode has been disabled on all links (TX and RX)")
+        print("NOTE: TX and RX polarity is set to be non-inverted")
+        prbs_status(links)
     elif command == "status":
-        prbs_status()
+        prbs_status(links)
