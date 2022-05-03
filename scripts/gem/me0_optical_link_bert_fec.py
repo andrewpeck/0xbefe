@@ -6,7 +6,7 @@ import random
 import datetime
 import math
 
-def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, ber_limit, vfat_list, verbose):
+def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, ber_limit, cl, vfat_list, verbose):
 
     resultDir = "results"
     try:
@@ -54,7 +54,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
     if runtime is None:
         ber_limit = float(ber_limit)
-        runtime = 1.0/(data_rate * ber_limit * 60)
+        cl = float(cl)
+        runtime = (-math.log(1-cl))/(data_rate * ber_limit * 60)
     elif ber_limit is None:
         runtime = float(runtime)
 
@@ -270,18 +271,18 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
     for gbt in gbt_list:
         fec_error_gbt = fec_errors[gbt]
-        ber = float(fec_error_gbt) / (data_rate * runtime * 60)
-        ineffi = ber * data_packet_size
-        ber_ul = 1.0/ (data_rate * runtime * 60)
+        #ber = float(fec_error_gbt) / (data_rate * runtime * 60)
+        #ineffi = ber * data_packet_size
+        ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
         ineffi_ul = ber_ul * data_packet_size
         ber_str = ""
         ineffi_str = ""
-        if ber!=0:
-            ber_str = "= {:.2e}".format(ber)
-            ineffi_str = "= {:.2e}".format(ineffi)
-        else:
+        if fec_error_gbt == 0:
             ber_str = "< {:.2e}".format(ber_ul)
             ineffi_str = "< {:.2e}".format(ineffi_ul)
+        #else:
+        #    ber_str = "= {:.2e}".format(ber)
+        #    ineffi_str = "= {:.2e}".format(ineffi)
         result_string = ""
         result_string_write = ""
         if fec_error_gbt == 0:
@@ -290,12 +291,14 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             result_string += Colors.YELLOW
         result_string += "GBT %d\n"%gbt
         result_string += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
-        result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
-        result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
+        if fec_error_gbt == 0:
+            result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
+            result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
         result_string_write += "GBT %d\n"%gbt
         result_string_write += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
-        result_string_write += "  Bit Error Ratio (BER) " + ber_str + "\n"
-        result_string_write += "  Inefficiency " + ineffi_str + "\n"
+        if fec_error_gbt == 0:
+            result_string_write += "  Bit Error Ratio (BER) " + ber_str + "\n"
+            result_string_write += "  Inefficiency " + ineffi_str + "\n"
         print (result_string)
         file_out.write(result_string_write + "\n")
     file_out.close()
@@ -325,6 +328,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--opr", action="store", dest="opr", default="run", help="opr = start, run, read, stop (only allowed options for uplink: run, read)")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
+    parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = list of VFATs (0-23) for read/write TEST_REG")
     parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", help="VERBOSE")
     args = parser.parse_args()
@@ -407,6 +411,7 @@ if __name__ == "__main__":
             sys.exit()
         args.time = "0"
         args.ber = "0"
+        args.cl = "0"
 
     if args.system == "backend" or args.system == "dryrun":
         import gem.gem_utils as gem_utils
@@ -446,7 +451,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
     try:
-        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, args.cl, vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
