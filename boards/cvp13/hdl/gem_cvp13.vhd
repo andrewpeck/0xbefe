@@ -58,11 +58,19 @@ entity gem_cvp13 is
         pcie_refclk0_p_i    : in  std_logic;
         pcie_refclk0_n_i    : in  std_logic;
 
-        -- USB-C
+        -- External interfaces
         usbc_cc_i           : in  std_logic;
         usbc_clk_i          : in  std_logic;
         usbc_trig_i         : in  std_logic;
         dimm2_dq5_trig_i    : in  std_logic;
+        sas1_gprx_0_i       : in  std_logic;
+        sas1_gprx_1_i       : in  std_logic;
+        sas1_gptx_0_o       : out std_logic;
+        sas1_gptx_1_o       : out std_logic;
+        sas2_gprx_0_i       : in  std_logic;
+        sas2_gprx_1_i       : in  std_logic;
+        sas2_gptx_0_o       : out std_logic;
+        sas2_gptx_1_o       : out std_logic;
 
         -- Other
         synth_b_out_p_i     : in  std_logic_vector(4 downto 0);
@@ -134,8 +142,12 @@ architecture gem_cvp13_arch of gem_cvp13 is
     -- external trigger
     signal usbc_trig_sync       : std_logic;
     signal dimm2_trig_sync      : std_logic;
+    signal sas1_trig_sync       : std_logic;
+    signal sas2_trig_sync       : std_logic;
     signal ext_trig             : std_logic;
+    signal ext_trig_in_sync     : std_logic;
     signal ext_trig_en          : std_logic;
+    signal ext_trig_source      : std_logic_vector(1 downto 0);
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
     signal ext_trig_cntdown     : unsigned(11 downto 0) := (others => '0');
 
@@ -362,6 +374,7 @@ begin
             reset_i               => '0',
             board_id_o            => board_id,
             ext_trig_en_o         => ext_trig_en,
+            ext_trig_source_o     => ext_trig_source,
             ext_trig_deadtime_o   => ext_trig_deadtime,
             ipb_reset_i           => ipb_reset,
             ipb_clk_i             => ipb_clk,
@@ -556,24 +569,28 @@ begin
     end generate;
 
     --================================--
-    -- Debug
+    -- External trigger
     --================================--
 
-    i_vio_qsfp : vio_qsfp_control
-        port map(
-            clk        => clk100,
-            probe_in0  => qsfp_present_b_i,
-            probe_in1  => qsfp_int_b_i,
-            probe_out0 => qsfp_reset_b_o,
-            probe_out1 => qsfp_lp_o,
-            probe_out2 => qsfp_ctrl_en_o
-        );
-
-    -- copper input test
+    ------------ trigger input synchronization and selection ------------
 
     i_usbc_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
     i_dimm2_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => dimm2_dq5_trig_i, clk_i => ttc_clks.clk_40, sync_o => dimm2_trig_sync);
+    i_sas1_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas1_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas1_trig_sync);
+    i_sas2_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas2_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas2_trig_sync);
 
+--    ext_trig_in_sync <= slimsas1_trig_sync when ext_trig_source = "00" else slimsas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
+
+    ext_trig_in_sync <= sas1_trig_sync;
+
+    ------------ SlimSAS outputs ------------
+
+    sas1_gptx_0_o <= '0';
+    sas1_gptx_1_o <= ttc_clks.clk_40;
+    sas2_gptx_0_o <= '0';
+    sas2_gptx_1_o <= '0';
+
+    ------------ trigger logic with configurable deadtime ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -582,7 +599,7 @@ begin
                 ext_trig_cntdown <= (others => '0');
             else
                 
-                if dimm2_trig_sync = '1' and ext_trig_cntdown = x"000" then
+                if ext_trig_in_sync = '1' and ext_trig_cntdown = x"000" then
                     ext_trig <= '1';
                     ext_trig_cntdown <= unsigned(ext_trig_deadtime);
                 else
@@ -598,7 +615,7 @@ begin
         end if;
     end process;
     
-
+    ------------ trigger debugging ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -629,8 +646,22 @@ begin
     i_ila_test : ila_test
         port map(
             clk    => ttc_clks.clk_40,
-            probe0 => dimm2_trig_sync,
+            probe0 => ext_trig_in_sync,
             probe1 => std_logic_vector(tst_bx_cnt)
+        );
+
+    --================================--
+    -- Debug
+    --================================--
+
+    i_vio_qsfp : vio_qsfp_control
+        port map(
+            clk        => clk100,
+            probe_in0  => qsfp_present_b_i,
+            probe_in1  => qsfp_int_b_i,
+            probe_out0 => qsfp_reset_b_o,
+            probe_out1 => qsfp_lp_o,
+            probe_out2 => qsfp_ctrl_en_o
         );
 
     ---------------------------------------------------------------------------------
