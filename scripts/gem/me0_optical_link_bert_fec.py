@@ -123,7 +123,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         file_out.write("Register value mismatch\n\n")
                         rw_terminate()
 
-            ber_t = 1.0/(data_rate * (time()-t0))
+            ber_t = (-math.log(1-cl))/(data_rate * (time()-t0))
             ber_t_log = math.log(ber_t, 10)
             if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                 print ("\nBER: ")
@@ -139,10 +139,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                         curr_ber_str += "< {:.2e}".format(ber_t)
                         curr_ber_str_write += "< {:.2e}".format(ber_t)
                     else:
-                        curr_ber_str += Colors.RED + "  GBT %d: BER "%gbt
-                        curr_ber_str_write += "  GBT %d: BER "%gbt
-                        curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                        curr_ber_str_write += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                        curr_ber_str += Colors.RED + "  GBT %d: Number of FEC Errors = %d"%(gbt,curr_fec_errors)
+                        curr_ber_str_write += "  GBT %d: Number of FEC Errors = %d"%(gbt,curr_fec_errors)
                     curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
                     print (curr_ber_str)
@@ -199,7 +197,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         ber_passed_log = -1
         if opr == "run":
             while ((time()-t0)/60.0) < runtime:
-                ber_t = 1.0/(data_rate * (time()-t0))
+                ber_t = (-math.log(1-cl))/(data_rate * (time()-t0))
                 ber_t_log = math.log(ber_t, 10)
                 if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                     print ("\nBER: ")
@@ -213,10 +211,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                        curr_ber_str += "< {:.2e}".format(ber_t)
                        curr_ber_str_write += "< {:.2e}".format(ber_t)
                     else:
-                       curr_ber_str += Colors.RED + "  GBT %d: BER "%int(gbt_list[0])
-                       curr_ber_str_write += "  GBT %d: BER "%int(gbt_list[0])
-                       curr_ber_str += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
-                       curr_ber_str_write += "= {:.2e}".format(curr_fec_errors/(data_rate * (time()-t0)))
+                       curr_ber_str += Colors.RED + "  GBT %d: Number of FEC Errors = %d"%(int(gbt_list[0]), curr_fec_errors)
+                       curr_ber_str_write += "  GBT %d: Number of FEC Errors = %d"%(int(gbt_list[0]), curr_fec_errors)
                     curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                     curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
                     print (curr_ber_str)
