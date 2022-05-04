@@ -326,7 +326,7 @@ begin
                 clusters_masked_o      => open,
                 overflow_o             => me0_overflow
                 );
-        end generate;
+       
     --------------------------------------------------------------------------------
     -- Cluster mapping to ports
     --------------------------------------------------------------------------------
@@ -348,6 +348,7 @@ begin
                 end if;
             end if;
         end process;
+        end generate;
         end generate;
     end generate;
 
