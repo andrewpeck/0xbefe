@@ -99,8 +99,8 @@ if __name__ == '__main__':
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
                 prbs_err_cnt = link.get_prbs_err_cnt()
                 print ("  Link %d: number of FEC errors accumulated = %d" % (link.idx, prbs_err_cnt))
-                print ("")
-            time_prev = time() 
+            time_prev = time()
+            print ("")
     print ("")
 
     # PRBS Disable 
