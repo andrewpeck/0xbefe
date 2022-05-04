@@ -8,6 +8,7 @@ from common.prbs import *
 import tableformatter as tf
 import argparse
 from time import time, sleep
+import math
 
 try:
     imp.find_module('colorama')
@@ -42,7 +43,8 @@ if __name__ == '__main__':
     parse_xml()
     links = befe_get_all_links()
 
-    # Print RX power at QSFP 
+    # Print RX power at QSFP
+    print ("\nQSFP RX Power for all Channels: ")
     ret = read_rx_power_all()
     print ("")
 
