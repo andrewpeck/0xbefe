@@ -33,7 +33,7 @@ if __name__ == '__main__':
         sys.exit()
     if args.time is not None:
         ber = 0
-        cl = 0
+        cl = float(args.cl)
         runtime = float(args.time)
     if args.ber is not None:
         ber_limit = float(args.ber)

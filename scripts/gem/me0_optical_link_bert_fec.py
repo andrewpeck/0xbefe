@@ -407,7 +407,6 @@ if __name__ == "__main__":
             sys.exit()
         args.time = "0"
         args.ber = "0"
-        args.cl = "0"
 
     if args.system == "backend" or args.system == "dryrun":
         import gem.gem_utils as gem_utils
