@@ -7,6 +7,7 @@ from common.optics import *
 from common.prbs import *
 import tableformatter as tf
 import argparse
+from time import time, sleep
 
 try:
     imp.find_module('colorama')
