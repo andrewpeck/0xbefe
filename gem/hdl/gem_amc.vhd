@@ -483,7 +483,7 @@ begin
         -- import clusters from ME0 cluster module to trigger module--
         sbit_clusters_arr <= me0_clusters_arr;
 
-    end generate;
+--    end generate;
 
     -- Trigger module --
     i_trigger : entity work.trigger
