@@ -83,7 +83,7 @@ if __name__ == '__main__':
                     curr_ber_str += Colors.GREEN + "  Link %d: BER "%link.idx
                     curr_ber_str += "< {:.2e}".format(ber_t)
                 else:
-                    curr_ber_str += Colors.RED + "  Link %d: Number of FEC Errors = %d"%(link.idx,prbs_err_cnt)
+                    curr_ber_str += Colors.RED + "  Link %d: Number of Bit Errors = %d"%(link.idx,prbs_err_cnt)
                 curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                 print (curr_ber_str)
             print ("\n")
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                 rx_mgt = link.get_mgt(MgtTxRx.RX)
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
                 prbs_err_cnt = link.get_prbs_err_cnt()
-                print ("  Link %d: number of FEC errors accumulated = %d" % (link.idx, prbs_err_cnt))
+                print ("  Link %d: number of Bit errors accumulated = %d" % (link.idx, prbs_err_cnt))
             time_prev = time()
             print ("")
     print ("")
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         else:
             result_string += Colors.YELLOW
         result_string += "Link %d\n"%link.idx
-        result_string += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, errors)
+        result_string += "  Number of Bit errors in %.2f minutes: %d\n"%(runtime, errors)
         if errors == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
         result_string += Colors.ENDC
