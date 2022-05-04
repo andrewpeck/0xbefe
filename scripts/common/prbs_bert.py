@@ -72,7 +72,7 @@ if __name__ == '__main__':
         if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
             print ("\nBER: ")
             for link in links:
-                if link.idx not in [8, 9 10, 11]:
+                if link.idx not in [8, 9, 10, 11]:
                     continue
                 rx_mgt = link.get_mgt(MgtTxRx.RX)
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
         if time_passed >= 1:
             print ("Time passed: %f minutes: " % ((time()-t0)/60.0))
             for link in links:
-                if link.idx not in [8, 9 10, 11]:
+                if link.idx not in [8, 9, 10, 11]:
                     continue
                 rx_mgt = link.get_mgt(MgtTxRx.RX)
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     # BER Calculation 
     for link in links:
-        if link.idx not in [8, 9 10, 11]:
+        if link.idx not in [8, 9, 10, 11]:
             continue
         ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
         ber_str = ""
