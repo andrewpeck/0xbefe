@@ -97,8 +97,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         start_fec_errors = {}
         end_fec_errors = {}
         fec_errors = {}
-        print ("Start Error Counting for time = %f minutes" % (runtime))
-        file_out.write("Start Error Counting for time = %f minutes\n" % (runtime))
+        print ("Start Error Counting for time = %.2f minutes" % (runtime))
+        file_out.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
         print ("Starting with: ")
         file_out.write("Starting with: \n")
         for gbt in fec_node_list:
@@ -152,8 +152,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
                 if verbose:
-                    print ("Time passed: %f minutes: " % ((time()-t0)/60.0))
-                    file_out.write("Time passed: %f minutes\n" % ((time()-t0)/60.0))
+                    print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
+                    file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
                     for gbt in fec_node_list:
                         fec_node = fec_node_list[gbt]
                         curr_fec_errors = gem_utils.read_backend_reg(fec_node)
@@ -186,8 +186,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         # start error counting loop
         start_fec_errors = lpgbt_fec_error_counter(oh_ver)
         if opr == "run":
-            print ("Start Error Counting for time = %f minutes" % (runtime))
-            file_out.write("Start Error Counting for time = %f minutes\n" % (runtime))
+            print ("Start Error Counting for time = %.2f minutes" % (runtime))
+            file_out.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
         if opr in ["start", "run"]:
             print ("Starting with number of FEC Errors = %d\n" % (start_fec_errors))
             file_out.write("Starting with number of FEC Errors = %d\n\n" % (start_fec_errors))
@@ -225,8 +225,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 if time_passed >= 1:
                     curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     if verbose:
-                        print ("Time passed: %f minutes, GBT %d: number of FEC errors accumulated = %d" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
-                        file_out.write("Time passed: %f minutes: GBT %d, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
+                        print ("Time passed: %.2f minutes, GBT %d: number of FEC errors accumulated = %d" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
+                        file_out.write("Time passed: %.2f minutes: GBT %d, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
                     time_prev = time()
         
         end_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -286,12 +286,12 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         else:
             result_string += Colors.YELLOW
         result_string += "GBT %d\n"%gbt
-        result_string += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
+        result_string += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, fec_error_gbt)
         if fec_error_gbt == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
             result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
         result_string_write += "GBT %d\n"%gbt
-        result_string_write += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, fec_error_gbt)
+        result_string_write += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, fec_error_gbt)
         if fec_error_gbt == 0:
             result_string_write += "  Bit Error Ratio (BER) " + ber_str + "\n"
             result_string_write += "  Inefficiency " + ineffi_str + "\n"

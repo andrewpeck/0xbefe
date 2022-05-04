@@ -63,7 +63,7 @@ if __name__ == '__main__':
     print ("")
 
     # PRBS Check Status
-    print ("Running PRBS test for %.4f minites\n"%runtime)
+    print ("Running PRBS test for %.2f minites\n"%runtime)
     t0 = time()
     time_prev = t0
     ber_passed_log = -1
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                 
         time_passed = (time()-time_prev)/60.0
         if time_passed >= 1:
-            print ("Time passed: %f minutes: " % ((time()-t0)/60.0))
+            print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
             for link in links:
                 if link.idx not in [8, 9, 10, 11]:
                     continue
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         else:
             result_string += Colors.YELLOW
         result_string += "Link %d\n"%link.idx
-        result_string += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, errors)
+        result_string += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, errors)
         if errors == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
         result_string += Colors.ENDC
