@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parse_xml()
     links = befe_get_all_links()
 
-    # Print RX power at QSFP
+    # Print RX power at QSFP at start 
     print ("\nQSFP RX Power for all Channels: ")
     ret = read_rx_power_all()
     print ("")
@@ -139,7 +139,10 @@ if __name__ == '__main__':
         result_string += Colors.ENDC
         print (result_string)
 
-
+    # Print RX power at QSFP at end 
+    print ("\nQSFP RX Power for all Channels: ")
+    ret = read_rx_power_all()
+    print ("")
 
 
 
