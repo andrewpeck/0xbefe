@@ -80,9 +80,8 @@ if __name__ == '__main__':
                     curr_ber_str += Colors.RED + "  Link %d: Number of FEC Errors = %d"%(link.idx,prbs_err_cnt)
                 curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
                 print (curr_ber_str)
-             print ("\n")
-             file_out.write("\n\n")
-             ber_passed_log = ber_t_log
+            print ("\n")
+            ber_passed_log = ber_t_log
                 
         time_passed = (time()-time_prev)/60.0
         if time_passed >= 1:
@@ -103,7 +102,7 @@ if __name__ == '__main__':
         tx_mgt = link.get_mgt(MgtTxRx.TX)
         prbs_err_cnt = link.get_prbs_err_cnt()
         prbs_errors[link.idx] = prbs_err_cnt
-    prbs_control(links, 0) # 0 means normal mode
+    prbs_control(links, 0) # 0 means normal mode 
     print("PRBS mode has been disabled on all links (TX and RX)")
     print("NOTE: TX and RX polarity is set to be non-inverted")
 
