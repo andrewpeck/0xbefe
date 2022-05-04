@@ -107,7 +107,7 @@ if __name__ == '__main__':
     print ("")
     prbs_errors = {}
     for link in links:
-        if link.idx not in [8, 9 10, 11]:
+        if link.idx not in [8, 9, 10, 11]:
             continue
         rx_mgt = link.get_mgt(MgtTxRx.RX)
         tx_mgt = link.get_mgt(MgtTxRx.TX)
