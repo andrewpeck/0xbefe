@@ -72,6 +72,8 @@ if __name__ == '__main__':
         if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
             print ("\nBER: ")
             for link in links:
+                if link.idx not in [8, 9 10, 11]:
+                    continue
                 rx_mgt = link.get_mgt(MgtTxRx.RX)
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
                 prbs_err_cnt = link.get_prbs_err_cnt()
@@ -90,6 +92,8 @@ if __name__ == '__main__':
         if time_passed >= 1:
             print ("Time passed: %f minutes: " % ((time()-t0)/60.0))
             for link in links:
+                if link.idx not in [8, 9 10, 11]:
+                    continue
                 rx_mgt = link.get_mgt(MgtTxRx.RX)
                 tx_mgt = link.get_mgt(MgtTxRx.TX)
                 prbs_err_cnt = link.get_prbs_err_cnt()
@@ -99,18 +103,24 @@ if __name__ == '__main__':
     print ("")
 
     # PRBS Disable 
+    prbs_status(links)
+    print ("")
     prbs_errors = {}
     for link in links:
+        if link.idx not in [8, 9 10, 11]:
+            continue
         rx_mgt = link.get_mgt(MgtTxRx.RX)
         tx_mgt = link.get_mgt(MgtTxRx.TX)
         prbs_err_cnt = link.get_prbs_err_cnt()
         prbs_errors[link.idx] = prbs_err_cnt
-    prbs_control(links, 0) # 0 means normal mode 
+    prbs_control(links, 0) # 0 means normal mode  
     print("PRBS mode has been disabled on all links (TX and RX)")
     print("NOTE: TX and RX polarity is set to be non-inverted")
 
     # BER Calculation 
     for link in links:
+        if link.idx not in [8, 9 10, 11]:
+            continue
         ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
         ber_str = ""
         errors = prbs_errors[link.idx]
@@ -125,6 +135,7 @@ if __name__ == '__main__':
         result_string += "  Number of FEC errors in %.1f minutes: %d\n"%(runtime, errors)
         if errors == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
+        result_string += Colors.ENDC
         print (result_string)
 
 
