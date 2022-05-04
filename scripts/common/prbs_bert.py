@@ -63,6 +63,7 @@ if __name__ == '__main__':
     print ("")
 
     # PRBS Check Status
+    print ("Running PRBS test for %.4f minites\n\n"%runtime)
     t0 = time()
     time_prev = t0
     ber_passed_log = -1
