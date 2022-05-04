@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
     args = parser.parse_args()
 
-    data_rate = 2.56 * 1e9
+    data_rate = 10.24 * 1e9
     if args.time is None and args.ber is None:
         print (Colors.YELLOW + "Provide either time or BER limit" + Colors.ENDC)
         sys.exit()
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     print ("")
 
     # PRBS Check Status
-    print ("Running PRBS test for %.4f minites\n\n"%runtime)
+    print ("Running PRBS test for %.4f minites\n"%runtime)
     t0 = time()
     time_prev = t0
     ber_passed_log = -1
