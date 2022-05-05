@@ -137,13 +137,13 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
                 ax.plot(scurveData[:,0], scurveFunc(scurveData[:,0], *params), "r-", label="fit")
                 props = dict(boxstyle="round", facecolor="white",edgecolor="lightgrey", alpha=1)
                 textstr = "\n".join((
-                    r"Threshold: $\mu=%.4f$ (fC)" % (params[2], ),
-                    r"ENC: $\sigma=%.4f$ (fC)" % (params[3], ),))
+                    r"Threshold: $\mu=%.1f$ (fC)" % (params[2], ),
+                    r"ENC: $\sigma=%.1f$ (fC)" % (params[3], ),))
                 ax.text(0.57, 0.7, textstr, transform=ax.transAxes, fontsize=22, verticalalignment="top", bbox=props)
                 ax.set_title("VFAT%02d" % vfat)
                 leg = ax.legend(loc="center right", ncol=2)
                 ax.text(-0.09, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax.transAxes)
-                ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax.transAxes)
+                ax.text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax.transAxes)
                 fig.tight_layout()
                 plt.savefig(directoryName + "/scurveFit_"+oh+"_VFAT%02d/"%(vfat)+"scurveFit_"+oh+"_VFAT%02d_channel%d.pdf" % (vfat, channel))
                 plt.close() # clear the plot
@@ -188,7 +188,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     ax.boxplot(data, patch_artist=True)
     
     ax.text(-0.092, 1.01, 'CMS', fontweight='bold', fontsize=30, transform=ax.transAxes)
-    ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=28, transform=ax.transAxes)
+    ax.text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=28, transform=ax.transAxes)
 
     textStr = '\n'.join((
     r'Orange line = median',
@@ -225,7 +225,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     ax.boxplot(data, patch_artist=True)
 
     ax.text(-0.092, 1.01, 'CMS', fontweight='bold', fontsize=30, transform=ax.transAxes)
-    ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=28, transform=ax.transAxes)
+    ax.text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=28, transform=ax.transAxes)
 
     textStr = '\n'.join((
     r'Orange line = median',
@@ -330,7 +330,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         #cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
         cbar.ax.tick_params(labelsize=14)
         axs.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=axs.transAxes)
-        axs.text(0.03, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=axs.transAxes)
+        axs.text(0.03, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=axs.transAxes)
         axs.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
         axs.set_yticks(np.arange(min(plot_data_y), max(plot_data_y)+1, 20))
         fig.tight_layout()
@@ -349,7 +349,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #cbar1.set_label("Fired events / total events", loc='top')
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1.transAxes)
-            ax1.text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
+            ax1.text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
         elif numVfats <= 3:
             ax1[vfatCnt0].set_xlabel("Channel number", loc='right', fontsize=18)
             ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
@@ -362,7 +362,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[vfatCnt0].transAxes)
-            ax1[vfatCnt0].text(-0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
         elif numVfats <= 6:
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right', fontsize=18)
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
@@ -375,7 +375,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
-            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right', fontsize=18)
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
@@ -388,13 +388,13 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
-            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=18, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
         vfatCnt0 += 1
         print(("\n2D histogram of scurves for VFAT%d " % vfat )+ ("saved at %s" % directoryName) + "/scurve2Dhist_"+oh+"_VFAT%d.pdf" % vfat)
 
     #plt.figtext(0.01, 1.0, 'CMS', fontweight='bold', fontsize=28)
-    #plt.figtext(0.8, 1.0, 'Muon R&D', fontstyle='italic', fontsize=26)
+    #plt.figtext(0.8, 1.0, 'Preliminary', fontstyle='italic', fontsize=26)
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".png"))
