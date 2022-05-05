@@ -12,7 +12,7 @@ from tqdm import tqdm
 import warnings
 import copy
 
-plt.rcParams.update({"font.size": 22}) # Increase font size
+plt.rcParams.update({"font.size": 24}) # Increase font size
 
 def dictToArray(dictionary, vfatNumber, channel):
     """
