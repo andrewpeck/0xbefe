@@ -140,7 +140,7 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
                     r"Threshold: $\mu=%.4f$ (fC)" % (params[2], ),
                     r"ENC: $\sigma=%.4f$ (fC)" % (params[3], ),))
                 ax.text(0.57, 0.7, textstr, transform=ax.transAxes, fontsize=22, verticalalignment="top", bbox=props)
-                ax.set_title("VFAT0%d" % vfat)
+                ax.set_title("VFAT%02d" % vfat)
                 leg = ax.legend(loc="center right", ncol=2)
                 ax.text(-0.09, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax.transAxes)
                 ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax.transAxes)
