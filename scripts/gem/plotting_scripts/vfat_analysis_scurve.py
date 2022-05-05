@@ -199,7 +199,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
 
     props = dict(boxstyle='round', facecolor='white', alpha=0.4)
 
-    ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
+    #ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
     
     plt.xticks(np.arange(1, len(vfatList) + 1), vfatList) # replace ticks with vfat number
     fig.tight_layout()
@@ -236,7 +236,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
 
     props = dict(boxstyle='round', facecolor='white', alpha=0.4)
 
-    ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
+    #ax.text(0.03, 0.76, textStr, transform=ax.transAxes, fontsize=22, bbox=props)
 
     plt.xticks(np.arange(1, len(vfatList) + 1), vfatList) # replace ticks with vfat number
     fig.tight_layout()
