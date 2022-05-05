@@ -1125,6 +1125,7 @@ begin
                 last_dav_timer <= (others => '0');
                 dav_timeout_flags <= (others => '0');
                 chmb_infifo_underflow <= '0';
+                spy_prescale_counter <= x"0001";
                 spy_prescale_keep_evt <= '0';
             else
             
@@ -1174,12 +1175,12 @@ begin
                             
                             -- if last event fifo has already been read by the user then enable writing to this fifo for the current event
                             last_evt_fifo_en <= last_evt_fifo_empty and (not block_last_evt_fifo);
-                            
-                            -- trying to match the CSC DDU logic here somewhat.. so it's kindof convoluted..
-                            -- the counter starts at 2 after resync, and then events are accepted when it's equal to the set prescale
-                            -- once an event is accepted, the counter is reset to 1 (note not 2)
-                            -- prescale values of 0 and 1 just allow all events 
-                            if (spy_prescale = x"0000" or spy_prescale = x"0001") then
+
+                            -- prescale the events sent in the spy path
+                            if (spy_prescale = x"0000") then -- disable
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '0';
+                            elsif (spy_prescale = x"0001") then -- allow all events
                                 spy_prescale_counter <= x"0001";
                                 spy_prescale_keep_evt <= '1';
                             elsif (std_logic_vector(spy_prescale_counter) = spy_prescale) then

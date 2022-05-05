@@ -673,7 +673,7 @@
               fw_signal="spy_gbe_skip_headers" fw_default="0b0"
               sw_units="bool"/>
         <node id="SPY_PRESCALE"        address="0x0"  mask="0xffff0000" permission="rw"
-              description="Prescale factor of the spy path (0 and 1 allow all events to go through, higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
+              description="Prescale factor of the spy path (0 disables the spy path, 1 allows all events to go through, and higher values will result in SPY_PRESCALE - 1 events skipped between consecutive spy events)"
               fw_signal="spy_prescale" fw_default="0x0001"/>
         <node id="SPY_DEST_MAC_1"      address="0x1"  mask="0x0000ffff" permission="rw"
               description="Destination MAC part 1 i.e. 16 bits that are sent out first"
