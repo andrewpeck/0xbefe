@@ -123,7 +123,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
     cluster_count_nodes = []
     for i in range(0,8):
         sbit_monitor_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
-        cluster_count_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
+        cluster_count_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.OH%d.CLUSTER_COUNT_%d_CNT"%(oh_select,i)))
 
     dac_node = {}
     dac = "CFG_CAL_DAC"
