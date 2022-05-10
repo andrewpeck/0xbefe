@@ -76,7 +76,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     l1a_node = gem_utils.get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A")
     calpulse_node = gem_utils.get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.CALPULSE")
 
-    gem_utils.write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_OH_SBIT_ME0"), oh_select)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_OH_SBIT_ME0"), oh_select)
     elink_sbit_select_node = gem_utils.get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_ELINK_SBIT_ME0") # Node for selecting Elink to count
     channel_sbit_select_node = gem_utils.get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_SBIT_ME0") # Node for selecting S-bit to count
     elink_sbit_counter_node = gem_utils.get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink

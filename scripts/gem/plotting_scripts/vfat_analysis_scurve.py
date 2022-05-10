@@ -130,10 +130,10 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
 
             if channel in channel_list:
                 fig, ax = plt.subplots(figsize = (12,10))
-                ax.set_xlabel("Charge (fC)", loc='right')
+                ax.set_xlabel("Injected charge (fC)", loc='right')
                 ax.set_ylabel("Fired events / total events", loc='top')
                 ax.grid()
-                ax.plot(scurveData[:,0], scurveData[:,1], "o", markersize= 6, label = "Channel %d" % channel) # plot raw data
+                ax.plot(scurveData[:,0], scurveData[:,1], "o", markersize= 6, label = "Channel %d" % channel) # plot raw data 
                 ax.plot(scurveData[:,0], scurveFunc(scurveData[:,0], *params), "r-", label="fit")
                 props = dict(boxstyle="round", facecolor="white",edgecolor="lightgrey", alpha=1)
                 textstr = "\n".join((
@@ -177,7 +177,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     fig, ax = plt.subplots(figsize = (12,10))
     ax.set_title("ENC distributions")
     ax.set_xlabel("VFAT number", loc='right')
-    ax.set_ylabel("S-curve ENC (fC)", loc='top')
+    ax.set_ylabel("S-Curve ENC (fC)", loc='top')
     ax.set_ylim(0, 4)
     ax.grid()
 
@@ -214,7 +214,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     fig, ax = plt.subplots(figsize = (12,10))
     ax.set_title("Threshold distributions")
     ax.set_xlabel("VFAT number", loc='right')
-    ax.set_ylabel("S-curve Threshold (fC)", loc='top')
+    ax.set_ylabel("S-Curve Threshold (fC)", loc='top')
     ax.set_ylim(0, 30)
     ax.grid()
 
@@ -343,7 +343,8 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1.set_title("VFAT%02d"%vfat)
             cf1 = ax1.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
-            cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1.ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
             #cbar1.set_label("Fired events / total events", loc='top')
@@ -356,7 +357,8 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
             cf1[vfatCnt0] = ax1[vfatCnt0].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
-            cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16) 
+            cbar1[vfatCnt0].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
             #cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
@@ -369,7 +371,8 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
-            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
             #cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
@@ -382,7 +385,8 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
-            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
             #cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
