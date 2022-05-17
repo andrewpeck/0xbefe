@@ -93,6 +93,10 @@ $(UPDATE_LIST): config
 			build_type="$(patsubst update_%,%,$@)"; \
 			do_update=false; \
 			for d in address_table/$$system/generated/$$build_type*; do \
+			        if [[ ! -f $$d/$$module.xml ]]; then \
+								echo "==== ERROR: $$module.xml does not exist in $$d, skipping.. ===="; \
+								continue; \
+							fi; \
 							prefix=address_table/$$system/generated/; \
 							flavor=$${d#$$prefix}; \
 							if [[ $$flavor =~ ${flavor}_flavor_(.*) ]]; then \
