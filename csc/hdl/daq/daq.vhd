@@ -896,8 +896,6 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS    => 3976,
-            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
             g_MAX_EVT_WORDS        => 50000,
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
@@ -913,6 +911,8 @@ begin
             dest_mac_i          => spy_gbe_dest_mac,
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
+            min_payload_words_i => std_logic_vector(to_unsigned(28, 14)), -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
+            max_payload_words_i => std_logic_vector(to_unsigned(3976, 14)),
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout,
             data_trailer_i      => '0',

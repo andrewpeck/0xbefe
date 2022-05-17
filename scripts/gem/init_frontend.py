@@ -38,14 +38,14 @@ def init_gem_frontend():
         num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
         initGbtRegAddrs()
 
-        # Reset only master lpGBTs (automatically resets slave lpGBTs)
+        # Reset boss lpGBTs 
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
-                selectGbt(oh, gbt)
                 if gbt%2 != 0:
                     continue
+                selectGbt(oh, gbt)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
                 elif gbt_ver == 1:
@@ -55,6 +55,23 @@ def init_gem_frontend():
                     writeGbtRegAddrs(0x12F, 0x80)
                 elif gbt_ver == 1:
                     writeGbtRegAddrs(0x13F, 0x80)
+                sleep(0.1)
+        sleep(2)
+
+        # Reset sub lpGBTs separately for OH-v2
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            for gbt in range(num_gbts):
+                gbt_ver = gbt_ver_list[gbt]
+                if gbt_ver == 0:
+                    continue
+                if gbt%2 != 0:
+                    continue
+                selectGbt(oh, gbt)
+                writeGbtRegAddrs(0x053, 0x02)
+                writeGbtRegAddrs(0x055, 0x00)
+                sleep(0.1)
+                writeGbtRegAddrs(0x053, 0x00)
                 sleep(0.1)
         sleep(2)
 
@@ -71,8 +88,8 @@ def init_gem_frontend():
                             read_data = readGbtRegAddrs(0x00)
                 else:
                     continue
-        
-        # configure lpGBTs
+
+        # Configure lpGBTs
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
             for gbt in range(num_gbts):

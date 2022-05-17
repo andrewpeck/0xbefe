@@ -84,9 +84,33 @@ entity gtx_single is
       );
   port
     (
+      ------------------------ Loopback and Powerdown Ports ----------------------
+      LOOPBACK_IN           : in   std_logic_vector(2 downto 0);
+      RXPOWERDOWN_IN        : in   std_logic_vector(1 downto 0);
+      ----------------------- Receive Ports - 8b10b Decoder ----------------------
+      RXCHARISK_OUT         : out  std_logic_vector(1 downto 0);
+      RXDISPERR_OUT         : out  std_logic_vector(1 downto 0);
+      RXNOTINTABLE_OUT      : out  std_logic_vector(1 downto 0);
+      --------------- Receive Ports - Comma Detection and Alignment --------------
+      RXENMCOMMAALIGN_IN    : in   std_logic;
+      RXENPCOMMAALIGN_IN    : in   std_logic;
+      ------------------- Receive Ports - RX Data Path interface -----------------
+      RXDATA_OUT            : out  std_logic_vector(15 downto 0);
+      RXRESET_IN            : in   std_logic;
+      RXUSRCLK2_IN          : in   std_logic;
       ------- Receive Ports - RX Driver,OOB signalling,Coupling and Eq.,CDR ------
-      RXN_IN                : in  std_logic;
-      RXP_IN                : in  std_logic;
+      RXN_IN                : in   std_logic;
+      RXP_IN                : in   std_logic;
+      -------- Receive Ports - RX Elastic Buffer and Phase Alignment Ports -------
+      RXSTATUS_OUT          : out  std_logic_vector(2 downto 0);
+      ------------------------ Receive Ports - RX PLL Ports ----------------------
+      GTXRXRESET_IN         : in   std_logic;
+      MGTREFCLKRX_IN        : in   std_logic_vector(1 downto 0);
+      PLLRXRESET_IN         : in   std_logic;
+      RXPLLLKDET_OUT        : out  std_logic;
+      RXRESETDONE_OUT       : out  std_logic;
+      -------------- Receive Ports - RX Pipe Control for PCI Express -------------
+      RXVALID_OUT           : out  std_logic;
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
       TXCHARISK_IN          : in  std_logic_vector(1 downto 0);
       ------------------------- Transmit Ports - GTX Ports -----------------------
@@ -119,7 +143,7 @@ entity gtx_single is
       --------------------- Transmit Ports - TX PRBS Generator -------------------
       TXENPRBSTST_IN        : in  std_logic_vector(2 downto 0);
       -- resets
-      TXPOWERDOWN           : in  std_logic_vector(1 downto 0);
+      TXPOWERDOWN_IN        : in  std_logic_vector(1 downto 0);
       TXPLLPOWERDOWN        : in  std_logic
 
 
@@ -137,6 +161,14 @@ architecture RTL of gtx_single is
   signal tied_to_ground_vec_i : std_logic_vector(63 downto 0);
   signal tied_to_vcc_i        : std_logic;
 
+  -- RX Datapath signals
+  signal rxdata_i              : std_logic_vector(31 downto 0);
+  signal rxchariscomma_float_i : std_logic_vector(1 downto 0);
+  signal rxcharisk_float_i     : std_logic_vector(1 downto 0);
+  signal rxdisperr_float_i     : std_logic_vector(1 downto 0);
+  signal rxnotintable_float_i  : std_logic_vector(1 downto 0);
+  signal rxrundisp_float_i     : std_logic_vector(1 downto 0);
+
   -- TX Datapath signals
   signal txdata_i          : std_logic_vector(31 downto 0);
   signal txkerr_float_i    : std_logic_vector(1 downto 0);
@@ -144,7 +176,7 @@ architecture RTL of gtx_single is
 
 --******************************** Main Body of Code***************************
 
-  function txpll_cp_cfg_sel (rate : string) return bit_vector is
+  function pll_cp_cfg_sel (rate : string) return bit_vector is
   begin
     if (RATE = "3p2") then
       return x"0D";
@@ -154,7 +186,7 @@ architecture RTL of gtx_single is
     end if;
   end;
 
-  function txpll_divsel_fb_sel (rate : string) return integer is
+  function pll_divsel_fb_sel (rate : string) return integer is
   begin
     if (RATE = "3p2") then
       return 4;
@@ -173,6 +205,9 @@ begin
   tied_to_vcc_i                     <= '1';
 
   -------------------  GTX Datapath byte mapping  -----------------
+
+  -- The GTX provides little endian data (first byte received on RXDATA(7 downto 0))
+  RXDATA_OUT <= rxdata_i(15 downto 0);
 
   txdata_i <= (tied_to_ground_vec_i(15 downto 0) & TXDATA_IN);
 
@@ -199,8 +234,8 @@ begin
       TX_CLK_SOURCE      => (GTX_TX_CLK_SOURCE),
       TX_OVERSAMPLE_MODE => (false),
       TXPLL_COM_CFG      => (x"21680a"),
-      TXPLL_CP_CFG       => (txpll_cp_cfg_sel(RATE)),
-      TXPLL_DIVSEL_FB    => (txpll_divsel_fb_sel(RATE)),
+      TXPLL_CP_CFG       => (pll_cp_cfg_sel(RATE)),
+      TXPLL_DIVSEL_FB    => (pll_divsel_fb_sel(RATE)),
       TXPLL_DIVSEL_OUT   => (1),
       TXPLL_DIVSEL_REF   => (1),
       TXPLL_DIVSEL45_FB  => (5),
@@ -261,13 +296,13 @@ begin
       ----------------------------RX PLL----------------------------
       RX_OVERSAMPLE_MODE => (false),
       RXPLL_COM_CFG      => (x"21680a"),
-      RXPLL_CP_CFG       => (x"0D"),
-      RXPLL_DIVSEL_FB    => (2),
+      RXPLL_CP_CFG       => (pll_cp_cfg_sel(RATE)),
+      RXPLL_DIVSEL_FB    => (pll_divsel_fb_sel(RATE)),
       RXPLL_DIVSEL_OUT   => (1),
       RXPLL_DIVSEL_REF   => (1),
       RXPLL_DIVSEL45_FB  => (5),
       RXPLL_LKDET_CFG    => ("111"),
-      RX_CLK25_DIVIDER   => (7),
+      RX_CLK25_DIVIDER   => (4),
 
       -------------------------RX Interface-------------------------
       GEN_RXUSRCLK  => (true),
@@ -317,7 +352,7 @@ begin
       MCOMMA_DETECT        => (true),
       PCOMMA_10B_VALUE     => ("0101111100"),
       PCOMMA_DETECT        => (true),
-      RX_DECODE_SEQ_MATCH  => (false),
+      RX_DECODE_SEQ_MATCH  => (true),
       RX_SLIDE_AUTO_WAIT   => (5),
       RX_SLIDE_MODE        => ("OFF"),
       SHOW_REALIGN_COMMA   => (true),
@@ -356,15 +391,15 @@ begin
       CLK_COR_MIN_LAT          => (14),
       CLK_COR_PRECEDENCE       => (true),
       CLK_COR_REPEAT_WAIT      => (0),
-      CLK_COR_SEQ_1_1          => ("0000000000"),
-      CLK_COR_SEQ_1_2          => ("0000000000"),
-      CLK_COR_SEQ_1_3          => ("0000000000"),
-      CLK_COR_SEQ_1_4          => ("0000000000"),
+      CLK_COR_SEQ_1_1          => ("0100000000"),
+      CLK_COR_SEQ_1_2          => ("0100000000"),
+      CLK_COR_SEQ_1_3          => ("0100000000"),
+      CLK_COR_SEQ_1_4          => ("0100000000"),
       CLK_COR_SEQ_1_ENABLE     => ("1111"),
-      CLK_COR_SEQ_2_1          => ("0000000000"),
-      CLK_COR_SEQ_2_2          => ("0000000000"),
-      CLK_COR_SEQ_2_3          => ("0000000000"),
-      CLK_COR_SEQ_2_4          => ("0000000000"),
+      CLK_COR_SEQ_2_1          => ("0100000000"),
+      CLK_COR_SEQ_2_2          => ("0100000000"),
+      CLK_COR_SEQ_2_3          => ("0100000000"),
+      CLK_COR_SEQ_2_4          => ("0100000000"),
       CLK_COR_SEQ_2_ENABLE     => ("1111"),
       CLK_COR_SEQ_2_USE        => (false),
       CLK_CORRECT_USE          => (false),
@@ -393,223 +428,225 @@ begin
       SAS_MIN_COMSAS     => (40),
       SATA_BURST_VAL     => ("100"),
       SATA_IDLE_VAL      => ("100"),
-      SATA_MAX_BURST     => (7),
-      SATA_MAX_INIT      => (22),
-      SATA_MAX_WAKE      => (7),
-      SATA_MIN_BURST     => (4),
-      SATA_MIN_INIT      => (12),
-      SATA_MIN_WAKE      => (4),
+      SATA_MAX_BURST     => (11),
+      SATA_MAX_INIT      => (34),
+      SATA_MAX_WAKE      => (11),
+      SATA_MIN_BURST     => (6),
+      SATA_MIN_INIT      => (19),
+      SATA_MIN_WAKE      => (6),
       TRANS_TIME_FROM_P2 => (x"03c"),
       TRANS_TIME_NON_P2  => (x"19"),
       TRANS_TIME_RATE    => (x"ff"),
       TRANS_TIME_TO_P2   => (x"064")
 
-
       )
     port map
     (
       ------------------------ Loopback and Powerdown Ports ----------------------
-      LOOPBACK              => tied_to_ground_vec_i(2 downto 0),
-      RXPOWERDOWN           => "11",
-      TXPOWERDOWN           => TXPOWERDOWN,
+      LOOPBACK                 => LOOPBACK_IN,
+      RXPOWERDOWN              => RXPOWERDOWN_IN,
+      TXPOWERDOWN              => TXPOWERDOWN_IN,
       -------------- Receive Ports - 64b66b and 64b67b Gearbox Ports -------------
-      RXDATAVALID           => open,
-      RXGEARBOXSLIP         => tied_to_ground_i,
-      RXHEADER              => open,
-      RXHEADERVALID         => open,
-      RXSTARTOFSEQ          => open,
+      RXDATAVALID              => open,
+      RXGEARBOXSLIP            => tied_to_ground_i,
+      RXHEADER                 => open,
+      RXHEADERVALID            => open,
+      RXSTARTOFSEQ             => open,
       ----------------------- Receive Ports - 8b10b Decoder ----------------------
-      RXCHARISCOMMA         => open,
-      RXCHARISK             => open,
-      RXDEC8B10BUSE         => tied_to_ground_i,
-      RXDISPERR             => open,
-      RXNOTINTABLE          => open,
-      RXRUNDISP             => open,
-      USRCODEERR            => tied_to_ground_i,
+      RXCHARISCOMMA            => open,
+      RXCHARISK(3 downto 2)    => rxcharisk_float_i,
+      RXCHARISK(1 downto 0)    => RXCHARISK_OUT,
+      RXDEC8B10BUSE            => tied_to_vcc_i,
+      RXDISPERR(3 downto 2)    => rxdisperr_float_i,
+      RXDISPERR(1 downto 0)    => RXDISPERR_OUT,
+      RXNOTINTABLE(3 downto 2) => rxnotintable_float_i,
+      RXNOTINTABLE(1 downto 0) => RXNOTINTABLE_OUT,
+      RXRUNDISP                => open,
+      USRCODEERR               => tied_to_ground_i,
       ------------------- Receive Ports - Channel Bonding Ports ------------------
-      RXCHANBONDSEQ         => open,
-      RXCHBONDI             => tied_to_ground_vec_i(3 downto 0),
-      RXCHBONDLEVEL         => tied_to_ground_vec_i(2 downto 0),
-      RXCHBONDMASTER        => tied_to_ground_i,
-      RXCHBONDO             => open,
-      RXCHBONDSLAVE         => tied_to_ground_i,
-      RXENCHANSYNC          => tied_to_ground_i,
+      RXCHANBONDSEQ            => open,
+      RXCHBONDI                => tied_to_ground_vec_i(3 downto 0),
+      RXCHBONDLEVEL            => tied_to_ground_vec_i(2 downto 0),
+      RXCHBONDMASTER           => tied_to_ground_i,
+      RXCHBONDO                => open,
+      RXCHBONDSLAVE            => tied_to_ground_i,
+      RXENCHANSYNC             => tied_to_ground_i,
       ------------------- Receive Ports - Clock Correction Ports -----------------
-      RXCLKCORCNT           => open,
+      RXCLKCORCNT              => open,
       --------------- Receive Ports - Comma Detection and Alignment --------------
-      RXBYTEISALIGNED       => open,
-      RXBYTEREALIGN         => open,
-      RXCOMMADET            => open,
-      RXCOMMADETUSE         => tied_to_ground_i,
-      RXENMCOMMAALIGN       => tied_to_ground_i,
-      RXENPCOMMAALIGN       => tied_to_ground_i,
-      RXSLIDE               => tied_to_ground_i,
+      RXBYTEISALIGNED          => open,
+      RXBYTEREALIGN            => open,
+      RXCOMMADET               => open,
+      RXCOMMADETUSE            => tied_to_vcc_i,
+      RXENMCOMMAALIGN          => RXENMCOMMAALIGN_IN,
+      RXENPCOMMAALIGN          => RXENPCOMMAALIGN_IN,
+      RXSLIDE                  => tied_to_ground_i,
       ----------------------- Receive Ports - PRBS Detection ---------------------
-      PRBSCNTRESET          => tied_to_ground_i,
-      RXENPRBSTST           => tied_to_ground_vec_i(2 downto 0),
-      RXPRBSERR             => open,
+      PRBSCNTRESET             => tied_to_ground_i,
+      RXENPRBSTST              => tied_to_ground_vec_i(2 downto 0),
+      RXPRBSERR                => open,
       ------------------- Receive Ports - RX Data Path interface -----------------
-      RXDATA                => open,
-      RXRECCLK              => open,
-      RXRECCLKPCS           => open,
-      RXRESET               => tied_to_ground_i,
-      RXUSRCLK              => tied_to_ground_i,
-      RXUSRCLK2             => tied_to_ground_i,
+      RXDATA                   => rxdata_i,
+      RXRECCLK                 => open,
+      RXRECCLKPCS              => open,
+      RXRESET                  => RXRESET_IN,
+      RXUSRCLK                 => tied_to_ground_i,
+      RXUSRCLK2                => RXUSRCLK2_IN,
       ------------ Receive Ports - RX Decision Feedback Equalizer(DFE) -----------
-      DFECLKDLYADJ          => tied_to_ground_vec_i(5 downto 0),
-      DFECLKDLYADJMON       => open,
-      DFEDLYOVRD            => tied_to_ground_i,
-      DFEEYEDACMON          => open,
-      DFESENSCAL            => open,
-      DFETAP1               => tied_to_ground_vec_i(4 downto 0),
-      DFETAP1MONITOR        => open,
-      DFETAP2               => tied_to_ground_vec_i(4 downto 0),
-      DFETAP2MONITOR        => open,
-      DFETAP3               => tied_to_ground_vec_i(3 downto 0),
-      DFETAP3MONITOR        => open,
-      DFETAP4               => tied_to_ground_vec_i(3 downto 0),
-      DFETAP4MONITOR        => open,
-      DFETAPOVRD            => tied_to_vcc_i,
+      DFECLKDLYADJ             => tied_to_ground_vec_i(5 downto 0),
+      DFECLKDLYADJMON          => open,
+      DFEDLYOVRD               => tied_to_ground_i,
+      DFEEYEDACMON             => open,
+      DFESENSCAL               => open,
+      DFETAP1                  => tied_to_ground_vec_i(4 downto 0),
+      DFETAP1MONITOR           => open,
+      DFETAP2                  => tied_to_ground_vec_i(4 downto 0),
+      DFETAP2MONITOR           => open,
+      DFETAP3                  => tied_to_ground_vec_i(3 downto 0),
+      DFETAP3MONITOR           => open,
+      DFETAP4                  => tied_to_ground_vec_i(3 downto 0),
+      DFETAP4MONITOR           => open,
+      DFETAPOVRD               => tied_to_vcc_i,
       ------- Receive Ports - RX Driver,OOB signalling,Coupling and Eq.,CDR ------
-      GATERXELECIDLE        => tied_to_vcc_i,
-      IGNORESIGDET          => tied_to_vcc_i,
-      RXCDRRESET            => tied_to_ground_i,
-      RXELECIDLE            => open,
-      RXEQMIX               => tied_to_ground_vec_i(9 downto 0),
-      RXN                   => RXN_IN,
-      RXP                   => RXP_IN,
+      GATERXELECIDLE           => tied_to_vcc_i,
+      IGNORESIGDET             => tied_to_vcc_i,
+      RXCDRRESET               => tied_to_ground_i,
+      RXELECIDLE               => open,
+      RXEQMIX                  => "0000000000",
+      RXN                      => RXN_IN,
+      RXP                      => RXP_IN,
       -------- Receive Ports - RX Elastic Buffer and Phase Alignment Ports -------
-      RXBUFRESET            => tied_to_ground_i,
-      RXBUFSTATUS           => open,
-      RXCHANISALIGNED       => open,
-      RXCHANREALIGN         => open,
-      RXDLYALIGNDISABLE     => tied_to_ground_i,
-      RXDLYALIGNMONENB      => tied_to_ground_i,
-      RXDLYALIGNMONITOR     => open,
-      RXDLYALIGNOVERRIDE    => tied_to_vcc_i,
-      RXDLYALIGNRESET       => tied_to_ground_i,
-      RXDLYALIGNSWPPRECURB  => tied_to_vcc_i,
-      RXDLYALIGNUPDSW       => tied_to_ground_i,
-      RXENPMAPHASEALIGN     => tied_to_ground_i,
-      RXPMASETPHASE         => tied_to_ground_i,
-      RXSTATUS              => open,
+      RXBUFRESET               => tied_to_ground_i,
+      RXBUFSTATUS              => open,
+      RXCHANISALIGNED          => open,
+      RXCHANREALIGN            => open,
+      RXDLYALIGNDISABLE        => tied_to_ground_i,
+      RXDLYALIGNMONENB         => tied_to_ground_i,
+      RXDLYALIGNMONITOR        => open,
+      RXDLYALIGNOVERRIDE       => tied_to_vcc_i,
+      RXDLYALIGNRESET          => tied_to_ground_i,
+      RXDLYALIGNSWPPRECURB     => tied_to_vcc_i,
+      RXDLYALIGNUPDSW          => tied_to_ground_i,
+      RXENPMAPHASEALIGN        => tied_to_ground_i,
+      RXPMASETPHASE            => tied_to_ground_i,
+      RXSTATUS                 => RXSTATUS_OUT,
       --------------- Receive Ports - RX Loss-of-sync State Machine --------------
-      RXLOSSOFSYNC          => open,
+      RXLOSSOFSYNC             => open,
       ---------------------- Receive Ports - RX Oversampling ---------------------
-      RXENSAMPLEALIGN       => tied_to_ground_i,
-      RXOVERSAMPLEERR       => open,
+      RXENSAMPLEALIGN          => tied_to_ground_i,
+      RXOVERSAMPLEERR          => open,
       ------------------------ Receive Ports - RX PLL Ports ----------------------
-      GREFCLKRX             => tied_to_ground_i,
-      GTXRXRESET            => tied_to_ground_i,
-      MGTREFCLKRX           => tied_to_ground_vec_i(1 downto 0),
-      NORTHREFCLKRX         => tied_to_ground_vec_i(1 downto 0),
-      PERFCLKRX             => tied_to_ground_i,
-      PLLRXRESET            => tied_to_ground_i,
-      RXPLLLKDET            => open,
-      RXPLLLKDETEN          => tied_to_vcc_i,
-      RXPLLPOWERDOWN        => tied_to_vcc_i,
-      RXPLLREFSELDY         => tied_to_ground_vec_i(2 downto 0),
-      RXRATE                => tied_to_ground_vec_i(1 downto 0),
-      RXRATEDONE            => open,
-      RXRESETDONE           => open,
-      SOUTHREFCLKRX         => tied_to_ground_vec_i(1 downto 0),
+      GREFCLKRX                => tied_to_ground_i,
+      GTXRXRESET               => GTXRXRESET_IN,
+      MGTREFCLKRX              => MGTREFCLKRX_IN,
+      NORTHREFCLKRX            => tied_to_ground_vec_i(1 downto 0),
+      PERFCLKRX                => tied_to_ground_i,
+      PLLRXRESET               => PLLRXRESET_IN,
+      RXPLLLKDET               => RXPLLLKDET_OUT,
+      RXPLLLKDETEN             => tied_to_vcc_i,
+      RXPLLPOWERDOWN           => tied_to_ground_i,
+      RXPLLREFSELDY            => tied_to_ground_vec_i(2 downto 0),
+      RXRATE                   => tied_to_ground_vec_i(1 downto 0),
+      RXRATEDONE               => open,
+      RXRESETDONE              => RXRESETDONE_OUT,
+      SOUTHREFCLKRX            => tied_to_ground_vec_i(1 downto 0),
       -------------- Receive Ports - RX Pipe Control for PCI Express -------------
-      PHYSTATUS             => open,
-      RXVALID               => open,
+      PHYSTATUS                => open,
+      RXVALID                  => RXVALID_OUT,
       ----------------- Receive Ports - RX Polarity Control Ports ----------------
-      RXPOLARITY            => tied_to_ground_i,
+      RXPOLARITY               => tied_to_ground_i,
       --------------------- Receive Ports - RX Ports for SATA --------------------
-      COMINITDET            => open,
-      COMSASDET             => open,
-      COMWAKEDET            => open,
+      COMINITDET               => open,
+      COMSASDET                => open,
+      COMWAKEDET               => open,
       ------------- Shared Ports - Dynamic Reconfiguration Port (DRP) ------------
-      DADDR                 => tied_to_ground_vec_i(7 downto 0),
-      DCLK                  => tied_to_ground_i,
-      DEN                   => tied_to_ground_i,
-      DI                    => tied_to_ground_vec_i(15 downto 0),
-      DRDY                  => open,
-      DRPDO                 => open,
-      DWE                   => tied_to_ground_i,
+      DADDR                    => tied_to_ground_vec_i(7 downto 0),
+      DCLK                     => tied_to_ground_i,
+      DEN                      => tied_to_ground_i,
+      DI                       => tied_to_ground_vec_i(15 downto 0),
+      DRDY                     => open,
+      DRPDO                    => open,
+      DWE                      => tied_to_ground_i,
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
-      TXGEARBOXREADY        => open,
-      TXHEADER              => tied_to_ground_vec_i(2 downto 0),
-      TXSEQUENCE            => tied_to_ground_vec_i(6 downto 0),
-      TXSTARTSEQ            => tied_to_ground_i,
+      TXGEARBOXREADY           => open,
+      TXHEADER                 => tied_to_ground_vec_i(2 downto 0),
+      TXSEQUENCE               => tied_to_ground_vec_i(6 downto 0),
+      TXSTARTSEQ               => tied_to_ground_i,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
-      TXBYPASS8B10B         => tied_to_ground_vec_i(3 downto 0),
-      TXCHARDISPMODE        => tied_to_ground_vec_i(3 downto 0),
-      TXCHARDISPVAL         => tied_to_ground_vec_i(3 downto 0),
-      TXCHARISK(3 downto 2) => tied_to_ground_vec_i(1 downto 0),
-      TXCHARISK(1 downto 0) => TXCHARISK_IN,
-      TXENC8B10BUSE         => tied_to_vcc_i,
-      TXKERR                => open,
-      TXRUNDISP             => open,
+      TXBYPASS8B10B            => tied_to_ground_vec_i(3 downto 0),
+      TXCHARDISPMODE           => tied_to_ground_vec_i(3 downto 0),
+      TXCHARDISPVAL            => tied_to_ground_vec_i(3 downto 0),
+      TXCHARISK(3 downto 2)    => tied_to_ground_vec_i(1 downto 0),
+      TXCHARISK(1 downto 0)    => TXCHARISK_IN,
+      TXENC8B10BUSE            => tied_to_vcc_i,
+      TXKERR                   => open,
+      TXRUNDISP                => open,
       ------------------------- Transmit Ports - GTX Ports -----------------------
-      GTXTEST               => GTXTEST_IN,
-      MGTREFCLKFAB          => open,
-      TSTCLK0               => tied_to_ground_i,
-      TSTCLK1               => tied_to_ground_i,
-      TSTIN                 => "11111111111111111111",
-      TSTOUT                => open,
+      GTXTEST                  => GTXTEST_IN,
+      MGTREFCLKFAB             => open,
+      TSTCLK0                  => tied_to_ground_i,
+      TSTCLK1                  => tied_to_ground_i,
+      TSTIN                    => "11111111111111111111",
+      TSTOUT                   => open,
       ------------------ Transmit Ports - TX Data Path interface -----------------
-      TXDATA                => txdata_i,
-      TXOUTCLK              => TXOUTCLK_OUT,
-      TXOUTCLKPCS           => open,
-      TXRESET               => TXRESET_IN,
-      TXUSRCLK              => tied_to_ground_i,
-      TXUSRCLK2             => TXUSRCLK2_IN,
+      TXDATA                   => txdata_i,
+      TXOUTCLK                 => TXOUTCLK_OUT,
+      TXOUTCLKPCS              => open,
+      TXRESET                  => TXRESET_IN,
+      TXUSRCLK                 => tied_to_ground_i,
+      TXUSRCLK2                => TXUSRCLK2_IN,
       ---------------- Transmit Ports - TX Driver and OOB signaling --------------
-      TXBUFDIFFCTRL         => "100",
-      TXDIFFCTRL            => TXDIFFCTRL_IN,
-      TXINHIBIT             => tied_to_ground_i,
-      TXN                   => TXN_OUT,
-      TXP                   => TXP_OUT,
-      TXPOSTEMPHASIS        => TXPOSTEMPHASIS_IN,
+      TXBUFDIFFCTRL            => "100",
+      TXDIFFCTRL               => TXDIFFCTRL_IN,
+      TXINHIBIT                => tied_to_ground_i,
+      TXN                      => TXN_OUT,
+      TXP                      => TXP_OUT,
+      TXPOSTEMPHASIS           => TXPOSTEMPHASIS_IN,
       --------------- Transmit Ports - TX Driver and OOB signalling --------------
-      TXPREEMPHASIS         => TXPREEMPHASIS_IN,
+      TXPREEMPHASIS            => TXPREEMPHASIS_IN,
       ----------- Transmit Ports - TX Elastic Buffer and Phase Alignment ---------
-      TXBUFSTATUS           => open,
+      TXBUFSTATUS              => open,
       -------- Transmit Ports - TX Elastic Buffer and Phase Alignment Ports ------
-      TXDLYALIGNDISABLE     => TXDLYALIGNDISABLE_IN,
-      TXDLYALIGNMONENB      => TXDLYALIGNMONENB_IN,
-      TXDLYALIGNMONITOR     => TXDLYALIGNMONITOR_OUT,
-      TXDLYALIGNOVERRIDE    => tied_to_ground_i,
-      TXDLYALIGNRESET       => TXDLYALIGNRESET_IN,
-      TXDLYALIGNUPDSW       => tied_to_ground_i,
-      TXENPMAPHASEALIGN     => TXENPMAPHASEALIGN_IN,
-      TXPMASETPHASE         => TXPMASETPHASE_IN,
+      TXDLYALIGNDISABLE        => TXDLYALIGNDISABLE_IN,
+      TXDLYALIGNMONENB         => TXDLYALIGNMONENB_IN,
+      TXDLYALIGNMONITOR        => TXDLYALIGNMONITOR_OUT,
+      TXDLYALIGNOVERRIDE       => tied_to_ground_i,
+      TXDLYALIGNRESET          => TXDLYALIGNRESET_IN,
+      TXDLYALIGNUPDSW          => tied_to_ground_i,
+      TXENPMAPHASEALIGN        => TXENPMAPHASEALIGN_IN,
+      TXPMASETPHASE            => TXPMASETPHASE_IN,
       ----------------------- Transmit Ports - TX PLL Ports ----------------------
-      GREFCLKTX             => tied_to_ground_i,
-      GTXTXRESET            => GTXTXRESET_IN,
-      MGTREFCLKTX           => MGTREFCLKTX_IN,
-      NORTHREFCLKTX         => tied_to_ground_vec_i(1 downto 0),
-      PERFCLKTX             => tied_to_ground_i,
-      PLLTXRESET            => PLLTXRESET_IN,
-      SOUTHREFCLKTX         => tied_to_ground_vec_i(1 downto 0),
-      TXPLLLKDET            => TXPLLLKDET_OUT,
-      TXPLLLKDETEN          => tied_to_vcc_i,
-      TXPLLPOWERDOWN        => TXPLLPOWERDOWN,
-      TXPLLREFSELDY         => tied_to_ground_vec_i(2 downto 0),
-      TXRATE                => tied_to_ground_vec_i(1 downto 0),
-      TXRATEDONE            => open,
-      TXRESETDONE           => TXRESETDONE_OUT,
+      GREFCLKTX                => tied_to_ground_i,
+      GTXTXRESET               => GTXTXRESET_IN,
+      MGTREFCLKTX              => MGTREFCLKTX_IN,
+      NORTHREFCLKTX            => tied_to_ground_vec_i(1 downto 0),
+      PERFCLKTX                => tied_to_ground_i,
+      PLLTXRESET               => PLLTXRESET_IN,
+      SOUTHREFCLKTX            => tied_to_ground_vec_i(1 downto 0),
+      TXPLLLKDET               => TXPLLLKDET_OUT,
+      TXPLLLKDETEN             => tied_to_vcc_i,
+      TXPLLPOWERDOWN           => TXPLLPOWERDOWN,
+      TXPLLREFSELDY            => tied_to_ground_vec_i(2 downto 0),
+      TXRATE                   => tied_to_ground_vec_i(1 downto 0),
+      TXRATEDONE               => open,
+      TXRESETDONE              => TXRESETDONE_OUT,
       --------------------- Transmit Ports - TX PRBS Generator -------------------
-      TXENPRBSTST           => TXENPRBSTST_IN,
-      TXPRBSFORCEERR        => tied_to_ground_i,
+      TXENPRBSTST              => TXENPRBSTST_IN,
+      TXPRBSFORCEERR           => tied_to_ground_i,
       -------------------- Transmit Ports - TX Polarity Control ------------------
-      TXPOLARITY            => tied_to_ground_i,
+      TXPOLARITY               => tied_to_ground_i,
       ----------------- Transmit Ports - TX Ports for PCI Express ----------------
-      TXDEEMPH              => tied_to_ground_i,
-      TXDETECTRX            => tied_to_ground_i,
-      TXELECIDLE            => tied_to_ground_i,
-      TXMARGIN              => tied_to_ground_vec_i(2 downto 0),
-      TXPDOWNASYNCH         => tied_to_ground_i,
-      TXSWING               => tied_to_ground_i,
+      TXDEEMPH                 => tied_to_ground_i,
+      TXDETECTRX               => tied_to_ground_i,
+      TXELECIDLE               => tied_to_ground_i,
+      TXMARGIN                 => tied_to_ground_vec_i(2 downto 0),
+      TXPDOWNASYNCH            => tied_to_ground_i,
+      TXSWING                  => tied_to_ground_i,
       --------------------- Transmit Ports - TX Ports for SATA -------------------
-      COMFINISH             => open,
-      TXCOMINIT             => tied_to_ground_i,
-      TXCOMSAS              => tied_to_ground_i,
-      TXCOMWAKE             => tied_to_ground_i
+      COMFINISH                => open,
+      TXCOMINIT                => tied_to_ground_i,
+      TXCOMSAS                 => tied_to_ground_i,
+      TXCOMWAKE                => tied_to_ground_i
 
       );
 

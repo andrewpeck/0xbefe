@@ -83,7 +83,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     cluster_count_nodes = []
     for i in range(0,8):
         sbit_monitor_nodes.append(gem_utils.get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
-        cluster_count_nodes.append(gem_utils.get_backend_node("BEFE.GEM.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
+        cluster_count_nodes.append(gem_utils.get_backend_node("BEFE.GEM.TRIGGER.OH%d.CLUSTER_COUNT_%d_CNT"%(oh_select,i)))
 
     # Configure TTC generator
     ttc_cnt_reset_node = gem_utils.get_backend_node("BEFE.GEM.TTC.CTRL.MODULE_RESET")

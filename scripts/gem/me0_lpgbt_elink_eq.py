@@ -110,15 +110,15 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, str(gbt_select))
     print("Initialization Done\n")
 
+    # Check if GBT is READY
+    if args.system == "backend":
+        check_lpgbt_ready(args.ohid, args.gbtid)
+    
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, str(gbt_select))
         check_lpgbt_mode(boss, args.ohid, str(gbt_select))
-
-    # Check if GBT is READY
-    if oh_ver == 1 and args.system == "backend":
-        check_lpgbt_ready(args.ohid, str(gbt_select))
-        
+    
     try:
         main(args.system, int(args.ohid), int(args.vfat), sbit_elink_list, args.daq, int(args.eq))
     except KeyboardInterrupt:

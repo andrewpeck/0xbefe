@@ -262,7 +262,9 @@ architecture Behavioral of daq is
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
-    signal spy_gbe_ethertype          : std_logic_vector(15 downto 0);    
+    signal spy_gbe_ethertype        : std_logic_vector(15 downto 0);
+    signal spy_min_payload_words    : std_logic_vector(13 downto 0);
+    signal spy_max_payload_words    : std_logic_vector(13 downto 0);
     signal spy_prescale             : std_logic_vector(15 downto 0);
     
     signal spy_err_evt_too_big      : std_logic;
@@ -868,8 +870,6 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS    => 3976,
-            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
             g_MAX_EVT_WORDS        => 50000,
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
@@ -885,6 +885,8 @@ begin
             dest_mac_i          => spy_gbe_dest_mac,
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
+            min_payload_words_i => spy_min_payload_words,
+            max_payload_words_i => spy_max_payload_words,
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout(15 downto 0),
             data_trailer_i      => spy_fifo_dout(16),
@@ -1135,6 +1137,7 @@ begin
                 last_dav_timer <= (others => '0');
                 dav_timeout_flags <= (others => '0');
                 chmb_infifo_underflow <= '0';
+                spy_prescale_counter <= x"0001";
                 spy_prescale_keep_evt <= '0';
             else
             
@@ -1184,12 +1187,12 @@ begin
                             
                             -- if last event fifo has already been read by the user then enable writing to this fifo for the current event
                             last_evt_fifo_en <= last_evt_fifo_empty and (not block_last_evt_fifo);
-                            
-                            -- trying to match the CSC DDU logic here somewhat.. so it's kindof convoluted..
-                            -- the counter starts at 2 after resync, and then events are accepted when it's equal to the set prescale
-                            -- once an event is accepted, the counter is reset to 1 (note not 2)
-                            -- prescale values of 0 and 1 just allow all events 
-                            if (spy_prescale = x"0000" or spy_prescale = x"0001") then
+
+                            -- prescale the events sent in the spy path
+                            if (spy_prescale = x"0000") then -- disable
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '0';
+                            elsif (spy_prescale = x"0001") then -- allow all events
                                 spy_prescale_counter <= x"0001";
                                 spy_prescale_keep_evt <= '1';
                             elsif (std_logic_vector(spy_prescale_counter) = spy_prescale) then
