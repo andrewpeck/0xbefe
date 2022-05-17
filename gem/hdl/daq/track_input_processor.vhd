@@ -39,7 +39,7 @@ port(
     infifo_valid_o              : out std_logic;
     infifo_underflow_o          : out std_logic;
     infifo_data_cnt_o           : out std_logic_vector(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0);
-    evtfifo_dout_o              : out std_logic_vector(59 downto 0);
+    evtfifo_dout_o              : out std_logic_vector(83 downto 0);
     evtfifo_rd_en_i             : in std_logic;
     evtfifo_empty_o             : out std_logic;
     evtfifo_valid_o             : out std_logic;
@@ -117,7 +117,7 @@ architecture Behavioral of track_input_processor is
     signal infifo_underflow         : std_logic := '0';
 
     -- Event FIFO
-    signal evtfifo_din              : std_logic_vector(59 downto 0) := (others => '0');
+    signal evtfifo_din              : std_logic_vector(83 downto 0) := (others => '0');
     signal evtfifo_wr_en            : std_logic := '0';
     signal evtfifo_full             : std_logic := '0';
     signal evtfifo_prog_full        : std_logic := '0';
@@ -153,6 +153,7 @@ architecture Behavioral of track_input_processor is
     signal eb_counters_valid        : std_logic := '0';
     signal eb_event_num             : unsigned(23 downto 0) := x"000001";
     signal eb_event_num_short       : unsigned(7 downto 0) := x"00"; -- used to double check with VFAT EC
+    signal eb_zs_flags              : std_logic_vector(23 downto 0) := (others => '0');
     
     signal eb_invalid_vfat_block    : std_logic := '0';
     signal eb_event_too_big         : std_logic := '0';
@@ -347,12 +348,12 @@ begin
             FIFO_MEMORY_TYPE    => "block",
             FIFO_WRITE_DEPTH    => CFG_DAQ_EVTFIFO_DEPTH,
             RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 60,
+            WRITE_DATA_WIDTH    => 84,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "170A", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 0
-            READ_DATA_WIDTH     => 60,
+            READ_DATA_WIDTH     => 84,
             CDC_SYNC_STAGES     => 2,
             PROG_FULL_THRESH    => CFG_DAQ_EVTFIFO_PROG_FULL_SET,
             RD_DATA_COUNT_WIDTH => CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH,
@@ -589,6 +590,7 @@ begin
                 err_evtfifo_full <= '0';
                 eb_timer <= (others => '0');
                 eb_timeout_flag <= '0';
+                eb_zs_flags <= (others => '0');
             else
                 
                 if (eb_timer >= eb_timeout_delay) then
@@ -642,19 +644,22 @@ begin
                         eb_counters_valid <= '1';
                     else -- we do have a valid bc
                         
-                    -- is the current vfat bc different than the previous (in the same event)
-                    if (eb_vfat_bc /= ep_last_rx_data(155 downto 144)) then
-                        eb_mixed_vfat_bc <= '1';
-                        err_mixed_vfat_bc <= '1';
-                    end if;
-                    
-                    -- is the current VFAT ec different than the previous (in the same event)
-                    if (eb_vfat_ec /= ep_last_rx_data(167 downto 160)) then
-                        eb_mixed_vfat_ec <= '1';
-                        err_mixed_vfat_ec <= '1';
-                    end if;
+                        -- is the current vfat bc different than the previous (in the same event)
+                        if (eb_vfat_bc /= ep_last_rx_data(155 downto 144)) then
+                            eb_mixed_vfat_bc <= '1';
+                            err_mixed_vfat_bc <= '1';
+                        end if;
+                        
+                        -- is the current VFAT ec different than the previous (in the same event)
+                        if (eb_vfat_ec /= ep_last_rx_data(167 downto 160)) then
+                            eb_mixed_vfat_ec <= '1';
+                            err_mixed_vfat_ec <= '1';
+                        end if;
                         
                     end if;
+
+                    -- fill in the zero suppression flags
+                    eb_zs_flags(to_integer(unsigned(ep_last_rx_data(188 downto 184)))) <= ep_last_rx_data_suppress;
                     
                 -- End of event - push to event fifo, reset the flags and populate the new event ids (event num, bx, etc)
                 elsif (((ep_last_rx_data_valid = '1') and (ep_end_of_event = '1')) or (eb_timeout_flag = '1')) then
@@ -662,7 +667,8 @@ begin
                     -- Push to event FIFO
                     if (evtfifo_full = '0') then
                         evtfifo_wr_en <= '1';
-                        evtfifo_din <= std_logic_vector(eb_event_num) & 
+                        evtfifo_din <= eb_zs_flags &
+                                       std_logic_vector(eb_event_num) & 
                                        eb_vfat_bc & 
                                        std_logic_vector(eb_vfat_words_64) & 
                                        evtfifo_almost_full & 
@@ -707,6 +713,8 @@ begin
                     eb_mixed_oh_bc <= '0';
                     eb_event_too_big <= '0';
                     eb_event_bigger_than_24 <= '0';
+                    eb_zs_flags <= (others => '0');
+                    eb_zs_flags(to_integer(unsigned(ep_last_rx_data(188 downto 184)))) <= ep_last_rx_data_suppress and ep_last_rx_data_valid;
                     
                     -- reset the timeout
                     eb_timeout_flag <= '0';
