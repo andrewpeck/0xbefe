@@ -35,7 +35,8 @@ package project_config is
     --== Link configuration ==--
     --========================--
 
-    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => true);
+    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => true);
+    constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => true);
     constant CFG_SPY_LINK : t_spy_link_config := (36, 37, 38, 39);
 
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));

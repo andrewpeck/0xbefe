@@ -22,7 +22,8 @@ static sigjmp_buf sj_env;
 #define FPGA0_BASE 0x50000000
 #define FPGA0_SIZE 0x04000000
 
-#define FPGA1_BASE 0x58000000
+//#define FPGA1_BASE 0x58000000
+#define FPGA1_BASE 0x60000000
 #define FPGA1_SIZE 0x04000000
 
 static int fpgaId = -1;

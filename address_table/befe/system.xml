@@ -12,6 +12,12 @@
       fw_reg_addr_lsb="0">
 
   <node id="CTRL" address="0x0">
+    <node id="USER_LOGIC_RESET" address="0x0" permission="w"
+          description="Resets all user (GEM/CSC) blocks"
+          fw_write_pulse_signal="usr_logic_reset"/>
+    <node id="TTC_RESET" address="0x1" permission="w"
+          description="Resets the TTC module in all user (GEM/CSC) blocks"
+          fw_write_pulse_signal="ttc_reset"/>
     <node id="BOARD_ID" address="0x2" mask="0x0000ffff" permission="rw"
           description="User programmable board ID that gets embedded in the DAQ data stream"
           fw_signal="board_id" fw_default="0xbefe"/>
@@ -26,6 +32,10 @@
           description="Sets the minimum separation of consecutive external triggers in BX (any trigger that comes in earlier after last trigger than the set value will be discarded). Default is set to 400 to limit the rate to 100kHz"
           fw_signal="ext_trig_deadtime" fw_default="0x190"
           sw_units="BX"/>
+    <node id="EXT_CLK_OUT_ENABLE" address="0x3" mask="0x80000000" permission="rw"
+          description="When set to 1, LHC clock output for external use is enabled"
+          fw_signal="ext_clk_out_en" fw_default="0b1"
+          sw_units="bool"/>
   </node>
 
   <node id="RELEASE" address="0x50">

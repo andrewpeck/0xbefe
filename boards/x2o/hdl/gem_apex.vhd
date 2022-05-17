@@ -135,6 +135,8 @@ architecture gem_apex_arch of gem_apex is
     -- resets
     --signal reset                : std_logic;
     signal gem_powerup_reset    : std_logic;
+    signal usr_logic_reset      : std_logic;
+    signal usr_ttc_reset        : std_logic;
 
     -- clocks
     signal gty_refclk0          : std_logic_vector(2 downto 0);
@@ -474,12 +476,14 @@ begin
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i     => '0',
-            board_id_o  => board_id,
-            ipb_reset_i => ipb_reset,
-            ipb_clk_i   => ipb_clk,
-            ipb_mosi_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
-            ipb_miso_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+            reset_i           => '0',
+            ttc_clk40_i       => ttc_clks.clk_40,
+            board_id_o        => board_id,
+            usr_logic_reset_o => usr_logic_reset,
+            ipb_reset_i       => ipb_reset,
+            ipb_clk_i         => ipb_clk,
+            ipb_mosi_i        => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o        => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
         );
 
     --================================--
@@ -500,9 +504,10 @@ begin
             g_DISABLE_TTC_DATA  => true
         )
         port map(
-            reset_i                 => '0',
+            reset_i                 => usr_logic_reset,
             reset_pwrup_o           => gem_powerup_reset,
 
+            ttc_reset_i             => usr_ttc_reset,
             ttc_clocks_i            => ttc_clks,
             ttc_clk_status_i        => ttc_clk_status,
             ttc_clk_ctrl_o          => ttc_clk_ctrl,
@@ -604,9 +609,22 @@ begin
         gem_gt_trig_tx_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)).tx);
     end generate;
 
-    -- spy link mapping
-    g_spy_link : if CFG_USE_SPY_LINK generate
+    -- spy link TX mapping
+    g_spy_link_tx : if CFG_USE_SPY_LINK_TX generate
         spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+    end generate;
+
+    -- no spy link TX
+    g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX generate
+        spy_usrclk <= '0';
+    end generate;
+
+    -- spy link RX mapping
+    g_spy_link_rx : if CFG_USE_SPY_LINK_RX generate
         spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdata(15 downto 0);
         spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyteisaligned;
         spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyterealign;
@@ -616,16 +634,10 @@ begin
         spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxchariscomma(1 downto 0);
         spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcharisk(1 downto 0);
         spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx);
-
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
     end generate;
 
-    -- spy link mapping
-    g_csc_fake_spy_link : if not CFG_USE_SPY_LINK generate
-        spy_usrclk      <= '0';
+    -- no spy link RX
+    g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX generate
         spy_rx_data     <= MGT_16B_RX_DATA_NULL;
         spy_rx_status   <= MGT_STATUS_NULL;
     end generate;

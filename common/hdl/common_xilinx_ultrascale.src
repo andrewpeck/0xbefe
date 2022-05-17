@@ -35,6 +35,8 @@ common/hdl/mgt/gty_qpll_odmb57_200.vhd
 common/hdl/mgt/gty_qpll_odmb57_156p25.vhd
 common/hdl/mgt/gty_qpll0_dmb_qpll1_gbe_156p25.vhd
 common/hdl/mgt/gty_qpll_gbe_156p25.vhd
+common/hdl/mgt/gty_qpll0_lpgbt_qpll1_gbe.vhd
+common/hdl/mgt/gty_channel_lpgbt_rx_gbe_tx.vhd
 
 # IP
 common/ip/common_xilinx_ultrascale_ip.src

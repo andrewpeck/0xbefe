@@ -48,6 +48,7 @@ entity gem_amc is
         reset_pwrup_o           : out  std_logic;
 
         -- TTC
+        ttc_reset_i             : in  std_logic;
         ttc_clocks_i            : in  t_ttc_clks;
         ttc_clk_status_i        : in  t_ttc_clk_status;
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
@@ -342,7 +343,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i             => reset,
+            reset_i             => reset or ttc_reset_i,
             ttc_clks_i          => ttc_clocks_i,
             ttc_clks_status_i   => ttc_clk_status_i,
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
@@ -471,39 +472,39 @@ begin
     -- Trigger
     --================================--
     --if GE11 or GE21 import clusters from OH into trigger module
-    ge_trigger : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
+--    ge_trigger : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         sbit_clusters_arr <= ge_clusters_arr;
-    end generate;
+--    end generate;
 
     -- ME0 Clusters --
 
-    me0_trigger : if (g_GEM_STATION = 0) generate
-        i_clusters : for i in 0 to g_NUM_OF_OHs - 1 generate
-            me0_cluster: entity work.sbit_me0
-                generic map(
-                    g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                    g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                    g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-                    g_DEBUG             => CFG_DEBUG_SBIT_ME0
-                )
-                port map(
-                    reset_i             => reset_i,
-                    ttc_clk_i           => ttc_clocks_i,
-                    ttc_cmds_i          => ttc_cmd,
-                    vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
-                    ipb_reset_i         => ipb_reset,
-                    ipb_clk_i           => ipb_clk_i,
-                    ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
-                    me0_cluster_count_o => open,
-                    me0_clusters_o      => me0_clusters_arr(i),
-                    ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
-                );
-        end generate;
-
-        -- import clusters from ME0 cluster module to trigger module--
-        sbit_clusters_arr <= me0_clusters_arr;
-
-    end generate;
+--    me0_trigger : if (g_GEM_STATION = 0) generate
+--        i_clusters : for i in 0 to 0 generate --g_NUM_OF_OHs - 1 generate
+--            me0_cluster: entity work.sbit_me0
+--                generic map(
+--                    g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
+--                    g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+--                    g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+--                    g_DEBUG             => CFG_DEBUG_SBIT_ME0
+--                )
+--                port map(
+--                    reset_i             => reset_i,
+--                    ttc_clk_i           => ttc_clocks_i,
+--                    ttc_cmds_i          => ttc_cmd,
+--                    vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
+--                    ipb_reset_i         => ipb_reset,
+--                    ipb_clk_i           => ipb_clk_i,
+--                    ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
+--                    me0_cluster_count_o => open,
+--                    me0_clusters_o      => me0_clusters_arr(i),
+--                    ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
+--                );
+--        end generate;
+--
+--        -- import clusters from ME0 cluster module to trigger module--
+--        sbit_clusters_arr <= me0_clusters_arr;
+--
+--    end generate;
 
     -- Trigger module --
     i_trigger : entity work.trigger
@@ -636,6 +637,7 @@ begin
 
     i_oh_link_registers : entity work.oh_link_regs
         generic map(
+            g_GEM_STATION       => g_GEM_STATION,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS

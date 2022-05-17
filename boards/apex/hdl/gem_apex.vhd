@@ -596,9 +596,22 @@ begin
     
         end generate;
 
-        -- spy link mapping
-        g_spy_link : if CFG_USE_SPY_LINK(slr) generate
+        -- spy link TX mapping
+        g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+        end generate;
+
+        -- no spy link TX
+        g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX(slr) generate
+            spy_usrclk <= '0';
+        end generate;
+
+        -- spy link RX mapping
+        g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
             spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
             spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
@@ -608,13 +621,14 @@ begin
             spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
             spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
             spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-    
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
         end generate;
 
+        -- no spy link RX
+        g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX(slr) generate
+            spy_rx_data     <= MGT_16B_RX_DATA_NULL;
+            spy_rx_status   <= MGT_STATUS_NULL;
+        end generate;
+        
         -- MGT mapping to EMTF links
         g_use_emtf_links : if CFG_USE_TRIG_TX_LINKS generate
             g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX - 1 generate
@@ -622,13 +636,6 @@ begin
                 gem_gt_trig_tx_status_arr(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(i)).tx);
             end generate;
             gem_gt_trig_tx_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(0)).tx);
-        end generate;
-    
-        -- spy link mapping
-        g_csc_fake_spy_link : if not CFG_USE_SPY_LINK(slr) generate
-            spy_usrclk      <= '0';
-            spy_rx_data     <= MGT_16B_RX_DATA_NULL;
-            spy_rx_status   <= MGT_STATUS_NULL;
         end generate;
         
     end generate;

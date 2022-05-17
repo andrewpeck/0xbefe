@@ -181,6 +181,23 @@ package board_config_package is
         rx_use_chan_bonding     => false
     );
 
+    constant CFG_MGT_TX_GBE_RX_LPGBT : t_mgt_type_config := (
+        link_type               => MGT_TX_GBE_RX_LPGBT,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+
     constant CFG_MGT_TRIG_3P2 : t_mgt_type_config := (
         link_type               => MGT_3P2G_8B10B,
         cpll_refclk_01          => 0, 

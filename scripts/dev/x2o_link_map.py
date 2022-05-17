@@ -8,12 +8,20 @@ RESERVED_GTYS = [126, 127, 231] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = [126, 127]
 # RESERVED_REFCLK1 = [125]
 RESERVED_REFCLK1 = []
-USE_QSFPDD = True
-RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH)
+# USE_QSFPDD = False
+# USE_NON_MAPPED_QSFP_CABLES = True
+USE_QSFPDD = False
+USE_NON_MAPPED_QSFP_CABLES = True
+RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
+
+if USE_NON_MAPPED_QSFP_CABLES:
+    RESERVED_QSFPS = [21, 20, 19, 18] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
 
 ###############################################################
 ############################# GEM #############################
 ###############################################################
+
+# default GEM settings for QSFP-DD
 
 # FULL CONFIG
 # GE11_NUM_OH = 0
@@ -42,18 +50,41 @@ GEM_USE_LDAQ = True
 GEM_LDAQ_QSFPS = [[10], [10], [10], [10]]
 GEM_LDAQ_QSFP_CHANS = [[0], [1], [2], [3]]
 
+if not USE_QSFPDD and USE_NON_MAPPED_QSFP_CABLES:
+
+    # CONFIG FOR QSFP-DD
+    GEM_NUM_SLR = 1
+    GEM_MAX_OHS = 12
+
+    GE11_NUM_OH = 0
+    # GE21_NUM_OH = 4 #20
+    GE21_NUM_OH = 4 #20
+    # ME0_NUM_OH = 1
+    ME0_NUM_OH = 1 #6
+
+    # QSFP assignment per GEM BLOCK
+    GE21_OH_QSFPS = [[7, 6], [14, 13]]
+    # GE21_OH_QSFPS = [[7], [6], [14], [13]]
+    # ME0_OH_QSFPS = [[9, 8]]
+    # ME0_OH_QSFPS = [[9, 8, 7, 6, 14, 13, 1, 0]] # monolithic 4 layer
+    # ME0_OH_QSFPS = [[9, 8, 7, 6], [14, 13, 1, 0]] # 4 layer 2 SLR
+    ME0_OH_QSFPS = [[9, 8], [7, 6], [14, 13], [1, 0]] # 4 layer 4 SLR
+    GEM_USE_LDAQ = True
+    GEM_LDAQ_QSFPS = [[10], [10], [10], [10]]
+    GEM_LDAQ_QSFP_CHANS = [[0], [1], [2], [3]]
+
 ###############################################################
 ############################## CSC ############################
 ###############################################################
 
 
 CSC_NUM_SLR = 1
-CSC_NUM_DMB = 2
+CSC_NUM_DMB = 6
 CSC_NUM_GBT = 4
 
 # QSFP assignment per CSC BLOCK
 CSC_DTH_QSFPS = [[5]]
-CSC_DMB_QSFPS = [[4]]
+CSC_DMB_QSFPS = [[10, 4]]
 CSC_LDAQ_QSFPS = [[4]]
 CSC_LDAQ_QSFP_CHANS = [[3]]
 CSC_GBT_QSFPS = [[11]]
@@ -736,6 +767,54 @@ DUAL_QSFP_AXI_TCDS_CABLE_MAP_PINS = [
     {"arf6_idx": 1, "arf6_pin": 48, "qsfp_idx": 0, "qsfp_pin": 21},
 ]
 
+# Pin mapping on the cable (this is for the original non optimized map cable that UF bought)
+# In Samtec drawings:
+# J3 -- ARF6 #0
+# J1 -- FQSFP #0
+# J2 -- FQSFP #1
+OLD_DUAL_QSFP_CABLE_MAP_PINS = [
+    ####################### J3 -- ARF6 #0 #######################
+    {"arf6_idx": 0, "arf6_pin": 3,  "qsfp_idx": 1, "qsfp_pin": 6 },
+    {"arf6_idx": 0, "arf6_pin": 5,  "qsfp_idx": 1, "qsfp_pin": 5 },
+    {"arf6_idx": 0, "arf6_pin": 9,  "qsfp_idx": 1, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 11, "qsfp_idx": 1, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 15, "qsfp_idx": 1, "qsfp_pin": 3},
+    {"arf6_idx": 0, "arf6_pin": 17, "qsfp_idx": 1, "qsfp_pin": 2},
+    {"arf6_idx": 0, "arf6_pin": 21, "qsfp_idx": 1, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 23, "qsfp_idx": 1, "qsfp_pin": 37},
+
+    {"arf6_idx": 0, "arf6_pin": 27, "qsfp_idx": 0, "qsfp_pin": 6 },
+    {"arf6_idx": 0, "arf6_pin": 29, "qsfp_idx": 0, "qsfp_pin": 5 },
+    {"arf6_idx": 0, "arf6_pin": 33, "qsfp_idx": 0, "qsfp_pin": 33},
+    {"arf6_idx": 0, "arf6_pin": 35, "qsfp_idx": 0, "qsfp_pin": 34},
+
+    {"arf6_idx": 0, "arf6_pin": 39, "qsfp_idx": 0, "qsfp_pin": 3 },
+    {"arf6_idx": 0, "arf6_pin": 41, "qsfp_idx": 0, "qsfp_pin": 2 },
+    {"arf6_idx": 0, "arf6_pin": 45, "qsfp_idx": 0, "qsfp_pin": 36},
+    {"arf6_idx": 0, "arf6_pin": 47, "qsfp_idx": 0, "qsfp_pin": 37},
+
+    {"arf6_idx": 0, "arf6_pin": 4,  "qsfp_idx": 1, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 6,  "qsfp_idx": 1, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 10, "qsfp_idx": 1, "qsfp_pin": 21},
+    {"arf6_idx": 0, "arf6_pin": 12, "qsfp_idx": 1, "qsfp_pin": 22},
+
+    {"arf6_idx": 0, "arf6_pin": 16, "qsfp_idx": 1, "qsfp_pin": 15},
+    {"arf6_idx": 0, "arf6_pin": 18, "qsfp_idx": 1, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 22, "qsfp_idx": 1, "qsfp_pin": 24},
+    {"arf6_idx": 0, "arf6_pin": 24, "qsfp_idx": 1, "qsfp_pin": 25},
+
+    {"arf6_idx": 0, "arf6_pin": 28, "qsfp_idx": 0, "qsfp_pin": 18},
+    {"arf6_idx": 0, "arf6_pin": 30, "qsfp_idx": 0, "qsfp_pin": 17},
+    {"arf6_idx": 0, "arf6_pin": 34, "qsfp_idx": 0, "qsfp_pin": 21},
+    {"arf6_idx": 0, "arf6_pin": 36, "qsfp_idx": 0, "qsfp_pin": 22},
+
+    {"arf6_idx": 0, "arf6_pin": 40, "qsfp_idx": 0, "qsfp_pin": 15},
+    {"arf6_idx": 0, "arf6_pin": 42, "qsfp_idx": 0, "qsfp_pin": 14},
+    {"arf6_idx": 0, "arf6_pin": 46, "qsfp_idx": 0, "qsfp_pin": 24},
+    {"arf6_idx": 0, "arf6_pin": 48, "qsfp_idx": 0, "qsfp_pin": 25},
+]
+
 # Construct a cable map of QSFP number and channel to ARF6 number and channel, and note if there is an inversion on the cable
 # the map is a 2d array of dictionaries where the first array index refers to the QSFP index on the cable, and the second index refers to the QSFP channel
 
@@ -781,7 +860,10 @@ def create_cable_map(num_qsfps, cable_pin_map):
     return ret
 
 QUAD_QSFP_CABLE_MAP = create_cable_map(4, QUAD_QSFP_CABLE_MAP_PINS)
-DUAL_QSFP_CABLE_MAP = create_cable_map(2, QUAD_QSFP_CABLE_MAP_PINS)
+DUAL_QSFP_CABLE_MAP = create_cable_map(2, DUAL_QSFP_AXI_TCDS_CABLE_MAP_PINS)
+
+if USE_NON_MAPPED_QSFP_CABLES:
+    DUAL_QSFP_CABLE_MAP = create_cable_map(2, OLD_DUAL_QSFP_CABLE_MAP_PINS)
 
 # Define cable connections from each QSFP on the front panel to the ARF6s, and construct a full front panel QSFP to ARF6 connection map
 # QSFPs are numbered from left (board bottom side) to right (board top side) and from top (crate top) to bottom (crate bottom) like this:
@@ -803,6 +885,27 @@ CABLE_CONNECTIONS = [
     {"type": "quad", "qsfp_idx": [22, 23, 24, 25], "arf6_j_labels": ["J7",  "J10"]},
     {"type": "quad", "qsfp_idx": [26, 27, 28, 29], "arf6_j_labels": ["J18", "J17"]}
 ]
+
+if USE_NON_MAPPED_QSFP_CABLES:
+    CABLE_CONNECTIONS = [
+        # Octopus left
+        {"type": "dual", "qsfp_idx": [0,  1 ], "arf6_j_labels": ["J20"]},
+        {"type": "dual", "qsfp_idx": [2,  3 ], "arf6_j_labels": ["J19"]},
+        {"type": "dual", "qsfp_idx": [4,  5 ], "arf6_j_labels": ["J11"]},
+        {"type": "dual", "qsfp_idx": [6,  7 ], "arf6_j_labels": ["J16"]},
+        {"type": "dual", "qsfp_idx": [8,  9 ], "arf6_j_labels": ["J15"]},
+        {"type": "dual", "qsfp_idx": [10, 11], "arf6_j_labels": ["J6" ]},
+        {"type": "dual", "qsfp_idx": [12, 13], "arf6_j_labels": ["J5" ]},
+        # Octopus right
+        {"type": "dual", "qsfp_idx": [14, 15], "arf6_j_labels": ["J3" ]},
+        {"type": "dual", "qsfp_idx": [16, 17], "arf6_j_labels": ["J4" ]},
+        {"type": "dual", "qsfp_idx": [18, 19], "arf6_j_labels": ["J13"]},
+        {"type": "dual", "qsfp_idx": [20, 21], "arf6_j_labels": ["J14"]},
+        {"type": "dual", "qsfp_idx": [22, 23], "arf6_j_labels": ["J10"]},
+        {"type": "dual", "qsfp_idx": [24, 25], "arf6_j_labels": ["J7" ]},
+        {"type": "dual", "qsfp_idx": [26, 27], "arf6_j_labels": ["J17"]},
+        {"type": "dual", "qsfp_idx": [28, 29], "arf6_j_labels": ["J18"]}
+    ]
 
 def find_qsfp_cable(qsfp_idx):
     for cable in CABLE_CONNECTIONS:
@@ -840,7 +943,7 @@ for qsfp_idx in range(30):
                 arf6_to_mgt_map_entry = entry
                 break
 
-        inverted = False if (cable_inverted and arf6_to_mgt_map_entry) or ((not cable_inverted) and (not arf6_to_mgt_map_entry)) else True
+        inverted = False if (cable_inverted and arf6_to_mgt_map_entry["inv"]) or ((not cable_inverted) and (not arf6_to_mgt_map_entry["inv"])) else True
         qsfp_chan_entry = {"mgt": arf6_to_mgt_map_entry["mgt"], "mgt_chan": arf6_to_mgt_map_entry["mgt_chan"], "inv": inverted, "dir": exp_dir, "qsfp_idx": qsfp_idx, "qsfp_chan": qsfp_chan, "arf6_j_label": arf6_j_label}
         qsfp_entry.append(qsfp_chan_entry)
     QSFP_TO_MGT.append(qsfp_entry)
@@ -1019,8 +1122,10 @@ if USE_QSFPDD:
 # print the cable map
 print("")
 print("============================================================")
-print("==   QSFP connections to MGT using the remapping cables   ==")
+print("==  QSFP connections to MGT using the through the cables  ==")
 print("============================================================")
+qsfp_table_col_labels = ["Cage #", "SLR", "MGTs"]
+qsfp_table_rows = []
 for qsfp_idx in range(len(QSFP_TO_MGT)):
     qsfp = QSFP_TO_MGT[qsfp_idx]
     tx_mgts_used = {}
@@ -1063,6 +1168,47 @@ for qsfp_idx in range(len(QSFP_TO_MGT)):
         print_green("==> This QSFP is fully mapped to a single MGT quad")
     else:
         print_color("==> This QSFP is mapped to multiple MGT quads", Colors.YELLOW)
+
+    mgts_used_str = ""
+    slr_used = None
+    for mgt in tx_mgts_used.keys():
+        mgts_used_str += str(mgt) + " "
+        if mgt in GTY_SLR:
+            slr = GTY_SLR[mgt]
+            if slr_used is None:
+                slr_used = slr
+            elif slr != slr_used:
+                print_red("==> ERROR: this QSFP is mapped to multiple SLRs!!!")
+                exit()
+    for mgt in rx_mgts_used.keys():
+        if mgt not in tx_mgts_used:
+            mgts_used_str += str(mgt) + " "
+            if mgt in GTY_SLR:
+                slr = GTY_SLR[mgt]
+                if slr_used is None:
+                    slr_used = slr
+                elif slr != slr_used:
+                    print_red("==> ERROR: this QSFP is mapped to multiple SLRs!!!")
+                    exit()
+
+    qsfp_table_row = [str(qsfp_idx), str(slr_used), mgts_used_str]
+    qsfp_table_rows.append(qsfp_table_row)
+
+header = "|"
+for col in qsfp_table_col_labels:
+    header += "\t" + col + "\t|"
+
+print("")
+print(header)
+print("---------------------------------------------------------")
+
+for row in qsfp_table_rows:
+    line = "|"
+    for cell in row:
+        line += "\t" + cell + "\t|"
+    print(line)
+
+# exit()
 
 # Remove reserved QSFPs
 for i in RESERVED_QSFPS:
@@ -1270,7 +1416,8 @@ def generate_gem_oh_link_map(fiber_to_slr, station):
     print("    --== Link configuration ==--")
     print("    --========================--")
     print("")
-    print("    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
+    print("    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
+    print("    constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
     print("    constant CFG_SPY_LINK : t_spy_link_config := %s;" % arr_to_vhdl_map(ldaq_fibers, 4, "TXRX_NULL"))
     print("")
     print("    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));")
@@ -1361,7 +1508,8 @@ def generate_csc_dmb_link_map(fiber_to_slr):
     print("")
     print("    constant CFG_NUM_DMBS       : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => %d);" % CSC_NUM_DMB)
     print("    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => %d);" % CSC_NUM_GBT)
-    print("    constant CFG_USE_SPY_LINK : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);")
+    print("    constant CFG_USE_SPY_LINK_TX : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);")
+    print("    constant CFG_USE_SPY_LINK_RX : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);")
     print("    constant CFG_TTC_TX_SOURCE_SLR : integer := 0;")
     print("    constant CFG_USE_TTC_TX_LINK : boolean := %s;" % bool_to_vhdl(use_ttc_tx))
 
