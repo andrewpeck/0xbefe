@@ -136,6 +136,8 @@ architecture gem_apex_arch of gem_apex is
     -- resets
     --signal reset                : std_logic;
     signal gem_powerup_reset    : std_logic;
+    signal usr_logic_reset      : std_logic;
+    signal usr_ttc_reset        : std_logic;
 
     -- clocks
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
@@ -434,9 +436,10 @@ begin
         )
         port map(
             reset_i             => '0',
+            ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
-            ext_trig_en_o       => open,
-            ext_trig_deadtime_o => open,
+            usr_logic_reset_o   => usr_logic_reset,
+            ttc_reset_o         => usr_ttc_reset,
             ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -500,9 +503,10 @@ begin
                 g_DISABLE_TTC_DATA  => true
             )
             port map(
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => gem_powerup_reset,
     
+                ttc_reset_i             => usr_ttc_reset,
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),

@@ -134,6 +134,7 @@ architecture csc_apex_arch of csc_apex is
     constant IPB_CLK_PERIOD_NS  : integer := 10;
 
     -- resets 
+    signal usr_logic_reset      : std_logic;
    
     -- clocks
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
@@ -441,9 +442,9 @@ begin
         )
         port map(
             reset_i             => '0',
+            ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
-            ext_trig_en_o       => open,
-            ext_trig_deadtime_o => open,
+            usr_logic_reset_o   => usr_logic_reset,
             ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -510,7 +511,7 @@ begin
             )
             port map(
                 -- Resets
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => open,
                 
                 -- TTC

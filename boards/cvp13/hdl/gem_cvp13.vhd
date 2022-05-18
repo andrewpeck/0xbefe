@@ -594,9 +594,7 @@ begin
     i_sas1_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas1_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas1_trig_sync);
     i_sas2_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas2_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas2_trig_sync);
 
---    ext_trig_in_sync <= slimsas1_trig_sync when ext_trig_source = "00" else slimsas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
-
-    ext_trig_in_sync <= sas1_trig_sync;
+    ext_trig_in_sync <= sas1_trig_sync when ext_trig_source = "00" else sas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
 
     ------------ SlimSAS outputs ------------
 

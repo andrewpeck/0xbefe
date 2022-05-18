@@ -51,12 +51,12 @@ end board_system;
 
 architecture board_system_arch of board_system is
 
-    signal usr_logic_reset      : std_logic;
-    signal usr_logic_reset_ext  : std_logic;
-    signal usr_logic_reset_clk40: std_logic;
-    signal ttc_reset            : std_logic;
-    signal ttc_reset_ext        : std_logic;
-    signal ttc_reset_clk40      : std_logic;
+    signal usr_logic_reset      : std_logic := '0';
+    signal usr_logic_reset_ext  : std_logic := '0';
+    signal usr_logic_reset_clk40: std_logic := '0';
+    signal ttc_reset            : std_logic := '0';
+    signal ttc_reset_ext        : std_logic := '0';
+    signal ttc_reset_clk40      : std_logic := '0';
 
     signal board_id             : std_logic_vector(15 downto 0);
     signal ext_trig_en          : std_logic;
