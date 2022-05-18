@@ -478,32 +478,32 @@ begin
 
     -- ME0 Clusters --
 
-    me0_trigger : if (g_GEM_STATION = 0) generate
-        
-        me0_cluster: entity work.sbit_me0
-            generic map(
-                g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-                g_DEBUG             => CFG_DEBUG_SBIT_ME0
-            )
-            port map(
-                reset_i             => reset_i,
-                ttc_clk_i           => ttc_clocks_i,
-                ttc_cmds_i          => ttc_cmd,
-                vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
-                ipb_reset_i         => ipb_reset,
-                ipb_clk_i           => ipb_clk_i,
-                ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
-                me0_cluster_count_o => open,
-                me0_clusters_o      => me0_clusters_arr,
-                ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
-            );
+    -- me0_trigger : if (g_GEM_STATION = 0) generate
+    --     
+    --     me0_cluster: entity work.sbit_me0
+    --         generic map(
+    --             g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
+    --             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+    --             g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+    --             g_DEBUG             => CFG_DEBUG_SBIT_ME0
+    --         )
+    --         port map(
+    --             reset_i             => reset_i,
+    --             ttc_clk_i           => ttc_clocks_i,
+    --             ttc_cmds_i          => ttc_cmd,
+    --             vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
+    --             ipb_reset_i         => ipb_reset,
+    --             ipb_clk_i           => ipb_clk_i,
+    --             ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
+    --             me0_cluster_count_o => open,
+    --             me0_clusters_o      => me0_clusters_arr,
+    --             ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
+    --         );
 
-        -- import clusters from ME0 cluster module to trigger module--
-        sbit_clusters_arr <= me0_clusters_arr;
-            
-    end generate;
+    --     -- import clusters from ME0 cluster module to trigger module--
+    --     sbit_clusters_arr <= me0_clusters_arr;
+    --         
+    -- end generate;
 
     -- Trigger module --
     i_trigger : entity work.trigger
