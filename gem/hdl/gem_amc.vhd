@@ -478,8 +478,9 @@ begin
 
     -- ME0 Clusters --
 
-    me0_trigger : if (g_GEM_STATION = 0) generate
-        
+    -- FIXME: Make me work with more than 1 OH
+    me0_trigger : if (g_GEM_STATION = 0) and (g_NUM_OF_OHs <= 1) generate
+
         me0_cluster: entity work.sbit_me0
             generic map(
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
@@ -502,7 +503,7 @@ begin
 
         -- import clusters from ME0 cluster module to trigger module--
         sbit_clusters_arr <= me0_clusters_arr;
-            
+
     end generate;
 
     -- Trigger module --
