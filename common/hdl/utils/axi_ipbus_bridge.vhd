@@ -226,8 +226,10 @@ begin
                             axil_s2m.wready     <= '1';
                             if g_NUM_USR_BLOCKS > 1 then
                                 usr_slv_offset := (C_NUM_IPB_SLAVES * to_integer(unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                                usr_block_select <= unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT));
                             else
                                 usr_slv_offset := 0;
+                                usr_block_select <= (others => '0');
                             end if;
                             ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr) + usr_slv_offset;
                             ipb_sys_slv_select  <= ipb_sys_addr_sel(axi_word_awaddr);
@@ -342,6 +344,7 @@ begin
                             ipb_state       <= AXI_WRITE_HANDSHAKE;
                             ipb_timer       <= (others => '0');
                             axil_s2m        <= (awready => '0', wready => '0', bresp => "11", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- DECERR: decode error response
+                            trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_ADDR_ERR;
                         end if;
     
                     -- wait for IPBus write ack
