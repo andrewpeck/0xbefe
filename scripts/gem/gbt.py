@@ -557,15 +557,17 @@ def selectGbt(ohIdx, gbtIdx):
 
     if station == 0:
         gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_VERSION'), gbt_ver)
         if gbt_ver == 0:
+            write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 1)
             write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
         elif gbt_ver == 1:
+            write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 2)
             if gbtIdx%2 == 0:
                 write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
             else:
                 write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x71)
     else:
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 0)
         write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
 
     #for now we'll operate with 8 bit words only

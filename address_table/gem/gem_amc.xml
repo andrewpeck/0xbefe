@@ -1443,18 +1443,19 @@
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
           fw_signal="ic_read_data" fw_read_ready_signal="ic_read_valid"/>
-    <node id="GBT_VERSION" address="0x8" mask ="0x00000001" permission="rw"
-          description="lpGBT version 0 or 1"
-          fw_signal="gbt_version" fw_default="0x00"/>      
+    <node id="GBT_FRAME_FORMAT" address="0x8" mask ="0x00000003" permission="rw"
+          description="Frame format to use to communicate with the GBTx/lpGBT ASIC"
+          fw_signal="gbt_frame_format" fw_default="0b00"
+          sw_enum="['GBTX', 'LPGBT_V0', 'LPGBT_V1']"/>
     <node id="READ_STATUS" address="0x10">
       <node id="READ_DONE" address="0x0" mask="0x00000001" permission="r"
-	  description="IC read/write transaction is complete (reset for every execute)"
-	  fw_signal="ic_read_done"/>
+          description="IC read/write transaction is complete (reset for every execute)"
+          fw_signal="ic_read_done"/>
       <node id="UPLINK_PARITY" address="0x0" mask="0x00000002" permission="r"
-          description="Set to '1' if uplink parity check passes"
+          description="Set to '1' if uplink (from the GBT to the counting room) parity check passes"
           fw_signal="ic_read_stat(1)"/>
       <node id="DOWNLINK_PARITY" address="0x0" mask="0x00000004" permission="r"
-          description="Set to '1' if downlink parity check passes"
+          description="Set to '1' if downlink (from the counting room to the GBT) parity check passes"
           fw_signal="ic_read_stat(2)"/>
       <node id="GBTX_ADDRESS" address="0x0" mask="0x00000008" permission="r"
           description="Set to '1' if gbt chip address received matches value written"

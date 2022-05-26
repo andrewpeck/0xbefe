@@ -16,8 +16,7 @@ use work.common_pkg.all;
 
 entity gbt_ic_controller is
     generic(
-        g_DEBUG			: boolean
-        --        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
+        g_DEBUG                 : boolean
     );
     port(
         -- reset
@@ -26,10 +25,10 @@ entity gbt_ic_controller is
         -- clocks
         gbt_clk_i               : in std_logic;
 
-        -- lpGBT version 0 or 1
-        gbt_version_i             : in std_logic;
+        -- Frame format to use -- different between GBTx(0) - lpGBT v0(1) - lpGBT v1(2)
+        gbt_frame_format_i      : in std_logic_vector(1 downto 0);
 
-        -- GBTx I2C address (for OHv2b it should be always 0x1 because that's hardwired on the board), but 0 can be used for broadcast
+        -- GBTx I2C address -- 0 can be used for broadcast
         gbtx_i2c_address        : in std_logic_vector(6 downto 0);
 
         -- GBTx IC elinks
@@ -135,19 +134,18 @@ begin
                             ser_state <= REG_ADDR;
                             ser_is_write <= ic_write_req_i;
                             -- we assign the beginning of the frame here because there's no chance of bit stuffing here
-                            -- Frames are different for lpGBT version 0 and 1
-                            if gbt_version_i = '0' then
+                            if (gbt_frame_format_i = "00") or (gbt_frame_format_i = "01") then -- GBTx and lpGBT v0
                                 tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                         x"01" &                                             -- CMD
+                                                         x"01" &                                             -- CMD, ignored
                                                          gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
                                                          x"00" &                                             -- RSVD, reserved byte should be set to 0
                                                          SOF_EOF;                                            -- SOF
                                 tx_frame(127 downto 48) <= (others => '1');
                                 ser_frame_pos <= 48;
                                 ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
-                            else
+                            else -- lpGBT v1 and others
                                 tx_frame(39 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                         x"01" &                                             -- CMD
+                                                         x"01" &                                             -- CMD, ignored
                                                          gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
                                                          SOF_EOF;                                            -- SOF                           
                                 tx_frame(127 downto 40) <= (others => '1');
@@ -311,10 +309,8 @@ begin
 
     end generate;
 
-
-    -- instantiate ic rx module (CERN module) to desirialize 2 elink bits to 8 bit words
-
-    i_ic_rx     : entity work.ic_rx
+    -- instantiate ic rx module (CERN module) to deserialize 2 elink bits to 8 bit words
+    i_ic_rx : entity work.ic_rx
         generic map (
             g_FIFO_DEPTH    => 20
         )
@@ -338,6 +334,7 @@ begin
             rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
 
         );
+
     -- gbt_ic_rx module is finite state machine for rx frame
     i_gbt_ic_rx : entity work.gbt_ic_rx
         port map(
@@ -347,7 +344,7 @@ begin
             frame_i                 => rx_data_from_gbtx,
             valid_i                 => wr,
 
-            lpgbt_version           => gbt_version_i,
+            gbt_frame_format_i      => gbt_frame_format_i,
 
             -- Control
             chip_adr_o              => ic_chip_adr,
@@ -381,17 +378,17 @@ begin
                 if (ic_chip_adr = gbtx_i2c_address) then
                     ic_read_stat_o(3) <= '1';
                 end if;
-    
+
                 if (ic_length(2 downto 0) = ic_rw_length_i) then
                     ic_read_stat_o(4) <= '1';
                 end if;
-    
+
                 if (ic_reg_adr = ic_rw_address_i) then
                     ic_read_stat_o(5) <= '1';
                 end if;
-                
+
             end if;
-            
+
         end if;
     end process;
 
