@@ -106,14 +106,14 @@ begin
         --======================================================--
 
         -- IC
-        gbt_ic_rx_data_arr_o(i * 2 + 0) <= gbt_rx_data_arr_i(i * 2 + 0).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 0).rx_ic_data(1); -- GBT0; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 1) <= gbt_rx_data_arr_i(i * 2 + 1).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 1).rx_ic_data(1); -- GBT1; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 2) <= gbt_rx_data_arr_i(i * 2 + 2).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 2).rx_ic_data(1); -- GBT2; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 3) <= gbt_rx_data_arr_i(i * 2 + 3).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 3).rx_ic_data(1); -- GBT3; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 4) <= gbt_rx_data_arr_i(i * 2 + 4).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 4).rx_ic_data(1); -- GBT4; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 5) <= gbt_rx_data_arr_i(i * 2 + 5).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 5).rx_ic_data(1); -- GBT5; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 6) <= gbt_rx_data_arr_i(i * 2 + 6).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 6).rx_ic_data(1); -- GBT6; bits reversed
-        gbt_ic_rx_data_arr_o(i * 2 + 7) <= gbt_rx_data_arr_i(i * 2 + 7).rx_ic_data(0) & gbt_rx_data_arr_i(i * 2 + 7).rx_ic_data(1); -- GBT7; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 0) <= gbt_rx_data_arr_i(i * 8 + 0).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 0).rx_ic_data(1); -- GBT0; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 1) <= gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(1); -- GBT1; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 2) <= gbt_rx_data_arr_i(i * 8 + 2).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 2).rx_ic_data(1); -- GBT2; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 3) <= gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(1); -- GBT3; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 4) <= gbt_rx_data_arr_i(i * 8 + 4).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 4).rx_ic_data(1); -- GBT4; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 5) <= gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(1); -- GBT5; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 6) <= gbt_rx_data_arr_i(i * 8 + 6).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 6).rx_ic_data(1); -- GBT6; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 7) <= gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(1); -- GBT7; bits reversed
 
         -- GBT ready
         gbt_rx_ready_arr(i * 8 + 0) <= gbt_link_status_arr_i(i * 8 + 0).gbt_rx_ready; -- GBT0
