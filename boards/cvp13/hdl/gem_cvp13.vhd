@@ -153,6 +153,7 @@ architecture gem_cvp13_arch of gem_cvp13 is
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
     signal ext_trig_cntdown     : unsigned(11 downto 0) := (others => '0');
     signal ext_clk_out_en       : std_logic;
+    signal ext_trig_phase_mask  : std_logic_vector(15 downto 0);
 
     -- PCIe
     signal pcie_refclk0         : std_logic;
@@ -383,6 +384,7 @@ begin
             ext_trig_source_o     => ext_trig_source,
             ext_trig_deadtime_o   => ext_trig_deadtime,
             ext_clk_out_en_o      => ext_clk_out_en,
+            ext_trig_phase_mask_o => ext_trig_phase_mask,
             ipb_reset_i           => ipb_reset,
             ipb_clk_i             => ipb_clk,
             ipb_mosi_i            => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -589,10 +591,10 @@ begin
 
     ------------ trigger input synchronization and selection ------------
 
-    i_usbc_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
-    i_dimm2_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => dimm2_dq5_trig_i, clk_i => ttc_clks.clk_40, sync_o => dimm2_trig_sync);
-    i_sas1_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas1_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas1_trig_sync);
-    i_sas2_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas2_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas2_trig_sync);
+    i_usbc_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => usbc_trig_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => usbc_trig_sync);
+    i_dimm2_trig_sync  : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => dimm2_dq5_trig_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => dimm2_trig_sync);
+    i_sas1_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas1_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas1_trig_sync);
+    i_sas2_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas2_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas2_trig_sync);
 
     ext_trig_in_sync <= sas1_trig_sync when ext_trig_source = "00" else sas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
 
