@@ -36,6 +36,9 @@
           description="When set to 1, LHC clock output for external use is enabled"
           fw_signal="ext_clk_out_en" fw_default="0b1"
           sw_units="bool"/>
+    <node id="EXT_TRIG_PHASE_MASK" address="0x3" mask="0x0ffff000" permission="rw"
+          description="Phases for which the trigger are accepted. The bits are ordered such as the MSB is the oldest signal and the LSB the youngest signal. I.e. natural time flow, from left to right."
+          fw_signal="ext_trig_phase_mask" fw_default="0xffff" />
   </node>
 
   <node id="RELEASE" address="0x50">
