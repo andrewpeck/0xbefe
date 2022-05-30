@@ -732,7 +732,7 @@ begin
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
                 RX_ENCODING_ODD     => g_GBT_WIDEBUS,
-                g_USE_RX_SYNC_FIFOS => false
+                g_USE_RX_SYNC_FIFOS => true
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
@@ -740,7 +740,7 @@ begin
 
                 tx_frame_clk_i              => ttc_clocks_i.clk_40,
                 rx_frame_clk_i              => ttc_clocks_i.clk_40,
-                rx_word_common_clk_i        => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i        => ttc_clocks_i.clk_120,
                 tx_word_clk_arr_i           => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i           => gt_gbt_rx_clk_arr_i,
 
@@ -769,7 +769,7 @@ begin
                 g_RX_RATE               => DATARATE_10G24,
                 g_RX_ENCODING           => FEC5,
                 g_RESET_MGT_ON_EVEN     => 0,
-                g_USE_RX_SYNC_FIFOS     => false,
+                g_USE_RX_SYNC_FIFOS     => true,
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
@@ -781,7 +781,7 @@ begin
                 rx_frame_clk_i       => ttc_clocks_i.clk_40,
                 tx_word_clk_arr_i    => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i    => gt_gbt_rx_clk_arr_i,
-                rx_word_common_clk_i => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i => ttc_clocks_i.clk_320,
                 mgt_status_arr_i     => gt_gbt_status_arr_i,
                 mgt_ctrl_arr_o       => gt_gbt_ctrl_arr_o,
                 mgt_tx_data_arr_o    => gt_gbt_tx_data_arr_o,
