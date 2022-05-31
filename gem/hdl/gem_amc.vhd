@@ -296,7 +296,7 @@ begin
     --================================--
 
     reset_pwrup_o <= reset_pwrup;
-    reset <= reset_i or reset_pwrup or manual_global_reset;
+    reset <= (reset_i or reset_pwrup or manual_global_reset) when rising_edge(ttc_clocks_i.clk_40);
     ipb_reset <= ipb_reset_i or reset_pwrup or manual_ipbus_reset;
     ipb_miso_arr_o <= ipb_miso_arr;
     link_reset <= manual_link_reset or ttc_cmd.hard_reset;
@@ -488,7 +488,7 @@ begin
     --             g_DEBUG             => CFG_DEBUG_SBIT_ME0
     --         )
     --         port map(
-    --             reset_i             => reset_i,
+    --             reset_i             => reset,
     --             ttc_clk_i           => ttc_clocks_i,
     --             ttc_cmds_i          => ttc_cmd,
     --             vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
@@ -702,7 +702,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i                     => reset_i,
+            reset_i                     => reset,
             ttc_clk_i                   => ttc_clocks_i,
             ttc_cmds_i                  => ttc_cmd,
             loopback_gbt_test_en_i      => loopback_gbt_test_en,
@@ -773,7 +773,7 @@ begin
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
-                reset_i              => reset_i or manual_gbt_reset,
+                reset_i              => reset or manual_gbt_reset,
                 reset_tx_i           => lpgbt_reset_tx or manual_gbt_reset,
                 reset_rx_i           => lpgbt_reset_rx or manual_gbt_reset,
                 cnt_reset_i          => link_reset,
@@ -896,7 +896,7 @@ begin
                 g_LOADER_CLK_80_MHZ => true
             )
             port map(
-                reset_i          => reset_i,
+                reset_i          => reset,
                 gbt_clk_i        => ttc_clocks_i.clk_40,
                 loader_clk_i     => ttc_clocks_i.clk_80,
                 to_promless_o    => to_promless_o,
