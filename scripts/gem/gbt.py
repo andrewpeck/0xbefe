@@ -553,22 +553,22 @@ def selectGbt(ohIdx, gbtIdx):
     numGbtsPerOh = 3 if station == 1 else 8 if station == 0 else 2
     linkIdx = ohIdx * numGbtsPerOh + gbtIdx
 
-    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_LINK_SELECT'), linkIdx)
 
     if station == 0:
         gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
         if gbt_ver == 0:
             write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 1)
-            write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+            write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_I2C_ADDR'), 0x70)
         elif gbt_ver == 1:
             write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 2)
             if gbtIdx%2 == 0:
-                write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x70)
+                write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_I2C_ADDR'), 0x70)
             else:
-                write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x71)
+                write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_I2C_ADDR'), 0x71)
     else:
         write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT'), 0)
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_I2C_ADDR'), 0x1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_I2C_ADDR'), 0x1)
 
     #for now we'll operate with 8 bit words only
     write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.READ_WRITE_LENGTH'), 1)

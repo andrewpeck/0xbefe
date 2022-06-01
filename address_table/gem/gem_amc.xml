@@ -1420,7 +1420,7 @@
   <node id="IC" address="0x3000">
     <node id="ADDRESS" address="0x0" mask="0x0000ffff" permission="rw"
           description="GBTx register address to read or write"
-          fw_signal="ic_address" fw_default="0x0000"/>
+          fw_signal="ic_rw_address" fw_default="0x0000"/>
     <node id="READ_WRITE_LENGTH" address="0x1" mask="0x00000007" permission="rw"
           description="Number of data bytes to be written or read e.g. if you set it to 4 then 4 consecutive
                        GBTx registers will be written with the 4 bytes in WRITE_DATA register. Max is 4."
@@ -1430,42 +1430,42 @@
           fw_signal="ic_write_data" fw_default="0x00"/>
     <node id="EXECUTE_WRITE" address="0x3" permission="w"
           description="writing any value here will execute a GBTx register write operation"
-          fw_write_pulse_signal="ic_write_req" fw_write_done_signal="ic_write_done"/>
+          fw_write_pulse_signal="ic_write_req" fw_write_done_signal="ic_write_req_done"/>
     <node id="EXECUTE_READ" address="0x4" permission="w"
           description="writing any value here will execute a GBTx register read operation"
-          fw_write_pulse_signal="ic_read_req" fw_write_done_signal="ic_read_done"/>
-    <node id="GBTX_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
-          description="GBTx I2C address as defined by the I2CADDRESS pins of the GBTx chip"
-          fw_signal="ic_gbtx_i2c_addr" fw_default="0b0000001"/>
-    <node id="GBTX_LINK_SELECT" address="0x6" mask="0x0000003f" permission="rw"
+          fw_write_pulse_signal="ic_read_req" fw_write_done_signal="ic_read_req_done"/>
+    <node id="GBT_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
+          description="GBTx/lpGBT I2C address of the chip to communicate with, as defined by the external pins (or internal registers) of the chip"
+          fw_signal="ic_gbt_i2c_addr" fw_default="0b0000001"/>
+    <node id="GBT_LINK_SELECT" address="0x6" mask="0x0000003f" permission="rw"
           description="Selects the GBT link to use"
           fw_signal="ic_link_select" fw_default="0b000000"/>
     <node id="READ_DATA" address="0x7" permission="r"
           description="GBTx register value to read"
-          fw_signal="ic_read_data" fw_read_ready_signal="ic_read_valid"/>
+          fw_signal="ic_read_data" fw_read_ready_signal="ic_read_data_valid"/>
     <node id="GBT_FRAME_FORMAT" address="0x8" mask ="0x00000003" permission="rw"
           description="Frame format to use to communicate with the GBTx/lpGBT ASIC"
-          fw_signal="gbt_frame_format" fw_default="0b00"
+          fw_signal="ic_gbt_frame_format" fw_default="0b00"
           sw_enum="['GBTX', 'LPGBT_V0', 'LPGBT_V1']"/>
     <node id="READ_STATUS" address="0x10">
       <node id="READ_DONE" address="0x0" mask="0x00000001" permission="r"
-          description="IC read/write transaction is complete (reset for every execute)"
-          fw_signal="ic_read_done"/>
+          description="Set to '1' when the IC read/write transaction is complete (reset for every execute)"
+          fw_signal="ic_read_stat(0)"/>
       <node id="UPLINK_PARITY" address="0x0" mask="0x00000002" permission="r"
           description="Set to '1' if uplink (from the GBT to the counting room) parity check passes"
-          fw_signal="ic_read_stat(1)"/>
+          fw_signal="ic_read_stat(2)"/>
       <node id="DOWNLINK_PARITY" address="0x0" mask="0x00000004" permission="r"
           description="Set to '1' if downlink (from the counting room to the GBT) parity check passes"
-          fw_signal="ic_read_stat(2)"/>
-      <node id="GBTX_ADDRESS" address="0x0" mask="0x00000008" permission="r"
-          description="Set to '1' if gbt chip address received matches value written"
           fw_signal="ic_read_stat(3)"/>
-      <node id="RW_LENGTH" address="0x0" mask="0x00000010" permission="r"
-          description="Set to '1' if number of data words received matches rw length chosen"
+      <node id="GBT_I2C_ADDR" address="0x0" mask="0x00000008" permission="r"
+          description="Set to '1' if GBT I2C chip address received matches value written"
           fw_signal="ic_read_stat(4)"/>
-      <node id="REG_ADDRESS" address="0x0" mask="0x00000020" permission="r"
-          description="Set to '1' if register address received matches address sent"
+      <node id="READ_WRITE_LENGTH" address="0x0" mask="0x00000010" permission="r"
+          description="Set to '1' if number of data words received matches rw length chosen"
           fw_signal="ic_read_stat(5)"/>
+      <node id="ADDRESS" address="0x0" mask="0x00000020" permission="r"
+          description="Set to '1' if register address received matches address sent"
+          fw_signal="ic_read_stat(6)"/>
     </node>
   </node>
 
