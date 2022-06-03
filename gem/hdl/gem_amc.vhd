@@ -277,13 +277,12 @@ begin
     --================================--
 
     reset_pwrup_o <= reset_pwrup;
-    reset <= reset_i or reset_pwrup or manual_global_reset;
+    reset <= (reset_i or reset_pwrup or manual_global_reset) when rising_edge(ttc_clocks_i.clk_40);
     ipb_reset <= ipb_reset_i or reset_pwrup or manual_ipbus_reset;
     ipb_miso_arr_o <= ipb_miso_arr;
     link_reset <= manual_link_reset or ttc_cmd.hard_reset;
 
     spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
---    spy_gbe_daq_data <= (txdata => x"50BC", txcharisk => "01", txchardispmode => "00", txchardispval => "00");
 
     -- select the GBT link to debug
     dbg_gbt_tx_data               <= gbt_tx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
@@ -457,16 +456,16 @@ begin
     -- ME0 Clusters --
 
     me0_trigger : if (g_GEM_STATION = 0) generate
-        
+
             me0_cluster: entity work.sbit_me0
                 generic map(
-                    g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
+                    g_NUM_OF_OHs        => g_NUM_OF_OHs,
                     g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                     g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
                     g_DEBUG             => CFG_DEBUG_SBIT_ME0
                 )
                 port map(
-                    reset_i             => reset_i,
+                    reset_i             => reset,
                     ttc_clk_i           => ttc_clocks_i,
                     ttc_cmds_i          => ttc_cmd,
                     vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
@@ -680,7 +679,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i                     => reset_i,
+            reset_i                     => reset,
             ttc_clk_i                   => ttc_clocks_i,
             ttc_cmds_i                  => ttc_cmd,
             loopback_gbt_test_en_i      => loopback_gbt_test_en,
@@ -751,7 +750,7 @@ begin
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
-                reset_i              => reset_i or manual_gbt_reset,
+                reset_i              => reset or manual_gbt_reset,
                 reset_tx_i           => lpgbt_reset_tx or manual_gbt_reset,
                 reset_rx_i           => lpgbt_reset_rx or manual_gbt_reset,
                 cnt_reset_i          => link_reset,
@@ -874,7 +873,7 @@ begin
                 g_LOADER_CLK_80_MHZ => true
             )
             port map(
-                reset_i          => reset_i,
+                reset_i          => reset,
                 gbt_clk_i        => ttc_clocks_i.clk_40,
                 loader_clk_i     => ttc_clocks_i.clk_80,
                 to_promless_o    => to_promless_o,
