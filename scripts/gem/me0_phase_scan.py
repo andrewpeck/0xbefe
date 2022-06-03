@@ -69,11 +69,11 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     # Setting phases of all VFATs first to 0
-    for vfat in vfat_list:
-        gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
-        oh_ver = get_oh_ver(oh_select, gbt_select)
-        gem_utils.check_gbt_link_ready(oh_select, gbt_select)
-        setVfatRxPhase(system, oh_select, vfat, 0)
+    #for vfat in vfat_list:
+    #    gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
+    #    oh_ver = get_oh_ver(oh_select, gbt_select)
+    #    gem_utils.check_gbt_link_ready(oh_select, gbt_select)
+    #    setVfatRxPhase(system, oh_select, vfat, 0)
     print ("")
 
     for vfat in vfat_list:
