@@ -86,6 +86,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         vfat_configured = 0
         for ph in range(0,15):
             setVfatRxPhase(system, oh_select, vfat, ph)
+            gem_utils.gem_link_reset()
+            sleep(0.1)
             output = gem_utils.simple_read_backend_reg(hwid_node, -9999)
             if output == -9999:
                 continue
@@ -95,6 +97,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                     enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
                 vfat_configured = 1
                 setVfatRxPhase(system, oh_select, vfat, 0)
+                gem_utils.gem_link_reset()
+            	sleep(0.1)
                 break
         if vfat_configured == 0:
             print (Colors.RED + "Cannot configure VFAT %d"%(vfat) + Colors.ENDC)
