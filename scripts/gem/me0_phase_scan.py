@@ -66,7 +66,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     daq_crc_error      = [[0 for phase in range(16)] for vfat in range(24)]
     errs         = [[0 for phase in range(16)] for vfat in range(24)]
 
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     # Setting phases of all VFATs first to 0
     for vfat in vfat_list:
@@ -86,6 +86,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         vfat_configured = 0
         for ph in range(0,15):
             setVfatRxPhase(system, oh_select, vfat, ph)
+            sleep(0.1)
             gem_utils.gem_link_reset()
             sleep(0.1)
             output = gem_utils.simple_read_backend_reg(hwid_node, -9999)
@@ -97,6 +98,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                     enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
                 vfat_configured = 1
                 setVfatRxPhase(system, oh_select, vfat, 0)
+                sleep(0.1)
                 gem_utils.gem_link_reset()
                 sleep(0.1)
                 break
@@ -154,7 +156,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                     #    enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
 
                     # Send L1A to get DAQ events from VFATs
-                    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+                    #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
                     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
                     cyclic_running = 1
                     while cyclic_running:
@@ -169,7 +171,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                         else:
                             print (Colors.YELLOW + "\tProblem with DAQ event counter=%d"%(daq_event_counter) + Colors.ENDC)
                     #configureVfat(0, vfat, oh_select, 0) # unconfigure VFAT
-                    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
+                    #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
             else:
                 daq_crc_error[vfat][phase]=0
 
@@ -190,7 +192,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     centers = 24*[0]
     widths  = 24*[0]
 
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     for vfat in vfat_list:
         for phase in range(0, 16):
