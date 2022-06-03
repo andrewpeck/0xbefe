@@ -274,12 +274,12 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
         ineffi_ul = (-math.log(1-cl))/(daq_event_count_diff[vfat])
         if daq_crc_error_count_diff[vfat] == 0:
             print (Colors.GREEN + "VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) < "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber_ul) + ", Inefficiency < " + "{:.2e}".format(ineffi_ul) + Colors.ENDC)
-            file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) < "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}\n".format(ber_ul) + ", Inefficiency < " + "{:.2e}".format(ineffi_ul))
+            file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) < "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber_ul) + ", Inefficiency < " + "{:.2e}".format(ineffi_ul))
         else:
             print (Colors.YELLOW + "VFAT#: %02d, Errors = %d"%(vfat, daq_crc_error_count_diff[vfat]) + Colors.ENDC)
             file_out.write("VFAT#: %02d, Errors = %d\n"%(vfat, daq_crc_error_count_diff[vfat]))
             #print (Colors.YELLOW + "VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi) + Colors.ENDC)
-            #file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}\n".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi))
+            #file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi))
 
             print ("")
             file_out.write("\n")
