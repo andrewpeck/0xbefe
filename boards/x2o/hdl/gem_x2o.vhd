@@ -439,7 +439,6 @@ begin
                 gt_gbt_tx_data_arr_o    => gem_gt_gbt_tx_data_arr,
                 gt_gbt_rx_clk_arr_i     => gem_gt_gbt_rx_clk_arr,
                 gt_gbt_tx_clk_arr_i     => gem_gt_gbt_tx_clk_arr,
-                gt_gbt_rx_common_clk_i  => mgt_master_rxusrclk.gbt,
     
                 gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
                 gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,

@@ -72,7 +72,6 @@ entity gem_amc is
         gt_gbt_tx_data_arr_o    : out t_std40_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_rx_clk_arr_i     : in  std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_tx_clk_arr_i     : in  std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-        gt_gbt_rx_common_clk_i  : in  std_logic;
 
         gt_gbt_status_arr_i     : in  t_mgt_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_ctrl_arr_o       : out t_mgt_ctrl_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -719,7 +718,7 @@ begin
 
                 tx_frame_clk_i              => ttc_clocks_i.clk_40,
                 rx_frame_clk_i              => ttc_clocks_i.clk_40,
-                rx_word_common_clk_i        => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i        => ttc_clocks_i.clk_120,
                 tx_word_clk_arr_i           => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i           => gt_gbt_rx_clk_arr_i,
 
@@ -760,7 +759,7 @@ begin
                 rx_frame_clk_i       => ttc_clocks_i.clk_40,
                 tx_word_clk_arr_i    => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i    => gt_gbt_rx_clk_arr_i,
-                rx_word_common_clk_i => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i => ttc_clocks_i.clk_320,
                 mgt_status_arr_i     => gt_gbt_status_arr_i,
                 mgt_ctrl_arr_o       => gt_gbt_ctrl_arr_o,
                 mgt_tx_data_arr_o    => gt_gbt_tx_data_arr_o,
