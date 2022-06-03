@@ -98,7 +98,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                 vfat_configured = 1
                 setVfatRxPhase(system, oh_select, vfat, 0)
                 gem_utils.gem_link_reset()
-            	sleep(0.1)
+                sleep(0.1)
                 break
         if vfat_configured == 0:
             print (Colors.RED + "Cannot configure VFAT %d"%(vfat) + Colors.ENDC)
