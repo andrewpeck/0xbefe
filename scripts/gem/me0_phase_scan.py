@@ -73,7 +73,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
         gem_utils.check_gbt_link_ready(oh_select, gbt_select)
-        setVfatRxPhase(system, oh_select, vfat, 0)
+        setVfatRxPhase(system, oh_select, vfat, 0, False)
     print ("")
 
     working_phases_sc = {}
@@ -86,7 +86,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         hwid_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
         vfat_configured = 0
         for ph in range(0,15):
-            setVfatRxPhase(system, oh_select, vfat, ph)
+            setVfatRxPhase(system, oh_select, vfat, ph, False)
             sleep(0.1)
             gem_utils.gem_link_reset()
             sleep(0.1)
@@ -100,7 +100,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                     enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
                 gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat)), 0)
                 vfat_configured = 1
-                setVfatRxPhase(system, oh_select, vfat, 0)
+                setVfatRxPhase(system, oh_select, vfat, 0, False)
                 sleep(0.1)
                 gem_utils.gem_link_reset()
                 sleep(0.1)
@@ -156,7 +156,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                 if system == "dryrun" or (link_good[vfat][phase]==1 and sync_err_cnt[vfat][phase]==0 and cfg_run[vfat][phase]==0):
                     for vfat2 in vfat_list:
                         if vfat2 != vfat:
-                            setVfatRxPhase(system, oh_select, vfat2, working_phases_sc[vfat2])
+                            setVfatRxPhase(system, oh_select, vfat2, working_phases_sc[vfat2], False)
                     sleep(0.1)
                     gem_utils.gem_link_reset()
                     sleep(0.1)
@@ -184,7 +184,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
                             
                     for vfat2 in vfat_list:
                         if vfat2 != vfat:
-                            setVfatRxPhase(system, oh_select, vfat2, phase)
+                            setVfatRxPhase(system, oh_select, vfat2, phase, False)
                     sleep(0.1)
                     gem_utils.gem_link_reset()
                     sleep(0.1)
@@ -314,9 +314,10 @@ def find_phase_center(err_list):
 
     return ngood_center, ngood_max
 
-def setVfatRxPhase(system, oh_select, vfat, phase):
+def setVfatRxPhase(system, oh_select, vfat, phase, verbose=True):
 
-    print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
+    if verbose:
+        print ("Setting RX phase %s for VFAT%d" %(hex(phase), vfat))
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
     select_ic_link(oh_select, gbt_select)
