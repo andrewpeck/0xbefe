@@ -108,7 +108,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         if vfat_configured == 0:
             print (Colors.RED + "Cannot configure VFAT %d"%(vfat) + Colors.ENDC)
             terminate()
-        print ("\n")
+    print ("\n")
 
     # Configure TTC Generator
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
