@@ -94,7 +94,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
             if output == -9999:
                 continue
             else:
-            	working_phases_sc[vfat] = ph
+                working_phases_sc[vfat] = ph
                 configureVfat(1, vfat, oh_select, 1) # configure VFAT with low threshold 
                 for i in range(128):
                     enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
