@@ -9,129 +9,283 @@ from cocotb.triggers import Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
-from cluster_finding import Cluster, find_clusters, equal
+from cluster_finding import Cluster, find_clusters, equal, find_cluster_primaries
 
 
-async def latch_in(dut):
-    ""
-    while (True):
-        await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.latch_i.value = 0
-        for i in range(3):
-            await RisingEdge(dut.clock)  # Synchronize with the clock
-        dut.latch_i.value = 1
+def print_clusters(clusters):
+    for i in range(len(clusters)):
+        print(
+            f" > %2d adr=%3d cnt=%X prt=%X vpf=%X"
+            % (
+                i,
+                clusters[i].adr.value,
+                clusters[i].cnt.value,
+                clusters[i].prt.value,
+                clusters[i].vpf.value,
+            )
+        )
+
 
 @cocotb.test()
-async def random_clusters(dut):
+async def test_random_data(dut, nloops=100000, nhits=128):
+    await run_test(dut, "RANDOM", nloops, nhits)
+
+
+@cocotb.test()
+async def test_walking1(dut):
+    await run_test(dut, "WALKING1")
+
+
+@cocotb.test()
+async def test_colliding1(dut):
+    await run_test(dut, "COLLIDING1")
+
+
+@cocotb.test()
+async def test_edges(dut, nloops=10000, nhits=32):
+    await run_test(dut, "EDGES", nloops, nhits)
+
+
+async def run_test(dut, test, nloops=1000, nhits=128):
     """Test for priority encoder with randomized data on all inputs"""
 
-    nloops = 100
-    nhits = 99
+    # extract detector parameters
 
-    cocotb.fork(Clock(dut.clk_40,  40, units="ns").start())  # Create a clock
-    cocotb.fork(Clock(dut.clk_fast,10,  units="ns").start())  # Create a clock
+    NVFATS = dut.NUM_VFATS.value
+    STATION = dut.STATION.value
 
-    station = dut.STATION.value
+    if STATION in [0, 1]:
+        NPARTITIONS = 8
+        WIDTH = 192
+        NSTRIPS = 1536
+    elif STATION == 2:
+        NPARTITIONS = 2
+        WIDTH = 384
+        NSTRIPS = 768
+    else:
+        NPARTITIONS = 0
+        WIDTH = 0
+        NSTRIPS = 0
 
-    # if station in [0, 1]:
-    #     n_partitions = 8
-    # if station == 2:
-    #     n_partitions = 2
+    if test in ("WALKING1", "COLLIDING1"):
+        nloops = NSTRIPS
 
-    n_vfats = dut.NUM_VFATS.value
-    #width = int((n_vfats * 64) / n_partitions)
-    #cntb = 3
+    # set inputs
 
+    dut.mask_output_i.value = 0
     dut.reset.value = 0
 
-    for i in range(n_vfats):
-        dut.sbits_i[i].value = 0
+    # setup clocks
+    cocotb.fork(Clock(dut.clk_40, 40, units="ns").start())  # Create a clock
+    cocotb.fork(Clock(dut.clk_fast, 10, units="ns").start())  # Create a clock
 
-    for _ in range(nloops):
+    ngood = 0
 
-        vfats = [0 for _ in range(n_vfats)]
+    LATENCY = 4
 
-        # # create fill a large number with some random bits
-        # for ibit in range(nhits):
-        #     ivfat = random.randint(0, n_vfats-1)
-        #     channel = random.randint(0, 63)
-        #     vfats[ivfat] |= 1 << channel
+    print("Running test: %s" % test)
 
-        await RisingEdge(dut.clk_40)  # Synchronize with the clock
+    vfat_pipeline = []
 
-        dut.sbits_i[1].value = 0xF00F000F0000F000
-        dut.sbits_i[10].value = 0xF00F000F000F000F
-        dut.sbits_i[19].value = 0xF00F000F000F0000
-        dut.sbits_i[3].value = 0xF00F000F000F0000
-        dut.sbits_i[5].value = 0xF00F000F000F0000
-        dut.sbits_i[12].value = 0xF00F000F000F0000
-        dut.sbits_i[13].value = 0xF00F000F000F0000
+    for _ in range(LATENCY):
+        vfat_pipeline.append([0] * NVFATS)
 
-        # await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        # #dut.sbits_i.value = vfats
-        # dut.sbits_i[17].value = 0x1f1f1f1f00000000
-        # dut.sbits_i[2].value  = 0x1f1f1f1f00000000
-        # await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        # dut.sbits_i[17].value = 0xe0e0e0e000000000
-        # dut.sbits_i[2].value  = 0xe0e0e0e000000000
+    # zero the inputs
+    vfats = [0] * NVFATS
+    dut.sbits_i.value = vfats
 
-        await RisingEdge(dut.clk_40)  # Synchronize with the clock
+    # flush the pipeline with zeroes
+    for _ in range(8):
+        await RisingEdge(dut.clk_40)
 
-        for i in range(n_vfats):
-            dut.sbits_i[i].value = 0
+    # event loop
+    for loop in range(nloops):
 
-        await RisingEdge(dut.clk_40)  # Synchronize with the clock
-        dut.sbits_i.value = vfats
-        await RisingEdge(dut.clk_40)  # Synchronize with the clock
+        if loop % (nloops / 100) == 0:
+            print(" > loop %d of %d" % (loop, nloops))
 
-        for i in range(n_vfats):
-            dut.sbits_i[i].value = 0
+        # Drive the inputs
 
-        # expect = find_clusters(partitions, cnts, width, dut.NUM_FOUND_CLUSTERS.value, dut.ENCODER_SIZE.value)
-        # for i in range(len(expect)):
-        #     print("generate: i=%02d %s" % (i, str(expect[i])))
+        vfats = [0] * NVFATS
 
-        for _ in range(8):
-            await RisingEdge(dut.clk_40)  # Synchronize with the clock
+        if test == "WALKING1":
+            # walking 1s
+            strip = loop
+            ivfat = strip // 64
+            channel = strip % 64
+            size = 1
+            vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+
+        if test == "COLLIDING1":
+            # colliding walking 1s
+            for i in range(2):
+
+                if i == 0:
+                    strip = loop
+                else:
+                    strip = NSTRIPS - 1 - loop
+
+                ivfat = strip // 64
+                channel = strip % 64
+                size = 1
+                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+
+        if test == "EDGES":
+            # focus on the edges
+            for _ in range(random.randint(0, nhits)):
+                ivfat = random.randint(0, NVFATS - 1)
+                channel = random.choice((0, 63, 64, 127, 128, 191))
+                size = random.choice((1, 3))
+                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+
+        if test == "RANDOM":
+            # create fill a large number with some random bits
+            for _ in range(random.randint(0, nhits)):
+                ivfat = random.randint(0, NVFATS - 1)
+                channel = random.randint(0, 63)
+                size = 2 ** (random.randint(0, 15)) - 1
+                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+
+        # set the dut input, and copy the input to a latency pipeline for later
+        for i in range(NVFATS):
+            dut.sbits_i[i].value = vfats[i]
+        vfat_pipeline.append(vfats)
+
+        await RisingEdge(dut.clk_40)
+
+        nclusters = 0
+        clusters = dut.clusters_o
+
+        # -------------------------------------------------------------------------------
+        # emulate the cluster finding algorithm
+        # -------------------------------------------------------------------------------
+
+        vfats_xpipeline = vfat_pipeline.pop(0)
+
+        (vpfs, cnts, total) = find_cluster_primaries(
+            vfats_xpipeline, WIDTH, INVERT=dut.INVERT_PARTITIONS.value
+        )
+
+        expected_clusters = find_clusters(
+            vpfs,  # partition vpfs
+            cnts,  # partition counts
+            WIDTH,  # width of a partition
+            dut.find_clusters_inst.NUM_FOUND_CLUSTERS.value,
+            dut.find_clusters_inst.ENCODER_SIZE.value,
+        )
+
+        # -------------------------------------------------------------------------------
+        # extract the outputs from the dut
+        # -------------------------------------------------------------------------------
+
+        found_clusters = [None] * 16
+        for iclst in range(16):
+            cluster = Cluster()
+            cluster.adr = dut.clusters_o[iclst].adr.value
+            cluster.cnt = dut.clusters_o[iclst].cnt.value
+            cluster.prt = dut.clusters_o[iclst].prt.value
+            cluster.vpf = dut.clusters_o[iclst].vpf.value
+            found_clusters[iclst] = cluster
+
+        # TODO: check the cluster latency
+
+        # TODO: check the overflows
+
+        # -------------------------------------------------------------------------------
+        # check the cluster count
+        # -------------------------------------------------------------------------------
+
+        total_tb = int(dut.cluster_count_o.value)
+        assert total == total_tb, print(
+            " > cluster primary counts: emu=%d vs simu=%d (loop=%d)"
+            % (total, total_tb, loop)
+        )
+
+        # -------------------------------------------------------------------------------
+        # check the number of found (valid) clusters
+        # -------------------------------------------------------------------------------
+
+        num_found_emu = 0
+        for i in range(16):
+            if expected_clusters[i].vpf == 1:
+                num_found_emu += 1
+
+        num_found_simu = 0
+        for i in range(16):
+            if expected_clusters[i].vpf == 1:
+                num_found_simu += 1
+
+        assert num_found_emu == num_found_simu, print(
+            " > cluster finder counts: emu=%d vs simu=%d (loop=%d)"
+            % (num_found_emu, num_found_simu, loop)
+        )
+
+        # -------------------------------------------------------------------------------
+        # check the actual clusters against the emulator
+        # -------------------------------------------------------------------------------
+
+        eq = 1
+        for i in range(16):
+
+            assert equal(found_clusters[i], expected_clusters[i]), print(
+                " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
+                % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
+            )
+
+        assert eq == True, print(vfats_xpipeline)
+
+        # TODO: check the cluster masking
+
+        # -------------------------------------------------------------------------------
+        # check that all clusters w/ vpf = 0 have an invalid address, and all valid
+        # addresses are marked with vpf = 1
+        # -------------------------------------------------------------------------------
+
+        for i in range(len(clusters)):
+            if int(clusters[i].vpf.value) == 0:
+                assert int(clusters[i].adr.value) == 0x1FF
+            if int(clusters[i].vpf.value) == 1:
+                assert int(clusters[i].adr.value) < WIDTH
+            if int(clusters[i].adr.value) < WIDTH:
+                assert int(clusters[i].vpf.value) == 1
+            if int(clusters[i].adr.value) >= WIDTH:
+                assert int(clusters[i].vpf.value) == 0
+                assert int(clusters[i].adr.value) == 0x1FF
+
+        # -------------------------------------------------------------------------------
+        # check the uniqueness of the clusters, don't allow duplicates
+        # -------------------------------------------------------------------------------
+
+        for i in range(len(clusters)):
+
+            if int(clusters[i].vpf.value) == 1:
+                nclusters += 1
+
+            for j in range(len(clusters)):
+
+                if (
+                    i != j
+                    and int(clusters[i].vpf.value) == 1
+                    and int(clusters[j].vpf.value) == 1
+                ):
+
+                    assert not equal(clusters[i], clusters[j]), print_clusters(clusters)
+                    assert not (
+                        clusters[i].adr.value == clusters[j].adr.value
+                        and clusters[i].cnt.value == clusters[j].cnt.value
+                        and clusters[i].prt.value == clusters[j].prt.value
+                    ), print_clusters(clusters)
+
+                    ngood = ngood + 1
 
 
-
-        # found = []
-
-        # await RisingEdge(dut.clock)  # Synchronize with the clock
-        # for iclst in range(16):
-
-        #     cluster = Cluster()
-
-        #     cluster.adr = dut.clusters_o[iclst].adr.value
-        #     cluster.cnt = dut.clusters_o[iclst].cnt.value
-        #     cluster.prt = dut.clusters_o[iclst].prt.value
-        #     cluster.vpf = dut.clusters_o[iclst].vpf.value
-
-        #     if (int(dut.clusters_o[iclst].adr.value) < 0x1ff):
-        #         print("found: i=%02d %s" % (iclst, str(cluster)))
-        #         found.append(cluster)
-
-        # for i in range(len(found)):
-        #     cla = expect[i]
-        #     found_a = False
-        #     for j in range(len(found)):
-        #         clb = found[j]
-        #         if (equal(cla, clb)):
-        #             found_a = True
-        #     assert found_a, "Failed to find cluster %s" % str(cla)
-
-        # assert len(found) == len(expect)
-
-        # await Timer(200, units='ns')
-
+# @pytest.mark.parametrize("oneshot", [False])
+# @pytest.mark.parametrize("deadtime", [0, 1])
 @pytest.mark.parametrize("station", [1, 2])
-@pytest.mark.parametrize("oneshot", [False, True])
-@pytest.mark.parametrize("deadtime", [0, 1])
-def test_cluster_packer(station, oneshot, deadtime):
+def test_cluster_packer(station, oneshot=False, deadtime=0):
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
-    rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', 'hdl'))
+    rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
@@ -144,30 +298,30 @@ def test_cluster_packer(station, oneshot, deadtime):
         os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd"),
-        os.path.join(rtl_dir, f"top_cluster_packer.vhd")
+        os.path.join(rtl_dir, f"top_cluster_packer.vhd"),
     ]
 
     verilog_sources = [
         os.path.join(rtl_dir, f"find_cluster_primaries.v"),
         os.path.join(rtl_dir, f"count.v"),
         os.path.join(rtl_dir, f"consecutive_count.v"),
-        os.path.join(rtl_dir, f"priority.v")
+        os.path.join(rtl_dir, f"priority.v"),
     ]
 
     parameters = {}
-    parameters['STATION'] = station
-    parameters['DEADTIME'] = deadtime
-    parameters['ONESHOT'] = oneshot
+    parameters["STATION"] = station
+    parameters["DEADTIME"] = deadtime
+    parameters["ONESHOT"] = oneshot
 
     if station == 2:
-        parameters['NUM_VFATS'] = 12
+        parameters["NUM_VFATS"] = 12
     else:
-        parameters['NUM_VFATS'] = 24
+        parameters["NUM_VFATS"] = 24
 
     if station == 2:
-        parameters['NUM_PARTITIONS'] = 2
+        parameters["NUM_PARTITIONS"] = 2
     else:
-        parameters['NUM_PARTITIONS'] = 8
+        parameters["NUM_PARTITIONS"] = 8
 
     os.environ["SIM"] = "questa"
 
@@ -178,14 +332,14 @@ def test_cluster_packer(station, oneshot, deadtime):
         toplevel="cluster_packer",
         toplevel_lang="vhdl",
         parameters=parameters,
+        vhdl_compile_args=["-2008"],
         # sim_args = ["do cluster_packer_wave.do"],
-        # extra_env = {"SIM": "questa"},
-        gui=0
+        sim_args=['-do "set NumericStdNoWarnings 1;"'],
+        gui=0,
     )
 
 
-#RUN=vsim -batch -do "set NumericStdNoWarnings 1; run 500000; quit -f"
-
-
 if __name__ == "__main__":
-    test_cluster_packer(1, True, 0)
+    # testing the oneshot is complicated here, since the emulator doesn't take
+    # into account the past :(
+    test_cluster_packer(1, False, 0)
