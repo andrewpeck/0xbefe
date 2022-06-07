@@ -74,7 +74,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     cluster_count_nodes = []
     for i in range(0,8):
         sbit_monitor_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.CLUSTER%d"%i))
-        cluster_count_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.OH0.CLUSTER_COUNT_%d_CNT"%i))
+        cluster_count_nodes.append(get_backend_node("BEFE.GEM.TRIGGER.OH%d.CLUSTER_COUNT_%d_CNT"%(oh_select,i)))
 
     dac_node = {}
     dac = "CFG_THR_ARM_DAC"
@@ -202,9 +202,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 if thr not in sbit_data[vfat][sbit]:
                     continue
                 if sbit == "all":
-                    file_out.write("%d    %s    %d    %d    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
+                    file_out.write("%d    %s    %d    %f    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
                 else:
-                    file_out.write("%d    %d    %d    %d    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
+                    file_out.write("%d    %d    %d    %f    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
 
     print ("")
     file_out.close()

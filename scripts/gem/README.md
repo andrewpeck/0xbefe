@@ -66,6 +66,8 @@ Use -h option for any script to check usage
 
 ```vfat_daq_crosstalk.py```: Scan for checking cross talk using DAQ data for VFATs
 
+```vfat_daq_noise_rate.py```: DAQ Noise rates for VFATs
+
 ```vfat_daq_scurve.py```: SCurve using DAQ data for VFATs
 
 ```vfat_daq_test.py```: bit error ratio tests by reading DAQ data packets from VFATs

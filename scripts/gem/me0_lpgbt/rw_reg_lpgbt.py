@@ -468,6 +468,8 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         ready_value = 18
     elif oh_ver == 2:
         ready_value = 19
+    if system == "backend":
+        gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
     if system != "dryrun":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):
@@ -475,8 +477,6 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
-    if system == "backend":
-        gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
     fuse_success = 1

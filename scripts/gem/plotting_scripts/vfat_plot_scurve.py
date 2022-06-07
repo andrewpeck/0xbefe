@@ -5,6 +5,8 @@ from matplotlib import cm
 import numpy as np
 import os, sys, glob
 import argparse
+import warnings
+import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
 
@@ -55,6 +57,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
     return charge
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Plotting VFAT SCurve")
@@ -155,24 +158,24 @@ if __name__ == "__main__":
         cbar1 = 0
     elif numVfats <= 3:
         fig1, ax1 = plt.subplots(1, numVfats, figsize=(numVfats*10,10))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 6:
         fig1, ax1 = plt.subplots(2, 3, figsize=(30,20))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 12:
         fig1, ax1 = plt.subplots(2, 6, figsize=(60,20))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 18:
         fig1, ax1 = plt.subplots(3, 6, figsize=(60,30))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
     elif numVfats <= 24:
         fig1, ax1 = plt.subplots(4, 6, figsize=(60,40))
-        cf1 ={}
-        cbar1 ={}
+        cf1 = {}
+        cbar1 = {}
 
     vfatCnt0 = 0
     for vfat in scurve_result:
@@ -186,80 +189,108 @@ if __name__ == "__main__":
         plot_data_x = []
         plot_data_y = []
         for dac in range(0,256):
-            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
-            plot_data_y.append(charge)
-            data = []
+            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
+            #plot_data_y.append(charge)
+            #data = []
+            #data_x = []
+            #data_y = []
             for channel in range(0,128):
+                plot_data_x.append(channel)
+                plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 elif charge not in scurve_result[vfat][channel]:
-                    data.append(0)
+                    plot_data.append(0)
+                    #data.append(0)
                 else:
-                    data.append(scurve_result[vfat][channel][charge])
-            plot_data.append(data)
-        for channel in range(0,128):
-            plot_data_x.append(channel)
+                    plot_data.append(scurve_result[vfat][channel][charge])
+                    #data.append(scurve_result[vfat][channel][charge])
+            #plot_data.append(data)
+        #for channel in range(0,128):
+        #    plot_data_x.append(channel)
 
-        cf = plt.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+        cmap_new = copy.copy(cm.get_cmap("viridis"))
+        cmap_new.set_under('w')
+        my_norm = mcolors.Normalize(vmin=0.00025, vmax=1, clip=False)
+        cf = axs.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
+
+        #cf = plt.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
         #chargeVals_mod = chargeVals
         #for i in range(0,len(chargeVals_mod)):
         #    chargeVals_mod[i] = DACToCharge(chargeVals_mod[i], slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
         #plot = axs.imshow(plot_data, extent=[min(channelNum), max(channelNum), min(chargeVals_mod), max(chargeVals_mod)], origin="lower",  cmap=cm.ocean_r,interpolation="nearest", aspect="auto")
         cbar = fig.colorbar(cf, ax=axs, pad=0.01)
-        cbar.set_label("Fired events / total events", loc = 'top')
+        #cbar = plt.colorbar()
+        cbar.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=18, labelpad=16)
+        #cbar.ax.set_label("Fired Events / Total Events", loc='top', fontsize=14)
+        cbar.ax.tick_params(labelsize=14)
         axs.set_title("VFAT%02d"%vfat)
         axs.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
         axs.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=axs.transAxes)
-        axs.text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=axs.transAxes)
+        axs.text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=axs.transAxes)
         fig.tight_layout()
         fig.savefig((directoryName+"/scurve2Dhist_"+oh+"_VFAT%02d.pdf")%vfat)
         plt.close(fig)
 
         if numVfats == 1:
-            ax1.set_xlabel("Channel number", loc = 'right')
-            ax1.set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1.set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1.set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1.set_title("VFAT%02d"%vfat)
-            cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1 = ax1.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
-            cbar1.set_label("Fired events / total events", loc = 'top')
+            cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=18, labelpad=16)
+            #cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
+            #cbar1.set_label("Fired events / total events", loc='top')
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1.transAxes)
-            ax1.text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1.transAxes)
+            ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1.transAxes)
+            ax1.text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1.transAxes)
         elif numVfats <= 3:
-            ax1[vfatCnt0].set_xlabel("Channel number", loc = 'right')
-            ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[vfatCnt0].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
-            cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[vfatCnt0] = ax1[vfatCnt0].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
-            cbar1[vfatCnt0].set_label("Fired events / total events",  loc = 'top')
+            cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=18, labelpad=16)
+            #cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
+            #cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[vfatCnt0].transAxes)
-            ax1[vfatCnt0].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1[vfatCnt0].transAxes)
         elif numVfats <= 6:
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc = 'right')
-            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
-            cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
-            cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc = 'top')
+            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=18, labelpad=16)
+            #cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
-            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.015, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc = 'right')
-            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc = 'top')
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right', fontsize=18)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top', fontsize=18)
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
-            cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
-            cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc = 'top')
+            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, fontsize=18, labelpad=16)
+            #cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
-            ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.1, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
-            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=20, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=18, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
         vfatCnt0+=1
 
     fig1.tight_layout()
     fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".pdf"))
+    fig1.savefig((directoryName+"/scurve2Dhist_"+oh+".png"))
     plt.close(fig1)
 
 
@@ -305,7 +336,7 @@ if __name__ == "__main__":
             ax.grid()
             ax.plot(charge_plot, frac, "o",markersize = 6, label="Channel %d"%channel)
             ax.text(-0.1, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax.transAxes)
-            ax.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax.transAxes)
+            ax.text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax.transAxes)
             if numVfats == 1:
                 ax2.grid()
                 ax2.plot(charge_plot, frac, "o", markersize = 6, label="Channel %d"%channel)
@@ -329,28 +360,28 @@ if __name__ == "__main__":
             ax2.set_title("VFAT%02d"%vfat)
             leg2 = ax2.legend(loc="center right", ncol=2)
             ax2.text(-0.09, 1.01, 'CMS', fontweight='bold', fontsize=26, transform=ax2.transAxes)
-            ax2.text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=24, transform=ax2.transAxes)
+            ax2.text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=24, transform=ax2.transAxes)
         elif numVfats <= 3:
             ax2[vfatCnt0].set_xlabel("Injected charge (fC)", loc = 'right')
             ax2[vfatCnt0].set_ylabel("Fired events / total events", loc = 'top')
             ax2[vfatCnt0].set_title("VFAT%02d"%vfat)
             leg2[vfatCnt0] = ax2[vfatCnt0].legend(loc="center right", ncol=2)
             ax2[vfatCnt0].text(-0.09, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[vfatCnt0].transAxes)
-            ax2[vfatCnt0].text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax2[vfatCnt0].transAxes)
+            ax2[vfatCnt0].text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[vfatCnt0].transAxes)
         elif numVfats <= 6:
             ax2[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Injected charge (fC)", loc = 'right')
             ax2[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Fired Events / Total Events", loc = 'top')
             ax2[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
             leg2[int(vfatCnt0/3), vfatCnt0%3] = ax2[int(vfatCnt0/3), vfatCnt0%3].legend(loc="center right", ncol=2)
             ax2[int(vfatCnt0/3), vfatCnt0%3].text(-0.11, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[int(vfatCnt0/3), vfatCnt0%3].transAxes)
-            ax2[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax2[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax2[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[int(vfatCnt0/3), vfatCnt0%3].transAxes)
         else:
             ax2[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Injected charge (fC)", loc = 'right')
             ax2[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Fired Events / Total Events", loc = 'top')
             ax2[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
             leg2[int(vfatCnt0/6), vfatCnt0%6] = ax2[int(vfatCnt0/6), vfatCnt0%6].legend(loc="center right", ncol=2)
             ax2[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[int(vfatCnt0/6), vfatCnt0%6].transAxes)
-            ax2[int(vfatCnt0/6), vfatCnt0%6].text(0.01, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax2[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax2[int(vfatCnt0/6), vfatCnt0%6].text(0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[int(vfatCnt0/6), vfatCnt0%6].transAxes)
         vfatCnt0+=1
 
     fig2.tight_layout()

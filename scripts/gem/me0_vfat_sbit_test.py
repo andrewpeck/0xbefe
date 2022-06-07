@@ -75,6 +75,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
     l1a_node = get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A")
     calpulse_node = get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.CALPULSE")
 
+    write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_OH_SBIT_ME0"), oh_select)
     write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
     elink_sbit_select_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_ELINK_SBIT_ME0") # Node for selecting Elink to count
     channel_sbit_select_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_SBIT_ME0") # Node for selecting S-bit to count

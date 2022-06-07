@@ -631,14 +631,14 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
+    # Check if GBT is READY
+    if args.system == "backend":
+        check_lpgbt_ready(args.ohid, args.gbtid)
+
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
-
-    # Check if GBT is READY
-    if oh_ver == 1 and args.system == "backend":
-        check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Configuring LPGBT
     readback = 0

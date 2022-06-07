@@ -16,6 +16,21 @@ entity gtx_quad is
     RATE3 : string := "3p2"
     );
   port (
+    -- rx loopback
+    loopback_mode_0 : in  std_logic_vector(2 downto 0);
+    loopback_mode_1 : in  std_logic_vector(2 downto 0);
+    loopback_mode_2 : in  std_logic_vector(2 downto 0);
+    loopback_mode_3 : in  std_logic_vector(2 downto 0);
+    rxpowerdown_in  : in  std_logic_vector(1 downto 0);
+    rxreset_in      : in  std_logic;
+    gtxrxreset_in   : in  std_logic;
+    pllrxreset_in   : in  std_logic;
+    rx_notintable_0 : out std_logic_vector (1 downto 0);
+    rx_notintable_1 : out std_logic_vector (1 downto 0);
+    rx_notintable_2 : out std_logic_vector (1 downto 0);
+    rx_notintable_3 : out std_logic_vector (1 downto 0);
+    rxvalid_out     : out std_logic_vector (3 downto 0);
+    --
     plltxreset_in : in std_logic;
 
     refclk_p : in std_logic_vector (1 downto 0);
@@ -31,22 +46,22 @@ entity gtx_quad is
 
     pll_lock : out std_logic_vector (3 downto 0);
 
-    GTX0_TXCHARISK_IN : in std_logic_vector(1 downto 0);
-    GTX1_TXCHARISK_IN : in std_logic_vector(1 downto 0);
-    GTX2_TXCHARISK_IN : in std_logic_vector(1 downto 0);
-    GTX3_TXCHARISK_IN : in std_logic_vector(1 downto 0);
+    gtx0_txcharisk_in : in std_logic_vector(1 downto 0);
+    gtx1_txcharisk_in : in std_logic_vector(1 downto 0);
+    gtx2_txcharisk_in : in std_logic_vector(1 downto 0);
+    gtx3_txcharisk_in : in std_logic_vector(1 downto 0);
 
-    GTX0_TXDATA_IN : in std_logic_vector(15 downto 0);
-    GTX1_TXDATA_IN : in std_logic_vector(15 downto 0);
-    GTX2_TXDATA_IN : in std_logic_vector(15 downto 0);
-    GTX3_TXDATA_IN : in std_logic_vector(15 downto 0);
+    gtx0_txdata_in : in std_logic_vector(15 downto 0);
+    gtx1_txdata_in : in std_logic_vector(15 downto 0);
+    gtx2_txdata_in : in std_logic_vector(15 downto 0);
+    gtx3_txdata_in : in std_logic_vector(15 downto 0);
 
     tx_prbs_mode_0 : in std_logic_vector (2 downto 0);
     tx_prbs_mode_1 : in std_logic_vector (2 downto 0);
     tx_prbs_mode_2 : in std_logic_vector (2 downto 0);
     tx_prbs_mode_3 : in std_logic_vector (2 downto 0);
 
-    txreset_in     : in std_logic;
+    txreset_in : in std_logic;
 
     txpowerdown    : in std_logic_vector (1 downto 0);
     txpllpowerdown : in std_logic;
@@ -101,28 +116,42 @@ architecture Behavioral of gtx_quad is
   signal gtx_txresetdone_r  : std_logic_vector (3 downto 0);
   signal gtx_txresetdone_r2 : std_logic_vector (3 downto 0);
 
-  signal GTX_TXCHARISK_IN : t_std2_array (3 downto 0);
+  signal gtx_txcharisk_in : t_std2_array (3 downto 0);
 
   signal tx_prbs_mode : t_std3_array(3 downto 0);
 
-  signal GTX_TXDATA_IN : t_std16_array (3 downto 0);
+  signal rx_notintable : t_std2_array(3 downto 0);
+
+  signal gtx_txdata_in : t_std16_array (3 downto 0);
+
+  signal loopback_mode : t_std3_array (3 downto 0);
 
 begin
+
+  rx_notintable_0 <= rx_notintable(0);
+  rx_notintable_1 <= rx_notintable(1);
+  rx_notintable_2 <= rx_notintable(2);
+  rx_notintable_3 <= rx_notintable(3);
 
   tx_prbs_mode(0) <= tx_prbs_mode_0;
   tx_prbs_mode(1) <= tx_prbs_mode_1;
   tx_prbs_mode(2) <= tx_prbs_mode_2;
   tx_prbs_mode(3) <= tx_prbs_mode_3;
 
-  GTX_TXCHARISK_IN(0) <= GTX0_TXCHARISK_IN;
-  GTX_TXCHARISK_IN(1) <= GTX1_TXCHARISK_IN;
-  GTX_TXCHARISK_IN(2) <= GTX2_TXCHARISK_IN;
-  GTX_TXCHARISK_IN(3) <= GTX3_TXCHARISK_IN;
+  gtx_txcharisk_in(0) <= gtx0_txcharisk_in;
+  gtx_txcharisk_in(1) <= gtx1_txcharisk_in;
+  gtx_txcharisk_in(2) <= gtx2_txcharisk_in;
+  gtx_txcharisk_in(3) <= gtx3_txcharisk_in;
 
-  GTX_TXDATA_IN(0) <= GTX0_TXDATA_IN;
-  GTX_TXDATA_IN(1) <= GTX1_TXDATA_IN;
-  GTX_TXDATA_IN(2) <= GTX2_TXDATA_IN;
-  GTX_TXDATA_IN(3) <= GTX3_TXDATA_IN;
+  gtx_txdata_in(0) <= gtx0_txdata_in;
+  gtx_txdata_in(1) <= gtx1_txdata_in;
+  gtx_txdata_in(2) <= gtx2_txdata_in;
+  gtx_txdata_in(3) <= gtx3_txdata_in;
+
+  loopback_mode(0) <= loopback_mode_0;
+  loopback_mode(1) <= loopback_mode_1;
+  loopback_mode(2) <= loopback_mode_2;
+  loopback_mode(3) <= loopback_mode_3;
 
   ----------------------------- The GTX Wrapper -----------------------------
 
@@ -140,22 +169,46 @@ begin
         )
       port map
       (
+        ------------------------ Loopback and Powerdown Ports ----------------------
+        LOOPBACK_IN           => loopback_mode(I),
+        RXPOWERDOWN_IN        => rxpowerdown_in,
+        ----------------------- Receive Ports - 8b10b Decoder ----------------------
+        RXCHARISK_OUT         => open,
+        RXDISPERR_OUT         => open,
+        RXNOTINTABLE_OUT      => rx_notintable(I),
+        --------------- Receive Ports - Comma Detection and Alignment --------------
+        RXENMCOMMAALIGN_IN    => '1',
+        RXENPCOMMAALIGN_IN    => '1',
+        ------------------- Receive Ports - RX Data Path interface -----------------
+        RXDATA_OUT            => open,
+        RXRESET_IN            => rxreset_in,
+        RXUSRCLK2_IN          => userclk(I),
         ------- Receive Ports - RX Driver,OOB signalling,Coupling and Eq.,CDR ------
         RXN_IN                => '0',
         RXP_IN                => '1',
+        -------- Receive Ports - RX Elastic Buffer and Phase Alignment Ports -------
+        RXSTATUS_OUT          => open,
+        ------------------------ Receive Ports - RX PLL Ports ----------------------
+        GTXRXRESET_IN         => gtxrxreset_in,
+        MGTREFCLKRX_IN        => mgt_refclk_i,
+        PLLRXRESET_IN         => pllrxreset_in,
+        RXPLLLKDET_OUT        => open,
+        RXRESETDONE_OUT       => open,
+        -------------- Receive Ports - RX Pipe Control for PCI Express -------------
+        RXVALID_OUT           => rxvalid_out(i),
         ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
-        TXCHARISK_IN          => GTX_TXCHARISK_IN(I),
+        TXCHARISK_IN          => gtx_txcharisk_in(i),
         ------------------------- Transmit Ports - GTX Ports -----------------------
         GTXTEST_IN            => gtxtest_in,
         ------------------ Transmit Ports - TX Data Path interface -----------------
-        TXDATA_IN             => GTX_TXDATA_IN(I),
+        TXDATA_IN             => gtx_txdata_in(i),
         TXOUTCLK_OUT          => gtx_txoutclk_i(I),
         TXRESET_IN            => txreset_in,
         TXUSRCLK2_IN          => userclk(I),
         ---------------- Transmit Ports - TX Driver and OOB signaling --------------
         TXDIFFCTRL_IN         => "1101",
-        TXN_OUT               => TXN_OUT(I),
-        TXP_OUT               => TXP_OUT(I),
+        TXN_OUT               => txn_out(i),
+        TXP_OUT               => txp_out(I),
         TXPOSTEMPHASIS_IN     => "00000",
         --------------- Transmit Ports - TX Driver and OOB signalling --------------
         TXPREEMPHASIS_IN      => "0000",
@@ -175,8 +228,8 @@ begin
         --------------------- Transmit Ports - TX PRBS Generator -------------------
         TXENPRBSTST_IN        => tx_prbs_mode(I),
         -- resets
-        TXPOWERDOWN           => TXPOWERDOWN,
-        TXPLLPOWERDOWN        => TXPLLPOWERDOWN
+        TXPOWERDOWN_IN        => txpowerdown,
+        TXPLLPOWERDOWN        => txpllpowerdown
         );
   end generate;
 

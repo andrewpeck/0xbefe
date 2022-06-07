@@ -53,8 +53,9 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        os.system("cp %s/scurve2Dhist_ME0_OH0.pdf %s/daq_scurve_2D_hist.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/daq_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/daq_scurve_ENC.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurveThreshdistribution_ME0_OH0.pdf %s/daq_scurve_Threshold.pdf"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
         logfile.write("DAQ SCurve result directory not found\n")    
@@ -109,8 +110,9 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        os.system("cp %s/scurve2Dhist_ME0_OH0.pdf %s/sbit_scurve_2D_hist.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_scurve_ENC.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurveThreshdistribution_ME0_OH0.pdf %s/sbit_scurve_Threshold.pdf"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
         logfile.write("S-bit SCurve result directory not found\n")    

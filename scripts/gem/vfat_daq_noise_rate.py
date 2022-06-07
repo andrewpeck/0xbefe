@@ -8,7 +8,7 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, all, verbose):
+def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a_bxgap, parallel, all, verbose):
 
     resultDir = "results"
     try:
@@ -20,7 +20,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_noise_results"
+    dataDir = "results/vfat_data/vfat_daq_noise_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -28,16 +28,15 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/%s_OH%d_vfat_sbit_noise_"%(gem,oh_select) + now + ".txt"
+    filename = dataDir + "/%s_OH%d_vfat_daq_noise_"%(gem,oh_select) + now + ".txt"
     file_out = open(filename,"w+")
-    file_out.write("vfat    sbit    threshold    fired    time\n")
+    file_out.write("vfat    channel    threshold    fired    time\n")
 
     gem_link_reset()
     global_reset()
     sleep(0.1)
-    write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
-    sbit_data = {}
+    daq_data = {}
     # Check ready and get nodes
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -48,6 +47,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask all channels and disable calpulsing
 
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_LATENCY"% (oh_select, vfat)), 18)
         link_good_node = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
         sync_error_node = get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
         link_good = read_backend_reg(link_good_node)
@@ -56,32 +56,44 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             print (Colors.RED + "Link is bad for VFAT# %02d"%(vfat) + Colors.ENDC)
             terminate()
 
-        sbit_data[vfat] = {}
-        for sbit in sbit_list:
-            sbit_data[vfat][sbit] = {}
+        daq_data[vfat] = {}
+        for channel in channel_list:
+            daq_data[vfat][channel] = {}
             for thr in range(0,256,step):
-                sbit_data[vfat][sbit][thr] = {}
-                sbit_data[vfat][sbit][thr]["time"] = -9999
-                sbit_data[vfat][sbit][thr]["fired"] = -9999
+                daq_data[vfat][channel][thr] = {}
+                daq_data[vfat][channel][thr]["time"] = -9999
+                daq_data[vfat][channel][thr]["fired"] = -9999
 
     sleep(1)
 
-    # Nodes for Sbit counters
-    write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_OH_SBIT_ME0"), oh_select)
-    vfat_sbit_select_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0") # VFAT for reading S-bits 
-    elink_sbit_select_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_ELINK_SBIT_ME0") # Node for selecting Elink to count
-    channel_sbit_select_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_SBIT_ME0") # Node for selecting S-bit to count
-    elink_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink
-    channel_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
-    reset_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
-    reset_sbit_vfat_node = get_backend_node("BEFE.GEM.SBIT_ME0.CTRL.MODULE_RESET")  # To reset VFAT S-bit rate registers
+    # Configure TTC generator
+    #write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 25)
+
+    # Setup the DAQ monitor
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE"), 1)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.OH_SELECT"), oh_select)
+    daq_monitor_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.RESET")
+    daq_monitor_enable_node = get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.ENABLE")
+    daq_monitor_select_node = get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_SELECT")
 
     dac_node = {}
-    vfat_counter_node = {}
+    daq_monitor_event_count_node = {}
+    daq_monitor_fire_count_node = {}
     dac = "CFG_THR_ARM_DAC"
     for vfat in vfat_list:
         dac_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%d.%s"%(oh_select, vfat, dac))
-        vfat_counter_node[vfat] = get_backend_node("BEFE.GEM.SBIT_ME0.ME0_VFAT%d_SBIT_RATE"%vfat) # S-bit counter for enitre VFAT
+        daq_monitor_event_count_node[vfat] = get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%d.GOOD_EVENTS_COUNT"%(vfat))
+        daq_monitor_fire_count_node[vfat] = get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.VFAT%d.CHANNEL_FIRE_COUNT"%(vfat))
+
+    ttc_reset_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET")
+    ttc_cyclic_start_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START")
+    cyclic_running_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
     print ("\nRunning Sbit Noise Scans for VFATs:")
     print (vfat_list)
@@ -95,82 +107,65 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             # Unmask channels for this vfat
             for channel in range(0,128):
                 enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
-            write_backend_reg(dac_node[vfat], 0)
 
-    # Looping over VFATs
-    for vfat in vfat_list:
+    # Looping over channels
+    for channel in channel_list:
         if all:
-            for sbit in sbit_list:
+            for vfat in vfat_list:
                 for thr in range(0,256,step):
-                    sbit_data[vfat][sbit][thr]["fired"] = 0
-                    sbit_data[vfat][sbit][thr]["time"] = runtime
+                    daq_data[vfat][channel][thr]["fired"] = 0
+                    daq_data[vfat][channel][thr]["time"] = runtime
             continue
-        print ("VFAT: %02d"%vfat)
 
-        # Looping over sbits
-        for sbit in sbit_list:
-            if sbit == "all":
-                continue
+        if channel == "all":
+            continue
+        print ("Channel: %d"%channel)
+        for vfat in vfat_list:
+            enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channel
+        write_backend_reg(daq_monitor_select_node, channel)
+
+        # Looping over threshold
+        for thr in range(0,256,step):
             if verbose:
-                print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))
-            elink = int(sbit/8)
-            channel_list = []
-            if str(vfat) not in s_bit_channel_mapping:
-                print (Colors.YELLOW + "    Mapping not present for VFAT %02d"%(vfat) + Colors.ENDC)
-                continue
-            for c in s_bit_channel_mapping[str(vfat)][str(elink)]:
-                if sbit == s_bit_channel_mapping[str(vfat)][str(elink)][c]:
-                    channel_list.append(int(c))
-            if len(channel_list)>2:
-                print (Colors.YELLOW + "Skipping S-bit %02d, more than 2 channels"%sbit + Colors.ENDC)
-                continue
-            elif len(channel_list)==1:
-                print (Colors.YELLOW + "S-bit %02d has 1 non-working channel"%sbit + Colors.ENDC)
-            elif len(channel_list)==0:
-                print (Colors.YELLOW + "Skipping S-bit %02d, missing both channels"%sbit + Colors.ENDC)
-                continue
-            write_backend_reg(vfat_sbit_select_node, vfat)
-            write_backend_reg(channel_sbit_select_node, sbit)
-
-            if not parallel:
-                # Unmask channels for this sbit
-                for channel in channel_list:
-                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
-
-            # Looping over threshold
-            for thr in range(0,256,step):
-                #print ("    Threshold: %d"%thr)
+                print ("    Threshold: %d"%thr)
+            for vfat in vfat_list:
                 write_backend_reg(dac_node[vfat], thr)
-                sleep(1e-3)
+            sleep(1e-3)
 
-                # Count hits in sbit in given time
-                write_backend_reg(reset_sbit_counter_node, 1)
-                sleep(runtime)
-                sbit_data[vfat][sbit][thr]["fired"] = read_backend_reg(channel_sbit_counter_node)
-                sbit_data[vfat][sbit][thr]["time"] = runtime
-            # End of threshold loop
+            write_backend_reg(daq_monitor_reset_node, 1)
+            write_backend_reg(daq_monitor_enable_node, 1)
 
-            if not parallel:
-                # Mask again channels for this sbit
-                for channel in channel_list:
-                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+            # Start the cyclic generator
+            write_backend_reg(ttc_cyclic_start_node, 1)
+            sleep(runtime)
+            # Stop the cyclic generator
+            write_backend_reg(ttc_reset_node, 1)
+            write_backend_reg(daq_monitor_enable_node, 0)
 
-        # End of sbits loop
-        if parallel:
-            write_backend_reg(dac_node[vfat], 0)
-        else:
-            write_backend_reg(dac_node[vfat], initial_thr[vfat])
-        sleep(1e-3)
-        print ("")
-    # End of VFAT loop
-    print ("")
+            # Looping over VFATs
+            for vfat in vfat_list:
+                #daq_data[vfat][channel][thr]["events"] = read_backend_reg(daq_monitor_event_count_node[vfat])
+                daq_data[vfat][channel][thr]["fired"] = read_backend_reg(daq_monitor_fire_count_node[vfat])
+                daq_data[vfat][channel][thr]["time"] = runtime
+            # End of VFAT loop
 
-    if parallel:
+        # Mask again channels
+        if not parallel:
+            for vfat in vfat_list:
+                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channel
+
         for vfat in vfat_list:
             write_backend_reg(dac_node[vfat], initial_thr[vfat])
+        sleep(1e-3)
+        #print ("")
+
+    # End of channel loop
+    print ("")
 
     # Rate counters for entire VFATs
-    print ("All VFATs, Sbit: All")
+    print ("All VFATs, Channels: All")
+    write_backend_reg(daq_monitor_select_node, 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 1)
     for vfat in vfat_list:
         # Unmask channels for this vfat
         for channel in range(0,128):
@@ -180,11 +175,25 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for vfat in vfat_list:
             write_backend_reg(dac_node[vfat], thr)
             sleep(1e-3)
-        write_backend_reg(reset_sbit_vfat_node, 1)
+
+        write_backend_reg(daq_monitor_reset_node, 1)
+        write_backend_reg(daq_monitor_enable_node, 1)
+        # Start the cyclic generator
+        write_backend_reg(ttc_cyclic_start_node, 1)
         sleep(1.1)
+        # Stop the cyclic generator
+        write_backend_reg(ttc_reset_node, 1)
+        write_backend_reg(daq_monitor_enable_node, 0)
+
+        # Looping over VFATs
         for vfat in vfat_list:
-            sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
-            sbit_data[vfat]["all"][thr]["time"] = runtime
+            #daq_data[vfat]["all"][thr]["events"] = read_backend_reg(daq_monitor_event_count_node[vfat])
+            daq_data[vfat]["all"][thr]["fired"] = read_backend_reg(daq_monitor_fire_count_node[vfat]) * runtime
+            daq_data[vfat]["all"][thr]["time"] = runtime
+        # End of VFAT loop
+
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.VFAT_DAQ_MONITOR.CTRL.VFAT_CHANNEL_GLOBAL_OR"), 0)
+    write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
 
     # Disable channels on VFATs
     for vfat in vfat_list:
@@ -193,18 +202,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels
         configureVfat(0, vfat, oh_select, 0)
-    write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     # Writing Results
     for vfat in vfat_list:
-        for sbit in sbit_list:
+        for channel in channel_list:
             for thr in range(0,256,1):
-                if thr not in sbit_data[vfat][sbit]:
+                if thr not in daq_data[vfat][channel]:
                     continue
-                if sbit != "all":
-                    file_out.write("%d    %d    %d    %f    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
+                if channel != "all":
+                    file_out.write("%d    %d    %d    %f    %f\n"%(vfat, channel, thr, daq_data[vfat][channel][thr]["fired"], daq_data[vfat][channel][thr]["time"]))
                 else:
-                    file_out.write("%d    all    %d    %f    %f\n"%(vfat, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
+                    file_out.write("%d    all    %d    %f    %f\n"%(vfat, thr, daq_data[vfat][channel][thr]["fired"], daq_data[vfat][channel][thr]["time"]))
 
     print ("")
     file_out.close()
@@ -225,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for threshold scan (default = 1)")
     parser.add_argument("-m", "--time", action="store", dest="time", default="0.001", help="time = time for each elink in sec (default = 0.001 s or 1 ms)")
+    parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
     parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", default=False, help="Set for more verbosity")
     args = parser.parse_args()
 
@@ -258,37 +267,30 @@ if __name__ == "__main__":
             sys.exit()
         vfat_list.append(v_int)
 
+    channel_list = [i for i in range(0, 128)]
+    channel_list.append("all")
+
     step = int(args.step)
     if step not in range(1,257):
         print (Colors.YELLOW + "Step size can only be between 1 and 256" + Colors.ENDC)
         sys.exit()
 
-    if args.all and args.parallel:
-        print (Colors.YELLOW + "All and Parallel cannot be given together" + Colors.ENDC)
-        sys.exit()
-
-    sbit_list = [i for i in range(0,64)]
-    sbit_list.append("all")
-    s_bit_channel_mapping = {}
-    print ("")
-    if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
-        print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-        sys.exit()
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
-    if len(list_of_files)==0:
-        print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-        sys.exit()
-    elif len(list_of_files)>1:
-        print ("Mutliple S-bit mapping results found, using latest file")
-    latest_file = max(list_of_files, key=os.path.getctime)
-    print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
-    with open(latest_file) as input_file:
-        s_bit_channel_mapping = json.load(input_file)
-
     if args.use_channel_trimming is not None:
         if args.use_channel_trimming not in ["daq", "sbit"]:
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
+
+    l1a_bxgap = int(args.bxgap)
+    l1a_timegap = l1a_bxgap * 25 * 0.001 # in microseconds
+    if l1a_bxgap<25:
+        print (Colors.YELLOW + "Gap between L1As should be at least 25 BX to read out enitre DAQ data packets" + Colors.ENDC)
+        sys.exit()
+    else:
+        print ("Gap between consecutive L1A = %d BX = %.2f us" %(l1a_bxgap, l1a_timegap))
+
+    if args.all and args.parallel:
+        print (Colors.YELLOW + "All and Parallel cannot be given together" + Colors.ENDC)
+        sys.exit()
 
     # Initialization 
     initialize(args.gem, args.system)
@@ -297,7 +299,7 @@ if __name__ == "__main__":
 
     # Running Sbit Noise Rate
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, sbit_list, step, float(args.time), s_bit_channel_mapping, args.parallel, args.all, args.verbose)
+        vfat_daq(args.gem, args.system, int(args.ohid), vfat_list, channel_list, step, float(args.time), l1a_bxgap, args.parallel, args.all, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

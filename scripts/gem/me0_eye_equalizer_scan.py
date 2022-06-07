@@ -255,13 +255,13 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
+    # Check if GBT is READY
+    check_lpgbt_ready(args.ohid, args.gbtid)
+
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
-
-    # Check if lpGBT is READY
-    check_lpgbt_ready(args.ohid, args.gbtid) 
 
     try:
         main(args.system, oh_ver, int(args.count,16), args.eq_attn, args.eq_cap, args.eq_res3, args.eq_res2, args.eq_res1, args.eq_res0, boss)

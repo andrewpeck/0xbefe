@@ -162,9 +162,9 @@ def main(inFile, calFile, directoryName, oh):
 
             xlabel_plot = ""
             if nominalDacValues[DAC_reg][1] == "uA":
-                xlabel_plot = "ADC0 ($\mu$A)"
+                xlabel_plot = "ADC ($\mu$A)"
             else:
-                xlabel_plot = "ADC0 (%s)" % nominalDacValues[DAC_reg][1]
+                xlabel_plot = "ADC (%s)" % nominalDacValues[DAC_reg][1]
 
             if numVfats == 1:
                 ax.grid()
@@ -173,7 +173,7 @@ def main(inFile, calFile, directoryName, oh):
                 ax.set_ylabel("%s register value (DAC)" % DAC_reg, loc = 'top')
                 ax.set_title("VFAT%02d"%vfat)
                 ax.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax.transAxes)
-                ax.text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax.transAxes)
+                ax.text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax.transAxes)
             elif numVfats <= 3:
                 ax[vfatCnt0].grid()
                 ax[vfatCnt0].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
@@ -181,7 +181,7 @@ def main(inFile, calFile, directoryName, oh):
                 ax[vfatCnt0].set_ylabel("%s register value (DAC)" % DAC_reg, loc = 'top')
                 ax[vfatCnt0].set_title("VFAT%02d" % vfat)
                 ax[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax[vfatCnt0].transAxes)
-                ax[vfatCnt0].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax[vfatCnt0].transAxes)
+                ax[vfatCnt0].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax[vfatCnt0].transAxes)
             elif numVfats <= 6:
                 ax[int(vfatCnt0/3), vfatCnt0%3].grid()
                 ax[int(vfatCnt0/3), vfatCnt0%3].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
@@ -189,7 +189,7 @@ def main(inFile, calFile, directoryName, oh):
                 ax[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("%s register value (DAC)" % DAC_reg, loc = 'top')
                 ax[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d" % vfat)
                 ax[int(vfatCnt0/3), vfatCnt0%3].text(-0.1, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax[int(vfatCnt0/3), vfatCnt0%3].transAxes)
-                ax[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+                ax[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax[int(vfatCnt0/3), vfatCnt0%3].transAxes)
             else:
                 ax[int(vfatCnt0/6), vfatCnt0%6].grid()
                 ax[int(vfatCnt0/6), vfatCnt0%6].errorbar(datavfat.value, datavfat.DAC_point, xerr=datavfat.error, fmt="ko", markersize=7, fillstyle="none") # plot transformed data
@@ -197,7 +197,7 @@ def main(inFile, calFile, directoryName, oh):
                 ax[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("%s register value (DAC)" % DAC_reg, loc = 'top')
                 ax[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d" % vfat)
                 ax[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax[int(vfatCnt0/6), vfatCnt0%6].transAxes)
-                ax[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Muon R&D',fontstyle='italic', fontsize=26, transform=ax[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+                ax[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax[int(vfatCnt0/6), vfatCnt0%6].transAxes)
 
             if DAC_reg not in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:         
                 fitData = np.polyfit(xdata, ydata, 5) # fit data to 5th degree polynomial

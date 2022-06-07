@@ -10,6 +10,7 @@ vfat_calib_iref = {}
 vfat_calib_vref = {}
 vfat_register_dac_scan = {}
 vfat_channel_trimming = {}
+vfat_channel_mask = {}
 
 def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_trimming):
     global vfat_register_config
@@ -17,11 +18,12 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
     global vfat_calib_vref
     global vfat_register_dac_scan
     global vfat_channel_trimming
+    global vfat_channel_mask
 
     # Generic register list
     vfat_register_config_file_path = "../resources/vfatConfig.txt"
     if not os.path.isfile(vfat_register_config_file_path):
-        print (Colors.YELLOW + "VFAT config text file not present in vfat_data/" + Colors.ENDC)
+        print (Colors.YELLOW + "VFAT config text file not present in resources/" + Colors.ENDC)
         sys.exit()
     vfat_register_config_file = open(vfat_register_config_file_path)
     for line in vfat_register_config_file.readlines():
@@ -109,6 +111,23 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
         else:
             print (Colors.YELLOW + "Trimming results not present, not using trimming" + Colors.ENDC)
 
+    # VFAT Channel Mask
+    vfat_channel_mask_file_path = "../resources/vfatChannelMask.txt"
+    if not os.path.isfile(vfat_channel_mask_file_path):
+        print (Colors.YELLOW + "VFAT channel mask text file not present in resources/" + Colors.ENDC)
+        sys.exit()
+    vfat_channel_mask_file = open(vfat_channel_mask_file_path)
+    for line in vfat_channel_mask_file.readlines():
+        if "VFAT" in line or "#" in line:
+            continue
+        vfat = int(line.split()[0])
+        channel_list = line.split()[1].split(",")
+        channel_list_int = []
+        for channel in channel_list:
+            channel_list_int.append(int(channel))
+        vfat_channel_mask[vfat] = channel_list_int
+    vfat_channel_mask_file.close()
+
 def setVfatchannelTrim(vfatN, ohN, channel, trim_polarity, trim_amp):
     channel_trim_polarity_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.ARM_TRIM_POLARITY"%(ohN, vfatN, channel))
     channel_trim_amp_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.ARM_TRIM_AMPLITUDE"%(ohN, vfatN, channel))
@@ -119,7 +138,11 @@ def enableVfatchannel(vfatN, ohN, channel, mask, enable_cal):
     #channel_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i"%(ohN, vfatN, channel))
     channel_enable_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.CALPULSE_ENABLE"%(ohN, vfatN, channel))
     channel_mask_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.MASK"%(ohN, vfatN, channel))
-    if mask: # mask and disable calpulsing
+    mask_channel = 0
+    if vfatN in vfat_channel_mask:
+        if channel in vfat_channel_mask[vfatN]:
+            mask_channel = 1
+    if mask or mask_channel: # mask and disable calpulsing
         #write_backend_reg(channel_node, 0x4000)
         write_backend_reg(channel_enable_node, 0)
         write_backend_reg(channel_mask_node, 1)
@@ -136,7 +159,7 @@ def enableVfatchannel(vfatN, ohN, channel, mask, enable_cal):
 def configureVfat(configure, vfatN, ohN, low_thresh):
 
     for i in range(128):
-        enableVfatchannel(vfatN, ohN, i, 0, 0) # unmask all channels and disable calpulsing
+        enableVfatchannel(vfatN, ohN, i, 0, 0) # unmask/mask channel and disable calpulsing
 
     if configure:
         #print ("Configuring VFAT")
