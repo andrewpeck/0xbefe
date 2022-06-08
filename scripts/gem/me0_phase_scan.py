@@ -86,7 +86,7 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
             else:
                 if daq_event_counter == depth%(2**16):
                    daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
-               else:
+                else:
                    print (Colors.YELLOW + "\tProblem with DAQ event counter=%d"%(daq_event_counter) + Colors.ENDC)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
        
@@ -221,7 +221,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         if n_errors == 0:
             print ("No bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 16):
-                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_err, cyclic_running_node)
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
     
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
     centers = 24*[0]
