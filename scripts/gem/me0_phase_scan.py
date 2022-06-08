@@ -27,7 +27,7 @@ def getConfig (filename):
 
 def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_err, cyclic_running_node):
 
-    print("  Scanning phase %d" % phase)
+    #print("  Scanning phase %d" % phase)
 
     # set phase   
     setVfatRxPhase(system, oh_select, vfat, phase)
@@ -74,7 +74,8 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
                enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
 
             # Send L1A to get DAQ events from VFATs
-            #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)  
+            #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0) 
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), depth)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
             cyclic_running = 1
             while cyclic_running:
@@ -205,9 +206,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     # Configure TTC Generator
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), 500) # 80 kHz
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), 500) # 80 kHz 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0) # Disable Calpulse 
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), depth)
     cyclic_running_node = gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
     for vfat in vfat_list:
@@ -219,10 +219,11 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         for phase in range(0, 15):
             n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
         if n_errors == 0:
-            print ("No bad phase detected, redoing the phase scan with higher statistics:")
+            print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 16):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
-    
+        print("")
+
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
     centers = 24*[0]
     widths  = 24*[0]
@@ -238,7 +239,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     file_out_data.write("\nPhase Scan Results:\n")
     bestphase_vfat = 24*[0]
     for vfat in vfat_list:
-        phase_print = "VFAT%02d: " % (vfat)
+        phase_print = "VFAT%02d: \n" % (vfat)
         for phase in range(0, 16):
 
             if (widths[vfat]>0 and phase==centers[vfat]):
