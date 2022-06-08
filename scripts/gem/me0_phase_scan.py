@@ -222,6 +222,15 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
             print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 16):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
+
+        n_errors = 0
+        for phase in range(0, 15):
+            n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
+        if n_errors == 0:
+            print ("\nNo bad phase detected again, redoing the phase scan with even higher statistics:")
+            for phase in range(0, 16):
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
+
         print("")
 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
