@@ -60,7 +60,7 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
     # Check DAQ event counter and CRC errors with L1A if link and slow control good
     daq_error = -1
     if daq_err:
-        if system == "dryrun" or (link_state]==1 and sync_error==0 and cfg_run_error==0):
+        if system == "dryrun" or (link_state==1 and sync_error==0 and cfg_run_error==0):
             #for vfat2 in vfat_list:
             #    if vfat2 != vfat:
             #        setVfatRxPhase(system, oh_select, vfat2, working_phases_sc[vfat2], False)
