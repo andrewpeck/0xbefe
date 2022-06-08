@@ -27,22 +27,22 @@ def print_clusters(clusters):
 
 
 @cocotb.test()
-async def test_random_data(dut, nloops=100000, nhits=128):
+async def random_data(dut, nloops=1000, nhits=128):
     await run_test(dut, "RANDOM", nloops, nhits)
 
 
 @cocotb.test()
-async def test_walking1(dut):
+async def walking1(dut):
     await run_test(dut, "WALKING1")
 
 
 @cocotb.test()
-async def test_colliding1(dut):
+async def colliding1(dut):
     await run_test(dut, "COLLIDING1")
 
 
 @cocotb.test()
-async def test_edges(dut, nloops=10000, nhits=32):
+async def edges(dut, nloops=1000, nhits=32):
     await run_test(dut, "EDGES", nloops, nhits)
 
 
