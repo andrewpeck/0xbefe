@@ -104,14 +104,14 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
         daq_error=0
 
     result_str = ""
-    if link_good[vfat][phase]==1 and sync_err_cnt[vfat][phase]==0 and cfg_run[vfat][phase]==0 and daq_crc_error[vfat][phase]==0:
+    if link_state==1 and sync_error==0 and cfg_run_error==0 and daq_error==0:
         result_str += Colors.GREEN
     else:
         result_str += Colors.RED
     if daq_err:
-        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase])
+        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_state, sync_error, cfg_run_error, daq_error)
     else:
-        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase])
+        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_state, sync_error, cfg_run_error)
     result_str += Colors.ENDC
     print(result_str)
 
