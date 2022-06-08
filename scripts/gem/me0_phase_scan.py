@@ -239,7 +239,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     file_out_data.write("\nPhase Scan Results:\n")
     bestphase_vfat = 24*[0]
     for vfat in vfat_list:
-        phase_print = "VFAT%02d: \n" % (vfat)
+        phase_print = "VFAT%02d: " % (vfat)
         for phase in range(0, 16):
 
             if (widths[vfat]>0 and phase==centers[vfat]):
