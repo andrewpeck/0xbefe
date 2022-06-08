@@ -191,6 +191,8 @@ async def run_test(dut, test, nloops=1000, nhits=128):
 
         # TODO: check the overflows
 
+        # TODO: check the cluster masking
+
         # -------------------------------------------------------------------------------
         # check the cluster count
         # -------------------------------------------------------------------------------
@@ -224,17 +226,11 @@ async def run_test(dut, test, nloops=1000, nhits=128):
         # check the actual clusters against the emulator
         # -------------------------------------------------------------------------------
 
-        eq = 1
         for i in range(16):
-
             assert equal(found_clusters[i], expected_clusters[i]), print(
                 " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
                 % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
             )
-
-        assert eq == True, print(vfats_xpipeline)
-
-        # TODO: check the cluster masking
 
         # -------------------------------------------------------------------------------
         # check that all clusters w/ vpf = 0 have an invalid address, and all valid
@@ -334,7 +330,7 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
         parameters=parameters,
         vhdl_compile_args=["-2008"],
         # sim_args = ["do cluster_packer_wave.do"],
-        sim_args=['-do "set NumericStdNoWarnings 1;"'],
+        sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         gui=0,
     )
 
