@@ -211,7 +211,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     cyclic_running_node = gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
     for vfat in vfat_list:
-        print ("Phase Scan for VFAT: %02d"%%vfat)
+        print ("Phase Scan for VFAT: %02d"%vfat)
         for phase in range(0, 16):
             link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_err, cyclic_running_node)
       
