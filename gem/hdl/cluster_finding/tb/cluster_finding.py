@@ -10,7 +10,7 @@ class Cluster:
         if (self.vpf==0):
             return "None"
         else:
-            return "adr=%d cnt=%d prt=%d vpf=%d" % (
+            return "adr=%3d cnt=%1d prt=%1d vpf=%1d" % (
                 self.adr,
                 self.cnt,
                 self.prt,
