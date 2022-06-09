@@ -110,6 +110,24 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False):
 
         vfats = [0] * NVFATS
 
+        if test == "SPECIFIC":
+            for (prt, adr, cnt) in [
+                (7, 63, 1),
+                (6, 69, 0),
+                (6, 66, 0),
+                (6, 124, 0),
+                (5, 0, 0),
+                (4, 191, 0),
+                (3, 69, 0),
+            ]:
+
+                channel = adr % 64
+                size = 2 ** (cnt + 1) - 1
+                ivfat = prt + 8 * (adr // 64)
+
+                val = (size << channel) & bit_mask_64
+                vfats[ivfat] |= val
+
         if test == "WALKING1":
             # walking 1s
             strip = loop
