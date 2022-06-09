@@ -1,4 +1,2 @@
-# -*- mode: TCL;-*-
-
 boards/ctp7/constraints/c2c.xdc
 boards/ctp7/constraints/top_constraints.xdc

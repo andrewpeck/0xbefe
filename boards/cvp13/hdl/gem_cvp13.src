@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 boards/cvp13/hdl/common_cvp13.src
 
 boards/cvp13/hdl/gem_cvp13.vhd top=gem_cvp13

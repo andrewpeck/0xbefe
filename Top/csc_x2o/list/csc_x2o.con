@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 boards/x2o/constraints/vup.xdc
 boards/x2o/constraints/mgt_vu13p.xdc
 boards/x2o/constraints/slink_4_chan.xdc

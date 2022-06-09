@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # Common CVP13 IPs
 boards/cvp13/ip/common_cvp13_ip.src
 
