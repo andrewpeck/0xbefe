@@ -46,7 +46,7 @@ async def edges(dut, nloops=1000, nhits=32):
     await run_test(dut, "EDGES", nloops, nhits)
 
 
-async def run_test(dut, test, nloops=1000, nhits=128):
+async def run_test(dut, test, nloops=1000, nhits=128, verbose=False):
     """Test for priority encoder with randomized data on all inputs"""
 
     # extract detector parameters
@@ -103,7 +103,7 @@ async def run_test(dut, test, nloops=1000, nhits=128):
     # event loop
     for loop in range(nloops):
 
-        if loop % (nloops / 100) == 0:
+        if verbose or loop % (nloops / 100) == 0:
             print(" > loop %d of %d" % (loop, nloops))
 
         # Drive the inputs
@@ -227,6 +227,14 @@ async def run_test(dut, test, nloops=1000, nhits=128):
         # -------------------------------------------------------------------------------
         # check the actual clusters against the emulator
         # -------------------------------------------------------------------------------
+
+        if verbose:
+            for i in range(16):
+                if found_clusters[i].vpf == 1 or expected_clusters[i].vpf == 1:
+                    print(
+                        " > #%2d Found  %s, \n       expect %s"
+                        % (i, str(found_clusters[i]), str(expected_clusters[i]))
+                    )
 
         for i in range(16):
             assert equal(found_clusters[i], expected_clusters[i]), print(
