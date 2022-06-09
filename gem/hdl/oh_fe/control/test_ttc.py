@@ -113,7 +113,7 @@ async def test_status(dut):
     assert dut.bx0_local_o.value.integer == 0 # should NOT expect a BC0 since it is now offset
     assert dut.ttc_bx0 == 1
     # check bxn
-    assert dut.bxn_counter_o.value.integer == dut.bxn_offset_i.value
+    assert dut.bxn_counter_o.value.integer == dut.bxn_offset_i.value.integer
     assert dut.ttc_bx0.value.integer == 1
     assert dut.bx0_sync_err_o.value.integer == 0
     assert dut.bxn_sync_err_o.value.integer == 0

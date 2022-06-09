@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: CLK_PHASE_CHECK_V7
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: This module is a tool to inspect clock phase alignment of two clocks of the same frequency, using ILA.
 --              It samples both clocks with a third clock that is phase shifted in steps of ~19ps and records the results in ILA.
 --              Note that this module is using Virtex7 primitives, so it won't work on Virtex6

@@ -26,22 +26,22 @@ async def latch_in(dut):
 async def random_clusters(dut):
     """Test for priority encoder with randomized data on all inputs"""
 
-    random.seed(13)
-
-    nloops = 1000
-    nhits = 14
+    NLOOPS = 10000
+    NHITS = 14
 
     cocotb.fork(Clock(dut.clock, 40, units="ns").start())  # Create a clock
 
-    station = dut.STATION.value
+    STATION = dut.STATION.value
 
-    if station in [0, 1]:
-        n_partitions = 8
-    if station == 2:
-        n_partitions = 2
+    if STATION in [0, 1]:
+        NPARTITIONS = 8
+    elif STATION == 2:
+        NPARTITIONS = 2
+    else:
+        NPARTITIONS = 0
 
     n_vfats = dut.NUM_VFATS.value
-    width = int((n_vfats * 64) / n_partitions)
+    width = int((n_vfats * 64) / NPARTITIONS)
     cntb = 3
 
     dut.vpfs_i.value = 0
@@ -50,15 +50,15 @@ async def random_clusters(dut):
     dut.latch_i.value = 0
     cocotb.fork(latch_in(dut))
 
-    for _ in range(nloops):
+    for _ in range(NLOOPS):
 
-        partitions = [0 for _ in range(n_partitions)]
-        cnts = [0 for _ in range(n_partitions)]
+        partitions = [0]*NPARTITIONS
+        cnts = [0]*NPARTITIONS
 
         # create fill a large number with some random bits
-        for _ in range(nhits):
+        for _ in range(NHITS):
             size = random.randint(0, 7)
-            iprt = random.randint(0, n_partitions - 1)
+            iprt = random.randint(0, NPARTITIONS - 1)
             channel = random.randint(0, width - 1)
             partitions[iprt] |= 1 << channel
             cnts[iprt] |= size << (channel * cntb)
@@ -68,7 +68,7 @@ async def random_clusters(dut):
         vpfs_i = 0
         cnts_i = 0
 
-        for prt in range(n_partitions):
+        for prt in range(NPARTITIONS):
             vpfs_i |= partitions[prt] << int(width * prt)
             cnts_i |= cnts[prt] << int(width * cntb * prt)
 
@@ -77,19 +77,19 @@ async def random_clusters(dut):
                                dut.ENCODER_SIZE.value)
 
         # sort the found keys by {valid , partition, adr}
-        expect = sorted(expect, key=lambda x: (1 ^ x.vpf) << 13 | x.prt << 10 | x.adr, reverse=False)
+        #expect = sorted(expect, key=lambda x: x.vpf << 12 | x.prt << 8 | x.adr, reverse=True)
 
         adr = -1
         prt = -1
 
-        for ioutput, _ in enumerate(expect):
-            print("generate: i=%02d %s" % (ioutput, str(expect[ioutput])))
+        # for ioutput, _ in enumerate(expect):
+        #   print("expected: i=%02d %s" % (ioutput, str(expect[ioutput])))
 
-            assert expect[ioutput].prt >= prt
-            if (expect[ioutput].prt == prt):
-                assert expect[ioutput].adr >= adr
-            adr = expect[ioutput].adr
-            prt = expect[ioutput].prt
+            # assert expect[ioutput].prt >= prt
+            # if (expect[ioutput].prt == prt):
+            #     assert expect[ioutput].adr >= adr
+            # adr = expect[ioutput].adr
+            # prt = expect[ioutput].prt
 
         dut.vpfs_i.value = vpfs_i
         dut.cnts_i.value = cnts_i
@@ -108,23 +108,18 @@ async def random_clusters(dut):
             cluster.prt = dut.clusters_o[iclst].prt.value
             cluster.vpf = dut.clusters_o[iclst].vpf.value
 
-            if int(dut.clusters_o[iclst].adr.value) < 0x1ff:
-                print("found: i=%02d %s" % (iclst, str(cluster)))
-                found.append(cluster)
+            # if int(dut.clusters_o[iclst].adr.value) < 0x1ff:
+            #print("found: i=%02d %s" % (iclst, str(cluster)))
+            found.append(cluster)
 
         for j, _ in enumerate(found):
             cluster_a = expect[j]
-            cluster_b = found[j]
-            is_eq = equal(cluster_a, cluster_b)
-            if (not is_eq):
-                print(" >> clst%d a: %s" % (j, str(cluster_a)))
-                print(" >> clst%d b: %s" % (j, str(cluster_b)))
-            assert is_eq==1
-
-            # for k, _ in enumerate(found):
-            #     if equal(cluster_a, cluster_b):
-            #         found_a = True
-            # assert found_a, "Failed to find cluster %s" % str(cluster_a)
+            found_a = False
+            for k, _ in enumerate(found):
+                cluster_b = found[k]
+                if equal(cluster_a, cluster_b):
+                    found_a = True
+            assert found_a, "Failed to find cluster %s" % str(cluster_a)
 
         assert len(found) == len(expect)
 
@@ -169,8 +164,9 @@ def test_find_clusters(station, num_found_clusters):
         verilog_sources=verilog_sources,
         vhdl_sources=vhdl_sources,
         module=module,       # name of cocotb test module
-        #compile_args=["-2008"],
+        vhdl_compile_args=["-2008"],
         toplevel="find_clusters",            # top level HDL
+        sim_args = ['-do "set NumericStdNoWarnings 1;"'],
         toplevel_lang="vhdl",
         parameters=parameters,
         gui=0

@@ -117,7 +117,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             print ("Boss lpGBT %d: "%gbt)
 
             # Check Link Ready
-            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_error_backend_ready_boss[gbt] += 1
@@ -125,7 +125,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
             # Check Uplink FEC Errors
-            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
+            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_boss[gbt] += 1
@@ -174,7 +174,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
             print ("Sub lpGBT %d: "%gbt)
 
             # Check Link Ready
-            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_error_backend_ready_sub[gbt] += 1
@@ -182,7 +182,7 @@ def main(system, oh_select, gbt_list, relay_number, niter):
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
             # Check Uplink FEC Errors
-            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
+            n_fec_errors = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh_select, gbt)))
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_sub[gbt] += 1

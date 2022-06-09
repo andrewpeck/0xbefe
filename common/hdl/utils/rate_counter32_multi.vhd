@@ -3,11 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.common_pkg.all;
-use work.gem_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
-use work.cluster_pkg.all;
 
 entity rate_counter32_multi is
     --- Rate Counter for multiple inputs. Counter Width is fixed to 32 ---

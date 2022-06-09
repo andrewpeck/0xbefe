@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 # SCA
 common/hdl/slow_control/sca_controller.vhd

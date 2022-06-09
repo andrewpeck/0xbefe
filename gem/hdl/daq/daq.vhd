@@ -5,7 +5,7 @@
 -- Create Date:    20:18:40 09/17/2015 
 -- Design Name:    GLIB v2
 -- Module Name:    DAQ
--- Project Name:   GLIB v2
+-- Project Name:
 -- Target Devices: xc6vlx130t-1ff1156
 -- Tool versions:  ISE  P.20131013
 -- Description:    This module buffers track data, builds events, analyses the data for consistency and ships off the events with all the needed headers and trailers to AMC13 over DAQLink
@@ -261,7 +261,9 @@ architecture Behavioral of daq is
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
-    signal spy_gbe_ethertype          : std_logic_vector(15 downto 0);    
+    signal spy_gbe_ethertype        : std_logic_vector(15 downto 0);
+    signal spy_min_payload_words    : std_logic_vector(13 downto 0);
+    signal spy_max_payload_words    : std_logic_vector(13 downto 0);
     signal spy_prescale             : std_logic_vector(15 downto 0);
     
     signal spy_err_evt_too_big      : std_logic;
@@ -299,7 +301,10 @@ architecture Behavioral of daq is
     signal chmb_evtfifos_empty  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '1'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_evtfifos_rd_en  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
     signal chmb_infifos_rd_en   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0'); -- you should probably just move this flag out of the t_chamber_evtfifo_rd_array struct 
-    signal chmb_tts_states      : t_std4_array(0 to g_NUM_OF_OHs - 1);
+    signal chmb_tts_states      : t_std4_array(0 to g_NUM_OF_OHs - 1) := (others => (others => '0'));
+    signal chmb_tts_err_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_warn_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
+    signal chmb_tts_oos_arr     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
     signal chmb_infifo_underflow: std_logic;
     
     signal err_event_too_big    : std_logic;
@@ -860,13 +865,12 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS    => 3976,
-            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
             g_MAX_EVT_WORDS        => 50000,
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
             g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => true
+            g_USE_TRAILER_FLAG_EOE => true,
+            g_USE_GEM_FORMAT       => true
         )
         port map(
             reset_i             => reset_daq,
@@ -876,6 +880,8 @@ begin
             dest_mac_i          => spy_gbe_dest_mac,
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
+            min_payload_words_i => spy_min_payload_words,
+            max_payload_words_i => spy_max_payload_words,
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout(15 downto 0),
             data_trailer_i      => spy_fifo_dout(16),
@@ -967,6 +973,9 @@ begin
         chamber_evtfifos(i).rd_en <= chmb_evtfifos_rd_en(i);
         chamber_infifos(i).rd_en <= chmb_infifos_rd_en(i);
         chmb_tts_states(i) <= input_status_arr(i).tts_state;
+        chmb_tts_err_arr(i) <= input_status_arr(i).tts_state(2) and input_status_arr(i).tts_state(3);
+        chmb_tts_oos_arr(i) <= input_status_arr(i).tts_state(1);
+        chmb_tts_warn_arr(i) <= input_status_arr(i).tts_state(0);
         
     end generate;
         
@@ -983,14 +992,15 @@ begin
                 tts_chmb_warning <= '0';
                 tts_start_cntdwn_chmb <= x"ff";
             else
-                if (tts_start_cntdwn_chmb /= x"00") then
-                    for I in 0 to (g_NUM_OF_OHs - 1) loop
-                        tts_chmb_critical <= tts_chmb_critical or (chmb_tts_states(I)(2) and input_mask(I));
-                        tts_chmb_out_of_sync <= tts_chmb_out_of_sync or (chmb_tts_states(I)(1) and input_mask(I));
-                        tts_chmb_warning <= tts_chmb_warning or (chmb_tts_states(I)(0) and input_mask(I));
-                    end loop;                
+                if (tts_start_cntdwn_chmb = x"00") then
+                    tts_chmb_critical <= or_reduce(chmb_tts_err_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_out_of_sync <= or_reduce(chmb_tts_oos_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
+                    tts_chmb_warning <= or_reduce(chmb_tts_warn_arr and input_mask(g_NUM_OF_OHs - 1 downto 0));
                 else
                     tts_start_cntdwn_chmb <= tts_start_cntdwn_chmb - 1;
+                    tts_chmb_critical <= '0';
+                    tts_chmb_out_of_sync <= '0';
+                    tts_chmb_warning <= '0';
                 end if;
             end if;
         end if;
@@ -1011,7 +1021,7 @@ begin
                 tts_busy <= '1';
                 tts_start_cntdwn <= x"ff";
             else
-                if (tts_start_cntdwn /= x"00") then
+                if (tts_start_cntdwn = x"00") then
                     tts_busy <= '0';
                     tts_critical_error <= err_l1afifo_full or tts_chmb_critical_tts_clk or err_daqfifo_full_tts_clk;
                     tts_out_of_sync <= tts_chmb_out_of_sync_tts_clk;
@@ -1115,6 +1125,7 @@ begin
                 last_dav_timer <= (others => '0');
                 dav_timeout_flags <= (others => '0');
                 chmb_infifo_underflow <= '0';
+                spy_prescale_counter <= x"0001";
                 spy_prescale_keep_evt <= '0';
             else
             
@@ -1164,12 +1175,12 @@ begin
                             
                             -- if last event fifo has already been read by the user then enable writing to this fifo for the current event
                             last_evt_fifo_en <= last_evt_fifo_empty and (not block_last_evt_fifo);
-                            
-                            -- trying to match the CSC DDU logic here somewhat.. so it's kindof convoluted..
-                            -- the counter starts at 2 after resync, and then events are accepted when it's equal to the set prescale
-                            -- once an event is accepted, the counter is reset to 1 (note not 2)
-                            -- prescale values of 0 and 1 just allow all events 
-                            if (spy_prescale = x"0000" or spy_prescale = x"0001") then
+
+                            -- prescale the events sent in the spy path
+                            if (spy_prescale = x"0000") then -- disable
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '0';
+                            elsif (spy_prescale = x"0001") then -- allow all events
                                 spy_prescale_counter <= x"0001";
                                 spy_prescale_keep_evt <= '1';
                             elsif (std_logic_vector(spy_prescale_counter) = spy_prescale) then

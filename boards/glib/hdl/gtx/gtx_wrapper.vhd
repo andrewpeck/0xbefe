@@ -5,7 +5,7 @@
 -- Create Date:    08:37:33 07/07/2015 
 -- Design Name:    GLIB v2
 -- Module Name:    gtx_wrapper - Behavioral 
--- Project Name:   GLIB v2
+-- Project Name:
 -- Target Devices: xc6vlx130t-1ff1156
 -- Tool versions:  ISE  P.20131013
 -- Description: 

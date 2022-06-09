@@ -48,13 +48,14 @@ end link_rx_trigger_ge11_4g;
 
 architecture Behavioral of link_rx_trigger_ge11_4g is    
 
-    -- trigger links will send a K-char every 4 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0xBC, 0xF7, 0xFB, 0xFD
-    -- in case there is an overflow in that particular BX, the K-char for this BX will be 0xFC
+    -- trigger links will send a K-char every 4 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0x1C, 0xF7, 0xFB, 0xFD
+    -- in case there is an overflow in that particular BX, the K-char for this BX will be 0xFE
 
-    constant FRAME_MARKERS          : t_std8_array(0 to 3) := (x"bc", x"f7", x"fb", x"fd");
-    constant OVERFLOW_FRAME_MARKER  : std_logic_vector(7 downto 0) := x"fc";
-    constant BC0_FRAME_MARKER       : std_logic_vector(7 downto 0) := x"1c";
-    constant RESYNC_FRAME_MARKER    : std_logic_vector(7 downto 0) := x"3c";
+    -- in order of priority
+    constant BC0_FRAME_MARKER       : std_logic_vector(7 downto 0) := x"bc"; -- K.28.5
+    constant RESYNC_FRAME_MARKER    : std_logic_vector(7 downto 0) := x"3c"; -- K.28.1
+    constant OVERFLOW_FRAME_MARKER  : std_logic_vector(7 downto 0) := x"fe"; -- K.30.7
+    constant FRAME_MARKERS          : t_std8_array(0 to 3) := (x"1c", x"f7", x"fb", x"fd"); -- K.28.0, K.23.7, K.27.7, K.29.7
 
     type state_t is (COMMA, DATA_0, DATA_1, DATA_2, DATA_3);    
     
@@ -299,7 +300,7 @@ begin
                 frame_counter_valid <= '0';
             else
                 if frame_counter_valid = '0' then
-                    if frame_40(7 downto 0) = FRAME_MARKERS(0) and frame_40(81 downto 80) = "01" and frame_40(83 downto 82) = "01" then
+                    if frame_40(7 downto 0) = BC0_FRAME_MARKER and frame_40(81 downto 80) = "01" and frame_40(83 downto 82) = "01" then
                         frame_counter <= 1;
                         frame_counter_valid <= '1';
                     end if;

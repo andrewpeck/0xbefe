@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 09/28/2017 13:50
 -- Module Name: TTC GENERATOR
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: This module can be used to generate a fake TTC command stream (particularly for L1As and CalPulses), which is useful for calibration   
 -- 
 ----------------------------------------------------------------------------------

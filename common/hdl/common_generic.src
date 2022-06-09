@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 # Utils
 common/hdl/utils/synchronizer__generic.vhd

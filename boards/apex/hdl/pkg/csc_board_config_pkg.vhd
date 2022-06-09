@@ -19,7 +19,7 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 package board_config_package is
 
     ------------ Firmware flavor and board type  ------------
-    constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"1"; -- 0 = GEM_AMC; 1 = CSC_FED
+    constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"1"; -- 0 = GEM; 1 = CSC_FED
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"3"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
 
     ------------ Board specific constants ------------
@@ -147,7 +147,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
     );
 
     constant CFG_MGT_TTC : t_mgt_type_config := (
@@ -163,7 +164,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => true, 
-        rx_use_buf              => false
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
     );
     
     constant CFG_MGT_DMB : t_mgt_type_config := (
@@ -179,7 +181,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
         tx_multilane_phalign    => false, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
     );
 
     constant CFG_MGT_ODMB57 : t_mgt_type_config := (
@@ -195,7 +198,25 @@ package board_config_package is
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 40,
         tx_multilane_phalign    => true, 
-        rx_use_buf              => true
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => true
+    );
+
+    constant CFG_MGT_ODMB57_BIDIR : t_mgt_type_config := (
+        link_type               => MGT_ODMB57_BIDIR,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 32,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => true
     );
 
     constant CFG_MGT_GBTX : t_mgt_type_config := (
@@ -211,7 +232,8 @@ package board_config_package is
         rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
         tx_bus_width            => 40,
         tx_multilane_phalign    => true, 
-        rx_use_buf              => false
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
     );
            
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;

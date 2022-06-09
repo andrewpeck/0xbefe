@@ -43,8 +43,8 @@
           description="Firmware release git commit hash"
           fw_signal="g_FW_SHA"/>
     <node id="FW_FLAVOR" address="0x4" mask="0x0000000f" permission="r"
-          description="Firmware flavor: 0 = GEM_AMC, 1 = CSC_FED"
-          sw_enum="['GEM_AMC', 'CSC_FED']"
+          description="Firmware flavor: 0 = GEM, 1 = CSC_FED"
+          sw_enum="['GEM', 'CSC_FED']"
           fw_signal="CFG_FW_FLAVOR"/>
     <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
           description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O"

@@ -294,7 +294,6 @@ begin
 
     i_slink_rocket : entity work.slink_rocket
         generic map(
-            g_FPGA_FAMILY       => "virtex",
             g_NUM_CHANNELS      => CFG_NUM_GEM_BLOCKS,
             g_LINE_RATE         => "25.78125",
             q_REF_CLK_FREQ      => "156.25",
@@ -316,6 +315,29 @@ begin
         );
 
     slink_mgt_ref_clk <= refclk0(24);
+
+    --================================--
+    -- PROMless
+    --================================--
+
+    g_promless : if CFG_GEM_STATION(0) /= 0 generate
+        i_promless : entity work.promless
+            generic map(
+                g_NUM_CHANNELS => CFG_NUM_GEM_BLOCKS,
+                g_MAX_SIZE_BYTES   => 8_388_608,
+                g_MEMORY_PRIMITIVE => "ultra",
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+            )
+            port map(
+                reset_i         => '0',
+                to_promless_i   => to_promless,
+                from_promless_o => from_promless,
+                ipb_reset_i     => ipb_reset,
+                ipb_clk_i       => ipb_clk,
+                ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
+                ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
+            );
+    end generate;
     
     --================================--
     -- Board System registers

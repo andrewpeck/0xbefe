@@ -458,7 +458,7 @@ begin
     -- ME0 Clusters --
 
     me0_trigger : if (g_GEM_STATION = 0) generate
-        i_clusters : for i in 0 to g_NUM_OF_OHs - 1 generate
+        
             me0_cluster: entity work.sbit_me0
                 generic map(
                     g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
@@ -475,7 +475,7 @@ begin
                     ipb_clk_i           => ipb_clk_i,
                     ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
                     me0_cluster_count_o => open,
-                    me0_clusters_o      => me0_clusters_arr(i),
+                    me0_clusters_o      => me0_clusters_arr,
                     ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
                 );
         end generate;
@@ -483,7 +483,7 @@ begin
         -- import clusters from ME0 cluster module to trigger module--
         sbit_clusters_arr <= me0_clusters_arr;
 
-    end generate;
+--    end generate;
 
     -- Trigger module --
     i_trigger : entity work.trigger
@@ -650,7 +650,8 @@ begin
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_DEBUG             => false
+            g_DEBUG             => false,
+            g_DEBUG_IC          => CFG_DEBUG_IC_RX
         )
         port map(
             reset_i             => reset,
@@ -954,14 +955,14 @@ begin
                 );
         end generate;
 
-        i_ila_gbe_rx_link : entity work.gt_rx_link_ila_wrapper
+        i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
             port map(
                 clk_i        => spy_usrclk_i,
                 rx_data_i    => spy_rx_data_i,
                 mgt_status_i => spy_rx_status_i
             );
 
-        i_ila_gbe_tx_link : entity work.gt_tx_link_ila_wrapper
+        i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
             port map(
                 clk_i   => spy_usrclk_i,
                 kchar_i => spy_tx_data_o.txcharisk,

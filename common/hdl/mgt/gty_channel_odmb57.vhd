@@ -7,7 +7,7 @@
 -- Description:    This is a wrapper for a single GTY channel that can be used with ODMB5 and ODMB7 boards:
 --                 Receiver is 8b10b encoded 12.5Gb/s with elastic buffers
 --                 Transmitter is a GBTX link (4.8Gb/s raw without buffers)
---                 This MGT should be used with a QPLL0 for the receiver (refclk 200MHz), and QPLL1 or CPLL for the transmitter (refclk 160MHz LHC freq)
+--                 This MGT should be used with a QPLL0 for the receiver, and QPLL1 or CPLL for the transmitter (refclk is a multiple of LHC freq)
 --                 Receiver user data bus width is 64 bits @ 156.25MHz (note rxusrclk is 312.5MHz, rxusrclk2 is 156.25MHz)
 --                 Transmitter user data bus witdth is 40 bits @ 120MHz 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,16 +249,28 @@ begin
         rxpllclksel <= "10";
     end generate;
         
-        
-    -- 8b10b encoding 64bit wide data bus
-    txdata(63 downto 0) <= tx_data_i.txdata(63 downto 0);
-    txdata(127 downto 64) <= (others => '0');
-    
-    txctrl2(7 downto 0) <= tx_data_i.txcharisk(7 downto 0);
-    
-    txctrl0 <= (others => '0'); -- disparity controlled by the 8b10b encoder 
-    txctrl1 <= (others => '0'); -- disparity controlled by the 8b10b encoder
+    -- TX: raw encoding 40 bit wide data bus
+    txdata(31 downto 0) <= tx_data_i.txdata(37 downto 30) &
+                           tx_data_i.txdata(27 downto 20) &
+                           tx_data_i.txdata(17 downto 10) &
+                           tx_data_i.txdata(7 downto 0);
+                           
+    txctrl0(3 downto 0) <= tx_data_i.txdata(38) &
+                           tx_data_i.txdata(28) &
+                           tx_data_i.txdata(18) &
+                           tx_data_i.txdata(8);
 
+    txctrl1(3 downto 0) <= tx_data_i.txdata(39) &
+                           tx_data_i.txdata(29) &
+                           tx_data_i.txdata(19) &
+                           tx_data_i.txdata(9);
+    
+    txdata(127 downto 32) <= (others => '0');
+    txctrl0(15 downto 4) <= (others => '0');
+    txctrl1(15 downto 4) <= (others => '0');
+    txctrl2 <= (others => '0');        
+        
+    -- RX: 8b10b encoding 64bit wide data bus
     rx_data_o.rxdata(63 downto 0) <= rxdata(63 downto 0);
     
     rx_data_o.rxcharisk(7 downto 0) <= rxctrl0(7 downto 0);

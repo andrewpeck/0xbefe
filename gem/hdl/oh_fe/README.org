@@ -67,8 +67,8 @@ Each conductor can be individually programmed into one of 4 modes:
 
 The registers you will want to use to control the HDMI output are:
 
-- GEM_AMC.OH.OH{X}.FPGA.CONTROL.HDMI.SBIT_SEL{0-7}
-- GEM_AMC.OH.OH{X}.FPGA.CONTROL.HDMI.SBIT_MODE{0-7}
+- BEFE.GEM.OH.OH{X}.FPGA.CONTROL.HDMI.SBIT_SEL{0-7}
+- BEFE.GEM.OH.OH{X}.FPGA.CONTROL.HDMI.SBIT_MODE{0-7}
 
 The assignments of these signals in the HDMI cable are:
 

@@ -17,6 +17,8 @@ package common_pkg is
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
     function min(arg1, arg2: integer) return integer; -- returns the lower of the two arguments
     function max(arg1, arg2: integer) return integer; -- returns the higher of the two arguments
+    function reverse_bytes(data_in: std_logic_vector) return std_logic_vector; -- reverses byte order in the provided std_logic_vector
+    function reverse_bits(data_in: std_logic_vector) return std_logic_vector; -- reverses bit order in the provided std_logic_vector
 
     --============--
     --== Common ==--
@@ -420,9 +422,10 @@ package common_pkg is
         rx_pll_locked   : std_logic;
         rxbufstatus     : std_logic_vector(2 downto 0);
         rxclkcorcnt     : std_logic_vector(1 downto 0);
+        rxchanisaligned : std_logic; -- channel bonding status
     end record;
 
-    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00");
+    constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00", rxchanisaligned => '0');
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
 
@@ -632,5 +635,29 @@ package body common_pkg is
             return arg2;
         end if;
     end function;
-            
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function reverse_bytes(data_in: std_logic_vector) return std_logic_vector is
+        constant NUM_BYTES : integer := data_in'length / 8;
+        variable ret : std_logic_vector(data_in'range);
+    begin
+        assert data_in'length mod 8 = 0 report "Non byte aligned std_logic_vector length has been passed to reverse_bytes() function" severity failure;
+        for byte in 0 to NUM_BYTES - 1 loop
+            ret(ret'high - (byte * 8) downto ret'high - (byte * 8) - 7) := data_in(data_in'low + (byte * 8) + 7 downto data_in'low + (byte * 8));
+        end loop;
+        return ret;
+    end function;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function reverse_bits(data_in: std_logic_vector) return std_logic_vector is
+        variable ret : std_logic_vector(data_in'range);
+    begin
+        for i in 0 to data_in'length - 1 loop
+            ret(ret'high - i) := data_in(data_in'low + i);
+        end loop;
+        return ret;
+    end function;
+                
 end common_pkg;

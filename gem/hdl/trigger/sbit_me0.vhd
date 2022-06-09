@@ -39,7 +39,7 @@ entity sbit_me0 is
 
         -- Cluster outputs
         me0_cluster_count_o : out std_logic_vector(10 downto 0);
-        me0_clusters_o      : out t_oh_clusters;
+        me0_clusters_o      : out t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- IPbus
         ipb_reset_i         : in  std_logic;
@@ -59,16 +59,16 @@ architecture sbit_me0_arch of sbit_me0 is
         PORT (
             clk : IN STD_LOGIC;
 
-            probe0 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe1 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe2 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe3 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe4 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe5 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe6 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe7 : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-            probe8 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
-            probe9 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+            probe0  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe1  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe2  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe3  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe4  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe5  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe6  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe7  : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+            probe8  : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
+            probe9  : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe10 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe11 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             probe12 : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
@@ -113,6 +113,7 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat3_sbit0xe_test        : std_logic_vector(7 downto 0);
     signal test_sbit0xs_count_me0    : std_logic_vector(31 downto 0);
     signal vfat3_sbit0xs_test        : std_logic;
+    signal test_sel_oh_sbit_me0      : std_logic_vector(31 downto 0);
     signal test_sel_vfat_sbit_me0    : std_logic_vector(31 downto 0);
     signal test_sel_elink_sbit_me0   : std_logic_vector(31 downto 0);
     signal test_sel_sbit_me0         : std_logic_vector(31 downto 0);
@@ -132,7 +133,6 @@ architecture sbit_me0_arch of sbit_me0 is
 
     signal me0_clusters_probe_raw : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal me0_cluster_count : std_logic_vector(10 downto 0);
     signal me0_overflow      : std_logic;
 
@@ -221,14 +221,14 @@ begin
             PORT MAP (
                 clk => ttc_clk_i.clk_40,
 
-                probe0 => me0_clusters_o(0).size & me0_clusters_o(0).address,
-                probe1 => me0_clusters_o(1).size & me0_clusters_o(1).address,
-                probe2 => me0_clusters_o(2).size & me0_clusters_o(2).address,
-                probe3 => me0_clusters_o(3).size & me0_clusters_o(3).address,
-                probe4 => me0_clusters_o(4).size & me0_clusters_o(4).address,
-                probe5 => me0_clusters_o(5).size & me0_clusters_o(5).address,
-                probe6 => me0_clusters_o(6).size & me0_clusters_o(6).address,
-                probe7 => me0_clusters_o(7).size & me0_clusters_o(7).address,
+                probe0 => me0_clusters_o(0)(0).size & me0_clusters_o(0)(0).address,
+                probe1 => me0_clusters_o(0)(1).size & me0_clusters_o(0)(1).address,
+                probe2 => me0_clusters_o(0)(2).size & me0_clusters_o(0)(2).address,
+                probe3 => me0_clusters_o(0)(3).size & me0_clusters_o(0)(3).address,
+                probe4 => me0_clusters_o(0)(4).size & me0_clusters_o(0)(4).address,
+                probe5 => me0_clusters_o(0)(5).size & me0_clusters_o(0)(5).address,
+                probe6 => me0_clusters_o(0)(6).size & me0_clusters_o(0)(6).address,
+                probe7 => me0_clusters_o(0)(7).size & me0_clusters_o(0)(7).address,
                 probe8 => sbits_probe,
                 probe9 => vfat_sbits_arr(0)(1),
                 probe10 => vfat_sbits_arr(0)(8),
@@ -268,7 +268,7 @@ begin
 
     --== COUNTER for selectable sbit ==--
     -- assigned sbit of selected vfat (x) and sbit (s) 
-    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
+    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
         generic map(
@@ -289,11 +289,10 @@ begin
     cluster_packer_me0 : if (true) generate
 
     begin
-        each_oh:
- for oh in 0 to g_NUM_OF_OHs - 1 generate
+        each_oh: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
             signal vfat_sbits_type_change : sbits_array_t(24 -1 downto 0);
-
+            signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
         begin
             each_vfat: for vfat in 0 to 23 generate
@@ -326,13 +325,11 @@ begin
                 clusters_masked_o      => open,
                 overflow_o             => me0_overflow
                 );
-        end generate;
-    end generate;
+       
     --------------------------------------------------------------------------------
     -- Cluster mapping to ports
     --------------------------------------------------------------------------------
-
-    cluster_loop : for I in 0 to 7 generate
+        cluster_loop : for I in 0 to 7 generate
 
         process (ttc_clk_i.clk_40)
         begin
@@ -342,14 +339,16 @@ begin
                 me0_clusters <= me0_clusters;
 
                 if (me0_clusters(I).vpf = '1') then
-                    me0_clusters_o(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);
-                    me0_clusters_o(I).size    <= me0_clusters(I).cnt;
+                    me0_clusters_o(oh)(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);
+                    me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;
                 else
-                    me0_clusters_o(I).address <= (others => '1');
-                    me0_clusters_o(I).size <= (others => '1');
+                    me0_clusters_o(oh)(I).address <= (others => '1');
+                    me0_clusters_o(oh)(I).size <= (others => '1');
                 end if;
             end if;
         end process;
+        end generate;
+        end generate;
     end generate;
 
     --===============================================================================================

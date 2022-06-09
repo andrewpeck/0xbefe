@@ -1366,7 +1366,7 @@
     </node> <!--TRIG-->
 
     <!--GBT module -->
-    <node id="GBT"  address="0x4000"
+    <node id="GBT"  address="0x3000"
           description="Contains functionality for controlling and monitoring the bidirectional GBTx to FPGA link"
           fw_is_module="true"
           fw_module_file="../gem/hdl/oh_fe/gbt/gbt.vhd"
@@ -1462,7 +1462,7 @@
     </node> <!--GBT-->
 
     <!--MGT module -->
-    <node id="MGT"  address="0x5000"
+    <node id="MGT"  address="0x4000"
           description="Controls and monitors the multi-gigabit links that drive the trigger fiber tranceivers"
           fw_is_module="true"
           fw_module_file="../gem/hdl/oh_fe/trigger/trigger_data_phy.vhd"
@@ -1471,7 +1471,7 @@
           fw_bus_reset_signal="ipb_reset_i"
           fw_master_bus_signal="ipb_mosi_i"
           fw_slave_bus_signal="ipb_miso_o"
-          fw_reg_addr_msb="4"
+          fw_reg_addr_msb="5"
           fw_reg_addr_lsb="0">
 
         <node id="PLL_LOCK" address="0x0" permission="r"
@@ -1486,43 +1486,43 @@
               generate_address_step="0x5"
               generate_idx_var="GT">
 
-            <node id="TX_PRBS_MODE${GT}" address="0x0" permission="rw"
+            <node id="TX_PRBS_MODE" address="0x0" permission="rw"
                   mask="0x00000007"
                   description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
                   fw_default="0x0"
                   fw_signal="control(${GT}).txprbssel"/>
 
-            <node id="RX_PRBS_MODE${GT}" address="0x0" permission="rw"
+            <node id="RX_PRBS_MODE" address="0x0" permission="rw"
                   mask="0x00000038"
                   description="0: Standard \n 1: PRBS-7 \n 2: PRBS-15 \n 3: PRBS-23 \n 4: PRBS-31"
                   fw_default="0x0"
                   fw_signal="control(${GT}).rxprbssel"/>
 
-            <node id="LOOPBACK_MODE${GT}" address="0x0" permission="rw"
+            <node id="LOOPBACK_MODE" address="0x0" permission="rw"
                   mask="0x000001c0"
                   description="GT Loopback Mode \n 0 = normal \n 1 = near end pcs \n 2 = near end pma \n4 = far end pma \n 6 = far end pcs"
                   fw_default="0x0"
                   fw_signal="control(${GT}).txloopback"/>
 
-            <node id="TX_DIFFCTRL${GT}" address="0x0" permission="rw"
+            <node id="TX_DIFFCTRL" address="0x0" permission="rw"
                   mask="0x0000f000"
                   description="TX Differential Swing Control"
                   fw_default="0xC"
                   fw_signal="control(${GT}).txdiffctrl"/>
 
-            <node id="GTTXRESET${GT}" address="0x1" permission="w"
+            <node id="GTTXRESET" address="0x1" permission="w"
                   description="GT TX Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).gttxreset"/>
 
-            <node id="TXPRBS_FORCE_ERR${GT}" address="0x2" permission="w"
+            <node id="TXPRBS_FORCE_ERR" address="0x2" permission="w"
                   description="TX PRBS Force Error" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txprbsforceerr"/>
 
-            <node id="TXPCSRESET${GT}" address="0x3" permission="w"
+            <node id="TXPCSRESET" address="0x3" permission="w"
                   description="TX PCS Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpcsreset"/>
 
-            <node id="TXPMARESET${GT}" address="0x4" permission="w"
+            <node id="TXPMARESET" address="0x4" permission="w"
                   description="TX PMA Reset" mask="0x1"
                   fw_write_pulse_signal="control(${GT}).txpmareset"/>
         </node> <!--Control-->
@@ -1534,26 +1534,62 @@
               generate_address_step="0x1"
               generate_idx_var="GT">
 
-            <node id="TXFSM_RESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TXFSM_RESET_DONE" address="0x0" permission="r"
                   mask="0x00000001"
                   description=""
                   fw_signal="status(${GT}).txfsm_reset_done"/>
 
-            <node id="TXRESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TXRESET_DONE" address="0x0" permission="r"
                   mask="0x00000002"
                   description=""
                   fw_signal="status(${GT}).txreset_done"/>
 
-            <node id="TX_PMA_RESET_DONE${GT}" address="0x0" permission="r"
+            <node id="TX_PMA_RESET_DONE" address="0x0" permission="r"
                   mask="0x00000004"
                   description=""
                   fw_signal="status(${GT}).txpmaresetdone"/>
 
-            <node id="TX_PHALIGN_DONE${GT}" address="0x0" permission="r"
+            <node id="TX_PHALIGN_DONE" address="0x0" permission="r"
                   mask="0x00000008"
                   description=""
                   fw_signal="status(${GT}).txphaligndone"/>
         </node> <!--Status-->
+
+        <!-- MGT RX -->
+        <node id="RX_PLL_RESET" address="0x20" permission="w"
+              description="RX PLL Reset"
+              mask="0x1"
+              fw_write_pulse_signal="pll_rx_reset"/>
+        <node id="RX_GTX_RESET" address="0x21" permission="w"
+              description="RX GTX Reset"
+              mask="0x1"
+              fw_write_pulse_signal="gtx_rx_reset"/>
+        <node id="RX_RESET" address="0x22" permission="w"
+              description="RX Reset"
+              mask="0x1"
+              fw_write_pulse_signal="rx_reset"/>
+        <node id="RX_POWERDOWN" address="0x23" permission="rw"
+              description="RX Powerdown"
+              mask="0x1"
+              fw_default="0x1"
+              fw_signal="rx_powerdown"/>
+        <node id="RX_VALID" address="0x24" permission="r"
+              description="RX valid"
+              mask="0xf"
+              fw_signal="rx_valid"/>
+
+        <node id="NOT_IN_TABLE_CNT_RESET" address="0x2f" permission="w"
+              description="Not in table counter Reset"
+              mask="0x1"
+              fw_write_pulse_signal="notintable_cnt_reset"/>
+        <node id="NOT_IN_TABLE_CNT${GT}" address="0x30" mask="0x0000ffff" permission="r"
+              description="MGT ${GT} Not In Table Error Counter"
+              fw_signal="cnt_notintable(${GT})"
+              generate="true"
+              generate_size="4"
+              generate_address_step="0x1"
+              generate_idx_var="GT">
+        </node>
 
         <!--<node id="RX{GT}_PRBS_ERR_CNT" address="0xf" permission="r"
             mask="0xff"

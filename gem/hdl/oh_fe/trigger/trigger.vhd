@@ -303,7 +303,6 @@ begin
       start_of_frame_n => vfat_sot_n,
 
       -- control
-
       sbit_map_sel           => sbit_map_sel,
       aligned_count_to_ready => aligned_count_to_ready,
       vfat_mask_i            => vfat_mask (NUM_VFATS -1 downto 0),

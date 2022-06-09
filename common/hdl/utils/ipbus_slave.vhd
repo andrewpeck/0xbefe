@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 04/24/2016 04:59:35 AM
 -- Module Name: ipbus_slave
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: A generic ipbus client for reading and writing 32bit arrays on an independent user clock (domain crossing is taken care of and data outputs are set synchronously with the user clock).
 --              In addition to the read and write data arrays, it also outputs read and write pulses which can be used for various resets e.g. to clear the data on write or read 
 -- 

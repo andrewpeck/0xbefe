@@ -318,6 +318,7 @@ begin
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
     begin
+
       process (clock) is
       begin
         if (rising_edge(clock)) then
@@ -325,6 +326,7 @@ begin
                                    clusters_s1(I).prt & clusters_s1(I).adr;
         end if;
       end process;
+
     end generate;
 
     unwrap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
@@ -332,13 +334,13 @@ begin
       constant hi : integer := size*(I+1)-1;
       constant lo : integer := size*(I);
 
-      constant adr_lo : integer := lo;
-      constant adr_hi : integer := lo+MXADRB-1;
-      constant prt_lo : integer := lo+MXADRB;
-      constant prt_hi : integer := lo+MXADRB+MXPRTB-1;
-      constant vpf_lo : integer := lo+MXADRB+MXPRTB;
-      constant vpf_hi : integer := lo+MXADRB+MXPRTB+1-1;
-      constant cnt_lo : integer := lo+MXADRB+MXPRTB+1;
+      constant prt_lo : integer := lo;
+      constant prt_hi : integer := lo+MXPRTB-1;
+      constant vpf_lo : integer := lo+MXPRTB;
+      constant vpf_hi : integer := lo+MXPRTB;
+      constant adr_lo : integer := lo+1+MXPRTB;
+      constant adr_hi : integer := lo+1+MXPRTB+MXADRB-1;
+      constant cnt_lo : integer := lo+1+MXPRTB+MXADRB;
       constant cnt_hi : integer := lo+1+MXPRTB+MXADRB+MXCNTB-1;
     begin
 
@@ -360,7 +362,7 @@ begin
         WORDS     => NUM_FOUND_CLUSTERS,
         WORD_BITS => 1 + MXADRB + MXCNTB + MXPRTB,
         -- sort on {Partition, VPF}
-        COMP_HIGH => 1 + MXPRTB-1+MXADRB,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
+        COMP_HIGH => 1 + MXPRTB-1,      -- This is used directly as a COMP_HIGH downto 0, so you must factor in the -1
         COMP_LOW  => 0,
         INFO_BITS => 1
         )

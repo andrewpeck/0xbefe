@@ -19,7 +19,7 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 package board_config_package is
 
     ------------ Firmware flavor and board type  ------------
-    constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"0"; -- 0 = GEM_AMC; 1 = CSC_FED
+    constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"0"; -- 0 = GEM; 1 = CSC_FED
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"1"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
 
     ------------ Board specific constants ------------
@@ -63,6 +63,7 @@ package board_config_package is
     constant CFG_DEBUG_DAQ                  : boolean := true;
     constant CFG_DEBUG_TRIGGER              : boolean := true;
     constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
+    constant CFG_DEBUG_IC_RX                : boolean := false; --set to true to instantiate ILA in IC rx
     
     ----------------------------------------------------------------------------------------------
 
@@ -196,8 +197,8 @@ package board_config_package is
     -- we're not using this on CTP7 yet, so this is just a dummy to suppress errors
     type t_mgt_config_arr is array (0 to 1) of t_mgt_config;
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true),   
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, ibert_inst => true)   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true),   
+        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_LPGBT, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true)   
     );    
     
 end board_config_package;

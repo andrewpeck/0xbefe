@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # X2O BD
 boards/x2o/bd/apex/apex_blk.bd
 boards/x2o/hdl/bd/bd_utils.v

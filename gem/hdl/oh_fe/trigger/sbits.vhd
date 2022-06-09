@@ -366,7 +366,7 @@ begin
           );
     end generate;
 
-    tmr_gen : if (EN_TMR = 1) generate
+    tmr_gen : if (EN_TMR_CLUSTER_PACKER = 1) generate
     begin
 
       majority_err (overflow_o, cluster_tmr_err(0), tmr_err_inj xor overflow(0), overflow(1), overflow(2));
@@ -392,7 +392,7 @@ begin
       end generate;
     end generate;
 
-    notmr_gen : if (EN_TMR /= 1) generate
+    notmr_gen : if (EN_TMR_CLUSTER_PACKER /= 1) generate
       clusters_masked          <= clusters_masked_tmr(0);
       clusters_unmasked        <= clusters_unmasked_tmr(0);
       overflow_o               <= overflow(0);

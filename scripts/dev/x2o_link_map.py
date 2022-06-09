@@ -4,15 +4,15 @@ from common.utils import *
 # FPGA_TYPE = "VU27P"
 FPGA_TYPE = "VU13P"
 # RESERVED_GTYS = [124, 125, 126, 127] # reserved GTYs, which are e.g. used by the C2C
-RESERVED_GTYS = [126, 127, 230] # reserved GTYs, which are e.g. used by the C2C
+RESERVED_GTYS = [126, 127, 231] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = [126, 127]
 # RESERVED_REFCLK1 = [125]
 RESERVED_REFCLK1 = []
-NUM_SLR = 4
 USE_QSFPDD = True
+RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH)
 
 ###############################################################
-########################## GEM / CSC ##########################
+############################# GEM #############################
 ###############################################################
 
 # FULL CONFIG
@@ -22,10 +22,37 @@ USE_QSFPDD = True
 # CSC_NUM_DMB = 56
 
 # CONFIG FOR QSFP-DD
+GEM_NUM_SLR = 1
+GEM_MAX_OHS = 12
+
 GE11_NUM_OH = 0
-GE21_NUM_OH = 20
-ME0_NUM_OH = 6
-CSC_NUM_DMB = 28
+GE21_NUM_OH = 4 #20
+ME0_NUM_OH = 1 #6
+
+# QSFP assignment per GEM BLOCK
+GE21_OH_QSFPS = [[7, 6]]
+ME0_OH_QSFPS = [[9, 8]]
+GEM_USE_LDAQ = True
+GEM_LDAQ_QSFPS = [[10]]
+GEM_LDAQ_QSFP_CHANS = [[0]]
+
+###############################################################
+############################## CSC ############################
+###############################################################
+
+
+CSC_NUM_SLR = 1
+CSC_NUM_DMB = 2
+CSC_NUM_GBT = 4
+
+# QSFP assignment per CSC BLOCK
+CSC_DTH_QSFPS = [[5]]
+CSC_DMB_QSFPS = [[4]]
+CSC_LDAQ_QSFPS = [[4]]
+CSC_LDAQ_QSFP_CHANS = [[3]]
+CSC_GBT_QSFPS = [[11]]
+CSC_TTC_TX_QSFPS = [12] # global, not per SLR
+
 
 ###############################################################
 ########################## REF CLKS ###########################
@@ -808,7 +835,7 @@ for qsfp_idx in range(30):
                 break
 
         inverted = False if (cable_inverted and arf6_to_mgt_map_entry) or ((not cable_inverted) and (not arf6_to_mgt_map_entry)) else True
-        qsfp_chan_entry = {"mgt": arf6_to_mgt_map_entry["mgt"], "mgt_chan": arf6_to_mgt_map_entry["mgt_chan"], "inv": inverted, "dir": exp_dir, "qsfp_chan": qsfp_chan, "arf6_j_label": arf6_j_label}
+        qsfp_chan_entry = {"mgt": arf6_to_mgt_map_entry["mgt"], "mgt_chan": arf6_to_mgt_map_entry["mgt_chan"], "inv": inverted, "dir": exp_dir, "qsfp_idx": qsfp_idx, "qsfp_chan": qsfp_chan, "arf6_j_label": arf6_j_label}
         qsfp_entry.append(qsfp_chan_entry)
     QSFP_TO_MGT.append(qsfp_entry)
 
@@ -818,168 +845,168 @@ if USE_QSFPDD:
     QSFP_TO_MGT = [
         ########## QSFP 0 ##########
         [
-            {'mgt': 220, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
-            {'mgt': 221, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
-            {'mgt': 220, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
-            {'mgt': 220, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
-            {'mgt': 221, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
-            {'mgt': 220, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
-            {'mgt': 221, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J18'},
-            {'mgt': 220, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J18'}
+            {'mgt': 220, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 0, 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
+            {'mgt': 221, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 0, 'qsfp_chan': 0, 'arf6_j_label': 'J17'},
+            {'mgt': 220, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 0, 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
+            {'mgt': 220, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 0, 'qsfp_chan': 1, 'arf6_j_label': 'J18'},
+            {'mgt': 221, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 0, 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
+            {'mgt': 220, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 0, 'qsfp_chan': 2, 'arf6_j_label': 'J17'},
+            {'mgt': 221, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 0, 'qsfp_chan': 3, 'arf6_j_label': 'J18'},
+            {'mgt': 220, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 0, 'qsfp_chan': 3, 'arf6_j_label': 'J18'}
         ],
         ########## QSFP 1 ##########
         [
-            {'mgt': 223, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
-            {'mgt': 223, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
-            {'mgt': 223, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
-            {'mgt': 222, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
-            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
-            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
-            {'mgt': 223, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J17'},
-            {'mgt': 223, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J17'}
+            {'mgt': 223, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 1, 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 1, 'qsfp_chan': 0, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 1, 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
+            {'mgt': 222, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 1, 'qsfp_chan': 1, 'arf6_j_label': 'J17'},
+            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 1, 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 1, 'qsfp_chan': 2, 'arf6_j_label': 'J18'},
+            {'mgt': 223, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 1, 'qsfp_chan': 3, 'arf6_j_label': 'J17'},
+            {'mgt': 223, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 1, 'qsfp_chan': 3, 'arf6_j_label': 'J17'}
         ],
         ########## QSFP 2 ##########
         [
-            {'mgt': 224, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
-            {'mgt': 224, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
-            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
-            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
-            {'mgt': 224, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
-            {'mgt': 224, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
-            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J7'},
-            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J7'}
+            {'mgt': 224, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 2, 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 2, 'qsfp_chan': 0, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 2, 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 2, 'qsfp_chan': 1, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 2, 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 2, 'qsfp_chan': 2, 'arf6_j_label': 'J10'},
+            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 2, 'qsfp_chan': 3, 'arf6_j_label': 'J7'},
+            {'mgt': 224, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 2, 'qsfp_chan': 3, 'arf6_j_label': 'J7'}
         ],
         ########## QSFP 3 ##########
         [
-            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
-            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
-            {'mgt': 227, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
-            {'mgt': 227, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
-            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
-            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
-            {'mgt': 227, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J10'},
-            {'mgt': 227, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J10'}
+            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 3, 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 3, 'qsfp_chan': 0, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 3, 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 3, 'qsfp_chan': 1, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 3, 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 3, 'qsfp_chan': 2, 'arf6_j_label': 'J7'},
+            {'mgt': 227, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 3, 'qsfp_chan': 3, 'arf6_j_label': 'J10'},
+            {'mgt': 227, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 3, 'qsfp_chan': 3, 'arf6_j_label': 'J10'}
         ],
         ########## QSFP 4 ##########
         [
-            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
-            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
-            {'mgt': 228, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
-            {'mgt': 228, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
-            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
-            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
-            {'mgt': 228, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J14'},
-            {'mgt': 228, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J14'}
+            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 4, 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 4, 'qsfp_chan': 0, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 4, 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 4, 'qsfp_chan': 1, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 4, 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 4, 'qsfp_chan': 2, 'arf6_j_label': 'J13'},
+            {'mgt': 228, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 4, 'qsfp_chan': 3, 'arf6_j_label': 'J14'},
+            {'mgt': 228, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 4, 'qsfp_chan': 3, 'arf6_j_label': 'J14'}
         ],
         ########## QSFP 5 ##########
         [
-            {'mgt': 231, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
-            {'mgt': 231, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
-            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
-            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
-            {'mgt': 231, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
-            {'mgt': 231, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
-            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J13'},
-            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J13'}
+            {'mgt': 231, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 5, 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 5, 'qsfp_chan': 0, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 5, 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 5, 'qsfp_chan': 1, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 5, 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 5, 'qsfp_chan': 2, 'arf6_j_label': 'J14'},
+            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 5, 'qsfp_chan': 3, 'arf6_j_label': 'J13'},
+            {'mgt': 231, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 5, 'qsfp_chan': 3, 'arf6_j_label': 'J13'}
         ],
         ########## QSFP 6 ##########
         [
-            {'mgt': 232, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
-            {'mgt': 232, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
-            {'mgt': 232, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
-            {'mgt': 232, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
-            {'mgt': 232, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
-            {'mgt': 232, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
-            {'mgt': 235, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J4'},
-            {'mgt': 232, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J4'}
+            {'mgt': 232, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 6, 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 6, 'qsfp_chan': 0, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 6, 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 6, 'qsfp_chan': 1, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 6, 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
+            {'mgt': 232, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 6, 'qsfp_chan': 2, 'arf6_j_label': 'J3'},
+            {'mgt': 235, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 6, 'qsfp_chan': 3, 'arf6_j_label': 'J4'},
+            {'mgt': 232, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 6, 'qsfp_chan': 3, 'arf6_j_label': 'J4'}
         ],
         ########## QSFP 7 ##########
         [
-            {'mgt': 234, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
-            {'mgt': 235, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
-            {'mgt': 234, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
-            {'mgt': 234, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
-            {'mgt': 235, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
-            {'mgt': 235, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
-            {'mgt': 235, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J3'},
-            {'mgt': 234, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J3'}
+            {'mgt': 234, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 7, 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 7, 'qsfp_chan': 0, 'arf6_j_label': 'J4'},
+            {'mgt': 234, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 7, 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
+            {'mgt': 234, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 7, 'qsfp_chan': 1, 'arf6_j_label': 'J3'},
+            {'mgt': 235, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 7, 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 7, 'qsfp_chan': 2, 'arf6_j_label': 'J4'},
+            {'mgt': 235, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 7, 'qsfp_chan': 3, 'arf6_j_label': 'J3'},
+            {'mgt': 234, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 7, 'qsfp_chan': 3, 'arf6_j_label': 'J3'}
         ],
         ########## QSFP 8 ##########
         [
-            {'mgt': 134, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
-            {'mgt': 134, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
-            {'mgt': 134, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
-            {'mgt': 134, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
-            {'mgt': 135, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
-            {'mgt': 134, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
-            {'mgt': 135, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J5'},
-            {'mgt': 135, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J5'}
+            {'mgt': 134, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 8, 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 8, 'qsfp_chan': 0, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 8, 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
+            {'mgt': 134, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 8, 'qsfp_chan': 1, 'arf6_j_label': 'J5'},
+            {'mgt': 135, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 8, 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
+            {'mgt': 134, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 8, 'qsfp_chan': 2, 'arf6_j_label': 'J6'},
+            {'mgt': 135, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 8, 'qsfp_chan': 3, 'arf6_j_label': 'J5'},
+            {'mgt': 135, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 8, 'qsfp_chan': 3, 'arf6_j_label': 'J5'}
         ],
         ########## QSFP 9 ##########
         [
-            {'mgt': 132, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
-            {'mgt': 132, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
-            {'mgt': 132, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
-            {'mgt': 132, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
-            {'mgt': 135, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
-            {'mgt': 132, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
-            {'mgt': 132, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J6'},
-            {'mgt': 132, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J6'}
+            {'mgt': 132, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 9, 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 9, 'qsfp_chan': 0, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 9, 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
+            {'mgt': 132, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 9, 'qsfp_chan': 1, 'arf6_j_label': 'J6'},
+            {'mgt': 135, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 9, 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 9, 'qsfp_chan': 2, 'arf6_j_label': 'J5'},
+            {'mgt': 132, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 9, 'qsfp_chan': 3, 'arf6_j_label': 'J6'},
+            {'mgt': 132, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 9, 'qsfp_chan': 3, 'arf6_j_label': 'J6'}
         ],
         ########## QSFP 10 ##########
         [
-            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
-            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
-            {'mgt': 131, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
-            {'mgt': 131, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
-            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
-            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
-            {'mgt': 131, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J15'},
-            {'mgt': 131, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J15'}
+            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 10, 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 10, 'qsfp_chan': 0, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 10, 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 10, 'qsfp_chan': 1, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 10, 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 10, 'qsfp_chan': 2, 'arf6_j_label': 'J16'},
+            {'mgt': 131, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 10, 'qsfp_chan': 3, 'arf6_j_label': 'J15'},
+            {'mgt': 131, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 10, 'qsfp_chan': 3, 'arf6_j_label': 'J15'}
         ],
         ########## QSFP 11 ##########
         [
-            {'mgt': 128, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
-            {'mgt': 128, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
-            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
-            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
-            {'mgt': 128, 'mgt_chan': 2, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
-            {'mgt': 128, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
-            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J16'},
-            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J16'}
+            {'mgt': 128, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 11, 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 0, 'inv': False, 'dir': 'RX', 'qsfp_idx': 11, 'qsfp_chan': 0, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 11, 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 1, 'inv': True, 'dir': 'RX',  'qsfp_idx': 11, 'qsfp_chan': 1, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 2, 'inv': True, 'dir': 'TX',  'qsfp_idx': 11, 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 2, 'inv': False, 'dir': 'RX', 'qsfp_idx': 11, 'qsfp_chan': 2, 'arf6_j_label': 'J15'},
+            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 11, 'qsfp_chan': 3, 'arf6_j_label': 'J16'},
+            {'mgt': 128, 'mgt_chan': 3, 'inv': True, 'dir': 'RX',  'qsfp_idx': 11, 'qsfp_chan': 3, 'arf6_j_label': 'J16'}
         ],
         ########## QSFP 12 ##########
         [
-            {'mgt': 124, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
-            {'mgt': 124, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
-            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
-            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
-            {'mgt': 124, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
-            {'mgt': 124, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
-            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J11'},
-            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J11'}
+            {'mgt': 124, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 12, 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 12, 'qsfp_chan': 0, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'TX', 'qsfp_idx': 12, 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 12, 'qsfp_chan': 1, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 12, 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 12, 'qsfp_chan': 2, 'arf6_j_label': 'J12'},
+            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'TX', 'qsfp_idx': 12, 'qsfp_chan': 3, 'arf6_j_label': 'J11'},
+            {'mgt': 124, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 12, 'qsfp_chan': 3, 'arf6_j_label': 'J11'}
         ],
         ########## QSFP 13 ##########
         [
-            {'mgt': 123, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
-            {'mgt': 122, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
-            {'mgt': 123, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
-            {'mgt': 123, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
-            {'mgt': 123, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
-            {'mgt': 123, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
-            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J19'},
-            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J19'}
+            {'mgt': 123, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 13, 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
+            {'mgt': 122, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 13, 'qsfp_chan': 0, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 13, 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 13, 'qsfp_chan': 1, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 13, 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 13, 'qsfp_chan': 2, 'arf6_j_label': 'J20'},
+            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'TX',  'qsfp_idx': 13, 'qsfp_chan': 3, 'arf6_j_label': 'J19'},
+            {'mgt': 123, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 13, 'qsfp_chan': 3, 'arf6_j_label': 'J19'}
         ],
         ########## QSFP 14 ##########
         [
-            {'mgt': 120, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
-            {'mgt': 120, 'mgt_chan': 2, 'inv': True, 'dir': 'RX', 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
-            {'mgt': 120, 'mgt_chan': 3, 'inv': True, 'dir': 'TX', 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
-            {'mgt': 121, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
-            {'mgt': 121, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
-            {'mgt': 120, 'mgt_chan': 0, 'inv': True, 'dir': 'RX', 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
-            {'mgt': 121, 'mgt_chan': 1, 'inv': True, 'dir': 'TX', 'qsfp_chan': 3, 'arf6_j_label': 'J20'},
-            {'mgt': 120, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_chan': 3, 'arf6_j_label': 'J20'}
+            {'mgt': 120, 'mgt_chan': 2, 'inv': False, 'dir': 'TX', 'qsfp_idx': 14, 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 2, 'inv': True, 'dir': 'RX',  'qsfp_idx': 14, 'qsfp_chan': 0, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 3, 'inv': True, 'dir': 'TX',  'qsfp_idx': 14, 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
+            {'mgt': 121, 'mgt_chan': 1, 'inv': False, 'dir': 'RX', 'qsfp_idx': 14, 'qsfp_chan': 1, 'arf6_j_label': 'J20'},
+            {'mgt': 121, 'mgt_chan': 0, 'inv': False, 'dir': 'TX', 'qsfp_idx': 14, 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
+            {'mgt': 120, 'mgt_chan': 0, 'inv': True, 'dir': 'RX',  'qsfp_idx': 14, 'qsfp_chan': 2, 'arf6_j_label': 'J19'},
+            {'mgt': 121, 'mgt_chan': 1, 'inv': True, 'dir': 'TX',  'qsfp_idx': 14, 'qsfp_chan': 3, 'arf6_j_label': 'J20'},
+            {'mgt': 120, 'mgt_chan': 3, 'inv': False, 'dir': 'RX', 'qsfp_idx': 14, 'qsfp_chan': 3, 'arf6_j_label': 'J20'}
         ]
     ]
 
@@ -1031,6 +1058,17 @@ for qsfp_idx in range(len(QSFP_TO_MGT)):
     else:
         print_color("==> This QSFP is mapped to multiple MGT quads", Colors.YELLOW)
 
+# Remove reserved QSFPs
+for i in RESERVED_QSFPS:
+    QSFP_TO_MGT.pop(i)
+
+def get_qsfp_fiber_idx(qsfp, chan):
+    qsfp_idx = 0
+    for q in QSFP_TO_MGT:
+        if q[0]["qsfp_idx"] == qsfp:
+            return qsfp_idx * 4 + chan
+        qsfp_idx += 1
+
 ###############################################################
 ############ MGT & LINK CODE GENERATIONS FUNCTIONS ############
 ###############################################################
@@ -1070,6 +1108,7 @@ def generate_fiber_to_mgt_vhdl():
     fiber_idx = 0
     for qsfp_idx in range(len(QSFP_TO_MGT)):
         qsfp = QSFP_TO_MGT[qsfp_idx]
+        qsfp_cage = qsfp[0]["qsfp_idx"]
         first = True
         for qsfp_chan_idx in range(0, len(qsfp), 2):
             qsfp_tx_chan = qsfp[qsfp_chan_idx]
@@ -1077,7 +1116,7 @@ def generate_fiber_to_mgt_vhdl():
             if qsfp_tx_chan["mgt"] not in GTYS and qsfp_rx_chan["mgt"] not in GTYS:
                 continue
             if first:
-                print("    --========= QSFP #%d =========--" % (qsfp_idx))
+                print("    --========= QSFP cage #%d =========--" % (qsfp_cage))
                 first = False
 
             if qsfp_tx_chan["dir"] != "TX" or qsfp_rx_chan["dir"] != "RX":
@@ -1103,7 +1142,7 @@ def generate_fiber_to_mgt_vhdl():
             fiber_idx += 1
 
     print("    --=== DUMMY fiber - use for unconnected channels ===--")
-    print("    (MGT_NULL, MGT_NULL, false, false)")
+    print("    others => (MGT_NULL, MGT_NULL, false, false)")
     print(");")
 
     return gty_chan_to_fiber, fiber_to_slr
@@ -1156,120 +1195,253 @@ def generate_loc_constraints():
 ################# GEM/CSC CODE GEN FUNCTIONS ##################
 ###############################################################
 
+def bool_to_vhdl(value):
+    return "true" if value else "false"
+
+def arr_to_vhdl_map(arr, required_vhdl_length=None, others_value=None):
+    s = "("
+    if len(arr) == 1:
+        s += "0 => %s" % str(arr[0])
+        if required_vhdl_length is not None and required_vhdl_length > len(arr):
+            s += ", others => %s" % others_value
+    else:
+        for i in range(len(arr)):
+            s += "%s" % (str(arr[i]))
+            if i < len(arr) - 1:
+                s += ", "
+            elif required_vhdl_length is not None and required_vhdl_length > len(arr):
+                s += ", others => %s" % others_value
+    s += ")"
+    return s
+
 # also returns MGT types needed
-def generate_gem_oh_link_map(fiber_to_slr):
-    NUM_LINKS = len(QSFP_TO_MGT) * 4
-    MAX_OHS = 48 if NUM_LINKS >= 60 else 4 if NUM_LINKS <= 16 else None # use 48 OHs on VU13P (max GE21 OHs), and 4 OHs on VU27P
+def generate_gem_oh_link_map(fiber_to_slr, station):
 
-    ## GE11 (dummy for now)
-    ge11_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_GE11 : t_oh_link_config_arr := (")
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        ge11_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
-        print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-    print("    );")
+    if station not in [0, 2]:
+        print_red("ERROR: unsupported station: %d" % station)
+        exit()
+
+    fiber_types = ["CFG_MGT_TYPE_NULL"] * (len(QSFP_TO_MGT) * 4)
+
+    ldaq_fibers = []
+    for slr in range(GEM_NUM_SLR):
+        fiber = get_qsfp_fiber_idx(GEM_LDAQ_QSFPS[slr][0], GEM_LDAQ_QSFP_CHANS[slr][0])
+        ldaq_fibers.append(fiber)
+        fiber_types[fiber] = "CFG_MGT_GBE"
+
+    oh_version = 2 if station == 2 else 1 if station == 0 else None
+    num_ohs = GE21_NUM_OH if station == 2 else ME0_NUM_OH if station == 0 else None
+    num_gbts_per_oh = 2 if station == 2 else 8 if station == 0 else None
+    num_vfats_per_oh = 12 if station == 2 else 24 if station == 0 else None
+    gbt_widebus = 1 if station == 2 else 0 if station == 0 else None
+    trig_link_type = "OH_TRIG_LINK_TYPE_GBT" if station == 2 else "OH_TRIG_LINK_TYPE_NONE" if station == 0 else None
+    oh_qsfps = GE21_OH_QSFPS if station == 2 else ME0_OH_QSFPS if station == 0 else None
+
+    print("    --================================--")
+    print("    -- GEM blocks and associated types  ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_NUM_GEM_BLOCKS         : integer := %d; -- total number of GEM blocks to instanciate" % GEM_NUM_SLR)
+    print("    type t_int_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of integer;")
+    print("    type t_oh_trig_link_type_arr is array (0 to CFG_NUM_GEM_BLOCKS - 1) of t_oh_trig_link_type;")
+    print("")
+    print("    --================================--")
+    print("    -- GEM configuration                ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_GEM_STATION            : t_int_per_gem := (others => %d);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1" % station)
+    print("    constant CFG_OH_VERSION             : t_int_per_gem := (others => %d);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode" % oh_version)
+    print("    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => %d); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)" % num_ohs)
+    print("    constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (others => %d);  -- number of GBTs per OH" % num_gbts_per_oh)
+    print("    constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (others => %d); -- number of VFATs per OH" % num_vfats_per_oh)
+    print("    constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => %d);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)" % gbt_widebus)
+    print("")
+    print("    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (others => %s); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21" % trig_link_type)
+    print("    constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)")
+    print("    constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF")
+    print("")
+    print("    --========================--")
+    print("    --== Link configuration ==--")
+    print("    --========================--")
+    print("")
+    print("    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (others => %s);" % bool_to_vhdl(GEM_USE_LDAQ))
+    print("    constant CFG_SPY_LINK : t_spy_link_config := %s;" % arr_to_vhdl_map(ldaq_fibers, 4, "TXRX_NULL"))
+    print("")
+    print("    constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));")
     print("")
 
-    ## GE21
-    ge21_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (")
-    if GE21_NUM_OH % NUM_SLR != 0:
-        print_red("ERROR: number of GE21 OHs (%d) is not divisible by number of SLRs (%d)" % (GE21_NUM_OH, NUM_SLR))
-        return
-    oh_per_slr = int(GE21_NUM_OH / NUM_SLR)
-    fiber = 0
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        if oh >= GE21_NUM_OH or fiber >= NUM_LINKS:
-            # fill the rest with dummies
-            print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-            continue
+    # =============== OHs ===============
+    print("    constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (")
+    for slr in range(CSC_NUM_SLR):
+        print("        %d =>" % slr)
+        print("        ( ------------------------------------------------ SLR%d ------------------------------------------------" % slr)
 
-        slr = int(oh / oh_per_slr)
-        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr:
-            fiber += 2
-            ge21_link_types.extend(["CFG_MGT_TYPE_NULL"] * 2)
+        rxs = []
+        txs = []
+        qsfp_idx = 0
+        for qsfp in oh_qsfps[slr]:
+            for chan in range(4):
+                rxs.append({"qsfp": qsfp, "chan": chan})
+                # for ME0 throw out TXs from every other QSFP
+                if station != 0 or qsfp_idx % 2 == 0:
+                    txs.append({"qsfp": qsfp, "chan": chan})
+            qsfp_idx += 1
 
-        gbt_tx = [fiber, fiber + 1]
-        gbt_rx = gbt_tx
-        fiber += 2
-        ge21_link_types.extend(["CFG_MGT_GBTX"] * 2)
-        print("        (((%03d, %03d), (%03d, %03d), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" % (gbt_tx[0], gbt_rx[0], gbt_tx[1], gbt_rx[1], comma, oh, slr))
+        for oh in range(num_ohs):
+            links = []
+            for gbt in range(8):
+                if gbt < num_gbts_per_oh:
+                    # RX
+                    rx_qsfp = rxs.pop(0)
+                    rx_fiber = get_qsfp_fiber_idx(rx_qsfp["qsfp"], rx_qsfp["chan"])
+                    rx_fiber_str = "%03d" % rx_fiber
+                    fiber_types[rx_fiber] = "CFG_MGT_GBTX" if station == 2 else "CFG_MGT_LPGBT" if station == 0 else None
 
-    print("    );")
-    print("")
+                    # TX
+                    tx_fiber_str = "TXRX_NULL"
+                    if station != 0 or gbt % 2 == 0:
+                        tx_qsfp = txs.pop(0)
+                        tx_fiber = get_qsfp_fiber_idx(tx_qsfp["qsfp"], tx_qsfp["chan"])
+                        tx_fiber_str = "%03d" % tx_fiber
 
-    ## ME0
-    me0_link_types = []
-    print("    constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (")
-    if ME0_NUM_OH % NUM_SLR != 0:
-        print_red("ERROR: number of ME0 OHs (%d) is not divisible by number of SLRs (%d)" % (ME0_NUM_OH, NUM_SLR))
-        return
-    oh_per_slr = int(ME0_NUM_OH / NUM_SLR)
-    fiber = 0
-    for oh in range(MAX_OHS):
-        comma = "," if oh < MAX_OHS - 1 else ""
-        if oh >= ME0_NUM_OH or fiber >= NUM_LINKS:
-            # fill the rest with dummies
-            print("        ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))%s" % (comma))
-            continue
+                    link = "(%s, %s)" % (tx_fiber_str, rx_fiber_str)
+                    links.append(link)
+                else:
+                    links.append("LINK_NULL")
 
-        slr = int(oh / oh_per_slr)
-        while fiber_to_slr[fiber] != slr or fiber_to_slr[fiber + 1] != slr or fiber_to_slr[fiber + 2] != slr or fiber_to_slr[fiber + 3] != slr or fiber_to_slr[fiber + 4] != slr or fiber_to_slr[fiber + 5] != slr or fiber_to_slr[fiber + 6] != slr or fiber_to_slr[fiber + 7] != slr:
-            fiber += 8
-            me0_link_types.extend(["CFG_MGT_TYPE_NULL"] * 8)
+            comma = "," if oh < GEM_MAX_OHS - 1 else ""
+            print("            ((%s, %s, %s, %s, %s, %s, %s, %s), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" % (links[0], links[1], links[2], links[3], links[4], links[5], links[6], links[7], comma, oh, slr))
 
-        gbt_tx = [fiber, fiber + 1, fiber + 2, fiber + 3]
-        gbt_rx = [fiber, fiber + 1, fiber + 2, fiber + 3, fiber + 4, fiber + 5, fiber + 6, fiber + 7]
-        fiber += 8
-        me0_link_types.extend(["CFG_MGT_LPGBT"] * 8)
-        print("        (((%03d, %03d), (TXRX_NULL, %03d), (%03d, %03d),  (TXRX_NULL, %03d),  (%03d, %03d),   (TXRX_NULL, %03d),  (%03d, %03d),  (TXRX_NULL, %03d)), (LINK_NULL, LINK_NULL))%s -- OH%d, SLR %d" %
-              (gbt_tx[0], gbt_rx[0], gbt_rx[1], gbt_tx[1], gbt_rx[2], gbt_rx[3], gbt_tx[2], gbt_rx[4], gbt_rx[5], gbt_tx[3], gbt_rx[6], gbt_rx[7], comma, oh, slr))
+        if num_ohs < GEM_MAX_OHS:
+            print("            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))")
+
+        comma = "," if slr < 4 else ""
+        print("        )%s" % comma)
+
+    if CSC_NUM_SLR < 4:
+        print("        others => (others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)))")
     print("    );")
 
-    return ge11_link_types, ge21_link_types, me0_link_types
+    return fiber_types
 
 # also returns MGT types needed
 def generate_csc_dmb_link_map(fiber_to_slr):
-    NUM_LINKS = len(QSFP_TO_MGT) * 4
-    MAX_DMBS = 56 if NUM_LINKS >= 96 else 4 if NUM_LINKS <= 16 else None # use 56 DMBs on VU13P, and 4 DMBs on VU27P
 
-    ## GE21
-    csc_link_types = []
-    print("    constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr := (")
-    if CSC_NUM_DMB % NUM_SLR != 0:
-        print_red("ERROR: number of CSC DMBs (%d) is not divisible by number of SLRs (%d)" % (CSC_NUM_DMB, NUM_SLR))
-        return
-    dmb_per_slr = int(CSC_NUM_DMB / NUM_SLR)
-    fiber = 0
-    for dmb in range(MAX_DMBS):
-        comma = "," if dmb < MAX_DMBS - 1 else ""
-        if dmb >= CSC_NUM_DMB or fiber >= NUM_LINKS:
-            # fill the rest with dummies
-            print("        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))%s" % (comma))
-            continue
+    fiber_types = ["CFG_MGT_TYPE_NULL"] * (len(QSFP_TO_MGT) * 4)
 
-        slr = int(dmb / dmb_per_slr)
-        while fiber_to_slr[fiber] != slr:
-            fiber += 1
-            csc_link_types.extend(["CFG_MGT_TYPE_NULL"] * 1)
+    ldaq_fibers = []
+    for slr in range(CSC_NUM_SLR):
+        fiber = get_qsfp_fiber_idx(CSC_LDAQ_QSFPS[slr][0], CSC_LDAQ_QSFP_CHANS[slr][0])
+        ldaq_fibers.append(fiber)
+        fiber_types[fiber] = "CFG_MGT_GBE"
 
-        rx = [fiber]
-        fiber += 1
-        csc_link_types.extend(["CFG_MGT_DMB"] * 1)
-        print("        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (%d, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS))%s -- DMB%d, SLR %d" % (rx[0], comma, dmb, slr))
+    use_ttc_tx = True if len(CSC_TTC_TX_QSFPS) > 0 else False
+    ttc_tx_fibers = []
+    for qsfp in CSC_TTC_TX_QSFPS:
+        for chan in range(4):
+            fiber = get_qsfp_fiber_idx(qsfp, chan)
+            ttc_tx_fibers.append(fiber)
+            fiber_types[fiber] = "CFG_MGT_TTC"
 
-    print("    );")
+    print("    --================================--")
+    print("    -- CSC blocks and associated types  ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_NUM_SLRS       : integer := %d;    -- number of full CSC blocks to instantiate (typically one per SLR)" % CSC_NUM_SLR)
+    print("")
+    print("    --================================--")
+    print("    -- CSC configuration                ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_NUM_DMBS       : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => %d);" % CSC_NUM_DMB)
+    print("    constant CFG_NUM_GBT_LINKS  : t_int_array(0 to CFG_NUM_SLRS - 1) := (others => %d);" % CSC_NUM_GBT)
+    print("    constant CFG_USE_SPY_LINK : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);")
+    print("    constant CFG_TTC_TX_SOURCE_SLR : integer := 0;")
+    print("    constant CFG_USE_TTC_TX_LINK : boolean := %s;" % bool_to_vhdl(use_ttc_tx))
+
+    print("")
+    print("    --================================--")
+    print("    -- Link configuration               ")
+    print("    --================================--")
+    print("")
+    print("    constant CFG_SPY_LINK : t_int_array(0 to CFG_NUM_SLRS -1) := %s;" % arr_to_vhdl_map(ldaq_fibers))
+    print("")
+    if use_ttc_tx:
+        print("    constant CFG_TTC_LINKS : t_int_array(0 to %d) := %s;" % (len(ttc_tx_fibers) - 1, arr_to_vhdl_map(ttc_tx_fibers)))
+    else:
+        print("    constant CFG_TTC_LINKS : t_int_array(0 to 3) := (others => CFG_BOARD_MAX_LINKS);")
     print("")
 
-    return csc_link_types
+    # =============== DMB ===============
+    print("    constant CFG_DMB_CONFIG_ARR : t_dmb_config_arr_per_slr(0 to CFG_NUM_SLRS - 1)(0 to CFG_DAQ_MAX_DMBS - 1) := (")
+    for slr in range(CSC_NUM_SLR):
+        print("        %d =>" % slr)
+        print("        ( ------------------------------------------------ SLR%d ------------------------------------------------" % slr)
+
+        dmb_idx = 0
+        for qsfp in CSC_DMB_QSFPS[slr]:
+            for chan in range(4):
+                if dmb_idx >= CSC_NUM_DMB:
+                    break
+
+                rx_fiber = get_qsfp_fiber_idx(qsfp, chan)
+                print("        (dmb_type => DMB, num_fibers => 1, tx_fiber => CFG_BOARD_MAX_LINKS, rx_fibers => (%d, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS, CFG_BOARD_MAX_LINKS)), -- DMB%d, SLR %d" % (rx_fiber, dmb_idx, slr))
+                fiber_types[rx_fiber] = "CFG_MGT_DMB"
+                dmb_idx += 1
+
+        print("            others => DMB_CONFIG_NULL")
+        print("        )")
+    print("    );")
+
+    # =============== GBT ===============
+    print("")
+    print("    constant CFG_GBT_LINK_CONFIG_ARR : t_gbt_link_config_arr_per_slr(0 to CFG_NUM_SLRS - 1)(0 to CFG_MAX_GBTS - 1) := (")
+    for slr in range(CSC_NUM_SLR):
+        print("        %d =>" % slr)
+        print("        ( ------------------------------------------------ SLR%d ------------------------------------------------" % slr)
+
+        gbt_idx = 0
+        for qsfp in CSC_GBT_QSFPS[slr]:
+            for chan in range(4):
+                if gbt_idx >= CSC_NUM_GBT:
+                    break
+
+                fiber = get_qsfp_fiber_idx(qsfp, chan)
+                print("            (tx_fiber => %d, rx_fiber => %d), -- GBT%d, SLR %d" % (fiber, fiber, gbt_idx, slr))
+                fiber_types[fiber] = "CFG_MGT_GBTX"
+                gbt_idx += 1
+
+        print("            others => (tx_fiber => CFG_BOARD_MAX_LINKS, rx_fiber => CFG_BOARD_MAX_LINKS)")
+        print("        )")
+    print("    );")
+
+    return fiber_types
 
 
-MGT_TYPE_QPLL = {"CFG_MGT_TYPE_NULL": "QPLL_NULL", "CFG_MGT_GBTX": "QPLL_GBTX", "CFG_MGT_LPGBT": "QPLL_LPGBT", "CFG_MGT_GBE": "QPLL_GBE_156",
-                 "CFG_MGT_DMB": "QPLL_DMB_GBE_156", "CFG_MGT_ODMB57": "QPLL_ODMB57_156"}
-NUM_IBERTS_PER_MGT_TYPE = {"CFG_MGT_TYPE_NULL": 0, "CFG_MGT_GBTX": 2, "CFG_MGT_LPGBT": 8, "CFG_MGT_GBE": 1,
-                           "CFG_MGT_DMB": 1, "CFG_MGT_ODMB57": 1}
+MGT_TYPE_QPLL = {"CFG_MGT_TYPE_NULL": "QPLL_NULL",
+                 "CFG_MGT_GBTX": "QPLL_GBTX",
+                 "CFG_MGT_LPGBT": "QPLL_LPGBT",
+                 "CFG_MGT_GBE": "QPLL_GBE_156",
+                 "CFG_MGT_DMB": "QPLL_DMB_GBE_156",
+                 "CFG_MGT_ODMB57": "QPLL_ODMB57_156",
+                 "CFG_MGT_TTC": "QPLL_LPGBT"}
+
+MGT_TYPE_COMPATIBLE_QPLLS = {"CFG_MGT_GBE": ["QPLL_DMB_GBE_156"]}
+
+NUM_IBERTS_PER_MGT_TYPE = {"CFG_MGT_TYPE_NULL": 0,
+                           "CFG_MGT_GBTX": 2,
+                           "CFG_MGT_LPGBT": 8,
+                           "CFG_MGT_GBE": 1,
+                           "CFG_MGT_DMB": 1,
+                           "CFG_MGT_ODMB57": 1,
+                           "CFG_MGT_TTC": 4}
+
+REQUIRES_MASTER = {"CFG_MGT_GBTX": True,
+                   "CFG_MGT_LPGBT": True,
+                   "CFG_MGT_GBE": True,
+                   "CFG_MGT_DMB": True,
+                   "CFG_MGT_ODMB57": True,
+                   "CFG_MGT_TTC": False}
 
 def generate_mgt_config(name, link_types, gty_chan_to_fiber):
     mgt_type_chars = len(max(MGT_TYPE_QPLL.keys(), key=len))
@@ -1300,11 +1472,12 @@ def generate_mgt_config(name, link_types, gty_chan_to_fiber):
             if qpll_type is None and qpll_type_needed != "QPLL_NULL":
                 qpll_type = qpll_type_needed
                 qpll_inst = qpll_type_needed
-            elif qpll_type is not None and qpll_type_needed != "QPLL_NULL" and qpll_type != qpll_type_needed:
+                qpll_idx = idx
+            elif qpll_type is not None and qpll_type_needed != "QPLL_NULL" and qpll_type != qpll_type_needed and qpll_type not in MGT_TYPE_COMPATIBLE_QPLLS[mgt_type]:
                 print_red("QPLL type conflict on MGT channel #%d (quad %d): qpll type needed = %s, but the quad has instantiated type %s" % (idx, quad, qpll_type_needed, qpll_type))
                 return
 
-            is_master = "true " if mgt_type not in mgt_types_used and mgt_type != "CFG_MGT_TYPE_NULL" else "false"
+            is_master = "true " if mgt_type not in mgt_types_used and mgt_type != "CFG_MGT_TYPE_NULL" and REQUIRES_MASTER[mgt_type] else "false"
             mgt_types_used.append(mgt_type)
             ibert_inst = "true " if num_iberts_left[mgt_type] > 0 else "false"
             num_iberts_left[mgt_type] -= 1
@@ -1312,8 +1485,8 @@ def generate_mgt_config(name, link_types, gty_chan_to_fiber):
             refclk0_idx = GTY_REFCLK_IDX[0][quad_idx]
             refclk1_idx = GTY_REFCLK_IDX[1][quad_idx]
 
-            print("        (mgt_type => %s, qpll_inst_type => %s, qpll_idx => %03d, refclk0_idx => %02d, refclk1_idx => %d, is_master => %s, ibert_inst => %s)%s" %
-                  (mgt_type.ljust(mgt_type_chars), qpll_inst.ljust(qpll_type_chars), qpll_idx, refclk0_idx, refclk1_idx, is_master, ibert_inst, comma))
+            print("        (mgt_type => %s, qpll_inst_type => %s, qpll_idx => %03d, refclk0_idx => %02d, refclk1_idx => %d, is_master => %s, chbond_master => 0, ibert_inst => %s)%s -- MGT %d" %
+                  (mgt_type.ljust(mgt_type_chars), qpll_inst.ljust(qpll_type_chars), qpll_idx, refclk0_idx, refclk1_idx, is_master, ibert_inst, comma, idx))
 
     print("    );")
 
@@ -1333,12 +1506,15 @@ if __name__ == '__main__':
     heading("fiber to MGT map")
     gty_chan_to_fiber, fiber_to_slr = generate_fiber_to_mgt_vhdl()
 
-    heading("GEM OH link map")
-    ge11_link_types, ge21_link_types, me0_link_types = generate_gem_oh_link_map(fiber_to_slr)
-    heading("GEM MGT configuration")
-    generate_mgt_config("CFG_MGT_LINK_CONFIG_GE11", ge11_link_types, gty_chan_to_fiber)
-    generate_mgt_config("CFG_MGT_LINK_CONFIG_GE21", ge21_link_types, gty_chan_to_fiber)
-    generate_mgt_config("CFG_MGT_LINK_CONFIG_ME0", me0_link_types, gty_chan_to_fiber)
+    heading("GE2/1 OH link map")
+    ge21_link_types = generate_gem_oh_link_map(fiber_to_slr, 2)
+    heading("GE2/1 MGT configuration")
+    generate_mgt_config("CFG_MGT_LINK_CONFIG", ge21_link_types, gty_chan_to_fiber)
+
+    heading("ME0 OH link map")
+    me0_link_types = generate_gem_oh_link_map(fiber_to_slr, 0)
+    heading("ME0 MGT configuration")
+    generate_mgt_config("CFG_MGT_LINK_CONFIG", me0_link_types, gty_chan_to_fiber)
 
     heading("CSC OH link map")
     csc_link_types = generate_csc_dmb_link_map(fiber_to_slr)
