@@ -98,6 +98,8 @@ async def run_test(dut, test, nloops=1000, nhits=128):
     for _ in range(8):
         await RisingEdge(dut.clk_40)
 
+    bit_mask_64 = 2 ** 64 - 1
+
     # event loop
     for loop in range(nloops):
 
@@ -114,7 +116,7 @@ async def run_test(dut, test, nloops=1000, nhits=128):
             ivfat = strip // 64
             channel = strip % 64
             size = 1
-            vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+            vfats[ivfat] |= (size << channel) & bit_mask_64
 
         if test == "COLLIDING1":
             # colliding walking 1s
@@ -128,7 +130,7 @@ async def run_test(dut, test, nloops=1000, nhits=128):
                 ivfat = strip // 64
                 channel = strip % 64
                 size = 1
-                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+                vfats[ivfat] |= (size << channel) & bit_mask_64
 
         if test == "EDGES":
             # focus on the edges
@@ -136,7 +138,7 @@ async def run_test(dut, test, nloops=1000, nhits=128):
                 ivfat = random.randint(0, NVFATS - 1)
                 channel = random.choice((0, 63, 64, 127, 128, 191))
                 size = random.choice((1, 3))
-                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+                vfats[ivfat] |= (size << channel) & bit_mask_64
 
         if test == "RANDOM":
             # create fill a large number with some random bits
@@ -144,7 +146,7 @@ async def run_test(dut, test, nloops=1000, nhits=128):
                 ivfat = random.randint(0, NVFATS - 1)
                 channel = random.randint(0, 63)
                 size = 2 ** (random.randint(0, 15)) - 1
-                vfats[ivfat] |= (size << channel) & (2 ** 64 - 1)
+                vfats[ivfat] |= (size << channel) & bit_mask_64
 
         # set the dut input, and copy the input to a latency pipeline for later
         for i in range(NVFATS):
