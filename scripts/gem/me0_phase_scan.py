@@ -92,13 +92,13 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
        
             for vfat2 in vfat_list:
+                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat2)), 0)
+            for vfat2 in vfat_list:
                 if vfat2 != vfat:
                     setVfatRxPhase(system, oh_select, vfat2, phase, False)
             sleep(0.1)
             gem_utils.gem_link_reset()
-            sleep(0.1)
-            for vfat2 in vfat_list:
-                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat2)), 0)    
+            sleep(0.1) 
             #configureVfat(0, vfat, oh_select, 0) # unconfigure VFAT
             #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1) 
     else:
@@ -339,7 +339,7 @@ def find_phase_center(err_list):
 
     n_bad_phases = 0
     bad_phase_loc = 0
-    for phase in range(0,len(err_list_temp)):
+    for phase in range(0,len(err_list_temp)-1):
         if err_list_temp[phase] != 0:
             n_bad_phases += 1
             bad_phase_loc = phase
