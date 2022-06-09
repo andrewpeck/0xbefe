@@ -7,7 +7,7 @@ class Cluster:
     vpf = 0
 
     def __str__(self):
-        if (False and self.vpf==0):
+        if (self.vpf==0):
             return "None"
         else:
             return "adr=%3d cnt=%1d prt=%1d vpf=%1d" % (
