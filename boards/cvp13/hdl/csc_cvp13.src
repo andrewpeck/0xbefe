@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 boards/cvp13/hdl/common_cvp13.src
 
 boards/cvp13/hdl/csc_cvp13.vhd top=csc_cvp13

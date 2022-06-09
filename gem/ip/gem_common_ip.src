@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 gem/ip/bram_vfat3_sc_adc/bram_vfat3_sc_adc.xci
 gem/ip/ila_daq/ila_daq.xci
 gem/ip/ila_trig_rx_link/ila_trig_rx_link.xci

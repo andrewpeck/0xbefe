@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # CSC Top
 csc/hdl/csc_fed.vhd
 

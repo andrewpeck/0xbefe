@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 gem/hdl/oh_fe/*/generated/oh_ge21/*.vhd
 
 gem/hdl/oh_fe/gbt/fifo_a7.vhd
