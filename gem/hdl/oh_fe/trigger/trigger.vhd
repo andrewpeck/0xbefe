@@ -307,10 +307,6 @@ begin
 
       -- control
 
-<<<<<<< HEAD
-      reverse_partitions     => reverse_partitions,
-=======
->>>>>>> c8bcacd (oh: remove cluster reverse option)
       sbit_map_sel           => sbit_map_sel,
       aligned_count_to_ready => aligned_count_to_ready,
       sbits_mux_sel_i        => sbits_mux_sel,
