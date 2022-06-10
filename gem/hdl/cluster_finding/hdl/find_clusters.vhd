@@ -8,7 +8,6 @@ use work.cluster_pkg.all;
 
 entity find_clusters is
   generic (
-    SORTER_TYPE        : integer := 1;
     MXSBITS            : integer := 64;
     NUM_VFATS          : integer := 24;
     NUM_FOUND_CLUSTERS : integer := 0;
@@ -40,6 +39,9 @@ architecture behavioral of find_clusters is
   end if_then_else;
 
   constant ENCODER_SIZE : integer := if_then_else(station = 0 or station = 1, 384, 192);
+
+  -- use the new sorter for GE11, old sorter for GE21 / ME0 (for now at least..)
+  constant SORTER_TYPE  : integer := if_then_else(station = 1, 1, 0);
 
   -- std_logic_vector to integer
   function int (vec : std_logic_vector) return integer is
@@ -270,7 +272,7 @@ begin
   -- we get up to 16 clusters / bx but only get to send a few so we put them in order of priority
   -- (should choose lowest addr first--- highest addr is invalid)
 
-  bitonic_sorter : if (sorter_type=0) generate
+  bitonic_sorter : if (SORTER_TYPE=0) generate
 
     constant size : integer := 1+MXADRB+MXCNTB+MXPRTB;
 
@@ -361,7 +363,7 @@ begin
 
   end generate;
 
-  fast_sorter : if (sorter_type=1) generate
+  fast_sorter : if (SORTER_TYPE=1) generate
 
     component sorter16
       generic (

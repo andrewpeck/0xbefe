@@ -252,11 +252,17 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
                         % (i, str(found_clusters[i]), str(expected_clusters[i]))
                     )
 
-        for i in range(16):
-            assert equal(found_clusters[i], expected_clusters[i]), print(
-                " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
-                % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
-            )
+        # sorter type 1 is ordered
+
+        if STATION == 1:
+
+            for i in range(16):
+                assert equal(found_clusters[i], expected_clusters[i]), print(
+                    " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
+                    % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
+                )
+
+        # sorter type 0 is less predictable...
 
         # -------------------------------------------------------------------------------
         # check that all clusters w/ vpf = 0 have an invalid address, and all valid
@@ -366,3 +372,4 @@ if __name__ == "__main__":
     # testing the oneshot is complicated here, since the emulator doesn't take
     # into account the past :(
     test_cluster_packer(1, False, 0)
+    test_cluster_packer(2, False, 0)
