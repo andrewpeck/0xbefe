@@ -233,7 +233,8 @@ begin
         generic map(
             g_CLK_STABLE_FREQ           => 100_000_000,
             g_GEM_STATION               => 1,
-            g_LPGBT_2P56G_LOOPBACK_TEST => false
+            g_LPGBT_2P56G_LOOPBACK_TEST => false,
+            g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)
         )
         port map(
             clk_stable_i        => axil_clk,
@@ -436,9 +437,9 @@ begin
                 ttc_cmds_o              => ttc_cmds(slr),
                 
                 -- DMB links
-                csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
-                csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
-                csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+                dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
+                dmb_rx_data_arr_i       => csc_dmb_rx_data_arr,
+                dmb_rx_status_arr_i     => csc_dmb_rx_status_arr,
     
                 -- GBT links
                 gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
@@ -451,10 +452,10 @@ begin
                 gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
-                csc_spy_usrclk_i        => csc_spy_usrclk,
-                csc_spy_rx_data_i       => csc_spy_rx_data,
-                csc_spy_tx_data_o       => csc_spy_tx_data,
-                csc_spy_rx_status_i     => csc_spy_rx_status,
+                spy_usrclk_i            => csc_spy_usrclk,
+                spy_rx_data_i           => csc_spy_rx_data,
+                spy_tx_data_o           => csc_spy_tx_data,
+                spy_rx_status_i         => csc_spy_rx_status,
                 
                 -- IPbus
                 ipb_reset_i             => ipb_reset,

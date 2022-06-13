@@ -46,25 +46,25 @@ entity csc_fed is
         ttc_cmds_o              : out t_ttc_cmds;
         
         -- DMB links
-        csc_dmb_rx_usrclk_arr_i : in  std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
-        csc_dmb_rx_data_arr_i   : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
-        csc_dmb_rx_status_arr_i : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
+        dmb_rx_usrclk_i         : in  std_logic;
+        dmb_rx_data_arr_i       : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+        dmb_rx_status_arr_i     : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
 
         -- GBT links
-        gbt_rx_data_arr_i    : in  t_std40_array(g_NUM_GBT_LINKS - 1 downto 0);
-        gbt_tx_data_arr_o    : out t_std40_array(g_NUM_GBT_LINKS - 1 downto 0);
-        gbt_rx_clk_arr_i     : in  std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
-        gbt_tx_clk_arr_i     : in  std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
-        gbt_rx_common_clk_i  : in  std_logic;
-
-        gbt_status_arr_i     : in  t_mgt_status_arr(g_NUM_GBT_LINKS - 1 downto 0);
-        gbt_ctrl_arr_o       : out t_mgt_ctrl_arr(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_rx_data_arr_i       : in  t_std40_array(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_tx_data_arr_o       : out t_std40_array(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_rx_clk_arr_i        : in  std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_tx_clk_arr_i        : in  std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_rx_common_clk_i     : in  std_logic;
+                                
+        gbt_status_arr_i        : in  t_mgt_status_arr(g_NUM_GBT_LINKS - 1 downto 0);
+        gbt_ctrl_arr_o          : out t_mgt_ctrl_arr(g_NUM_GBT_LINKS - 1 downto 0);
         
         -- Spy link
-        csc_spy_usrclk_i        : in  std_logic;
-        csc_spy_rx_data_i       : in  t_mgt_16b_rx_data;
-        csc_spy_tx_data_o       : out t_mgt_16b_tx_data;                
-        csc_spy_rx_status_i     : in  t_mgt_status;
+        spy_usrclk_i            : in  std_logic;
+        spy_rx_data_i           : in  t_mgt_16b_rx_data;
+        spy_tx_data_o           : out t_mgt_16b_tx_data;                
+        spy_rx_status_i         : in  t_mgt_status;
 
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -187,7 +187,7 @@ begin
     link_reset <= manual_link_reset or ttc_cmd.hard_reset;
 
     ipb_miso_arr_o <= ipb_miso_arr;
-    csc_spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
+    spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
     
     board_id <= board_id_i;
     
@@ -261,9 +261,9 @@ begin
             ttc_status_i     => ttc_status,
             l1a_request_o    => daq_l1a_request,
             l1a_reset_req_o  => daq_l1a_reset,
-            input_clk_arr_i  => csc_dmb_rx_usrclk_arr_i,
-            input_link_arr_i => csc_dmb_rx_data_arr_i,
-            spy_clk_i        => csc_spy_usrclk_i,
+            dmb_clk_i        => dmb_rx_usrclk_i,
+            dmb_link_arr_i   => dmb_rx_data_arr_i,
+            spy_clk_i        => spy_usrclk_i,
             spy_link_o       => spy_gbe_daq_data,
             ipb_reset_i      => ipb_reset,
             ipb_clk_i        => ipb_clk_i,
@@ -272,7 +272,7 @@ begin
             board_id_i       => board_id,
             tts_ready_o      => open
         );    
-
+    
     --================================--
     -- System registers
     --================================--
@@ -328,30 +328,30 @@ begin
         )
         port map(
             reset_i                 => reset,
-            clk_i                   => csc_dmb_rx_usrclk_arr_i(0),
+            clk_i                   => dmb_rx_usrclk_i,
 
             -- TTC
             ttc_clks_i              => ttc_clocks_i,
             ttc_cmds_i              => ttc_cmd,
         
             -- DMB links
-            csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr_i,
-            csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr_i,
-            csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr_i,
+            dmb_rx_usrclk_i         => dmb_rx_usrclk_i,
+            dmb_rx_data_arr_i       => dmb_rx_data_arr_i,
+            dmb_rx_status_arr_i     => dmb_rx_status_arr_i,
 
             -- GBT links
             gbt_link_status_arr_i   => gbt_link_status_arr,
-    
-            -- Spy link
-            csc_spy_usrclk_i        => csc_spy_usrclk_i,
-            csc_spy_rx_data_i       => csc_spy_rx_data_i,
-            csc_spy_rx_status_i     => csc_spy_rx_status_i,
-                
-            -- IPbus
-            ipb_reset_i            => ipb_reset,
-            ipb_clk_i              => ipb_clk_i,
-            ipb_miso_o             => ipb_miso_arr(C_IPB_SLV.links),
-            ipb_mosi_i             => ipb_mosi_arr_i(C_IPB_SLV.links)
+                                    
+            -- Spy link             
+            spy_usrclk_i            => spy_usrclk_i,
+            spy_rx_data_i           => spy_rx_data_i,
+            spy_rx_status_i         => spy_rx_status_i,
+                                    
+            -- IPbus                
+            ipb_reset_i             => ipb_reset,
+            ipb_clk_i               => ipb_clk_i,
+            ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.links),
+            ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.links)
         );
 
     --================================--
@@ -360,20 +360,34 @@ begin
 
     i_csc_tests : entity work.csc_tests
         generic map(
+            g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
             g_NUM_GBT_LINKS     => g_NUM_GBT_LINKS,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                => reset,
+            
+            -- TTC
             ttc_clk_i              => ttc_clocks_i,
             ttc_cmds_i             => ttc_cmd,
-            gbe_clk_i              => csc_spy_usrclk_i,
+            
+            -- GbE link
+            gbe_clk_i              => spy_usrclk_i,
             gbe_tx_data_o          => spy_gbe_test_data,
             gbe_test_enable_o      => spy_gbe_test_en,
+            
+            -- GBT links
             loopback_gbt_test_en_i => loopback_gbt_test_en,
             gbt_link_ready_i       => test_gbt_ready_arr,
             gbt_tx_data_arr_o      => test_gbt_tx_data_arr,
             gbt_wide_rx_data_arr_i => test_gbt_wide_rx_data_arr,
+            
+            -- DMB links
+            dmb_rx_usrclk_i        => dmb_rx_usrclk_i,
+            dmb_rx_data_arr_i      => dmb_rx_data_arr_i,
+            dmb_rx_status_arr_i    => dmb_rx_status_arr_i,  
+            
+            -- IPbus
             ipb_reset_i            => ipb_reset,
             ipb_clk_i              => ipb_clk_i,
             ipb_miso_o             => ipb_miso_arr(C_IPB_SLV.tests),
@@ -475,30 +489,30 @@ begin
 
     i_ila_dmb0_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
-            clk_i        => csc_dmb_rx_usrclk_arr_i(0),
-            rx_data_i    => csc_dmb_rx_data_arr_i(0),
-            mgt_status_i => csc_dmb_rx_status_arr_i(0)
+            clk_i        => dmb_rx_usrclk_i,
+            rx_data_i    => dmb_rx_data_arr_i(0),
+            mgt_status_i => dmb_rx_status_arr_i(0)
         );
 
     i_ila_dmb1_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
-            clk_i        => csc_dmb_rx_usrclk_arr_i(1),
-            rx_data_i    => csc_dmb_rx_data_arr_i(1),
-            mgt_status_i => csc_dmb_rx_status_arr_i(1)
+            clk_i        => dmb_rx_usrclk_i,
+            rx_data_i    => dmb_rx_data_arr_i(1),
+            mgt_status_i => dmb_rx_status_arr_i(1)
         );
 
     i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
-            clk_i        => csc_spy_usrclk_i,
-            rx_data_i    => csc_spy_rx_data_i,
-            mgt_status_i => csc_spy_rx_status_i
+            clk_i        => spy_usrclk_i,
+            rx_data_i    => spy_rx_data_i,
+            mgt_status_i => spy_rx_status_i
         );
 
     i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
         port map(
-            clk_i   => csc_spy_usrclk_i,
-            kchar_i => csc_spy_tx_data_o.txcharisk,
-            data_i  => csc_spy_tx_data_o.txdata
+            clk_i   => spy_usrclk_i,
+            kchar_i => spy_tx_data_o.txcharisk,
+            data_i  => spy_tx_data_o.txdata
         );
 
 end csc_fed_arch;
