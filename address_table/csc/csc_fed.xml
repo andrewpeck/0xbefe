@@ -759,7 +759,7 @@
           </node>
         </node>
 
-        <node id="GBE_TEST" address="0x50">
+        <node id="DMB_PRBS_TEST" address="0x50">
             <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
                   description="Enable/disable this module"
                   fw_signal="dmb_link_test_en" fw_default="0b0"/>
