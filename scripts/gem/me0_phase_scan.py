@@ -25,7 +25,7 @@ def getConfig (filename):
     f.close()
     return reg_map
 
-def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_err, cyclic_running_node):
+def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node):
 
     #print("  Scanning phase %d" % phase)
 
@@ -50,7 +50,7 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
     # Check Slow Control
     cfg_run_error = 0
     cfg_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat))
-    for iread in range(depth):
+    for iread in range(sc_depth):
         vfat_cfg_run = gem_utils.simple_read_backend_reg(cfg_node, 9999)
         if vfat_cfg_run != 0 and vfat_cfg_run != 1:
             cfg_run_error = 1
@@ -75,7 +75,7 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
 
             # Send L1A to get DAQ events from VFATs
             #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0) 
-            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), depth)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), crc_depth)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
             cyclic_running = 1
             while cyclic_running:
@@ -85,7 +85,7 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
             if system == "dryrun":
                 daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
             else:
-                if daq_event_counter == depth%(2**16):
+                if daq_event_counter == crc_depth%(2**16):
                    daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
                 else:
                    print (Colors.YELLOW + "\tProblem with DAQ event counter=%d"%(daq_event_counter) + Colors.ENDC)
@@ -118,8 +118,8 @@ def phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_er
 
     return link_state, sync_error, cfg_run_error, daq_error
 
-def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_list):
-    print ("ME0 Phase Scan depth=%s transactions" % (str(depth)))
+def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_depth, l1a_bxgap, bestphase_list):
+    print ("ME0 Phase Scan")
 
     if bestphase_list!={}:
         print ("Setting phases for VFATs only, not scanning")
@@ -206,14 +206,14 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
     # Configure TTC Generator
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
-    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), 500) # 80 kHz 
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap) 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 0) # Disable Calpulse 
     cyclic_running_node = gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
     for vfat in vfat_list:
         print ("Phase Scan for VFAT: %02d"%vfat)
         for phase in range(0, 16):
-            link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth, phase, working_phases_sc, daq_err, cyclic_running_node)
+            link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node)
       
         n_errors = 0
         for phase in range(0, 15):
@@ -221,7 +221,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         if n_errors == 0:
             print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 16):
-                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         n_errors = 0
         for phase in range(0, 15):
@@ -229,7 +229,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, depth, bestphase_
         if n_errors == 0:
             print ("\nNo bad phase detected again, redoing the phase scan with even higher statistics:")
             for phase in range(0, 16):
-                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         print("")
 
@@ -409,7 +409,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--daq_err", action="store_true", dest="daq_err", help="if you want to check for DAQ CRC errors")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
-    parser.add_argument("-d", "--depth", action="store", dest="depth", default="10000", help="depth = number of times to check for cfg_run error and crc errors")
+    parser.add_argument("-sd", "--sc_depth", action="store", dest="sc_depth", default="10000", help="sc_depth = number of times to check for slow control errors")
+    parser.add_argument("-cd", "--crc_depth", action="store", dest="crc_depth", default="10000", help="crc_depth = number of times to check for crc errors")
+    parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
     parser.add_argument("-f", "--bestphase_file", action="store", dest="bestphase_file", help="bestphase_file = Text file with best value of the elinkRX phase for each VFAT (in hex), calculated from phase scan by default")
     args = parser.parse_args()
@@ -472,6 +474,12 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
+    l1a_bxgap = int(args.bxgap)
+    l1a_timegap = l1a_bxgap * 25 * 0.001 # in microseconds
+    if l1a_bxgap<25:
+        print (Colors.YELLOW + "Gap between L1As should be at least 25 BX to read out enitre DAQ data packets" + Colors.ENDC)
+        sys.exit()
+
     # Initialization 
     rw_initialize(args.gem, args.system)
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
@@ -502,7 +510,7 @@ if __name__ == "__main__":
     
     # Running Phase Scan
     try:
-        gbt_phase_scan(args.gem, args.system, int(args.ohid), args.daq_err, vfat_list, int(args.depth), bestphase_list)
+        gbt_phase_scan(args.gem, args.system, int(args.ohid), args.daq_err, vfat_list, int(args.sc_depth), int(args.crc_depth), l1a_bxgap, bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
