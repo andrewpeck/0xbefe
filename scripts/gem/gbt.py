@@ -400,33 +400,96 @@ def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
             sleep(0.000001) # writing is too fast for CVP13 :)
 
 def getBestPhase(goodPhases):
-    bestDistLeft = 0
-    bestDistRight = 0
-    bestPhase = 0
-    for i in range(len(goodPhases)):
-        distRight = 0
-        for j in range(i, i + 15):
-            phaseIdx = j if j < 15 else j - 15
-            if not goodPhases[phaseIdx]:
-                break
-            else:
-                distRight += 1
-        distLeft = 0
-        for j in range(i, i - 15, -1):
-            phaseIdx = j
-            if not goodPhases[phaseIdx]:
-                break
-            else:
-                distLeft += 1
+    # find the centers
+    ngood        = 0
+    ngood_max    = 0
+    ngood_edge   = 0
+    ngood_center = 0
 
-        if distLeft + distRight > bestDistLeft + bestDistRight or (distLeft + distRight == bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight)):
-            if distLeft <= 4: # don't set a phase with distance more than 4 to the left (to protect against cases where the second bad spot is not detected)
-                bestDistLeft = distLeft
-                bestDistRight = distRight
-                bestPhase = i
+    # Adding a bad phase 15 from the calculation - to prevent wrap around
+    err_list_temp = err_list.copy()
+    err_list_temp.append(99)
 
-    print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
-    return bestPhase
+    # duplicate the err_list to handle the wraparound
+    err_list_doubled = err_list_temp + err_list_temp
+    phase_max = len(err_list_temp)-1
+
+    for phase in range(0,len(err_list_doubled)):
+        if (err_list_doubled[phase] == 0):
+            ngood+=1
+        else: # hit an edge
+            if (ngood > 0 and ngood >= ngood_max):
+                ngood_max  = ngood
+                ngood_edge = phase
+            ngood=0
+
+    # cover the case when there are no edges, just pick the center
+    if (ngood==len(err_list_doubled)):
+        ngood_max  = int(ngood/2)
+        ngood_edge = len(err_list_doubled)-1
+
+    if (ngood_max>0):
+        ngood_width = ngood_max
+        # even windows 
+        if (ngood_max % 2 == 0):
+            ngood_center = ngood_edge - int(ngood_max/2) -1
+            if (err_list_doubled[ngood_edge] > err_list_doubled[ngood_edge-ngood_max-1]):
+                ngood_center = ngood_center
+            else:
+                ngood_center = ngood_center+1
+        # odd windows
+        else:
+            ngood_center = ngood_edge - int(ngood_max/2) - 1;
+
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
+
+    if (ngood_max==0):
+        ngood_center=0
+
+    n_bad_phases = 0
+    bad_phase_loc = 0
+    for phase in range(0,len(err_list_temp)-1):
+        if err_list_temp[phase] != 0:
+            n_bad_phases += 1
+            bad_phase_loc = phase
+    if n_bad_phases == 1:
+        if bad_phase_loc <= 7:
+            ngood_center = bad_phase_loc + 4
+        else:
+            ngood_center = bad_phase_loc - 4
+
+    print("Best phase is %d, width of good phase region = %d" % (ngood_center, ngood_max))
+    return ngood_center
+
+#def getBestPhase(goodPhases):
+#    bestDistLeft = 0
+#    bestDistRight = 0
+#    bestPhase = 0
+#    for i in range(len(goodPhases)):
+#        distRight = 0
+#        for j in range(i, i + 15):
+#            phaseIdx = j if j < 15 else j - 15
+#            if not goodPhases[phaseIdx]:
+#                break
+#            else:
+#                distRight += 1
+#        distLeft = 0
+#        for j in range(i, i - 15, -1):
+#            phaseIdx = j
+#            if not goodPhases[phaseIdx]:
+#                break
+#            else:
+#                distLeft += 1
+#
+#        if distLeft + distRight > bestDistLeft + bestDistRight or (distLeft + distRight == bestDistLeft + bestDistRight and abs(distLeft - distRight) < abs(bestDistLeft - bestDistRight)):
+#            if distLeft <= 4: # don't set a phase with distance more than 4 to the left (to protect against cases where the second bad spot is not detected)
+#                bestDistLeft = distLeft
+#                bestDistRight = distRight
+#                bestPhase = i
+#
+#    print("Best phase is %d, distance to a bad spot on the left = %d, on the right = %d" % (bestPhase, bestDistLeft, bestDistRight))
+#    return bestPhase
 
 def readConfig(ohIdx, gbtIdx, filename):
     gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
