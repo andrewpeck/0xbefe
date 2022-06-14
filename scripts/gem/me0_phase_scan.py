@@ -331,12 +331,6 @@ def find_phase_center(err_list):
         else:
             ngood_center = ngood_edge - int(ngood_max/2) - 1;
 
-    if ngood_center > phase_max:
-        ngood_center = ngood_center % phase_max - 1
-
-    if (ngood_max==0):
-        ngood_center=0
-
     n_bad_phases = 0
     bad_phase_loc = 0
     for phase in range(0,len(err_list_temp)-1):
@@ -348,6 +342,12 @@ def find_phase_center(err_list):
             ngood_center = bad_phase_loc + 4
         else:
             ngood_center = bad_phase_loc - 4
+
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
+
+    if (ngood_max==0):
+        ngood_center=0
 
     return ngood_center, ngood_max
 

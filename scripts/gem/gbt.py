@@ -441,12 +441,6 @@ def getBestPhase(goodPhases):
         else:
             ngood_center = ngood_edge - int(ngood_max/2) - 1;
 
-    if ngood_center > phase_max:
-        ngood_center = ngood_center % phase_max - 1
-
-    if (ngood_max==0):
-        ngood_center=0
-
     n_bad_phases = 0
     bad_phase_loc = 0
     for phase in range(0,len(err_list_temp)-1):
@@ -458,6 +452,12 @@ def getBestPhase(goodPhases):
             ngood_center = bad_phase_loc + 4
         else:
             ngood_center = bad_phase_loc - 4
+
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
+
+    if (ngood_max==0):
+        ngood_center=0
 
     print("Best phase is %d, width of good phase region = %d" % (ngood_center, ngood_max))
     return ngood_center
