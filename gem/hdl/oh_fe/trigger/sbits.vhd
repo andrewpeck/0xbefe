@@ -440,7 +440,12 @@ begin
     -- Cluster Outputs
     --------------------------------------------------------------------------------
 
-    clusters_o <= clusters_masked;
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        clusters_o <= clusters_masked;
+      end if;
+    end process;
 
     --------------------------------------------------------------------------------
     -- Cluster TMR Output
