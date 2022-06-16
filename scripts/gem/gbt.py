@@ -437,7 +437,7 @@ def getBestPhase(goodPhases):
         if width%2 != 0:
             center = int((lower_edge + upper_edge)/2)
         else:
-            if err_list[lower_edge] >= err_list[upper_edge]:
+            if err_list[lower_edge] <= err_list[upper_edge]:
                 center = int((lower_edge + upper_edge)/2)
             else:
                 center = int((lower_edge + upper_edge)/2) + 1
