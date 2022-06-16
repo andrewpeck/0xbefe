@@ -153,11 +153,11 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
     file_out_data = open(filename_data, "w")
     file_out.write("vfat  phase\n")
 
-    link_good    = [[0 for phase in range(16)] for vfat in range(24)]
-    sync_err_cnt = [[0 for phase in range(16)] for vfat in range(24)]
-    cfg_run      = [[0 for phase in range(16)] for vfat in range(24)]
-    daq_crc_error      = [[0 for phase in range(16)] for vfat in range(24)]
-    errs         = [[0 for phase in range(16)] for vfat in range(24)]
+    link_good    = [[0 for phase in range(15)] for vfat in range(24)]
+    sync_err_cnt = [[0 for phase in range(15)] for vfat in range(24)]
+    cfg_run      = [[0 for phase in range(15)] for vfat in range(24)]
+    daq_crc_error      = [[0 for phase in range(15)] for vfat in range(24)]
+    errs         = [[0 for phase in range(15)] for vfat in range(24)]
 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
@@ -212,7 +212,13 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
 
     for vfat in vfat_list:
         print ("Phase Scan for VFAT: %02d"%vfat)
-        for phase in range(0, 16):
+        link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node)
+        phase_15_error = (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
+        if phase_15_error == 0:
+            print (Colors.RED + "\nPhase not being set correctly for VFAT %02d"%vfat + Colors.ENDC)
+            terminate()
+
+        for phase in range(0, 15):
             link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node)
       
         n_errors = 0
@@ -220,7 +226,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
             n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
         if n_errors == 0:
             print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
-            for phase in range(0, 16):
+            for phase in range(0, 15):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         n_errors = 0
@@ -228,7 +234,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
             n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
         if n_errors == 0:
             print ("\nNo bad phase detected again, redoing the phase scan with even higher statistics:")
-            for phase in range(0, 16):
+            for phase in range(0, 15):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         print("")
@@ -240,7 +246,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
     #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
     for vfat in vfat_list:
-        for phase in range(0, 16):
+        for phase in range(0, 15):
             errs[vfat][phase] = (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
         centers[vfat], widths[vfat] = find_phase_center(errs[vfat])
 
@@ -249,7 +255,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
     bestphase_vfat = 24*[0]
     for vfat in vfat_list:
         phase_print = "VFAT%02d: " % (vfat)
-        for phase in range(0, 16):
+        for phase in range(0, 15):
 
             if (widths[vfat]>0 and phase==centers[vfat]):
                 char=Colors.GREEN + "+" + Colors.ENDC
@@ -296,13 +302,10 @@ def find_phase_center(err_list):
     ngood_edge   = 0
     ngood_center = 0
 
-    # NOT Removing phase 15 from the calculation - to prevent wrap around
-    err_list_temp = err_list.copy()
-    #err_list_temp.pop()
-
     # duplicate the err_list to handle the wraparound
-    err_list_doubled = err_list_temp + err_list_temp
-    phase_max = len(err_list_temp)-1
+    #err_list_doubled = err_list + err_list
+    err_list_doubled = err_list.copy()
+    phase_max = len(err_list)-1
 
     for phase in range(0,len(err_list_doubled)):
         if (err_list_doubled[phase] == 0):
@@ -333,8 +336,8 @@ def find_phase_center(err_list):
 
     n_bad_phases = 0
     bad_phase_loc = 0
-    for phase in range(0,len(err_list_temp)-1):
-        if err_list_temp[phase] != 0:
+    for phase in range(0,len(err_list)-1):
+        if err_list[phase] != 0:
             n_bad_phases += 1
             bad_phase_loc = phase
     if n_bad_phases == 1:
@@ -343,8 +346,8 @@ def find_phase_center(err_list):
         else:
             ngood_center = bad_phase_loc - 4
 
-    if ngood_center > phase_max:
-        ngood_center = ngood_center % phase_max - 1
+    #if ngood_center > phase_max:
+    #    ngood_center = ngood_center % phase_max - 1
 
     if (ngood_max==0):
         ngood_center=0
@@ -411,7 +414,7 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-sd", "--sc_depth", action="store", dest="sc_depth", default="10000", help="sc_depth = number of times to check for slow control errors")
     parser.add_argument("-cd", "--crc_depth", action="store", dest="crc_depth", default="10000", help="crc_depth = number of times to check for crc errors")
-    parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
+    parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="40", help="bxgap = Nr. of BX between two L1As (default = 40 i.e. 1 us)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
     parser.add_argument("-f", "--bestphase_file", action="store", dest="bestphase_file", help="bestphase_file = Text file with best value of the elinkRX phase for each VFAT (in hex), calculated from phase scan by default")
     args = parser.parse_args()

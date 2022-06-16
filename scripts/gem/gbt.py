@@ -406,13 +406,10 @@ def getBestPhase(goodPhases):
     ngood_edge   = 0
     ngood_center = 0
 
-    # Adding a bad phase 15 from the calculation - to prevent wrap around
-    err_list_temp = err_list.copy()
-    err_list_temp.append(99)
-
     # duplicate the err_list to handle the wraparound
-    err_list_doubled = err_list_temp + err_list_temp
-    phase_max = len(err_list_temp)-1
+    #err_list_doubled = err_list + err_list
+    err_list_doubled = err_list.copy()
+    phase_max = len(err_list)-1
 
     for phase in range(0,len(err_list_doubled)):
         if (err_list_doubled[phase] == 0):
@@ -443,8 +440,8 @@ def getBestPhase(goodPhases):
 
     n_bad_phases = 0
     bad_phase_loc = 0
-    for phase in range(0,len(err_list_temp)-1):
-        if err_list_temp[phase] != 0:
+    for phase in range(0,len(err_list)-1):
+        if err_list[phase] != 0:
             n_bad_phases += 1
             bad_phase_loc = phase
     if n_bad_phases == 1:
@@ -453,8 +450,8 @@ def getBestPhase(goodPhases):
         else:
             ngood_center = bad_phase_loc - 4
 
-    if ngood_center > phase_max:
-        ngood_center = ngood_center % phase_max - 1
+    #if ngood_center > phase_max:
+    #    ngood_center = ngood_center % phase_max - 1
 
     if (ngood_max==0):
         ngood_center=0
