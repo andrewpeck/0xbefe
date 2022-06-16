@@ -25,12 +25,12 @@ def getConfig (filename):
     f.close()
     return reg_map
 
-def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node, verbose=True):
+def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node):
 
     #print("  Scanning phase %d" % phase)
 
     # set phase
-    setVfatRxPhase(system, oh_select, vfat, phase, verbose)
+    setVfatRxPhase(system, oh_select, vfat, phase)
 
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
@@ -109,11 +109,10 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
         result_str += Colors.GREEN
     else:
         result_str += Colors.RED
-    if verbsoe:
-        if daq_err:
-            result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_state, sync_error, cfg_run_error, daq_error)
-        else:
-            result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_state, sync_error, cfg_run_error)
+    if daq_err:
+        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_state, sync_error, cfg_run_error, daq_error)
+    else:
+        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_state, sync_error, cfg_run_error)
     result_str += Colors.ENDC
     print(result_str)
 
@@ -213,12 +212,13 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
 
     for vfat in vfat_list:
         print ("Phase Scan for VFAT: %02d"%vfat)
-        link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node, False)
+        print ("Checking that phase 15 does not work to make sure we can set phases:")
+        link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node)
         phase_15_error = (not link_good_15==1) + (not sync_err_cnt_15==0) + (not cfg_run_15==0) + (not daq_crc_error_15==0)
         if phase_15_error == 0:
             print (Colors.RED + "\nPhase not being set correctly for VFAT %02d"%vfat + Colors.ENDC)
             terminate()
-
+        print ("")
         for phase in range(0, 15):
             link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node)
       
@@ -297,6 +297,45 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         configureVfat(0, vfat, oh_select, 0)
 
 def find_phase_center(err_list):
+    lower_edge = -1
+    upper_edge = 15
+    center = 0
+    width = 0
+
+    bad_phases = []
+    for phase in range(0, len(err_list)):
+        if err_list[phase] != 0:
+            bad_phases.append(phase)
+
+    if len(bad_phases) == 1:
+        if bad_phases[0] <= 7:
+            center = bad_phases[0] + 4
+            width = upper_edge - bad_phases[0] - 1
+        else:
+            center = bad_phases[0] - 4
+            width = bad_phases[0] - lower_edge - 1
+    else:
+        l = -9999
+        u = -9999
+        diff = 0
+        max_diff = 0
+        for i in range(0, len(bad_phases)-1):
+            l = bad_phases[i]
+            u = bad_phases[i+1]
+            diff = u - l - 1
+            if diff >= max_diff:
+                lower_edge = l
+                upper_edge = u
+                max_diff = diff
+
+    if len(bad_phases) != 1:
+        center = (lower_edge + upper_edge)/2
+        width = upper_edge - lower_edge - 1
+
+    return center, width
+
+
+def find_phase_center_wrap(err_list):
     # find the centers
     ngood        = 0
     ngood_max    = 0
@@ -304,8 +343,7 @@ def find_phase_center(err_list):
     ngood_center = 0
 
     # duplicate the err_list to handle the wraparound
-    #err_list_doubled = err_list + err_list
-    err_list_doubled = err_list.copy()
+    err_list_doubled = err_list + err_list
     phase_max = len(err_list)-1
 
     for phase in range(0,len(err_list_doubled)):
@@ -347,8 +385,8 @@ def find_phase_center(err_list):
         else:
             ngood_center = bad_phase_loc - 4
 
-    #if ngood_center > phase_max:
-    #    ngood_center = ngood_center % phase_max - 1
+    if ngood_center > phase_max:
+        ngood_center = ngood_center % phase_max - 1
 
     if (ngood_max==0):
         ngood_center=0

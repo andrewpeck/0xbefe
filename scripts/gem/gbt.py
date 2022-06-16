@@ -422,7 +422,8 @@ def getBestPhase(goodPhases):
 
     # cover the case when there are no edges, just pick the center
     if (ngood==len(err_list_doubled)):
-        ngood_max  = int(ngood/2)
+        #ngood_max  = int(ngood/2)
+        ngood_max = ngood
         ngood_edge = len(err_list_doubled)-1
 
     if (ngood_max>0):
