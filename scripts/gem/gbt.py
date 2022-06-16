@@ -410,7 +410,10 @@ def getBestPhase(goodPhases):
         if err_list[phase] != 0:
             bad_phases.append(phase)
 
-    if len(bad_phases) == 1:
+    if len(bad_phases) == 0:
+        width = upper_edge - lower_edge - 1
+        center = int((lower_edge + upper_edge)/2)
+    elif len(bad_phases) == 1:
         if bad_phases[0] <= 7:
             center = bad_phases[0] + 4
             width = upper_edge - bad_phases[0] - 1
@@ -430,10 +433,14 @@ def getBestPhase(goodPhases):
                 lower_edge = l
                 upper_edge = u
                 max_diff = diff
-
-    if len(bad_phases) != 1:
-        center = (lower_edge + upper_edge)/2
         width = upper_edge - lower_edge - 1
+        if width%2 != 0:
+            center = int((lower_edge + upper_edge)/2)
+        else:
+            if err_list[lower_edge] >= err_list[upper_edge]:
+                center = int((lower_edge + upper_edge)/2)
+            else:
+                center = int((lower_edge + upper_edge)/2) + 1
 
     print("Best phase is %d, width of good phase region = %d" % (center, width))
     return center
