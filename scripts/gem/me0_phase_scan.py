@@ -334,7 +334,6 @@ def find_phase_center(err_list):
 
     return center, width
 
-
 def find_phase_center_wrap(err_list):
     # find the centers
     ngood        = 0

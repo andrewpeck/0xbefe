@@ -400,65 +400,43 @@ def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
             sleep(0.000001) # writing is too fast for CVP13 :)
 
 def getBestPhase(goodPhases):
-    # find the centers
-    ngood        = 0
-    ngood_max    = 0
-    ngood_edge   = 0
-    ngood_center = 0
+    lower_edge = -1
+    upper_edge = 15
+    center = 0
+    width = 0
 
-    # duplicate the err_list to handle the wraparound
-    #err_list_doubled = err_list + err_list
-    err_list_doubled = err_list.copy()
-    phase_max = len(err_list)-1
-
-    for phase in range(0,len(err_list_doubled)):
-        if (err_list_doubled[phase] == 0):
-            ngood+=1
-        else: # hit an edge
-            if (ngood > 0 and ngood >= ngood_max):
-                ngood_max  = ngood
-                ngood_edge = phase
-            ngood=0
-
-    # cover the case when there are no edges, just pick the center
-    if (ngood==len(err_list_doubled)):
-        #ngood_max  = int(ngood/2)
-        ngood_max = ngood
-        ngood_edge = len(err_list_doubled)-1
-
-    if (ngood_max>0):
-        ngood_width = ngood_max
-        # even windows 
-        if (ngood_max % 2 == 0):
-            ngood_center = ngood_edge - int(ngood_max/2) -1
-            if (err_list_doubled[ngood_edge] > err_list_doubled[ngood_edge-ngood_max-1]):
-                ngood_center = ngood_center
-            else:
-                ngood_center = ngood_center+1
-        # odd windows
-        else:
-            ngood_center = ngood_edge - int(ngood_max/2) - 1;
-
-    n_bad_phases = 0
-    bad_phase_loc = 0
-    for phase in range(0,len(err_list)-1):
+    bad_phases = []
+    for phase in range(0, len(err_list)):
         if err_list[phase] != 0:
-            n_bad_phases += 1
-            bad_phase_loc = phase
-    if n_bad_phases == 1:
-        if bad_phase_loc <= 7:
-            ngood_center = bad_phase_loc + 4
+            bad_phases.append(phase)
+
+    if len(bad_phases) == 1:
+        if bad_phases[0] <= 7:
+            center = bad_phases[0] + 4
+            width = upper_edge - bad_phases[0] - 1
         else:
-            ngood_center = bad_phase_loc - 4
+            center = bad_phases[0] - 4
+            width = bad_phases[0] - lower_edge - 1
+    else:
+        l = -9999
+        u = -9999
+        diff = 0
+        max_diff = 0
+        for i in range(0, len(bad_phases)-1):
+            l = bad_phases[i]
+            u = bad_phases[i+1]
+            diff = u - l - 1
+            if diff >= max_diff:
+                lower_edge = l
+                upper_edge = u
+                max_diff = diff
 
-    #if ngood_center > phase_max:
-    #    ngood_center = ngood_center % phase_max - 1
+    if len(bad_phases) != 1:
+        center = (lower_edge + upper_edge)/2
+        width = upper_edge - lower_edge - 1
 
-    if (ngood_max==0):
-        ngood_center=0
-
-    print("Best phase is %d, width of good phase region = %d" % (ngood_center, ngood_max))
-    return ngood_center
+    print("Best phase is %d, width of good phase region = %d" % (center, width))
+    return center
 
 #def getBestPhase(goodPhases):
 #    bestDistLeft = 0
