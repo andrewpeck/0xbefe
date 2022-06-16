@@ -25,12 +25,12 @@ def getConfig (filename):
     f.close()
     return reg_map
 
-def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node):
+def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node, verbose=True):
 
     #print("  Scanning phase %d" % phase)
 
-    # set phase   
-    setVfatRxPhase(system, oh_select, vfat, phase)
+    # set phase
+    setVfatRxPhase(system, oh_select, vfat, phase, verbose)
 
     gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
     oh_ver = get_oh_ver(oh_select, gbt_select)
@@ -109,10 +109,11 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
         result_str += Colors.GREEN
     else:
         result_str += Colors.RED
-    if daq_err:
-        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_state, sync_error, cfg_run_error, daq_error)
-    else:
-        result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_state, sync_error, cfg_run_error)
+    if verbsoe:
+        if daq_err:
+            result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d, daq_crc_errors=%d" % (phase, link_state, sync_error, cfg_run_error, daq_error)
+        else:
+            result_str += "\tResults for phase %d: link_good=%d, sync_err_cnt=%d, slow_control_bad=%d" % (phase, link_state, sync_error, cfg_run_error)
     result_str += Colors.ENDC
     print(result_str)
 
@@ -212,7 +213,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
 
     for vfat in vfat_list:
         print ("Phase Scan for VFAT: %02d"%vfat)
-        link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node)
+        link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node, False)
         phase_15_error = (not link_good_15==1) + (not sync_err_cnt_15==0) + (not cfg_run_15==0) + (not daq_crc_error_15==0)
         if phase_15_error == 0:
             print (Colors.RED + "\nPhase not being set correctly for VFAT %02d"%vfat + Colors.ENDC)
@@ -227,7 +228,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         if n_errors == 0:
             print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 15):
-                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*10, phase, working_phases_sc, daq_err, cyclic_running_node)
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         n_errors = 0
         for phase in range(0, 15):
@@ -235,7 +236,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         if n_errors == 0:
             print ("\nNo bad phase detected again, redoing the phase scan with even higher statistics:")
             for phase in range(0, 15):
-                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
+                link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*10000, phase, working_phases_sc, daq_err, cyclic_running_node)
 
         print("")
 
@@ -323,7 +324,7 @@ def find_phase_center(err_list):
 
     if (ngood_max>0):
         ngood_width = ngood_max
-        # even windows 
+        # even windows  
         if (ngood_max % 2 == 0):
             ngood_center = ngood_edge - int(ngood_max/2) -1
             if (err_list_doubled[ngood_edge] > err_list_doubled[ngood_edge-ngood_max-1]):
