@@ -213,7 +213,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
     for vfat in vfat_list:
         print ("Phase Scan for VFAT: %02d"%vfat)
         link_good_15, sync_err_cnt_15, cfg_run_15, daq_crc_error_15 = phase_check(system, oh_select, vfat, sc_depth, crc_depth, 15, working_phases_sc, daq_err, cyclic_running_node)
-        phase_15_error = (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
+        phase_15_error = (not link_good_15==1) + (not sync_err_cnt_15==0) + (not cfg_run_15==0) + (not daq_crc_error_15==0)
         if phase_15_error == 0:
             print (Colors.RED + "\nPhase not being set correctly for VFAT %02d"%vfat + Colors.ENDC)
             terminate()
