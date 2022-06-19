@@ -322,7 +322,9 @@ def find_phase_center(err_list):
         u = -9999
         diff = 0
         max_diff = 0
+        bad_phase_mean = -9999
         for i in range(0, len(bad_phases)-1):
+            bad_phase_mean += bad_phases[i]
             l = bad_phases[i]
             u = bad_phases[i+1]
             diff = u - l - 1
@@ -330,15 +332,27 @@ def find_phase_center(err_list):
                 lower_edge = l
                 upper_edge = u
                 max_diff = diff
+        bad_phase_mean = int(bad_phase_mean/len(bad_phases))
         width = upper_edge - lower_edge - 1
-        if width%2 != 0:
+        if width == 0:
+            if bad_phase_mean <= 7:
+                center = bad_phases[-1] + 4
+                width = upper_edge - bad_phases[-1] - 1
+            else:
+                center = bad_phases[0] - 4
+                width = bad_phases[0] - lower_edge - 1
+        elif width%2 != 0:
             center = int((lower_edge + upper_edge)/2)
         else:
             if err_list[lower_edge] <= err_list[upper_edge]:
                 center = int((lower_edge + upper_edge)/2)
             else:
                 center = int((lower_edge + upper_edge)/2) + 1
-        
+
+    if center < 0:
+        center = 0
+    elif center > 14:
+        center = 14
     return center, width
 
 def find_phase_center_wrap(err_list):
