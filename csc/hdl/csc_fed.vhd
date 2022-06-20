@@ -108,6 +108,13 @@ architecture csc_fed_arch of csc_fed is
         );
     end component;
     
+    component vio_csc_debug_link_select
+        port(
+            clk        : in  std_logic;
+            probe_out0 : out std_logic_vector(5 downto 0)
+        );
+    end component;
+    
     --================================--
     -- Constants
     --================================--
@@ -173,6 +180,12 @@ architecture csc_fed_arch of csc_fed is
     --== PROMless ==--
     signal promless_stats       : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
     signal promless_cfg         : t_promless_cfg;
+
+    --== Debug ==--
+    signal dbg_dmb_link_sel_slv : std_logic_vector(5 downto 0) := (others => '0');
+    signal dbg_dmb_link_select  : integer range 0 to g_NUM_OF_DMBs - 1 := 0;
+    signal dbg_dmb_rx_data      : t_mgt_16b_rx_data;
+    signal dbg_dmb_rx_status    : t_mgt_status;
 
 begin
 
@@ -272,7 +285,10 @@ begin
             board_id_i       => board_id,
             tts_ready_o      => open
         );    
-    
+
+--    daq_to_daqlink_o <= DAQ_TO_DAQLINK_NULL;
+--    spy_gbe_daq_data <= MGT_16B_TX_DATA_NULL;
+        
     --================================--
     -- System registers
     --================================--
@@ -327,7 +343,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i                 => reset,
+            reset_i                 => reset or link_reset,
             clk_i                   => dmb_rx_usrclk_i,
 
             -- TTC
@@ -487,18 +503,32 @@ begin
     -- Debug
     --================================--
 
+    i_vio_dbg_link_select : vio_csc_debug_link_select
+        port map(
+            clk        => dmb_rx_usrclk_i,
+            probe_out0 => dbg_dmb_link_sel_slv
+        );
+
+    process(dmb_rx_usrclk_i)
+    begin
+        if rising_edge(dmb_rx_usrclk_i) then
+            if to_integer(unsigned(dbg_dmb_link_sel_slv)) >= g_NUM_OF_DMBs then
+                dbg_dmb_link_select <= 0;
+            else
+                dbg_dmb_link_select <= to_integer(unsigned(dbg_dmb_link_sel_slv));
+            end if;
+
+            dbg_dmb_rx_data <= dmb_rx_data_arr_i(dbg_dmb_link_select);
+            dbg_dmb_rx_status <= dmb_rx_status_arr_i(dbg_dmb_link_select);
+            
+        end if;
+    end process;
+
     i_ila_dmb0_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
             clk_i        => dmb_rx_usrclk_i,
-            rx_data_i    => dmb_rx_data_arr_i(0),
-            mgt_status_i => dmb_rx_status_arr_i(0)
-        );
-
-    i_ila_dmb1_link : entity work.ila_mgt_rx_16b_wrapper
-        port map(
-            clk_i        => dmb_rx_usrclk_i,
-            rx_data_i    => dmb_rx_data_arr_i(1),
-            mgt_status_i => dmb_rx_status_arr_i(1)
+            rx_data_i    => dbg_dmb_rx_data,
+            mgt_status_i => dbg_dmb_rx_status
         );
 
     i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper

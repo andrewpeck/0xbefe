@@ -123,7 +123,7 @@ begin
             generic map(
                 g_COUNTER_WIDTH  => 32,
                 g_ALLOW_ROLLOVER => false,
-                g_INPUT_REG_STAGES => 4
+                g_INPUT_REG_STAGES => 1
             )
             port map(
                 ref_clk_i => mgt_clks_arr_i(chan).rxusrclk2,

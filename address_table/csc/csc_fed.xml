@@ -769,6 +769,9 @@
             <node id="PRBS_ERR_CNT" address="0x1" permission="r"
                   description="Number of PRBS errors detected"
                   fw_signal="dmb_prbs_err_cnt"/>
+            <node id="MEGA_WORD_CNT" address="0x2" permission="r"
+                  description="Number of DMB words checked by the PRBS checker, each count represents a million words checked"
+                  fw_signal="dmb_mega_words_cnt"/>
         </node>
 
     </node>

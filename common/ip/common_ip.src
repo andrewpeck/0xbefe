@@ -23,3 +23,4 @@ common/ip/ila_mgt_tx_64b/ila_mgt_tx_64b.xci
 common/ip/ila_mgt_rx_128b/ila_mgt_rx_128b.xci
 common/ip/ila_mgt_tx_128b/ila_mgt_tx_128b.xci
 common/ip/vio_gbe/vio_gbe.xci
+common/ip/ila_link_prbs_test/ila_link_prbs_test.xci
