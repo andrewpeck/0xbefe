@@ -16,21 +16,20 @@ use work.common_pkg.all;
 
 entity gbt_ic_controller is
     generic(
-        g_DEBUG			: boolean
-        --        g_GBTX_I2C_ADDRESS      : std_logic_vector(3 downto 0) := x"1"
+        g_DEBUG                 : boolean
     );
     port(
-        -- reset
+        -- Reset
         reset_i                 : in  std_logic;
 
-        -- clocks
+        -- Clocks
         gbt_clk_i               : in std_logic;
 
-        -- lpGBT version 0 or 1
-        gbt_version_i             : in std_logic;
+        -- Frame format to use -- different between GBTx(0) - lpGBT v0(1) - lpGBT v1(2)
+        gbt_frame_format_i      : in std_logic_vector(1 downto 0);
 
-        -- GBTx I2C address (for OHv2b it should be always 0x1 because that's hardwired on the board), but 0 can be used for broadcast
-        gbtx_i2c_address        : in std_logic_vector(6 downto 0);
+        -- GBTx/lpGBT I2C address -- 0 can be used for broadcast
+        gbt_i2c_address         : in std_logic_vector(6 downto 0);
 
         -- GBTx IC elinks
         gbt_rx_ic_elink_i       : in  std_logic_vector(1 downto 0);
@@ -38,23 +37,21 @@ entity gbt_ic_controller is
 
         -- Control
         ic_rw_address_i         : in  std_logic_vector(15 downto 0);
+        ic_rw_length_i          : in std_logic_vector(2 downto 0);
         ic_w_data_i             : in  std_logic_vector(31 downto 0);
         ic_r_data_o             : out std_logic_vector(31 downto 0);
-        ic_rw_length_i          : in std_logic_vector(2 downto 0);
+        ic_r_data_valid_o       : out std_logic;
+        ic_r_stat_o             : out std_logic_vector(6 downto 0);
         ic_write_req_i          : in std_logic;
-        ic_write_done_o         : out std_logic;
+        ic_write_req_done_o     : out std_logic;
         ic_read_req_i           : in std_logic;
-        ic_read_valid_o         : out std_logic;
-        ic_read_done_o          : out std_logic;
-        ic_read_stat_o          : out std_logic_vector(5 downto 0)
-
+        ic_read_req_done_o      : out std_logic
     );
 end gbt_ic_controller;
 
 architecture Behavioral of gbt_ic_controller is
 
     COMPONENT ila_ic_rx
-
         PORT (
             clk : IN STD_LOGIC;
 
@@ -112,8 +109,9 @@ architecture Behavioral of gbt_ic_controller is
 
 begin
 
-    --========= Serializer FSM =========--
+    --========= IC TX =========--
 
+    -- Serializer FSM --
     process(gbt_clk_i)
     begin
         if (rising_edge(gbt_clk_i)) then
@@ -131,28 +129,27 @@ begin
 
                 case ser_state is
                     when IDLE   =>
-                        if ((ic_write_req_i = '1' and ic_rw_length_i /= "000") or ic_read_req_i = '1') then
+                        if ((ic_write_req_i = '1' or ic_read_req_i = '1') and ic_rw_length_i /= "000") then
                             ser_state <= REG_ADDR;
                             ser_is_write <= ic_write_req_i;
                             -- we assign the beginning of the frame here because there's no chance of bit stuffing here
-                            -- Frames are different for lpGBT version 0 and 1
-                            if gbt_version_i = '0' then
+                            if (gbt_frame_format_i = "00") or (gbt_frame_format_i = "01") then -- GBTx and lpGBT v0
                                 tx_frame(47 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                         x"01" &                                             -- CMD
-                                                         gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                         x"01" &                                             -- CMD, ignored
+                                                         gbt_i2c_address & not ic_write_req_i &              -- I2C ADDRESS + read flag
                                                          x"00" &                                             -- RSVD, reserved byte should be set to 0
                                                          SOF_EOF;                                            -- SOF
                                 tx_frame(127 downto 48) <= (others => '1');
                                 ser_frame_pos <= 48;
                                 ser_parity <= ((x"01" xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
-                            else
+                            else -- lpGBT v1 and others
                                 tx_frame(39 downto 0) <= x"000" & "0" & ic_rw_length_i &                     -- LENGTH
-                                                         x"01" &                                             -- CMD
-                                                         gbtx_i2c_address & not ic_write_req_i &             -- I2C ADDRESS + read flag
+                                                         x"01" &                                             -- CMD, ignored
+                                                         gbt_i2c_address & not ic_write_req_i &              -- I2C ADDRESS + read flag
                                                          SOF_EOF;                                            -- SOF                           
                                 tx_frame(127 downto 40) <= (others => '1');
                                 ser_frame_pos <= 40;
-                                ser_parity <= ((((gbtx_i2c_address & not ic_write_req_i) xor x"01") xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
+                                ser_parity <= ((((gbt_i2c_address & not ic_write_req_i) xor x"01") xor ("00000" & ic_rw_length_i)) xor ic_rw_address_i(7 downto 0)) xor ic_rw_address_i(15 downto 8) ;
                             end if;
                             ser_word_pos <= 0;
                             ser_set_bit_cnt <= 0;
@@ -249,18 +246,14 @@ begin
         end if;
     end process;
 
-    --========= TX Sender FSM =========--
-
+    -- TX Sender FSM --
     process(gbt_clk_i)
     begin
         if (rising_edge(gbt_clk_i)) then
             if (reset_i = '1') then
                 gbt_tx_ic_elink_o <= "11";
                 sender_frame_pos <= 0;
-                ic_write_done_o <= '0';
             else
-
-                ic_write_done_o <= '0';
 
                 case sender_state is
                     when IDLE =>
@@ -274,7 +267,6 @@ begin
                             sender_frame_pos <= sender_frame_pos + 2;
                         else
                             sender_state <= IDLE;
-                            ic_write_done_o <= '1';
                         end if;
                         gbt_tx_ic_elink_o <= tx_frame(sender_frame_pos + 1) & tx_frame(sender_frame_pos);
                     when others =>
@@ -285,11 +277,92 @@ begin
             end if;
         end if;
     end process;
+
     --========= IC RX =========--
+
+    -- Instantiate IC RX module (CERN module) to deserialize 2 elink bits to 8 bit words
+    i_ic_rx : entity work.ic_rx
+        generic map (
+            g_FIFO_DEPTH    => 20
+        )
+        port map(
+            -- Clock and reset
+            rx_clk_i        => gbt_clk_i,
+            rx_clk_en       => '1',
+
+            reset_i         => reset_i,
+
+            -- Status
+            wr_o            => wr,
+
+            -- Internal FIFO
+            rd_clk_i        => gbt_clk_i,
+            rd_i            => '1',
+            data_o          => rx_data_from_gbtx,
+
+            -- IC line
+            rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
+        );
+
+    -- Finite state machine parsing RX frames
+    i_gbt_ic_rx : entity work.gbt_ic_rx
+        port map(
+            clock_i                 => gbt_clk_i,
+            reset_i                 => reset_i,
+
+            frame_i                 => rx_data_from_gbtx,
+            valid_i                 => wr,
+
+            gbt_frame_format_i      => gbt_frame_format_i,
+
+            -- Control
+            chip_adr_o              => ic_chip_adr,
+            data_o                  => ic_r_data,
+            length_o                => ic_length,
+            reg_adr_o               => ic_reg_adr,
+            uplink_parity_ok_o      => ic_uplink_parity_ok,
+            downlink_parity_ok_o    => ic_downlink_parity_ok,
+            err_o                   => ic_err,
+            valid_o                 => ic_r_valid
+        );
+
+    -- IC RX interface
+    ic_read_req_done_o  <= ic_r_valid;
+    ic_write_req_done_o <= ic_r_valid;
+
+    process(gbt_clk_i)
+    begin
+        if (rising_edge(gbt_clk_i)) then
+            if (ic_write_req_i = '1' or ic_read_req_i = '1') then
+                ic_r_stat_o    <= (others => '0');
+            elsif (ic_r_valid = '1') then
+                -- Register output data
+                ic_r_data_o    <= ic_r_data;
+
+                ic_r_stat_o(0) <= '1'; -- done flag
+                ic_r_stat_o(1) <= not ic_err;
+                ic_r_stat_o(2) <= ic_uplink_parity_ok;
+                ic_r_stat_o(3) <= ic_downlink_parity_ok;
+
+                if (ic_chip_adr = gbt_i2c_address) then
+                    ic_r_stat_o(4) <= '1';
+                end if;
+
+                if (ic_length(2 downto 0) = ic_rw_length_i) then
+                    ic_r_stat_o(5) <= '1';
+                end if;
+
+                if (ic_reg_adr = ic_rw_address_i) then
+                    ic_r_stat_o(6) <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
+
+    ic_r_data_valid_o <= and ic_r_stat_o; -- IC RX error control
 
     -- ILA Debug IC RX --
     ila_enable : if g_DEBUG generate
-
         i_gbt_ila_ix_rx : ila_ic_rx
             PORT MAP (
                 clk => gbt_clk_i,
@@ -308,93 +381,6 @@ begin
                 probe11 => ic_length,
                 probe12 => ic_reg_adr
             );
-
     end generate;
-
-
-    -- instantiate ic rx module (CERN module) to desirialize 2 elink bits to 8 bit words
-
-    i_ic_rx     : entity work.ic_rx
-        generic map (
-            g_FIFO_DEPTH    => 20
-        )
-        port map(
-            -- Clock and reset
-            rx_clk_i        => gbt_clk_i,
-            rx_clk_en       => '1',
-
-            reset_i         => reset_i,
-
-            -- Status>
-            --rx_empty_o      => ic_rx_empty,
-            wr_o            => wr,
-
-            -- Internal FIFO
-            rd_clk_i        => gbt_clk_i,
-            rd_i            => '1',
-            data_o          => rx_data_from_gbtx,
-
-            -- IC line
-            rx_data_i       => gbt_rx_ic_elink_i(0) & gbt_rx_ic_elink_i(1)
-
-        );
-    -- gbt_ic_rx module is finite state machine for rx frame
-    i_gbt_ic_rx : entity work.gbt_ic_rx
-        port map(
-            clock_i                 => gbt_clk_i,
-            reset_i                 => reset_i,
-
-            frame_i                 => rx_data_from_gbtx,
-            valid_i                 => wr,
-
-            lpgbt_version           => gbt_version_i,
-
-            -- Control
-            chip_adr_o              => ic_chip_adr,
-            data_o                  => ic_r_data,
-            length_o                => ic_length,
-            reg_adr_o               => ic_reg_adr,
-            uplink_parity_ok_o      => ic_uplink_parity_ok,
-            downlink_parity_ok_o    => ic_downlink_parity_ok,
-            err_o                   => ic_err,
-            valid_o                 => ic_r_valid
-        );
-
-    ic_r_data_o <= ic_r_data;
-
-    -- IC rx error control
-    process(gbt_clk_i)
-    begin
-        if (rising_edge(gbt_clk_i)) then
-
-            if (ic_write_req_i = '1' or ic_read_req_i = '1') then
-                ic_read_done_o    <= '0';
-                ic_read_stat_o    <= (others => '0');
-            end if;
-
-            if (ic_r_valid = '1') then
-                ic_read_done_o    <= '1';
-                ic_read_stat_o(0) <= not ic_err;
-                ic_read_stat_o(1) <= ic_uplink_parity_ok;
-                ic_read_stat_o(2) <= ic_downlink_parity_ok;
-
-                if (ic_chip_adr = gbtx_i2c_address) then
-                    ic_read_stat_o(3) <= '1';
-                end if;
-    
-                if (ic_length(2 downto 0) = ic_rw_length_i) then
-                    ic_read_stat_o(4) <= '1';
-                end if;
-    
-                if (ic_reg_adr = ic_rw_address_i) then
-                    ic_read_stat_o(5) <= '1';
-                end if;
-                
-            end if;
-            
-        end if;
-    end process;
-
-    ic_read_valid_o <= ic_read_done_o and ic_read_stat_o(0) and ic_read_stat_o(1) and ic_read_stat_o(3) and ic_read_stat_o(4) and ic_read_stat_o(5);
 
 end Behavioral;
