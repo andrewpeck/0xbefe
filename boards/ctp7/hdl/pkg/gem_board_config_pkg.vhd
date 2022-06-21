@@ -64,6 +64,7 @@ package board_config_package is
     constant CFG_DEBUG_TRIGGER              : boolean := true;
     constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
     constant CFG_DEBUG_IC_RX                : boolean := false; --set to true to instantiate ILA in IC rx
+    constant CFG_DEBUG_TRIGGER_TX           : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any trigger TX link
     
     ----------------------------------------------------------------------------------------------
 

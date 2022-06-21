@@ -32,8 +32,6 @@ boards/cvp13/hdl/system/generated/me0_cvp13/pcie_slow_control.vhd
 gem/hdl/trigger/generated/me0_cvp13/sbit_me0.vhd
 #gem/hdl/trigger/generated/me0_cvp13/sbit_monitor.vhd
 
->>>>>>> devel
-
 #dummy promless just to keep compiler happy
 common/hdl/misc/promless_bram.vhd
 

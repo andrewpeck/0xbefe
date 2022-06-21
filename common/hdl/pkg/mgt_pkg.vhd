@@ -15,8 +15,8 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 
 package mgt_pkg is
 
-    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE, MGT_TTC, MGT_ODMB57_BIDIR);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156, QPLL_GBE_156, QPLL_3P2G, QPLL0_3P2G_QPLL1_GBTX);
+    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE, MGT_TTC, MGT_ODMB57_BIDIR, MGT_TX_GBE_RX_LPGBT);
+    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156, QPLL_GBE_156, QPLL_3P2G, QPLL0_3P2G_QPLL1_GBTX, QPLL0_LPGBT_QPLL1_GBE);
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -234,5 +234,20 @@ package mgt_pkg is
     type t_mgt_misc_status_arr is array (integer range <>) of t_mgt_misc_status;
     type t_mgt_tx_init_arr is array (integer range <>) of t_mgt_tx_init;
     type t_mgt_rx_init_arr is array (integer range <>) of t_mgt_rx_init;
+
+    function is_refclk_160_lhc(freq : integer) return boolean;
+
+end mgt_pkg;
+    
+package body mgt_pkg is
+
+    function is_refclk_160_lhc(freq : integer) return boolean is
+    begin
+        if freq = 4 * C_TTC_CLK_FREQUENCY then
+            return true;
+        else
+            return false;
+        end if;
+    end function;
 
 end mgt_pkg;

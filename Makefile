@@ -89,8 +89,24 @@ $(UPDATE_LIST): config
 				system="unknown"; \
 			fi ; \
 			\
-			cd address_table/$$system && python generate_xml.py ; cd - ;\
-			cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$module ; cd - ;\
+			cd address_table/$$system && python generate_xml.py ; cd - ; \
+			build_type="$(patsubst update_%,%,$@)"; \
+			do_update=false; \
+			for d in address_table/$$system/generated/$$build_type*; do \
+			        if [[ ! -f $$d/$$module.xml ]]; then \
+								echo "==== ERROR: $$module.xml does not exist in $$d, skipping.. ===="; \
+								continue; \
+							fi; \
+							prefix=address_table/$$system/generated/; \
+							flavor=$${d#$$prefix}; \
+							if [[ $$flavor =~ ${flavor}_flavor_(.*) ]]; then \
+											extra_args="-f $${BASH_REMATCH[1]}"; \
+							else \
+											extra_args=; \
+							fi; \
+							cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$extra_args -a ../$$d/$$module.xml -u $$do_update $$module; cd - ;\
+							do_update=true; \
+			done; \
 		fi ; \
 	}
 

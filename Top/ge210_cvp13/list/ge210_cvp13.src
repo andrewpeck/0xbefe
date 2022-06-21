@@ -11,6 +11,9 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
+# Trigger Source
+gem/hdl/sbit_me0.src
+
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
 
@@ -26,6 +29,7 @@ gem/hdl/oh/generated/ge210_cvp13/oh_link_regs.vhd
 gem/hdl/daq/generated/ge210_cvp13/daq.vhd
 gem/hdl/slow_control/generated/ge210_cvp13/slow_control.vhd
 gem/hdl/trigger/generated/ge210_cvp13/trigger.vhd
+gem/hdl/trigger/generated/ge210_cvp13/sbit_me0.vhd
 boards/cvp13/hdl/system/generated/ge210_cvp13/pcie_slow_control.vhd
 
 # GEM IP

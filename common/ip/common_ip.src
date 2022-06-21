@@ -4,6 +4,7 @@ common/ip/ila_axi_ipbus_bridge/ila_axi_ipbus_bridge.xci
 common/ip/ila_gbt_mgt/ila_gbt_mgt.xci
 common/ip/ila_gbt/ila_gbt.xci
 common/ip/ila_lpgbt/ila_lpgbt.xci
+common/ip/ila_lpgbt_10g_tx/ila_lpgbt_10g_tx.xci
 common/ip/ila_gem_loader/ila_gem_loader.xci
 common/ip/vio_gem_loader/vio_gem_loader.xci
 common/ip/xlx_k7v7_rx_dpram/xlx_k7v7_rx_dpram.xci
@@ -20,3 +21,5 @@ common/ip/ila_mgt_rx_64b/ila_mgt_rx_64b.xci
 common/ip/ila_mgt_tx_64b/ila_mgt_tx_64b.xci
 common/ip/ila_mgt_rx_128b/ila_mgt_rx_128b.xci
 common/ip/ila_mgt_tx_128b/ila_mgt_tx_128b.xci
+common/ip/vio_gbe/vio_gbe.xci
+common/ip/ila_link_prbs_test/ila_link_prbs_test.xci

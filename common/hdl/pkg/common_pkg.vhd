@@ -11,7 +11,8 @@ package common_pkg is
     constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
         
     function count_ones(s : std_logic_vector) return integer;
-    function bool_to_std_logic(L : BOOLEAN) return std_logic;
+    function bool_to_std_logic(L : boolean) return std_logic;
+    function bool_to_bit(L : boolean) return bit;
     function log2ceil(arg : positive) return natural; -- returns the number of bits needed to encode the given number
     function up_to_power_of_2(arg : positive) return natural; -- "rounds" the given number up to the closest power of 2 number (e.g. if you give 6, it will say 8, which is 2^3)
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
@@ -566,7 +567,7 @@ package body common_pkg is
     ---------------------------------------------------------------------------
     --
     ---------------------------------------------------------------------------
-    function bool_to_std_logic(L : BOOLEAN) return std_logic is
+    function bool_to_std_logic(L : boolean) return std_logic is
     begin
         if L then
             return ('1');
@@ -574,6 +575,17 @@ package body common_pkg is
             return ('0');
         end if;
     end function bool_to_std_logic;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function bool_to_bit(L : boolean) return bit is
+    begin
+        if L then
+            return ('1');
+        else
+            return ('0');
+        end if;
+    end function bool_to_bit;
     ---------------------------------------------------------------------------
     --
     ---------------------------------------------------------------------------

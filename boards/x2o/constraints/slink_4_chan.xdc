@@ -1,8 +1,8 @@
 # MGT location
-set_property LOC GTYE4_CHANNEL_X1Y40 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[0]/*GTYE4_CHANNEL_PRIM_INST]
-set_property LOC GTYE4_CHANNEL_X1Y41 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[1]/*GTYE4_CHANNEL_PRIM_INST]
-set_property LOC GTYE4_CHANNEL_X1Y42 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[2]/*GTYE4_CHANNEL_PRIM_INST]
-set_property LOC GTYE4_CHANNEL_X1Y43 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[3]/*GTYE4_CHANNEL_PRIM_INST]
+set_property LOC GTYE4_CHANNEL_X1Y45 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[0]/*GTYE4_CHANNEL_PRIM_INST]
+set_property LOC GTYE4_CHANNEL_X1Y44 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[1]/*GTYE4_CHANNEL_PRIM_INST]
+set_property LOC GTYE4_CHANNEL_X1Y47 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[2]/*GTYE4_CHANNEL_PRIM_INST]
+set_property LOC GTYE4_CHANNEL_X1Y46 [get_cells -hierarchical -filter name=~i_slink_rocket/g_channels[3]/*GTYE4_CHANNEL_PRIM_INST]
 
 
 set_max_delay -datapath_only -from [get_pins -hierarchical -filter {NAME =~ */Sender_core_i1*/resync_pulse*/reg_1st_stage*/C}] -to [get_pins -hierarchical -filter {NAME =~ */Sender_core_i1*/resync_pulse*/reg_2nd_stage_async*/D}] 2.000

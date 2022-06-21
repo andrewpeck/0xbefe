@@ -238,10 +238,11 @@ begin
         vfat3_link_status_o(i).daq_event_cnt    <= vfat3_daq_cnt_evt_arr(i);
         vfat3_link_status_o(i).daq_crc_err_cnt  <= vfat3_daq_cnt_crc_err_arr(i);
             
-        vfat3_daq_links_o(i).data_en    <= vfat3_daq_data_en(i);
-        vfat3_daq_links_o(i).data       <= vfat3_daq_data(i);
-        vfat3_daq_links_o(i).event_done <= vfat3_daq_event_done(i);
-        vfat3_daq_links_o(i).crc_error  <= vfat3_daq_crc_err(i);
+        vfat3_daq_links_o(i).data_en      <= vfat3_daq_data_en(i);
+        vfat3_daq_links_o(i).data         <= vfat3_daq_data(i);
+        vfat3_daq_links_o(i).event_done   <= vfat3_daq_event_done(i);
+        vfat3_daq_links_o(i).crc_error    <= vfat3_daq_crc_err(i);
+        vfat3_daq_links_o(i).link_enabled <= (not vfat_mask_arr_i(i)) and vfat_gbt_ready_arr_i(i);
 
     end generate;
     

@@ -68,6 +68,7 @@ common/hdl/misc/gbe_tx_driver.vhd
 
 # Tests
 common/hdl/tests/eth_test.vhd
+common/hdl/tests/link_prbs_test.vhd
 
 # IP
 common/ip/common_ip.src

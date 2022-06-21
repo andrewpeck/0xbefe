@@ -172,7 +172,8 @@
       fw_master_bus_signal="ipb_mosi_i"
       fw_slave_bus_signal="ipb_miso_o"
       fw_reg_addr_msb="16"
-      fw_reg_addr_lsb="0">
+      fw_reg_addr_lsb="0"
+      fw_use_flavor="true">
 
   <node id="CTRL" address="0x0">
     <node id="GLOBAL_RESET" address="0x0" permission="w"
@@ -221,7 +222,7 @@
           fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX, 4))"/>
     <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
           description="Indicates whether or not local DAQ link is supported by this firmware build"
-          fw_signal="'1' when CFG_USE_SPY_LINK(g_SLR) else '0'"/>
+          fw_signal="'1' when CFG_USE_SPY_LINK_TX(g_SLR) else '0'"/>
     <node id="OH_LINK_CONFIG" address="0x5">
       <node id="OH${OH_IDX}" address="0x0"
             description="OH${OH_IDX} link numbers"
@@ -472,7 +473,8 @@
       fw_master_bus_signal="ipb_mosi_i"
       fw_slave_bus_signal="ipb_miso_o"
       fw_reg_addr_msb="16"
-      fw_reg_addr_lsb="0">
+      fw_reg_addr_lsb="0"
+      fw_use_flavor="true">
 
   <node id="CTRL" address="0x0">
     <node id="RESET" address="0x0" permission="w"
@@ -1118,7 +1120,8 @@
       fw_master_bus_signal="ipb_mosi_i"
       fw_slave_bus_signal="ipb_miso_o"
       fw_reg_addr_msb="12"
-      fw_reg_addr_lsb="0">
+      fw_reg_addr_lsb="0"
+      fw_use_flavor="true">
 
   <node id="OH${OH_IDX}" address="0x100"
         description="Links for OH ${OH_IDX}"
@@ -1209,11 +1212,11 @@
       <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
             description="Number of times that MGT elastic buffer has been in overflow"
             fw_signal="spy_mgt_buf_ovf_sync"
-            sw_monitor_warn_min_threshold="1"/>
+            sw_val_good="self == 0"/>
       <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
             description="Number of times that MGT elastic buffer has been in underflow"
             fw_signal="spy_mgt_buf_unf_sync"
-            sw_monitor_warn_min_threshold="1"/>
+            sw_val_good="self == 0"/>
       <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
             description="Number of times that MGT has added a fake idle word to correct for clock drift"
             fw_signal="spy_clk_corr_add_sync"/>
@@ -1223,11 +1226,11 @@
       <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
             description="Number of not-in-table errors"
             fw_signal="spy_not_in_table_sync"
-            sw_monitor_warn_min_threshold="1000"/>
+            sw_val_good="self == 0"/>
       <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
             description="Number of disparity errors"
             fw_signal="spy_disperr_sync"
-            sw_monitor_warn_min_threshold="1000"/>
+            sw_val_good="self == 0"/>
   </node>
 
 </node>

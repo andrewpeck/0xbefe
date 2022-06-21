@@ -61,7 +61,8 @@ package project_config is
         (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL)
     );
     
-    constant CFG_USE_SPY_LINK : t_spy_link_enable_arr := (true, true, true, true);
+    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (true, true, true, true);
+    constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (true, true, true, true);
     constant CFG_SPY_LINK : t_spy_link_config := (12, 13, 14, 15);
 
     --================================--
