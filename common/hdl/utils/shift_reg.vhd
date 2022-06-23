@@ -34,7 +34,7 @@ architecture shift_reg_arch of shift_reg is
 
   constant DEPTH    : integer := 2**TAP_DELAY_WIDTH;
   
-  type t_sr_arr is array (DEPTH -2 downto 0) of std_logic_vectors(DATA_WIDTH - 1 downto 0);
+  type t_sr_arr is array (DEPTH -2 downto 0) of std_logic_vector(DATA_WIDTH - 1 downto 0);
       
   signal sr         : t_sr_arr;
   signal reset_cnt  : integer range 0 to DEPTH - 1 := 0;
@@ -74,7 +74,7 @@ begin
         end generate;
         
         g_reset_supported : if SUPPORT_RESET generate
-            data_o <= sr(to_integer(unsigned(tap_delay_i))) when reset_cnt >= to_integer(unsigned(tap_delay_i)) else '0';
+            data_o <= sr(to_integer(unsigned(tap_delay_i))) when reset_cnt >= to_integer(unsigned(tap_delay_i)) else (others=>'0');
         end generate;
     end generate;
 
@@ -86,7 +86,7 @@ begin
                 if (not SUPPORT_RESET) or (reset_cnt >= to_integer(unsigned(tap_delay_i))) then
                     data_o <= sr(to_integer(unsigned(tap_delay_i))); 
                 else
-                    data_o <= '0';
+                    data_o <= (others=>'0');
                 end if; 
             end if;
         end process;
