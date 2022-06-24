@@ -87,7 +87,7 @@ class EventInfo:
 
         return ret
 
-class EventPart:
+class EventFragment:
 
     info = None
     info_values = None
@@ -243,7 +243,7 @@ class EventPart:
         self.print_errors(include_warnings=True)
 
 
-class Fed(EventPart):
+class Fed(EventFragment):
 
     # data
     dmbs = None
@@ -404,7 +404,7 @@ class Fed(EventPart):
             return False
         # return None
 
-class Dmb(EventPart):
+class Dmb(EventFragment):
 
     fed = None
     alct = None
@@ -645,7 +645,7 @@ class Dmb(EventPart):
 
         return idx
 
-class Alct(EventPart):
+class Alct(EventFragment):
 
     dmb = None
 
@@ -714,7 +714,7 @@ class Alct(EventPart):
 
         return idx
 
-class Tmb(EventPart):
+class Tmb(EventFragment):
 
     dmb = None
 
@@ -783,7 +783,7 @@ class Tmb(EventPart):
 
         return idx
 
-class Cfeb(EventPart):
+class Cfeb(EventFragment):
 
     dmb = None
 
