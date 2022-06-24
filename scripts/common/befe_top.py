@@ -36,7 +36,7 @@ import asyncio
 from utils import *
 
 # remote
-if len(sys.argv) > 1:
+if len(sys.argv) > 1 and "rpyc_classic.py" not in sys.argv[0]:
     hostname = sys.argv[1]
     heading("Connecting to %s" % hostname)
     import rpyc
@@ -649,6 +649,7 @@ class TopScreenDaq(TopScreen):
                     rw.write_reg('BEFE.%s.DAQ.CONTROL.L1A_REQUEST_EN' % self.gem_csc, 1)
 
             rw.write_reg('BEFE.SYSTEM.CTRL.BOARD_ID', board_id.get_int_value())
+            rw.write_reg('BEFE.%s.DAQ.CONTROL.FED_ID' % self.gem_csc, fed_id.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.INPUT_ENABLE_MASK' % self.gem_csc, input_mask.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.IGNORE_DAQLINK' % self.gem_csc, ignore_daqlink.get_int_value())
             rw.write_reg('BEFE.%s.DAQ.CONTROL.FREEZE_ON_ERROR' % self.gem_csc, freeze_on_error.get_int_value())
