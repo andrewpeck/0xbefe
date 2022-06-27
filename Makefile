@@ -104,6 +104,14 @@ $(UPDATE_LIST): config
 							else \
 											extra_args=; \
 							fi; \
+							if [[ ! $$extra_args ]]; then \
+							    readarray -d _ -t strarr <<< $$flavor; \
+							    extra_args="-f $${strarr[0]}"; \
+							    # do not execute again on projects that do not have a _flavor in them, but just a similar board name e.g. x2o and x2o_tamu \
+							    if [[ $$do_update == "true" ]]; then \
+							        continue; \
+							    fi; \
+							fi; \
 							cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$extra_args -a ../$$d/$$module.xml -u $$do_update $$module; cd - ;\
 							do_update=true; \
 			done; \
