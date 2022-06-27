@@ -248,7 +248,7 @@ begin
 
     --== COUNT of summed sbits on selectable elink ==--
     -- assigned array of sbits for selected vfat (x) and elink (e)
-    vfat3_sbit0xe_test <= vfat3_sbits_arr_i(0)(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+    vfat3_sbit0xe_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i: for i in 0 to 7 generate
         me0_sbit0xe_count : entity work.counter
