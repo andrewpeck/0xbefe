@@ -445,6 +445,11 @@ begin
             ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
             usr_logic_reset_o   => usr_logic_reset,
+            ttc_reset_o         => open,
+            ext_trig_en_o       => open,
+            ext_trig_deadtime_o => open,
+            ext_trig_source_o   => open,
+            ext_clk_out_en_o    => open,
             ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -524,9 +529,9 @@ begin
                 ttc_cmds_o              => ttc_cmds(slr),
                 
                 -- DMB links
-                csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
-                csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
-                csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+                dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
+                dmb_rx_data_arr_i       => csc_dmb_rx_data_arr,
+                dmb_rx_status_arr_i     => csc_dmb_rx_status_arr,
     
                 -- GBT links
                 gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
@@ -539,10 +544,10 @@ begin
                 gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
-                csc_spy_usrclk_i        => csc_spy_usrclk,
-                csc_spy_rx_data_i       => csc_spy_rx_data,
-                csc_spy_tx_data_o       => csc_spy_tx_data,
-                csc_spy_rx_status_i     => csc_spy_rx_status,
+                spy_usrclk_i            => csc_spy_usrclk,
+                spy_rx_data_i           => csc_spy_rx_data,
+                spy_tx_data_o           => csc_spy_tx_data,
+                spy_rx_status_i         => csc_spy_rx_status,
                 
                 -- IPbus
                 ipb_reset_i             => ipb_reset,
