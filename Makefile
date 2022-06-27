@@ -106,7 +106,9 @@ $(UPDATE_LIST): config
 							fi; \
 							if [[ ! $$extra_args ]]; then \
 							    readarray -d _ -t strarr <<< $$flavor; \
-							    extra_args="-f $${strarr[0]}"; \
+							    if [[ $${strarr[0]} != "csc" ]]; then \
+							        extra_args="-f $${strarr[0]}"; \
+							    fi; \
 							    # do not execute again on projects that do not have a _flavor in them, but just a similar board name e.g. x2o and x2o_tamu \
 							    if [[ $$do_update == "true" ]]; then \
 							        continue; \
