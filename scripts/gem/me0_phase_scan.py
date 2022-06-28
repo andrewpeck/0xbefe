@@ -200,7 +200,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
                 break
         if vfat_configured == 0:
             print (Colors.RED + "Cannot configure VFAT %d"%(vfat) + Colors.ENDC)
-            terminate()
+            rw_terminate()
     print ("\n")
 
     # Configure TTC Generator
@@ -217,7 +217,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         phase_15_error = (not link_good_15==1) + (not sync_err_cnt_15==0) + (not cfg_run_15==0) + (not daq_crc_error_15==0)
         if phase_15_error == 0:
             print (Colors.RED + "\nPhase not being set correctly for VFAT %02d"%vfat + Colors.ENDC)
-            terminate()
+            rw_terminate()
         print ("")
         for phase in range(0, 15):
             link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_phases_sc, daq_err, cyclic_running_node)
