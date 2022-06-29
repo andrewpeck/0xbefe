@@ -297,8 +297,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         configureVfat(0, vfat, oh_select, 0)
 
 def find_phase_center(err_list):
-    lower_edge = -1
-    upper_edge = 15
+    lower_edge_min = -1
+    upper_edge_max = 15
     center = 0
     width = 0
 
@@ -308,16 +308,18 @@ def find_phase_center(err_list):
             bad_phases.append(phase)
 
     if len(bad_phases) == 0:
-        width = upper_edge - lower_edge - 1
-        center = int((lower_edge + upper_edge)/2)
+        width = upper_edge_max - lower_edge_min - 1
+        center = int((lower_edge_min + upper_edge_max)/2)
     elif len(bad_phases) == 1:
         if bad_phases[0] <= 7:
             center = bad_phases[0] + 4
-            width = upper_edge - bad_phases[0] - 1
+            width = upper_edge_max - bad_phases[0] - 1
         else:
             center = bad_phases[0] - 4
-            width = bad_phases[0] - lower_edge - 1
+            width = bad_phases[0] - lower_edge_min - 1
     else:
+        lower_edge = -1
+        upper_edge = 15
         l = -9999
         u = -9999
         diff = 0
@@ -334,20 +336,22 @@ def find_phase_center(err_list):
                 max_diff = diff
         bad_phase_mean = int(bad_phase_mean/len(bad_phases))
         width = upper_edge - lower_edge - 1
-        if width == 0:
-            if bad_phase_mean <= 7:
-                center = bad_phases[-1] + 4
-                width = upper_edge - bad_phases[-1] - 1
-            else:
-                center = bad_phases[0] - 4
-                width = bad_phases[0] - lower_edge - 1
-        elif width%2 != 0:
-            center = int((lower_edge + upper_edge)/2)
-        else:
-            if err_list[lower_edge] <= err_list[upper_edge]:
+        lower_edge_width = bad_phases[0] - lower_edge_min - 1
+        upper_edge_width = upper_edge_max - bad_phases[-1] - 1
+        if max(lower_edge_width, width, upper_edge_width) == lower_edge_width:
+            center = bad_phases[0] - 4
+            width = lower_edge_width
+        elif max(lower_edge_width, width, upper_edge_width) == upper_edge_width:
+            center = bad_phases[-1] + 4
+            width = upper_edge_width
+        else:                   
+            if width%2 != 0:
                 center = int((lower_edge + upper_edge)/2)
             else:
-                center = int((lower_edge + upper_edge)/2) + 1
+                if err_list[lower_edge] <= err_list[upper_edge]:
+                   center = int((lower_edge + upper_edge)/2)
+                else:
+                   center = int((lower_edge + upper_edge)/2) + 1
 
     if center < 0:
         center = 0
