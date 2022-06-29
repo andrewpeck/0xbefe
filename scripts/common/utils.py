@@ -56,6 +56,9 @@ def get_befe_scripts_dir():
 def get_config(config_name):
     return eval("befe_config." + config_name)
 
+def config_exists(config_name):
+    return hasattr(befe_config, config_name)
+
 def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
 
@@ -80,11 +83,27 @@ def print_red(msg):
 def print_green(msg):
     print_color(msg, Colors.GREEN)
 
+def print_orange(msg):
+    print_color(msg, Colors.ORANGE)
+
 def print_green_red(msg, controlValue, expectedValue):
     col = Colors.GREEN
     if controlValue != expectedValue:
         col = Colors.RED
     print_color(msg, col)
+
+def print_green_orange(msg, controlValue, expectedValue):
+    col = Colors.GREEN
+    if controlValue != expectedValue:
+        col = Colors.ORANGE
+    print_color(msg, col)
+
+def print_green_grey(msg, controlValue, expectedValue):
+    if controlValue == expectedValue:
+        col = Colors.GREEN
+        print_color(msg, col)
+    else:
+        print(msg)
 
 def hex(number):
     if number is None:
@@ -108,7 +127,7 @@ def hex_padded(number, numBytes, include0x=True):
     if number is None:
         return 'None'
     else:
-        length = 2 + numBytes * 2
+        length = 2 + int(numBytes * 2)
         formatStr = "{0:#0{1}x}"
         if not include0x:
             length -= 2
@@ -151,3 +170,19 @@ def bitmask_to_array(bitmask):
         bitmask = bitmask >> 1
         id += 1
     return ids
+
+def count_ones(number):
+    num_ones = 0
+    while number != 0:
+        if number & 1 == 1:
+            num_ones += 1
+        number = number >> 1
+    return num_ones
+
+def get_bits(word, top_bit_idx, bot_bit_idx):
+    length = (top_bit_idx - bot_bit_idx) + 1
+    if length > 64:
+        raise Exception("get_bits() does not support a length longer than 64 bits")
+    ret = word >> bot_bit_idx
+    mask = 0xffffffffffffffff >> (64 - length)
+    return ret & mask

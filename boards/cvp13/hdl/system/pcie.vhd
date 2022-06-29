@@ -421,230 +421,230 @@ begin
     -- PCIe XDMA module
     --================================--
 
---    g_xdma : if not g_USE_QDMA generate
---
---        i_pcie_dma : pcie_xdma
---            port map(
---                sys_clk                 => pcie_sysclk_i,
---                sys_clk_gt              => pcie_refclk_i,
---                sys_rst_n               => pcie_reset_b_i,
---                user_lnk_up             => pcie_link_up,
---                pci_exp_txp             => pcie_serial_txp(3 downto 0),
---                pci_exp_txn             => pcie_serial_txn(3 downto 0),
---                pci_exp_rxp             => (others => '1'),
---                pci_exp_rxn             => (others => '0'),
---                                        
---                axi_aclk                => axi_clk,
---                axi_aresetn             => axi_reset_b,
---                usr_irq_req             => '0',
---                usr_irq_ack             => open,
---                msi_enable              => open,
---                msi_vector_width        => open,
---                                        
---                -- axi lite             
---                m_axil_awaddr           => axil_m2s.awaddr,
---                m_axil_awprot           => axil_m2s.awprot,
---                m_axil_awvalid          => axil_m2s.awvalid,
---                m_axil_awready          => axil_s2m.awready,
---                m_axil_wdata            => axil_m2s.wdata, 
---                m_axil_wstrb            => axil_m2s.wstrb, 
---                m_axil_wvalid           => axil_m2s.wvalid,
---                m_axil_wready           => axil_s2m.wready,
---                m_axil_bvalid           => axil_s2m.bvalid,
---                m_axil_bresp            => axil_s2m.bresp, 
---                m_axil_bready           => axil_m2s.bready,
---                m_axil_araddr           => axil_m2s.araddr,
---                m_axil_arprot           => axil_m2s.arprot, 
---                m_axil_arvalid          => axil_m2s.arvalid,
---                m_axil_arready          => axil_s2m.arready,
---                m_axil_rdata            => axil_s2m.rdata,  
---                m_axil_rresp            => axil_s2m.rresp,  
---                m_axil_rvalid           => axil_s2m.rvalid, 
---                m_axil_rready           => axil_m2s.rready, 
---                                        
---                s_axis_c2h_tdata_0      => axis_c2h.tdata,
---                s_axis_c2h_tlast_0      => axis_c2h.tlast,
---                s_axis_c2h_tvalid_0     => axis_c2h.tvalid,
---                s_axis_c2h_tready_0     => axis_c2h_ready,
---                s_axis_c2h_tkeep_0      => axis_c2h.tkeep,
---                m_axis_h2c_tdata_0      => axis_h2c.tdata,
---                m_axis_h2c_tlast_0      => axis_h2c.tlast,
---                m_axis_h2c_tvalid_0     => axis_h2c.tvalid,
---                m_axis_h2c_tready_0     => axis_h2c_ready,
---                m_axis_h2c_tkeep_0      => axis_h2c.tkeep,
---                c2h_sts_0               => c2h_status,
---                h2c_sts_0               => h2c_status,
---    
---                cfg_negotiated_width_o  => pcie_width,
---                cfg_current_speed_o     => pcie_speed,
---                cfg_ltssm_state_o       => pcie_train_state,
---                cfg_err_cor_o           => pcie_err_cor,
---                cfg_err_fatal_o         => pcie_err_fatal,
---                cfg_err_nonfatal_o      => pcie_err_nonfatal,
---                cfg_local_error_o       => pcie_local_err,
---                cfg_local_error_valid_o => pcie_local_err_valid
---            );
---    
---        --================================--
---        -- AXI stream
---        --================================--  
---      
---        axis_h2c_ready <= '1';
---        fed_clk <= daq_to_daqlink_i.event_clk;
---        
---        ---------- Calculate CRC ----------
---    
---        daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;        
---            
---        process(fed_clk)
---        begin
---            if rising_edge(fed_clk) then
---                fed_data_d       <= daq_to_daqlink_i.event_data;
---                fed_data_head_d  <= daq_to_daqlink_i.event_header;
---                fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
---                fed_data_we_d    <= daq_to_daqlink_i.event_valid;
---                crc_clear      <= daq_to_daqlink_i.event_trailer or daq_reset;
---                
---                -- substitute the CRC
---                if fed_data_trail_d = '1' then
---                    fed_data(31 downto 16) <= crc;
---                else
---                    fed_data(31 downto 16) <= fed_data_d(31 downto 16);
---                end if;
---                fed_data(127 downto 32) <= fed_data_d(127 downto 32);
---                fed_data(15 downto 0) <= fed_data_d(15 downto 0);
---                fed_data_head    <= fed_data_head_d;
---                fed_data_trail   <= fed_data_trail_d;
---                fed_data_we      <= fed_data_we_d;            
---            end if;
---        end process;
---        
---        crc_en <= daq_to_daqlink_i.event_valid;
---        crc_data_in <= daq_to_daqlink_i.event_data;
---        
---        i_crc : entity work.FED_fragment_CRC16_D128b
---            port map ( 
---                clear_p  => crc_clear,
---                clk      => fed_clk,
---                enable   => crc_en,
---                Data     => crc_data_in,
---                CRC_out  => crc
---            );
---        
---        -- CDC fifo between the DAQ clk and the AXI clk
---        i_daq_cdc_fifo : xpm_fifo_async
---            generic map(
---                FIFO_MEMORY_TYPE    => "block",
---                FIFO_WRITE_DEPTH    => 128,
---                RELATED_CLOCKS      => 0,
---                WRITE_DATA_WIDTH    => 128,
---                READ_MODE           => "std",
---                FIFO_READ_LATENCY   => 1,
---                FULL_RESET_VALUE    => 0,
---                USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
---                READ_DATA_WIDTH     => 128,
---                CDC_SYNC_STAGES     => 2,
---                DOUT_RESET_VALUE    => "0",
---                ECC_MODE            => "no_ecc"
---            )
---            port map(
---                sleep         => '0',
---                rst           => daq_to_daqlink_i.reset,
---                wr_clk        => fed_clk,
---                wr_en         => fed_data_we,
---                din           => fed_data,
---                full          => open,
---                prog_full     => open,
---                wr_data_count => open,
---                overflow      => daq_cdc_ovf,
---                wr_rst_busy   => open,
---                almost_full   => open,
---                wr_ack        => open,
---                rd_clk        => axi_clk,
---                rd_en         => daq_cdc_rd_en,
---                dout          => daq_cdc_data,
---                empty         => daq_cdc_empty,
---                prog_empty    => open,
---                rd_data_count => open,
---                underflow     => open,
---                rd_rst_busy   => open,
---                almost_empty  => open,
---                data_valid    => daq_cdc_valid,
---                injectsbiterr => '0',
---                injectdbiterr => '0',
---                sbiterr       => open,
---                dbiterr       => open
---            );    
---    
---        i_daq_cdc_ovf_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
---        i_daqlink_reset_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daqlink_reset_axi_clk);
---        i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
---        i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
---    
---        i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
---        i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => c2h_backpressure, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
---        daqlink_to_daq_o.disperr_cnt <= (others => '0');
---        daqlink_to_daq_o.notintable_cnt <= (others => '0');
---    
---        c2h_backpressure <= not axis_c2h_ready and not daq_cdc_empty;
---        daq_cdc_rd_en <= not daq_cdc_empty and axis_c2h_ready;
---        axis_c2h.tdata <= daq_cdc_data(127 downto 0);
---        axis_c2h.tlast <= daq_cdc_valid and not or_reduce(std_logic_vector(c2h_words_cntdown));
---        axis_c2h.tvalid <= daq_cdc_valid;
---        axis_c2h.tkeep <= (others => daq_cdc_valid);
---        
---        c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
---        
---        process(axi_clk)
---        begin
---            if rising_edge(axi_clk) then
---                if daq_reset = '1' then
---                    c2h_words_cntdown <= c2h_packet_size_words - 1;
---                else
---                    if daq_cdc_valid = '1' then
---                        if c2h_words_cntdown = x"00000" then
---                            c2h_words_cntdown <= c2h_packet_size_words - 1;
---                        else
---                            c2h_words_cntdown <= c2h_words_cntdown - 1;
---                        end if;
---                    end if;
---                end if;
---            end if;
---        end process;
---    
---        i_daq_cdc_ovf_latch : entity work.latch
---            port map(
---                reset_i => daq_reset,
---                clk_i   => axi_clk,
---                input_i => daq_cdc_ovf_axi_clk,
---                latch_o => daq_cdc_ovf_latch
---            );
---    
---        i_words_sent_cnt : entity work.counter
---            generic map(
---                g_COUNTER_WIDTH  => 44,
---                g_ALLOW_ROLLOVER => false
---            )
---            port map(
---                ref_clk_i => axi_clk,
---                reset_i   => daq_reset,
---                en_i      => axis_c2h.tvalid,
---                count_o   => pcie_daq_status_o.words_sent
---            );
---    
---        i_word_rate : entity work.rate_counter
---            generic map(
---                g_CLK_FREQUENCY => std_logic_vector(to_unsigned(125_000_000, 32)),
---                g_COUNTER_WIDTH => 28
---            )
---            port map(
---                clk_i   => axi_clk,
---                reset_i => daq_reset,
---                en_i    => axis_c2h.tvalid,
---                rate_o  => pcie_daq_status_o.word_rate
---            );
---
---    end generate;
+    g_xdma : if not g_USE_QDMA generate
+
+        i_pcie_dma : pcie_xdma
+            port map(
+                sys_clk                 => pcie_sysclk_i,
+                sys_clk_gt              => pcie_refclk_i,
+                sys_rst_n               => pcie_reset_b_i,
+                user_lnk_up             => pcie_link_up,
+                pci_exp_txp             => pcie_serial_txp(3 downto 0),
+                pci_exp_txn             => pcie_serial_txn(3 downto 0),
+                pci_exp_rxp             => (others => '1'),
+                pci_exp_rxn             => (others => '0'),
+                                        
+                axi_aclk                => axi_clk,
+                axi_aresetn             => axi_reset_b,
+                usr_irq_req             => '0',
+                usr_irq_ack             => open,
+                msi_enable              => open,
+                msi_vector_width        => open,
+                                        
+                -- axi lite             
+                m_axil_awaddr           => axil_m2s.awaddr,
+                m_axil_awprot           => axil_m2s.awprot,
+                m_axil_awvalid          => axil_m2s.awvalid,
+                m_axil_awready          => axil_s2m.awready,
+                m_axil_wdata            => axil_m2s.wdata, 
+                m_axil_wstrb            => axil_m2s.wstrb, 
+                m_axil_wvalid           => axil_m2s.wvalid,
+                m_axil_wready           => axil_s2m.wready,
+                m_axil_bvalid           => axil_s2m.bvalid,
+                m_axil_bresp            => axil_s2m.bresp, 
+                m_axil_bready           => axil_m2s.bready,
+                m_axil_araddr           => axil_m2s.araddr,
+                m_axil_arprot           => axil_m2s.arprot, 
+                m_axil_arvalid          => axil_m2s.arvalid,
+                m_axil_arready          => axil_s2m.arready,
+                m_axil_rdata            => axil_s2m.rdata,  
+                m_axil_rresp            => axil_s2m.rresp,  
+                m_axil_rvalid           => axil_s2m.rvalid, 
+                m_axil_rready           => axil_m2s.rready, 
+                                        
+                s_axis_c2h_tdata_0      => axis_c2h.tdata,
+                s_axis_c2h_tlast_0      => axis_c2h.tlast,
+                s_axis_c2h_tvalid_0     => axis_c2h.tvalid,
+                s_axis_c2h_tready_0     => axis_c2h_ready,
+                s_axis_c2h_tkeep_0      => axis_c2h.tkeep,
+                m_axis_h2c_tdata_0      => axis_h2c.tdata,
+                m_axis_h2c_tlast_0      => axis_h2c.tlast,
+                m_axis_h2c_tvalid_0     => axis_h2c.tvalid,
+                m_axis_h2c_tready_0     => axis_h2c_ready,
+                m_axis_h2c_tkeep_0      => axis_h2c.tkeep,
+                c2h_sts_0               => c2h_status,
+                h2c_sts_0               => h2c_status,
+    
+                cfg_negotiated_width_o  => pcie_width,
+                cfg_current_speed_o     => pcie_speed,
+                cfg_ltssm_state_o       => pcie_train_state,
+                cfg_err_cor_o           => pcie_err_cor,
+                cfg_err_fatal_o         => pcie_err_fatal,
+                cfg_err_nonfatal_o      => pcie_err_nonfatal,
+                cfg_local_error_o       => pcie_local_err,
+                cfg_local_error_valid_o => pcie_local_err_valid
+            );
+    
+        --================================--
+        -- AXI stream
+        --================================--  
+      
+        axis_h2c_ready <= '1';
+        fed_clk <= daq_to_daqlink_i.event_clk;
+        
+        ---------- Calculate CRC ----------
+    
+        daq_reset <= daqlink_reset_axi_clk or pcie_daq_control_i.reset;        
+            
+        process(fed_clk)
+        begin
+            if rising_edge(fed_clk) then
+                fed_data_d       <= daq_to_daqlink_i.event_data;
+                fed_data_head_d  <= daq_to_daqlink_i.event_header;
+                fed_data_trail_d <= daq_to_daqlink_i.event_trailer;
+                fed_data_we_d    <= daq_to_daqlink_i.event_valid;
+                crc_clear      <= daq_to_daqlink_i.event_trailer or daq_reset;
+                
+                -- substitute the CRC
+                if fed_data_trail_d = '1' then
+                    fed_data(31 downto 16) <= crc;
+                else
+                    fed_data(31 downto 16) <= fed_data_d(31 downto 16);
+                end if;
+                fed_data(127 downto 32) <= fed_data_d(127 downto 32);
+                fed_data(15 downto 0) <= fed_data_d(15 downto 0);
+                fed_data_head    <= fed_data_head_d;
+                fed_data_trail   <= fed_data_trail_d;
+                fed_data_we      <= fed_data_we_d;            
+            end if;
+        end process;
+        
+        crc_en <= daq_to_daqlink_i.event_valid;
+        crc_data_in <= daq_to_daqlink_i.event_data;
+        
+        i_crc : entity work.FED_fragment_CRC16_D128b
+            port map ( 
+                clear_p  => crc_clear,
+                clk      => fed_clk,
+                enable   => crc_en,
+                Data     => crc_data_in,
+                CRC_out  => crc
+            );
+        
+        -- CDC fifo between the DAQ clk and the AXI clk
+        i_daq_cdc_fifo : xpm_fifo_async
+            generic map(
+                FIFO_MEMORY_TYPE    => "block",
+                FIFO_WRITE_DEPTH    => 128,
+                RELATED_CLOCKS      => 0,
+                WRITE_DATA_WIDTH    => 128,
+                READ_MODE           => "std",
+                FIFO_READ_LATENCY   => 1,
+                FULL_RESET_VALUE    => 0,
+                USE_ADV_FEATURES    => "1001", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 128,
+                CDC_SYNC_STAGES     => 2,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => daq_to_daqlink_i.reset,
+                wr_clk        => fed_clk,
+                wr_en         => fed_data_we,
+                din           => fed_data,
+                full          => open,
+                prog_full     => open,
+                wr_data_count => open,
+                overflow      => daq_cdc_ovf,
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_clk        => axi_clk,
+                rd_en         => daq_cdc_rd_en,
+                dout          => daq_cdc_data,
+                empty         => daq_cdc_empty,
+                prog_empty    => open,
+                rd_data_count => open,
+                underflow     => open,
+                rd_rst_busy   => open,
+                almost_empty  => open,
+                data_valid    => daq_cdc_valid,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );    
+    
+        i_daq_cdc_ovf_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => daq_cdc_ovf, clk_i => axi_clk, sync_o => daq_cdc_ovf_axi_clk);
+        i_daqlink_reset_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.reset, clk_i => axi_clk, sync_o => daqlink_reset_axi_clk);
+        i_daqlink_valid_sync  : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.event_valid, clk_i => axi_clk, sync_o => daqlink_valid_axi_clk);
+        i_daqlink_enable_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => daq_to_daqlink_i.daq_enabled, clk_i => axi_clk, sync_o => daq_enabled_axi_clk);
+    
+        i_daqlink_ready_sync : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => pcie_link_up, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.ready);
+        i_daqlink_bp_sync    : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => c2h_backpressure, clk_i => daq_to_daqlink_i.event_clk, sync_o => daqlink_to_daq_o.backpressure);
+        daqlink_to_daq_o.disperr_cnt <= (others => '0');
+        daqlink_to_daq_o.notintable_cnt <= (others => '0');
+    
+        c2h_backpressure <= not axis_c2h_ready and not daq_cdc_empty;
+        daq_cdc_rd_en <= not daq_cdc_empty and axis_c2h_ready;
+        axis_c2h.tdata <= daq_cdc_data(127 downto 0);
+        axis_c2h.tlast <= daq_cdc_valid and not or_reduce(std_logic_vector(c2h_words_cntdown));
+        axis_c2h.tvalid <= daq_cdc_valid;
+        axis_c2h.tkeep <= (others => daq_cdc_valid);
+        
+        c2h_packet_size_words <= unsigned(pcie_daq_control_i.packet_size_bytes(23 downto 4)); -- divide by 16 to get 128 bit words
+        
+        process(axi_clk)
+        begin
+            if rising_edge(axi_clk) then
+                if daq_reset = '1' then
+                    c2h_words_cntdown <= c2h_packet_size_words - 1;
+                else
+                    if daq_cdc_valid = '1' then
+                        if c2h_words_cntdown = x"00000" then
+                            c2h_words_cntdown <= c2h_packet_size_words - 1;
+                        else
+                            c2h_words_cntdown <= c2h_words_cntdown - 1;
+                        end if;
+                    end if;
+                end if;
+            end if;
+        end process;
+    
+        i_daq_cdc_ovf_latch : entity work.latch
+            port map(
+                reset_i => daq_reset,
+                clk_i   => axi_clk,
+                input_i => daq_cdc_ovf_axi_clk,
+                latch_o => daq_cdc_ovf_latch
+            );
+    
+        i_words_sent_cnt : entity work.counter
+            generic map(
+                g_COUNTER_WIDTH  => 44,
+                g_ALLOW_ROLLOVER => false
+            )
+            port map(
+                ref_clk_i => axi_clk,
+                reset_i   => daq_reset,
+                en_i      => axis_c2h.tvalid,
+                count_o   => pcie_daq_status_o.words_sent
+            );
+    
+        i_word_rate : entity work.rate_counter
+            generic map(
+                g_CLK_FREQUENCY => std_logic_vector(to_unsigned(125_000_000, 32)),
+                g_COUNTER_WIDTH => 28
+            )
+            port map(
+                clk_i   => axi_clk,
+                reset_i => daq_reset,
+                en_i    => axis_c2h.tvalid,
+                rate_o  => pcie_daq_status_o.word_rate
+            );
+
+    end generate;
 
     --================================--
     -- PCIe QDMA module

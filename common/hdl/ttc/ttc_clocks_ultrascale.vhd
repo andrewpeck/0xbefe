@@ -274,6 +274,9 @@ begin
     -- Output buffering
     -------------------------------------
 
+    -- TODO: use BUFGCE_DIV to produce the clk 80 and 40 to minimize skew (must use BUFGCE_DIV on the other clocks too in this case)
+    -- reference: https://docs.xilinx.com/r/en-US/ug949-vivado-design-methodology/Synchronous-CDC
+
     i_bufg_clk_40 : BUFG
         port map(
             O => ttc_clocks_bufg.clk_40,

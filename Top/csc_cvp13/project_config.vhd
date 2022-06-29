@@ -46,7 +46,8 @@ package project_config is
         )
     );
 
-    constant CFG_USE_SPY_LINK : t_bool_array(0 to CFG_NUM_SLRS - 1) := (0 => true);
+    constant CFG_USE_SPY_LINK_TX : t_bool_array(0 to CFG_NUM_SLRS - 1) := (0 => true);
+    constant CFG_USE_SPY_LINK_RX : t_bool_array(0 to CFG_NUM_SLRS - 1) := (0 => true);
     constant CFG_SPY_LINK : t_int_array(0 to CFG_NUM_SLRS -1) := (0 => 12);
     
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;

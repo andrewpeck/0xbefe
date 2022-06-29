@@ -243,7 +243,8 @@ def parse_xml():
             import lxml.etree
             lxmlExists = True
         except:
-            print("WARNING: lxml python module was not found, so xinclude won't work.. Also will not create a pickle file..")
+            print_red("ERROR: lxml python module was not found, so xinclude won't work.. Also will not create a pickle file..")
+            exit()
 
         if lxmlExists:
             tree = lxml.etree.parse(addressTable)

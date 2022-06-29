@@ -110,6 +110,10 @@ architecture gbe_tx_driver_arch of gbe_tx_driver is
     signal data                 : std_logic_vector(15 downto 0) := ETH_IDLE;
     signal charisk              : std_logic_vector(1 downto 0) := "01";
 
+    -- temporary debug
+    signal min_payload_words    : std_logic_vector(13 downto 0);
+    signal max_payload_words    : std_logic_vector(13 downto 0);
+
 begin
 
     i_reset_sync : entity work.synch

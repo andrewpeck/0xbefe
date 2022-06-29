@@ -83,6 +83,8 @@ architecture gem_x2o_arch of gem_x2o is
     -- resets
     signal gem_reset_powerup    : std_logic_vector(CFG_NUM_GEM_BLOCKS - 1 downto 0);
     signal reset_powerup        : std_logic;
+    signal usr_logic_reset      : std_logic;
+    signal usr_ttc_reset        : std_logic;
 
     -- clocks
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
@@ -230,7 +232,8 @@ begin
     i_ttc_clks : entity work.ttc_clocks
         generic map(
             g_CLK_STABLE_FREQ           => 100_000_000,
-            g_GEM_STATION               => CFG_GEM_STATION(0)
+            g_GEM_STATION               => CFG_GEM_STATION(0),
+            g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq))
         )
         port map(
             clk_stable_i        => axil_clk,
@@ -353,7 +356,10 @@ begin
         )
         port map(
             reset_i             => '0',
+            ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
+            usr_logic_reset_o   => usr_logic_reset,
+            ttc_reset_o         => usr_ttc_reset,
             ext_trig_en_o       => open,
             ext_trig_deadtime_o => open,
             ipb_reset_i         => ipb_reset,
@@ -415,9 +421,10 @@ begin
                 g_DISABLE_TTC_DATA  => true
             )
             port map(
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => gem_reset_powerup(slr),
     
+                ttc_reset_i             => usr_ttc_reset,
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
@@ -439,7 +446,6 @@ begin
                 gt_gbt_tx_data_arr_o    => gem_gt_gbt_tx_data_arr,
                 gt_gbt_rx_clk_arr_i     => gem_gt_gbt_rx_clk_arr,
                 gt_gbt_tx_clk_arr_i     => gem_gt_gbt_tx_clk_arr,
-                gt_gbt_rx_common_clk_i  => mgt_master_rxusrclk.gbt,
     
                 gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
                 gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
@@ -511,9 +517,22 @@ begin
     
         end generate;
 
-        -- spy link mapping
-        g_spy_link : if CFG_USE_SPY_LINK(slr) generate
-            spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+        -- spy link TX mapping
+        g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
+            spy_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+        end generate;
+
+        -- no spy link TX
+        g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX(slr) generate
+            spy_usrclk <= '0';
+        end generate;
+
+        -- spy link RX mapping
+        g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
             spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
             spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
@@ -523,11 +542,12 @@ begin
             spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
             spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
             spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-    
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+        end generate;
+
+        -- no spy link RX
+        g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX(slr) generate
+            spy_rx_data     <= MGT_16B_RX_DATA_NULL;
+            spy_rx_status   <= MGT_STATUS_NULL;
         end generate;
 
         -- MGT mapping to EMTF links
@@ -539,13 +559,6 @@ begin
             gem_gt_trig_tx_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(0)).tx);
         end generate;
     
-        -- spy link mapping
-        g_csc_fake_spy_link : if not CFG_USE_SPY_LINK(slr) generate
-            spy_usrclk      <= '0';
-            spy_rx_data     <= MGT_16B_RX_DATA_NULL;
-            spy_rx_status   <= MGT_STATUS_NULL;
-        end generate;
-
     end generate;
 
     reset_powerup <= gem_reset_powerup(0);
