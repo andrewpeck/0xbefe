@@ -475,9 +475,7 @@ begin
     end generate;
 
     -- ME0 Clusters --
-
-    -- FIXME: Make me work with more than 1 OH
-    me0_trigger : if (g_GEM_STATION = 0) and (g_NUM_OF_OHs <= 1) generate
+    me0_trigger : if (g_GEM_STATION = 0) generate
 
         me0_cluster: entity work.sbit_me0
             generic map(
