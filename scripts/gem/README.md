@@ -109,7 +109,7 @@ and login using your CERN credentials. (To execute from any directory, place `DB
  
 7. Execute the script:
 ```
-python3 get_cal_info_vfat.py -s backend -o <oh_id> -t <input_type> -w
+python3 get_cal_info_vfat.py -s backend -q ME0 -o <oh_id> -t <input_type> -w
 ```
 For more information on usage, run `# python3 get_cal_info_vfat.py -h`.
 
