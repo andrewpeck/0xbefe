@@ -74,21 +74,25 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
             #   enableVfatchannel(vfat, oh_select, i, 0, 0) # unmask all channels and disable calpulsing
 
             # Send L1A to get DAQ events from VFATs
-            #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0) 
+            #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.CTRL.MODULE_RESET"), 1)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), crc_depth)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
             cyclic_running = 1
             while cyclic_running:
                 cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
+            l1a_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A"))
+            nl1a_reg_cycles = int(crc_depth/(2**32))
+            real_l1a_counter = crc_depth*(2**32) + l1a_counter
             daq_event_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (oh_select, vfat)))
             if system == "dryrun":
                 daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
             else:
-                if daq_event_counter == crc_depth%(2**16):
+                if daq_event_counter == real_l1a_counter%(2**16):
                    daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
                 else:
-                   print (Colors.YELLOW + "\tProblem with DAQ event counter=%d"%(daq_event_counter) + Colors.ENDC)
+                   print (Colors.YELLOW + "\tProblem with DAQ event counter=%d, L1A counter=%d"%(daq_event_counter, real_l1a_counter) + Colors.ENDC)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
        
             for vfat2 in vfat_list:
