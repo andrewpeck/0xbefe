@@ -3,6 +3,7 @@ from common.utils import *
 from common.fw_utils import *
 from common.promless import *
 from gem.gbt import *
+from gem.me0_phase_scan import getConfig
 from gem.gem_utils import *
 import time
 from os import path
@@ -89,9 +90,10 @@ def init_gem_frontend():
                 else:
                     continue
 
-        # Configure lpGBTs
+        # Configure lpGBTs and vfat phase
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            # configure lpGBTs now
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
                 oh_ver = -9999
@@ -215,8 +217,85 @@ def init_gem_frontend():
                 # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
                 if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
                     sleep(2.5)
+            
+            # Read in me0 phase scan results
+            bestphase_list = {}
+            file_in = open(get_config("CONFIG_ME0_PHASE_SCAN"))
+            for line in file_in.readlines():
+                if "vfat" in line:
+                    continue
+                vfat = int(line.split()[0])
+                phase = int(line.split()[1],16)
+                bestphase_list[vfat] = phase
+            file_in.close()
 
-    print("Setting VFAT HDLC addresses")
+            # Read in sbit phase scan result
+            bestphase_list_sbit = {}
+            file_in = open(get_config("CONFIG_ME0_VFAT_SBIT_PHASE_SCAN"))
+            for line in file_in.readlines():
+                if "vfat" in line:
+                    continue
+                vfat = int(line.split()[0])
+                elink = int(line.split()[1])
+                phase = int(line.split()[2],16)
+                if vfat not in bestphase_list_sbit:
+                    bestphase_list_sbit[vfat] = {}
+                bestphase_list_sbit[vfat][elink] = phase
+            file_in.close()
+
+            # Set the phases
+            for vfat in range(0, 24):
+                set_bestphase = bestphase_list[vfat]
+                lpgbt, gbt_num, elink_num, gpio = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat]
+                gbt_ver = gbt_ver_list[gbt_num]
+
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt_num))
+                if not gbt_ready:
+                    continue
+                print ("\nSetting DAQ and Sbit phases for VFAT# %02d"%vfat)
+
+                oh_ver = -9999
+                if gbt_ver == 0:
+                    oh_ver = 1
+                elif gbt_ver == 1:
+                    oh_ver = 2
+                
+                GBT_ELINK_SAMPLE_PHASE_BASE_REG = -9999
+                if oh_ver == 1:
+                    GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
+                elif oh_ver == 2:
+                    GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
+                addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink_num
+
+                if lpgbt == "boss":
+                    if oh_ver == 1:
+                        config = getConfig("../resources/me0_boss_config_ohv1.txt")
+                    elif oh_ver == 2:
+                        config = getConfig("../resources/me0_boss_config_ohv2.txt")
+                elif lpgbt == "sub":
+                    if oh_ver == 1:
+                        config = getConfig("../resources/me0_sub_config_ohv1.txt")
+                    elif oh_ver == 2:
+                        config = getConfig("../resources/me0_sub_config_ohv2.txt")
+
+                value = (config[addr] & 0x0f) | (set_bestphase << 4)
+                selectGbt(oh, gbt_num)
+                writeGbtRegAddrs(addr, value)
+                sleep(0.01)
+                #print ("DAQ Elink phase set for VFAT#%02d to: %s" % (vfat, hex(set_bestphase)))
+                
+                sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat]
+                for elink in range(0,8):
+                    set_bestphase = bestphase_list_sbit[vfat][elink]
+                    
+                    addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + sbit_elinks[elink]
+                    value = (config[addr] & 0x0f) | (set_bestphase << 4)
+                    writeGbtRegAddrs(addr, value)
+                    sleep(0.1)
+                    #print ("VFAT %02d: Sbit Elink phase set for ELINK %02d to: %s" % (vfat, elink, hex(set_bestphase)))
+
+
+    print("\nSetting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
     hdlc_addr = get_config("CONFIG_ME0_VFAT_HDLC_ADDRESSES") if gem_station == 0 else get_config("CONFIG_GE11_VFAT_HDLC_ADDRESSES") if gem_station == 1 else get_config("CONFIG_GE21_VFAT_HDLC_ADDRESSES") if gem_station == 2 else None
     for vfat in range(vfats_per_oh):
