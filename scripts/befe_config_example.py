@@ -132,6 +132,11 @@ CONFIG_GE21_VFAT_HDLC_ADDRESSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] # repla
 CONFIG_ME0_OH_GBT0_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_boss_config_ohv*.txt"] * 16
 CONFIG_ME0_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_sub_config_ohv*.txt"] * 16
 CONFIG_ME0_OH_GBT_CONFIGS = [CONFIG_ME0_OH_GBT0_CONFIGS, CONFIG_ME0_OH_GBT1_CONFIGS] # do not modify this line
+
+# VFAT Phases
+CONFIG_ME0_VFAT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_vfat_phase_scan.txt"
+CONFIG_ME0_VFAT_SBIT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_vfat_sbit_phase_scan.txt"
+
 # VFAT HDLC addresses
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12] # replace with zeros if your setup has VFAT hybrids that don't support addressing
 # GBT version - 0 for ME0 OH-v1 and 1 for ME0 OH-v2 (0 for GE1/1 and GE2/1)
