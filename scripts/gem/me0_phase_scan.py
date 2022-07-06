@@ -84,7 +84,7 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
 
             l1a_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A"))
             nl1a_reg_cycles = int(crc_depth/(2**32))
-            real_l1a_counter = crc_depth*(2**32) + l1a_counter
+            real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
             daq_event_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_EVENT_CNT" % (oh_select, vfat)))
             if system == "dryrun":
                 daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
