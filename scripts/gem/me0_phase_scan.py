@@ -89,11 +89,9 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
             if system == "dryrun":
                 daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
             else:
-                print (daq_event_counter, real_l1a_counter, real_l1a_counter%(2**16))
-                if daq_event_counter == real_l1a_counter%(2**16):
-                   daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
-                else:
-                   print (Colors.YELLOW + "\tProblem with DAQ event counter=%d, L1A counter=%d"%(daq_event_counter, real_l1a_counter) + Colors.ENDC)
+                if daq_event_counter != real_l1a_counter%(2**16):
+                    print (Colors.YELLOW + "\tProblem with DAQ event counter=%d, L1A counter=%d (%d)"%(daq_event_counter, real_l1a_counter, real_l1a_counter%(2**16)) + Colors.ENDC)
+                daq_error = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh_select, vfat)))
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
        
             for vfat2 in vfat_list:
