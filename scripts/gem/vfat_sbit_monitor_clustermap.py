@@ -225,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
+    parser.add_argument("-f", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -260,19 +261,24 @@ if __name__ == "__main__":
     s_bit_channel_mapping = {}
     print ("")
     if args.gem == "ME0":
-        if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
-            print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-            sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
-        if len(list_of_files)==0:
-            print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-            sys.exit()
-        elif len(list_of_files)>1:
-            print ("Mutliple S-bit mapping results found, using latest file")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
-        with open(latest_file) as input_file:
-            s_bit_channel_mapping = json.load(input_file)
+        if not args.latest_map:
+            default_file = "../resources/me0_vfat_sbit_mapping.py"
+            with open(default_file) as input_file:
+                s_bit_channel_mapping = json.load(input_file)
+        else:
+            if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+                print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+                sys.exit()
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+            if len(list_of_files)==0:
+                print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+                sys.exit()
+            elif len(list_of_files)>1:
+                print ("Mutliple S-bit mapping results found, using latest file")
+                latest_file = max(list_of_files, key=os.path.getctime)
+                print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
+                with open(latest_file) as input_file:
+                    s_bit_channel_mapping = json.load(input_file)
 
     if args.use_channel_trimming is not None:
         if args.use_channel_trimming not in ["daq", "sbit"]:
