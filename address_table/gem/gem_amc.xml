@@ -29,6 +29,10 @@
           description="Sector ID that gets embedded in the TX links to EMTF"
           fw_signal="sector_id"
           fw_default="0x0"/>
+    <node id="SELF_TRIGGER_EN" address="0x2" mask="0x10000000" permission="rw"
+        description="Writing 1 enables self triggerring, meaning that valid clusters from unmasked OHs will result in TTC L1A being fired, which goes to the VFATs and DAQ"
+        fw_signal="self_trig_en"
+        fw_default="0x0"/>
   </node>
 
   <node id="STATUS" address="0x10"

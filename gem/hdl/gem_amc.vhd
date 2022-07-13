@@ -193,6 +193,7 @@ architecture gem_amc_arch of gem_amc is
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     signal emtf_tx_ready_arr        : std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     signal emtf_tx_had_not_ready_arr: std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal self_trigger             : std_logic;
 
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -347,7 +348,7 @@ begin
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
-            local_l1a_req_i     => external_trigger_i,
+            local_l1a_req_i     => external_trigger_i or self_trigger,
             local_l1a_reset_i   => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
@@ -520,6 +521,7 @@ begin
             ttc_cmds_i         => ttc_cmd,
             sbit_clusters_i    => sbit_clusters_arr,
             sbit_link_status_i => sbit_links_status_arr,
+            self_trigger_o     => self_trigger,
             trig_led_o         => led_trigger_o,
             trig_tx_data_arr_o => emtf_data_arr,
             ipb_reset_i        => ipb_reset,
