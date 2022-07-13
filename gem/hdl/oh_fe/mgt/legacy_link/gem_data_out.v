@@ -83,10 +83,10 @@ module   gem_data_out
          initial begin
             CLOCK_MULT [3] = 5;
             CLOCK_MULT [2] = 5;
-            CLOCK_MULT [1] = 4;
-            CLOCK_MULT [0] = 4;
+            CLOCK_MULT [1] = 5;
+            CLOCK_MULT [0] = 5;
          end
-         assign usrclks = {clock_200, clock_200, clock_160, clock_160};
+         assign usrclks = {clock_200, clock_200, clock_200, clock_200};
       end
       if (FPGA_TYPE_IS_ARTIX7 == 1) begin
          initial begin
