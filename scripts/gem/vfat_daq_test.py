@@ -159,7 +159,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
                 for vfat in vfat_list:
                     daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
                     daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
-                    vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter % 16 - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%16 - daq_event_count_temp, daq_error_count_temp)
+                    vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%16 - daq_event_count_temp, daq_error_count_temp)
                 print (vfat_results_string + "\n")
                 file_out.write(vfat_results_string + "\n\n")
                 time_prev = time()
@@ -184,7 +184,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
                 for vfat in vfat_list:
                     daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
                     daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
-                    vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter % 16 - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%16 - daq_event_count_temp, daq_error_count_temp)
+                    vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%16 - daq_event_count_temp, daq_error_count_temp)
                 print (vfat_results_string + "\n")
                 file_out.write(vfat_results_string + "\n\n")
                 time_prev = time()
