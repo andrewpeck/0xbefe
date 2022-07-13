@@ -144,7 +144,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             if time_passed >= 1:
                 expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
                 if (read_backend_reg(l1a_node) < l1a_counter):
-                    #nl1a_reg_cycles = int(expected_l1a/(2**32))
+                    #nl1a_reg_cycles = int(expected_l1a/(2**32))  
                     nl1a_reg_cycles += 1
                 l1a_counter = read_backend_reg(l1a_node)
                 calpulse_counter = read_backend_reg(calpulse_node)
@@ -153,10 +153,10 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
                     real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
                 else:
                     real_calpulse_counter = calpulse_counter
-                #daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
-                daq_event_count_temp = real_l1a_counter # since DAQ_EVENT_CNT is a 16-bit rolling counter
-                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp))
-                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp))
+                daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
+                #daq_event_count_temp = real_l1a_counter # since DAQ_EVENT_CNT is a 16-bit rolling counter  
+                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e, L1A counter - DAQ Events = %d" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp))
+                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e, L1A counter - DAQ Events = %d\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp))
                 vfat_results_string = ""
                 for vfat in vfat_list:
                     daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
@@ -170,7 +170,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             if time_passed >= 1:
                 expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
                 if (read_backend_reg(l1a_node) < l1a_counter):
-                    #nl1a_reg_cycles = int(expected_l1a/(2**32))
+                    #nl1a_reg_cycles = int(expected_l1a/(2**32)) 
                     nl1a_reg_cycles += 1
                 l1a_counter = read_backend_reg(l1a_node)
                 calpulse_counter = read_backend_reg(calpulse_node)
@@ -179,10 +179,10 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
                     real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
                 else:
                     real_calpulse_counter = calpulse_counter
-                #daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
-                daq_event_count_temp = real_l1a_counter # since DAQ_EVENT_CNT is a 16-bit rolling counter
-                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp))
-                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp))
+                daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
+                #daq_event_count_temp = real_l1a_counter # since DAQ_EVENT_CNT is a 16-bit rolling counter  
+                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e, L1A counter - DAQ Events = %d" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp))
+                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e, DAQ Events = %.2e, L1A counter - DAQ Events = %d\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp))
                 vfat_results_string = ""
                 for vfat in vfat_list:
                     daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
@@ -282,7 +282,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) < "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber_ul) + ", Inefficiency < " + "{:.2e}".format(ineffi_ul))
         else:
             print (Colors.YELLOW + "VFAT#: %02d, Errors = %d,"%(vfat, daq_crc_error_count_diff[vfat]) + Colors.ENDC)
-            file_out.write("VFAT#: %02d, Errors = %d,\n"%(vfat, daq_crc_error_count_diff[vfat]))
+            file_out.write("VFAT#: %02d, Errors = %d"%(vfat, daq_crc_error_count_diff[vfat]))
             #print (Colors.YELLOW + "VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi) + Colors.ENDC)
             #file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi))
 

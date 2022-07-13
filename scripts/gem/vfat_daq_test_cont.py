@@ -10,12 +10,12 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
     
     resultDir = "results"
     try:
-        os.makedirs(resultDir) # create directory for results
+        os.makedirs(resultDir) # create directory for results  
     except FileExistsError: # skip if directory already exists
         pass
     vfatDir = "results/vfat_data"
     try:
-        os.makedirs(vfatDir) # create directory for VFAT data
+        os.makedirs(vfatDir) # create directory for VFAT data  
     except FileExistsError: # skip if directory already exists
         pass
     dataDir = "results/vfat_data/vfat_daq_test_results"
