@@ -147,7 +147,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     real_calpulse_counter = calpulse_counter
 
                 print ("Number of resets due to mismatches = %d"%n_reset)
-                file_out.write("Number of resets due to mismatches = %d"%n_reset)
+                file_out.write("Number of resets due to mismatches = %d\n"%n_reset)
                 print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
                 file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
                 vfat_results_string = ""
