@@ -114,6 +114,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     l1a_node = get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A")
     calpulse_node = get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.CALPULSE")
 
+    n_reset = 0
     nl1a_reg_cycles = 0
     l1a_counter = 0
     t0 = time()
@@ -145,6 +146,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                 else:
                     real_calpulse_counter = calpulse_counter
 
+                print ("Number of resets due to mismatches = %d"%n_reset)
+                file_out.write("Number of resets due to mismatches = %d"%n_reset)
                 print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
                 file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
                 vfat_results_string = ""
@@ -165,6 +168,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     # Reset links and counters
                     gem_link_reset()
                     write_backend_reg(ttc_cnt_reset_node, 1)
+                    n_reset += 1
                     nl1a_reg_cycles = 0
                     l1a_counter = 0
                     t0 = time()
