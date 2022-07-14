@@ -152,18 +152,21 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                 file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
                 vfat_results_string = ""
                 n_mismatch = 0
+                vfat_mismatch = []
                 for vfat in vfat_list:
                     daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
                     daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
                     vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp) 
                     if (real_l1a_counter%(2**16) - daq_event_count_temp) != 0:
+                        vfat_mismatch.append(vfat)
                         n_mismatch += 1
                 print (vfat_results_string)
                 file_out.write(vfat_results_string + "\n")
+                vfat_mismatch_str = ', '.join(str(x) for x in vfat_mismatch)
 
                 if n_mismatch != 0:
-                    print (Colors.YELLOW + "\nEncountered L1A and DAQ Event Counter mismatches, sending reset and starting again\n" + Colors.ENDC)
-                    file_out.write("\nEncountered L1A and DAQ Event Counter mismatches, sending reset and starting again\n\n")
+                    print (Colors.YELLOW + "\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s sending reset and starting again\n"%vfat_mismatch_str + Colors.ENDC)
+                    file_out.write("\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s sending reset and starting again\n\n"%vfat_mismatch_str)
 
                     # Reset links and counters
                     gem_link_reset()
