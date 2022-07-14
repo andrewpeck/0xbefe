@@ -181,8 +181,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
 
-    print ("Stopped L1A's\n")
-    file_out.write("Stopped L1A's\n")
+    print ("\nStopped L1A's\n")
+    file_out.write("\nStopped L1A's\n")
 
     # Disable channels on VFATs
     for vfat in vfat_list:
