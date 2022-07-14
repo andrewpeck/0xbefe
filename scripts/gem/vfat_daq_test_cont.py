@@ -165,8 +165,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                 vfat_mismatch_str = ', '.join(str(x) for x in vfat_mismatch)
 
                 if n_mismatch != 0:
-                    print (Colors.YELLOW + "\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s sending reset and starting again\n"%vfat_mismatch_str + Colors.ENDC)
-                    file_out.write("\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s sending reset and starting again\n\n"%vfat_mismatch_str)
+                    print (Colors.YELLOW + "\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s; sending reset and starting again\n"%vfat_mismatch_str + Colors.ENDC)
+                    file_out.write("\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s; sending reset and starting again\n\n"%vfat_mismatch_str)
 
                     # Reset links and counters
                     gem_link_reset()
