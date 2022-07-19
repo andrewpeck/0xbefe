@@ -346,10 +346,10 @@ def mpoke(address, value):
         rw_terminate()
 
 def readRegStr(reg):
-    return "0x%02X"%(readReg(reg))
+    return "0x%02X"%(lpgbt_readReg(reg))
     #return "{0:#010x}".format(readReg(reg))
 
-def readReg(reg):
+def lpgbt_readReg(reg):
     try:
         address = reg.real_address
     except:
@@ -386,7 +386,7 @@ def displayReg(reg, option=None):
     if option=="hexbin": return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)+" = "+"{0:032b}".format(final_int)
     else: return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)
 
-def writeReg(reg, value, readback):
+def lpgbt_writeReg(reg, value, readback):
     try:
         address = reg.real_address
     except:
@@ -396,8 +396,8 @@ def writeReg(reg, value, readback):
         return "No write permission!"
 
     if (readback):
-        if (value!=readReg(reg)):
-            print (Colors.RED + "ERROR: Failed to read back register %s. Expect=0x%x Read=0x%x" % (reg.name, value, readReg(reg)) + Colors.ENDC)
+        if (value!=lpgbt_readReg(reg)):
+            print (Colors.RED + "ERROR: Failed to read back register %s. Expect=0x%x Read=0x%x" % (reg.name, value, lpgbt_readReg(reg)) + Colors.ENDC)
     else:
         # Apply Mask if applicable
         if (reg.mask != 0):
@@ -471,7 +471,7 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
     if system == "backend":
         gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
     if system != "dryrun":
-        pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
+        pusmstate = lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):
             print ("lpGBT status is READY")
         else:
@@ -532,7 +532,7 @@ def check_rom_readback(ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
         print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
-    romreg=readReg(getNode("LPGBT.RO.ROMREG"))
+    romreg=lpgbt_readReg(getNode("LPGBT.RO.ROMREG"))
     oh_ver = get_oh_ver(ohIdx, gbtIdx)
     if oh_ver == 1:
         if (romreg != 0xA5):
@@ -547,8 +547,8 @@ def check_lpgbt_mode(boss = None, ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
         print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
-    mode = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
-    i2c_addr = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.ASICCONTROLADR")) 
+    mode = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
+    i2c_addr = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.ASICCONTROLADR")) 
     oh_ver = get_oh_ver(ohIdx, gbtIdx)
      
     if boss and mode!=11:

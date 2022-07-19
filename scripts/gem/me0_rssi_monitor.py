@@ -125,35 +125,35 @@ def live_plot(ax, x, y):
     plt.pause(0.01)
 
 def init_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0)  # resets temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0)  # resets temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0)  # enable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0)  # vref enable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0)  # vref enable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
     sleep(0.01)
 
 
 def powerdown_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0)  # disable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0)  # disable temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0)  # disable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0)  # disable temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0)  # disable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0)  # vref disable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0)  # vref disable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
 
 
 def read_adc(channel, gain, system):
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
 
     gain_settings = {
         2: 0x00,
@@ -161,23 +161,23 @@ def read_adc(channel, gain, system):
         16: 0x10,
         32: 0x11
     }
-    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain], 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain], 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
 
     done = 0
     while (done == 0):
         if system != "dryrun":
-            done = readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
         else:
             done = 1
 
-    val = readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
 
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
 
     return val
 

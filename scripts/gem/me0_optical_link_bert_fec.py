@@ -179,9 +179,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         # Enable the counter
         if opr in ["start", "run"]:
             if oh_ver == 1:
-                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
             elif oh_ver == 2:
-                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, 0)
     
         # start error counting loop
         start_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -258,9 +258,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         # Disable the counter
         if opr in ["run", "stop"]:
             if oh_ver == 1:
-                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
             elif oh_ver == 2:
-                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
 
         if opr != "run":
             return  
@@ -302,14 +302,14 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
     if oh_ver == 1:
-        error_counter_h = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
-        error_counter_l = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
+        error_counter_h = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
+        error_counter_l = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
         error_counter = (error_counter_h << 8) | error_counter_l
     elif oh_ver == 2:
-        error_counter_0 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
-        error_counter_1 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
-        error_counter_2 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
-        error_counter_3 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
+        error_counter_0 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
+        error_counter_1 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
+        error_counter_2 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
+        error_counter_3 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
         error_counter = (error_counter_0 << 24) | (error_counter_1 << 16) | (error_counter_2 << 8) | error_counter_3
     return error_counter   
        
