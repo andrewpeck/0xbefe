@@ -1,4 +1,11 @@
-SHELL = /bin/bash
+SHELL = /usr/bin/env bash
+
+check: 
+	if [$[ "${BASH_VERSINFO:-0}" -ge 5 ]]; then \
+		continue; \
+	else \
+		echo "==== ERROR: Bash version not greater than or equal to 5.2 ===="; \
+	fi ; \	
 
 .PHONY = all clean
 
