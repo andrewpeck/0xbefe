@@ -412,6 +412,7 @@ begin
                 g_GEM_STATION       => g_GEM_STATION,
                 g_OH_VERSION        => g_OH_VERSION,
                 g_OH_TRIG_LINK_TYPE => g_OH_TRIG_LINK_TYPE,
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
                 g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG             => CFG_DEBUG_OH and ((i = 0) or (i = 1))
