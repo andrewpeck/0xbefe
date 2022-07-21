@@ -19,7 +19,7 @@ package project_config is
     constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (0 => 12); -- number of VFATs per OH
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (0 => 1);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+) 
 
-    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (0 => OH_TRIG_LINK_TYPE_4P0G); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21   
+    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (0 => OH_TRIG_LINK_TYPE_GBT); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21   
     constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
 
