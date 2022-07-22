@@ -568,6 +568,7 @@ begin
     i_daq : entity work.daq
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
             g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO  => false,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
