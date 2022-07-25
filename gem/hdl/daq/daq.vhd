@@ -148,6 +148,7 @@ architecture Behavioral of daq is
 
     -- DAQ Error Flags
     signal err_l1afifo_full     : std_logic := '0';
+    signal err_l1afifo_full_dclk: std_logic := '0';
     signal err_daqfifo_full     : std_logic := '0';
 
     -- TTS
@@ -261,7 +262,9 @@ architecture Behavioral of daq is
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
-    signal spy_gbe_ethertype          : std_logic_vector(15 downto 0);    
+    signal spy_gbe_ethertype        : std_logic_vector(15 downto 0);
+    signal spy_min_payload_words    : std_logic_vector(13 downto 0);
+    signal spy_max_payload_words    : std_logic_vector(13 downto 0);
     signal spy_prescale             : std_logic_vector(15 downto 0);
     
     signal spy_err_evt_too_big      : std_logic;
@@ -307,6 +310,8 @@ architecture Behavioral of daq is
     
     signal err_event_too_big    : std_logic;
     signal err_evtfifo_underflow: std_logic;
+    
+    signal vfat_enable_mask_arr : t_std24_array(g_NUM_OF_OHs - 1 downto 0) := (others => (others => '0'));
 
     --=== Input processor status and control ===--
     signal input_status_arr     : t_daq_input_status_arr(g_NUM_OF_OHs -1 downto 0);
@@ -788,6 +793,8 @@ begin
         end if;
     end process;
 
+    i_sync_err_l1afifo_full_daq_clk : entity work.synch generic map(N_STAGES => 3) port map(async_i => err_l1afifo_full, clk_i => daq_clk_i, sync_o => err_l1afifo_full_dclk);
+
     -- Near-full counter    
     i_l1afifo_near_full_counter : entity work.counter
     generic map(
@@ -863,13 +870,12 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS    => 3976,
-            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
             g_MAX_EVT_WORDS        => 50000,
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
             g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => true
+            g_USE_TRAILER_FLAG_EOE => true,
+            g_USE_GEM_FORMAT       => true
         )
         port map(
             reset_i             => reset_daq,
@@ -879,6 +885,8 @@ begin
             dest_mac_i          => spy_gbe_dest_mac,
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
+            min_payload_words_i => spy_min_payload_words,
+            max_payload_words_i => spy_max_payload_words,
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout(15 downto 0),
             data_trailer_i      => spy_fifo_dout(16),
@@ -973,6 +981,11 @@ begin
         chmb_tts_err_arr(i) <= input_status_arr(i).tts_state(2) and input_status_arr(i).tts_state(3);
         chmb_tts_oos_arr(i) <= input_status_arr(i).tts_state(1);
         chmb_tts_warn_arr(i) <= input_status_arr(i).tts_state(0);
+        
+        -- sync VFAT enable masks to DAQ clk
+        g_vfats: for vfat in 0 to 23 generate
+            i_sync_vfat_en_mask : entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => vfat3_daq_links_arr_i(i)(vfat).link_enabled, clk_i => daq_clk_i, sync_o => vfat_enable_mask_arr(i)(vfat));
+        end generate;
         
     end generate;
         
@@ -1084,6 +1097,8 @@ begin
         variable e_word128_count            : std_logic_vector(19 downto 0) := (others => '0');
 
         -- event chamber info; TODO: convert these to signals (but would require additional state)
+        variable e_chmb_vfat_en_mask        : std_logic_vector(23 downto 0) := (others => '0');
+        variable e_chmb_zs_flags            : std_logic_vector(23 downto 0) := (others => '0');
         variable e_chmb_l1a_id              : std_logic_vector(23 downto 0) := (others => '0');
         variable e_chmb_bx_id               : std_logic_vector(11 downto 0) := (others => '0');
         variable e_chmb_payload_size        : unsigned(19 downto 0) := (others => '0');
@@ -1122,6 +1137,7 @@ begin
                 last_dav_timer <= (others => '0');
                 dav_timeout_flags <= (others => '0');
                 chmb_infifo_underflow <= '0';
+                spy_prescale_counter <= x"0001";
                 spy_prescale_keep_evt <= '0';
             else
             
@@ -1171,12 +1187,12 @@ begin
                             
                             -- if last event fifo has already been read by the user then enable writing to this fifo for the current event
                             last_evt_fifo_en <= last_evt_fifo_empty and (not block_last_evt_fifo);
-                            
-                            -- trying to match the CSC DDU logic here somewhat.. so it's kindof convoluted..
-                            -- the counter starts at 2 after resync, and then events are accepted when it's equal to the set prescale
-                            -- once an event is accepted, the counter is reset to 1 (note not 2)
-                            -- prescale values of 0 and 1 just allow all events 
-                            if (spy_prescale = x"0000" or spy_prescale = x"0001") then
+
+                            -- prescale the events sent in the spy path
+                            if (spy_prescale = x"0000") then -- disable
+                                spy_prescale_counter <= x"0001";
+                                spy_prescale_keep_evt <= '0';
+                            elsif (spy_prescale = x"0001") then -- allow all events
                                 spy_prescale_counter <= x"0001";
                                 spy_prescale_keep_evt <= '1';
                             elsif (std_logic_vector(spy_prescale_counter) = spy_prescale) then
@@ -1249,10 +1265,9 @@ begin
                                           std_logic_vector(unsigned(e_l1a_id) - 1); -- minus one to start from 0 instead of 1
                     else
                         daq_event_data <= C_DAQ_FORMAT_VERSION &
-                                          run_type &
-                                          run_params &
-                                          e_orbit_id(15 downto 0) & 
-                                          board_sn_i;
+                                          x"000" &
+                                          e_orbit_id & 
+                                          fed_id(15 downto 0);
                     end if;
                     daq_event_header <= '0';
                     daq_event_trailer <= '0';
@@ -1311,6 +1326,9 @@ begin
                         -- pop this event out (this is a fall-through fifo, so the data is already available)
                         chmb_evtfifos_rd_en(e_input_idx) <= '1';
                     
+                        e_chmb_vfat_en_mask := vfat_enable_mask_arr(e_input_idx);
+                    
+                        e_chmb_zs_flags                     := chamber_evtfifos(e_input_idx).dout(83 downto 60);
                         e_chmb_l1a_id                       := chamber_evtfifos(e_input_idx).dout(59 downto 36);
                         e_chmb_bx_id                        := chamber_evtfifos(e_input_idx).dout(35 downto 24);
                         e_chmb_payload_size(11 downto 0)    := unsigned(chamber_evtfifos(e_input_idx).dout(23 downto 12));
@@ -1336,11 +1354,11 @@ begin
                                           -- input status
                                           e_chmb_evtfifo_full &
                                           e_chmb_infifo_full &
-                                          err_l1afifo_full &
+                                          "0" &  -- unused
                                           e_chmb_evt_too_big &
                                           e_chmb_evtfifo_near_full &
                                           e_chmb_infifo_near_full &
-                                          l1afifo_near_full_daqclk &
+                                          "0" & -- unused
                                           e_chmb_evt_bigger_24 &
                                           e_chmb_invalid_vfat_block &
                                           "0" & -- OOS AMC-VFAT
@@ -1425,13 +1443,11 @@ begin
                     if ((e_input_idx >= g_NUM_OF_OHs - 1) or (e_dav_mask(e_input_idx + 1) = '1')) then
                     
                         -- send the data
-                        daq_event_data <= x"0000" & -- OH CRC
-                                          std_logic_vector(e_chmb_payload_size(11 downto 0)) & -- OH word count
-                                          -- GEM chamber status
-                                          err_evtfifo_underflow &
-                                          "0" &  -- stuck data
+                        daq_event_data <= std_logic_vector(e_chmb_payload_size(11 downto 0)) & -- VFAT word count
                                           chmb_infifo_underflow & -- this input had an infifo underflow
-                                          "0" & x"00000000";
+                                          "000" & -- unused
+                                          e_chmb_zs_flags &
+                                          e_chmb_vfat_en_mask;  
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
@@ -1462,7 +1478,9 @@ begin
                                       daq_clk_locked_i & 
                                       daq_ready &
                                       ttc_status_i.bc0_status.locked &
-                                      "000";         -- Reserved
+                                      "0" & -- Reserved
+                                      err_l1afifo_full_dclk &
+                                      l1afifo_near_full_daqclk;         
                     daq_event_header <= '0';
                     daq_event_trailer <= '0';
                     daq_event_write_en <= '1';

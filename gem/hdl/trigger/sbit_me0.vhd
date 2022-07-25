@@ -302,7 +302,11 @@ begin
 
                 end generate;
             end generate;
-            sbits_probe <= vfat_sbits_type_change(17); --17 selected arbitrarily, can change if want to probe other vfat
+            
+            g_probe : if oh = 0 generate
+                sbits_probe <= vfat_sbits_type_change(17); --17 selected arbitrarily, can change if want to probe other vfat
+                me0_clusters_probe_raw <= me0_clusters;
+            end generate;
 
             cluster_packer_inst : entity work.cluster_packer
               generic map (
@@ -335,10 +339,6 @@ begin
         process (ttc_clk_i.clk_40)
         begin
             if (rising_edge(ttc_clk_i.clk_40)) then
-
-                me0_clusters_probe_raw <= me0_clusters;
-                me0_clusters <= me0_clusters;
-
                 if (me0_clusters(I).vpf = '1') then
                     me0_clusters_o(oh)(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);
                     me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;

@@ -52,8 +52,8 @@ port(
     l1a_reset_req_o             : out std_logic;
 
     -- Data
-    input_clk_arr_i             : in std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
-    input_link_arr_i            : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+    dmb_clk_i                   : in std_logic;
+    dmb_link_arr_i              : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
     
     -- Spy
     spy_clk_i                   : in  std_logic;
@@ -896,13 +896,12 @@ begin
     
     i_spy_ethernet_driver : entity work.gbe_tx_driver
         generic map(
-            g_MAX_PAYLOAD_WORDS    => 3976,
-            g_MIN_PAYLOAD_WORDS    => 28, -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
             g_MAX_EVT_WORDS        => 50000,
             g_NUM_IDLES_SMALL_EVT  => 2,
             g_NUM_IDLES_BIG_EVT    => 7,
             g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => false
+            g_USE_TRAILER_FLAG_EOE => false,
+            g_USE_GEM_FORMAT       => false
         )
         port map(
             reset_i             => reset_daq,
@@ -912,6 +911,8 @@ begin
             dest_mac_i          => spy_gbe_dest_mac,
             source_mac_i        => spy_gbe_source_mac,
             ether_type_i        => spy_gbe_ethertype,
+            min_payload_words_i => std_logic_vector(to_unsigned(28, 14)), -- should be 32 based on ethernet specification, but hmm looks like DDU is using 56, and actually that's what the driver is expecting too, otherwise some filler words get on disk
+            max_payload_words_i => std_logic_vector(to_unsigned(3976, 14)),
             data_empty_i        => spy_fifo_empty,
             data_i              => spy_fifo_dout,
             data_trailer_i      => '0',
@@ -987,8 +988,8 @@ begin
             evtfifo_data_cnt_o          => chamber_evtfifos(i).data_cnt,
 
             -- Track data
-            input_clk_i                 => input_clk_arr_i(i),
-            input_data_link_i           => input_link_arr_i(i),
+            input_clk_i                 => dmb_clk_i,
+            input_data_link_i           => dmb_link_arr_i(i),
             
             -- Status and control
             status_o                    => input_status_arr(i),
@@ -1032,9 +1033,9 @@ begin
     --================================--
 
     -- TODO: this is a cheat -- using the first input clock to aggregate input TTS states 
-    process (input_clk_arr_i(0))
+    process (dmb_clk_i)
     begin
-        if (rising_edge(input_clk_arr_i(0))) then
+        if (rising_edge(dmb_clk_i)) then
             if (reset_daq = '1') then
                 tts_chmb_critical <= '0';
                 tts_chmb_oos <= '0';

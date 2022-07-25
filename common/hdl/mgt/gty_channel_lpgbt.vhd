@@ -30,7 +30,8 @@ entity gty_channel_lpgbt is
         g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
         g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
         g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
-        g_RX_REFCLK_FREQ    : integer  -- TX refclk frequency
+        g_RX_REFCLK_FREQ    : integer; -- TX refclk frequency
+        g_USE_TX_SYNC       : boolean := true -- set to true if using tx multilane phase alignment (default)
     );
     port(
         
@@ -659,7 +660,7 @@ begin
             TXSWBST_BST                  => 1,
             TXSWBST_EN                   => 0,
             TXSWBST_MAG                  => 4,
-            TXSYNC_MULTILANE             => '1',
+            TXSYNC_MULTILANE             => bool_to_bit(g_USE_TX_SYNC), -- keep
             TXSYNC_OVRD                  => '0',
             TXSYNC_SKIP_DA               => '0',
             TX_CLK25_DIV                 => TX_CLK25_DIV, -- keep

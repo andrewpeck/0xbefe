@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE node [
-<!ENTITY NUM_DMBS "2">
+<!ENTITY NUM_DMBS "6">
 <!ENTITY NUM_GBT_LINKS "4">
 <!ENTITY NUM_OPTICAL_LINKS "116">
 <!ENTITY NUM_MGTS "116">

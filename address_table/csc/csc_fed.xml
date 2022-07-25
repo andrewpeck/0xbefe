@@ -39,7 +39,7 @@
                 fw_signal="std_logic_vector(to_unsigned(g_SLR, 2))"/>
           <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
                 description="Indicates whether or not local DAQ link is supported by this firmware build"
-                fw_signal="'1' when CFG_USE_SPY_LINK(g_SLR) else '0'"/>
+                fw_signal="'1' when CFG_USE_SPY_LINK_TX(g_SLR) else '0'"/>
           <node id="DMB_LINK_CONFIG" address="0x5">
             <node id="DMB${DMB_IDX}" address="0x0"
                   description="DMB${DMB_IDX} link numbers"
@@ -176,11 +176,11 @@
             <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
                   description="Number of times that MGT elastic buffer has been in overflow"
                   fw_signal="dmb_mgt_buf_ovf_arr(${DMB_IDX})"
-                  sw_monitor_warn_min_threshold="1"/>
+                  sw_val_good="self == 0"/>
             <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
                   description="Number of times that MGT elastic buffer has been in underflow"
                   fw_signal="dmb_mgt_buf_unf_arr(${DMB_IDX})"
-                  sw_monitor_warn_min_threshold="1"/>
+                  sw_val_good="self == 0"/>
             <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
                   description="Number of times that MGT has added a fake idle word to correct for clock drift"
                   fw_signal="dmb_clk_corr_add_arr(${DMB_IDX})"/>
@@ -190,22 +190,22 @@
             <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
                   description="Number of not-in-table errors"
                   fw_signal="dmb_not_in_table_arr(${DMB_IDX})"
-                  sw_monitor_warn_min_threshold="1000"/>
+                  sw_val_good="self == 0"/>
             <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
                   description="Number of disparity errors"
                   fw_signal="dmb_disperr_arr(${DMB_IDX})"
-                  sw_monitor_warn_min_threshold="1000"/>
+                  sw_val_good="self == 0"/>
         </node>
 
         <node id="SPY" address="0xa00" description="Spy readout link">
             <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
                   description="Number of times that MGT elastic buffer has been in overflow"
                   fw_signal="spy_mgt_buf_ovf"
-                  sw_monitor_warn_min_threshold="1"/>
+                  sw_val_good="self == 0"/>
             <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
                   description="Number of times that MGT elastic buffer has been in underflow"
                   fw_signal="spy_mgt_buf_unf"
-                  sw_monitor_warn_min_threshold="1"/>
+                  sw_val_good="self == 0"/>
             <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
                   description="Number of times that MGT has added a fake idle word to correct for clock drift"
                   fw_signal="spy_clk_corr_add"/>
@@ -215,11 +215,11 @@
             <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
                   description="Number of not-in-table errors"
                   fw_signal="spy_not_in_table"
-                  sw_monitor_warn_min_threshold="1000"/>
+                  sw_val_good="self == 0"/>
             <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
                   description="Number of disparity errors"
                   fw_signal="spy_disperr"
-                  sw_monitor_warn_min_threshold="1000"/>
+                  sw_val_good="self == 0"/>
         </node>
 
         <node id="GBT${GBT_IDX}" address="0xb00"
@@ -757,6 +757,21 @@
                   description="Number of PRBS7 errors found in the received data for this elink"
                   fw_signal="gbt_loop_error_cnt_arr(${ELINK_IDX})(30 downto 0)"/>
           </node>
+        </node>
+
+        <node id="DMB_PRBS_TEST" address="0x50">
+            <node id="ENABLE" address="0x0" mask="0x00000001" permission="rw"
+                  description="Enable/disable this module"
+                  fw_signal="dmb_link_test_en" fw_default="0b0"/>
+            <node id="LINK_SELECT" address="0x0" mask="0x000007f0" permission="rw"
+                  description="Select the DMB link to test"
+                  fw_signal="dmb_link_select" fw_default="0b0000000"/>
+            <node id="PRBS_ERR_CNT" address="0x1" permission="r"
+                  description="Number of PRBS errors detected"
+                  fw_signal="dmb_prbs_err_cnt"/>
+            <node id="MEGA_WORD_CNT" address="0x2" permission="r"
+                  description="Number of DMB words checked by the PRBS checker, each count represents a million words checked"
+                  fw_signal="dmb_mega_words_cnt"/>
         </node>
 
     </node>
