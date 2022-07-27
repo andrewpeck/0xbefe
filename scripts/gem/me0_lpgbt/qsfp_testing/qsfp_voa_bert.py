@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
         # Run FEC BERT
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %s -g %s -p %s -r run -b %s"%(args.ohid, args.gbtid[0], args.path, args.ber))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_links_bert_fec_results/*.txt")
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         result_file = open(latest_file)  
         result_read = 0  
