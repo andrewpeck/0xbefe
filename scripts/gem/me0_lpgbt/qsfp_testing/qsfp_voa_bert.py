@@ -45,7 +45,12 @@ if __name__ == "__main__":
         print ("Start Test for Attenuation: %0.1f dB\n"%i)
 
         # Run ssh command for VOA
-        ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -a %0.1f"%i
+        if i==8:
+            #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -r -a %0.1f"%i 
+            ssh_command = "python3 Documents/voa_control.py -r -a %0.1f"%i
+        else:
+            #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -a %0.1f"%i  
+            ssh_command = "python3 Documents/voa_control.py -a %0.1f"%i
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
         print(output)
