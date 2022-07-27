@@ -15,9 +15,6 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     args = parser.parse_args()
 
-    # Initialize
-    os.system("python3 init_frontend.py")
-
     # VOA Control Parameters
     attenuation_list = [8, 9, 10, 11, 11.2, 11.4, 11.6, 11.8, 12, 12.2, 12.4, 12.6, 12.8, 13, 13.2, 13.4, 13.6]
     router_ip = "169.254.119.34"
@@ -37,6 +34,17 @@ if __name__ == "__main__":
                 password=router_password,
                 look_for_keys=False)
 
+    # Set Attenuation to 0
+    #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -r -a 0"  
+    ssh_command = "python3 Documents/voa_control.py -r -a 0"
+    output = ssh_stdout.readlines()
+    print(output)
+    print ("Attenuation set to 0 dB\n"%i)
+    sleep(2)
+
+    # Initialize  
+    os.system("python3 init_frontend.py")
+
     n_fec_errors = [-9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999]
     print ("")
 
@@ -45,20 +53,16 @@ if __name__ == "__main__":
         print ("Start Test for Attenuation: %0.1f dB\n"%i)
 
         # Run ssh command for VOA
-        if i==8:
-            #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -r -a %0.1f"%i 
-            ssh_command = "python3 Documents/voa_control.py -r -a %0.1f"%i
-        else:
-            #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -a %0.1f"%i  
-            ssh_command = "python3 Documents/voa_control.py -a %0.1f"%i
+        #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -a %0.1f"%i  
+        ssh_command = "python3 Documents/voa_control.py -a %0.1f"%i
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
         print(output)
-        print ("Attenuation set for %0.1f dB\n"%i)
+        print ("Attenuation set to %0.1f dB\n"%i)
         sleep(2)
 
         # Run FEC BERT
-        os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %s -g %s -p %s -r run -b %s"%(args.ohid, args.gbtid, args.path, args.ber))
+        os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %s -g %s -p %s -r run -b %s"%(args.ohid, args.gbtid[0], args.path, args.ber))
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         result_file = open(latest_file)  
