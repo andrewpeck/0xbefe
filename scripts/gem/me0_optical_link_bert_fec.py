@@ -438,9 +438,9 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.path == "downlink":
-        for gbt in args.gbtid:
-            check_lpgbt_ready(args.ohid, gbt)
+    #if args.path == "downlink":
+    for gbt in args.gbtid:
+        check_lpgbt_ready(args.ohid, gbt)
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun" and args.path == "downlink":
