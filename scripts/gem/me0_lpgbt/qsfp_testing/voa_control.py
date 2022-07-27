@@ -83,6 +83,8 @@ if __name__ == "__main__":
     print ("Maximum attenuation = %.2f dB"%max_attenuation)
     print("")
 
+    time.sleep(1)
+
     # Read or Set Attenuation
     current_attenuation_data = bus.read_i2c_block_data(device_addr, query_attenuation_addr, 2)
     current_attenuation = (current_attenuation_data[0]<<8 | current_attenuation_data[1])/100.0
