@@ -31,6 +31,15 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     file_out.write("Checking FEC Errors for: " + path + "\n\n")
     fec_errors = 0
 
+    # Check if GBT is READY
+    if path == "uplink":
+        for gbt in gbtid:
+            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (ohid, gbtid)))
+            if (link_ready!=1):
+                print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
+                file_out.close()
+                terminate()
+        
     if system != "chc" and opr in ["start", "run"]:
         gem_utils.gem_link_reset()
     sleep(0.1)
@@ -438,11 +447,11 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    #if args.path == "downlink":
-    for gbt in args.gbtid:
-        check_lpgbt_ready(args.ohid, gbt)
+    if args.path == "downlink":
+        for gbt in args.gbtid:
+            check_lpgbt_ready(args.ohid, gbt)
 
-    # Readback rom register to make sure communication is OK
+    # Readback rom register to make sure communication is OK  
     if args.system != "dryrun" and args.path == "downlink":
         check_rom_readback(args.ohid, args.gbtid[0])
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
