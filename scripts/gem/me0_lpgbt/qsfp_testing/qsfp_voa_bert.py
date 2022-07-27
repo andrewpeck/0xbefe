@@ -40,7 +40,7 @@ if __name__ == "__main__":
     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
     output = ssh_stdout.readlines()
     print(output)
-    print ("Attenuation set to 0 dB\n"%i)
+    print ("Attenuation set to 0 dB\n")
     sleep(2)
 
     # Initialize  
