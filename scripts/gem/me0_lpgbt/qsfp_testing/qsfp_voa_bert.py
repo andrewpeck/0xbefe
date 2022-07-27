@@ -69,12 +69,12 @@ if __name__ == "__main__":
         result_file = open(latest_file)  
         result_read = 0  
         for line in result_file.readlines():
-            if "End Error Counting:" in line:
-                result_read=1
             if result_read:
                 n_fec_errors[counter] = int(line.split("=")[1])
                 break
-
+            if "End Error Counting:" in line:
+                result_read=1
+      
         result_file.close()
         sleep(1)
 
