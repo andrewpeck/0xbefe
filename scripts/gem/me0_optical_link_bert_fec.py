@@ -38,7 +38,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             if (link_ready!=1):
                 print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
                 file_out.close()
-                terminate()
+                rw_terminate()
         
     if system != "chc" and opr in ["start", "run"]:
         gem_utils.gem_link_reset()
