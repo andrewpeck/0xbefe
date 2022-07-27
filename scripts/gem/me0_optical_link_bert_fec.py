@@ -290,6 +290,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         if fec_error_gbt == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
             result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
+        else:
+            result_string += Colors.ENDC
         result_string_write += "GBT %d\n"%gbt
         result_string_write += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, fec_error_gbt)
         if fec_error_gbt == 0:
