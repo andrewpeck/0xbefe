@@ -116,18 +116,18 @@ def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbo
             for vfat in vfat_list:
                 # Writing to the register
                 if write_perm:
-                    data_write_output = simple_write_backend_reg(reg_node[vfat][reg], data_write, -9999)
+                    data_write_output = write_backend_reg(reg_node[vfat][reg], data_write, False)
                     total_sc_transactions_alt[reg] += 1
-                    if data_write_output == -9999:
+                    if data_write_output == -1:
                         bus_errors[reg][vfat] += 1
                     if verbose:
                         print ("Register value written to VFAT# %02d: "%(vfat) + hex(data_write))
                         file_out.write("Register value written to VFAT# %02d: "%(vfat) + hex(data_write) + "\n")
                 
                 # Reading the register
-                data_read = simple_read_backend_reg(reg_node[vfat][reg], -9999)
+                data_read = read_backend_reg(reg_node[vfat][reg], False)
                 total_sc_transactions_alt[reg] += 1
-                if data_read == -9999:
+                if data_read == 0xdeaddead:
                     bus_errors[reg][vfat] += 1
                 if write_perm:
                     if verbose:

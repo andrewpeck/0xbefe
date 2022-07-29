@@ -32,14 +32,14 @@ def main(gem, oh_select, id_type, write):
 
     for vfat in range(0,24):
         register = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID"%(oh_select, vfat))
-        serialN[vfat] = simple_read_backend_reg(register, -9999)
+        serialN[vfat] = read_backend_reg(register, False)
     print("=" * 31)
     print("====== VFAT Chip Numbers ======")
     print("=" * 31)
     print("VFAT\t|\t Chip Number")
     print("-" * 31)
     for vfat in range(0,24):
-        if serialN[vfat] == -9999:
+        if serialN[vfat] == 0xdeaddead:
             print(Colors.RED + "%s" % vfat + Colors.ENDC + "\t|\t" + Colors.RED + "Link bad" + Colors.ENDC)
         else:
             print(Colors.GREEN + "%s" % vfat + Colors.ENDC + "\t|\t" + Colors.GREEN + "%s" % hex(serialN[vfat]) + Colors.ENDC)

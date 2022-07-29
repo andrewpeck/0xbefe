@@ -44,14 +44,20 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
     sync_error = 0
     link_node = gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh_select, vfat))
     sync_node = gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh_select, vfat))
-    link_state = gem_utils.simple_read_backend_reg(link_node, 0)
-    sync_error = gem_utils.simple_read_backend_reg(sync_node, 9999)
+    link_state = gem_utils.read_backend_reg(link_node, False)
+    if link_state == 0xdeaddead:
+        link_state = 0
+    sync_error = gem_utils.read_backend_reg(sync_node, False)
+    if sync_error == 0xdeaddead:
+        sync_error = 9999
 
     # Check Slow Control
     cfg_run_error = 0
     cfg_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat))
     for iread in range(sc_depth):
-        vfat_cfg_run = gem_utils.simple_read_backend_reg(cfg_node, 9999)
+        vfat_cfg_run = gem_utils.read_backend_reg(cfg_node, False)
+        if vfat_cfg_run = 0xdeaddead:
+            vfat_cfg_run = 9999
         if vfat_cfg_run != 0 and vfat_cfg_run != 1:
             cfg_run_error = 1
             break
@@ -186,8 +192,8 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
             sleep(0.1)
             gem_utils.gem_link_reset()
             sleep(0.1)
-            output = gem_utils.simple_read_backend_reg(hwid_node, -9999)
-            if output == -9999:
+            output = gem_utils.read_backend_reg(hwid_node, False)
+            if output == 0xdeaddead:
                 continue
             else:
                 working_phases_sc[vfat] = ph
