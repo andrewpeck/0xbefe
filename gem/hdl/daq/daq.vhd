@@ -63,7 +63,7 @@ port(
 
     -- Spy
     spy_clk_i                   : in  std_logic;
-    spy_link_o                  : out t_mgt_16b_tx_data;
+    spy_link_o                  : out t_mgt_64b_tx_data;
     
     -- IPbus
     ipb_reset_i                 : in  std_logic;
@@ -814,53 +814,92 @@ begin
     -- Spy Path
     --================================--
 
-    i_spy_fifo : xpm_fifo_async
-        generic map(
-            FIFO_MEMORY_TYPE    => "block",
-            FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
-            RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 68,
-            READ_MODE           => "fwft",
-            FIFO_READ_LATENCY   => 0,
-            FULL_RESET_VALUE    => 1,
-            USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 17,
-            CDC_SYNC_STAGES     => 2,
-            PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
-            PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
-            DOUT_RESET_VALUE    => "0",
-            ECC_MODE            => "no_ecc"
-        )
-        port map(
-            sleep         => '0',
-            rst           => reset_daq,
-            wr_clk        => daq_clk_i,
-            wr_en         => spy_fifo_wr_en and spy_prescale_keep_evt,
-            din           => daq_event_trailer & daq_event_data(63 downto 48) & "0" & daq_event_data(47 downto 32) & "0" & daq_event_data(31 downto 16) & "0" & daq_event_data(15 downto 0),
-            full          => open,
-            prog_full     => spy_fifo_prog_full,
-            wr_data_count => open,
-            overflow      => spy_fifo_ovf,
-            wr_rst_busy   => open,
-            almost_full   => open,
-            wr_ack        => open,
-            rd_clk        => spy_clk_i,
-            rd_en         => spy_fifo_rd_en,
-            dout          => spy_fifo_dout,
-            empty         => spy_fifo_empty,
-            prog_empty    => spy_fifo_prog_empty,
-            rd_data_count => open,
-            underflow     => open,
-            rd_rst_busy   => open,
-            almost_empty  => spy_fifo_aempty,
-            data_valid    => open,
-            injectsbiterr => '0',
-            injectdbiterr => '0',
-            sbiterr       => open,
-            dbiterr       => open
-        );    
+    g_spy_gbe: if not CFG_SPY_10GBE generate
+        signal spy_link : t_mgt_16b_tx_data;
+    begin
+        i_spy_fifo : xpm_fifo_async
+            generic map(
+                FIFO_MEMORY_TYPE    => "block",
+                FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
+                RELATED_CLOCKS      => 0,
+                WRITE_DATA_WIDTH    => 68,
+                READ_MODE           => "fwft",
+                FIFO_READ_LATENCY   => 0,
+                FULL_RESET_VALUE    => 1,
+                USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 17,
+                CDC_SYNC_STAGES     => 2,
+                PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
+                PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => spy_fifo_wr_en,
+                din           => daq_event_trailer & daq_event_data(63 downto 48) & "0" & daq_event_data(47 downto 32) & "0" & daq_event_data(31 downto 16) & "0" & daq_event_data(15 downto 0),
+                full          => open,
+                prog_full     => spy_fifo_prog_full,
+                wr_data_count => open,
+                overflow      => spy_fifo_ovf,
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_clk        => spy_clk_i,
+                rd_en         => spy_fifo_rd_en,
+                dout          => spy_fifo_dout,
+                empty         => spy_fifo_empty,
+                prog_empty    => spy_fifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open,
+                rd_rst_busy   => open,
+                almost_empty  => spy_fifo_aempty,
+                data_valid    => open,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
 
-    spy_fifo_wr_en <= daq_event_write_en; -- write the same exact data as to the AMC13 for now
+        i_spy_gbe_tx_driver : entity work.gbe_tx_driver
+            generic map(
+                g_MAX_EVT_WORDS        => 50000,
+                g_NUM_IDLES_SMALL_EVT  => 2,
+                g_NUM_IDLES_BIG_EVT    => 7,
+                g_SMALL_EVT_MAX_WORDS  => 24,
+                g_USE_TRAILER_FLAG_EOE => true,
+                g_USE_GEM_FORMAT       => true
+            )
+            port map(
+                reset_i             => reset_daq,
+                gbe_clk_i           => spy_clk_i,
+                gbe_tx_data_o       => spy_link,
+                skip_eth_header_i   => spy_gbe_skip_headers,
+                dest_mac_i          => spy_gbe_dest_mac,
+                source_mac_i        => spy_gbe_source_mac,
+                ether_type_i        => spy_gbe_ethertype,
+                min_payload_words_i => spy_min_payload_words,
+                max_payload_words_i => spy_max_payload_words,
+                data_empty_i        => spy_fifo_empty,
+                data_i              => spy_fifo_dout(15 downto 0),
+                data_trailer_i      => spy_fifo_dout(16),
+                data_rd_en          => spy_fifo_rd_en,
+                last_valid_word_i   => spy_fifo_aempty,
+                err_event_too_big_o => spy_err_evt_too_big,
+                err_eoe_not_found_o => spy_err_eoe_not_found,
+                word_rate_o         => spy_word_rate,
+                evt_cnt_o           => spy_evt_sent
+            );
+
+            spy_link_o.txdata(15 downto 0) <= spy_link.txdata;
+            spy_link_o.txcharisk(1 downto 0) <= spy_link.txcharisk;
+            spy_link_o.txchardispval(1 downto 0) <= spy_link.txchardispval;
+            spy_link_o.txchardispmode(1 downto 0) <= spy_link.txchardispmode;
+    end generate;
+
+    spy_fifo_wr_en <= daq_event_write_en and spy_prescale_keep_evt; -- pre-scaled version of the DAQLink data
 
     i_sync_spyfifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => spy_fifo_prog_empty, clk_i => daq_clk_i, sync_o => spy_fifo_prog_empty_wrclk);
     i_latch_spyfifo_near_full : entity work.latch port map(
@@ -868,37 +907,7 @@ begin
             clk_i   => daq_clk_i,
             input_i => spy_fifo_prog_full,
             latch_o => spy_fifo_afull
-        );        
-    
-    i_spy_ethernet_driver : entity work.gbe_tx_driver
-        generic map(
-            g_MAX_EVT_WORDS        => 50000,
-            g_NUM_IDLES_SMALL_EVT  => 2,
-            g_NUM_IDLES_BIG_EVT    => 7,
-            g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => true,
-            g_USE_GEM_FORMAT       => true
-        )
-        port map(
-            reset_i             => reset_daq,
-            gbe_clk_i           => spy_clk_i,
-            gbe_tx_data_o       => spy_link_o,
-            skip_eth_header_i   => spy_gbe_skip_headers,
-            dest_mac_i          => spy_gbe_dest_mac,
-            source_mac_i        => spy_gbe_source_mac,
-            ether_type_i        => spy_gbe_ethertype,
-            min_payload_words_i => spy_min_payload_words,
-            max_payload_words_i => spy_max_payload_words,
-            data_empty_i        => spy_fifo_empty,
-            data_i              => spy_fifo_dout(15 downto 0),
-            data_trailer_i      => spy_fifo_dout(16),
-            data_rd_en          => spy_fifo_rd_en,
-            last_valid_word_i   => spy_fifo_aempty,
-            err_event_too_big_o => spy_err_evt_too_big,
-            err_eoe_not_found_o => spy_err_eoe_not_found,
-            word_rate_o         => spy_word_rate,
-            evt_cnt_o           => spy_evt_sent
-        );    
+        );
 
     -- Near-full counter
     i_spy_near_full_counter : entity work.counter
@@ -912,7 +921,7 @@ begin
         en_i      => spy_fifo_afull,
         count_o   => spy_fifo_afull_cnt
     );
-        
+
     -- latch the spy fifo overflow error
     process(daq_clk_i)
     begin
@@ -928,7 +937,7 @@ begin
             end if;
         end if;
     end process;
-        
+
     --================================--
     -- Chamber Event Builders
     --================================--

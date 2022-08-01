@@ -57,6 +57,8 @@ package board_config_package is
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
+    constant CFG_SPY_10GBE                  : boolean := false; -- true = 10 GbE; false = 1 GbE
+
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link

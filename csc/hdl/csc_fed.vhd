@@ -540,9 +540,8 @@ begin
 
     i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
         port map(
-            clk_i   => spy_usrclk_i,
-            kchar_i => spy_tx_data_o.txcharisk,
-            data_i  => spy_tx_data_o.txdata
+            clk_i     => spy_usrclk_i,
+            tx_data_i => spy_tx_data_o
         );
 
 end csc_fed_arch;
