@@ -1,16 +1,19 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Company: TAMU
+-- Company:
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
+--           Laurent Pétré (laurent.petre@cern.ch)
+--
 -- Create Date: 05/05/2020
--- Module Name: GTH_SINGLE_TX_10p24g_RX_4p0g
+-- Module Name: gth_single_tx_10p3125g_rx_4p0g
 -- Project Name:
--- Description: raw 10.24Gb/s TX & 8b10b 4.0Gb/s RX. The TX is intended to be used with the LpGBT core, and RX is for receiving trigger data from OH. Both TX and RX elastic buffers are bypassed, and there is no encoding on TX, and RX uses 8b10b.
---              the TX user bus width is selectable between 32 and 64 bits using the g_TX_BUS_WIDTH and g_RX_BUS_WIDTH generics. RX user bus is 16 bits wide.
---              the TX usrclk has to be 320.64MHz, and TX usrclk2 has to be 320.64MHz when 32 bit bus is selected, and 160MHz when 64 bit bus is selected. The RX usrclk and usrclk2 have to be 200.4MHz.
---              the TX is using a CPLL, and the RX is using a QPLL. The CPLL expects a 160.32MHz refclk, for TX see QPLL configuration to determine the refclk frequency (normally 320MHz). 
---              only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").
--- 
+-- Description: 64b66b 10.3125Gb/s TX & 8b10b 4.0Gb/s RX. The TX is intended to be used for 10 GbE (local DAQ), and RX is for receiving trigger data from OH.
+--              TX is using the elastic buffer, RX elastic buffer is bypassed.
+--              TX user bus width is 64 bits, RX user bus width is 16 bits.
+--              The TX refclk should be 322.265625MHz, the userclk should be 322.1328125MHz, and the userclk2 should be 161.1328125MHz.
+--              The RX refclk should be 320.64MHz, and both the usrclk and userclk2 should be 200.4MHz.
+--              The TX is using a CPLL, and the RX is using a QPLL. The CPLL expects a 322.265625MHz refclk, for RX see QPLL configuration to determine the refclk frequency (normally 320.64MHz).
+--              Only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").
+--
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -29,13 +32,12 @@ use work.gem_pkg.all;
 --============================================================================
 --                                                          Entity declaration
 --============================================================================
-entity gth_single_tx_10p24g_rx_4p0g is
+entity gth_single_tx_10p3125g_rx_4p0g is
   generic
     (
       -- Simulation attributes
       g_GT_SIM_GTRESET_SPEEDUP : string := "TRUE";  -- Set to "TRUE" to speed up sim reset
-      g_TX_REFCLK_01           : integer range 0 to 1 := 0; -- selects which ref clock should be used for TX
-      g_TX_BUS_WIDTH           : integer range 0 to 64 := 32 -- select the TX bus width, valid options are 32 and 64. Note that when using 64 bit bus, the TXUSRCLK2 must be half the frequency of the TXUSRCLK, and both clocks have to come from the same MMCM on low skew buffer 
+      g_TX_REFCLK_01           : integer range 0 to 1 := 0 -- selects which ref clock should be used for RX
       );
   port
     (
@@ -71,19 +73,17 @@ entity gth_single_tx_10p24g_rx_4p0g is
       );
 
 
-end gth_single_tx_10p24g_rx_4p0g;
+end gth_single_tx_10p3125g_rx_4p0g;
 
 --============================================================================
 --                                                        Architecture section
 --============================================================================
-architecture gth_single_tx_10p24g_rx_4p0g_arch of gth_single_tx_10p24g_rx_4p0g is
+architecture gth_single_tx_10p3125g_rx_4p0g_arch of gth_single_tx_10p3125g_rx_4p0g is
 
 
 --============================================================================
 --                                                         Signal declarations
 --============================================================================
-
-  signal s_txdata             : std_logic_vector(63 downto 0);
 
   -- dummy signals to surpress synth. warnings
   signal s_rxdata_float        : std_logic_vector(47 downto 0);
@@ -125,17 +125,7 @@ begin
 
 --  s_cpll_pd <= '0';
 
-  -- select the user bus width
-  g_64b_tx_bus : if g_TX_BUS_WIDTH = 64 generate
-      s_txdata <= gth_tx_data_i.txdata;
-  end generate;
-  
-  g_not_64b_tx_bus : if g_TX_BUS_WIDTH /= 64 generate
-      s_txdata(g_TX_BUS_WIDTH - 1 downto 0) <= gth_tx_data_i.txdata(g_TX_BUS_WIDTH - 1 downto 0);
-      s_txdata(63 downto g_TX_BUS_WIDTH) <= (others => '0');
-  end generate;
-
-  ----------------------------- GTHE2 Instance  --------------------------   
+  ----------------------------- GTHE2 Instance  --------------------------
 
   i_gthe2 : GTHE2_CHANNEL
     generic map
@@ -307,14 +297,14 @@ begin
 
       -------------------------RX Gearbox Attributes---------------------------
       RXGEARBOX_EN => "FALSE",
-      GEARBOX_MODE => "000",
+      GEARBOX_MODE => "001",
 
       -------------------------PRBS Detection Attribute-----------------------
       RXPRBS_ERR_LOOPBACK => '0',
 
       -------------Power-Down Attributes----------
       PD_TRANS_TIME_FROM_P2 => "000000111100",
-      PD_TRANS_TIME_NONE_P2 => "00111100",
+      PD_TRANS_TIME_NONE_P2 => "00011001",
       PD_TRANS_TIME_TO_P2   => "01100100",
 
       -------------RX OOB Signaling Attributes----------
@@ -334,7 +324,7 @@ begin
       TRANS_TIME_RATE => "00001110",
 
       --------------TX Buffer Attributes----------------
-      TXBUF_EN                   => "FALSE",
+      TXBUF_EN                   => "TRUE",
       TXBUF_RESET_ON_RATE_CHANGE => "TRUE",
       TXDLY_CFG                  => "0000000000011111",
       TXDLY_LCFG                 => "000110000",
@@ -342,10 +332,10 @@ begin
       TXPH_CFG                   => "0000011110000000",
       TXPHDLY_CFG                => "000010000100000000100000",
       TXPH_MONITOR_SEL           => "00000",
-      TX_XCLK_SEL                => "TXUSR",
+      TX_XCLK_SEL                => "TXOUT",
 
       -------------------------FPGA TX Interface Attributes-------------------------
-      TX_DATA_WIDTH => g_TX_BUS_WIDTH,
+      TX_DATA_WIDTH => 64,
 
       -------------------------TX Configurable Driver Attributes-------------------------
       TX_DEEMPH0              => "000000",
@@ -367,7 +357,7 @@ begin
       TX_MARGIN_LOW_4         => "1000000",
 
       -------------------------TX Gearbox Attributes--------------------------
-      TXGEARBOX_EN => "FALSE",
+      TXGEARBOX_EN => "TRUE",
 
       -------------------------TX Initialization and Reset Attributes--------------------------
       TXPCSRESET_TIME => "00001",
@@ -384,7 +374,7 @@ begin
       CPLL_INIT_CFG   => "000000000000000000011110",
       CPLL_LOCK_CFG   => "0000000111101000",
       CPLL_REFCLK_DIV => 1,
-      RXOUT_DIV       => 2,
+      RXOUT_DIV       => 1,
       TXOUT_DIV       => 1,
       SATA_CPLL_CFG   => "VCO_3000MHZ",
 
@@ -495,11 +485,9 @@ begin
 
       ------------------TX Buffer Attributes---------------
       TXSYNC_MULTILANE => '0',
-      TXSYNC_OVRD      => '1',
+      TXSYNC_OVRD      => '0',
       TXSYNC_SKIP_DA   => '0'
-
-      )
-
+    )
     port map
     (
       --------------------------------- CPLL Ports -------------------------------
@@ -769,7 +757,7 @@ begin
       TXPIPPMEN                  => '0',
       TXPIPPMOVRDEN              => '0',
       TXPIPPMPD                  => '0',
-      TXPIPPMSEL                 => '0',
+      TXPIPPMSEL                 => '1',
       TXPIPPMSTEPSIZE            => "00000",
       ---------------------- Transceiver Reset Mode Operation --------------------
       GTRESETSEL                 => '0',
@@ -779,8 +767,8 @@ begin
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
       TXHEADER                   => gth_tx_data_i.txheader,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
-      TXCHARDISPMODE             => "00000000",
-      TXCHARDISPVAL              => "00000000",
+      TXCHARDISPMODE             => gth_tx_data_i.txchardispmode,
+      TXCHARDISPVAL              => gth_tx_data_i.txchardispval,
       ------------------ Transmit Ports - FPGA TX Interface Ports ----------------
       TXUSRCLK                  => gth_gt_clk_i.txusrclk,
       TXUSRCLK2                 => gth_gt_clk_i.txusrclk2,
@@ -792,7 +780,7 @@ begin
       ------------------ Transmit Ports - Pattern Generator Ports ----------------
       TXPRBSFORCEERR            => gth_tx_ctrl_i.txprbsforceerr,
       ------------------ Transmit Ports - TX Buffer Bypass Ports -----------------
-      TXDLYBYPASS               => '0',
+      TXDLYBYPASS               => '1',
       TXDLYEN                   => gth_tx_init_i.TXDLYEN,
       TXDLYHOLD                 => '0',
       TXDLYOVRDEN               => '0',
@@ -823,7 +811,7 @@ begin
       TXMAINCURSOR              => gth_tx_ctrl_i.txmaincursor,
       TXPISOPD                  => '0',
       ------------------ Transmit Ports - TX Data Path interface -----------------
-      TXDATA                    => s_txdata,
+      TXDATA                    => gth_tx_data_i.txdata,
       ---------------- Transmit Ports - TX Driver and OOB signaling --------------
       GTHTXN                    => gth_tx_serial_o.gthtxn,
       GTHTXP                    => gth_tx_serial_o.gthtxp,
@@ -831,7 +819,7 @@ begin
       TXOUTCLK                  => gth_gt_clk_o.txoutclk,
       TXOUTCLKFABRIC            => open,
       TXOUTCLKPCS               => open,
-      TXOUTCLKSEL               => gth_tx_ctrl_i.TXOUTCLKSEL,
+      TXOUTCLKSEL               => "010",
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
@@ -856,41 +844,16 @@ begin
       ------------------ Transmit Ports - pattern Generator Ports ----------------
       TXPRBSSEL                 => gth_tx_ctrl_i.txprbssel,
       ----------- Transmit Transmit Ports - 8b10b Encoder Control Ports ----------
-      TXCHARISK                 => "00000000",
+      TXCHARISK                 => gth_tx_data_i.txcharisk,
       ----------------------- Tx Configurable Driver  Ports ----------------------
       TXQPISENN                 => open,
       TXQPISENP                 => open
-
-      );
-
---    process( gth_gt_clk_i.GTREFCLK0 )
---      begin
---          if(rising_edge(gth_gt_clk_i.GTREFCLK0)) then 
---             s_cpllpd_wait <= s_cpllpd_wait(94 downto 0) & '0';
---             s_cpllreset_wait <= s_cpllreset_wait(126 downto 0) & '0';
---           end if;
---      end process;
-
---  s_cpllpd_ovrd <= s_cpllpd_wait(95);
---  s_cpllreset_ovrd <= s_cpllreset_wait(127);
-
---   s_cpll_pd <=  s_cpllpd_ovrd;
-
-
---   i_sync_cpllreset : entity work.gth_single_sync_block
---    port map
---           (
---              clk             =>  gth_gt_clk_i.GTREFCLK0,
---              data_in         =>  gth_cpll_init_i.CPLLRESET,
---              data_out        =>  s_cpllreset_sync
---           );
-
---  s_cpll_reset <= s_cpllreset_sync or s_cpllreset_ovrd;
+    );
 
   s_cpll_reset <= gth_cpll_init_i.cpllreset;
   s_cpll_pd <= gth_cpll_init_i.cpllpd;
 
-end gth_single_tx_10p24g_rx_4p0g_arch;
+end gth_single_tx_10p3125g_rx_4p0g_arch;
 --============================================================================
 --                                                            Architecture end
 --============================================================================
