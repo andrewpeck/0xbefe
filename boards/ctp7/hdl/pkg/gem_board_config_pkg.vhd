@@ -67,6 +67,7 @@ package board_config_package is
     constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
     constant CFG_DEBUG_IC_RX                : boolean := false; --set to true to instantiate ILA in IC rx
     constant CFG_DEBUG_TRIGGER_TX           : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any trigger TX link
+    constant CFG_DEBUG_10GBE_MAC_PCS        : boolean := false; -- if set to true, an ILA will be instantiated which allows probing the 10 GbE MAC-PCS core
     
     ----------------------------------------------------------------------------------------------
 
@@ -75,8 +76,6 @@ package board_config_package is
     constant CFG_LPGBT_EMTF_LOOP_RX_GTH     : integer := 66;
     constant CFG_LPGBT_EMTF_LOOP_TX_LINK    : integer := 7;
     constant CFG_ILA_GBT0_MGT_EN            : boolean := false; -- setting this to 1 enables the instantiation of ILA on GBT link 0 MGT
-
-    -- oh link mapping is in the project pkg file
 
     --================================--
     -- Fiber to MGT mapping

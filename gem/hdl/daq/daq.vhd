@@ -68,8 +68,8 @@ port(
     -- IPbus
     ipb_reset_i                 : in  std_logic;
     ipb_clk_i                   : in std_logic;
-	ipb_mosi_i                  : in ipb_wbus;
-	ipb_miso_o                  : out ipb_rbus;
+    ipb_mosi_i                  : in ipb_wbus;
+    ipb_miso_o                  : out ipb_rbus;
     
     -- Other
     board_sn_i                  : in std_logic_vector(15 downto 0) -- board serial ID, needed for the header to AMC13
@@ -261,6 +261,8 @@ architecture Behavioral of daq is
     signal err_spy_fifo_ovf         : std_logic;
     signal spy_fifo_afull_cnt       : std_logic_vector(15 downto 0);
     
+    signal spy_gbe_reset_ipb        : std_logic;
+    signal spy_gbe_generator_en     : std_logic;
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
@@ -814,6 +816,7 @@ begin
     -- Spy Path
     --================================--
 
+    -- 1 GbE
     g_spy_gbe: if not CFG_SPY_10GBE generate
         signal spy_link : t_mgt_16b_tx_data;
     begin
@@ -897,6 +900,31 @@ begin
             spy_link_o.txcharisk(1 downto 0) <= spy_link.txcharisk;
             spy_link_o.txchardispval(1 downto 0) <= spy_link.txchardispval;
             spy_link_o.txchardispmode(1 downto 0) <= spy_link.txchardispmode;
+    end generate;
+
+    -- 10 GbE
+    g_spy_10gbe : if CFG_SPY_10GBE generate
+    begin
+        i_spy_ten_gbe_tx_mac_pcs : entity work.ten_gbe_tx_mac_pcs
+            port map (
+                reset_i        => reset_i or spy_gbe_reset_ipb,
+
+                -- GbE link
+                clk_i          => spy_clk_i,
+                tx_data_o      => spy_link_o,
+
+                -- Packet input
+                packet_valid_i => '0',
+                packet_data_i  => (others => '0'),
+                packet_end_i   => '0',
+                packet_rden_o  => open,
+
+                -- Config
+                generator_en   => spy_gbe_generator_en,
+
+                -- Status
+                word_rate_o    => spy_word_rate -- 16 bits words!
+            );
     end generate;
 
     spy_fifo_wr_en <= daq_event_write_en and spy_prescale_keep_evt; -- pre-scaled version of the DAQLink data
