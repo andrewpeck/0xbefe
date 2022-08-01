@@ -111,7 +111,7 @@ package system_package is
     ---=== MP 2 / MP TX ===---
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 56
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 57
-    (gth_tx_1p25g_rx_4p0g,     false, GTH_USRCLK_OUTCLK, GTH_USRCLK_OUTCLK, 100, 4, "BUFH"),         -- GTH FW Ch 58 -- LDAQ TX (MTP48 LC #1)
+    (gth_tx_10p3125g_rx_4p0g,  true,  GTH_USRCLK_10GBE,  GTH_USRCLK2_10GBE, 100, 4, "BUFH"),         -- GTH FW Ch 58 -- LDAQ TX (MTP48 LC #1)
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 59
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 60
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 61
