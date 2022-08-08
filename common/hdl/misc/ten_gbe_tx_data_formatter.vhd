@@ -60,7 +60,6 @@ architecture ten_gbe_tx_data_formatter_arch of ten_gbe_tx_data_formatter is
     signal source_mac           : std_logic_vector(47 downto 0);
     signal ether_type           : std_logic_vector(15 downto 0);
 
-    signal fifos_ready          : std_logic;
     signal event_rden           : std_logic := '0';
 
     -- FSM
@@ -70,9 +69,6 @@ architecture ten_gbe_tx_data_formatter_arch of ten_gbe_tx_data_formatter is
     signal word_idx             : integer range 0 to 16383 := 0; -- 16 bits words!
 
     -- event status
-    signal state_prev           : t_state;
-    signal event_end_prev       : std_logic;
-
     signal evt_word_cnt         : unsigned(15 downto 0) := (others => '0');
     signal err_evt_too_big      : std_logic := '0';
 
@@ -115,8 +111,7 @@ begin
     source_mac <= source_mac_i(39 downto 32) & source_mac_i(47 downto 40) & source_mac_i(23 downto 16) & source_mac_i(31 downto 24) & source_mac_i(7 downto 0) & source_mac_i(15 downto 8);
     ether_type <= ether_type_i(7 downto 0) & ether_type_i(15 downto 8);
 
-    fifos_ready  <= event_valid_i and not packet_fifo_full;
-    event_rden_o <= event_rden and fifos_ready;
+    event_rden_o <= event_rden and event_valid_i and not packet_fifo_full;
 
     -- packet FSM
     process(clk_i)
@@ -129,18 +124,23 @@ begin
                 event_rden       <= '0';
                 state            <= HEADER1;
                 word_idx         <= 0;
-            elsif (fifos_ready = '1') then
+            elsif (packet_fifo_full = '0') then
                 case state is
 
                     --=== Send the first header (destination MAC, and beginning of the source MAC) ===--
                     when HEADER1 =>
 
-                        packet_fifo_data <= source_mac(15 downto 0) & dest_mac;
-                        packet_fifo_end  <= '0';
-                        packet_fifo_wren <= '1';
+                        packet_fifo_wren <= '0';
                         event_rden       <= '0';
-                        state            <= HEADER2;
+                        state            <= HEADER1;
                         word_idx         <= 0;
+
+                        if (event_valid_i = '1') then
+                            packet_fifo_data <= source_mac(15 downto 0) & dest_mac;
+                            packet_fifo_end  <= '0';
+                            packet_fifo_wren <= '1';
+                            state            <= HEADER2;
+                        end if;
 
                     --=== Send the first header (end of the source MAC, EtherType, and GEM header) ===--
                     when HEADER2 =>
@@ -156,22 +156,34 @@ begin
                     --=== Send the payload ===--
                     when PAYLOAD =>
 
-                        packet_fifo_data <= event_data_i;
-                        packet_fifo_end  <= '0';
-                        packet_fifo_wren <= '1';
-                        event_rden       <= '1';
-                        state            <= PAYLOAD;
-                        word_idx         <= word_idx + 4;
+                        state <= PAYLOAD;
 
-                        -- end of packet (either due to end of event detection or a packet size limit)
-                        if (event_end_i = '1') or (word_idx = to_integer(unsigned(max_payload_words_i)) - 7) then
+                        -- there is data in the FIFO
+                        if (event_valid_i = '1') then
+                            event_rden <= '1';
+                        else
                             event_rden <= '0';
+                        end if;
 
-                            if (word_idx < to_integer(unsigned(min_payload_words_i)) - 4) then
-                                state <= FILLER;
-                            else
-                                state <= TRAILER;
+                        -- we got an updated event
+                        if (event_rden = '1') and (event_valid_i = '1') then
+                            packet_fifo_data <= event_data_i;
+                            packet_fifo_end  <= '0';
+                            packet_fifo_wren <= '1';
+                            word_idx         <= word_idx + 4;
+
+                            -- end of packet (either due to end of event detection or a packet size limit)
+                            if (event_end_i = '1') or (word_idx = to_integer(unsigned(max_payload_words_i)) - 7) then
+                                event_rden <= '0';
+
+                                if (word_idx < to_integer(unsigned(min_payload_words_i)) - 4) then
+                                    state <= FILLER;
+                                else
+                                    state <= TRAILER;
+                                end if;
                             end if;
+                        else
+                            packet_fifo_wren <= '0';
                         end if;
 
                     --=== Send filler words to satisfy the minimum packet length requirement ===--
@@ -220,40 +232,41 @@ begin
             if (reset = '1') then
                 evt_word_cnt         <= (others => '0');
                 err_evt_too_big      <= '0';
-                evt_cnt              <= (others => '0');
-                evt_pkt_cnt          <= (others => '0');
-                evt_pkt_payload_size <= (others => '0');
                 evt_pkt_first        <= '1';
                 evt_pkt_last         <= '0';
-            elsif (fifos_ready = '1') then
-                state_prev     <= state;
-                event_end_prev <= event_end_i;
+                evt_pkt_payload_size <= (others => '0');
+                evt_pkt_cnt          <= (others => '0');
+                evt_cnt              <= (others => '0');
+            elsif (packet_fifo_full = '0') then
+                -- got a new word
+                if (state = PAYLOAD) and (event_rden = '1') and (event_valid_i = '1') then
+                    evt_pkt_first        <= '0';
+                    evt_pkt_payload_size <= evt_pkt_payload_size + 4;
 
-                if (state = PAYLOAD) then
+                    -- end of event
                     if (event_end_i = '1') then
                         evt_word_cnt <= (others => '0');
-                        evt_cnt      <= evt_cnt + 1;
-                        evt_pkt_cnt  <= (others => '0');
                         evt_pkt_last <= '1';
                     else
                         evt_word_cnt <= evt_word_cnt + 1;
                     end if;
 
+                    -- event size check
                     if (evt_word_cnt > to_unsigned(g_MAX_EVT_WORDS, 16)) then
                         err_evt_too_big <= '1';
                     end if;
+                -- update per-packet metadata
+                elsif (state = TRAILER) then
+                    evt_pkt_first        <= evt_pkt_last;
+                    evt_pkt_last         <= '0';
+                    evt_pkt_payload_size <= (others => '0');
 
-                    evt_pkt_payload_size <= evt_pkt_payload_size + 4;
-                    evt_pkt_first        <= '0';
-                else
-                    if (state_prev = PAYLOAD and event_end_prev = '0') then
+                    -- end of event
+                    if (evt_pkt_last = '1') then
+                        evt_pkt_cnt <= (others => '0');
+                        evt_cnt     <= evt_cnt + 1;
+                    else
                         evt_pkt_cnt <= evt_pkt_cnt + 1;
-                    end if;
-
-                    if (state = TRAILER) then
-                        evt_pkt_payload_size <= (others => '0');
-                        evt_pkt_first        <= evt_pkt_last;
-                        evt_pkt_last         <= '0';
                     end if;
                 end if;
             end if;
@@ -281,7 +294,7 @@ begin
             sleep              => '0',
             rst                => reset,
             wr_clk             => clk_i,
-            wr_en              => packet_fifo_wren and fifos_ready,
+            wr_en              => packet_fifo_wren and not packet_fifo_full,
             din                => packet_fifo_end & packet_fifo_data,
             full               => packet_fifo_full,
             prog_full          => open,
@@ -307,7 +320,7 @@ begin
         );
 
         read_end  <= packet_end and packet_rden_i;
-        write_end <= packet_fifo_end and packet_fifo_wren and fifos_ready;
+        write_end <= packet_fifo_end and packet_fifo_wren and not packet_fifo_full;
 
         packet_valid_o <= '1' when (packet_empty = '0' and ends_in_packet_fifo /= 0) else '0';
         packet_end_o   <= packet_end;
