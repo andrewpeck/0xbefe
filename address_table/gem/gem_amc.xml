@@ -666,6 +666,10 @@
           description="If this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run."
           fw_signal="reset_till_resync" fw_default="0x0"
           sw_units="bool"/>
+    <node id="IGNORE_SPYLINK" address="0x2" mask="0x00000800" permission="rw"
+          description="If this is set to 1 then the spy link state will be ignored. Events will still be sent in the spy path but could be corrupted (FIFO overflow, ReSync,...) This is useful to avoid impacting DAQLink data taking."
+          fw_signal="ignore_spylink" fw_default="0b0"
+          sw_units="bool"/>
     <node id="FED_ID"     address="0x3" permission="rw"
           description="FED ID, used in SlinkRocket header"
           fw_signal="fed_id" fw_default="0x0000033e"/>
