@@ -250,7 +250,6 @@ architecture Behavioral of daq is
     -- Spy path
     signal spy_fifo_wr_en           : std_logic;
     signal spy_fifo_rd_en           : std_logic;
-    signal spy_fifo_dout            : std_logic_vector(16 downto 0);
     signal spy_fifo_ovf             : std_logic;
     signal spy_fifo_empty           : std_logic;
     signal spy_fifo_prog_full       : std_logic;
@@ -818,7 +817,8 @@ begin
 
     -- 1 GbE
     g_spy_gbe: if not CFG_SPY_10GBE generate
-        signal spy_link : t_mgt_16b_tx_data;
+        signal spy_fifo_dout : std_logic_vector(16 downto 0);
+        signal spy_link      : t_mgt_16b_tx_data;
     begin
         i_spy_fifo : xpm_fifo_async
             generic map(
@@ -904,7 +904,87 @@ begin
 
     -- 10 GbE
     g_spy_10gbe : if CFG_SPY_10GBE generate
+        signal spy_fifo_dout    : std_logic_vector(64 downto 0);
+        signal spy_packet_valid : std_logic;
+        signal spy_packet_data  : std_logic_vector(63 downto 0);
+        signal spy_packet_end   : std_logic;
+        signal spy_packet_rden  : std_logic;
     begin
+        i_spy_fifo : xpm_fifo_async
+            generic map(
+                FIFO_MEMORY_TYPE    => "block",
+                FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
+                RELATED_CLOCKS      => 0,
+                WRITE_DATA_WIDTH    => 65,
+                READ_MODE           => "fwft",
+                FIFO_READ_LATENCY   => 0,
+                FULL_RESET_VALUE    => 1,
+                USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 65,
+                CDC_SYNC_STAGES     => 2,
+                PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
+                PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => spy_fifo_wr_en,
+                din           => daq_event_trailer & daq_event_data,
+                full          => open,
+                prog_full     => spy_fifo_prog_full,
+                wr_data_count => open,
+                overflow      => spy_fifo_ovf,
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_clk        => spy_clk_i,
+                rd_en         => spy_fifo_rd_en,
+                dout          => spy_fifo_dout,
+                empty         => spy_fifo_empty,
+                prog_empty    => spy_fifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open,
+                rd_rst_busy   => open,
+                almost_empty  => spy_fifo_aempty,
+                data_valid    => open,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
+
+        i_spy_ten_gbe_tx_data_formatter : entity work.ten_gbe_tx_data_formatter
+            port map (
+                clk_i               => spy_clk_i,
+                reset_i             => reset_i or spy_gbe_reset_ipb,
+
+                -- Event input
+                event_valid_i       => not spy_fifo_empty,
+                event_data_i        => spy_fifo_dout(63 downto 0),
+                event_end_i         => spy_fifo_dout(64),
+                event_rden_o        => spy_fifo_rd_en,
+
+                -- Packet output
+                packet_valid_o      => spy_packet_valid,
+                packet_data_o       => spy_packet_data,
+                packet_end_o        => spy_packet_end,
+                packet_rden_i       => spy_packet_rden,
+
+                -- Config
+                dest_mac_i          => spy_gbe_dest_mac,
+                source_mac_i        => spy_gbe_source_mac,
+                ether_type_i        => spy_gbe_ethertype,
+                min_payload_words_i => spy_min_payload_words, -- 16 bits words!
+                max_payload_words_i => spy_max_payload_words, -- 16 bits words!
+
+                -- Status
+                evt_cnt_o           => spy_evt_sent,
+                err_event_too_big_o => spy_err_evt_too_big
+            );
+
         i_spy_ten_gbe_tx_mac_pcs : entity work.ten_gbe_tx_mac_pcs
             port map (
                 reset_i        => reset_i or spy_gbe_reset_ipb,
@@ -914,10 +994,10 @@ begin
                 tx_data_o      => spy_link_o,
 
                 -- Packet input
-                packet_valid_i => '0',
-                packet_data_i  => (others => '0'),
-                packet_end_i   => '0',
-                packet_rden_o  => open,
+                packet_valid_i => spy_packet_valid,
+                packet_data_i  => spy_packet_data,
+                packet_end_i   => spy_packet_end,
+                packet_rden_o  => spy_packet_rden,
 
                 -- Config
                 generator_en   => spy_gbe_generator_en,
