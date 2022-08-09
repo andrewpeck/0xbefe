@@ -241,6 +241,9 @@ def enable_hdlc_addressing(addr_list):
 
 def global_reset():
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 0x1)
+    sleep(0.1)
+    gem_link_reset()
+    sleep(0.1)
 
 def get_backend_node(name):
     node = None

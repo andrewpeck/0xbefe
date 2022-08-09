@@ -67,7 +67,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
     errs = [[[0 for phase in range(16)] for elink in range(0,8)] for vfat in range(24)]
 
-    gem_utils.global_reset()
+    #gem_utils.global_reset()
     sleep(0.1)
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 

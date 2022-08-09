@@ -33,7 +33,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     file_out.write("vfat    sbit    threshold    fired    time\n")
 
     gem_link_reset()
-    global_reset()
+    #global_reset()
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 

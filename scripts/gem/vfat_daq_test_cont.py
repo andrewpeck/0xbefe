@@ -30,7 +30,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
 
     print ("Reset VFAT links\n")
     gem_link_reset()
-    global_reset()
+    #global_reset()
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sleep(0.1)
 

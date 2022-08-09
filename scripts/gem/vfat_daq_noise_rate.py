@@ -33,7 +33,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
     file_out.write("vfat    channel    threshold    fired    time\n")
 
     gem_link_reset()
-    global_reset()
+    #global_reset()
     sleep(0.1)
 
     daq_data = {}

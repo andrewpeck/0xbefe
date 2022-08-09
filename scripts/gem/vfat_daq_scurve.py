@@ -30,7 +30,7 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
     file_out.write("vfat    channel    charge    fired    events\n")
 
     gem_link_reset()
-    global_reset()
+    #global_reset()
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sleep(0.1)
 
