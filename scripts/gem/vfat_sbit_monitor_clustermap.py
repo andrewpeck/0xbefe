@@ -11,9 +11,9 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping):
     print ("LPGBT VFAT S-Bit Cluster Mapping\n")
 
-    gem_link_reset()
-    #global_reset()
-    sleep(0.1)
+    global_reset()
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     # Configure TTC generator
@@ -112,13 +112,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             write_backend_reg(reset_sbit_cluster_node, 1)
 
             # Start the cyclic generator
+            sleep(0.1)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+            sleep(0.1)
             cyclic_running = read_backend_reg(cyclic_running_node)
             while cyclic_running:
                 cyclic_running = read_backend_reg(cyclic_running_node)
 
             # Stop the cyclic generator
+            sleep(0.1)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+            sleep(0.1)
 
             l1a_counter = read_backend_reg(l1a_node)
             calpulse_counter = read_backend_reg(calpulse_node)

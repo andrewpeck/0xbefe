@@ -32,9 +32,9 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
     print ("%s VFAT S-Bit Test\n"%gem)
     file_out.write("%s VFAT S-Bit Test\n\n"%gem)
 
-    gem_link_reset()
-    #global_reset()
-    sleep(0.1)
+    global_reset()
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -172,7 +172,9 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
             # Start the cyclic generator
             print ("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle"%(elink, channel))
             file_out.write("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle\n"%(elink, channel))
+            sleep(0.1)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+            sleep(0.1)
 
             cyclic_running = read_backend_reg(cyclic_running_node)
             nl1a_reg_cycles = 0
@@ -184,39 +186,41 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
                     cyclic_running = read_backend_reg(cyclic_running_node)
                     time_passed = (time()-time_prev)/60.0
                     if time_passed >= 1:
-                        elink_sbit_counter = read_backend_reg(elink_sbit_counter_node)
-                        channel_sbit_counter = read_backend_reg(channel_sbit_counter_node)
-                        expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
-                        if (read_backend_reg(l1a_node) < l1a_counter):
-                            #nl1a_reg_cycles = int(expected_l1a/(2**32))
-                            nl1a_reg_cycles += 1
-                        l1a_counter = read_backend_reg(l1a_node)
-                        calpulse_counter = read_backend_reg(calpulse_node)
-                        real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
-                        real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
-                        print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e,  S-bit counter for Elink %02d = %.2e,  S-bit counter for Channel %02d = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, elink, elink_sbit_counter, channel, channel_sbit_counter))
-                        file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e,  S-bit counter for Elink %02d = %.2e,  S-bit counter for Channel %02d = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, elink, elink_sbit_counter, channel, channel_sbit_counter))
+                        #elink_sbit_counter = read_backend_reg(elink_sbit_counter_node)
+                        #channel_sbit_counter = read_backend_reg(channel_sbit_counter_node)
+                        #expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
+                        #if (read_backend_reg(l1a_node) < l1a_counter):
+                        #    #nl1a_reg_cycles = int(expected_l1a/(2**32))
+                        #    nl1a_reg_cycles += 1
+                        #l1a_counter = read_backend_reg(l1a_node)
+                        #calpulse_counter = read_backend_reg(calpulse_node)
+                        #real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
+                        #real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
+                        print ("Time passed: %.2f minutes" % ((time()-t0)/60.0))
+                        file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
                         time_prev = time()
             else:
                 while ((time()-t0)/60.0) < runtime:
                     time_passed = (time()-time_prev)/60.0
                     if time_passed >= 1:
-                        elink_sbit_counter = read_backend_reg(elink_sbit_counter_node)
-                        channel_sbit_counter = read_backend_reg(channel_sbit_counter_node)
-                        expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
-                        if (read_backend_reg(l1a_node) < l1a_counter):
-                            #nl1a_reg_cycles = int(expected_l1a/(2**32))
-                            nl1a_reg_cycles += 1
-                        l1a_counter = read_backend_reg(l1a_node)
-                        calpulse_counter = read_backend_reg(calpulse_node)
-                        real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
-                        real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
-                        print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e,  S-bit counter for Elink %02d = %.2e,  S-bit counter for Channel %02d = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, elink, elink_sbit_counter, channel, channel_sbit_counter))
-                        file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e,  S-bit counter for Elink %02d = %.2e,  S-bit counter for Channel %02d = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter, elink, elink_sbit_counter, channel, channel_sbit_counter))
+                        #elink_sbit_counter = read_backend_reg(elink_sbit_counter_node)
+                        #channel_sbit_counter = read_backend_reg(channel_sbit_counter_node)
+                        #expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
+                        #if (read_backend_reg(l1a_node) < l1a_counter):
+                        #    #nl1a_reg_cycles = int(expected_l1a/(2**32))
+                        #    nl1a_reg_cycles += 1
+                        #l1a_counter = read_backend_reg(l1a_node)
+                        #calpulse_counter = read_backend_reg(calpulse_node)
+                        #real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
+                        #real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
+                        print ("Time passed: %.2f minutes, %.2f% completed" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
+                        file_out.write("Time passed: %.2f minutes, %.2f% completed\n" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
                         time_prev = time()
 
             # Stop the cyclic generator
+            sleep(0.1)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+            sleep(0.1)
             total_time = time() - t0
             print ("ELINK# %02d, Channel %02d, S-bit %02d: L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes)"%(elink, channel, sbit_read, total_time, total_time/60.0))
             file_out.write("ELINK# %02d, Channel %02d, S-bit %02d: L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes)\n"%(elink, channel, sbit_read, total_time, total_time/60.0))

@@ -37,8 +37,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
     errors = {}
     error_rates = {}
 
-    gem_link_reset()
-    #global_reset()
+    global_reset()
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sleep(0.1)
 
@@ -135,8 +136,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
     time_prev = t0
 
     # Start the cyclic generator
+    sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-
+    sleep(0.1)
     cyclic_running = read_backend_reg(cyclic_running_node)
     
     if nl1a != 0:
@@ -144,58 +146,64 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             cyclic_running = read_backend_reg(cyclic_running_node)
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
-                expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
-                if (read_backend_reg(l1a_node) < l1a_counter):
-                    #nl1a_reg_cycles = int(expected_l1a/(2**32))  
-                    nl1a_reg_cycles += 1
-                l1a_counter = read_backend_reg(l1a_node)
-                calpulse_counter = read_backend_reg(calpulse_node)
-                real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
-                if calpulse:
-                    real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
-                else:
-                    real_calpulse_counter = calpulse_counter
-                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-                vfat_results_string = ""
-                for vfat in vfat_list:
-                    daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
-                    daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
-                    #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp)
-                    vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
-                print (vfat_results_string + "\n")
-                file_out.write(vfat_results_string + "\n\n")
+            #    expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
+            #    if (read_backend_reg(l1a_node) < l1a_counter):
+            #        #nl1a_reg_cycles = int(expected_l1a/(2**32))  
+            #        nl1a_reg_cycles += 1
+            #    l1a_counter = read_backend_reg(l1a_node)
+            #    calpulse_counter = read_backend_reg(calpulse_node)
+            #    real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
+            #    if calpulse:
+            #        real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
+            #    else:
+            #        real_calpulse_counter = calpulse_counter
+                print ("Time passed: %.2f minutes" % ((time()-t0)/60.0))
+                file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
+            #    print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    vfat_results_string = ""
+            #    for vfat in vfat_list:
+            #        daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
+            #        daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
+            #        #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp)
+            #        vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
+            #    print (vfat_results_string + "\n")
+            #    file_out.write(vfat_results_string + "\n\n")
                 time_prev = time()
     else:
         while ((time()-t0)/60.0) < runtime:
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
-                expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
-                if (read_backend_reg(l1a_node) < l1a_counter):
-                    #nl1a_reg_cycles = int(expected_l1a/(2**32))   
-                    nl1a_reg_cycles += 1
-                l1a_counter = read_backend_reg(l1a_node)
-                calpulse_counter = read_backend_reg(calpulse_node)
-                real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
-                if calpulse:
-                    real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
-                else:
-                    real_calpulse_counter = calpulse_counter
-                print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-                file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-                vfat_results_string = ""
-                for vfat in vfat_list:
-                    daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
-                    daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
-                    #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp) 
-                    vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
-                print (vfat_results_string + "\n")
-                file_out.write(vfat_results_string + "\n\n")
+            #    expected_l1a = int(l1a_rate * (time()-t0) * efficiency)
+            #    if (read_backend_reg(l1a_node) < l1a_counter):
+            #        #nl1a_reg_cycles = int(expected_l1a/(2**32))   
+            #        nl1a_reg_cycles += 1
+            #    l1a_counter = read_backend_reg(l1a_node)
+            #    calpulse_counter = read_backend_reg(calpulse_node)
+            #    real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
+            #    if calpulse:
+            #        real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
+            #    else:
+            #        real_calpulse_counter = calpulse_counter
+                print ("Time passed: %.2f minutes, %.2f% completed" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
+                file_out.write("Time passed: %.2f minutes, %.2f% completed\n" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
+            #    print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    vfat_results_string = ""
+            #    for vfat in vfat_list:
+            #        daq_event_count_temp = read_backend_reg(daq_event_count_node[vfat])
+            #        daq_error_count_temp = read_backend_reg(daq_crc_error_node[vfat])
+            #        #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp) 
+            #        vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
+            #    print (vfat_results_string + "\n")
+            #    file_out.write(vfat_results_string + "\n\n")
                 time_prev = time()
 
     # Stop the cyclic generator
+    sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
+    sleep(0.1)
 
     print ("")
     file_out.write("\n")

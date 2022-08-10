@@ -67,7 +67,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
     errs = [[[0 for phase in range(16)] for elink in range(0,8)] for vfat in range(24)]
 
-    #gem_utils.global_reset()
+    gem_utils.global_reset()
+    #gem_utils.gem_link_reset()
+    #sleep(0.1)
     sleep(0.1)
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
@@ -187,13 +189,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                         gem_utils.write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
 
                         # Start the cyclic generator
+                        sleep(0.1)
                         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+                        sleep(0.1)
                         cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
                         while cyclic_running:
                             cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
                         # Stop the cyclic generator
+                        sleep(0.1)
                         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+                        sleep(0.1)
 
                         elink_sbit_counter_final = gem_utils.read_backend_reg(elink_sbit_counter_node)
                         l1a_counter = gem_utils.read_backend_reg(l1a_node)

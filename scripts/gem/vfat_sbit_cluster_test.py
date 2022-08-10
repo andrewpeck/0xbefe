@@ -32,9 +32,9 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, p
     print ("%s VFAT S-Bit Cluster Test\n"%gem)
     file_out.write("%s VFAT S-Bit Cluster Test\n\n"%gem)
 
-    gem_link_reset()
-    #global_reset()
-    sleep(0.1)
+    global_reset()
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     gbt, gbt_select, elink_daq, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -177,23 +177,27 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, p
             # Setting Trigger Delay
             write_backend_reg(trigger_delay_sbit_monitor_node, 512)
 
-            # Start the cyclic generator
-            print ("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle"%(elink, channel))
-            file_out.write("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle\n"%(elink, channel))
-            write_backend_reg(ttc_cyclic_start_node, 1)
-
             # Setting Trigger Enable
             if trigger == "l1a":
                 write_backend_reg(fifo_en_l1a_trigger_sbit_monitor_node, 1)
             elif trigger == "sbit":
                 write_backend_reg(fifo_en_sbit_trigger_sbit_monitor_node, 1)
 
-            cyclic_running = 1
+            # Start the cyclic generator
+            print ("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle"%(elink, channel))
+            file_out.write("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle\n"%(elink, channel))
+            sleep(0.1)
+            write_backend_reg(ttc_cyclic_start_node, 1)
+            sleep(0.1)
+
+            cyclic_running = read_backend_reg(cyclic_running_node)
             t0 = time()
             while (cyclic_running):
                 cyclic_running = read_backend_reg(cyclic_running_node)
             # Stop the cyclic generator
+            sleep(0.1)
             write_backend_reg(ttc_reset_node, 1)
+            sleep(0.1)
 
             # Disabling the pulsing channels
             if parallel is None:

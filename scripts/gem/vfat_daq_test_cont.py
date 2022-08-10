@@ -29,8 +29,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     file_out = open(dataDir+"/%s_OH%d_vfat_daq_test_cont_output_"%(gem,oh_select) + now + ".txt", "w+")
 
     print ("Reset VFAT links\n")
-    gem_link_reset()
-    #global_reset()
+    global_reset()
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sleep(0.1)
 
@@ -121,7 +122,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     time_prev = t0
     
     # Start the cyclic generator
+    sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+    sleep(0.1)
 
     cyclic_running = read_backend_reg(cyclic_running_node)
 
@@ -133,7 +136,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
             time_passed = (time()-time_prev)/60.0
             if time_passed >= 1:
                 # Stop L1A's
+                sleep(0.1)
                 write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+                sleep(0.1)
 
                 # Check counters 
                 if (read_backend_reg(l1a_node) < l1a_counter):
@@ -177,7 +182,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     t0 = time()
 
                 # Start L1A's 
+                sleep(0.1)
                 write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+                sleep(0.1)
                             
                 time_prev = time()
             cyclic_running = read_backend_reg(cyclic_running_node)
@@ -185,8 +192,10 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
             cyclic_running = 0
 
     # Stop the cyclic generator
+    sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
+    sleep(0.1)
 
     print ("\nStopped L1A's\n")
     file_out.write("\nStopped L1A's\n")
