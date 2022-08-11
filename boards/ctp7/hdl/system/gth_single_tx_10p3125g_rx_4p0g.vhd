@@ -374,7 +374,7 @@ begin
       CPLL_INIT_CFG   => "000000000000000000011110",
       CPLL_LOCK_CFG   => "0000000111101000",
       CPLL_REFCLK_DIV => 1,
-      RXOUT_DIV       => 1,
+      RXOUT_DIV       => 2,
       TXOUT_DIV       => 1,
       SATA_CPLL_CFG   => "VCO_3000MHZ",
 
