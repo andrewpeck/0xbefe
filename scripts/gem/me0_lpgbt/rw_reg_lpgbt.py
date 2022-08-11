@@ -249,9 +249,9 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
 
 def config_initialize_chc(oh_ver, boss):
     initialize_success = 1
-    gbt_rpi_chc.set_lpgbt_address(oh_ver, boss)
+    gbt_rpi_chc.set_lpgbt_address("chc", oh_ver, boss)
     if oh_ver == 1:
-        initialize_success *= gbt_rpi_chc.config_select(boss)
+        initialize_success *= gbt_rpi_chc.config_select()
     if initialize_success:
         initialize_success *= gbt_rpi_chc.en_i2c_switch()
     if initialize_success:
