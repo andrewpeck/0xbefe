@@ -120,7 +120,7 @@ if __name__ == "__main__":
     print ("")
     print ("QSFP RX Squelch Results for: ")
     for i in range(0, len(attenuation_list_increase)):
-        print ("  Attenuation = %0.1f: Increasing attenuation status: %s,    Decreasing attenuation status: %s"%(lpgbt_status_increase[i], lpgbt_status_decrease[i]))
+        print ("  Attenuation = %0.1f: Increasing attenuation status: %s,    Decreasing attenuation status: %s"%(attenuation_list_increase[i], lpgbt_status_increase[i], lpgbt_status_decrease[len(attenuation_list_increase) - 1 - i]))
     print ("")
 
     # Close connection
