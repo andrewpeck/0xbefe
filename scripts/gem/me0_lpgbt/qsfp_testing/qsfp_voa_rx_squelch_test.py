@@ -76,12 +76,12 @@ if __name__ == "__main__":
         sleep(2)
 
         # Check lpGBT Status
-        ready = read_reg("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0]))
-        fec_err_cnt = read_reg("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0]))
+        ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0])))
+        fec_err_cnt = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0])))
         if ready:
-            lpgbt_status_increase[count] = "READY, FEC Errors = %d"%fec_err_cnt
+            lpgbt_status_increase[counter] = "READY, FEC Errors = %d"%fec_err_cnt
         else:
-            lpgbt_status_increase[count] = "NOT READY"
+            lpgbt_status_increase[counter] = "NOT READY"
         sleep(1)
 
         print ("End Test for Attenuation: %0.1f dB\n"%i)
@@ -105,9 +105,9 @@ if __name__ == "__main__":
         ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0])))
         fec_err_cnt = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0])))
         if ready:
-            lpgbt_status_decrease[count] = "READY, FEC Errors = %d"%fec_err_cnt
+            lpgbt_status_decrease[counter] = "READY, FEC Errors = %d"%fec_err_cnt
         else:
-            lpgbt_status_decrease[count] = "NOT READY"
+            lpgbt_status_decrease[counter] = "NOT READY"
         sleep(1)
 
         print ("End Test for Attenuation: %0.1f dB\n"%i)
