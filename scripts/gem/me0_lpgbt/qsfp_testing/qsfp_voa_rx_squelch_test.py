@@ -21,8 +21,8 @@ if __name__ == "__main__":
     lpgbt_status_increase = []
     lpgbt_status_decrease = []
     a = 10.0
-    b = 18.0
-    while a<=18:
+    b = 25.0
+    while a<=25:
         attenuation_list_increase.append(a)
         attenuation_list_decrease.append(b)
         lpgbt_status_increase.append("")
