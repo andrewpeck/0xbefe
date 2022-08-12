@@ -76,6 +76,8 @@ if __name__ == "__main__":
         sleep(2)
 
         # Check lpGBT Status
+        gem_link_reset()
+        sleep(0.1)
         ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0])))
         fec_err_cnt = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0])))
         if ready:
@@ -104,6 +106,8 @@ if __name__ == "__main__":
         sleep(2)
 
         # Check lpGBT Status
+        gem_link_reset()
+        sleep(0.1)
         ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0])))
         fec_err_cnt = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0])))
         if ready:
