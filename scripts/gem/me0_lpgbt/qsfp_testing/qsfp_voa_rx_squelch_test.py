@@ -5,7 +5,7 @@ import random
 import datetime
 import math
 import paramiko
-from common.rw_reg import *
+from gem.gem_utils import *
       
 if __name__ == "__main__":
     # Parsing arguments
@@ -101,8 +101,8 @@ if __name__ == "__main__":
         sleep(2)
 
         # Check lpGBT Status
-        ready = read_reg("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0]))
-        fec_err_cnt = read_reg("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0]))
+        ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (args.ohid, args.gbtid[0])))
+        fec_err_cnt = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_FEC_ERR_CNT" % (args.ohid, args.gbtid[0])))
         if ready:
             lpgbt_status_decrease[count] = "READY, FEC Errors = %d"%fec_err_cnt
         else:
