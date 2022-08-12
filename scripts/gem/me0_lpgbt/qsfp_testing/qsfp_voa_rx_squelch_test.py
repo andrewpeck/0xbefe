@@ -110,7 +110,7 @@ if __name__ == "__main__":
             lpgbt_status_decrease[counter] = "READY, FEC Errors = %d"%fec_err_cnt
         else:
             lpgbt_status_decrease[counter] = "NOT READY"
-        print ("Status: %s\n"%lpgbt_status_increase[counter])
+        print ("Status: %s\n"%lpgbt_status_decrease[counter])
         sleep(1)
 
         print ("End Test for Attenuation: %0.1f dB\n"%i)
