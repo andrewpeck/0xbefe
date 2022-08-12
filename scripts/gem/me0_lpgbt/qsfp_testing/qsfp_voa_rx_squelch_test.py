@@ -89,6 +89,7 @@ if __name__ == "__main__":
         counter += 1
 
     sleep (5)
+    counter = 0
     print ("Decreasing Attenuation: \n")
     for i in attenuation_list_decrease:
         print ("Start Test for Attenuation: %0.1f dB\n"%i)
