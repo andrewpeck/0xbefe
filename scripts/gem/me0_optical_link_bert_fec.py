@@ -63,7 +63,6 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
     if runtime is None:
         ber_limit = float(ber_limit)
-        cl = float(cl)
         runtime = (-math.log(1-cl))/(data_rate * ber_limit * 60)
     elif ber_limit is None:
         runtime = float(runtime)
@@ -457,7 +456,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
     try:
-        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, args.cl, vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, float(args.cl), vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
