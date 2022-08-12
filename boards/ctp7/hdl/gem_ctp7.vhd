@@ -189,10 +189,11 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs(0) * CFG_NUM_GBTS_PER_OH(0) - 1 downto 0);
 
     -------------------- Spy / LDAQ readout link ---------------------------------
-    signal spy_usrclk               : std_logic;
-    signal spy_rx_data              : t_mgt_16b_rx_data;
-    signal spy_tx_data              : t_mgt_16b_tx_data;
-    signal spy_rx_status            : t_mgt_status;
+    signal spy_rx_data              : t_mgt_64b_rx_data;
+    signal spy_tx_data              : t_mgt_64b_tx_data;
+    signal spy_tx_usrclk            : std_logic;
+    signal spy_rx_usrclk            : std_logic;
+    signal spy_status               : t_mgt_status;
 
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink       : t_daq_to_daqlink;
@@ -392,10 +393,11 @@ begin
                 gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
                 gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
 
-                spy_usrclk_i            => spy_usrclk,
                 spy_rx_data_i           => spy_rx_data,
                 spy_tx_data_o           => spy_tx_data,
-                spy_rx_status_i         => spy_rx_status,
+                spy_rx_usrclk_i         => spy_rx_usrclk,
+                spy_tx_usrclk_i         => spy_tx_usrclk,
+                spy_status_i            => spy_status,
 
                 ipb_reset_i             => ipb_reset,
                 ipb_clk_i               => ipb_clk,
@@ -470,41 +472,27 @@ begin
 
     -- spy link TX mapping
     g_spy_link_tx : if CFG_USE_SPY_LINK_TX(0) generate
-        spy_usrclk                  <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx);
-
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
-        
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txdata(63 downto 16) <= (others => '0');
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txcharisk(7 downto 2) <= (others => '0');
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispval(7 downto 2) <= (others => '0');
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx).txchardispmode(7 downto 2) <= (others => '0');
-    end generate;
-
-    -- spy link TX mapping
-    g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX(0) generate
-        spy_usrclk      <= '0';
+        spy_tx_usrclk <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx);
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= spy_tx_data;
+    else generate
+        spy_tx_usrclk <= '0';
+        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= MGT_64B_TX_DATA_NULL;
     end generate;
 
     -- spy link RX mapping
     g_spy_link_rx : if CFG_USE_SPY_LINK_RX(0) generate
-        spy_rx_data.rxdata          <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxdata(15 downto 0);
-        spy_rx_data.rxbyteisaligned <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxbyteisaligned;
-        spy_rx_data.rxbyterealign   <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxbyterealign;
-        spy_rx_data.rxcommadet      <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxcommadet;
-        spy_rx_data.rxdisperr       <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxdisperr(1 downto 0);
-        spy_rx_data.rxnotintable    <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxnotintable(1 downto 0);
-        spy_rx_data.rxchariscomma   <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxchariscomma(1 downto 0);
-        spy_rx_data.rxcharisk       <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx).rxcharisk(1 downto 0);
-        spy_rx_status               <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
+        spy_rx_usrclk <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
+        spy_rx_data <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
+    else generate
+        spy_rx_usrclk <= '0';
+        spy_rx_data <= MGT_64B_RX_DATA_NULL;
     end generate;
 
-    -- spy link RX mapping
-    g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX(0) generate
-        spy_rx_data     <= MGT_16B_RX_DATA_NULL;
-        spy_rx_status   <= MGT_STATUS_NULL;
+    -- spy link statuses mapping
+    g_spy_link : if CFG_USE_SPY_LINK_TX(0) or CFG_USE_SPY_LINK_RX(0) generate
+        spy_status <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
+    else generate
+        spy_status <= MGT_STATUS_NULL;
     end generate;
 
     -------------------------- LpGBT loopback test without GEM logic ---------------------------------

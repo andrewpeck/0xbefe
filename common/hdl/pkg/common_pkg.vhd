@@ -344,9 +344,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(7 downto 0);
         txchardispmode : std_logic_vector(7 downto 0);
         txchardispval  : std_logic_vector(7 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
 
-    constant MGT_64B_TX_DATA_NULL : t_mgt_64b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0')); 
+    constant MGT_64B_TX_DATA_NULL : t_mgt_64b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_64b_rx_data is record
         rxdata          : std_logic_vector(63 downto 0);
@@ -359,6 +361,8 @@ package common_pkg is
         rxcharisk       : std_logic_vector(7 downto 0);
     end record;
 
+    constant MGT_64B_RX_DATA_NULL : t_mgt_64b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
+
     type t_mgt_64b_tx_data_arr is array(integer range <>) of t_mgt_64b_tx_data;
     type t_mgt_64b_rx_data_arr is array(integer range <>) of t_mgt_64b_rx_data;
 
@@ -367,7 +371,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(3 downto 0);
         txchardispmode : std_logic_vector(3 downto 0);
         txchardispval  : std_logic_vector(3 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
+
+    constant MGT_32B_TX_DATA_NULL : t_mgt_32b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_32b_rx_data is record
         rxdata          : std_logic_vector(31 downto 0);
@@ -380,6 +388,8 @@ package common_pkg is
         rxcharisk       : std_logic_vector(3 downto 0);
     end record;
 
+    constant MGT_32B_RX_DATA_NULL : t_mgt_32b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
+
     type t_mgt_32b_tx_data_arr is array(integer range <>) of t_mgt_32b_tx_data;
     type t_mgt_32b_rx_data_arr is array(integer range <>) of t_mgt_32b_rx_data;
 
@@ -388,9 +398,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(1 downto 0);
         txchardispmode : std_logic_vector(1 downto 0);
         txchardispval  : std_logic_vector(1 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
 
-    constant MGT_16B_TX_DATA_NULL : t_mgt_16b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'));
+    constant MGT_16B_TX_DATA_NULL : t_mgt_16b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_16b_rx_data is record
         rxdata          : std_logic_vector(15 downto 0);

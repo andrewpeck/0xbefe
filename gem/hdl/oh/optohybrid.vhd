@@ -23,6 +23,7 @@ entity optohybrid is
         g_GEM_STATION       : integer;
         g_OH_VERSION        : integer;
         g_OH_TRIG_LINK_TYPE : t_oh_trig_link_type;
+        g_NUM_VFATS_PER_OH  : integer;
         g_OH_IDX            : std_logic_vector(3 downto 0);
         g_IPB_CLK_PERIOD_NS : integer;
         g_DEBUG             : boolean := false -- if this is set to true, some chipscope cores will be inserted
@@ -242,7 +243,7 @@ begin
         vfat3_daq_links_o(i).data         <= vfat3_daq_data(i);
         vfat3_daq_links_o(i).event_done   <= vfat3_daq_event_done(i);
         vfat3_daq_links_o(i).crc_error    <= vfat3_daq_crc_err(i);
-        vfat3_daq_links_o(i).link_enabled <= (not vfat_mask_arr_i(i)) and vfat_gbt_ready_arr_i(i);
+        vfat3_daq_links_o(i).link_enabled <= (not vfat_mask_arr_i(i) and vfat_gbt_ready_arr_i(i)) when i < g_NUM_VFATS_PER_OH else '0';
 
     end generate;
     

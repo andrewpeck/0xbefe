@@ -42,9 +42,9 @@ entity oh_link_regs is
         gbt_tx_bitslip_arr_o    : out t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
         -- Spy link
-        spy_usrclk_i            : in  std_logic;
-        spy_rx_data_i           : in  t_mgt_16b_rx_data;
-        spy_rx_status_i         : in  t_mgt_status;
+        spy_rx_usrclk_i         : in  std_logic;
+        spy_rx_data_i           : in  t_mgt_64b_rx_data;
+        spy_status_i            : in  t_mgt_status;
 
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -97,9 +97,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
-            en_i      => (spy_rx_status_i.rxbufstatus(2)) and (spy_rx_status_i.rxbufstatus(1)) and (not spy_rx_status_i.rxbufstatus(0)), -- 110
+            en_i      => (spy_status_i.rxbufstatus(2)) and (spy_status_i.rxbufstatus(1)) and (not spy_status_i.rxbufstatus(0)), -- 110
             count_o   => spy_mgt_buf_ovf
         );
 
@@ -110,7 +110,7 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_mgt_buf_ovf,
             dest_clk     => clk_i,
             dest_out_bin => spy_mgt_buf_ovf_sync
@@ -122,9 +122,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
-            en_i      => (spy_rx_status_i.rxbufstatus(2)) and (not spy_rx_status_i.rxbufstatus(1)) and (spy_rx_status_i.rxbufstatus(0)), -- 101
+            en_i      => (spy_status_i.rxbufstatus(2)) and (not spy_status_i.rxbufstatus(1)) and (spy_status_i.rxbufstatus(0)), -- 101
             count_o   => spy_mgt_buf_unf
         );
 
@@ -135,21 +135,22 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_mgt_buf_unf,
             dest_clk     => clk_i,
             dest_out_bin => spy_mgt_buf_unf_sync
         );
 
     -- clock correction: idle word insertion counter 
+    -- note: meaningful only for 1 GbE
     i_cnt_spy_clk_corr_add : entity work.counter
         generic map(
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
-            en_i      => spy_rx_status_i.rxclkcorcnt(1) and spy_rx_status_i.rxclkcorcnt(0), -- 11
+            en_i      => spy_status_i.rxclkcorcnt(1) and spy_status_i.rxclkcorcnt(0), -- 11
             count_o   => spy_clk_corr_add
         );
 
@@ -160,21 +161,22 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_clk_corr_add,
             dest_clk     => clk_i,
             dest_out_bin => spy_clk_corr_add_sync
         );
 
     -- clock correction: idle word drop counter 
+    -- note: meaningful only for 1 GbE
     i_cnt_spy_clk_corr_drop : entity work.counter
         generic map(
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
-            en_i      => spy_rx_status_i.rxclkcorcnt(1) xor spy_rx_status_i.rxclkcorcnt(0), -- 10 or 01
+            en_i      => spy_status_i.rxclkcorcnt(1) xor spy_status_i.rxclkcorcnt(0), -- 10 or 01
             count_o   => spy_clk_corr_drop
         );
 
@@ -185,19 +187,20 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_clk_corr_drop,
             dest_clk     => clk_i,
             dest_out_bin => spy_clk_corr_drop_sync
         );
 
     -- not in table error counter
+    -- note: meaningful only for 1 GbE
     i_cnt_spy_not_in_table : entity work.counter
         generic map(
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
             en_i      => spy_rx_data_i.rxnotintable(1) or spy_rx_data_i.rxnotintable(0),
             count_o   => spy_not_in_table
@@ -210,19 +213,20 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_not_in_table,
             dest_clk     => clk_i,
             dest_out_bin => spy_not_in_table_sync
         );
 
     -- dispersion error counter
+    -- note: meaningful only for 1 GbE
     i_cnt_spy_disperr : entity work.counter
         generic map(
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => spy_usrclk_i,
+            ref_clk_i => spy_rx_usrclk_i,
             reset_i   => reset_i,
             en_i      => spy_rx_data_i.rxdisperr(1) or spy_rx_data_i.rxdisperr(0),
             count_o   => spy_disperr
@@ -235,7 +239,7 @@ begin
             WIDTH                 => 16
         )
         port map(
-            src_clk      => spy_usrclk_i,
+            src_clk      => spy_rx_usrclk_i,
             src_in_bin   => spy_disperr,
             dest_clk     => clk_i,
             dest_out_bin => spy_disperr_sync

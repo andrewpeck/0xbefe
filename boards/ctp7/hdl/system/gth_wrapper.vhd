@@ -209,10 +209,15 @@ architecture gth_wrapper_arch of gth_wrapper is
   signal s_tx_startup_fsm_mmcm_reset    : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_tx_startup_fsm_mmcm_lock     : std_logic_vector(g_NUM_OF_GTH_GTs-1 downto 0) := (others => '1');
 
-
   signal s_gth_gbt_tx_mmcm_reset        : std_logic;
   signal s_gth_gbt_tx_mmcm_locked       : std_logic;
 
+  signal s_gth_10gbe_tx_mmcm_reset      : std_logic;
+  signal s_gth_10gbe_tx_mmcm_locked     : std_logic;
+
+  signal s_clk_gth_10gbe_common_txoutclk  : std_logic;
+  signal s_clk_gth_10gbe_common_txusrclk  : std_logic;
+  signal s_clk_gth_10gbe_common_txusrclk2 : std_logic;
 
 --============================================================================
 --                                                          Architecture begin
@@ -222,26 +227,37 @@ begin
 
   gen_tx_mmcm_sigs : for n in 0 to g_NUM_OF_GTH_GTs-1 generate
 
-    s_tx_startup_fsm_mmcm_lock(n) <= s_gth_gbt_tx_mmcm_locked;
+    -- Lock signals
+    gen_gth_tx_mmcm_lock : if c_gth_config_arr(n).gth_link_type = gth_tx_10p3125g_rx_4p0g generate
+        s_tx_startup_fsm_mmcm_lock(n) <= s_gth_10gbe_tx_mmcm_locked;
+    else generate
+        s_tx_startup_fsm_mmcm_lock(n) <= s_gth_gbt_tx_mmcm_locked;
+    end generate;
 
+    -- Reset signals
     gen_gth_gbt_txuserclk : if c_gth_config_arr(n).gth_link_type = gth_4p8g or c_gth_config_arr(n).gth_link_type = gth_10p24g generate
-
       gen_gth_gbt_txuserclk_master : if c_gth_config_arr(n).gth_txclk_out_master = true generate
 
         s_gth_gbt_tx_mmcm_reset <= s_tx_startup_fsm_mmcm_reset(n);
-        
+
 --        i_pcs_clk_phase_check : entity work.clk_phase_check_v7
---            generic map(
+--            generic map (
 --                FREQ_MHZ => 120.000
 --            )
---            port map(
+--            port map (
 --                reset => s_GTH_4p8g_TX_MMCM_reset,
 --                clk1  => ttc_clks_i.clk_120,
 --                clk2  => s_gth_gt_clk_out_arr(n).txoutpcs
 --            );
-
       end generate;
     end generate;
+
+    gen_gth_10gbe_txuserclk : if c_gth_config_arr(n).gth_link_type = gth_tx_10p3125g_rx_4p0g generate
+      gen_gth_10gbe_txuserclk_master : if c_gth_config_arr(n).gth_txclk_out_master = true generate
+        s_gth_10gbe_tx_mmcm_reset <= s_tx_startup_fsm_mmcm_reset(n);
+      end generate;
+    end generate;
+
   end generate;
 
   i_gth_clk_bufs : entity work.gth_clk_bufs
@@ -276,16 +292,26 @@ begin
 
       gth_gbt_tx_mmcm_locked_o  => s_gth_gbt_tx_mmcm_locked,
       clk_gth_gbt_common_rxusrclk_o => s_gth_gbt_common_rxusrclk,
-      clk_gth_gbt_common_txoutclk_o => gth_gbt_common_txoutclk_o
-      
-      );
+      clk_gth_gbt_common_txoutclk_o => gth_gbt_common_txoutclk_o,
+
+      clk_gth_10gbe_common_txoutclk_o  => s_clk_gth_10gbe_common_txoutclk,
+      clk_gth_10gbe_common_txusrclk_i  => s_clk_gth_10gbe_common_txusrclk,
+      clk_gth_10gbe_common_txusrclk2_i => s_clk_gth_10gbe_common_txusrclk2
+    );
 
   ttc_clks_reset_o <= s_gth_gbt_tx_mmcm_reset;
   clk_gth_tx_usrclk_arr_o <= s_clk_gth_tx_usrclk2_arr;
   clk_gth_rx_usrclk_arr_o <= s_clk_gth_rx_usrclk_arr;
   gth_gbt_common_rxusrclk_o <= s_gth_gbt_common_rxusrclk;
-  
-------------------------
+
+  i_ten_gbe_clocks : entity work.ten_gbe_clocks
+  port map (
+    mmcm_reset_i  => s_gth_10gbe_tx_mmcm_reset,
+    mmcm_locked_o => s_gth_10gbe_tx_mmcm_locked,
+    txoutclk_i    => s_clk_gth_10gbe_common_txoutclk,
+    txusrclk_o    => s_clk_gth_10gbe_common_txusrclk,
+    txusrclk2_o   => s_clk_gth_10gbe_common_txusrclk2
+  );
 
   gen_qpll_refclk_assign_Q110_to_Q111 : for i in 0 to 1 generate
   begin
@@ -608,6 +634,50 @@ begin
           );        
     end generate;
 
+    gen_gth_tx_10p3125g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_10p3125g_rx_4p0g generate
+
+      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
+      s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
+      s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
+      s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
+      s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
+
+      s_gth_tx_data_arr(n) <= gth_tx_data_arr_i(n);
+
+      i_gth_single_tx_10p3125g_rx_4p0g : entity work.gth_single_tx_10p3125g_rx_4p0g
+        generic map
+        (
+          g_TX_REFCLK_01 => 1,
+          -- Simulation attributes
+          g_GT_SIM_GTRESET_SPEEDUP => g_GT_SIM_GTRESET_SPEEDUP
+        )
+        port map
+        (
+          gth_rx_serial_i => s_gth_rx_serial_arr(n),
+          gth_tx_serial_o => s_gth_tx_serial_arr(n),
+          gth_gt_clk_i    => s_gth_gt_clk_in_arr(n),
+          gth_gt_clk_o    => s_gth_gt_clk_out_arr(n),
+
+          gth_cpll_ctrl_i   => s_gth_cpll_ctrl_arr(n),
+          gth_cpll_init_i   => s_gth_cpll_init_arr(n),
+          gth_cpll_status_o => s_gth_cpll_status_arr(n),
+
+          gth_gt_drp_i      => s_gth_gt_drp_in_arr(n),
+          gth_gt_drp_o      => s_gth_gt_drp_out_arr(n),
+          gth_tx_ctrl_i     => s_gth_tx_ctrl_arr(n),
+          gth_tx_init_i     => s_gth_tx_init_arr(n),
+          gth_tx_status_o   => s_gth_tx_status_arr(n),
+          gth_rx_ctrl_i     => s_gth_rx_ctrl_arr(n),
+          gth_rx_ctrl_2_i   => s_gth_rx_ctrl_2_arr(n),
+          gth_rx_init_i     => s_gth_rx_init_arr(n),
+          gth_rx_status_o   => s_gth_rx_status_arr(n),
+          gth_misc_ctrl_i   => s_gth_misc_ctrl_arr(n),
+          gth_misc_status_o => s_gth_misc_status_arr(n),
+          gth_tx_data_i     => s_gth_tx_data_arr(n),
+          gth_rx_data_o     => s_gth_rx_data_arr(n)
+        );
+    end generate;
+
     gen_gth_2p56g : if c_gth_config_arr(n).gth_link_type = gth_2p56g generate
 
       gth_rx_data_arr_o(n).rxdata <= s_gth_rx_data_arr(n).rxdata;
@@ -746,8 +816,8 @@ begin
           STABLE_CLOCK_PERIOD    => g_STABLE_CLOCK_PERIOD,  -- Period of the stable clock driving this state-machine, unit is [ns]
           RETRY_COUNTER_BITWIDTH => 8,
           TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g),  -- the TX and RX Reset FSMs must
-          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g),  -- share these two generic values
-          PHASE_ALIGNMENT_MANUAL => not (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g)  -- Decision if a manual phase-alignment is necessary or the automatic
+          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p3125g_rx_4p0g),  -- share these two generic values
+          PHASE_ALIGNMENT_MANUAL => not ((c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p3125g_rx_4p0g))  -- Decision if a manual phase-alignment is necessary or the automatic
                                                                                                         -- is enough. For single-lane applications the automatic alignment is
                                                                                                         -- sufficient
           )
@@ -781,7 +851,7 @@ begin
           STABLE_CLOCK_PERIOD    => g_STABLE_CLOCK_PERIOD,  --Period of the stable clock driving this state-machine, unit is [ns]
           RETRY_COUNTER_BITWIDTH => 8,
           TX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g),  -- the TX and RX Reset FSMs must
-          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g),  -- share these two generic values
+          RX_QPLL_USED           => (c_gth_config_arr(i*4+j).gth_link_type = gth_10p24g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_1p25g_rx_4p0g) or (c_gth_config_arr(i*4+j).gth_link_type = gth_tx_10p3125g_rx_4p0g),  -- share these two generic values
           PHASE_ALIGNMENT_MANUAL => false  -- Decision if a manual phase-alignment is necessary or the automatic
                                            -- is enough. For single-lane applications the automatic alignment is
                                            -- sufficient

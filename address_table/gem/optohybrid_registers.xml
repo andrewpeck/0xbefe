@@ -387,16 +387,16 @@
 
             <node id="OVERTEMP" address="0x0" permission="r"
                   mask="0x00000001"
-                  description="FPGA over temperature"
-                  fw_signal="overtemp"/>
+                  description="Temperature Alarm"
+                  fw_signal="alarm_sync_os(0)"/>
             <node id="VCCAUX_ALARM" address="0x0" permission="r"
                   mask="0x00000002"
                   description="FPGA VCCAUX Alarm"
-                  fw_signal="vccaux_alarm"/>
+                  fw_signal="alarm_sync_os(1)"/>
             <node id="VCCINT_ALARM" address="0x0" permission="r"
                   mask="0x00000004"
                   description="FPGA VCCINT Alarm"
-                  fw_signal="vccint_alarm"/>
+                  fw_signal="alarm_sync_os(2)"/>
 
             <node id="ADR_IN" address="0x0" permission="rw"
                   description="XADC Addr In"
@@ -434,8 +434,8 @@
 
             <node id="CNT_OVERTEMP" address="0x0" permission="r"
                   mask="0x3f800"
-                  description="Overtemperature counter"
-                  fw_cnt_en_signal="overtemp"
+                  description="Temperature Alarm counter"
+                  fw_cnt_en_signal="alarm_sync(0)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_overtemp"/>
@@ -443,7 +443,7 @@
             <node id="CNT_VCCAUX_ALARM" address="0x0" permission="r"
                   description="VCCAUX Alarm Counter"
                   mask="0x1fc0000"
-                  fw_cnt_en_signal="vccaux_alarm"
+                  fw_cnt_en_signal="alarm_sync(1)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccaux_alarm"/>
@@ -451,7 +451,7 @@
             <node id="CNT_VCCINT_ALARM" address="0x0" permission="r"
                   mask="0xfe000000"
                   description="VCCINT Alarm Counter"
-                  fw_cnt_en_signal="vccint_alarm"
+                  fw_cnt_en_signal="alarm_sync(2)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccint_alarm"/>

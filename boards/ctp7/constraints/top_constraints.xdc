@@ -57,10 +57,10 @@ create_clock -period 3.125 [get_ports {refclk_B_0_p_i[1]}]
 create_clock -period 3.125 [get_ports {refclk_B_0_p_i[2]}]
 create_clock -period 3.125 [get_ports {refclk_B_0_p_i[3]}]
 
-#create_clock -period 5.000 [get_ports {refclk_B_1_p_i[0]}]
-create_clock -period 5.000 [get_ports {refclk_B_1_p_i[1]}]
-create_clock -period 5.000 [get_ports {refclk_B_1_p_i[2]}]
-create_clock -period 5.000 [get_ports {refclk_B_1_p_i[3]}]
+#create_clock -period 3.103 [get_ports {refclk_B_1_p_i[0]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[1]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[2]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[3]}]
 
 ################################ RefClk Location constraints #####################
 
@@ -482,8 +482,8 @@ create_clock -period 5.000 [get_pins -hier -filter {name=~*gen_gth_single[56].ge
 create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[57].gen_gth_*/i_gthe2*TXOUTCLK}]
 create_clock -period 5.000 [get_pins -hier -filter {name=~*gen_gth_single[57].gen_gth_*/i_gthe2*RXOUTCLK}]
 
-############# Channel [58] - 1.25 Gbps TX (GbE), 4.0 Gbps RX #############
-create_clock -period 16.000 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*TXOUTCLK}]
+############# Channel [58] - 10.3125 Gbps TX (10 GbE), 4.0 Gbps RX #############
+create_clock -period 3.103 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*TXOUTCLK}]
 create_clock -period 5.000 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*RXOUTCLK}]
 
 ############# Channel [59] - 10.24 Gbps TX, 4.0 Gbps RX #############
@@ -585,6 +585,9 @@ set_clock_groups -asynchronous -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -g
 
 # GbE clock async to everything
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[58].gen_gth_tx_1p25g_rx_4p0g.i_gth_single_tx_1p25g_rx_4p0g/i_gthe2/TXOUTCLK}]
+
+# 10 GbE clock async to everything
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {i_system/i_gth_wrapper/gen_gth_single[58].gen_gth_tx_10p3125g_rx_4p0g.i_gth_single_tx_10p3125g_rx_4p0g/i_gthe2/TXOUTCLK}]
 
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_daqlink/gth_amc13_support_i/gth_amc13_init_i/U0/gth_amc13_1_i/gt0_gth_amc13_1_i/gthe2_i/?XOUTCLK}] -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/?XOUTCLK}]
 #set_clock_groups -asynchronous -group [get_clocks {i_system/i_daqlink/gth_amc13_support_i/gth_amc13_init_i/U0/gth_amc13_1_i/gt0_gth_amc13_1_i/gthe2_i/?XOUTCLK}] -group [get_clocks clk_160] 
