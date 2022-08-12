@@ -28,7 +28,7 @@ class rpi_chc:
         self.bus = smbus.SMBus(device_bus)
         # Set up SPI
         self.spi = spidev.SpiDev()
-        self.spi.open(1,0) # bus 1 device 0 - default
+        self.spi.open(0,0) # bus 0 device 0 - default
         
         # Addresses
         self.reset_channel = 17
