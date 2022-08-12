@@ -57,6 +57,7 @@ if __name__ == "__main__":
     sleep(2)
 
     # Initialize  
+    initialize("ME0", "backend")
     os.system("python3 init_frontend.py")
     print ("")
 
