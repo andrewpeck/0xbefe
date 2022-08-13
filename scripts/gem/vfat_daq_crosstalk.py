@@ -129,16 +129,16 @@ def vfat_crosstalk(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1
             write_backend_reg(daq_monitor_enable_node, 1)
 
             # Start the cyclic generator
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(ttc_cyclic_start_node, 1)
-            sleep(0.1)
+            sleep(0.001)
             cyclic_running = read_backend_reg(cyclic_running_node)
             while (cyclic_running):
                 cyclic_running = read_backend_reg(cyclic_running_node)
             # Stop the cyclic generator
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(ttc_reset_node, 1)
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(daq_monitor_enable_node, 0)
 
             # Looping over VFATs

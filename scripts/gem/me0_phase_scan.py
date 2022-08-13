@@ -83,15 +83,15 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
             #gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.CTRL.MODULE_RESET"), 1)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_COUNT"), crc_depth)
-            sleep(0.1)
+            sleep(0.001)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-            sleep(0.1)
+            sleep(0.001)
             cyclic_running = 1
             while cyclic_running:
                 cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
-            sleep(0.1)
+            sleep(0.001)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
-            sleep(0.1)
+            sleep(0.001)
 
             l1a_counter = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.CMD_COUNTERS.L1A"))
             nl1a_reg_cycles = int(crc_depth/(2**32))

@@ -136,9 +136,9 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
     time_prev = t0
 
     # Start the cyclic generator
-    sleep(0.1)
+    sleep(0.001)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-    sleep(0.1)
+    sleep(0.001)
     cyclic_running = read_backend_reg(cyclic_running_node)
     
     if nl1a != 0:
@@ -200,10 +200,10 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
                 time_prev = time()
 
     # Stop the cyclic generator
-    sleep(0.1)
+    sleep(0.001)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
-    sleep(0.1)
+    sleep(0.001)
 
     print ("")
     file_out.write("\n")

@@ -179,17 +179,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 gem_utils.write_backend_reg(reset_sbit_cluster_node, 1)
 
                 # Start the cyclic generator
-                sleep(0.1)
+                sleep(0.001)
                 gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-                sleep(0.1)
+                sleep(0.001)
                 cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
                 while cyclic_running:
                     cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
                 # Stop the cyclic generator
-                sleep(0.1)
+                sleep(0.001)
                 gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
-                sleep(0.1)
+                sleep(0.001)
 
                 l1a_counter = gem_utils.read_backend_reg(l1a_node)
                 calpulse_counter = gem_utils.read_backend_reg(calpulse_node)

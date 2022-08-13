@@ -172,9 +172,9 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
             # Start the cyclic generator
             print ("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle"%(elink, channel))
             file_out.write("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle\n"%(elink, channel))
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-            sleep(0.1)
+            sleep(0.001)
 
             cyclic_running = read_backend_reg(cyclic_running_node)
             nl1a_reg_cycles = 0
@@ -218,9 +218,9 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
                         time_prev = time()
 
             # Stop the cyclic generator
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
-            sleep(0.1)
+            sleep(0.001)
             total_time = time() - t0
             print ("ELINK# %02d, Channel %02d, S-bit %02d: L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes)"%(elink, channel, sbit_read, total_time, total_time/60.0))
             file_out.write("ELINK# %02d, Channel %02d, S-bit %02d: L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes)\n"%(elink, channel, sbit_read, total_time, total_time/60.0))

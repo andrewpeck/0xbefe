@@ -186,18 +186,18 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, p
             # Start the cyclic generator
             print ("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle"%(elink, channel))
             file_out.write("ELINK# %02d, Channel %02d: Start L1A and Calpulsing cycle\n"%(elink, channel))
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(ttc_cyclic_start_node, 1)
-            sleep(0.1)
+            sleep(0.001)
 
             cyclic_running = read_backend_reg(cyclic_running_node)
             t0 = time()
             while (cyclic_running):
                 cyclic_running = read_backend_reg(cyclic_running_node)
             # Stop the cyclic generator
-            sleep(0.1)
+            sleep(0.001)
             write_backend_reg(ttc_reset_node, 1)
-            sleep(0.1)
+            sleep(0.001)
 
             # Disabling the pulsing channels
             if parallel is None:

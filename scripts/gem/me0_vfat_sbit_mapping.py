@@ -112,17 +112,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                     write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
 
                     # Start the cyclic generator
-                    sleep(0.1)
+                    sleep(0.001)
                     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
-                    sleep(0.1)
+                    sleep(0.001)
                     cyclic_running = read_backend_reg(cyclic_running_node)
                     while cyclic_running:
                         cyclic_running = read_backend_reg(cyclic_running_node)
 
                     # Stop the cyclic generator
-                    sleep(0.1)
+                    sleep(0.001)
                     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
-                    sleep(0.1)
+                    sleep(0.001)
 
                     elink_sbit_counter_final = read_backend_reg(elink_sbit_counter_node)
                     l1a_counter = read_backend_reg(l1a_node)

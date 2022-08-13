@@ -180,17 +180,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
                 write_backend_reg(ttc_cnt_reset_node, 1)
                 write_backend_reg(reset_sbit_monitor_node, 1)
                 write_backend_reg(reset_sbit_cluster_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 write_backend_reg(ttc_cyclic_start_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 cyclic_running = read_backend_reg(cyclic_running_node)
                 t0 = time()
                 while (cyclic_running):
                     cyclic_running = read_backend_reg(cyclic_running_node)
                 # Stop the cyclic generator
-                sleep(0.1)
+                sleep(0.001)
                 write_backend_reg(ttc_reset_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 #print ("  Time taken for L1A loop with %d L1As and %d BX gap = %.4f us"%(nl1a, l1a_bxgap, (time()-t0)*1e6))
                 calpulse_counter = read_backend_reg(calpulse_node)
 

@@ -145,16 +145,16 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ca
                 # Start the cyclic generator
                 write_backend_reg(ttc_cnt_reset_node, 1)
                 write_backend_reg(reset_sbit_counter_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 write_backend_reg(ttc_cyclic_start_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 cyclic_running = 1
                 while (cyclic_running):
                     cyclic_running = read_backend_reg(cyclic_running_node)
                 # Stop the cyclic generator
-                sleep(0.1)
+                sleep(0.001)
                 write_backend_reg(ttc_reset_node, 1)
-                sleep(0.1)
+                sleep(0.001)
                 calpulse_counter = read_backend_reg(calpulse_node)
 
                 sbit_data[vfat][channel_inj][channel_read]["events"] = calpulse_counter
