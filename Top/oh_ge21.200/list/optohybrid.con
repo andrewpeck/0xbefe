@@ -1,3 +1,4 @@
 boards/ge21_oh/constraints/clocking.tcl nosynth
 boards/ge21_oh/constraints/pinout.xdc
 boards/ge21_oh/constraints/impl.xdc nosynth
+boards/ge21_oh/constraints/rlocs_xc7a200t.tcl nosynth

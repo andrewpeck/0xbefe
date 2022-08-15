@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 4.0 bx as of 2021/08/17
+-- latency = 4.25 bx as of 2022/02/24
 
 entity cluster_packer is
   generic (
@@ -62,7 +62,7 @@ architecture behavioral of cluster_packer is
 
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 2;
+  constant OVERFLOW_LATENCY                 : natural := 5;
 
   signal cluster_latch : std_logic;
 
@@ -122,6 +122,9 @@ begin
   end process;
 
   clock_strobe_inst : entity work.clock_strobe
+    generic map(
+      RATIO => 4
+      )
     port map (
       fast_clk_i => clk_fast,
       slow_clk_i => clk_40,
@@ -238,7 +241,7 @@ begin
   --
   -- You should be able to just tweak the # of pipelines stages in the counter module
   --
-  -- Timed in for on 2020/06/26
+  -- Timed in on 2022/02/24
   count_clusters_inst : count_clusters
     generic map (
       overflow_thresh => NUM_OUTPUT_CLUSTERS,
@@ -304,15 +307,15 @@ begin
     if (rising_edge(clk_fast)) then
 
       if (reset = '1') then
-        clusters_o <= clusters;
-      else
         clusters_o <= (others => NULL_CLUSTER);
+      else
+        clusters_o <= clusters;
       end if;
 
       if (reset = '1' or mask_output_i = '1') then
-        clusters_masked_o <= clusters;
-      else
         clusters_masked_o <= (others => NULL_CLUSTER);
+      else
+        clusters_masked_o <= clusters;
       end if;
 
     end if;

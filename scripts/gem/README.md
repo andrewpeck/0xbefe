@@ -28,6 +28,8 @@ Use -h option for any script to check usage
 
 ```me0_lpgbt_efuse.py```: fuse registers on lpGBT for ME0 Optohyrbid
 
+```me0_lpgbt_elink_eq.py```: Set equalization settings for elinks on lpGBT for ME0 Optohyrbid
+
 ```me0_lpgbt_rw_register.py```: read/write to any register on lpGBT for ME0 Optohyrbid
 
 ```me0_lpgbt_status.py```: check status of lpGBT for ME0 Optohyrbid
@@ -63,6 +65,8 @@ Use -h option for any script to check usage
 ```vfat_dac_scan.py```: VFAT DAC Scan
 
 ```vfat_daq_crosstalk.py```: Scan for checking cross talk using DAQ data for VFATs
+
+```vfat_daq_noise_rate.py```: DAQ Noise rates for VFATs
 
 ```vfat_daq_scurve.py```: SCurve using DAQ data for VFATs
 

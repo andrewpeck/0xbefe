@@ -103,6 +103,31 @@ set_property PACKAGE_PIN AU19 [get_ports usbc_clk_i]
 set_property IOSTANDARD LVCMOS18 [get_ports i2c_master_en_b_o]
 set_property PACKAGE_PIN AY21 [get_ports i2c_master_en_b_o]
 
+set_property IOSTANDARD        LVCMOS12        [get_ports "dimm2_dq5_trig_i"]
+set_property PACKAGE_PIN       AR27            [get_ports "dimm2_dq5_trig_i"]
+
+#set_property IOSTANDARD        SSTL12        [get_ports "dimm2_dq5_trig_i"]
+#set_property ODT               RTT_48        [get_ports "dimm2_dq5_i"]
+#set_property PACKAGE_PIN       AR27            [get_ports "dimm2_dq5_trig_i"]
+#set_property INTERNAL_VREF 0.60 [get_iobanks 61]
+
+set_property IOSTANDARD LVCMOS18 [get_ports sas1_gprx_0_i]
+set_property IOSTANDARD LVCMOS18 [get_ports sas1_gprx_1_i]
+set_property IOSTANDARD LVCMOS18 [get_ports sas1_gptx_0_o]
+set_property IOSTANDARD LVCMOS18 [get_ports sas1_gptx_1_o]
+set_property IOSTANDARD LVCMOS18 [get_ports sas2_gprx_0_i]
+set_property IOSTANDARD LVCMOS18 [get_ports sas2_gprx_1_i]
+set_property IOSTANDARD LVCMOS18 [get_ports sas2_gptx_0_o]
+set_property IOSTANDARD LVCMOS18 [get_ports sas2_gptx_1_o]
+
+set_property PACKAGE_PIN AN22 [get_ports sas1_gprx_0_i]
+set_property PACKAGE_PIN AN21 [get_ports sas1_gprx_1_i]
+set_property PACKAGE_PIN AL19 [get_ports sas1_gptx_0_o]
+set_property PACKAGE_PIN AM19 [get_ports sas1_gptx_1_o]
+set_property PACKAGE_PIN AU20 [get_ports sas2_gprx_0_i]
+set_property PACKAGE_PIN AR22 [get_ports sas2_gprx_1_i]
+set_property PACKAGE_PIN AR20 [get_ports sas2_gptx_0_o]
+set_property PACKAGE_PIN AU21 [get_ports sas2_gptx_1_o]
 
 ##############################################
 ##########           PCIe           ##########

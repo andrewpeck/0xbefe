@@ -1,0 +1,41 @@
+# -*- mode: TCL;-*-
+
+# Project config
+Top/ge210_cvp13/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/sca.src
+
+# GEM source
+gem/hdl/gem.src
+
+# Trigger Source
+gem/hdl/sbit_me0.src
+
+# GEM CVP13 source
+boards/cvp13/hdl/gem_cvp13.src
+
+# sources with generated registers
+gem/hdl/pkg/generated/ge210_cvp13/registers.vhd
+common/hdl/mgt/generated/ge210_cvp13/mgt_slow_control.vhd
+common/hdl/ttc/generated/ge210_cvp13/ttc.vhd
+common/hdl/misc/generated/ge210_cvp13/promless_bram.vhd
+common/hdl/misc/generated/ge210_cvp13/board_system.vhd
+gem/hdl/misc/generated/ge210_cvp13/gem_system_regs.vhd
+gem/hdl/tests/generated/ge210_cvp13/gem_tests.vhd
+gem/hdl/oh/generated/ge210_cvp13/oh_link_regs.vhd
+gem/hdl/daq/generated/ge210_cvp13/daq.vhd
+gem/hdl/slow_control/generated/ge210_cvp13/slow_control.vhd
+gem/hdl/trigger/generated/ge210_cvp13/trigger.vhd
+gem/hdl/trigger/generated/ge210_cvp13/sbit_me0.vhd
+boards/cvp13/hdl/system/generated/ge210_cvp13/pcie_slow_control.vhd
+
+# GEM IP
+gem/ip/gem_common_ip.src
+
+# CVP13 IP
+boards/cvp13/ip/gem_cvp13_ip.src
+

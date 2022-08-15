@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_2p56g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: raw 2.56Gb/s TX & 2.56Gb/s RX intended to be used for LpGBT ASIC loopback tests. Both TX and RX elastic buffers are bypassed, and there is no encoding.
 --              CPLL is used, refclk is expected to be 320MHz, the usrclks have to be 80MHz, user bus width is 32 bits.
 --              only one CPLL refclk is connected based on the g_REFCLK_01 generic (the tool then automagically configures the MGT to use the correct one, just make sure to set CPLLREFCLKSEL to "001").
@@ -754,7 +754,7 @@ begin
       ------------------------------- Transmit Ports -----------------------------
       TXRATEMODE                 => '0',
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
-      TXHEADER                   => "000",
+      TXHEADER                   => gth_tx_data_i.txheader,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
       TXCHARDISPMODE             => "00000000",
       TXCHARDISPVAL              => "00000000",
@@ -813,7 +813,7 @@ begin
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
-      TXSEQUENCE                => "0000000",
+      TXSEQUENCE                => gth_tx_data_i.txsequence,
       TXSTARTSEQ                => '0',
       ------------- Transmit Ports - TX Initialization and Reset Ports -----------
       TXPCSRESET                => '0',

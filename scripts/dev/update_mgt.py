@@ -1,6 +1,6 @@
 import sys
 import re
-import common.tables.tableformatter as tf
+import tableformatter as tf
 from colorama import Back
 from common.utils import *
 

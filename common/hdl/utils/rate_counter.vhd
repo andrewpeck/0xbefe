@@ -41,8 +41,9 @@ begin
     begin
         if rising_edge(clk_i) then
             if reset_i = '1' then
-                count <= (others => '0');
-                timer <= (others => '0');
+                count  <= (others => '0');
+                timer  <= (others => '0');
+                rate_o <= (others => '0');
             else
                 if timer < unsigned(g_CLK_FREQUENCY) then
                     timer <= timer + 1;

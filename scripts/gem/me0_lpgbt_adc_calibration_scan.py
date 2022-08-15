@@ -174,7 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for RSSI ADC: 2, 8, 16, 32")
+    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -224,13 +224,13 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
+    # Check if GBT is READY
+    check_lpgbt_ready(args.ohid, args.gbtid)
+
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
-
-    # Check if GBT is READY
-    check_lpgbt_ready(args.ohid, args.gbtid)
 
     try:
         main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, gain)

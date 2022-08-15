@@ -755,7 +755,7 @@ begin
       TXPIPPMEN                  => '0',
       TXPIPPMOVRDEN              => '0',
       TXPIPPMPD                  => '0',
-      TXPIPPMSEL                 => '0',
+      TXPIPPMSEL                 => '1',
       TXPIPPMSTEPSIZE            => "00000",
       ---------------------- Transceiver Reset Mode Operation --------------------
       GTRESETSEL                 => '0',
@@ -763,7 +763,7 @@ begin
       ------------------------------- Transmit Ports -----------------------------
       TXRATEMODE                 => '0',
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
-      TXHEADER                   => "000",
+      TXHEADER                   => gth_tx_data_i.txheader,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
       TXCHARDISPMODE(7 downto 4) => s_txchardispmode_float,
       TXCHARDISPMODE(3 downto 0) => gth_tx_data_i.txchardispmode,
@@ -825,7 +825,7 @@ begin
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
-      TXSEQUENCE                => "0000000",
+      TXSEQUENCE                => gth_tx_data_i.txsequence,
       TXSTARTSEQ                => '0',
       ------------- Transmit Ports - TX Initialization and Reset Ports -----------
       TXPCSRESET                => '0',

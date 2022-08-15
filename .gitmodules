@@ -4,3 +4,6 @@
 [submodule "Hog"]
 	path = Hog
 	url = https://gitlab.cern.ch/hog/Hog.git
+[submodule "scripts/ext/python-prompt-toolkit"]
+	path = scripts/ext/python-prompt-toolkit
+	url = https://github.com/prompt-toolkit/python-prompt-toolkit.git

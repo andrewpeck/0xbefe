@@ -8,11 +8,44 @@ use work.board_config_package.all;
 package gem_pkg is
 
     --======================--
-    --== Config Constants ==--
+    --==     Functions    ==--
     --======================-- 
-        
-    -- DAQ
-    constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"0";
+
+    function select_slv32_by_station(gem_station : integer; me0_slv32, ge11_slv32, ge21_slv32 : std_logic_vector(31 downto 0)) return std_logic_vector;
+
+    --========================--
+    --== Link configuration ==--
+    --========================--
+
+    constant TXRX_NULL : integer := CFG_BOARD_MAX_LINKS;
+    
+    -- this record represents a single link (TXRX_NULL can be used to represent an unused tx or rx)
+    type t_link is record
+        tx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+        rx      : integer range 0 to CFG_BOARD_MAX_LINKS;
+    end record;
+
+    -- this constant can be used to represent an unused link
+    constant LINK_NULL : t_link := (tx => TXRX_NULL, rx => TXRX_NULL);
+
+    -- defines the GT index for each type of OH link
+    type t_link_arr is array(integer range <>) of t_link;
+    
+    type t_oh_link_config is record
+        gbt_links       : t_link_arr(0 to 7); -- GBT links
+        trig_rx_links   : t_link_arr(0 to 1); -- GE1/1 trigger RX links
+    end record t_oh_link_config;
+    
+    type t_oh_link_config_arr is array (0 to CFG_BOARD_MAX_OHS - 1) of t_oh_link_config;
+    type t_oh_link_config_arr_arr is array (0 to CFG_BOARD_MAX_SLRS - 1) of t_oh_link_config_arr;
+
+    type t_trig_tx_link_config_arr is array (0 to 7) of integer range 0 to CFG_BOARD_MAX_LINKS;
+    type t_trig_tx_link_config_arr_arr is array (0 to CFG_BOARD_MAX_SLRS - 1) of t_trig_tx_link_config_arr;
+
+    type t_spy_link_enable_arr is array (0 to CFG_BOARD_MAX_SLRS - 1) of boolean;
+    type t_spy_link_config is array (0 to CFG_BOARD_MAX_SLRS - 1) of integer range 0 to CFG_BOARD_MAX_LINKS;
+
+    type t_oh_trig_link_type is (OH_TRIG_LINK_TYPE_3P2G, OH_TRIG_LINK_TYPE_4P0G, OH_TRIG_LINK_TYPE_GBT, OH_TRIG_LINK_TYPE_NONE);
 
     --=============--
     --==  VFAT3  ==--
@@ -40,7 +73,6 @@ package gem_pkg is
     constant VFAT3_HDLC_ADDRESSES_ME0  : t_std4_array(23 downto 0) := (x"4", x"3", x"a", x"9", x"1", x"3", x"7", x"9", x"1", x"5", x"7", x"b", x"4", x"5", x"a", x"b", x"2", x"6", x"8", x"c", x"2", x"6", x"8", x"c");
 
     function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
-    constant VFAT3_HDLC_ADDRESSES : t_std4_array(23 downto 0) := get_vfat_hdlc_addresses(CFG_GEM_STATION); 
 
     type t_vfat_mapping_arr is array(integer range<>, integer range<>) of std_logic_vector(2 downto 0);
 
@@ -59,11 +91,15 @@ package gem_pkg is
     type t_oh_clusters_arr is array(integer range <>) of t_oh_clusters;
 
     type t_sbit_link_status is record
+        bc0_marker      : std_logic;
         sbit_overflow   : std_logic;
         missed_comma    : std_logic;
         underflow       : std_logic;
         overflow        : std_logic;
+        not_in_table    : std_logic;
     end record;
+
+    constant NULL_SBIT_LINK : t_sbit_link_status := (bc0_marker => '0', sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '1', not_in_table => '1');
 
     type t_oh_sbit_links is array(1 downto 0) of t_sbit_link_status;    
     type t_oh_sbit_links_arr is array(integer range <>) of t_oh_sbit_links;
@@ -151,7 +187,7 @@ package gem_pkg is
     type t_chamber_infifo_rd_array is array(integer range <>) of t_chamber_infifo_rd;
 
     type t_chamber_evtfifo_rd is record
-        dout          : std_logic_vector(59 downto 0);
+        dout          : std_logic_vector(83 downto 0);
         rd_en         : std_logic;
         empty         : std_logic;
         valid         : std_logic;
@@ -197,6 +233,7 @@ package gem_pkg is
         data            : std_logic_vector(7 downto 0);
         event_done      : std_logic;
         crc_error       : std_logic;
+        link_enabled    : std_logic;
     end record;
 
     type t_vfat_daq_link_arr is array(integer range <>) of t_vfat_daq_link;
@@ -285,5 +322,18 @@ package body gem_pkg is
             return VFAT3_HDLC_ADDRESSES_GE11;  
         end if;
     end function get_vfat_hdlc_addresses;
-        
+
+    function select_slv32_by_station(gem_station : integer; me0_slv32, ge11_slv32, ge21_slv32 : std_logic_vector(31 downto 0)) return std_logic_vector is
+    begin
+        if gem_station = 0 then
+            return me0_slv32;
+        elsif gem_station = 1 then
+            return ge11_slv32;
+        elsif gem_station = 2 then
+            return ge21_slv32;
+        else
+            return x"00000000";  
+        end if;
+    end function select_slv32_by_station;
+            
 end gem_pkg;

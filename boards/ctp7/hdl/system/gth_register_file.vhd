@@ -198,7 +198,7 @@ begin
     end generate;
   
     -- 8b10b error counters
-    g_8b10b_gth : if (c_gth_config_arr(i).gth_link_type = gth_3p2g) or (c_gth_config_arr(i).gth_link_type = gth_tx_10p24g_rx_3p2g) or (c_gth_config_arr(i).gth_link_type = gth_9p6g) generate
+    g_8b10b_gth : if (c_gth_config_arr(i).gth_link_type = gth_tx_1p25g_rx_4p0g) or (c_gth_config_arr(i).gth_link_type = gth_tx_10p24g_rx_4p0g) or (c_gth_config_arr(i).gth_link_type = gth_tx_10p3125g_rx_4p0g) or (c_gth_config_arr(i).gth_link_type = gth_9p6g) generate
       process(clk_gth_rx_usrclk_arr_i(i))is
       begin
         if (rising_edge(clk_gth_rx_usrclk_arr_i(i))) then

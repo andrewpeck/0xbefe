@@ -27,7 +27,7 @@ entity ic_deserializer is
     port (
         clk_i           : in std_logic;                                     --! Rx clock (Rx_frameclk_o from GBT-FPGA IP): must be a multiple of the LHC frequency
         rx_clk_en       : in std_logic;                                     --! Rx clock enable signal must be used in case of multi-cycle path(rx_clk_i > LHC frequency). By default: always enabled
-		  
+
         reset_i         : in std_logic;                                     --! Reset all of the RX processes
 
         -- Data
@@ -46,7 +46,7 @@ end ic_deserializer;
 --! deserialize the input and decode the "HDLC" frame. The decoding
 --! consists in removing the '0' inserted every 5 consecutive high level bits
 --! bits and detecting/removing the delimiter packets (SOF/EOF).
-architecture behaviour of ic_deserializer is    
+architecture behaviour of ic_deserializer is
 begin                 --========####   Architecture Body   ####========-- 
 
     --! @brief Deserializer process: manages the decoding/deserialization
@@ -75,72 +75,72 @@ begin                 --========####   Architecture Body   ####========--
             ongoing                 := '0';
 
         elsif rising_edge(clk_i) then
-		  
-			if rx_clk_en = '1' then
+
+            if rx_clk_en = '1' then
                 write_o         <= '0';
                 new_word_o        <= '0';
-    
+
                 -- Data(1)
                 reg(7 downto 0)     := data_i(1) & reg(7 downto 1);
                 reg_no_destuffing   := data_i(1) & reg_no_destuffing(7 downto 1);
-    
+
                 if reg_no_destuffing(7 downto 1) = "0111110" then
                     reg(7 downto 0)    := reg(6 downto 0) & '0';
-    
+
                 elsif ongoing  = '1' then
                     cnter           := cnter + 1;
-    
+
                 end if;
-    
+
                 if reg_no_destuffing = g_DELIMITER then
                     cnter                       := 0;
                     ongoing                     := '1';
                     new_word_o                  <= '1';
-    
+
                 elsif reg_no_destuffing = x"FF" then
                     ongoing                     := '0';
-    
+
                 end if;
-    
-                if cnter >= g_WORD_SIZE and ongoing  = '1' then
-                    cnter                       := 0;
-                    data_o                      <= reg;
-                    write_o                     <= '1';
-                end if;
-    
-                -- Data(0)
-                reg(7 downto 0)        := data_i(0) & reg(7 downto 1);
-                reg_no_destuffing   := data_i(0) & reg_no_destuffing(7 downto 1);
-    
-                if reg_no_destuffing(7 downto 1) = "0111110" then
-                    reg(7 downto 0)    := reg(6 downto 0) & '0';
-    
-                elsif ongoing  = '1' then
-                    cnter           := cnter + 1;
-    
-                end if;
-    
-                if reg_no_destuffing = g_DELIMITER then
-                    cnter                       := 0;
-                    ongoing                     := '1';
-                    new_word_o                  <= '1';
-    
-                elsif reg_no_destuffing = x"FF" then
-                    ongoing                     := '0';
-    
-                end if;
-    
+
                 if cnter >= g_WORD_SIZE and ongoing  = '1' then
                     cnter                       := 0;
                     data_o                      <= reg;
                     write_o                     <= '1';
                 end if;
 
-			end if;
+                -- Data(0)
+                reg(7 downto 0)        := data_i(0) & reg(7 downto 1);
+                reg_no_destuffing   := data_i(0) & reg_no_destuffing(7 downto 1);
+
+                if reg_no_destuffing(7 downto 1) = "0111110" then
+                    reg(7 downto 0)    := reg(6 downto 0) & '0';
+
+                elsif ongoing  = '1' then
+                    cnter           := cnter + 1;
+
+                end if;
+
+                if reg_no_destuffing = g_DELIMITER then
+                    cnter                       := 0;
+                    ongoing                     := '1';
+                    new_word_o                  <= '1';
+
+                elsif reg_no_destuffing = x"FF" then
+                    ongoing                     := '0';
+
+                end if;
+
+                if cnter >= g_WORD_SIZE and ongoing  = '1' then
+                    cnter                       := 0;
+                    data_o                      <= reg;
+                    write_o                     <= '1';
+                end if;
+
+            end if;
         end if;
-        
+
     end process;
-    
+
 end behaviour;
 --============================================================================--
 --############################################################################--

@@ -34,7 +34,7 @@ static void sigbushdl (int sig, siginfo_t *siginfo, void *ptr)
   siglongjmp (sj_env, 1);
 }
 
-extern "C" void rwreg_init(char* device) {
+extern "C" void rwreg_init(char* device, unsigned int base_address) {
     if (strcmp(device, "FPGA0") == 0) {
         fpgaId = 0;
     } else if (strcmp(device, "FPGA1") == 0) {

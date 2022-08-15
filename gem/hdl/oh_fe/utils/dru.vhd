@@ -57,6 +57,9 @@ architecture behavioral of dru is
   attribute use_clock_enable            : string;
   attribute use_clock_enable of fifo_s2 : signal is "no";
 
+  attribute shreg_extract                  : string;
+  attribute shreg_extract of data_in_delay : signal is "no";
+
 begin
 
   ----------------------------------------------------------------------------------------------------------------------

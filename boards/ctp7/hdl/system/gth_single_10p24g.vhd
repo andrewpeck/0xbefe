@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 05/05/2020
 -- Module Name: GTH_SINGLE_10p24g
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: raw 10.24Gb/s TX & 10.24Gb/s RX intended to be used with the LpGBT core. Both TX and RX elastic buffers are bypassed, and there is no encoding.
 --              the user bus width is selectable between 32 and 64 bits using the g_TX_BUS_WIDTH and g_RX_BUS_WIDTH generics.
 --              the usrclk has to be 320MHz, and usrclk2 has to be 320MHz when 32 bit bus is selected, and 160MHz when 64 bit bus is selected.
@@ -789,7 +789,7 @@ begin
       ------------------------------- Transmit Ports -----------------------------
       TXRATEMODE                 => '0',
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
-      TXHEADER                   => "000",
+      TXHEADER                   => gth_tx_data_i.txheader,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
       TXCHARDISPMODE             => "00000000",
       TXCHARDISPVAL              => "00000000",
@@ -847,7 +847,7 @@ begin
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
-      TXSEQUENCE                => "0000000",
+      TXSEQUENCE                => gth_tx_data_i.txsequence,
       TXSTARTSEQ                => '0',
       ------------- Transmit Ports - TX Initialization and Reset Ports -----------
       TXPCSRESET                => '0',

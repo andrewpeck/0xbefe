@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 09/28/2017 13:50
 -- Module Name: TTC GENERATOR
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: This module can be used to generate a fake TTC command stream (particularly for L1As and CalPulses), which is useful for calibration   
 -- 
 ----------------------------------------------------------------------------------
@@ -52,6 +52,8 @@ architecture Behavioral of ttc_generator is
     signal pre_bc0              : std_logic := '0';
     signal post_bc0             : std_logic := '0';
     
+    signal oc0                  : std_logic := '0';
+    
     signal single_hr_dly        : std_logic := '0';
     signal single_resync_dly    : std_logic := '0';
     signal single_ec_dly        : std_logic := '0';
@@ -66,8 +68,9 @@ architecture Behavioral of ttc_generator is
        
 begin
 
-    -- bc0
+    -- bc0 & oc0
     ttc_cmds_o.bc0 <= bc0;
+    ttc_cmds_o.oc0 <= oc0;
 
     -- cyclic commands
     ttc_cmds_o.l1a <= cyclic_l1a_fire when cyclic_running = '1' else '0';
@@ -116,6 +119,10 @@ begin
             end if;
         end if;
     end process;
+
+    --======== OC0 ========--
+    
+    oc0 <= reset_i; -- simply use the reset for this
 
     --======== single commands ========--
 

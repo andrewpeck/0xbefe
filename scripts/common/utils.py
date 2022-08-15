@@ -1,4 +1,5 @@
 import sys
+import os
 
 # bright colors:
 class Colors:
@@ -9,6 +10,7 @@ class Colors:
     YELLOW  = '\033[93m'
     GREEN   = '\033[92m'
     RED     = '\033[91m'
+    ORANGE  = '\033[38;5;208m'
     ENDC    = '\033[39m'
 
 # normal colors:
@@ -27,24 +29,35 @@ if sys.version_info < (3, 6):
     print(Colors.RED + "Please use python 3.6 or higher (you are using python %d.%d)" % (sys.version_info[0], sys.version_info[1]) + Colors.ENDC)
     exit()
 
-import common.tables.tableformatter as tf
+if sys.version_info >= (3, 6):
+    def raw_input(s):
+        return input(s)
+
+import tableformatter as tf
 import imp
 
 try:
     imp.find_module('befe_config')
     import befe_config as befe_config
 except ImportError:
-    print_red("befe_config.py not found")
-    print_red("Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup")
-    print_red("In most cases the example config without modifications will work as a starting point")
+    print(Colors.RED + "befe_config.py not found" + Colors.ENDC)
+    print(Colors.RED + "Please make a copy of the befe_config_example.py and name it befe_config.py, and edit it as needed to reflect the configuration of your setup" + Colors.ENDC)
+    print(Colors.RED + "In most cases the example config without modifications will work as a starting point" + Colors.ENDC)
     exit(1)
 
 
 FULL_TABLE_GRID_STYLE = tf.FancyGrid()
 DEFAULT_TABLE_GRID_STYLE = tf.AlternatingRowGrid()
 
+def get_befe_scripts_dir():
+    scripts_dir = os.environ.get('BEFE_SCRIPT_DIR')
+    return scripts_dir
+
 def get_config(config_name):
     return eval("befe_config." + config_name)
+
+def config_exists(config_name):
+    return hasattr(befe_config, config_name)
 
 def check_bit(byteval, idx):
     return ((byteval & (1 << idx)) != 0)
@@ -70,11 +83,27 @@ def print_red(msg):
 def print_green(msg):
     print_color(msg, Colors.GREEN)
 
+def print_orange(msg):
+    print_color(msg, Colors.ORANGE)
+
 def print_green_red(msg, controlValue, expectedValue):
     col = Colors.GREEN
     if controlValue != expectedValue:
         col = Colors.RED
     print_color(msg, col)
+
+def print_green_orange(msg, controlValue, expectedValue):
+    col = Colors.GREEN
+    if controlValue != expectedValue:
+        col = Colors.ORANGE
+    print_color(msg, col)
+
+def print_green_grey(msg, controlValue, expectedValue):
+    if controlValue == expectedValue:
+        col = Colors.GREEN
+        print_color(msg, col)
+    else:
+        print(msg)
 
 def hex(number):
     if number is None:
@@ -98,7 +127,7 @@ def hex_padded(number, numBytes, include0x=True):
     if number is None:
         return 'None'
     else:
-        length = 2 + numBytes * 2
+        length = 2 + int(numBytes * 2)
         formatStr = "{0:#0{1}x}"
         if not include0x:
             length -= 2
@@ -122,3 +151,38 @@ def parse_int(string):
         return int(string, 2)
     else:
         return int(string)
+
+def array_to_string(arr):
+    s = "["
+    for i in range(len(arr)):
+        if i != 0:
+            s += ", "
+        s += str(arr[i])
+    s += "]"
+    return s
+
+def bitmask_to_array(bitmask):
+    ids = []
+    id = 0
+    while bitmask != 0:
+        if bitmask & 1 == 1:
+            ids.append(id)
+        bitmask = bitmask >> 1
+        id += 1
+    return ids
+
+def count_ones(number):
+    num_ones = 0
+    while number != 0:
+        if number & 1 == 1:
+            num_ones += 1
+        number = number >> 1
+    return num_ones
+
+def get_bits(word, top_bit_idx, bot_bit_idx):
+    length = (top_bit_idx - bot_bit_idx) + 1
+    if length > 64:
+        raise Exception("get_bits() does not support a length longer than 64 bits")
+    ret = word >> bot_bit_idx
+    mask = 0xffffffffffffffff >> (64 - length)
+    return ret & mask

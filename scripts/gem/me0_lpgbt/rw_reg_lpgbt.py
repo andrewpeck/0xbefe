@@ -18,9 +18,9 @@ n_rw_reg = -9999
 
 TOP_NODE_NAME = "LPGBT"
 
-NODE_IC_GBTX_LINK_SELECT = None
-NODE_IC_GBT_VER = None
-NODE_IC_GBTX_I2C_ADDRESS = None
+NODE_IC_GBT_LINK_SELECT = None
+NODE_IC_GBT_FRAME_FORMAT = None
+NODE_IC_GBT_I2C_ADDRESS = None
 NODE_IC_READ_WRITE_LENGTH = None
 NODE_IC_ADDR = None
 NODE_IC_WRITE_DATA = None
@@ -225,24 +225,24 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
         gem_utils.initialize(station, system_val)
         print("Parsing complete...")
 
-        global NODE_IC_GBTX_LINK_SELECT
-        global NODE_IC_GBT_VER
-        global NODE_IC_GBTX_I2C_ADDRESS
+        global NODE_IC_GBT_LINK_SELECT
+        global NODE_IC_GBT_FRAME_FORMAT
+        global NODE_IC_GBT_I2C_ADDRESS
         global NODE_IC_READ_WRITE_LENGTH
         global NODE_IC_ADDR
         global NODE_IC_WRITE_DATA
         global NODE_IC_EXEC_WRITE
         global NODE_IC_EXEC_READ
         global NODE_IC_READ_DATA
-        NODE_IC_GBTX_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_LINK_SELECT")
-        NODE_IC_GBT_VER = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBT_VERSION")
-        NODE_IC_GBTX_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.GBTX_I2C_ADDR")
-        NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
-        NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.ADDRESS")
-        NODE_IC_WRITE_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.WRITE_DATA")
-        NODE_IC_EXEC_WRITE = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_WRITE")
-        NODE_IC_EXEC_READ = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.EXECUTE_READ")
-        NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM_AMC.SLOW_CONTROL.IC.READ_DATA")
+        NODE_IC_GBT_LINK_SELECT = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBT_LINK_SELECT")
+        NODE_IC_GBT_FRAME_FORMAT = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBT_FRAME_FORMAT")
+        NODE_IC_GBT_I2C_ADDRESS = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.GBT_I2C_ADDR")
+        NODE_IC_READ_WRITE_LENGTH = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.READ_WRITE_LENGTH")
+        NODE_IC_ADDR = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.ADDRESS")
+        NODE_IC_WRITE_DATA = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.WRITE_DATA")
+        NODE_IC_EXEC_WRITE = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_WRITE")
+        NODE_IC_EXEC_READ = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.EXECUTE_READ")
+        NODE_IC_READ_DATA = gem_utils.get_backend_node("BEFE.GEM.SLOW_CONTROL.IC.READ_DATA")
 
         if ohIdx is not None and gbtIdx is not None:
             select_ic_link(ohIdx, gbtIdx)
@@ -268,7 +268,7 @@ def select_ic_link(ohIdx, gbtIdx):
             print (Colors.RED + "ERROR: Invalid ohIdx or gbtIdx" + Colors.ENDC)
             rw_terminate()
         linkIdx = ohIdx * 8 + gbtIdx
-        gem_utils.write_backend_reg(NODE_IC_GBTX_LINK_SELECT, linkIdx)
+        gem_utils.write_backend_reg(NODE_IC_GBT_LINK_SELECT, linkIdx)
         
         oh_ver = get_oh_ver(ohIdx, gbtIdx)
         gbt_ver = -9999
@@ -276,14 +276,15 @@ def select_ic_link(ohIdx, gbtIdx):
             gbt_ver = 0
         elif oh_ver == 2:
             gbt_ver = 1
-        gem_utils.write_backend_reg(NODE_IC_GBT_VER, gbt_ver)
         if oh_ver == 1:
-            gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+            gem_utils.write_backend_reg(NODE_IC_GBT_FRAME_FORMAT, 1)
+            gem_utils.write_backend_reg(NODE_IC_GBT_I2C_ADDRESS, 0x70)
         elif oh_ver == 2:
+            gem_utils.write_backend_reg(NODE_IC_GBT_FRAME_FORMAT, 2)
             if gbtIdx%2 == 0:
-                gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x70)
+                gem_utils.write_backend_reg(NODE_IC_GBT_I2C_ADDRESS, 0x70)
             else:
-                gem_utils.write_backend_reg(NODE_IC_GBTX_I2C_ADDRESS, 0x71)
+                gem_utils.write_backend_reg(NODE_IC_GBT_I2C_ADDRESS, 0x71)
         gem_utils.write_backend_reg(NODE_IC_READ_WRITE_LENGTH, 1)
 
 def get_oh_ver(ohIdx, gbtIdx):
@@ -468,6 +469,8 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         ready_value = 18
     elif oh_ver == 2:
         ready_value = 19
+    if system == "backend":
+        gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
     if system != "dryrun":
         pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):
@@ -475,8 +478,6 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
         else:
             print (Colors.RED + "ERROR: lpGBT is not READY, configure lpGBT first" + Colors.ENDC)
             rw_terminate()
-    if system == "backend":
-        gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
 
 def lpgbt_efuse(boss, enable):
     fuse_success = 1

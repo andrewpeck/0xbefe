@@ -7,12 +7,9 @@
 -- Description:    A single bit shift register with a dynamic tap delay. Tap value of 0 results in a delay of 1 clock (if OUTPUT_REG is set to true, then 2 clocks)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use IEEE.NUMERIC_STD.all;
-
-library xpm;
-use xpm.vcomponents.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity shift_reg is
     generic(

@@ -1,0 +1,64 @@
+<IVTable>
+    <Crate number="1">
+        <Slot number="1">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">1 192 168 1 41 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="2">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">2 192 168 1 42 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="3">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">3 192 168 1 43 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="4">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">4 192 168 1 44 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="5">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">5 192 168 1 45 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="6">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">6 192 168 1 46 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="7">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">7 192 168 1 47 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="8">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">8 192 168 1 48 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="9">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">9 192 168 1 49 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="10">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">10 192 168 1 50 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="11">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">11 192 168 1 51 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+        <Slot number="12">
+            <Card type="WISC CTP-7">
+                <FPGA id="0">12 192 168 1 52 255 255 0 0 192 168 1 1 192 168 1 1 0 0</FPGA>
+            </Card>
+        </Slot>
+    </Crate>
+</IVTable>

@@ -278,7 +278,7 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
-    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for Asense ADCs: 2, 8, 16, 32")
+    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -328,13 +328,14 @@ if __name__ == "__main__":
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
     print("Initialization Done\n")
 
+    # Check if GBT is READY
+    if args.system == "backend":
+        check_lpgbt_ready(args.ohid, args.gbtid)
+
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
-
-    # Check if GBT is READY
-    check_lpgbt_ready(args.ohid, args.gbtid)    
         
     try:
         main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, args.plot)

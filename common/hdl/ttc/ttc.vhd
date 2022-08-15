@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 04/24/2016 04:52:35 AM
 -- Module Name: TTC
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Locks to TTC clock and decodes TTC commands from the backplane link. Also provides various controls and counters to be used for configuration, diagnostics and daq   
 -- 
 ----------------------------------------------------------------------------------
@@ -47,6 +47,7 @@ entity ttc is
 
         -- TTC commands
         local_l1a_req_i     : in  std_logic; -- this is an edge triggered async input, and can be used to request local L1As
+        local_l1a_reset_i   : in  std_logic;
         ttc_cmds_o          : out t_ttc_cmds;
     
         -- DAQ counters (L1A ID, Orbit ID, BX ID)
@@ -109,6 +110,9 @@ architecture ttc_arch of ttc is
     signal gen_enable               : std_logic;
     signal gen_enable_cal_only      : std_logic; -- for synthetic tests, this will use only the calpulse signal from the generator while all the other commands will come from AMC13
     signal gen_reset                : std_logic;
+    signal gen_sync_reset_en        : std_logic;
+    signal gen_sync_reset           : std_logic := '0';
+    signal gen_sync_reset_done      : std_logic;
     signal gen_ttc_cmds             : t_ttc_cmds;
     signal gen_single_hard_reset    : std_logic;
     signal gen_single_resync        : std_logic;
@@ -121,8 +125,9 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_l1a_running   : std_logic;
 
     -- daq counters
-    signal l1id_cnt                 : std_logic_vector(23 downto 0);
-    signal orbit_cnt                : std_logic_vector(15 downto 0);
+    signal oc_reset_armed           : std_logic := '0';
+    signal l1id_cnt                 : std_logic_vector(43 downto 0);
+    signal orbit_cnt                : std_logic_vector(31 downto 0);
     signal bx_cnt                   : std_logic_vector(11 downto 0);
 
     -- control and status
@@ -140,6 +145,7 @@ architecture ttc_arch of ttc is
     -- l1a request
     signal l1a_req_sync             : std_logic;
     signal l1a_req                  : std_logic;
+    signal l1a_req_reset            : std_logic;
 
     -- ttc mini spy
     signal ttc_spy_buffer           : std_logic_vector(31 downto 0) := (others => '1');
@@ -313,11 +319,13 @@ begin
             oneshot_o => l1a_req
         );
     
+    i_l1a_reset_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_reset_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_reset);
+    
     ------------- TTC generator -------------
 
     i_ttc_generator : entity work.ttc_generator
         port map(
-            reset_i              => reset or gen_reset,
+            reset_i              => reset or gen_reset or gen_sync_reset,
             ttc_clks_i           => ttc_clks_i,
             ttc_cmds_o           => gen_ttc_cmds,
             single_hard_reset_i  => gen_single_hard_reset,
@@ -331,12 +339,29 @@ begin
             cyclic_l1a_running_o => gen_cyclic_l1a_running
         );
 
+    process(ttc_clks_i.clk_40)
+    begin
+        if rising_edge(ttc_clks_i.clk_40) then
+            if reset = '1' or gen_reset = '1' then
+                gen_sync_reset      <= '0';
+                gen_sync_reset_done <= '0';
+            else
+                if gen_sync_reset_en ='1' and gen_sync_reset_done = '0' and l1a_req = '1' then
+                    gen_sync_reset <= '1';
+                    gen_sync_reset_done <= '1';
+                else
+                    gen_sync_reset <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
+
     ------------- MUX between real and generated TTC commands -------------    
     
     bc0_cmd        <= bc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.bc0;
     ec0_cmd        <= ec0_cmd_real when gen_enable = '0' else gen_ttc_cmds.ec0;
     resync_cmd     <= resync_cmd_real when gen_enable = '0' else gen_ttc_cmds.resync;
-    oc0_cmd        <= oc0_cmd_real when gen_enable = '0' else '0';
+    oc0_cmd        <= oc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.oc0;
     start_cmd      <= start_cmd_real when gen_enable = '0' else gen_ttc_cmds.start;
     stop_cmd       <= stop_cmd_real when gen_enable = '0' else gen_ttc_cmds.stop;
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
@@ -352,11 +377,20 @@ begin
         if (rising_edge(ttc_clks_i.clk_40)) then
             if (reset = '1') then
                 orbit_cnt <= (others => '0');
+                oc_reset_armed <= '0';
             else
                 if (oc0_cmd = '1') then
-                    orbit_cnt <= (others => '0');
-                elsif (bc0_cmd = '1') then
-                    orbit_cnt <= std_logic_vector(unsigned(orbit_cnt) + 1);
+                    oc_reset_armed <= '1';
+                end if;
+                
+                if (bc0_cmd = '1') then
+                    if (oc_reset_armed = '1') then
+                        orbit_cnt <= (others => '0');
+                        oc_reset_armed <= '0';
+                    else
+                        orbit_cnt <= std_logic_vector(unsigned(orbit_cnt) + 1);
+                        oc_reset_armed <= '0';
+                    end if;
                 end if;
             end if;
 
@@ -367,11 +401,11 @@ begin
     process(ttc_clks_i.clk_40) is
     begin
         if (rising_edge(ttc_clks_i.clk_40)) then
-            if (reset = '1') then
-                l1id_cnt <= x"000001";
+            if (reset = '1' or l1a_req_reset = '1') then
+                l1id_cnt <= x"00000000001";
             else
                 if (ec0_cmd = '1' or resync_cmd = '1') then
-                    l1id_cnt <= x"000001";
+                    l1id_cnt <= x"00000000001";
                 elsif (l1a_cmd = '1') then
                     l1id_cnt <= std_logic_vector(unsigned(l1id_cnt) + 1);
                 end if;
@@ -493,6 +527,7 @@ begin
     ttc_cmds_o.l1a        <= l1a_cmd;
     ttc_cmds_o.bc0        <= bc0_cmd;
     ttc_cmds_o.ec0        <= ec0_cmd;
+    ttc_cmds_o.oc0        <= oc0_cmd;
     ttc_cmds_o.resync     <= resync_cmd;
     ttc_cmds_o.hard_reset <= hard_reset_cmd;
     ttc_cmds_o.calpulse   <= calpulse_cmd;

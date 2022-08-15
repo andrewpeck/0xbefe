@@ -1,5 +1,7 @@
-generate_project:csc_apex:
+GEN:csc_apex:
     extends: .generate_project
     variables:
       extends: .vars
       PROJECT_NAME: csc_apex
+    tags:
+      - vivado_2021_1

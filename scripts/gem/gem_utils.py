@@ -1,6 +1,6 @@
 from common.rw_reg import *
 from common.utils import *
-import common.tables.tableformatter as tf
+import tableformatter as tf
 import sys
 
 try:
@@ -82,10 +82,10 @@ vfat_registers = {
 }
 
 def gem_print_status():
-    max_ohs = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-    gbts_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
-    vfats_per_oh = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
-    gem_station = read_reg("BEFE.GEM_AMC.GEM_SYSTEM.RELEASE.GEM_STATION")
+    max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    gbts_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+    vfats_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
+    gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
 
     cols = ["OH"]
     if gem_station != 0:
@@ -106,23 +106,23 @@ def gem_print_status():
 
         ### OH FPGA FW ###
         if gem_station != 0:
-            #read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
-            oh_fw_version = read_reg("BEFE.GEM_AMC.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
+            #read_reg("BEFE.GEM.OH.OH%d.FPGA.CONTROL.HOG.GLOBAL_DATE")
+            oh_fw_version = read_reg("BEFE.GEM.OH.OH%d.FPGA.CONTROL.HOG.OH_VER" % oh, False)
             row.append(color_string("NO COMMUNICATION", Colors.RED) if oh_fw_version == 0xdeaddead else str(oh_fw_version))
 
         ### GBTs ###
         status_block = ""
         first = True
         for gbt in range(gbts_per_oh):
-            ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
+            ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
             status = "%d: " % gbt + ready.to_string()
             if ready == 1:
-                was_not_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (oh, gbt))
-                had_ovf = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HAD_OVERFLOW" % (oh, gbt))
-                had_unf = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HAD_UNDERFLOW" % (oh, gbt))
-                fec_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh, gbt))
-                had_header_unlock = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_RX_HEADER_HAD_UNLOCK" % (oh, gbt))
-                tx_ready = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.GBT%d_TX_READY" % (oh, gbt)) if gem_station != 0 or gbt % 2 == 0 else 1 # Odd GBT TX numbers are not used on ME0
+                was_not_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_WAS_NOT_READY" % (oh, gbt))
+                had_ovf = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_RX_HAD_OVERFLOW" % (oh, gbt))
+                had_unf = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_RX_HAD_UNDERFLOW" % (oh, gbt))
+                fec_err_cnt = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_FEC_ERR_CNT" % (oh, gbt))
+                had_header_unlock = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_RX_HEADER_HAD_UNLOCK" % (oh, gbt))
+                tx_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_TX_READY" % (oh, gbt)) if gem_station != 0 or gbt % 2 == 0 else 1 # Odd GBT TX numbers are not used on ME0
 
                 if was_not_ready == 1:
                     status += "\n" + color_string("(HAD UNLOCK)", Colors.RED)
@@ -142,8 +142,8 @@ def gem_print_status():
 
         ### SCA ###
         if gem_station in [1, 2]:
-            sca_ready = (read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.READY") >> oh) & 1
-            not_ready_cnt = read_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.STATUS.NOT_READY_CNT_OH%d" % oh)
+            sca_ready = (read_reg("BEFE.GEM.SLOW_CONTROL.SCA.STATUS.READY") >> oh) & 1
+            not_ready_cnt = read_reg("BEFE.GEM.SLOW_CONTROL.SCA.STATUS.NOT_READY_CNT_OH%d" % oh)
             sca_status = color_string("READY", Colors.GREEN) if sca_ready == 1 else color_string("NOT_READY", Colors.RED)
             if sca_ready == 1 and not_ready_cnt > 2:
                 sca_status += "\n" + color_string("(HAD UNLOCKS)", Colors.YELLOW)
@@ -155,18 +155,18 @@ def gem_print_status():
             vfat_block_status = ""
             first = True
             for vfat in range(vfat_block, vfat_block + num_vfats_per_col):
-                link_good = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh, vfat))
+                link_good = read_reg("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.LINK_GOOD" % (oh, vfat))
                 status = "%d: " % vfat + color_string("GOOD", Colors.GREEN) if link_good == 1 else "%d: " % vfat + color_string("LINK BAD", Colors.RED)
                 if link_good == 1:
-                    sync_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh, vfat))
-                    daq_crc_err_cnt = read_reg("BEFE.GEM_AMC.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh, vfat))
+                    sync_err_cnt = read_reg("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.SYNC_ERR_CNT" % (oh, vfat))
+                    daq_crc_err_cnt = read_reg("BEFE.GEM.OH_LINKS.OH%d.VFAT%d.DAQ_CRC_ERROR_CNT" % (oh, vfat))
 
                     if sync_err_cnt > 0:
                         status = "%d: " % vfat + color_string("SYNC ERRORS", Colors.RED)
                     elif daq_crc_err_cnt > 0:
                         status = "%d: " % vfat + color_string("DAQ CRC ERRORS", Colors.YELLOW)
 
-                    cfg_run = read_reg("BEFE.GEM_AMC.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat), False)
+                    cfg_run = read_reg("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh, vfat), False)
                     if cfg_run == 0xdeaddead:
                         if "GOOD" in status:
                             status = "%d: " % vfat + color_string("NO COMM", Colors.RED)
@@ -187,15 +187,15 @@ def gem_print_status():
     print(tf.generate_table(rows, cols, grid_style=FULL_TABLE_GRID_STYLE))
 
 def gem_hard_reset():
-    ttc_gen_en = read_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE")
-    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", 1)
-    write_reg("BEFE.GEM_AMC.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN", 0xffffffff)
-    write_reg("BEFE.GEM_AMC.TTC.GENERATOR.SINGLE_HARD_RESET", 1)
+    ttc_gen_en = read_reg("BEFE.GEM.TTC.GENERATOR.ENABLE")
+    write_reg("BEFE.GEM.TTC.GENERATOR.ENABLE", 1)
+    write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN", 0xffffffff)
+    write_reg("BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET", 1)
     if ttc_gen_en != 1:
-        write_reg("BEFE.GEM_AMC.TTC.GENERATOR.ENABLE", ttc_gen_en)
+        write_reg("BEFE.GEM.TTC.GENERATOR.ENABLE", ttc_gen_en)
 
 def gem_link_reset():
-    write_reg("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.LINK_RESET", 1)
+    write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET", 1)
 
 def initialize(station, system_val):
     parse_xml()
@@ -212,12 +212,12 @@ def initialize(station, system_val):
         hdlc_address_map = get_config("CONFIG_GE11_VFAT_HDLC_ADDRESSES")
 
 def terminate():
-    write_reg(get_node("BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
+    write_reg(get_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
     sys.exit()   
 
 def check_gbt_link_ready(ohIdx, gbtIdx):
     if system == "backend":
-        link_ready = read_backend_reg(get_backend_node("BEFE.GEM_AMC.OH_LINKS.OH%s.GBT%s_READY" % (ohIdx, gbtIdx)))
+        link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (ohIdx, gbtIdx)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)  
             terminate()
@@ -235,12 +235,12 @@ def me0_vfat_to_sbit_elink(vfat):
 
 def enable_hdlc_addressing(addr_list):
     for vfat in addr_list:
-        reg_name = "BEFE.GEM_AMC.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)
+        reg_name = "BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS"%(vfat)
         address = hdlc_address_map[vfat]
         write_backend_reg(get_backend_node(reg_name), address)
 
 def global_reset():
-    write_backend_reg(get_backend_node("BEFE.GEM_AMC.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 0x1)
+    write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 0x1)
 
 def get_backend_node(name):
     node = None

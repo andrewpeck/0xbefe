@@ -11,6 +11,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library xpm;
@@ -20,12 +21,16 @@ use work.axi_pkg.all;
 use work.ipbus.all;
 use work.ipb_addr_decode.all;
 use work.ipb_sys_addr_decode.all;
+use work.common_pkg.all;
 
 entity axi_ipbus_bridge is
     generic (
-        g_DEBUG         : boolean := false;
-        g_IPB_CLK_ASYNC : boolean := false;
-        g_IPB_TIMEOUT   : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
+        g_NUM_USR_BLOCKS        : integer := 1; -- number of user blocks (more than one can be used e.g. where we have multiple GEM or CSC modules instantiated, used on devices with multiple SLRs)
+        g_USR_BLOCK_SEL_BIT_TOP : integer := 25; -- top address bit used for user block selection
+        g_USR_BLOCK_SEL_BIT_BOT : integer := 24; -- bottom address bit used for user block selection
+        g_DEBUG                 : boolean := false;
+        g_IPB_CLK_ASYNC         : boolean := false;
+        g_IPB_TIMEOUT           : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
     );
     port (
         -- AXI4-Lite interface
@@ -40,8 +45,8 @@ entity axi_ipbus_bridge is
         ipb_sys_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
         ipb_sys_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);  
         -- Wishbone / IPbus USER interface
-        ipb_usr_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-        ipb_usr_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);  
+        ipb_usr_miso_i          : in  ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+        ipb_usr_mosi_o          : out ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);  
         -- Activity signals, can be used e.g. for LEDs to indicate slow control activity on the board
         read_active_o           : out std_logic;
         write_active_o          : out std_logic        
@@ -119,11 +124,11 @@ architecture arch_imp of axi_ipbus_bridge is
     signal ipb_state                : t_axi_ipb_state;
     signal ipb_sys_transact         : std_logic;
     signal ipb_timer                : unsigned(23 downto 0) := (others => '0');
-    signal ipb_usr_mosi             : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_miso             : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
-    signal ipb_usr_slv_select       : integer range 0 to C_NUM_IPB_SLAVES := 0;
+    signal ipb_usr_mosi             : ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_miso             : ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_miso_ipbclk      : ipb_rbus_array(C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 downto 0);
+    signal ipb_usr_slv_select       : integer range 0 to C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS := 0;
     signal ipb_sys_mosi             : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_miso             : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
     signal ipb_sys_mosi_ipbclk      : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
@@ -136,6 +141,17 @@ architecture arch_imp of axi_ipbus_bridge is
     signal dbg_ipb_usr_miso         : ipb_rbus;
     signal dbg_ipb_usr_mosi_ipbclk  : ipb_wbus;
     signal dbg_ipb_usr_miso_ipbclk  : ipb_rbus;
+
+    ---------- last transaction status registers ----------
+    constant TRANS_STATUS_INIT          : std_logic_vector(31 downto 0) := x"BEFE0000";
+    constant TRANS_STATUS_GOOD          : std_logic_vector(31 downto 0) := x"BEFE600D";
+    constant TRANS_STATUS_IPB_ERR       : std_logic_vector(31 downto 0) := x"BEFEBAD0";
+    constant TRANS_STATUS_AXI_TIMEOUT   : std_logic_vector(31 downto 0) := x"BEFEBAD1";
+    constant TRANS_STATUS_AXI_ADDR_ERR  : std_logic_vector(31 downto 0) := x"BEFEBAD2";
+    
+    signal trans_status_arr             : t_std32_array(3 downto 0) := (others => TRANS_STATUS_INIT);
+    signal usr_block_select             : unsigned(g_USR_BLOCK_SEL_BIT_TOP - g_USR_BLOCK_SEL_BIT_BOT downto 0) := (others => '0');
+    signal trans_status_read            : std_logic := '0';
 
 begin
     -- I/O Connections assignments
@@ -159,19 +175,24 @@ begin
 
       -- main FSM
     process(axi_aclk_i)
+        variable usr_slv_offset : integer range 0 to g_NUM_USR_BLOCKS * C_NUM_IPB_SLAVES := 0;
     begin
         if (rising_edge(axi_aclk_i)) then
             -- reset  
             if (axi_aresetn_i = '0') then
-                ipb_usr_mosi       <= (others => IPB_M2S_NULL);
-                ipb_sys_mosi       <= (others => IPB_M2S_NULL);
-                ipb_state          <= IDLE;
-                ipb_timer          <= (others => '0');
-                axil_s2m           <= AXI_LITE_S2M_NULL;
-                ipb_usr_slv_select <= 0;
-                ipb_sys_slv_select <= 0;
-                transaction_cnt    <= (others => '0');
-                ipb_sys_transact   <= '0'; 
+                ipb_usr_mosi         <= (others => IPB_M2S_NULL);
+                ipb_sys_mosi         <= (others => IPB_M2S_NULL);
+                ipb_state            <= IDLE;
+                ipb_timer            <= (others => '0');
+                axil_s2m             <= AXI_LITE_S2M_NULL;
+                ipb_usr_slv_select   <= 0;
+                ipb_sys_slv_select   <= 0;
+                transaction_cnt      <= (others => '0');
+                ipb_sys_transact     <= '0';
+                usr_block_select     <= (others => '0');
+                trans_status_arr     <= (others => TRANS_STATUS_INIT);
+                trans_status_read    <= '0'; 
+                usr_slv_offset       := 0;
             else
                 -- main state machine     
                 case ipb_state is
@@ -186,34 +207,54 @@ begin
                         -- axi read request
                         if (axil_m2s.arvalid = '1') then
                             axil_s2m.arready   <= '1';
-                            ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr);
+                            if g_NUM_USR_BLOCKS > 1 then
+                                usr_slv_offset := (C_NUM_IPB_SLAVES * to_integer(unsigned(axi_word_araddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                                usr_block_select <= unsigned(axi_word_araddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT));
+                            else
+                                usr_slv_offset := 0;
+                                usr_block_select <= (others => '0');
+                            end if;
+                            ipb_usr_slv_select <= ipb_addr_sel(axi_word_araddr) + usr_slv_offset;
                             ipb_sys_slv_select <= ipb_sys_addr_sel(axi_word_araddr);
                             ipb_state          <= READ;
                             transaction_cnt    <= transaction_cnt + 1;
+                            trans_status_read  <= and_reduce(axi_word_araddr(g_USR_BLOCK_SEL_BIT_BOT - 1 downto 0)); -- read the transaction status if all address bits are high
     
                         -- axi write request
                         elsif (axil_m2s.awvalid = '1' and axil_m2s.wvalid = '1') then
                             axil_s2m.awready    <= '1';
                             axil_s2m.wready     <= '1';
-                            ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr);
+                            if g_NUM_USR_BLOCKS > 1 then
+                                usr_slv_offset := (C_NUM_IPB_SLAVES * to_integer(unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT))));
+                                usr_block_select <= unsigned(axi_word_awaddr(g_USR_BLOCK_SEL_BIT_TOP downto g_USR_BLOCK_SEL_BIT_BOT));
+                            else
+                                usr_slv_offset := 0;
+                                usr_block_select <= (others => '0');
+                            end if;
+                            ipb_usr_slv_select  <= ipb_addr_sel(axi_word_awaddr) + usr_slv_offset;
                             ipb_sys_slv_select  <= ipb_sys_addr_sel(axi_word_awaddr);
                             transaction_cnt     <= transaction_cnt + 1;
     
                             ipb_state <= WRITE;
                         end if;
     
-                    --          -- initiate IPBus read request
+                    -- initiate IPBus read request
                     when READ =>
                         
+                        -- read last transaction status
+                        if (trans_status_read = '1') then
+                            axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => trans_status_arr(to_integer(usr_block_select)), rresp => "00", rvalid => '1'); -- OKAY response
+                            ipb_state <= AXI_READ_HANDSHAKE;
+                                                    
                         -- system address
-                        if (ipb_sys_slv_select /= C_IPB_SYS_SLV.none) then
+                        elsif (ipb_sys_slv_select /= C_IPB_SYS_SLV.none) then
                             axil_s2m <= AXI_LITE_S2M_NULL;
                             ipb_sys_transact <= '1';
                             ipb_sys_mosi(ipb_sys_slv_select) <= (ipb_addr => axi_word_araddr, ipb_wdata => (others => '0'), ipb_strobe => '1', ipb_write => '0');
                             ipb_state <= WAIT_FOR_READ_ACK;
     
                         -- user address
-                        elsif (ipb_usr_slv_select /= C_IPB_SLV.none) then
+                        elsif (ipb_usr_slv_select - usr_slv_offset /= C_IPB_SLV.none) then
                             axil_s2m <= AXI_LITE_S2M_NULL;
                             ipb_sys_transact <= '0';
                             ipb_usr_mosi(ipb_usr_slv_select) <= (ipb_addr => axi_word_araddr, ipb_wdata => (others => '0'), ipb_strobe => '1', ipb_write => '0');
@@ -226,6 +267,7 @@ begin
                             ipb_state       <= AXI_READ_HANDSHAKE;
                             ipb_timer       <= (others => '0');
                             axil_s2m        <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "11", rvalid => '1'); -- DECERR: decode error response
+                            trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_ADDR_ERR;
                         end if;
     
                     -- wait for IPbus read ack
@@ -238,8 +280,10 @@ begin
                             ipb_timer <= (others => '0');
                             if (ipb_sys_miso(ipb_sys_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
 
                         -- got ack from user bus
@@ -249,8 +293,10 @@ begin
                             ipb_timer <= (others => '0');
                             if (ipb_usr_miso(ipb_usr_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
                         -- IPbus timed out
@@ -260,6 +306,7 @@ begin
                             axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "10", rvalid => '1'); -- SLVERR: slave error response
                             ipb_usr_mosi <= (others => IPB_M2S_NULL);
                             ipb_sys_mosi <= (others => IPB_M2S_NULL);
+                            trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_TIMEOUT;
                             
                         -- still waiting for IPbus
                         else
@@ -297,6 +344,7 @@ begin
                             ipb_state       <= AXI_WRITE_HANDSHAKE;
                             ipb_timer       <= (others => '0');
                             axil_s2m        <= (awready => '0', wready => '0', bresp => "11", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- DECERR: decode error response
+                            trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_ADDR_ERR;
                         end if;
     
                     -- wait for IPBus write ack
@@ -309,8 +357,10 @@ begin
                             ipb_timer <= (others => '0');
                             if (ipb_sys_miso(ipb_sys_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
                         -- got ack from user bus
@@ -320,8 +370,10 @@ begin
                             ipb_timer <= (others => '0');
                             if (ipb_usr_miso(ipb_usr_slv_select).ipb_err = '0') then
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
+                                trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
                         -- IPbus timed out
@@ -331,7 +383,8 @@ begin
                             axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
                             ipb_usr_mosi <= (others => IPB_M2S_NULL);
                             ipb_sys_mosi <= (others => IPB_M2S_NULL);
-    
+                            trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_TIMEOUT;
+                            
                         -- still waiting for IPbus
                         else
                             ipb_timer <= ipb_timer + 1;
@@ -373,7 +426,7 @@ begin
     gen_ipbclk_async : if g_IPB_CLK_ASYNC generate
         
         -- user bus
-        gen_usr_bus : for i in 0 to C_NUM_IPB_SLAVES - 1 generate
+        gen_usr_bus : for i in 0 to C_NUM_IPB_SLAVES * g_NUM_USR_BLOCKS - 1 generate
 
             i_cdc_usr_mosi : xpm_cdc_handshake
                 generic map(

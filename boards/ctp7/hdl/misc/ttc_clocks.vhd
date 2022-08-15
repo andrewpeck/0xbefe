@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: TTC_CLOCKS
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Given a jitter cleaned TTC clock (160MHz, coming from MGT ref) and a reference 40MHz TTC clock from the backplane, this module   
 --              generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks that are phase aligned with the reference TTC clock from the backplane.
 --              All clocks are generated from the jitter cleaned clock and then phase shifted to match the reference, using PLL to check for phase alignment.
@@ -16,20 +16,28 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 library UNISIM;
 use UNISIM.VComponents.all;
 
 use work.ttc_pkg.all;
 use work.board_config_package.all;
+use work.common_pkg.all;
 
 --============================================================================
 --                                                          Entity declaration
 --============================================================================
 entity ttc_clocks is
     generic (
-        PLL_LOCK_WAIT_TIMEOUT     : unsigned(23 downto 0) := x"002710" -- way too long, will measure how low we can go here
+        g_GEM_STATION               : integer range 0 to 2;
+        g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false;
+        PLL_LOCK_WAIT_TIMEOUT       : unsigned(23 downto 0) := x"002710"; -- way too long, will measure how low we can go here
+        g_CLK_STABLE_FREQ           : integer
     );
     port (
+        clk_stable_i            : in  std_logic;
         clk_40_ttc_p_i          : in  std_logic; -- TTC backplane clock signals
         clk_40_ttc_n_i          : in  std_logic;
         clk_gbt_mgt_txout_i     : in  std_logic; -- TTC jitter cleaned 160MHz or 320MHz TTC clock, should come from MGT ref (160MHz in GBTX case, and 320MHz in LpGBT case)
@@ -73,6 +81,18 @@ COMPONENT ila_ttc_clocks
     );
 END COMPONENT  ;
 
+    component freq_meter is
+        generic(
+            REF_F       : std_logic_vector(31 downto 0);
+            N           : integer
+        );
+        port(
+            ref_clk     : in  std_logic;
+            f           : in  std_logic_vector(N - 1 downto 0);
+            freq        : out t_std32_array(N - 1 downto 0)
+        );
+    end component freq_meter;
+    
     --============================================================================
     --                                                         Signal declarations
     --============================================================================
@@ -82,7 +102,7 @@ END COMPONENT  ;
     signal clkin                : std_logic;
 
     signal clkfbout             : std_logic;
-    signal clkfbin              : std_logic;
+    signal clkfbin              : std_logic;    
 
     signal clk_40               : std_logic;
     signal clk_80               : std_logic;
@@ -92,19 +112,20 @@ END COMPONENT  ;
 
     signal ttc_clocks_bufg      : t_ttc_clks;
     
-    -- this function determines the feedback clock multiplication factor based on whether the station is using LpGBT or GBTX
+    -- this function determines the feedback clock multiplication factor based on whether the station is using LpGBT (clkin is 320MHz) or GBTX (clkin is 160MHz)
+    -- VCO frequency should be 960MHz
     function get_clkfbout_mult(gem_station : integer; is_lpgbt_loopback : boolean) return real is
     begin
         if is_lpgbt_loopback then
-            return 3.0;
+            return 3.00;
         elsif gem_station = 0 then
-            return 3.0;
+            return 3.00;
         elsif gem_station = 1 then
-            return 6.0;
+            return 6.00;
         elsif gem_station = 2 then
-            return 6.0;
+            return 6.00;
         else -- hmm whatever, lets say 6.0
-            return 6.0;  
+            return 6.00;  
         end if;
     end function get_clkfbout_mult;    
 
@@ -123,25 +144,9 @@ END COMPONENT  ;
         end if;
     end function get_clkin_period;    
 
-    function get_clkin_frequency_slv32(gem_station : integer; is_lpgbt_loopback : boolean) return std_logic_vector is
-    begin
-        if is_lpgbt_loopback then
-            return x"131c74c0"; -- 320.632
-        elsif gem_station = 0 then
-            return x"131c74c0"; -- 320.632
-        elsif gem_station = 1 then
-            return x"098e3a60"; -- 160.316MHz
-        elsif gem_station = 2 then
-            return x"098e3a60"; -- 160.316MHz
-        else -- hmm whatever, lets say 160
-            return x"098e3a60";  -- 160.316MHz
-        end if;
-    end function get_clkin_frequency_slv32;    
 
-
-    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_FREQ_SLV32 : std_logic_vector := get_clkin_frequency_slv32(CFG_GEM_STATION, CFG_LPGBT_2P56G_LOOPBACK_TEST);
+    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(g_GEM_STATION, g_LPGBT_2P56G_LOOPBACK_TEST);
+    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(g_GEM_STATION, g_LPGBT_2P56G_LOOPBACK_TEST);
     
     ----------------- phase alignment ------------------
     constant MMCM_PS_DONE_TIMEOUT : unsigned(7 downto 0) := x"9f"; -- datasheet says MMCM should complete a phase shift in 12 clocks, but we check it with some margin, just in case
@@ -198,16 +203,24 @@ END COMPONENT  ;
     signal phase_offset_pos         : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_offset_neg         : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_zero_cross         : std_logic;
-    signal phase_zero_cross_psclk   : std_logic;
     signal phase_lock_update        : std_logic;
+
+    -- phase monitoring CDC to psclk domain
+    signal phase_lock_update_psclk  : std_logic;
+    signal phase_lock_ack_psclk     : std_logic;
+    signal phase_lock_ack_psclk_dly : std_logic;
+    signal phase_lock_data_psclk    : std_logic_vector(33 downto 0) := (others => '0');
+    signal phase_zero_cross_psclk   : std_logic;
     signal phase_locked_psclk       : std_logic;
     signal phase_offset_pos_psclk   : std_logic_vector(15 downto 0) := (others => '0');
     signal phase_offset_neg_psclk   : std_logic_vector(15 downto 0) := (others => '0');
-    signal phase_lock_update_psclk : std_logic;
-    signal phase_lock_update1_psclk : std_logic;
    
     -- control signals moved to mmcm_ps_clk domain
     signal ctrl_psclk               : t_ttc_clk_ctrl;
+    
+    -- frequency monitor
+    signal ttc_freq                 : t_std32_array(0 downto 0);
+    signal ttc_freq_sync            : std_logic_vector(31 downto 0);
     
 --============================================================================
 --                                                          Architecture begin
@@ -403,10 +416,14 @@ begin
                 searching_unlock <= '0';
                 mmcm_ps_incdec <= '0';
                 shift_cnt <= (others => '0');
+                phase_lock_ack_psclk <= '0';
+                phase_lock_ack_psclk_dly <= '0';
             else
                 sync_done_flag <= '0';
                 mmcm_ps_en <= '0';
                 mmcm_ps_done_timer <= (others => '0');
+                phase_lock_ack_psclk_dly <= phase_lock_ack_psclk;
+                phase_lock_ack_psclk <= '0';
                 
                 case pa_state is
                     
@@ -414,6 +431,7 @@ begin
                     when IDLE =>
                         -- wait for the MMCM to be locked, and TTC clk reported as present, and phase lock to be updated before moving forward
                         if (mmcm_locked = '1' and ttc_clk_present_psclk = '1' and phase_lock_update_psclk = '1') then
+                            phase_lock_ack_psclk <= '1';
                             pa_state <= FIND_UNLOCK;
                         end if;
                         
@@ -455,10 +473,10 @@ begin
                             pa_state <= FIND_LOCK;
                             searching_unlock <= '0';
                             if (phase_offset_pos_psclk > phase_offset_neg_psclk) then
-                                shift_cnt <= unsigned(phase_offset_neg_psclk) + unsigned("000000000" & phase_offset_neg_psclk(15 downto 9)); -- offset + 1/512 * offset (see the main FSM description for details)
+                                shift_cnt <= unsigned(phase_offset_neg_psclk) + resize(unsigned(phase_offset_neg_psclk(15 downto 9)), 16); -- offset + 1/512 * offset (see the main FSM description for details)
                                 mmcm_ps_incdec <= '1';
                             else
-                                shift_cnt <= unsigned(phase_offset_pos_psclk) + unsigned("000000000" & phase_offset_pos_psclk(15 downto 9)); -- offset + 1/512 * offset (see the main FSM description for details)
+                                shift_cnt <= unsigned(phase_offset_pos_psclk) + resize(unsigned(phase_offset_pos_psclk(15 downto 9)), 16); -- offset + 1/512 * offset (see the main FSM description for details)
                                 mmcm_ps_incdec <= '0';
                             end if;
                             
@@ -664,11 +682,32 @@ begin
             seconds_o => sync_done_time
         );   
 
+    i_freq_meter : freq_meter
+        generic map(
+            REF_F => std_logic_vector(to_unsigned(g_CLK_STABLE_FREQ, 32)),
+            N     => 1
+        )
+        port map(
+            ref_clk => clk_stable_i,
+            f       => (0 => ttc_clocks_bufg.clk_40),
+            freq    => ttc_freq
+        );    
         
     --- transfer status signals from psclk to clk40 domain    
     
     i_sync_sync_done_clk40 :        entity work.synch generic map(N_STAGES => 2) port map(async_i => sync_done_flag, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => sync_done_flag_clk40);
     i_sync_mmcm_locked_clk40 :      entity work.synch generic map(N_STAGES => 2) port map(async_i => mmcm_locked, clk_i   => ttc_clocks_bufg.clk_40, sync_o  => mmcm_locked_clk40);
+ 
+     i_ttc_freq_sync : xpm_cdc_array_single
+        generic map(
+            WIDTH          => 32
+        )
+        port map(
+            src_clk  => clk_stable_i,
+            src_in   => ttc_freq(0),
+            dest_clk => ttc_clocks_bufg.clk_40,
+            dest_out => ttc_freq_sync
+        );        
     
     -- status signal wiring    
     
@@ -681,6 +720,7 @@ begin
     status_o.sync_done_time <= sync_done_time;
     status_o.phase_unlock_time <= phase_unlock_time;
     status_o.ttc_clk_loss_time <= ttc_clk_loss_time;
+    status_o.clk40_freq <= ttc_freq_sync;
         
         
     -------------- Phase monitoring of the 40MHz derived from TXOUTCLK vs TTC backplane -------------- 
@@ -763,16 +803,6 @@ begin
     
     -- transfer the lockmon signals to psclk domain
     
-    i_sync_phase_locked_psclk : entity work.synch
-        generic map(
-            N_STAGES => 2
-        )
-        port map(
-            async_i => phase_locked,
-            clk_i   => mmcm_ps_clk,
-            sync_o  => phase_locked_psclk
-        );
-    
     i_sync_ttc_clk_present_psclk : entity work.synch
         generic map(
             N_STAGES => 2
@@ -782,37 +812,30 @@ begin
             clk_i   => mmcm_ps_clk,
             sync_o  => ttc_clk_present_psclk
         );
-
-    i_sync_zero_cross_psclk : entity work.synch
+    
+    i_phasemon_update_cdc : xpm_cdc_handshake
         generic map(
-            N_STAGES => 2
+            DEST_EXT_HSK   => 0,
+            DEST_SYNC_FF   => 4,
+            SRC_SYNC_FF    => 4,
+            WIDTH          => 34
         )
         port map(
-            async_i => phase_zero_cross,
-            clk_i   => mmcm_ps_clk,
-            sync_o  => phase_zero_cross_psclk
-        );
-    
-    i_sync_phase_lock_update : entity work.oneshot_cross_domain
-        port map(
-            reset_i       => ttc_phase_meas_reset,
-            input_clk_i   => ttc_clocks_bufg.clk_40,
-            oneshot_clk_i => mmcm_ps_clk,
-            input_i       => phase_lock_update,
-            oneshot_o     => phase_lock_update1_psclk
-        );
-    
-    process (mmcm_ps_clk)
-    begin
-        if rising_edge(mmcm_ps_clk) then
-            phase_lock_update_psclk <= phase_lock_update1_psclk;
-            if (phase_lock_update1_psclk = '1') then
-                phase_offset_pos_psclk <= phase_offset_pos;
-                phase_offset_neg_psclk <= phase_offset_neg;
-            end if;
-        end if;
-    end process;
-    
+            src_clk  => ttc_clocks_bufg.clk_40,
+            src_in   => phase_locked & phase_zero_cross & phase_offset_pos & phase_offset_neg,
+            src_send => phase_lock_update,
+            src_rcv  => open,
+            dest_clk => mmcm_ps_clk,
+            dest_req => phase_lock_update_psclk,
+            dest_ack => phase_lock_ack_psclk_dly,
+            dest_out => phase_lock_data_psclk
+        );    
+
+    phase_locked_psclk <= phase_lock_data_psclk(33);
+    phase_zero_cross_psclk <= phase_lock_data_psclk(32);
+    phase_offset_pos_psclk <= phase_lock_data_psclk(31 downto 16);
+    phase_offset_neg_psclk <= phase_lock_data_psclk(15 downto 0);
+
     -------------- DEBUG -------------- 
     
 --    i_clk_phase_check : entity work.clk_phase_check_v7

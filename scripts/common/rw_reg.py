@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as xml
 import sys, os, subprocess
+from datetime import datetime
+import pickle
 from ctypes import *
 import imp
 import sys
@@ -20,13 +22,12 @@ wReg.argtypes = [c_uint, c_uint]
 regInitExists = False
 try:
     regInit = lib.rwreg_init
-    regInit.argtypes = [c_char_p]
+    regInit.argtypes = [c_char_p, c_uint]
     regInitExists = True
 except:
     print("WARNING: rwreg_init() function does not exist.. if you're running on CTP7, you can safely ignore this warning.")
 
 DEBUG = True
-ADDRESS_TABLE_DEFAULT = './address_table.xml'
 nodes = OrderedDict()
 val_cache = {}
 
@@ -92,7 +93,7 @@ class Node:
 class RegVal(int):
     STATE_NEUTRAL = "NEUTRAL"
     STATE_GOOD = Colors.GREEN
-    STATE_WARN = Colors.YELLOW
+    STATE_WARN = Colors.ORANGE
     STATE_BAD = Colors.RED
 
     reg = None
@@ -115,6 +116,8 @@ class RegVal(int):
         elif self.reg.sw_val_good is not None and self.reg.sw_val_bad is None:
             return self.STATE_BAD
         elif self.reg.sw_val_bad is not None and self.reg.sw_val_good is None:
+            return self.STATE_GOOD
+        elif self.reg.sw_val_warn is not None and self.reg.sw_val_good is None:
             return self.STATE_GOOD
         else:
             return self.STATE_NEUTRAL
@@ -178,9 +181,9 @@ class RegVal(int):
                         val = "%d%s" % (self, self.reg.sw_units)
                 else:
                     if hex:
-                        val += " (%f%s)" % (val_pretty, self.reg.sw_units)
+                        val += " (%.3f%s)" % (val_pretty, self.reg.sw_units)
                     else:
-                        val = "%f%s" % (val_pretty, self.reg.sw_units)
+                        val = "%.3f%s" % (val_pretty, self.reg.sw_units)
         elif not hex:
             val = "%d" % self
 
@@ -196,34 +199,79 @@ class RegVal(int):
 
 def parse_xml():
     if regInitExists:
-        regInit(DEVICE)
+        regInit(DEVICE, BASE_ADDR)
     addressTable = os.environ.get('ADDRESS_TABLE')
     if addressTable is None:
-        print('Warning: environment variable ADDRESS_TABLE is not set, using a default of %s' % ADDRESS_TABLE_DEFAULT)
-        addressTable = ADDRESS_TABLE_DEFAULT
-    print('Parsing ' + addressTable + '...')
+        print_red("Environment variable ADDRESS_TABLE is not defined, exiting.. Please source the env.sh")
+        exit()
+
+    xml_modify_time = os.path.getmtime(addressTable)
+    scripts_dir = os.environ.get("BEFE_SCRIPT_DIR")
+    if scripts_dir is None:
+        print_red("Environment variable BEFE_SCRIPT_DIR is not defined, exiting.. Please source the env.sh")
+        exit()
+    befe_flavor = os.environ.get("BEFE_FLAVOR")
+    if befe_flavor is None:
+        print_red("Environment variable BEFE_FLAVOR is not defined, exiting.. Please source the env.sh")
+        exit()
+    befe_board = os.environ.get("BOARD_TYPE")
+    if befe_board is None:
+        print_red("Environment variable BOARD_TYPE is not defined, exiting.. Please source the env.sh")
+        exit()
+
+    pickle_fname = scripts_dir + "/resources/" + befe_flavor + "_" + befe_board + "_address_table.pickle"
+    pickle_exists = os.path.exists(pickle_fname)
+    pickle_modify_time = os.path.getmtime(pickle_fname) if pickle_exists else 0
+
+    global nodes
+
     t1 = time.time()
-    tree = None
-    lxmlExists = False
-    try:
-        imp.find_module('lxml')
-        import lxml.etree
-        lxmlExists = True
-    except:
-        print("WARNING: lxml python module was not found, so xinclude won't work")
 
-    if lxmlExists:
-        tree = lxml.etree.parse(addressTable)
+    if (not pickle_exists) or xml_modify_time > pickle_modify_time:
+        if not pickle_exists:
+            print("Address table pickle file doesn't exist, creating one..")
+        else:
+            print("XML modification time (UTC): %s" % datetime.utcfromtimestamp(xml_modify_time).strftime('%Y-%m-%d %H:%M:%S'))
+            print("Pickle modification time (UTC): %s" % datetime.utcfromtimestamp(pickle_modify_time).strftime('%Y-%m-%d %H:%M:%S'))
+            print("Address table pickle file is out of date, re-creating..")
+
+        print('Parsing XML: ' + addressTable + '...')
+        tree = None
+        lxmlExists = False
         try:
-            tree.xinclude()
-        except Exception as e:
-            print(e)
-    else:
-        tree = xml.parse(addressTable)
+            imp.find_module('lxml')
+            import lxml.etree
+            lxmlExists = True
+        except:
+            print_red("ERROR: lxml python module was not found, so xinclude won't work.. Also will not create a pickle file..")
+            exit()
 
-    root = tree.getroot()
-    vars = {}
-    make_tree(root, '', 0x0, nodes, None, vars, False)
+        if lxmlExists:
+            tree = lxml.etree.parse(addressTable)
+            try:
+                tree.xinclude()
+            except Exception as e:
+                print(e)
+                exit()
+        else:
+            tree = xml.parse(addressTable)
+
+        root = tree.getroot()
+        vars = {}
+        make_tree(root, '', 0x0, nodes, None, vars, False)
+
+        # pickle the nodes
+        pickle_file = open(pickle_fname, 'wb')
+        pickle.dump(nodes, pickle_file)
+        pickle_file.close()
+        print("Pickle file created: %s" % pickle_fname)
+
+    else:
+        print("Loading address table pickle file: %s" % pickle_fname)
+        pickle_file = open(pickle_fname, 'rb')
+        nodes = pickle.load(pickle_file)
+        pickle_file.close()
+
     t2 = time.time()
     print("Parsing done, took %fs. Total num register nodes: %d" % ((t2 - t1), len(nodes)))
 
@@ -258,7 +306,7 @@ def make_tree(node, baseName, baseAddress, nodes, parentNode, vars, isGenerated)
     if node.get('address') is not None:
         address = baseAddress + parse_int(node.get('address'))
     newNode.local_address = address
-    newNode.address = (address << 2) + BASE_ADDR
+    newNode.address = (address << 2)
     newNode.permission = node.get('permission')
     if newNode.permission is None:
         newNode.permission = ""

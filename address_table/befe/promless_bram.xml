@@ -10,22 +10,35 @@
       fw_reg_addr_msb="3"
       fw_reg_addr_lsb="0">
 
-  <node id="RESET_ADDR" address="0x0" permission="w"
+  <node id="RAM_READY" address="0x0" mask="0x80000000" permission="r"
+        description="This flag indicates if the RAM is in working order e.g. MIG init calibration is complete."
+        fw_signal="ram_ready"/>
+  <node id="RAM_MAX_ADDRESS" address="0x0" mask="0x001fffff" permission="r"
+        description="Size of the RAM in units of RAM_DATA_WIDTH -- this is the max allowed address value"
+        fw_signal="std_logic_vector(to_unsigned(RAM_MAX_ADDRESS, 21))"/>
+  <node id="RAM_DATA_WIDTH" address="0x0" mask="0x3f000000" permission="r"
+        description="The width of the RAM data bus -- that determines the number of bits that are used on the WRITE_DATA and READ_DATA registers."
+        fw_signal="std_logic_vector(to_unsigned(RAM_SC_DATA_WIDTH, 6))"/>
+
+  <node id="RESET" address="0x5" permission="w"
+        description="Resets the module"
+        fw_write_pulse_signal="reset_local"/>
+  <node id="RESET_ADDR" address="0x6" permission="w"
         description="Resets the write and read address pointers"
         fw_write_pulse_signal="rama_reset_addr"/>
-  <node id="WRITE_ADDRESS" address="0x1" mask="0x001fffff" permission="r"
+  <node id="WRITE_ADDRESS" address="0x7" mask="0x001fffff" permission="r"
         description="Write address pointer (read-only). The address increments automatically when writing to WRITE_DATA reg"
         fw_signal="rama_write_addr"/>
-  <node id="READ_ADDRESS" address="0x2" mask="0x001fffff" permission="r"
+  <node id="READ_ADDRESS" address="0x8" mask="0x001fffff" permission="r"
         description="Read address pointer (read-only). The address increments automatically when reading the READ_DATA reg"
         fw_signal="rama_read_addr"/>
-  <node id="WRITE_DATA" address="0x3" permission="rw"
+  <node id="WRITE_DATA" address="0x9" permission="rw"
         description="Writing to this register writes the data to the RAM at address WRITE_ADDRESS and then increments the address by 1"
         fw_signal="rama_write_data" fw_write_pulse_signal="rama_write_req" fw_default="0x00000000"/>
-  <node id="READ_DATA" address="0x4" permission="r"
+  <node id="READ_DATA" address="0xa" permission="r"
         description="Reading this register will read the data from the RAM at address READ_ADDRESS, and then increment the address by 1"
         fw_signal="rama_read_data" fw_read_pulse_signal="rama_read_req" fw_read_ready_signal="rama_read_ready"/>
-  <node id="FIRMWARE_SIZE" address="0x5" mask="0x007fffff" permission="rw"
+  <node id="FIRMWARE_SIZE" address="0xb" mask="0x007fffff" permission="rw"
         description="The number of bytes to be streamed on hard-reset (frontend firmware size)"
         fw_signal="firmware_size" fw_default="0x00700000"/>
 </node>

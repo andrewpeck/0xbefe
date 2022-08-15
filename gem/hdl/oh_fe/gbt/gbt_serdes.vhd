@@ -195,7 +195,7 @@ begin
 
       )
     port map(
-      fabric_clk  => clk_1x,
+      clock       => clk_1x,
       reset       => rst,
       bitslip_cnt => rx_bitslip_cnt_stdlog,
       din         => from_gbt_raw,

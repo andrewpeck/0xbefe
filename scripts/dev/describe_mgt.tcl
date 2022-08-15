@@ -9,10 +9,12 @@ set mgt_cell [get_cells $MGT_NAME]
 
 set fp [open $PORT_FNAME w]
 foreach p [get_pins -of $mgt_cell] {
-    set t [get_property TYPE [get_nets -of $p]]
-    set p_split [split $p "/"]
-    set p_short [lindex $p_split end]
-    puts $fp "$p_short $t"
+    catch {
+        set t [get_property TYPE [get_nets -of $p]]
+        set p_split [split $p "/"]
+        set p_short [lindex $p_split end]
+        puts $fp "$p_short $t"
+    }
 }
 close $fp
 

@@ -42,8 +42,8 @@ begin
   process (clock) is
   begin
     if (rising_edge(clock)) then
-      if (to_integer(unsigned(bxn_offset_i)) >= LHC_CYCLE) then
-        bxn_offset_lim <= std_logic_vector(to_unsigned(LHC_CYCLE-2, MXBXN));
+      if (to_integer(unsigned(bxn_offset_i)) >= LHC_CYCLE-1) then
+        bxn_offset_lim <= std_logic_vector(to_unsigned(LHC_CYCLE-1, MXBXN));
       else
         bxn_offset_lim <= bxn_offset_i;
       end if;
@@ -79,7 +79,11 @@ begin
   begin
     if (rising_edge(clock)) then
       if (bxn_preset = '1') then
-        bxn_counter <= to_integer(unsigned(bxn_offset_lim))+1;  -- Counter
+        if (to_integer(unsigned(bxn_offset_lim)) = LHC_CYCLE-1) then
+          bxn_counter <= 0;
+        else
+          bxn_counter <= to_integer(unsigned(bxn_offset_lim))+1;  -- Counter
+        end if;
       elsif (bxn_ovf = '1') then
         bxn_counter <= 0;
       else
@@ -105,7 +109,7 @@ begin
     end if;
   end process;
 
-  bx0_local_o <= '1' when bxn_counter = 0 else '0';  -- This TMBs bxn is at 0
+  bx0_local_o <= '1' when bxn_counter = 0 else '0';  -- This OHs bxn is at 0
 
   -- single clock strobe of sync error at bx0
   bx0_sync_err_o <= '1' when

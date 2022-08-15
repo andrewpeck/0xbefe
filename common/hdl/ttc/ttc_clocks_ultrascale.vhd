@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 12/13/2016 14:27:30
 -- Module Name: TTC_CLOCKS
--- Project Name: GEM_AMC
+-- Project Name:
 -- Description: Given a jitter cleaned TTC clock (160MHz), this module generates 40MHz, 80MHz, 120MHz, 160MHz TTC clocks.
 --              There's also an option to accept the same TXPROGDIVCLK (when g_TXPROGDIVCLK_USED is set to true), which is the same frequency as the MGT user clocks, which are 120MHz for GBTX and 320MHz for LpGBT
 --              This version doesn't implement phase alignment with external reference
@@ -18,7 +18,11 @@ use IEEE.NUMERIC_STD.all;
 library UNISIM;
 use UNISIM.VComponents.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use work.ttc_pkg.all;
+use work.common_pkg.all;
 
 --============================================================================
 --                                                          Entity declaration
@@ -28,9 +32,11 @@ entity ttc_clocks is
         g_GEM_STATION               : integer range 0 to 2;
         g_TXPROGDIVCLK_USED         : boolean := false; -- set this to true if TXOUTCLKSEL is set to TXPROGDIVCLK ("101"), which results in the same frequency as the user clock (e.g. for GBTX TXOUTCLK in this case is 120MHz instead of the 160MHz refclk)
         g_INST_BUFG_GT              : boolean := true; -- if set to true then BUFG_GT will be instantiated inside this module, otherwise the clk_gbt_mgt_txout_i should be put on a BUFG_GT outside
-        g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false
+        g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false;
+        g_CLK_STABLE_FREQ           : integer
     );
     port (
+        clk_stable_i            : in  std_logic; -- used for frequency meter
         clk_gbt_mgt_txout_i     : in  std_logic; -- TTC jitter cleaned 160MHz or 320MHz TTC clock, should come from MGT ref (160MHz in GBTX case, and 320MHz in LpGBT case)
         clk_gbt_mgt_ready_i     : in  std_logic;
         clocks_o                : out t_ttc_clks;
@@ -44,6 +50,18 @@ end ttc_clocks;
 --                                                        Architecture section
 --============================================================================
 architecture ttc_clocks_arch of ttc_clocks is
+
+    component freq_meter is
+        generic(
+            REF_F       : std_logic_vector(31 downto 0);
+            N           : integer
+        );
+        port(
+            ref_clk     : in  std_logic;
+            f           : in  std_logic_vector(N - 1 downto 0);
+            freq        : out t_std32_array(N - 1 downto 0)
+        );
+    end component freq_meter;
 
     --============================================================================
     --                                                         Signal declarations
@@ -122,6 +140,10 @@ architecture ttc_clocks_arch of ttc_clocks is
     
     -- control signals moved to mmcm_ps_clk domain
     signal ctrl_psclk               : t_ttc_clk_ctrl;
+    
+    -- frequency monitor
+    signal ttc_freq                 : t_std32_array(0 downto 0);
+    signal ttc_freq_sync            : std_logic_vector(31 downto 0);
     
 --============================================================================
 --                                                          Architecture begin
@@ -252,6 +274,9 @@ begin
     -- Output buffering
     -------------------------------------
 
+    -- TODO: use BUFGCE_DIV to produce the clk 80 and 40 to minimize skew (must use BUFGCE_DIV on the other clocks too in this case)
+    -- reference: https://docs.xilinx.com/r/en-US/ug949-vivado-design-methodology/Synchronous-CDC
+
     i_bufg_clk_40 : BUFG
         port map(
             O => ttc_clocks_bufg.clk_40,
@@ -316,6 +341,28 @@ begin
             count_o   => mmcm_unlock_cnt
         );
 
+    i_freq_meter : freq_meter
+        generic map(
+            REF_F => std_logic_vector(to_unsigned(g_CLK_STABLE_FREQ, 32)),
+            N     => 1
+        )
+        port map(
+            ref_clk => clk_stable_i,
+            f       => (0 => ttc_clocks_bufg.clk_40),
+            freq    => ttc_freq
+        );    
+
+    i_ttc_freq_sync : xpm_cdc_array_single
+        generic map(
+            WIDTH          => 32
+        )
+        port map(
+            src_clk  => clk_stable_i,
+            src_in   => ttc_freq(0),
+            dest_clk => ttc_clocks_bufg.clk_40,
+            dest_out => ttc_freq_sync
+        );
+
     status_o.mmcm_locked <= mmcm_locked_clk40;
     status_o.mmcm_unlock_cnt <= mmcm_unlock_cnt;
     status_o.phase_locked <= '1';
@@ -332,7 +379,8 @@ begin
     status_o.phase_monitor.phase_max <= (others => '0');
     status_o.phase_monitor.phase_min <= (others => '0');
     status_o.phase_monitor.sample_counter <= (others => '0');
-    
+    status_o.clk40_freq <= ttc_freq_sync;
+        
 end ttc_clocks_arch;
 --============================================================================
 --                                                            Architecture end
