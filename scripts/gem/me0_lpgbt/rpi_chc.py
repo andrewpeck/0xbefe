@@ -72,14 +72,31 @@ class rpi_chc:
             self.efuse_pwr_boss = 12
             self.efuse_pwr_sub = 13
 
+    def gpio_action(self, operation, gpio, value = -9999):
+        read = -9999
+        if operation not in ["read", "write"]:
+            return read
+        if operation == "read":
+            if value != -9999:
+                return read
+            GPIO.setup(gpio, GPIO.IN)
+            read = GPIO.input(gpio)
+        elif operation == "write":
+            if value == -9999:
+                return read
+            GPIO.setup(gpio, GPIO.OUT)
+            GPIO.output(gpio, value)
+            read = 0
+        return read
+        
     def config_select(self):
         # Setting GPIO 13/26 high, connected to config_select enabling I2C
         config_success = 0
         try:
-            GPIO.setup(self.config_channel, GPIO.OUT)
-            GPIO.output(self.config_channel, 1)
-            print("Config Select set to I2C for Pin : " + str(self.config_channel) + "\n")
-            config_success = 1
+            read = self.gpio_action("write", self.config_channel, 1)
+            if read != -9999:
+                print("Config Select set to I2C for Pin : " + str(self.config_channel) + "\n")
+                config_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to set config select, check RPi connection" + Colors.ENDC)
         return config_success
@@ -88,10 +105,10 @@ class rpi_chc:
         # Setting GPIO17 to High to disable Reset for I2C switch
         reset_success = 0
         try:
-            GPIO.setup(self.reset_channel, GPIO.OUT)
-            GPIO.output(self.reset_channel, 1)
-            print("GPIO17 set to high, can now select channels in I2C Switch")
-            reset_success = 1
+            read = self.gpio_action("write", self.reset_channel, 1)
+            if read != -9999:
+                print("GPIO17 set to high, can now select channels in I2C Switch")
+                reset_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to disable reset, check RPi connection" + Colors.ENDC)
         return reset_success
@@ -135,9 +152,10 @@ class rpi_chc:
         # Setting GPIO17 to Low to deselect all channels for I2C switch
         reset_success = 0
         try:
-            GPIO.output(self.reset_channel, 0)
-            print("GPIO17 set to low, deselect both channels in I2C Switch")
-            reset_success = 1
+            read = self.gpio_action("write", self.reset_channel, 0)
+            if read != -9999:
+                print("GPIO17 set to low, deselect both channels in I2C Switch")
+                reset_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to enable reset, check RPi connection" + Colors.ENDC)
 
@@ -145,20 +163,20 @@ class rpi_chc:
         config_channel_13 = 13
         config_success_13 = 0
         try:
-            GPIO.setup(config_channel_13, GPIO.OUT)
-            GPIO.output(config_channel_13, 0)
-            print("GPIO 13 (config select) set to low")
-            config_success_13 = 1
+            read = self.gpio_action("write", config_channel_13, 0)
+            if read != -9999:
+                print("GPIO 13 (config select) set to low")
+                config_success_13 = 1
         except:
             print(Colors.RED + "ERROR: Unable to set GPIO 13 to low, check RPi connection" + Colors.ENDC)
 
         config_channel_26 = 26
         config_success_26 = 0
         try:
-            GPIO.setup(config_channel_26, GPIO.OUT)
-            GPIO.output(config_channel_26, 0)
-            print("GPIO 26 (config select) set to low")
-            config_success_26 = 1
+            read = self.gpio_action("write", config_channel_26, 0)
+            if read != -9999:
+                print("GPIO 26 (config select) set to low")
+                config_success_26 = 1
         except:
             print(Colors.RED + "ERROR: Unable to set GPIO 26 to low, check RPi connection" + Colors.ENDC)
 
@@ -252,26 +270,27 @@ class rpi_chc:
         except Exception as e:
             print(Colors.RED + "ERROR: " + str(e) + Colors.ENDC)
             success = 0
-
+        
         return success, data
 
     def spi_rw(self, command):
-        data = 0
-        success = 1
+        # Perform SPI read/write operations
+        spi_data = 0
+        spi_success = 1
         try:
-            data = self.spi.xfer2(command)
+            spi_data = self.spi.xfer2(command)
         except IOError:
             print(Colors.YELLOW + "ERROR: I/O error in SPI connection, Trying again" + Colors.ENDC)
             time.sleep(0.00001)
             try:
-                data = self.spi.xfer2(command)
+                spi_data = self.spi.xfer2(command)
                 except IOError:
                     print(Colors.RED + "ERROR: I/O error in SPI connection, Trying again" + Colors.ENDC)
-                    success = 0
-         except Exception as e:
+                    spi_success = 0
+        except Exception as e:
             print(Colors.RED + "ERROR: " + str(e) + Colors.ENDC)
-            success = 0
-        return success, data
+            spi_success = 0
+        return spi_success, spi_data
 
     def fuse_arm_disarm(self, boss, enable):
         # Given selection of Boss or Sub, drives LDO for EFUSE at 2.5V
@@ -286,13 +305,13 @@ class rpi_chc:
             print(Colors.RED + "ERROR: Unable to arm/disarm fuse, invalid option" + Colors.ENDC)
             return efuse_success
         try:
-            GPIO.setup(efuse_pwr, GPIO.OUT)
-            GPIO.output(efuse_pwr, enable)
-            if enable:
-                print("GPIO" + str(efuse_pwr) + "set to high, EFUSE ARMED")
-            else:
-                print("GPIO" + str(efuse_pwr) + "set to low, EFUSE DISARMED")
-            efuse_success = 1
+            read = self.gpio_action("write", efuse_pwr, enable)
+            if read != -9999:
+                if enable:
+                    print("GPIO" + str(efuse_pwr) + "set to high, EFUSE ARMED")
+                else:
+                    print("GPIO" + str(efuse_pwr) + "set to low, EFUSE DISARMED")
+                efuse_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to arm/disarm fuse, check RPi connection" + Colors.ENDC)
         return efuse_success
@@ -308,9 +327,10 @@ class rpi_chc:
         efuse_success = 0
         status = 0
         try:
-            GPIO.setup(efuse_pwr, GPIO.IN)
-            status = GPIO.input(efuse_pwr)
-            efuse_success = 1
+            read = self.gpio_action("read", efuse_pwr)
+            if read != -9999:
+                status = read
+                efuse_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to check status of fuse, check RPi connection" + Colors.ENDC)
         return efuse_success, status
