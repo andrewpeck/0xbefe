@@ -185,8 +185,8 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ru
             #        real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
             #    else:
             #        real_calpulse_counter = calpulse_counter
-                print ("Time passed: %.2f minutes, %.2f% completed" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
-                file_out.write("Time passed: %.2f minutes, %.2f% completed\n" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
+                print ("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed")
+                file_out.write("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed\n")
             #    print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
             #    file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
             #    vfat_results_string = ""

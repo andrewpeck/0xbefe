@@ -272,7 +272,7 @@ class rpi_chc:
             success = 0
         
         return success, data
-
+  
     def spi_rw(self, command):
         # Perform SPI read/write operations
         spi_data = 0
@@ -284,9 +284,9 @@ class rpi_chc:
             time.sleep(0.00001)
             try:
                 spi_data = self.spi.xfer2(command)
-                except IOError:
-                    print(Colors.RED + "ERROR: I/O error in SPI connection, Trying again" + Colors.ENDC)
-                    spi_success = 0
+            except IOError:
+                print(Colors.RED + "ERROR: I/O error in SPI connection, Trying again" + Colors.ENDC)
+                spi_success = 0
         except Exception as e:
             print(Colors.RED + "ERROR: " + str(e) + Colors.ENDC)
             spi_success = 0
