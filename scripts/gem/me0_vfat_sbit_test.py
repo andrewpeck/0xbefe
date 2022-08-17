@@ -213,8 +213,8 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, sbit_list,
                         #calpulse_counter = read_backend_reg(calpulse_node)
                         #real_l1a_counter = nl1a_reg_cycles*(2**32) + l1a_counter
                         #real_calpulse_counter = nl1a_reg_cycles*(2**32) + calpulse_counter
-                        print ("Time passed: %.2f minutes, %.2f% completed" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
-                        file_out.write("Time passed: %.2f minutes, %.2f% completed\n" % ((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)))
+                        print ("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed")
+                        file_out.write("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed\n")
                         time_prev = time()
 
             # Stop the cyclic generator
