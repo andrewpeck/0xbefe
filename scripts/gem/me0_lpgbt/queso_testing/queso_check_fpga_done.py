@@ -36,18 +36,13 @@ if __name__ == '__main__':
     read_gpio["2"] = 24
     read_gpio["3"] = 25
 
-    # Reset FPGA
+    # Read FPGA DONE
     for f in args.fpga:
         try:
             fpga_done = my_rpi_chc.gpio_action("read", read_gpio[f])
             print("FPGA %s done status:",%(f, fpga_done))
         except:
-            print("Unable to read from GPIO 23 (fpga 1)")
-        time.sleep(1)
-        try:
-            my_rpi_chc.gpio_action("write", read_gpio[f], 0)
-        except:
-            print("Unable to write GPIO %d to low (fpga %s)"%(read_gpio[f], f))
+            print("Unable to read from GPIO %d to low (fpga %s)"%(read_gpio[f], f))
         time.sleep(1)
 
     # Terminate RPi
