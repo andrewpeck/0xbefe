@@ -45,14 +45,22 @@ if __name__ == '__main__':
     # Reset FPGA
     for f in args.fpga:
         try:
-            my_rpi_chc.gpio_action("write", reset_gpio[f], 1)
+            read = my_rpi_chc.gpio_action("write", reset_gpio[f], 1)
+            if read != -9999:
+                print(Colors.GREEN + "GPIO %d set to high for FPGA %s reset signal"%(reset_gpio[f], f) + Colors.ENDC)
+            else:
+                print(Colors.RED + "ERROR: Unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         except:
-            print("unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f))
+            print(Colors.RED + "ERROR: Unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         time.sleep(1)
         try:
-            my_rpi_chc.gpio_action("write", reset_gpio[f], 0)
+            read = my_rpi_chc.gpio_action("write", reset_gpio[f], 0)
+            if read != -9999:
+                print(Colors.GREEN + "GPIO %d set to low for FPGA %s reset signal"%(reset_gpio[f], f) + Colors.ENDC)
+            else:
+                print(Colors.RED + "ERROR: Unable to write GPIO %d to low (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         except:
-            print("unable to write GPIO %d to low (fpga %s)"%(reset_gpio[f], f))
+            print(Colors.RED + "ERROR: Unable to write GPIO %d to low (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         time.sleep(1)
 
     # Terminate RPi

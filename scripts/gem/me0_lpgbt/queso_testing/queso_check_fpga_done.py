@@ -40,9 +40,15 @@ if __name__ == '__main__':
     for f in args.fpga:
         try:
             fpga_done = my_rpi_chc.gpio_action("read", read_gpio[f])
-            print("FPGA %s done status:",%(f, fpga_done))
+            if fpga_done != -9999:
+                if fpga_done == 1:
+                    print(Colors.GREEN + "FPGA %s done status:",%(f, fpga_done) + Colors.ENDC)
+                else:
+                    print(Colors.YELLOW + "FPGA %s done status:",%(f, fpga_done) + Colors.ENDC)
+            else:
+                print(Colors.RED + "ERROR: Unable to read from GPIO %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
         except:
-            print("Unable to read from GPIO %d to low (fpga %s)"%(read_gpio[f], f))
+            print(Colors.RED + "ERROR: Unable to read from GPIO %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
         time.sleep(1)
 
     # Terminate RPi
