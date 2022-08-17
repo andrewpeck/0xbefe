@@ -88,7 +88,20 @@ class rpi_chc:
             GPIO.output(gpio, value)
             read = 0
         return read
-        
+    
+    def fpga_spi_cs(self, gpio, enable):
+        self.spi.close() 
+        self.spi.open(0,1) # bus 0 device 1 - unused
+        spi_success = 0
+        try:
+            read = self.gpio_action("write", gpio, enable)
+            if read != -9999:
+                print("Chip Select set for FPGA for Pin : " + str(gpio) + "\n")
+                spi_success = 1
+        except:
+            print(Colors.RED + "ERROR: Unable to set chip select for FPGA, check RPi connection" + Colors.ENDC)
+        return spi_success
+
     def config_select(self):
         # Setting GPIO 13/26 high, connected to config_select enabling I2C
         config_success = 0
