@@ -74,8 +74,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Set up RPi
-    gbt_rpi_chc = rpi_chc.rpi_chc()
     global gbt_rpi_chc
+    gbt_rpi_chc = rpi_chc.rpi_chc()
+    
     initialize_success = 1
     if initialize_success:
         initialize_success *= gbt_rpi_chc.en_i2c_switch() 
