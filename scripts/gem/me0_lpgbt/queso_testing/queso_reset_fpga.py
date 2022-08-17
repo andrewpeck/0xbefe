@@ -52,7 +52,7 @@ if __name__ == '__main__':
                 print(Colors.RED + "ERROR: Unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         except:
             print(Colors.RED + "ERROR: Unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
-        time.sleep(1)
+        time.sleep(0.5)
         try:
             read = my_rpi_chc.gpio_action("write", reset_gpio[f], 0)
             if read != -9999:
