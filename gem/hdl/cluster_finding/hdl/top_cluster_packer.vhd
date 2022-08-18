@@ -8,6 +8,9 @@ use work.cluster_pkg.all;
 
 -- latency v0 sorter = 4.75 bx as of 2022/03/03
 -- latency v1 sorter = 4.25 bx as of 2022/03/03
+-- latency v2 sorter = 3.25 bx as of 2022/08/18
+--
+-- ovf_latency = (total_latency[bx] - 2.5) * 4
 
 entity cluster_packer is
   generic (
@@ -41,6 +44,8 @@ end cluster_packer;
 
 architecture behavioral of cluster_packer is
 
+  constant SORTER_TYPE : integer := 2;
+
   constant MXSBITS         : integer := 64;
   constant PARTITION_WIDTH : integer := NUM_VFATS/NUM_PARTITIONS;
 
@@ -61,9 +66,21 @@ architecture behavioral of cluster_packer is
   signal vpfs     : std_logic_vector (NUM_VFATS*MXSBITS-1 downto 0);
   signal cnts     : std_logic_vector (NUM_VFATS*MXSBITS*MXCNTB-1 downto 0);
 
+  function select_ovf_latency (stype : integer) return integer is
+  begin
+    if (stype=0) then
+      return 7;
+    elsif (stype=1) then
+      return 5;
+    elsif (stype=2) then
+      return 3;
+    end if;
+    return -1;
+  end function;
+
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 5;
+  constant OVERFLOW_LATENCY                 : natural := select_ovf_latency(SORTER_TYPE);
 
   signal cluster_latch : std_logic;
 
@@ -288,7 +305,8 @@ begin
       MXSBITS            => MXSBITS,
       NUM_VFATS          => NUM_VFATS,
       NUM_FOUND_CLUSTERS => NUM_FOUND_CLUSTERS,
-      STATION            => STATION
+      STATION            => STATION,
+      SORTER_TYPE        => SORTER_TYPE
       )
     port map (
       clock      => clk_fast,

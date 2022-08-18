@@ -33,11 +33,13 @@ async def random_data(dut, nloops=1000, nhits=128):
 async def walking1(dut):
     await run_test(dut, "WALKING1")
 
-
 @cocotb.test()
 async def colliding1(dut):
     await run_test(dut, "COLLIDING1")
 
+# @cocotb.test()
+# async def specific(dut):
+#     await run_test(dut, "SPECIFIC")
 
 @cocotb.test()
 async def edges(dut, nloops=1000, nhits=32):
@@ -79,7 +81,14 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
 
     ngood = 0
 
-    LATENCY = 4
+    SORTER_TYPE = dut.find_clusters_inst.SORTER_TYPE
+
+    if SORTER_TYPE == 0:
+        LATENCY = 4
+    elif SORTER_TYPE == 1:
+        LATENCY = 4
+    elif SORTER_TYPE == 2:
+        LATENCY = 3
 
     print("Running test: %s" % test)
 
@@ -121,7 +130,10 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
 
                 channel = adr % 64
                 size = 2 ** (cnt + 1) - 1
-                ivfat = prt + 8 * (adr // 64)
+                if (STATION == 2):
+                    ivfat = prt + 2 * (adr // 64)
+                else:
+                    ivfat = prt + 8 * (adr // 64)
 
                 val = (size << channel) & bit_mask_64
                 vfats[ivfat] |= val
@@ -252,17 +264,16 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
                         % (i, str(found_clusters[i]), str(expected_clusters[i]))
                     )
 
-        # sorter type 1 is ordered
 
-        if STATION == 1:
+        # sorter type 1 & 2 are ordered
+        # sorter type 0 is less predictable...
+        if SORTER_TYPE != 0:
 
             for i in range(16):
                 assert equal(found_clusters[i], expected_clusters[i]), print(
                     " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
                     % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
                 )
-
-        # sorter type 0 is less predictable...
 
         # -------------------------------------------------------------------------------
         # check that all clusters w/ vpf = 0 have an invalid address, and all valid

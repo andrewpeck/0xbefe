@@ -37,6 +37,9 @@ package cluster_pkg is
   function cluster_to_vector (a : sbit_cluster_t; size : integer)
     return std_logic_vector;
 
+  function if_then_else (bool : boolean; a : integer; b : integer)
+    return integer;
+
 end package cluster_pkg;
 
 package body cluster_pkg is
@@ -50,5 +53,14 @@ package body cluster_pkg is
     tmp2 := std_logic_vector(resize(unsigned(tmp), size));
     return tmp2;
   end function;
+
+  function if_then_else (bool : boolean; a : integer; b : integer) return integer is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
 
 end package body cluster_pkg;

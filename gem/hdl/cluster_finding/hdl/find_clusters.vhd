@@ -11,7 +11,9 @@ entity find_clusters is
     MXSBITS            : integer := 64;
     NUM_VFATS          : integer := 24;
     NUM_FOUND_CLUSTERS : integer := 0;
-    STATION            : integer := 0
+    STATION            : integer := 0;
+    SORTER_TYPE        : integer := 2
+    -- use the new sorter for GE11, old sorter for GE21 / ME0 (for now at least..)
     );
   port (
     clock : in std_logic;
@@ -29,19 +31,7 @@ end find_clusters;
 
 architecture behavioral of find_clusters is
 
-  function if_then_else (bool : boolean; a : integer; b : integer) return integer is
-  begin
-    if (bool) then
-      return a;
-    else
-      return b;
-    end if;
-  end if_then_else;
-
   constant ENCODER_SIZE : integer := if_then_else(station = 0 or station = 1, 384, 192);
-
-  -- use the new sorter for GE11, old sorter for GE21 / ME0 (for now at least..)
-  constant SORTER_TYPE  : integer := if_then_else(station = 1, 1, 0);
 
   -- std_logic_vector to integer
   function int (vec : std_logic_vector) return integer is
@@ -670,6 +660,79 @@ begin
         prt_out14 => clusters_o(14).prt,
         prt_out15 => clusters_o(15).prt
         );
+
+  end generate;
+
+  priority_sort : if (SORTER_TYPE = 2) generate
+    signal hitmask : std_logic_vector (clusters_s1'length-1 downto 0) := (others => '0');
+
+    function pick_nth (idx     : integer;
+                       hitmask : std_logic_vector)
+      return integer is
+      variable cnt : integer;
+    begin
+      cnt := 0;
+
+      for I in 0 to hitmask'length-1 loop
+        if (hitmask(I) = '1') then
+          if (cnt = idx) then
+            return I;
+          else
+            cnt := cnt + 1;
+          end if;
+        end if;
+      end loop;
+
+      return 16;
+    end;
+
+    type int_array_t is array (integer range <>) of integer;
+    signal cluster_sel : int_array_t (clusters_o'length-1 downto 0) := (others => 0);
+
+    signal clusters_s2 : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal latch_out_s2 : std_logic := '0';
+
+  begin
+
+    -- pack all the vpfs into a single vector
+    hitmask_gen : for I in 0 to clusters_s1'length-1 generate
+      hitmask(I) <= clusters_s1(I).vpf;
+    end generate;
+
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        clusters_s2  <= clusters_s1;
+        latch_out_s2 <= latch_out_s1(0);
+        latch_o      <= latch_out_s2;
+      end if;
+    end process;
+
+    -- get the indexes of the first N clusters
+    cluster_sel_gen : for I in 0 to clusters_o'length-1 generate
+    begin
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          cluster_sel(I) <= pick_nth(I, hitmask);
+        end if;
+      end process;
+    end generate;
+
+    -- mux together the outputs
+
+    cluster_out_gen : for I in 0 to clusters_o'length-1 generate
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          if (cluster_sel(I) = 16)  then
+            clusters_o(I) <= NULL_CLUSTER;
+          else
+            clusters_o(I) <= clusters_s2(cluster_sel(I));
+          end if;
+        end if;
+      end process;
+    end generate;
 
   end generate;
 
