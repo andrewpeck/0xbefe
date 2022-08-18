@@ -141,7 +141,8 @@ def test_find_clusters(station, num_found_clusters):
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
         os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
-        os.path.join(rtl_dir, f"find_clusters.vhd")
+        os.path.join(rtl_dir, f"sort_clusters.vhd"),
+        os.path.join(rtl_dir, f"find_clusters.vhd"),
     ]
 
     verilog_sources = [

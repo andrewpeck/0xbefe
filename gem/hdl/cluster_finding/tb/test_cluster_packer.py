@@ -336,6 +336,7 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
         os.path.join(rtl_dir, f"bitonic_merge.vhd"),
         os.path.join(rtl_dir, f"bitonic_sorter.vhd"),
+        os.path.join(rtl_dir, f"sort_clusters.vhd"),
         os.path.join(rtl_dir, f"find_clusters.vhd"),
         os.path.join(rtl_dir, f"top_cluster_packer.vhd"),
     ]

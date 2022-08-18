@@ -10,6 +10,7 @@ gem/hdl/cluster_finding/hdl/sorter16.v
 gem/hdl/cluster_finding/hdl/sbit_oneshot.vhd 93
 gem/hdl/cluster_finding/hdl/fixed_delay.vhd 93
 gem/hdl/cluster_finding/hdl/find_clusters.vhd 93
+gem/hdl/cluster_finding/hdl/sort_clusters.vhd 93
 gem/hdl/cluster_finding/hdl/top_cluster_packer.vhd 93
 gem/hdl/cluster_finding/hdl/truncate_lsb.vhd 93
 gem/hdl/cluster_finding/hdl/cluster_pkg.vhd 93
