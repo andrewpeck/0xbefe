@@ -106,6 +106,7 @@ architecture Behavioral of gbt_ic_controller is
     signal ic_chip_adr           : std_logic_vector(6 downto 0);
     signal ic_length             : std_logic_vector(15 downto 0);
     signal ic_reg_adr            : std_logic_vector(15 downto 0);
+    signal ic_r_stat             : std_logic_vector(6 downto 0);
 
 begin
 
@@ -334,32 +335,33 @@ begin
     begin
         if (rising_edge(gbt_clk_i)) then
             if (ic_write_req_i = '1' or ic_read_req_i = '1') then
-                ic_r_stat_o    <= (others => '0');
+                ic_r_stat    <= (others => '0');
             elsif (ic_r_valid = '1') then
                 -- Register output data
                 ic_r_data_o    <= ic_r_data;
 
-                ic_r_stat_o(0) <= '1'; -- done flag
-                ic_r_stat_o(1) <= not ic_err;
-                ic_r_stat_o(2) <= ic_uplink_parity_ok;
-                ic_r_stat_o(3) <= ic_downlink_parity_ok;
+                ic_r_stat(0) <= '1'; -- done flag
+                ic_r_stat(1) <= not ic_err;
+                ic_r_stat(2) <= ic_uplink_parity_ok;
+                ic_r_stat(3) <= ic_downlink_parity_ok;
 
                 if (ic_chip_adr = gbt_i2c_address) then
-                    ic_r_stat_o(4) <= '1';
+                    ic_r_stat(4) <= '1';
                 end if;
 
                 if (ic_length(2 downto 0) = ic_rw_length_i) then
-                    ic_r_stat_o(5) <= '1';
+                    ic_r_stat(5) <= '1';
                 end if;
 
                 if (ic_reg_adr = ic_rw_address_i) then
-                    ic_r_stat_o(6) <= '1';
+                    ic_r_stat(6) <= '1';
                 end if;
             end if;
         end if;
     end process;
 
-    ic_r_data_valid_o <= and ic_r_stat_o; -- IC RX error control
+    ic_r_stat_o <= ic_r_stat;
+    ic_r_data_valid_o <= and_reduce(ic_r_stat); -- IC RX error control
 
     -- ILA Debug IC RX --
     ila_enable : if g_DEBUG generate

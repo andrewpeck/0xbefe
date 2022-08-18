@@ -78,10 +78,11 @@ entity gem_amc is
         gt_gbt_ctrl_arr_o       : out t_mgt_ctrl_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
         -- Spy link
-        spy_usrclk_i            : in  std_logic;
-        spy_rx_data_i           : in  t_mgt_16b_rx_data;
-        spy_tx_data_o           : out t_mgt_16b_tx_data;
-        spy_rx_status_i         : in  t_mgt_status;
+        spy_rx_data_i           : in  t_mgt_64b_rx_data;
+        spy_tx_data_o           : out t_mgt_64b_tx_data;
+        spy_rx_usrclk_i         : in  std_logic;
+        spy_tx_usrclk_i         : in  std_logic;
+        spy_status_i            : in  t_mgt_status;
 
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -268,8 +269,8 @@ architecture gem_amc_arch of gem_amc is
 
     --== Spy path ==--
     signal spy_gbe_test_en              : std_logic;
-    signal spy_gbe_test_data            : t_mgt_16b_tx_data;
-    signal spy_gbe_daq_data             : t_mgt_16b_tx_data;
+    signal spy_gbe_test_data            : t_mgt_64b_tx_data;
+    signal spy_gbe_daq_data             : t_mgt_64b_tx_data;
 
     --== Debug ==--
     signal dbg_lpgbt_tx_data            : t_lpgbt_tx_frame;
@@ -412,6 +413,7 @@ begin
                 g_GEM_STATION       => g_GEM_STATION,
                 g_OH_VERSION        => g_OH_VERSION,
                 g_OH_TRIG_LINK_TYPE => g_OH_TRIG_LINK_TYPE,
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
                 g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG             => CFG_DEBUG_OH and ((i = 0) or (i = 1))
@@ -475,9 +477,7 @@ begin
     end generate;
 
     -- ME0 Clusters --
-
-    -- FIXME: Make me work with more than 1 OH
-    me0_trigger : if (g_GEM_STATION = 0) and (g_NUM_OF_OHs <= 1) generate
+    me0_trigger : if (g_GEM_STATION = 0) generate
 
         me0_cluster: entity work.sbit_me0
             generic map(
@@ -584,7 +584,7 @@ begin
             ttc_status_i            => ttc_status,
             vfat3_daq_clk_i         => ttc_clocks_i.clk_40,
             vfat3_daq_links_arr_i   => vfat3_daq_link_arr,
-            spy_clk_i               => spy_usrclk_i,
+            spy_clk_i               => spy_tx_usrclk_i,
             spy_link_o              => spy_gbe_daq_data,
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
@@ -650,9 +650,9 @@ begin
             vfat_mask_arr_o         => vfat_mask_arr,
             gbt_tx_bitslip_arr_o    => gbt_tx_bitslip_arr,
 
-            spy_usrclk_i            => spy_usrclk_i,
+            spy_rx_usrclk_i         => spy_rx_usrclk_i,
             spy_rx_data_i           => spy_rx_data_i,
-            spy_rx_status_i         => spy_rx_status_i,
+            spy_status_i            => spy_status_i,
 
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
@@ -709,7 +709,7 @@ begin
             gbt_tx_data_arr_o           => test_gbt_tx_data_arr,
             gbt_wide_rx_data_arr_i      => test_gbt_wide_rx_data_arr,
             vfat3_daq_links_arr_i       => vfat3_daq_link_arr,
-            gbe_clk_i                   => spy_usrclk_i,
+            gbe_clk_i                   => spy_tx_usrclk_i,
             gbe_tx_data_o               => spy_gbe_test_data,
             gbe_test_enable_o           => spy_gbe_test_en,
             ipb_reset_i                 => ipb_reset,
@@ -976,18 +976,17 @@ begin
                 );
         end generate;
 
-        i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
+        i_ila_gbe_rx_link : entity work.ila_mgt_rx_64b_wrapper
             port map(
-                clk_i        => spy_usrclk_i,
+                clk_i        => spy_rx_usrclk_i,
                 rx_data_i    => spy_rx_data_i,
-                mgt_status_i => spy_rx_status_i
+                mgt_status_i => spy_status_i
             );
 
-        i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
+        i_ila_gbe_tx_link : entity work.ila_mgt_tx_64b_wrapper
             port map(
-                clk_i   => spy_usrclk_i,
-                kchar_i => spy_tx_data_o.txcharisk,
-                data_i  => spy_tx_data_o.txdata
+                clk_i     => spy_tx_usrclk_i,
+                tx_data_i => spy_tx_data_o
             );
 
     end generate;

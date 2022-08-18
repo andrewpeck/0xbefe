@@ -39,6 +39,8 @@ gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner_tmr.vhd 93
 gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
 
 # Utils
+common/hdl/utils/oneshot.vhd 93
+common/hdl/utils/synchronizer__generic.vhd 93
 #gem/hdl/utils/yahamm/yahamm_dec.vhd 93
 common/hdl/utils/yahamm/matrix_pkg.vhd 93
 common/hdl/utils/yahamm/yahamm_enc.vhd 93

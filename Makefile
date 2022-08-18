@@ -76,36 +76,46 @@ $(UPDATE_LIST): config
 		`# BACKEND ` ; \
 			\
 		else \
-			`# GEM ` ; \
-			if [[ $@ == *"me0"* ]] || [[ $@ == *"ge21"* ]] || [[ $@ == *"ge11"* ]] ; then \
+			flavor="$(patsubst update_%,%,$@)"; \
+			# GEM \
+			if [[ $${flavor} =~ ^(g|m)e ]]; then \
 				system="gem"; \
 				module="gem_amc"; \
-			`# CSC ` ; \
-			elif [[ $@ == *"csc"* ]]; then \
+			# CSC \
+			elif [[ $${flavor} =~ ^csc ]]; then \
 				system="csc"; \
 				module="csc_fed"; \
-			`# unknown` ; \
+			# Unknown \
 			else \
-				system="unknown"; \
-			fi ; \
-			\
-			cd address_table/$$system && python generate_xml.py ; cd - ; \
-			build_type="$(patsubst update_%,%,$@)"; \
+				echo "==== ERROR: cannot determine system (GEM, CSC) for flavor $${flavor} ===="; \
+				exit 1; \
+			fi; \
+			cd address_table/$${system} && python generate_xml.py; cd -; \
 			do_update=false; \
-			for d in address_table/$$system/generated/$$build_type*; do \
-			        if [[ ! -f $$d/$$module.xml ]]; then \
-								echo "==== ERROR: $$module.xml does not exist in $$d, skipping.. ===="; \
-								continue; \
-							fi; \
-							prefix=address_table/$$system/generated/; \
-							flavor=$${d#$$prefix}; \
-							if [[ $$flavor =~ ${flavor}_flavor_(.*) ]]; then \
-											extra_args="-f $${BASH_REMATCH[1]}"; \
-							else \
-											extra_args=; \
-							fi; \
-							cd regtools && python generate_registers.py -p generated/$(patsubst update_%,%,$@)/ $$extra_args -a ../$$d/$$module.xml -u $$do_update $$module; cd - ;\
-							do_update=true; \
+			for d in address_table/$${system}/generated/$${flavor}*; do \
+				if [[ ! -f $${d}/$${module}.xml ]]; then \
+					# Could be an hard error, but regtools creates an empty directory for hybrid firmware \
+					echo "==== WARNING: $${module}.xml does not exist in $${d}, skipping... ===="; \
+					continue; \
+				fi; \
+				\
+				table_name=$${d#address_table/$${system}/generated/}; \
+				if [[ $${table_name} =~ ^$${flavor}_flavor_(.*)$$ ]]; then \
+					station="$${BASH_REMATCH[1]}"; \
+				elif [[ $${table_name} = $${flavor} ]]; then \
+					station=$${flavor%%_*}; \
+				else \
+					# Only exact and flavored matches are used \
+					continue; \
+				fi; \
+				\
+				if [[ $${station} != "csc" ]]; then \
+					extra_args="-f $${station}"; \
+				else \
+					extra_args=; \
+				fi; \
+				cd regtools && python generate_registers.py -p generated/$${flavor}/ $${extra_args} -a ../$${d}/$${module}.xml -u $${do_update} $${module}; cd - ;\
+				do_update=true; \
 			done; \
 		fi ; \
 	}
