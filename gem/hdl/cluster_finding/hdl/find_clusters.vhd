@@ -689,22 +689,26 @@ begin
     type int_array_t is array (integer range <>) of integer;
     signal cluster_sel : int_array_t (clusters_o'length-1 downto 0) := (others => 0);
 
-    signal clusters_s2 : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    signal latch_out_s2 : std_logic := '0';
+    signal clusters_s2, clusters_s3: sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal latch_out_s2, latch_out_s3 : std_logic := '0';
 
   begin
 
     -- pack all the vpfs into a single vector
     hitmask_gen : for I in 0 to clusters_s1'length-1 generate
-      hitmask(I) <= clusters_s1(I).vpf;
+      hitmask(I) <= clusters_s2(I).vpf;
     end generate;
 
     process (clock) is
     begin
       if (rising_edge(clock)) then
+        --
         clusters_s2  <= clusters_s1;
+        clusters_s3  <= clusters_s2;
+        --
         latch_out_s2 <= latch_out_s1(0);
-        latch_o      <= latch_out_s2;
+        latch_out_s3 <= latch_out_s2;
+        latch_o      <= latch_out_s3;
       end if;
     end process;
 
@@ -728,7 +732,7 @@ begin
           if (cluster_sel(I) = 16)  then
             clusters_o(I) <= NULL_CLUSTER;
           else
-            clusters_o(I) <= clusters_s2(cluster_sel(I));
+            clusters_o(I) <= clusters_s3(cluster_sel(I));
           end if;
         end if;
       end process;
