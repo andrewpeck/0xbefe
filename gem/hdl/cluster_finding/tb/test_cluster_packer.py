@@ -154,8 +154,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     # event loop
     for loop in range(nloops):
 
-        if verbose or loop % (nloops / 100) == 0:
-            print(" > loop %d of %d" % (loop, nloops))
+        if verbose:
+            print(" > loop %d of %d" % (loop+1, nloops))
 
         # Drive the inputs
 
