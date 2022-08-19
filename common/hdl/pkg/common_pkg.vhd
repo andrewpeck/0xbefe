@@ -11,7 +11,8 @@ package common_pkg is
     constant C_LED_PULSE_LENGTH_TTC_CLK : std_logic_vector(20 downto 0) := std_logic_vector(to_unsigned(1_600_000, 21));
         
     function count_ones(s : std_logic_vector) return integer;
-    function bool_to_std_logic(L : BOOLEAN) return std_logic;
+    function bool_to_std_logic(L : boolean) return std_logic;
+    function bool_to_bit(L : boolean) return bit;
     function log2ceil(arg : positive) return natural; -- returns the number of bits needed to encode the given number
     function up_to_power_of_2(arg : positive) return natural; -- "rounds" the given number up to the closest power of 2 number (e.g. if you give 6, it will say 8, which is 2^3)
     function div_ceil(numerator, denominator : positive) return natural; -- poor man's division, rounding up to the closest integer
@@ -343,9 +344,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(7 downto 0);
         txchardispmode : std_logic_vector(7 downto 0);
         txchardispval  : std_logic_vector(7 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
 
-    constant MGT_64B_TX_DATA_NULL : t_mgt_64b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0')); 
+    constant MGT_64B_TX_DATA_NULL : t_mgt_64b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_64b_rx_data is record
         rxdata          : std_logic_vector(63 downto 0);
@@ -358,6 +361,8 @@ package common_pkg is
         rxcharisk       : std_logic_vector(7 downto 0);
     end record;
 
+    constant MGT_64B_RX_DATA_NULL : t_mgt_64b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
+
     type t_mgt_64b_tx_data_arr is array(integer range <>) of t_mgt_64b_tx_data;
     type t_mgt_64b_rx_data_arr is array(integer range <>) of t_mgt_64b_rx_data;
 
@@ -366,7 +371,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(3 downto 0);
         txchardispmode : std_logic_vector(3 downto 0);
         txchardispval  : std_logic_vector(3 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
+
+    constant MGT_32B_TX_DATA_NULL : t_mgt_32b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_32b_rx_data is record
         rxdata          : std_logic_vector(31 downto 0);
@@ -379,6 +388,8 @@ package common_pkg is
         rxcharisk       : std_logic_vector(3 downto 0);
     end record;
 
+    constant MGT_32B_RX_DATA_NULL : t_mgt_32b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
+
     type t_mgt_32b_tx_data_arr is array(integer range <>) of t_mgt_32b_tx_data;
     type t_mgt_32b_rx_data_arr is array(integer range <>) of t_mgt_32b_rx_data;
 
@@ -387,9 +398,11 @@ package common_pkg is
         txcharisk      : std_logic_vector(1 downto 0);
         txchardispmode : std_logic_vector(1 downto 0);
         txchardispval  : std_logic_vector(1 downto 0);
+        txheader       : std_logic_vector(2 downto 0);
+        txsequence     : std_logic_vector(6 downto 0);
     end record;
 
-    constant MGT_16B_TX_DATA_NULL : t_mgt_16b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'));
+    constant MGT_16B_TX_DATA_NULL : t_mgt_16b_tx_data := (txdata => (others => '0'), txcharisk => (others => '0'), txchardispmode => (others => '0'), txchardispval => (others => '0'), txheader => (others => '0'), txsequence => (others => '0'));
 
     type t_mgt_16b_rx_data is record
         rxdata          : std_logic_vector(15 downto 0);
@@ -566,7 +579,7 @@ package body common_pkg is
     ---------------------------------------------------------------------------
     --
     ---------------------------------------------------------------------------
-    function bool_to_std_logic(L : BOOLEAN) return std_logic is
+    function bool_to_std_logic(L : boolean) return std_logic is
     begin
         if L then
             return ('1');
@@ -574,6 +587,17 @@ package body common_pkg is
             return ('0');
         end if;
     end function bool_to_std_logic;
+    ---------------------------------------------------------------------------
+    --
+    ---------------------------------------------------------------------------
+    function bool_to_bit(L : boolean) return bit is
+    begin
+        if L then
+            return ('1');
+        else
+            return ('0');
+        end if;
+    end function bool_to_bit;
     ---------------------------------------------------------------------------
     --
     ---------------------------------------------------------------------------

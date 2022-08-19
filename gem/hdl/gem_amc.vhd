@@ -48,6 +48,7 @@ entity gem_amc is
         reset_pwrup_o           : out  std_logic;
 
         -- TTC
+        ttc_reset_i             : in  std_logic;
         ttc_clocks_i            : in  t_ttc_clks;
         ttc_clk_status_i        : in  t_ttc_clk_status;
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
@@ -72,16 +73,16 @@ entity gem_amc is
         gt_gbt_tx_data_arr_o    : out t_std40_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_rx_clk_arr_i     : in  std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_tx_clk_arr_i     : in  std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-        gt_gbt_rx_common_clk_i  : in  std_logic;
 
         gt_gbt_status_arr_i     : in  t_mgt_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gt_gbt_ctrl_arr_o       : out t_mgt_ctrl_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
         -- Spy link
-        spy_usrclk_i            : in  std_logic;
-        spy_rx_data_i           : in  t_mgt_16b_rx_data;
-        spy_tx_data_o           : out t_mgt_16b_tx_data;
-        spy_rx_status_i         : in  t_mgt_status;
+        spy_rx_data_i           : in  t_mgt_64b_rx_data;
+        spy_tx_data_o           : out t_mgt_64b_tx_data;
+        spy_rx_usrclk_i         : in  std_logic;
+        spy_tx_usrclk_i         : in  std_logic;
+        spy_status_i            : in  t_mgt_status;
 
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -148,13 +149,23 @@ architecture gem_amc_arch of gem_amc is
         );
     end component;
 
+    component ila_lpgbt_10g_tx
+        port(
+            clk    : in std_logic;
+            probe0 : in std_logic_vector(233 downto 0);
+            probe1 : in std_logic;
+            probe2 : in std_logic
+        );
+    end component;
+
     component vio_debug_link_selector
         port(
             clk        : in  std_logic;
             probe_out0 : out std_logic_vector(5 downto 0);
             probe_out1 : out std_logic_vector(4 downto 0);
             probe_out2 : out std_logic;
-            probe_out3 : out std_logic
+            probe_out3 : out std_logic;
+            probe_out4 : out std_logic_vector(2 downto 0)
         );
     end component;
 
@@ -181,6 +192,8 @@ architecture gem_amc_arch of gem_amc is
     signal sbit_clusters_arr        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal emtf_tx_ready_arr        : std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal emtf_tx_had_not_ready_arr: std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -256,8 +269,8 @@ architecture gem_amc_arch of gem_amc is
 
     --== Spy path ==--
     signal spy_gbe_test_en              : std_logic;
-    signal spy_gbe_test_data            : t_mgt_16b_tx_data;
-    signal spy_gbe_daq_data             : t_mgt_16b_tx_data;
+    signal spy_gbe_test_data            : t_mgt_64b_tx_data;
+    signal spy_gbe_daq_data             : t_mgt_64b_tx_data;
 
     --== Debug ==--
     signal dbg_lpgbt_tx_data            : t_lpgbt_tx_frame;
@@ -267,9 +280,14 @@ architecture gem_amc_arch of gem_amc is
     signal dbg_gbt_wide_rx_data         : std_logic_vector(31 downto 0);
     signal dbg_gbt_rx_valid             : std_logic;
     signal dbg_gbt_link_status          : t_gbt_link_status;
+    signal dbg_emtf_data                : std_logic_vector(233 downto 0);
+    signal dbg_emtf_tx_ready            : std_logic;
+    signal dbg_emtf_tx_had_not_ready    : std_logic;
+    
 
     signal dbg_gbt_link_select          : std_logic_vector(5 downto 0);
     signal dbg_vfat_link_select         : std_logic_vector(4 downto 0);
+    signal dbg_trig_tx_link_select      : std_logic_vector(2 downto 0);
 
 begin
 
@@ -278,13 +296,12 @@ begin
     --================================--
 
     reset_pwrup_o <= reset_pwrup;
-    reset <= reset_i or reset_pwrup or manual_global_reset;
+    reset <= (reset_i or reset_pwrup or manual_global_reset) when rising_edge(ttc_clocks_i.clk_40);
     ipb_reset <= ipb_reset_i or reset_pwrup or manual_ipbus_reset;
     ipb_miso_arr_o <= ipb_miso_arr;
     link_reset <= manual_link_reset or ttc_cmd.hard_reset;
 
     spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
---    spy_gbe_daq_data <= (txdata => x"50BC", txcharisk => "01", txchardispmode => "00", txchardispval => "00");
 
     -- select the GBT link to debug
     dbg_gbt_tx_data               <= gbt_tx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
@@ -294,6 +311,9 @@ begin
     dbg_lpgbt_rx_data             <= lpgbt_rx_data_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_rx_valid              <= gbt_rx_valid_arr(to_integer(unsigned(dbg_gbt_link_select)));
     dbg_gbt_link_status           <= gbt_link_status_arr(to_integer(unsigned(dbg_gbt_link_select)));
+    dbg_emtf_data                 <= emtf_data_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
+    dbg_emtf_tx_ready             <= emtf_tx_ready_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
+    dbg_emtf_tx_had_not_ready     <= emtf_tx_had_not_ready_arr(to_integer(unsigned(dbg_trig_tx_link_select)));
 
     --================================--
     -- Power-on reset
@@ -322,7 +342,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i             => reset,
+            reset_i             => reset or ttc_reset_i,
             ttc_clks_i          => ttc_clocks_i,
             ttc_clks_status_i   => ttc_clk_status_i,
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
@@ -393,6 +413,7 @@ begin
                 g_GEM_STATION       => g_GEM_STATION,
                 g_OH_VERSION        => g_OH_VERSION,
                 g_OH_TRIG_LINK_TYPE => g_OH_TRIG_LINK_TYPE,
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
                 g_OH_IDX            => std_logic_vector(to_unsigned(i, 4)),
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG             => CFG_DEBUG_OH and ((i = 0) or (i = 1))
@@ -456,34 +477,32 @@ begin
     end generate;
 
     -- ME0 Clusters --
-
     me0_trigger : if (g_GEM_STATION = 0) generate
-        
-            me0_cluster: entity work.sbit_me0
-                generic map(
-                    g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                    g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                    g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-                    g_DEBUG             => CFG_DEBUG_SBIT_ME0
-                )
-                port map(
-                    reset_i             => reset_i,
-                    ttc_clk_i           => ttc_clocks_i,
-                    ttc_cmds_i          => ttc_cmd,
-                    vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
-                    ipb_reset_i         => ipb_reset,
-                    ipb_clk_i           => ipb_clk_i,
-                    ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
-                    me0_cluster_count_o => open,
-                    me0_clusters_o      => me0_clusters_arr,
-                    ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
-                );
-        end generate;
+
+        me0_cluster: entity work.sbit_me0
+            generic map(
+                g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                g_DEBUG             => CFG_DEBUG_SBIT_ME0
+            )
+            port map(
+                reset_i             => reset,
+                ttc_clk_i           => ttc_clocks_i,
+                ttc_cmds_i          => ttc_cmd,
+                vfat3_sbits_arr_i   => me0_vfat3_sbits_arr,
+                ipb_reset_i         => ipb_reset,
+                ipb_clk_i           => ipb_clk_i,
+                ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
+                me0_cluster_count_o => open,
+                me0_clusters_o      => me0_clusters_arr,
+                ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
+            );
 
         -- import clusters from ME0 cluster module to trigger module--
         sbit_clusters_arr <= me0_clusters_arr;
 
---    end generate;
+    end generate;
 
     -- Trigger module --
     i_trigger : entity work.trigger
@@ -527,8 +546,8 @@ begin
                     mgt_tx_ready_i     => gt_trig_tx_status_arr_i(i).tx_reset_done,
                     mgt_tx_data_o      => gt_trig_tx_data_arr_o(i),
                     tx_data_i          => emtf_data_arr(i),
-                    tx_ready_o         => open,
-                    tx_had_not_ready_o => open
+                    tx_ready_o         => emtf_tx_ready_arr(i),
+                    tx_had_not_ready_o => emtf_tx_had_not_ready_arr(i)
                 );
 
         end generate;
@@ -565,7 +584,7 @@ begin
             ttc_status_i            => ttc_status,
             vfat3_daq_clk_i         => ttc_clocks_i.clk_40,
             vfat3_daq_links_arr_i   => vfat3_daq_link_arr,
-            spy_clk_i               => spy_usrclk_i,
+            spy_clk_i               => spy_tx_usrclk_i,
             spy_link_o              => spy_gbe_daq_data,
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
@@ -616,6 +635,7 @@ begin
 
     i_oh_link_registers : entity work.oh_link_regs
         generic map(
+            g_GEM_STATION       => g_GEM_STATION,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
@@ -630,9 +650,9 @@ begin
             vfat_mask_arr_o         => vfat_mask_arr,
             gbt_tx_bitslip_arr_o    => gbt_tx_bitslip_arr,
 
-            spy_usrclk_i            => spy_usrclk_i,
+            spy_rx_usrclk_i         => spy_rx_usrclk_i,
             spy_rx_data_i           => spy_rx_data_i,
-            spy_rx_status_i         => spy_rx_status_i,
+            spy_status_i            => spy_status_i,
 
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk_i,
@@ -681,7 +701,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i                     => reset_i,
+            reset_i                     => reset,
             ttc_clk_i                   => ttc_clocks_i,
             ttc_cmds_i                  => ttc_cmd,
             loopback_gbt_test_en_i      => loopback_gbt_test_en,
@@ -689,7 +709,7 @@ begin
             gbt_tx_data_arr_o           => test_gbt_tx_data_arr,
             gbt_wide_rx_data_arr_i      => test_gbt_wide_rx_data_arr,
             vfat3_daq_links_arr_i       => vfat3_daq_link_arr,
-            gbe_clk_i                   => spy_usrclk_i,
+            gbe_clk_i                   => spy_tx_usrclk_i,
             gbe_tx_data_o               => spy_gbe_test_data,
             gbe_test_enable_o           => spy_gbe_test_en,
             ipb_reset_i                 => ipb_reset,
@@ -711,7 +731,7 @@ begin
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
                 RX_ENCODING_ODD     => g_GBT_WIDEBUS,
-                g_USE_RX_SYNC_FIFOS => false
+                g_USE_RX_SYNC_FIFOS => true
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
@@ -719,7 +739,7 @@ begin
 
                 tx_frame_clk_i              => ttc_clocks_i.clk_40,
                 rx_frame_clk_i              => ttc_clocks_i.clk_40,
-                rx_word_common_clk_i        => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i        => ttc_clocks_i.clk_120,
                 tx_word_clk_arr_i           => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i           => gt_gbt_rx_clk_arr_i,
 
@@ -748,11 +768,11 @@ begin
                 g_RX_RATE               => DATARATE_10G24,
                 g_RX_ENCODING           => FEC5,
                 g_RESET_MGT_ON_EVEN     => 0,
-                g_USE_RX_SYNC_FIFOS     => false,
+                g_USE_RX_SYNC_FIFOS     => true,
                 g_USE_RX_CORRECTION_CNT => true
             )
             port map(
-                reset_i              => reset_i or manual_gbt_reset,
+                reset_i              => reset or manual_gbt_reset,
                 reset_tx_i           => lpgbt_reset_tx or manual_gbt_reset,
                 reset_rx_i           => lpgbt_reset_rx or manual_gbt_reset,
                 cnt_reset_i          => link_reset,
@@ -760,7 +780,7 @@ begin
                 rx_frame_clk_i       => ttc_clocks_i.clk_40,
                 tx_word_clk_arr_i    => gt_gbt_tx_clk_arr_i,
                 rx_word_clk_arr_i    => gt_gbt_rx_clk_arr_i,
-                rx_word_common_clk_i => gt_gbt_rx_common_clk_i,
+                rx_word_common_clk_i => ttc_clocks_i.clk_320,
                 mgt_status_arr_i     => gt_gbt_status_arr_i,
                 mgt_ctrl_arr_o       => gt_gbt_ctrl_arr_o,
                 mgt_tx_data_arr_o    => gt_gbt_tx_data_arr_o,
@@ -875,7 +895,7 @@ begin
                 g_LOADER_CLK_80_MHZ => true
             )
             port map(
-                reset_i          => reset_i,
+                reset_i          => reset,
                 gbt_clk_i        => ttc_clocks_i.clk_40,
                 loader_clk_i     => ttc_clocks_i.clk_80,
                 to_promless_o    => to_promless_o,
@@ -916,7 +936,8 @@ begin
             probe_out0 => dbg_gbt_link_select,
             probe_out1 => dbg_vfat_link_select,
             probe_out2 => lpgbt_reset_tx,
-            probe_out3 => lpgbt_reset_rx
+            probe_out3 => lpgbt_reset_rx,
+            probe_out4 => dbg_trig_tx_link_select
         );
 
     g_gbt_debug : if CFG_DEBUG_GBT generate
@@ -955,20 +976,31 @@ begin
                 );
         end generate;
 
-        i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
+        i_ila_gbe_rx_link : entity work.ila_mgt_rx_64b_wrapper
             port map(
-                clk_i        => spy_usrclk_i,
+                clk_i        => spy_rx_usrclk_i,
                 rx_data_i    => spy_rx_data_i,
-                mgt_status_i => spy_rx_status_i
+                mgt_status_i => spy_status_i
             );
 
-        i_ila_gbe_tx_link : entity work.ila_mgt_tx_16b_wrapper
+        i_ila_gbe_tx_link : entity work.ila_mgt_tx_64b_wrapper
             port map(
-                clk_i   => spy_usrclk_i,
-                kchar_i => spy_tx_data_o.txcharisk,
-                data_i  => spy_tx_data_o.txdata
+                clk_i     => spy_tx_usrclk_i,
+                tx_data_i => spy_tx_data_o
             );
 
     end generate;
+
+    g_trig_tx_debug : if g_USE_TRIG_TX_LINKS and CFG_DEBUG_TRIGGER_TX generate
+        
+        i_ila_trig_tx : component ila_lpgbt_10g_tx
+            port map(
+                clk    => ttc_clocks_i.clk_40,
+                probe0 => dbg_emtf_data,
+                probe1 => dbg_emtf_tx_ready,
+                probe2 => dbg_emtf_tx_had_not_ready
+            );
+
+    end generate; 
 
 end gem_amc_arch;

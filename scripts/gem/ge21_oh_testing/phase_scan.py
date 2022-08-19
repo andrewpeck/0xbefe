@@ -554,7 +554,7 @@ def initVfatRegAddrs():
 def selectGbt(ohIdx, gbtIdx):
     linkIdx = ohIdx * 2 + gbtIdx
 
-    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBTX_LINK_SELECT'), linkIdx)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.IC.GBT_LINK_SELECT'), linkIdx)
 
     return 0
 

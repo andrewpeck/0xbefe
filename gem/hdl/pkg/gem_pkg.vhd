@@ -47,13 +47,6 @@ package gem_pkg is
 
     type t_oh_trig_link_type is (OH_TRIG_LINK_TYPE_3P2G, OH_TRIG_LINK_TYPE_4P0G, OH_TRIG_LINK_TYPE_GBT, OH_TRIG_LINK_TYPE_NONE);
 
-    --======================--
-    --== Config Constants ==--
-    --======================-- 
-        
-    -- DAQ
-    constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"0";
-
     --=============--
     --==  VFAT3  ==--
     --=============--
@@ -192,7 +185,7 @@ package gem_pkg is
     type t_chamber_infifo_rd_array is array(integer range <>) of t_chamber_infifo_rd;
 
     type t_chamber_evtfifo_rd is record
-        dout          : std_logic_vector(59 downto 0);
+        dout          : std_logic_vector(83 downto 0);
         rd_en         : std_logic;
         empty         : std_logic;
         valid         : std_logic;
@@ -238,6 +231,7 @@ package gem_pkg is
         data            : std_logic_vector(7 downto 0);
         event_done      : std_logic;
         crc_error       : std_logic;
+        link_enabled    : std_logic;
     end record;
 
     type t_vfat_daq_link_arr is array(integer range <>) of t_vfat_daq_link;

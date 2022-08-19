@@ -52,8 +52,8 @@ port(
     l1a_reset_req_o             : out std_logic;
 
     -- Data
-    input_clk_arr_i             : in std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
-    input_link_arr_i            : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+    dmb_clk_i                   : in std_logic;
+    dmb_link_arr_i              : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
     
     -- Spy
     spy_clk_i                   : in  std_logic;
@@ -988,8 +988,8 @@ begin
             evtfifo_data_cnt_o          => chamber_evtfifos(i).data_cnt,
 
             -- Track data
-            input_clk_i                 => input_clk_arr_i(i),
-            input_data_link_i           => input_link_arr_i(i),
+            input_clk_i                 => dmb_clk_i,
+            input_data_link_i           => dmb_link_arr_i(i),
             
             -- Status and control
             status_o                    => input_status_arr(i),
@@ -1033,9 +1033,9 @@ begin
     --================================--
 
     -- TODO: this is a cheat -- using the first input clock to aggregate input TTS states 
-    process (input_clk_arr_i(0))
+    process (dmb_clk_i)
     begin
-        if (rising_edge(input_clk_arr_i(0))) then
+        if (rising_edge(dmb_clk_i)) then
             if (reset_daq = '1') then
                 tts_chmb_critical <= '0';
                 tts_chmb_oos <= '0';

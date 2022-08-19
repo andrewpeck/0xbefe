@@ -84,6 +84,9 @@ architecture csc_x2o_arch of csc_x2o is
     -- constants
     constant IPB_CLK_PERIOD_NS  : integer := 10;
 
+    -- resets
+    signal usr_logic_reset      : std_logic;
+
     -- clocks
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
     signal refclk1              : std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);
@@ -233,7 +236,8 @@ begin
         generic map(
             g_CLK_STABLE_FREQ           => 100_000_000,
             g_GEM_STATION               => 1,
-            g_LPGBT_2P56G_LOOPBACK_TEST => false
+            g_LPGBT_2P56G_LOOPBACK_TEST => false,
+            g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)
         )
         port map(
             clk_stable_i        => axil_clk,
@@ -354,9 +358,14 @@ begin
         )
         port map(
             reset_i             => '0',
+            ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
+            usr_logic_reset_o   => usr_logic_reset,
+            ttc_reset_o         => open,
             ext_trig_en_o       => open,
             ext_trig_deadtime_o => open,
+            ext_trig_source_o   => open,
+            ext_clk_out_en_o    => open,
             ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -423,7 +432,7 @@ begin
             )
             port map(
                 -- Resets
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => open,
                 
                 -- TTC
@@ -436,9 +445,9 @@ begin
                 ttc_cmds_o              => ttc_cmds(slr),
                 
                 -- DMB links
-                csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
-                csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
-                csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+                dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
+                dmb_rx_data_arr_i       => csc_dmb_rx_data_arr,
+                dmb_rx_status_arr_i     => csc_dmb_rx_status_arr,
     
                 -- GBT links
                 gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
@@ -451,10 +460,10 @@ begin
                 gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
-                csc_spy_usrclk_i        => csc_spy_usrclk,
-                csc_spy_rx_data_i       => csc_spy_rx_data,
-                csc_spy_tx_data_o       => csc_spy_tx_data,
-                csc_spy_rx_status_i     => csc_spy_rx_status,
+                spy_usrclk_i            => csc_spy_usrclk,
+                spy_rx_data_i           => csc_spy_rx_data,
+                spy_tx_data_o           => csc_spy_tx_data,
+                spy_rx_status_i         => csc_spy_rx_status,
                 
                 -- IPbus
                 ipb_reset_i             => ipb_reset,
@@ -490,7 +499,7 @@ begin
             csc_dmb_rx_status_arr(i)               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
             
             -- send some dummy data on the TX of the same fiber
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= (txdata => x"00000000000050bc", txcharisk => x"01", txchardispmode => x"00", txchardispval => x"00");
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= MGT_64B_TX_DATA_NULL;
         end generate; 
 
         g_csc_gbt_links : for gbt in 0 to CFG_NUM_GBT_LINKS(slr) - 1 generate
@@ -507,9 +516,22 @@ begin
             csc_gbt_status_arr(gbt).rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_pll_locked;
         end generate; 
 
-        -- spy link mapping
-        g_csc_spy_link : if CFG_USE_SPY_LINK(slr) generate
+        -- spy link TX mapping
+        g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             csc_spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
+        end generate;
+
+        -- no spy link TX
+        g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX(slr) generate
+            csc_spy_usrclk <= '0';
+        end generate;
+
+        -- spy link RX mapping
+        g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             csc_spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
             csc_spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
             csc_spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
@@ -519,20 +541,14 @@ begin
             csc_spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
             csc_spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
             csc_spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-            
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
         end generate;
 
-        -- spy link mapping
-        g_csc_fake_spy_link : if not CFG_USE_SPY_LINK(slr) generate
-            csc_spy_usrclk      <= '0';
+        -- no spy link RX
+        g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX(slr) generate
             csc_spy_rx_data     <= MGT_16B_RX_DATA_NULL;
             csc_spy_rx_status   <= MGT_STATUS_NULL;
         end generate;
-    
+        
     end generate;
 
     -- TTC TX links
@@ -567,6 +583,433 @@ begin
                     mgt_status_i => rx_link_status
                 );
         end generate;
+    end generate;
+
+    -- ODMB57 loopback test
+    g_odmb7_test : if CFG_ODMB57_BIDIR_TEST generate
+        
+        component vio_odmb57_loopback
+            port(
+                clk        : in  std_logic;
+                probe_in0  : in  std_logic_vector(31 downto 0);
+                probe_in1  : in  std_logic_vector(31 downto 0);
+                probe_in2  : in  std_logic_vector(31 downto 0);
+                probe_in3  : in  std_logic_vector(31 downto 0);
+                probe_in4  : in  std_logic_vector(31 downto 0);
+                probe_in5  : in  std_logic_vector(31 downto 0);
+                probe_in6  : in  std_logic_vector(31 downto 0);
+                probe_in7  : in  std_logic_vector(31 downto 0);
+                probe_in8  : in  std_logic_vector(31 downto 0);
+                probe_in9  : in  std_logic_vector(31 downto 0);
+                probe_in10 : in  std_logic_vector(31 downto 0);
+                probe_in11 : in  std_logic_vector(31 downto 0);
+                probe_in12 : in  std_logic_vector(31 downto 0);
+                probe_in13 : in  std_logic_vector(31 downto 0);
+                probe_in14 : in  std_logic_vector(31 downto 0);
+                probe_in15 : in  std_logic_vector(31 downto 0);
+                probe_in16 : in  std_logic_vector(31 downto 0);
+                probe_in17 : in  std_logic_vector(31 downto 0);
+                probe_in18 : in  std_logic_vector(31 downto 0);
+                probe_in19 : in  std_logic_vector(31 downto 0);
+                probe_in20 : in  std_logic_vector(31 downto 0);
+                probe_in21 : in  std_logic_vector(31 downto 0);
+                probe_in22 : in  std_logic_vector(31 downto 0);
+                probe_in23 : in  std_logic_vector(31 downto 0);
+                probe_in24 : in  std_logic_vector(31 downto 0);
+                probe_in25 : in  std_logic_vector(31 downto 0);
+                probe_in26 : in  std_logic_vector(31 downto 0);
+                probe_in27 : in  std_logic_vector(31 downto 0);
+                probe_out0 : out std_logic;
+                probe_out1 : out std_logic_vector(15 downto 0);
+                probe_out2 : out std_logic;
+                probe_out3 : out std_logic
+            );
+        end component;        
+        
+        component ila_mgt_tx_128b
+            port(
+                clk    : in std_logic;
+                probe0 : in std_logic_vector(127 downto 0);
+                probe1 : in std_logic_vector(15 downto 0)
+            );
+        end component;        
+        
+        component ila_mgt_rx_128b
+            port(
+                clk    : in std_logic;
+                probe0 : in std_logic_vector(127 downto 0);
+                probe1 : in std_logic_vector(15 downto 0);
+                probe2 : in std_logic_vector(15 downto 0);
+                probe3 : in std_logic_vector(15 downto 0);
+                probe4 : in std_logic_vector(15 downto 0);
+                probe5 : in std_logic;
+                probe6 : in std_logic;
+                probe7 : in std_logic_vector(2 downto 0);
+                probe8 : in std_logic_vector(1 downto 0)
+            );
+        end component;        
+        
+        signal o57_reset            : std_logic;
+        signal link_clk             : std_logic;
+        signal use_prbs             : std_logic := '1';
+        signal reverse_rx_prbs      : std_logic := '1';
+        
+        signal tx_data              : std_logic_vector(127 downto 0);
+        signal tx_charisk           : std_logic_vector(15 downto 0);
+        signal rx_data              : std_logic_vector(127 downto 0);
+        signal rx_byteisaligned     : std_logic_vector(3 downto 0);
+        signal rx_byterealign       : std_logic_vector(3 downto 0);
+        signal rx_commadet          : std_logic_vector(3 downto 0);
+        signal rx_disperr           : std_logic_vector(15 downto 0);
+        signal rx_notintable        : std_logic_vector(15 downto 0);
+        signal rx_chariscomma       : std_logic_vector(15 downto 0);
+        signal rx_charisk           : std_logic_vector(15 downto 0);
+        signal rx_charisk_d1        : std_logic_vector(15 downto 0) := (others => '1');
+        signal rx_charisk_d2        : std_logic_vector(15 downto 0) := (others => '1');
+        signal rx_chanisaligned     : std_logic_vector(3 downto 0);
+                                    
+        signal idle_word_period     : std_logic_vector(15 downto 0);
+        signal idle_cntdown         : integer range 0 to (2 ** 16) - 1 := 0;
+        signal tx_counter           : unsigned(31 downto 0) := (others => '0');
+        signal tx_prbs_data         : std_logic_vector(31 downto 0) := (others => '0');
+        signal tx_prbs_en           : std_logic;
+        
+        signal rx_prbs_data         : t_std32_array(0 to 3) := (others => (others => '0'));
+        signal rx_prbs_err_bits     : t_std32_array(0 to 3) := (others => (others => '0'));
+        signal rx_prbs_err          : std_logic_vector(3 downto 0) := (others => '0');
+                                    
+        signal rx_counter           : unsigned(31 downto 0) := (others => '0');
+        signal rx_data_err          : std_logic_vector(3 downto 0) := (others => '0');
+        signal rx_data_err_cnt      : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_charisk_err       : std_logic_vector(3 downto 0) := (others => '0');
+        signal rx_charisk_err_cnt   : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_notintable_err_cnt: t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_disperr_err_cnt   : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_bytealign_err_cnt : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_chanalign_err_cnt : t_std32_array(3 downto 0) := (others => (others => '0'));
+        signal rx_prbs_err_cnt      : t_std32_array(3 downto 0) := (others => (others => '0'));
+                                    
+        constant CHAN_BOND_WORD     : std_logic_vector(31 downto 0) := x"606060BC";
+        constant IDLE_WORD          : std_logic_vector(31 downto 0) := x"505050BC";
+        
+    begin
+        
+        g_chan : for i in 0 to 3 generate
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx).txdata(31 downto 0) <= tx_data(32 * i + 31 downto 32 * i);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx).txchardispmode <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx).txchardispval <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx).txcharisk(3 downto 0) <= tx_charisk(4 * i + 3 downto 4 * i);
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).tx).txreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxslide <= '0';
+            
+            rx_data(32 * i + 31 downto 32 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxdata(31 downto 0);
+            rx_byteisaligned(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxbyteisaligned;
+            rx_byterealign(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxbyterealign;
+            rx_commadet(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxcommadet;
+            rx_disperr(4 * i + 3 downto 4 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxdisperr(3 downto 0);
+            rx_notintable(4 * i + 3 downto 4 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxnotintable(3 downto 0);
+            rx_chariscomma(4 * i + 3 downto 4 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxchariscomma(3 downto 0);
+            rx_charisk(4 * i + 3 downto 4 * i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxcharisk(3 downto 0);
+            rx_chanisaligned(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_ODMB7_BIDIR_TX_LINK(i)).rx).rxchanisaligned;
+        end generate;
+        
+        link_clk <= mgt_master_txusrclk.odmb57;
+        
+        -- TX PRBS
+        i_tx_prbs : entity work.PRBS_ANY
+            generic map(
+                CHK_MODE    => false,
+                INV_PATTERN => true,
+                POLY_LENGHT => 31,
+                POLY_TAP    => 28,
+                NBITS       => 32
+            )
+            port map(
+                RST      => o57_reset,
+                CLK      => link_clk,
+                DATA_IN  => x"00000000",
+                EN       => tx_prbs_en,
+                DATA_OUT => tx_prbs_data
+            );
+        
+        tx_prbs_en <= '0' when idle_cntdown = 0 else '1';
+        
+        -- RX PRBS checkers
+        g_prbs_chekers : for i in 0 to 3 generate
+        
+            process(link_clk) is
+            begin
+                if rising_edge(link_clk) then
+                    if reverse_rx_prbs = '1' then
+                        rx_prbs_data(i) <= reverse_bits(rx_data(32 * i + 31 downto 32 * i));
+                    else
+                        rx_prbs_data(i) <= rx_data(32 * i + 31 downto 32 * i);
+                    end if;
+                    rx_charisk_d1(4 * i + 3 downto 4 * i) <= rx_charisk(4 * i + 3 downto 4 * i);
+                    rx_charisk_d2(4 * i + 3 downto 4 * i) <= rx_charisk_d1(4 * i + 3 downto 4 * i);
+                end if;
+            end process;
+        
+            i_rx_prbs_check : entity work.PRBS_ANY
+                generic map(
+                    CHK_MODE    => true,
+                    INV_PATTERN => true,
+                    POLY_LENGHT => 31,
+                    POLY_TAP    => 28,
+                    NBITS       => 32
+                )
+                port map(
+                    RST      => o57_reset,
+                    CLK      => link_clk,
+                    DATA_IN  => rx_prbs_data(i),
+                    EN       => not rx_charisk_d1(4 * i),
+                    DATA_OUT => rx_prbs_err_bits(i)
+                );
+
+            process(link_clk) is
+            begin
+                if rising_edge(link_clk) then
+                    if o57_reset = '1' then
+                        rx_prbs_err(i) <= '0';
+                    else
+                        rx_prbs_err(i) <= or_reduce(rx_prbs_err_bits(i)) and not or_reduce(rx_charisk_d2(4 * i + 3 downto 4 * i));
+                    end if;
+                end if;
+            end process;
+
+        end generate;
+        
+        -- tx logic
+        process(link_clk)
+            variable tx_idle_char : std_logic := '0';
+        begin
+            if rising_edge(link_clk) then
+                if o57_reset = '1' then
+                    idle_cntdown <= to_integer(unsigned(idle_word_period));
+                    tx_counter <= (others => '0');
+                    if tx_idle_char = '0' then
+                        tx_data <= CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD;
+                    else
+                        tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
+                    end if;
+                    tx_charisk <= x"1111";
+                    tx_idle_char := not tx_idle_char;
+                else
+                    
+                    if idle_cntdown = 0 then
+                        if tx_idle_char = '0' then
+                            tx_data <= CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD & CHAN_BOND_WORD;
+                        else
+                            tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
+                        end if;
+                        tx_idle_char := not tx_idle_char;
+--                        tx_data <= IDLE_WORD & IDLE_WORD & IDLE_WORD & IDLE_WORD;
+                        tx_charisk <= x"1111";
+                        idle_cntdown <= to_integer(unsigned(idle_word_period));
+                    else
+                        idle_cntdown <= idle_cntdown - 1;
+                        tx_counter <= tx_counter + 1;
+                        if use_prbs = '1' then
+                            tx_data <= tx_prbs_data & tx_prbs_data & tx_prbs_data & tx_prbs_data; 
+                        else
+                            tx_data <= std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter) & std_logic_vector(tx_counter);
+                        end if;
+                        tx_charisk <= x"0000";
+                    end if;
+                    
+                end if;
+            end if;
+        end process;
+        
+        -- rx logic
+        process (link_clk) is
+        begin
+            if rising_edge(link_clk) then
+                if o57_reset = '1' then
+                    rx_counter <= (others => '0');
+                    rx_data_err <= (others => '0');
+                    rx_charisk_err <= (others => '0');
+                else
+                    if rx_charisk = x"0000" then
+                        rx_charisk_err <= (others => '0');
+                        rx_counter <= rx_counter + 1;
+                        for i in 0 to 3 loop
+                            if rx_data(32 * i + 31 downto 32 * i) = std_logic_vector(rx_counter) then
+                                rx_data_err(i) <= '0';
+                            else
+                                rx_data_err(i) <= '1';
+                            end if;
+                        end loop;
+                    elsif rx_charisk = x"1111" then
+                        rx_charisk_err <= (others => '0');
+                        rx_data_err <= (others => '0');
+                    else
+                        rx_charisk_err <= or_reduce(rx_charisk(15 downto 12)) & or_reduce(rx_charisk(11 downto 8)) & or_reduce(rx_charisk(7 downto 4)) & or_reduce(rx_charisk(3 downto 0));
+                        rx_data_err <= (others => '0');
+                    end if;
+                end if;
+            end if;
+        end process;
+        
+        -- error counters
+        g_channels : for i in 0 to 3 generate
+            
+            i_data_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => rx_data_err(i),
+                    count_o   => rx_data_err_cnt(i)
+                );
+
+            i_charisk_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => rx_charisk_err(i),
+                    count_o   => rx_charisk_err_cnt(i)
+                );
+
+            i_notintable_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => or_reduce(rx_notintable(i * 4 + 3 downto i * 4)),
+                    count_o   => rx_notintable_err_cnt(i)
+                );
+
+            i_disperr_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => or_reduce(rx_disperr(i * 4 + 3 downto i * 4)),
+                    count_o   => rx_disperr_err_cnt(i)
+                );
+
+            i_bytealign_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => not rx_byteisaligned(i),
+                    count_o   => rx_bytealign_err_cnt(i)
+                );
+
+            i_chanalign_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => not rx_chanisaligned(i),
+                    count_o   => rx_chanalign_err_cnt(i)
+                );
+
+            i_prbs_err_cnt : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => link_clk,
+                    reset_i   => o57_reset,
+                    en_i      => rx_prbs_err(i),
+                    count_o   => rx_prbs_err_cnt(i)
+                );
+                        
+        end generate;
+    
+        -- VIO
+        i_vio_odmb57_loop : vio_odmb57_loopback
+            port map(
+                clk        => link_clk,
+                probe_in0  => rx_data_err_cnt(0),
+                probe_in1  => rx_data_err_cnt(1),
+                probe_in2  => rx_data_err_cnt(2),
+                probe_in3  => rx_data_err_cnt(3),
+                probe_in4  => rx_charisk_err_cnt(0),
+                probe_in5  => rx_charisk_err_cnt(1),
+                probe_in6  => rx_charisk_err_cnt(2),
+                probe_in7  => rx_charisk_err_cnt(3),
+                probe_in8  => rx_notintable_err_cnt(0),
+                probe_in9  => rx_notintable_err_cnt(1),
+                probe_in10 => rx_notintable_err_cnt(2),
+                probe_in11 => rx_notintable_err_cnt(3),
+                probe_in12 => rx_disperr_err_cnt(0),
+                probe_in13 => rx_disperr_err_cnt(1),
+                probe_in14 => rx_disperr_err_cnt(2),
+                probe_in15 => rx_disperr_err_cnt(3),
+                probe_in16 => rx_bytealign_err_cnt(0),
+                probe_in17 => rx_bytealign_err_cnt(1),
+                probe_in18 => rx_bytealign_err_cnt(2),
+                probe_in19 => rx_bytealign_err_cnt(3),
+                probe_in20 => rx_chanalign_err_cnt(0),
+                probe_in21 => rx_chanalign_err_cnt(1),
+                probe_in22 => rx_chanalign_err_cnt(2),
+                probe_in23 => rx_chanalign_err_cnt(3),
+                probe_in24 => rx_prbs_err_cnt(0),
+                probe_in25 => rx_prbs_err_cnt(1),
+                probe_in26 => rx_prbs_err_cnt(2),
+                probe_in27 => rx_prbs_err_cnt(3),
+                probe_out0 => o57_reset,
+                probe_out1 => idle_word_period,
+                probe_out2 => use_prbs,
+                probe_out3 => reverse_rx_prbs
+            );    
+    
+        -- TX ILA
+        i_odmb57_tx_ila : ila_mgt_tx_128b
+            port map(
+                clk    => link_clk,
+                probe0 => tx_data,
+                probe1 => tx_charisk
+            );
+        
+        -- RX ILA
+        i_odmb57_rx_ila : ila_mgt_rx_128b
+            port map(
+                clk    => link_clk,
+                probe0 => rx_data,
+                probe1 => rx_charisk,
+                probe2 => rx_chariscomma,
+                probe3 => rx_notintable,
+                probe4 => rx_disperr,
+                probe5 => and_reduce(rx_byteisaligned),
+                probe6 => or_reduce(rx_byterealign),
+                probe7 => "000", -- bufstatus
+                probe8 => "00" -- rxclkcorr
+            );
+
+        -- PRBS checker ILA
+        i_prbs_check_ila : ila_mgt_tx_128b
+            port map(
+                clk    => link_clk,
+                probe0 => rx_prbs_err_bits(3) & rx_prbs_err_bits(2) & rx_prbs_err_bits(1) & rx_prbs_err_bits(0),
+                probe1 => x"000" & rx_prbs_err(3) & rx_prbs_err(2) & rx_prbs_err(1) & rx_prbs_err(0)
+            );
+    
     end generate;
 
 end csc_x2o_arch;

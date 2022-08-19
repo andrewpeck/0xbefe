@@ -34,17 +34,17 @@ entity link_monitor is
         ttc_cmds_i              : in t_ttc_cmds;
 
         -- DMB links
-        csc_dmb_rx_usrclk_arr_i : in  std_logic_vector(g_NUM_OF_DMBs - 1 downto 0);
-        csc_dmb_rx_data_arr_i   : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
-        csc_dmb_rx_status_arr_i : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
+        dmb_rx_usrclk_i         : in  std_logic;
+        dmb_rx_data_arr_i       : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+        dmb_rx_status_arr_i     : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
 
         -- GBT links
         gbt_link_status_arr_i   : in t_gbt_link_status_arr(g_NUM_GBT_LINKS - 1 downto 0);
 
         -- Spy link
-        csc_spy_usrclk_i        : in  std_logic;
-        csc_spy_rx_data_i       : in  t_mgt_16b_rx_data;
-        csc_spy_rx_status_i     : in  t_mgt_status;
+        spy_usrclk_i            : in  std_logic;
+        spy_rx_data_i           : in  t_mgt_16b_rx_data;
+        spy_rx_status_i         : in  t_mgt_status;
         
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -138,9 +138,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => (csc_dmb_rx_status_arr_i(i).rxbufstatus(2)) and (csc_dmb_rx_status_arr_i(i).rxbufstatus(1)) and (not csc_dmb_rx_status_arr_i(i).rxbufstatus(0)) and not hard_reset_veto, -- 110
+                en_i      => (dmb_rx_status_arr_i(i).rxbufstatus(2)) and (dmb_rx_status_arr_i(i).rxbufstatus(1)) and (not dmb_rx_status_arr_i(i).rxbufstatus(0)) and not hard_reset_veto, -- 110
                 count_o   => dmb_mgt_buf_ovf_arr(i)
             );
     
@@ -150,9 +150,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => (csc_dmb_rx_status_arr_i(i).rxbufstatus(2)) and (not csc_dmb_rx_status_arr_i(i).rxbufstatus(1)) and (csc_dmb_rx_status_arr_i(i).rxbufstatus(0)) and not hard_reset_veto, -- 101
+                en_i      => (dmb_rx_status_arr_i(i).rxbufstatus(2)) and (not dmb_rx_status_arr_i(i).rxbufstatus(1)) and (dmb_rx_status_arr_i(i).rxbufstatus(0)) and not hard_reset_veto, -- 101
                 count_o   => dmb_mgt_buf_unf_arr(i)
             );
     
@@ -162,9 +162,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => csc_dmb_rx_status_arr_i(i).rxclkcorcnt(1) and csc_dmb_rx_status_arr_i(i).rxclkcorcnt(0) and not hard_reset_veto, -- 11
+                en_i      => dmb_rx_status_arr_i(i).rxclkcorcnt(1) and dmb_rx_status_arr_i(i).rxclkcorcnt(0) and not hard_reset_veto, -- 11
                 count_o   => dmb_clk_corr_add_arr(i)
             );
     
@@ -174,9 +174,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => (csc_dmb_rx_status_arr_i(i).rxclkcorcnt(1) xor csc_dmb_rx_status_arr_i(i).rxclkcorcnt(0)) and not hard_reset_veto, -- 10 or 01
+                en_i      => (dmb_rx_status_arr_i(i).rxclkcorcnt(1) xor dmb_rx_status_arr_i(i).rxclkcorcnt(0)) and not hard_reset_veto, -- 10 or 01
                 count_o   => dmb_clk_corr_drop_arr(i)
             );
 
@@ -186,9 +186,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => (csc_dmb_rx_data_arr_i(i).rxnotintable(1) or csc_dmb_rx_data_arr_i(i).rxnotintable(0)) and not hard_reset_veto,
+                en_i      => (dmb_rx_data_arr_i(i).rxnotintable(1) or dmb_rx_data_arr_i(i).rxnotintable(0)) and not hard_reset_veto,
                 count_o   => dmb_not_in_table_arr(i)
             );
 
@@ -198,9 +198,9 @@ begin
                 g_COUNTER_WIDTH => 16
             )
             port map(
-                ref_clk_i => csc_dmb_rx_usrclk_arr_i(i),
+                ref_clk_i => dmb_rx_usrclk_i,
                 reset_i   => reset,
-                en_i      => (csc_dmb_rx_data_arr_i(i).rxdisperr(1) or csc_dmb_rx_data_arr_i(i).rxdisperr(0)) and not hard_reset_veto,
+                en_i      => (dmb_rx_data_arr_i(i).rxdisperr(1) or dmb_rx_data_arr_i(i).rxdisperr(0)) and not hard_reset_veto,
                 count_o   => dmb_disperr_arr(i)
             );
       
@@ -216,9 +216,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => (csc_spy_rx_status_i.rxbufstatus(2)) and (csc_spy_rx_status_i.rxbufstatus(1)) and (not csc_spy_rx_status_i.rxbufstatus(0)), -- 110
+            en_i      => (spy_rx_status_i.rxbufstatus(2)) and (spy_rx_status_i.rxbufstatus(1)) and (not spy_rx_status_i.rxbufstatus(0)), -- 110
             count_o   => spy_mgt_buf_ovf
         );
 
@@ -228,9 +228,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => (csc_spy_rx_status_i.rxbufstatus(2)) and (not csc_spy_rx_status_i.rxbufstatus(1)) and (csc_spy_rx_status_i.rxbufstatus(0)), -- 101
+            en_i      => (spy_rx_status_i.rxbufstatus(2)) and (not spy_rx_status_i.rxbufstatus(1)) and (spy_rx_status_i.rxbufstatus(0)), -- 101
             count_o   => spy_mgt_buf_unf
         );
 
@@ -240,9 +240,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => csc_spy_rx_status_i.rxclkcorcnt(1) and csc_spy_rx_status_i.rxclkcorcnt(0), -- 11
+            en_i      => spy_rx_status_i.rxclkcorcnt(1) and spy_rx_status_i.rxclkcorcnt(0), -- 11
             count_o   => spy_clk_corr_add
         );
 
@@ -252,9 +252,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => csc_spy_rx_status_i.rxclkcorcnt(1) xor csc_spy_rx_status_i.rxclkcorcnt(0), -- 10 or 01
+            en_i      => spy_rx_status_i.rxclkcorcnt(1) xor spy_rx_status_i.rxclkcorcnt(0), -- 10 or 01
             count_o   => spy_clk_corr_drop
         );
 
@@ -264,9 +264,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => csc_spy_rx_data_i.rxnotintable(1) or csc_spy_rx_data_i.rxnotintable(0),
+            en_i      => spy_rx_data_i.rxnotintable(1) or spy_rx_data_i.rxnotintable(0),
             count_o   => spy_not_in_table
         );
 
@@ -276,9 +276,9 @@ begin
             g_COUNTER_WIDTH => 16
         )
         port map(
-            ref_clk_i => csc_spy_usrclk_i,
+            ref_clk_i => spy_usrclk_i,
             reset_i   => reset,
-            en_i      => csc_spy_rx_data_i.rxdisperr(1) or csc_spy_rx_data_i.rxdisperr(0),
+            en_i      => spy_rx_data_i.rxdisperr(1) or spy_rx_data_i.rxdisperr(0),
             count_o   => spy_disperr
         );
     

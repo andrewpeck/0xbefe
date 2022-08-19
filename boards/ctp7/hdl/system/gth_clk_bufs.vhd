@@ -58,7 +58,11 @@ entity gth_clk_bufs is
 
     gth_gbt_tx_mmcm_locked_o : out std_logic;
     clk_gth_gbt_common_rxusrclk_o : out std_logic;
-    clk_gth_gbt_common_txoutclk_o : out std_logic
+    clk_gth_gbt_common_txoutclk_o : out std_logic;
+
+    clk_gth_10gbe_common_txoutclk_o  : out std_logic;
+    clk_gth_10gbe_common_txusrclk_i  :  in std_logic;
+    clk_gth_10gbe_common_txusrclk2_i :  in std_logic
 
     );
 end gth_clk_bufs;
@@ -138,18 +142,26 @@ begin
   gen_bufh_outclks : for n in 0 to g_NUM_OF_GTH_GTs-1 generate
 
     -- select the TXOUTCLK that feeds to the main MMCM (also use the TXUSRCLK2 as the GBT common RXUSRCLK)
-    gen_gth_gbt_txuserclk_master : if c_gth_config_arr(n).gth_txclk_out_master = true generate
+    gen_gth_gbt_txuserclk : if c_gth_config_arr(n).gth_link_type = gth_4p8g or c_gth_config_arr(n).gth_link_type = gth_10p24g generate
+      gen_gth_gbt_txuserclk_master : if c_gth_config_arr(n).gth_txclk_out_master = true generate
 
-      s_gth_gbt_txoutclk <= gth_gt_clk_out_arr_i(n).txoutclk;
+        s_gth_gbt_txoutclk <= gth_gt_clk_out_arr_i(n).txoutclk;
 
-      i_bufg_gbt_tx_outclk : BUFG
-        port map(
-          I => s_gth_gbt_txoutclk,
-          O => clk_gth_gbt_common_txoutclk_o
-        );
+        i_bufg_gbt_tx_outclk : BUFG
+          port map(
+            I => s_gth_gbt_txoutclk,
+            O => clk_gth_gbt_common_txoutclk_o
+          );
 
-      clk_gth_gbt_common_rxusrclk_o <= s_gth_tx_usrclk_arr(n);
+        clk_gth_gbt_common_rxusrclk_o <= s_gth_tx_usrclk_arr(n);
+      end generate;
+    end generate;
 
+    -- select the TXOUTCLK that feeds to the 10 GbE MMCM
+    gen_gth_10gbe_txuserclk : if c_gth_config_arr(n).gth_link_type = gth_tx_10p3125g_rx_4p0g generate
+      gen_gth_10gbe_txuserclk_master : if c_gth_config_arr(n).gth_txclk_out_master = true generate
+        clk_gth_10gbe_common_txoutclk_o <= gth_gt_clk_out_arr_i(n).txoutclk;
+      end generate;
     end generate;
 
     -- when txoutclk is used as the txusrclk, put the txoutclk on a bufg and send it back (this is used in the GbE link)
@@ -163,6 +175,14 @@ begin
 
       s_gth_tx_usrclk2_arr(n) <= s_gth_tx_usrclk_arr(n);
 
+    end generate;
+
+    gen_gth_txusrclk_10gbe: if c_gth_config_arr(n).gth_txusrclk = GTH_USRCLK_10GBE generate
+        s_gth_tx_usrclk_arr(n) <= clk_gth_10gbe_common_txusrclk_i;
+    end generate;
+
+    gen_gth_txusrclk2_10gbe: if c_gth_config_arr(n).gth_txusrclk2 = GTH_USRCLK2_10GBE generate
+        s_gth_tx_usrclk2_arr(n) <= clk_gth_10gbe_common_txusrclk2_i;
     end generate;
 
     -- connect the TXUSRCLKs

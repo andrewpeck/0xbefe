@@ -58,10 +58,19 @@ entity csc_cvp13 is
         pcie_refclk0_p_i    : in  std_logic;
         pcie_refclk0_n_i    : in  std_logic;
         
-        -- USB-C
+        -- External interfaces
         usbc_cc_i           : in  std_logic;
         usbc_clk_i          : in  std_logic;
         usbc_trig_i         : in  std_logic;
+        dimm2_dq5_trig_i    : in  std_logic;
+        sas1_gprx_0_i       : in  std_logic;
+        sas1_gprx_1_i       : in  std_logic;
+        sas1_gptx_0_o       : out std_logic;
+        sas1_gptx_1_o       : out std_logic;
+        sas2_gprx_0_i       : in  std_logic;
+        sas2_gprx_1_i       : in  std_logic;
+        sas2_gptx_0_o       : out std_logic;
+        sas2_gptx_1_o       : out std_logic;
         
         -- Other
         synth_b_out_p_i     : in  std_logic_vector(4 downto 0);
@@ -107,6 +116,7 @@ architecture csc_cvp13_arch of csc_cvp13 is
     -- resets 
     signal reset                : std_logic;
     signal reset_pwrup          : std_logic;
+    signal usr_logic_reset      : std_logic;
         
     -- qsfp mgts
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
@@ -134,10 +144,17 @@ architecture csc_cvp13_arch of csc_cvp13 is
     signal ttc_tx_mgt_data      : t_mgt_16b_tx_data;
         
     -- external trigger
+    signal usbc_trig_sync       : std_logic;
+    signal dimm2_trig_sync      : std_logic;
+    signal sas1_trig_sync       : std_logic;
+    signal sas2_trig_sync       : std_logic;
     signal ext_trig             : std_logic;
+    signal ext_trig_in_sync     : std_logic;
     signal ext_trig_en          : std_logic;
+    signal ext_trig_source      : std_logic_vector(1 downto 0);
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
     signal ext_trig_cntdown     : unsigned(11 downto 0) := (others => '0');
+    signal ext_clk_out_en       : std_logic;
     
     -- PCIe
     signal pcie_refclk0         : std_logic;
@@ -359,9 +376,14 @@ begin
         )
         port map(
             reset_i             => '0',
+            ttc_clk40_i         => ttc_clks.clk_40,
             board_id_o          => board_id,
+            usr_logic_reset_o   => usr_logic_reset,
+            ttc_reset_o         => open,
             ext_trig_en_o       => ext_trig_en,
             ext_trig_deadtime_o => ext_trig_deadtime,
+            ext_trig_source_o   => ext_trig_source,
+            ext_clk_out_en_o    => ext_clk_out_en,
             ipb_reset_i         => ipb_reset,
             ipb_clk_i           => ipb_clk,
             ipb_mosi_i          => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -428,7 +450,7 @@ begin
             )
             port map(
                 -- Resets
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => open,
                 
                 -- TTC
@@ -441,9 +463,9 @@ begin
                 ttc_cmds_o              => ttc_cmds(slr),
                 
                 -- DMB links
-                csc_dmb_rx_usrclk_arr_i => csc_dmb_rx_usrclk_arr,
-                csc_dmb_rx_data_arr_i   => csc_dmb_rx_data_arr,
-                csc_dmb_rx_status_arr_i => csc_dmb_rx_status_arr,
+                dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
+                dmb_rx_data_arr_i       => csc_dmb_rx_data_arr,
+                dmb_rx_status_arr_i     => csc_dmb_rx_status_arr,
 
                 -- GBT links
                 gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
@@ -456,10 +478,10 @@ begin
                 gbt_ctrl_arr_o          => csc_gbt_ctrl_arr,
     
                 -- Spy link
-                csc_spy_usrclk_i        => csc_spy_usrclk,
-                csc_spy_rx_data_i       => csc_spy_rx_data,
-                csc_spy_tx_data_o       => csc_spy_tx_data,
-                csc_spy_rx_status_i     => csc_spy_rx_status,
+                spy_usrclk_i            => csc_spy_usrclk,
+                spy_rx_data_i           => csc_spy_rx_data,
+                spy_tx_data_o           => csc_spy_tx_data,
+                spy_rx_status_i         => csc_spy_rx_status,
                 
                 -- IPbus
                 ipb_reset_i             => ipb_reset,
@@ -495,7 +517,7 @@ begin
             csc_dmb_rx_status_arr(i)               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
             
             -- send some dummy data on the TX of the same fiber
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= (txdata => x"00000000000050bc", txcharisk => x"01", txchardispmode => x"00", txchardispval => x"00");
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= MGT_64B_TX_DATA_NULL;
         end generate; 
 
         g_csc_gbt_links : for gbt in 0 to CFG_NUM_GBT_LINKS(slr) - 1 generate
@@ -512,9 +534,22 @@ begin
             csc_gbt_status_arr(gbt).rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_GBT_LINK_CONFIG_ARR(slr)(gbt).rx_fiber).rx).rx_pll_locked;
         end generate;
 
-        -- spy link mapping
-        g_csc_spy_link : if CFG_USE_SPY_LINK(slr) generate
+        -- spy link TX mapping
+        g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             csc_spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
+        end generate;
+
+        -- no spy link TX
+        g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX(slr) generate
+            csc_spy_usrclk <= '0';
+        end generate;
+
+        -- spy link RX mapping
+        g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             csc_spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
             csc_spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
             csc_spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
@@ -524,20 +559,14 @@ begin
             csc_spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
             csc_spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
             csc_spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-            
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
         end generate;
 
-        -- spy link mapping
-        g_csc_fake_spy_link : if not CFG_USE_SPY_LINK(slr) generate
-            csc_spy_usrclk      <= '0';
+        -- no spy link RX
+        g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX(slr) generate
             csc_spy_rx_data     <= MGT_16B_RX_DATA_NULL;
             csc_spy_rx_status   <= MGT_STATUS_NULL;
         end generate;
-                    
+        
     end generate;
 
     -- TTC TX links
@@ -981,21 +1010,28 @@ begin
     end generate;
 
     --================================--
-    -- Debug
+    -- External trigger
     --================================--
-    
-    i_vio_qsfp : vio_qsfp_control
-        port map(
-            clk        => clk100,
-            probe_in0  => qsfp_present_b_i,
-            probe_in1  => qsfp_int_b_i,
-            probe_out0 => qsfp_reset_b_o,
-            probe_out1 => qsfp_lp_o,
-            probe_out2 => qsfp_ctrl_en_o
-        );
-        
-    -- copper input test
 
+    ------------ trigger input synchronization and selection ------------
+
+    i_usbc_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
+    i_dimm2_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => dimm2_dq5_trig_i, clk_i => ttc_clks.clk_40, sync_o => dimm2_trig_sync);
+    i_sas1_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas1_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas1_trig_sync);
+    i_sas2_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => sas2_gprx_0_i, clk_i => ttc_clks.clk_40, sync_o => sas2_trig_sync);
+
+--    ext_trig_in_sync <= slimsas1_trig_sync when ext_trig_source = "00" else slimsas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
+
+    ext_trig_in_sync <= sas1_trig_sync;
+
+    ------------ SlimSAS outputs ------------
+
+    sas1_gptx_0_o <= '0';
+    sas1_gptx_1_o <= ttc_clks.clk_40 when ext_clk_out_en = '1' else '0';
+    sas2_gptx_0_o <= '0';
+    sas2_gptx_1_o <= '0';
+
+    ------------ trigger logic with configurable deadtime ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -1004,7 +1040,7 @@ begin
                 ext_trig_cntdown <= (others => '0');
             else
                 
-                if usbc_trig_i = '1' and ext_trig_cntdown = x"000" then
+                if ext_trig_in_sync = '1' and ext_trig_cntdown = x"000" then
                     ext_trig <= '1';
                     ext_trig_cntdown <= unsigned(ext_trig_deadtime);
                 else
@@ -1020,6 +1056,7 @@ begin
         end if;
     end process;
     
+    ------------ trigger debugging ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -1032,28 +1069,42 @@ begin
                 else
                     tst_bx_cnt <= tst_bx_cnt + 1;
                 end if;
-                
+
                 if ext_trig = '1' and tst_trig_cnt /= x"ffffffff" then
                     tst_trig_cnt <= tst_trig_cnt + 1;
                 end if;
             end if;
         end if;
     end process;
-        
+
     i_vio_test : vio_test
         port map(
             clk        => ttc_clks.clk_40,
             probe_in0  => std_logic_vector(tst_trig_cnt),
             probe_out0 => tst_bx_cnt_max
         );
-        
+
     i_ila_test : ila_test
         port map(
             clk    => ttc_clks.clk_40,
-            probe0 => usbc_trig_i,
+            probe0 => ext_trig_in_sync,
             probe1 => std_logic_vector(tst_bx_cnt)
         );
 
+    --================================--
+    -- Debug
+    --================================--
+    
+    i_vio_qsfp : vio_qsfp_control
+        port map(
+            clk        => clk100,
+            probe_in0  => qsfp_present_b_i,
+            probe_in1  => qsfp_int_b_i,
+            probe_out0 => qsfp_reset_b_o,
+            probe_out1 => qsfp_lp_o,
+            probe_out2 => qsfp_ctrl_en_o
+        );
+        
     ---------------------------------------------------------------------------------
     -- TEST clk output to LEDs (need to disconnect the LEDs from the PCIe module
 --    leds_o <= leds_tmp(4 downto 1);

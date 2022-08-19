@@ -125,6 +125,7 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_l1a_running   : std_logic;
 
     -- daq counters
+    signal oc_reset_armed           : std_logic := '0';
     signal l1id_cnt                 : std_logic_vector(43 downto 0);
     signal orbit_cnt                : std_logic_vector(31 downto 0);
     signal bx_cnt                   : std_logic_vector(11 downto 0);
@@ -376,11 +377,20 @@ begin
         if (rising_edge(ttc_clks_i.clk_40)) then
             if (reset = '1') then
                 orbit_cnt <= (others => '0');
+                oc_reset_armed <= '0';
             else
                 if (oc0_cmd = '1') then
-                    orbit_cnt <= (others => '0');
-                elsif (bc0_cmd = '1') then
-                    orbit_cnt <= std_logic_vector(unsigned(orbit_cnt) + 1);
+                    oc_reset_armed <= '1';
+                end if;
+                
+                if (bc0_cmd = '1') then
+                    if (oc_reset_armed = '1') then
+                        orbit_cnt <= (others => '0');
+                        oc_reset_armed <= '0';
+                    else
+                        orbit_cnt <= std_logic_vector(unsigned(orbit_cnt) + 1);
+                        oc_reset_armed <= '0';
+                    end if;
                 end if;
             end if;
 

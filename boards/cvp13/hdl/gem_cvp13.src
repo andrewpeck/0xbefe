@@ -3,3 +3,5 @@ boards/cvp13/hdl/common_cvp13.src
 boards/cvp13/hdl/gem_cvp13.vhd top=gem_cvp13
 boards/cvp13/hdl/pkg/gem_board_config_pkg.vhd
 
+common/hdl/misc/ext_trig_ultrascale.vhd
+common/ip/ila_ext_trig/ila_ext_trig.xci

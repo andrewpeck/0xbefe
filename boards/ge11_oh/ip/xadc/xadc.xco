@@ -1,42 +1,38 @@
 ##############################################################
 #
-# Xilinx Core Generator version 14.7
-# Date: Thu Jun 18 16:42:37 2020
+# PlanAhead 14.7
+# Date: Wed Jul 27 17:32:49 2022
+
 #
 ##############################################################
 #
 #  This file contains the customisation parameters for a
-#  Xilinx CORE Generator IP GUI. It is strongly recommended
+#  Xilinx IP GUI. It is strongly recommended
 #  that you do not manually alter this file as it may cause
 #  unexpected and unsupported behavior.
 #
 ##############################################################
-#
-#  Generated from component: xilinx.com:ip:sysmon_wiz:2.1
-#
-##############################################################
-#
 # BEGIN Project Options
-SET addpads = false
-SET asysymbol = true
-SET busformat = BusFormatAngleBracketNotRipped
-SET createndf = false
-SET designentry = VHDL
-SET device = xc6vlx130t
-SET devicefamily = virtex6
-SET flowvendor = Other
-SET formalverification = false
-SET foundationsym = false
-SET implementationfiletype = Ngc
-SET package = ff1156
-SET removerpms = false
-SET simulationfiles = Behavioral
-SET speedgrade = -1
-SET verilogsim = false
-SET vhdlsim = true
+SET addpads=false
+SET asysymbol=true
+SET busformat=BusFormatAngleBracketNotRipped
+SET createndf=false
+SET designentry=VHDL
+SET device=xc6vlx130t
+SET devicefamily=virtex6
+SET flowvendor=Other
+SET formalverification=false
+SET foundationsym=false
+SET implementationfiletype=Ngc
+SET package=ff1156
+SET removerpms=false
+SET simulationfiles=Behavioral
+SET speedgrade=-1
+SET verilogsim=false
+SET vhdlsim=true
 # END Project Options
 # BEGIN Select
-SELECT System_Monitor_Wizard family Xilinx,_Inc. 2.1
+SELECT System_Monitor_Wizard xilinx.com:ip:sysmon_wiz:2.1
 # END Select
 # BEGIN Parameters
 CSET acquisition_time_vauxp0_vauxn0=false
@@ -97,7 +93,7 @@ CSET bipolar_vauxp7_vauxn7=false
 CSET bipolar_vauxp8_vauxn8=false
 CSET bipolar_vauxp9_vauxn9=false
 CSET bipolar_vp_vn=false
-CSET channel_averaging=16
+CSET channel_averaging=64
 CSET channel_enable_calibration=false
 CSET channel_enable_temperature=true
 CSET channel_enable_vauxp0_vauxn0=false
@@ -146,12 +142,12 @@ CSET single_channel_acquisition_time=false
 CSET single_channel_enable_calibration=true
 CSET single_channel_selection=Temperature
 CSET startup_channel_selection=channel_sequencer
-CSET temperature_alarm_ot_reset=70
-CSET temperature_alarm_ot_trigger=80
-CSET temperature_alarm_reset=60.0
-CSET temperature_alarm_trigger=85.0
+CSET temperature_alarm_ot_reset=55
+CSET temperature_alarm_ot_trigger=65
+CSET temperature_alarm_reset=55
+CSET temperature_alarm_trigger=55
 CSET timing_mode=Continuous
-CSET user_temp_alarm=false
+CSET user_temp_alarm=true
 CSET vccaux_alarm=true
 CSET vccaux_alarm_lower=2.375
 CSET vccaux_alarm_upper=2.625
@@ -159,8 +155,4 @@ CSET vccint_alarm=true
 CSET vccint_alarm_lower=0.95
 CSET vccint_alarm_upper=1.05
 # END Parameters
-# BEGIN Extra information
-MISC pkg_timestamp=2013-10-13T18:46:09Z
-# END Extra information
 GENERATE
-# CRC: 6aa975c5

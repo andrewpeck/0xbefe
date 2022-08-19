@@ -58,11 +58,19 @@ entity gem_cvp13 is
         pcie_refclk0_p_i    : in  std_logic;
         pcie_refclk0_n_i    : in  std_logic;
 
-        -- USB-C
+        -- External interfaces
         usbc_cc_i           : in  std_logic;
         usbc_clk_i          : in  std_logic;
         usbc_trig_i         : in  std_logic;
         dimm2_dq5_trig_i    : in  std_logic;
+        sas1_gprx_0_i       : in  std_logic;
+        sas1_gprx_1_i       : in  std_logic;
+        sas1_gptx_0_o       : out std_logic;
+        sas1_gptx_1_o       : out std_logic;
+        sas2_gprx_0_i       : in  std_logic;
+        sas2_gprx_1_i       : in  std_logic;
+        sas2_gptx_0_o       : out std_logic;
+        sas2_gptx_1_o       : out std_logic;
 
         -- Other
         synth_b_out_p_i     : in  std_logic_vector(4 downto 0);
@@ -107,6 +115,8 @@ architecture gem_cvp13_arch of gem_cvp13 is
     -- resets
     signal reset                : std_logic;
     signal reset_pwrup          : std_logic;
+    signal usr_logic_reset      : std_logic;
+    signal usr_ttc_reset        : std_logic;
 
     -- qsfp mgts
     signal refclk0              : std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
@@ -134,10 +144,16 @@ architecture gem_cvp13_arch of gem_cvp13 is
     -- external trigger
     signal usbc_trig_sync       : std_logic;
     signal dimm2_trig_sync      : std_logic;
+    signal sas1_trig_sync       : std_logic;
+    signal sas2_trig_sync       : std_logic;
     signal ext_trig             : std_logic;
+    signal ext_trig_in_sync     : std_logic;
     signal ext_trig_en          : std_logic;
+    signal ext_trig_source      : std_logic_vector(1 downto 0);
     signal ext_trig_deadtime    : std_logic_vector(11 downto 0);
     signal ext_trig_cntdown     : unsigned(11 downto 0) := (others => '0');
+    signal ext_clk_out_en       : std_logic;
+    signal ext_trig_phase_mask  : std_logic_vector(15 downto 0);
 
     -- PCIe
     signal pcie_refclk0         : std_logic;
@@ -213,7 +229,8 @@ begin
         generic map(
             g_CLK_STABLE_FREQ           => 100_000_000,
             g_GEM_STATION               => CFG_GEM_STATION(0),
-            g_LPGBT_2P56G_LOOPBACK_TEST => false
+            g_LPGBT_2P56G_LOOPBACK_TEST => false,
+            g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)) 
         )
         port map(
             clk_stable_i        => clk100,
@@ -359,9 +376,15 @@ begin
         )
         port map(
             reset_i               => '0',
+            ttc_clk40_i           => ttc_clks.clk_40,
             board_id_o            => board_id,
+            usr_logic_reset_o     => usr_logic_reset,
+            ttc_reset_o           => usr_ttc_reset,
             ext_trig_en_o         => ext_trig_en,
+            ext_trig_source_o     => ext_trig_source,
             ext_trig_deadtime_o   => ext_trig_deadtime,
+            ext_clk_out_en_o      => ext_clk_out_en,
+            ext_trig_phase_mask_o => ext_trig_phase_mask,
             ipb_reset_i           => ipb_reset,
             ipb_clk_i             => ipb_clk,
             ipb_mosi_i            => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
@@ -395,10 +418,11 @@ begin
         signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX - 1 downto 0);
     
         -------------------- Spy / LDAQ readout link ---------------------------------
-        signal spy_usrclk               : std_logic;
-        signal spy_rx_data              : t_mgt_16b_rx_data;
-        signal spy_tx_data              : t_mgt_16b_tx_data;
-        signal spy_rx_status            : t_mgt_status;
+        signal spy_rx_data              : t_mgt_64b_rx_data;
+        signal spy_tx_data              : t_mgt_64b_tx_data;
+        signal spy_rx_usrclk            : std_logic;
+        signal spy_tx_usrclk            : std_logic;
+        signal spy_status               : t_mgt_status;
                 
     begin
 
@@ -421,9 +445,10 @@ begin
                 g_DISABLE_TTC_DATA  => true
             )
             port map(
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => open,
     
+                ttc_reset_i             => usr_ttc_reset,
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
@@ -445,15 +470,15 @@ begin
                 gt_gbt_tx_data_arr_o    => gem_gt_gbt_tx_data_arr,
                 gt_gbt_rx_clk_arr_i     => gem_gt_gbt_rx_clk_arr,
                 gt_gbt_tx_clk_arr_i     => gem_gt_gbt_tx_clk_arr,
-                gt_gbt_rx_common_clk_i  => mgt_master_rxusrclk.gbt,
     
                 gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
                 gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
     
-                spy_usrclk_i            => spy_usrclk,
                 spy_rx_data_i           => spy_rx_data,
                 spy_tx_data_o           => spy_tx_data,
-                spy_rx_status_i         => spy_rx_status,
+                spy_rx_usrclk_i         => spy_rx_usrclk,
+                spy_tx_usrclk_i         => spy_tx_usrclk,
+                spy_status_i            => spy_status,
     
                 ipb_reset_i             => ipb_reset,
                 ipb_clk_i               => ipb_clk,
@@ -517,23 +542,29 @@ begin
     
         end generate;
 
-        -- spy link mapping
-        g_spy_link : if CFG_USE_SPY_LINK(slr) generate
-            spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
-            spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
-            spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
-            spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
-            spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcommadet;
-            spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdisperr(1 downto 0);
-            spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxnotintable(1 downto 0);
-            spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
-            spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
-            spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-    
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
+        -- spy link TX mapping
+        g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
+            spy_tx_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= spy_tx_data;
+        else generate
+            spy_tx_usrclk <= '0';
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= MGT_64B_TX_DATA_NULL;
+        end generate;
+
+        -- spy link RX mapping
+        g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
+            spy_rx_usrclk <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+            spy_rx_data <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+        else generate
+            spy_rx_usrclk <= '0';
+            spy_rx_data <= MGT_64B_RX_DATA_NULL;
+        end generate;
+
+        -- spy link statuses mapping
+        g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
+            spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+        else generate
+            spy_status <= MGT_STATUS_NULL;
         end generate;
 
         -- MGT mapping to EMTF links
@@ -544,35 +575,30 @@ begin
             end generate;
             gem_gt_trig_tx_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(0)).tx);
         end generate;
-    
-        -- spy link mapping
-        g_csc_fake_spy_link : if not CFG_USE_SPY_LINK(slr) generate
-            spy_usrclk      <= '0';
-            spy_rx_data     <= MGT_16B_RX_DATA_NULL;
-            spy_rx_status   <= MGT_STATUS_NULL;
-        end generate;
-        
+            
     end generate;
 
     --================================--
-    -- Debug
+    -- External trigger
     --================================--
 
-    i_vio_qsfp : vio_qsfp_control
-        port map(
-            clk        => clk100,
-            probe_in0  => qsfp_present_b_i,
-            probe_in1  => qsfp_int_b_i,
-            probe_out0 => qsfp_reset_b_o,
-            probe_out1 => qsfp_lp_o,
-            probe_out2 => qsfp_ctrl_en_o
-        );
+    ------------ trigger input synchronization and selection ------------
 
-    -- copper input test
+    i_usbc_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => usbc_trig_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => usbc_trig_sync);
+    i_dimm2_trig_sync  : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => dimm2_dq5_trig_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => dimm2_trig_sync);
+    i_sas1_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas1_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas1_trig_sync);
+    i_sas2_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas2_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas2_trig_sync);
 
-    i_usbc_trig_sync  : entity work.synch generic map(N_STAGES => 4) port map(async_i => usbc_trig_i, clk_i => ttc_clks.clk_40, sync_o => usbc_trig_sync);
-    i_dimm2_trig_sync : entity work.synch generic map(N_STAGES => 4) port map(async_i => dimm2_dq5_trig_i, clk_i => ttc_clks.clk_40, sync_o => dimm2_trig_sync);
+    ext_trig_in_sync <= sas1_trig_sync when ext_trig_source = "00" else sas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
 
+    ------------ SlimSAS outputs ------------
+
+    sas1_gptx_0_o <= '0';
+    sas1_gptx_1_o <= ttc_clks.clk_40 when ext_clk_out_en = '1' else '0';
+    sas2_gptx_0_o <= '0';
+    sas2_gptx_1_o <= '0';
+
+    ------------ trigger logic with configurable deadtime ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -581,7 +607,7 @@ begin
                 ext_trig_cntdown <= (others => '0');
             else
                 
-                if dimm2_trig_sync = '1' and ext_trig_cntdown = x"000" then
+                if ext_trig_in_sync = '1' and ext_trig_cntdown = x"000" then
                     ext_trig <= '1';
                     ext_trig_cntdown <= unsigned(ext_trig_deadtime);
                 else
@@ -597,7 +623,7 @@ begin
         end if;
     end process;
     
-
+    ------------ trigger debugging ------------
     process(ttc_clks.clk_40)
     begin
         if rising_edge(ttc_clks.clk_40) then
@@ -628,8 +654,22 @@ begin
     i_ila_test : ila_test
         port map(
             clk    => ttc_clks.clk_40,
-            probe0 => dimm2_trig_sync,
+            probe0 => ext_trig_in_sync,
             probe1 => std_logic_vector(tst_bx_cnt)
+        );
+
+    --================================--
+    -- Debug
+    --================================--
+
+    i_vio_qsfp : vio_qsfp_control
+        port map(
+            clk        => clk100,
+            probe_in0  => qsfp_present_b_i,
+            probe_in1  => qsfp_int_b_i,
+            probe_out0 => qsfp_reset_b_o,
+            probe_out1 => qsfp_lp_o,
+            probe_out2 => qsfp_ctrl_en_o
         );
 
     ---------------------------------------------------------------------------------

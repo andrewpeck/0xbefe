@@ -53,7 +53,7 @@ class FedEvent:
         pass
 
     def unpackTrailer(self):
-        misalignedDmb = (int(self.words[words.size - 1]) >> 59) & 0x1
+        misalignedDmb = (int(self.words[self.words.size - 1]) >> 59) & 0x1
         if misalignedDmb == 1:
             self.unpackErrors.append("64bit misalignment bit set in FED trailer")
 

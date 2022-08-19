@@ -58,6 +58,10 @@ package board_config_package is
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
+    constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
+    constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
+
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
@@ -65,9 +69,8 @@ package board_config_package is
     constant CFG_DEBUG_TRIGGER              : boolean := true;
     constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
     constant CFG_DEBUG_IC_RX                : boolean := false; --set to tru ti instantiate ILA in IC rx
-        
-    
-    -- oh link mapping is in the project pkg file
+    constant CFG_DEBUG_TRIGGER_TX           : boolean := false; -- if set to true, an ILA will be instantiated which allows probing any trigger TX link
+    constant CFG_DEBUG_10GBE_MAC_PCS        : boolean := false; -- if set to true, an ILA will be instantiated which allows probing the 10 GbE MAC-PCS core
     
     --================================--
     -- Fiber to MGT mapping
@@ -176,6 +179,23 @@ package board_config_package is
         rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
         tx_bus_width            => 32,
         tx_multilane_phalign    => true, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_TX_GBE_RX_LPGBT : t_mgt_type_config := (
+        link_type               => MGT_TX_GBE_RX_LPGBT,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
         rx_use_buf              => false,
         rx_use_chan_bonding     => false
     );

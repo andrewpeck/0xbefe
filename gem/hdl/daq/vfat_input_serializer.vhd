@@ -54,17 +54,22 @@ architecture vfat_input_serializer_arch of vfat_input_serializer is
 
 begin
 
-    --======== Wiring ========--
-    
-    data_valid_o <= not buffer_empty_arr(vfat_idx);
-    data_o <= std_logic_vector(to_unsigned(vfat_idx, 8)) & "0000000" & crc_err_arr(vfat_idx) & data_arr(vfat_idx);
-    crc_err_o <= crc_err_arr(vfat_idx);
-    zero_packet_o <= not or_reduce(data_arr(vfat_idx) and x"00000000ffffffffffffffffffffffffffffffff0000");
-    
-    overflow_o <= or_reduce(buffer_ovf_arr);
-    underflow_o <= or_reduce(buffer_unf_arr);
-
     i_sync_reset_rd_clk : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => rd_clk_i, sync_o => reset_rd_clk);
+
+    --======== Output ========--
+    
+    process(rd_clk_i)
+    begin
+        if (rising_edge(rd_clk_i)) then
+            data_valid_o <= not buffer_empty_arr(vfat_idx);
+            data_o <= "000" & std_logic_vector(to_unsigned(vfat_idx, 5)) & "0000000" & crc_err_arr(vfat_idx) & data_arr(vfat_idx);
+            crc_err_o <= crc_err_arr(vfat_idx);
+            zero_packet_o <= not or_reduce(data_arr(vfat_idx) and x"00000000ffffffffffffffffffffffffffffffff0000");
+            
+            overflow_o <= or_reduce(buffer_ovf_arr);
+            underflow_o <= or_reduce(buffer_unf_arr);
+        end if;
+    end process;
     
     --======== VFAT buffers ========--
     
