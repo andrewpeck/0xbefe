@@ -80,7 +80,7 @@ architecture behavioral of cluster_packer is
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
 
-  constant OVERFLOW_LATENCY                 : natural := select_ovf_latency(SORTER_TYPE);
+  constant OVERFLOW_LATENCY : natural := select_ovf_latency(SORTER_TYPE);
 
   signal cluster_latch : std_logic;
 

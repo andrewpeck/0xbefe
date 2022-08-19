@@ -8,6 +8,7 @@ from cocotb_test.simulator import run
 from cocotb.triggers import Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb.triggers import Edge
 
 from cluster_finding import Cluster, find_clusters, equal, find_cluster_primaries
 
@@ -63,6 +64,28 @@ async def measure_latency(dut) -> float:
     print("================================================================================")
     return (cnt/4.0)
 
+async def monitor_latch_alignment(dut):
+
+    await RisingEdge(dut.clk_40)
+    await RisingEdge(dut.clk_40)
+
+    while True:
+        await Edge(dut.clusters)
+        assert dut.cluster_latch.value==1, "Clusters changed out of time with latch!"
+
+async def monitor_overflow(dut):
+
+    await RisingEdge(dut.clk_40)
+    await RisingEdge(dut.clk_40)
+
+    while True:
+        await Edge(dut.overflow_o)
+        await RisingEdge(dut.clk_fast)
+        await RisingEdge(dut.clk_fast)
+        await RisingEdge(dut.clk_fast)
+        await RisingEdge(dut.clk_fast)
+        assert dut.cluster_latch.value==1, "Overflow out of time with latch!"
+
 async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False):
     """Test for priority encoder with randomized data on all inputs"""
 
@@ -97,6 +120,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     cocotb.fork(Clock(dut.clk_fast, 10, units="ns").start())  # Create a clock
 
     cocotb.fork(measure_latency(dut))
+    cocotb.fork(monitor_latch_alignment(dut))
+    cocotb.fork(monitor_overflow(dut))
 
     ngood = 0
 
