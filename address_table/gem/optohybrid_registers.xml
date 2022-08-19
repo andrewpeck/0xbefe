@@ -678,6 +678,12 @@
                   description="GE11: 0=identity map, 1=short, 2=long"
                   fw_default="0"
                   fw_signal="sbit_map_sel"/>
+            <node id="REVERSE_PARTITIONS" address="0x18"
+                  permission="rw"
+                  mask="0x10"
+                  description="1 to reverse partitions"
+                  fw_default="0"
+                  fw_signal="reverse_partitions"/>
 
         </node> <!--CTRL-->
 
