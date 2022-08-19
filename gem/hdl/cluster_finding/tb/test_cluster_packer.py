@@ -45,6 +45,24 @@ async def specific(dut):
 async def edges(dut, nloops=1000, nhits=32):
     await run_test(dut, "EDGES", nloops, nhits)
 
+async def measure_latency(dut) -> float:
+
+    await RisingEdge(dut.clk_fast)
+
+    cnt = 0
+
+    while sum(dut.sbits_i.value) < 1:
+        await RisingEdge(dut.clk_fast)
+
+    while (dut.clusters_o[0].vpf.value == 0):
+        await RisingEdge(dut.clk_fast)
+        cnt += 1
+
+    print("================================================================================")
+    print("LATENCY=%f" % (cnt / 4))
+    print("================================================================================")
+    return (cnt/4.0)
+
 async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False):
     """Test for priority encoder with randomized data on all inputs"""
 
@@ -77,6 +95,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     # setup clocks
     cocotb.fork(Clock(dut.clk_40, 40, units="ns").start())  # Create a clock
     cocotb.fork(Clock(dut.clk_fast, 10, units="ns").start())  # Create a clock
+
+    cocotb.fork(measure_latency(dut))
 
     ngood = 0
 
