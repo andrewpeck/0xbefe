@@ -128,12 +128,12 @@ architecture behavioral of find_clusters is
 
 begin
 
-  -- GE2/1 uses 1 384 bit encoder per partition
-  -- 2 partitions total, returning 4 or 5 clusters / clock from each partition
-  -- 2 encoders total
-  -- 8 or 10 clusters total, depending on 160MHz or 200MHz clock (200M not supported right now but is possible)
+  -- GE2/1 uses 1 192 bit encoder per partition
+  -- 2 partitions total, 4 / clock from each half-partition
+  -- 4 encoders total
+  -- 16 clusters total
   --
-  -- GE1/1 uses 1 384 bit encoder per TWO partitions
+  -- GE1/1 uses 1 192 bit encoder per TWO partitions
   -- 8 partitions total, returning 4 or 5 clusters / clock from each di-partition
   -- 4 encoders total
   -- 16 clusters total

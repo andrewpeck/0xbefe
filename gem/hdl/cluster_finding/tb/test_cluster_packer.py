@@ -37,16 +37,15 @@ async def walking1(dut):
 async def colliding1(dut):
     await run_test(dut, "COLLIDING1")
 
-# @cocotb.test()
-# async def specific(dut):
-#     await run_test(dut, "SPECIFIC")
+@cocotb.test()
+async def specific(dut):
+    await run_test(dut, "SPECIFIC")
 
 @cocotb.test()
 async def edges(dut, nloops=1000, nhits=32):
     await run_test(dut, "EDGES", nloops, nhits)
 
-
-async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
+async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False):
     """Test for priority encoder with randomized data on all inputs"""
 
     # extract detector parameters
@@ -228,7 +227,7 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
         # -------------------------------------------------------------------------------
 
         total_tb = int(dut.cluster_count_o.value)
-        assert total == total_tb, print(
+        assert noassert or total == total_tb, print(
             " > cluster primary counts: emu=%d vs simu=%d (loop=%d)"
             % (total, total_tb, loop)
         )
@@ -247,7 +246,7 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
             if expected_clusters[i].vpf == 1:
                 num_found_simu += 1
 
-        assert num_found_emu == num_found_simu, print(
+        assert noassert or num_found_emu == num_found_simu, print(
             " > cluster finder counts: emu=%d vs simu=%d (loop=%d)"
             % (num_found_emu, num_found_simu, loop)
         )
@@ -270,7 +269,7 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
         if SORTER_TYPE != 0:
 
             for i in range(16):
-                assert equal(found_clusters[i], expected_clusters[i]), print(
+                assert noassert or equal(found_clusters[i], expected_clusters[i]), print(
                     " > #%2d Found  %s, \n       expect %s (Test=%s loop=%d)"
                     % (i, str(found_clusters[i]), str(expected_clusters[i]), test, loop)
                 )
@@ -282,14 +281,14 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
 
         for i in range(len(clusters)):
             if int(clusters[i].vpf.value) == 0:
-                assert int(clusters[i].adr.value) == 0x1FF
+                assert noassert or int(clusters[i].adr.value) == 0x1FF
             if int(clusters[i].vpf.value) == 1:
-                assert int(clusters[i].adr.value) < WIDTH
+                assert noassert or int(clusters[i].adr.value) < WIDTH
             if int(clusters[i].adr.value) < WIDTH:
-                assert int(clusters[i].vpf.value) == 1
+                assert noassert or int(clusters[i].vpf.value) == 1
             if int(clusters[i].adr.value) >= WIDTH:
-                assert int(clusters[i].vpf.value) == 0
-                assert int(clusters[i].adr.value) == 0x1FF
+                assert noassert or int(clusters[i].vpf.value) == 0
+                assert noassert or int(clusters[i].adr.value) == 0x1FF
 
         # -------------------------------------------------------------------------------
         # check the uniqueness of the clusters, don't allow duplicates
@@ -308,8 +307,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=True):
                     and int(clusters[j].vpf.value) == 1
                 ):
 
-                    assert not equal(clusters[i], clusters[j]), print_clusters(clusters)
-                    assert not (
+                    assert noassert or not equal(clusters[i], clusters[j]), print_clusters(clusters)
+                    assert noassert or not (
                         clusters[i].adr.value == clusters[j].adr.value
                         and clusters[i].cnt.value == clusters[j].cnt.value
                         and clusters[i].prt.value == clusters[j].prt.value

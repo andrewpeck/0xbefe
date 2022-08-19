@@ -248,7 +248,7 @@ begin
         );
     end component;
 
-    begin
+  begin
 
     sorter16_inst : sorter16
       generic map (
@@ -404,7 +404,82 @@ begin
   end generate;
 
   priority_sort : if (SORTER_TYPE = 2) generate
-    signal hitmask : std_logic_vector (clusters_i'length-1 downto 0) := (others => '0');
+
+    function count_ones(slv : std_logic_vector) return natural is
+      variable n_ones : natural := 0;
+    begin
+      for i in slv'range loop
+        if slv(i) = '1' then
+          n_ones := n_ones + 1;
+        end if;
+      end loop;
+      return n_ones;
+    end function count_ones;
+
+    function count_preceeding_ones(slv : std_logic_vector; index : integer) return integer is
+      variable n_ones : integer := 0;
+    begin
+      if (index=0) then
+        return 0;
+      elsif (index=1) then
+        if (slv(0)='1') then
+          return 1;
+        else
+          return 0;
+        end if;
+      else
+        return count_ones(slv(index-1 downto 0));
+      end if;
+    end function;
+
+    function vec2str(vec : std_logic_vector) return string is
+      variable result : string(vec'left + 1 downto 1);
+    begin
+      for i in vec'reverse_range loop
+        if (vec(i) = '1') then
+          result(i + 1) := '1';
+        elsif (vec(i) = '0') then
+          result(i + 1) := '0';
+        else
+          result(i + 1) := 'X';
+        end if;
+      end loop;
+      return result;
+    end;
+
+    function is_nth (ibit    : integer;
+                     iclst   : integer;
+                     cnt     : integer;
+                     hitmask : std_logic_vector)
+      return std_logic is
+    begin
+      if (iclst=0 and ibit=0 and hitmask(0)='1') then
+        return '1';
+      elsif (ibit > 0) then
+        if (hitmask(ibit)='1' and cnt=iclst) then
+          -- assert false report "iclst=" & integer'image(iclst)
+          --   & " ibit=" & integer'image(ibit)
+          --   & " icnt=" & integer'image(cnt)
+          --   --& " data=" & vec2str(hitmask)
+          --   severity note;
+          return '1';
+        else
+          return '0';
+        end if;
+      end if;
+      return '0';
+    end;
+
+    function get_lsb(hitmask : std_logic_vector)
+      return integer is
+    begin
+      for I in 0 to hitmask'length-1 loop
+        if (hitmask(I) = '1') then
+          return I;
+        end if;
+      end loop;
+      return 16;
+    end;
 
     function pick_nth (idx     : integer;
                        hitmask : std_logic_vector)
@@ -426,42 +501,103 @@ begin
       return 16;
     end;
 
+    signal hitmask : std_logic_vector (clusters_i'length-1 downto 0) := (others => '0');
+
+    type onehot_array_t is array (integer range <>) of std_logic_vector(clusters_i'length-1 downto 0);
+    signal onehots : onehot_array_t (clusters_i'length-1 downto 0);
+
     type int_array_t is array (integer range <>) of integer;
     signal cluster_sel : int_array_t (clusters_o'length-1 downto 0) := (others => 0);
 
-    signal clusters_s2, clusters_s3: sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    signal latch_out_s2, latch_out_s3 : std_logic := '0';
+    type cnt_array_t is array (integer range <>) of integer range 0 to 15;
+    signal counts : cnt_array_t (clusters_o'length-1 downto 0) := (others => 0);
+
+    type pos_array_t is array (integer range <>) of integer range 0 to 16;
+    signal positions : pos_array_t (clusters_o'length-1 downto 0) := (others => 0);
+
+    signal clusters_s2, clusters_s3, clusters_s4: sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal latch_out_s2, latch_out_s3, latch_out_s4 : std_logic := '0';
 
   begin
 
+    assert '0' = is_nth(0,  0, 0, "0000000000000000") report "is_nth failure 0" severity error;
+    assert '1' = is_nth(0,  0, 0, "1000000000000000") report "is_nth failure 1" severity error;
+    assert '1' = is_nth(1,  0, 0, "0100000000000000") report "is_nth failure 2" severity error;
+    assert '1' = is_nth(1,  1, 1, "1100000000000000") report "is_nth failure 3" severity error;
+    assert '1' = is_nth(2,  0, 0, "0010000000000000") report "is_nth failure 4" severity error;
+    assert '1' = is_nth(2,  1, 1, "1010000000000000") report "is_nth failure 5" severity error;
+    assert '1' = is_nth(15, 0, 0, "0000000000000001") report "is_nth failure 6" severity error;
+
+    assert '0' = is_nth(1,  0, 1, "1100000000000000") report "is_nth failure 7" severity error;
+    assert '0' = is_nth(15, 0, 1, "1000000000000001") report "is_nth failure 8" severity error;
+
+    assert '1' = is_nth(4, 0, 0, "0000100010000000") report "is_nth failure 9" severity error;
+    assert '0' = is_nth(8, 0, 1, "0000100010000000") report "is_nth failure 10" severity error;
+    assert '0' = is_nth(4, 1, 0, "0000100010000000") report "is_nth failure 11" severity error;
+    assert '1' = is_nth(8, 1, 1, "0000100010000000") report "is_nth failure 12" severity error;
+
     -- pack all the vpfs into a single vector
     hitmask_gen : for I in 0 to clusters_i'length-1 generate
-      hitmask(I) <= clusters_s2(I).vpf;
+      hitmask(I) <= clusters_i(I).vpf;
+    end generate;
+
+    cnts_gen : for I in 1 to clusters_i'length-1 generate
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          counts(I) <= count_preceeding_ones(hitmask, I);
+        end if;
+      end process;
+    end generate;
+
+    onehots_gen_i : for iclst in 0 to clusters_i'length-1 generate
+      onehots_gen_j : for ibit in 0 to clusters_i'length-1 generate
+        process (clock) is
+        begin
+          if (rising_edge(clock)) then
+            onehots(iclst)(ibit) <= is_nth(ibit, iclst, counts(ibit), hitmask);
+          end if;
+        end process;
+      end generate;
+    end generate;
+
+    sel_gen : for I in 0 to clusters_i'length-1 generate
+      process (clock) is
+      begin
+        if (rising_edge(clock)) then
+          cluster_sel(I) <= get_lsb(onehots(I));
+        end if;
+      end process;
     end generate;
 
     process (clock) is
     begin
       if (rising_edge(clock)) then
+
         --
         clusters_s2  <= clusters_i;
         clusters_s3  <= clusters_s2;
+        clusters_s4  <= clusters_s3;
+
         --
         latch_out_s2 <= latch_i;
         latch_out_s3 <= latch_out_s2;
-        latch_o      <= latch_out_s3;
+        latch_out_s4 <= latch_out_s3;
+        latch_o      <= latch_out_s4;
+
       end if;
     end process;
 
     -- get the indexes of the first N clusters
-    cluster_sel_gen : for I in 0 to clusters_o'length-1 generate
-    begin
-      process (clock) is
-      begin
-        if (rising_edge(clock)) then
-          cluster_sel(I) <= pick_nth(I, hitmask);
-        end if;
-      end process;
-    end generate;
+    -- cluster_sel_gen : for I in 0 to clusters_o'length-1 generate
+    -- begin
+    --   process (clock) is
+    --   begin
+    --     if (rising_edge(clock)) then
+    --       cluster_sel(I) <= pick_nth(I, hitmask);
+    --     end if;
+    --   end process;
+    -- end generate;
 
     -- mux together the outputs
 
@@ -469,10 +605,10 @@ begin
       process (clock) is
       begin
         if (rising_edge(clock)) then
-          if (cluster_sel(I) = 16)  then
+          if (cluster_sel(I)=16)  then -- fixme: only need to check the msb
             clusters_o(I) <= NULL_CLUSTER;
           else
-            clusters_o(I) <= clusters_s3(cluster_sel(I));
+            clusters_o(I) <= clusters_s4(cluster_sel(I));
           end if;
         end if;
       end process;
