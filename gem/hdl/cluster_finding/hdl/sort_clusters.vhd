@@ -501,7 +501,7 @@ begin
       return 16;
     end;
 
-    signal hitmask : std_logic_vector (clusters_i'length-1 downto 0) := (others => '0');
+    signal hitmask, hitmask_s1 : std_logic_vector (clusters_i'length-1 downto 0) := (others => '0');
 
     type onehot_array_t is array (integer range <>) of std_logic_vector(clusters_i'length-1 downto 0);
     signal onehots : onehot_array_t (clusters_i'length-1 downto 0);
@@ -515,8 +515,10 @@ begin
     type pos_array_t is array (integer range <>) of integer range 0 to 16;
     signal positions : pos_array_t (clusters_o'length-1 downto 0) := (others => 0);
 
-    signal clusters_s2, clusters_s3, clusters_s4: sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    signal latch_out_s2, latch_out_s3, latch_out_s4 : std_logic := '0';
+    signal clusters_s1, clusters_s2, clusters_s3 :
+      sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
+    signal latch_s1, latch_s2, latch_s3 :
+      std_logic := '0';
 
   begin
 
@@ -538,7 +540,8 @@ begin
 
     -- pack all the vpfs into a single vector
     hitmask_gen : for I in 0 to clusters_i'length-1 generate
-      hitmask(I) <= clusters_i(I).vpf;
+      hitmask(I)    <= clusters_i(I).vpf;
+      hitmask_s1(I) <= clusters_s1(I).vpf;
     end generate;
 
     cnts_gen : for I in 1 to clusters_i'length-1 generate
@@ -555,7 +558,7 @@ begin
         process (clock) is
         begin
           if (rising_edge(clock)) then
-            onehots(iclst)(ibit) <= is_nth(ibit, iclst, counts(ibit), hitmask);
+            onehots(iclst)(ibit) <= is_nth(ibit, iclst, counts(ibit), hitmask_s1);
           end if;
         end process;
       end generate;
@@ -575,15 +578,15 @@ begin
       if (rising_edge(clock)) then
 
         --
-        clusters_s2  <= clusters_i;
+        clusters_s1  <= clusters_i;
+        clusters_s2  <= clusters_s1;
         clusters_s3  <= clusters_s2;
-        clusters_s4  <= clusters_s3;
 
         --
-        latch_out_s2 <= latch_i;
-        latch_out_s3 <= latch_out_s2;
-        latch_out_s4 <= latch_out_s3;
-        latch_o      <= latch_out_s4;
+        latch_s1 <= latch_i;
+        latch_s2 <= latch_s1;
+        latch_s3 <= latch_s2;
+        latch_o  <= latch_s3;
 
       end if;
     end process;
@@ -608,7 +611,7 @@ begin
           if (cluster_sel(I)=16)  then -- fixme: only need to check the msb
             clusters_o(I) <= NULL_CLUSTER;
           else
-            clusters_o(I) <= clusters_s4(cluster_sel(I));
+            clusters_o(I) <= clusters_s3(cluster_sel(I));
           end if;
         end if;
       end process;
