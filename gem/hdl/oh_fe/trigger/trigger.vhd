@@ -135,8 +135,6 @@ architecture Behavioral of trigger is
 
   signal sbit_time_counter : unsigned (31 downto 0);
 
-  signal cnt_pulse : std_logic;
-
   -- reset signal (ORed with global reset)
   signal cnt_reset         : std_logic;
   signal cnt_reset_strobed : std_logic;

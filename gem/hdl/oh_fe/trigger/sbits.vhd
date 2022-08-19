@@ -91,19 +91,14 @@ architecture Behavioral of sbits is
   signal mask_l1a     : std_logic;
 
   signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
-  signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
 
-  constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
-
   signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
 
   signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0) := (others => '0');
-
-  signal active_vfats_s1 : std_logic_vector (NUM_VFATS*8-1 downto 0);
 
 begin
 

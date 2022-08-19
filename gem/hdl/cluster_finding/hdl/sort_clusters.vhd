@@ -417,7 +417,6 @@ begin
     end function count_ones;
 
     function count_preceeding_ones(slv : std_logic_vector; index : integer) return integer is
-      variable n_ones : integer := 0;
     begin
       if (index=0) then
         return 0;
@@ -431,21 +430,6 @@ begin
         return count_ones(slv(index-1 downto 0));
       end if;
     end function;
-
-    function vec2str(vec : std_logic_vector) return string is
-      variable result : string(vec'left + 1 downto 1);
-    begin
-      for i in vec'reverse_range loop
-        if (vec(i) = '1') then
-          result(i + 1) := '1';
-        elsif (vec(i) = '0') then
-          result(i + 1) := '0';
-        else
-          result(i + 1) := 'X';
-        end if;
-      end loop;
-      return result;
-    end;
 
     function is_nth (ibit    : integer;
                      iclst   : integer;
@@ -481,26 +465,6 @@ begin
       return 16;
     end;
 
-    function pick_nth (idx     : integer;
-                       hitmask : std_logic_vector)
-      return integer is
-      variable cnt : integer;
-    begin
-      cnt := 0;
-
-      for I in 0 to hitmask'length-1 loop
-        if (hitmask(I) = '1') then
-          if (cnt = idx) then
-            return I;
-          else
-            cnt := cnt + 1;
-          end if;
-        end if;
-      end loop;
-
-      return 16;
-    end;
-
     signal hitmask, hitmask_s1 : std_logic_vector (clusters_i'length-1 downto 0) := (others => '0');
 
     type onehot_array_t is array (integer range <>) of std_logic_vector(clusters_i'length-1 downto 0);
@@ -511,9 +475,6 @@ begin
 
     type cnt_array_t is array (integer range <>) of integer range 0 to 15;
     signal counts : cnt_array_t (clusters_o'length-1 downto 0) := (others => 0);
-
-    type pos_array_t is array (integer range <>) of integer range 0 to 16;
-    signal positions : pos_array_t (clusters_o'length-1 downto 0) := (others => 0);
 
     signal clusters_s1, clusters_s2, clusters_s3 :
       sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
@@ -591,19 +552,7 @@ begin
       end if;
     end process;
 
-    -- get the indexes of the first N clusters
-    -- cluster_sel_gen : for I in 0 to clusters_o'length-1 generate
-    -- begin
-    --   process (clock) is
-    --   begin
-    --     if (rising_edge(clock)) then
-    --       cluster_sel(I) <= pick_nth(I, hitmask);
-    --     end if;
-    --   end process;
-    -- end generate;
-
     -- mux together the outputs
-
     cluster_out_gen : for I in 0 to clusters_o'length-1 generate
       process (clock) is
       begin
