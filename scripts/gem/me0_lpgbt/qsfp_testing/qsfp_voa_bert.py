@@ -47,7 +47,7 @@ if __name__ == "__main__":
     os.system("python3 init_frontend.py")
     
     n_fec_errors = []
-    for i in len(0, range(attenuation_list)):
+    for i in range(0, len(attenuation_list)):
         n_fec_errors.append(-9999) 
     print ("")
 
