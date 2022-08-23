@@ -16,7 +16,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # VOA Control Parameters
-    attenuation_list = [8, 9, 10, 11, 11.2, 11.4, 11.6, 11.8, 12, 12.2, 12.4, 12.6, 12.8, 13, 13.2, 13.4, 13.6]
+    attenuation_list = [8, 9, 10, 11, 11.2, 11.4, 11.6, 11.8, 12, 12.2, 12.4, 12.6, 12.8, 13, 13.2, 13.4, 13.6, 13.8, 14, 14.2, 14.4, 14.6, 14.8, 15.0]
     router_ip = "169.254.119.34"
     router_username = "pi"
     router_password = "queso"
@@ -45,8 +45,10 @@ if __name__ == "__main__":
 
     # Initialize  
     os.system("python3 init_frontend.py")
-
-    n_fec_errors = [-9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999]
+    
+    n_fec_errors = []
+    for i in len(0, range(attenuation_list)):
+        n_fec_errors.append(-9999) 
     print ("")
 
     counter = 0
@@ -56,6 +58,7 @@ if __name__ == "__main__":
         # Run ssh command for VOA
         #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -a %0.1f"%i  
         ssh_command = "python3 Documents/voa_control.py -a %0.1f"%i
+        print (ssh_command)
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
         print(output)
