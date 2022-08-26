@@ -34,8 +34,9 @@ architecture Behavioral of ila_mgt_rx_64b_wrapper is
             probe4 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
             probe5 : IN STD_LOGIC;
             probe6 : IN STD_LOGIC;
-            probe7 : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
-            probe8 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
+            probe7 : IN STD_LOGIC;
+            probe8 : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+            probe9 : IN STD_LOGIC_VECTOR(1 DOWNTO 0)
         );
     end component ila_mgt_rx_64b;
         
@@ -51,8 +52,9 @@ begin
             probe4      => rx_data_i.rxdisperr,
             probe5      => rx_data_i.rxbyteisaligned,
             probe6      => rx_data_i.rxbyterealign,
-            probe7      => mgt_status_i.rxbufstatus,
-            probe8      => mgt_status_i.rxclkcorcnt
+            probe7      => rx_data_i.rxcommadet,
+            probe8      => mgt_status_i.rxbufstatus,
+            probe9      => mgt_status_i.rxclkcorcnt
         );
         
 end Behavioral;

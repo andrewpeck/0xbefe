@@ -46,7 +46,7 @@ entity gem_tests is
 
         -- GbE link
         gbe_clk_i                   : in  std_logic;
-        gbe_tx_data_o               : out t_mgt_16b_tx_data;
+        gbe_tx_data_o               : out t_mgt_64b_tx_data;
         gbe_test_enable_o           : out std_logic; 
         
         -- IPbus
@@ -89,6 +89,8 @@ architecture Behavioral of gem_tests is
     signal vfat_daqmon_chan_fire_cnt_arr: t_std16_array(23 downto 0); 
     
     -- GbE test
+    signal gbe_tx_data                  : t_mgt_16b_tx_data;
+
     signal gbe_test_enable              : std_logic;
     signal gbe_user_data                : std_logic_vector(17 downto 0);
     signal gbe_user_data_en             : std_logic;
@@ -194,7 +196,7 @@ begin
         port map(
             reset_i                     => reset,
             gbe_clk_i                   => gbe_clk_i,
-            gbe_tx_data_o               => gbe_tx_data_o,
+            gbe_tx_data_o               => gbe_tx_data,
             user_data_clk_i             => ipb_clk_i,
             user_data_i                 => gbe_user_data(15 downto 0),
             user_data_charisk_i         => gbe_user_data(17 downto 16),
@@ -207,6 +209,11 @@ begin
             manual_read_data_o          => gbe_manual_rd_data,
             manual_read_valid_o         => gbe_manual_rd_valid
         );
+
+    gbe_tx_data_o.txdata(15 downto 0) <= gbe_tx_data.txdata;
+    gbe_tx_data_o.txcharisk(1 downto 0) <= gbe_tx_data.txcharisk;
+    gbe_tx_data_o.txchardispval(1 downto 0) <= gbe_tx_data.txchardispval;
+    gbe_tx_data_o.txchardispmode(1 downto 0) <= gbe_tx_data.txchardispmode;
     
     g_reg_ge11 : if g_GEM_STATION = 1 generate
     --==== Registers begin ge11 ==========================================================================

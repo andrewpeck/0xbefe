@@ -223,10 +223,11 @@ architecture gem_apex_arch of gem_apex is
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs * CFG_NUM_GBTS_PER_OH - 1 downto 0);
 
     -- Spy readout link
-    signal spy_usrclk               : std_logic;
-    signal spy_rx_data              : t_mgt_16b_rx_data;
-    signal spy_tx_data              : t_mgt_16b_tx_data;
-    signal spy_rx_status            : t_mgt_status;
+    signal spy_rx_data              : t_mgt_64b_rx_data;
+    signal spy_tx_data              : t_mgt_64b_tx_data;
+    signal spy_rx_usrclk            : std_logic;
+    signal spy_tx_usrclk            : std_logic;
+    signal spy_status               : t_mgt_status;
 
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink           : t_daq_to_daqlink;
@@ -532,10 +533,11 @@ begin
             gt_gbt_status_arr_i     => gem_gt_gbt_status_arr,
             gt_gbt_ctrl_arr_o       => gem_gt_gbt_ctrl_arr,
 
-            spy_usrclk_i            => spy_usrclk,
             spy_rx_data_i           => spy_rx_data,
             spy_tx_data_o           => spy_tx_data,
-            spy_rx_status_i         => spy_rx_status,
+            spy_rx_usrclk_i         => spy_rx_usrclk,
+            spy_tx_usrclk_i         => spy_tx_usrclk,
+            spy_status_i            => spy_status,
 
             ipb_reset_i             => ipb_reset,
             ipb_clk_i               => ipb_clk,
@@ -599,6 +601,31 @@ begin
 
     end generate;
 
+    -- spy link TX mapping
+    g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
+        spy_tx_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= spy_tx_data;
+    else generate
+        spy_tx_usrclk <= '0';
+        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= MGT_64B_TX_DATA_NULL;
+    end generate;
+
+    -- spy link RX mapping
+    g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
+        spy_rx_usrclk <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+        spy_rx_data <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+    else generate
+        spy_rx_usrclk <= '0';
+        spy_rx_data <= MGT_64B_RX_DATA_NULL;
+    end generate;
+
+    -- spy link statuses mapping
+    g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
+        spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+    else generate
+        spy_status <= MGT_STATUS_NULL;
+    end generate;
+
     -- MGT mapping to EMTF links
     g_use_emtf_links : if CFG_USE_TRIG_TX_LINKS generate
         g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX - 1 generate
@@ -606,39 +633,6 @@ begin
             gem_gt_trig_tx_status_arr(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(i)).tx);
         end generate;
         gem_gt_trig_tx_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)).tx);
-    end generate;
-
-    -- spy link TX mapping
-    g_spy_link_tx : if CFG_USE_SPY_LINK_TX generate
-        spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx);
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txdata(15 downto 0) <= spy_tx_data.txdata;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txcharisk(1 downto 0) <= spy_tx_data.txcharisk;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispval(1 downto 0) <= spy_tx_data.txchardispval;
-        mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).tx).txchardispmode(1 downto 0) <= spy_tx_data.txchardispmode;
-    end generate;
-
-    -- no spy link TX
-    g_no_spy_link_tx : if not CFG_USE_SPY_LINK_TX generate
-        spy_usrclk <= '0';
-    end generate;
-
-    -- spy link RX mapping
-    g_spy_link_rx : if CFG_USE_SPY_LINK_RX generate
-        spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdata(15 downto 0);
-        spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyteisaligned;
-        spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxbyterealign;
-        spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcommadet;
-        spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxdisperr(1 downto 0);
-        spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxnotintable(1 downto 0);
-        spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxchariscomma(1 downto 0);
-        spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx).rxcharisk(1 downto 0);
-        spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK).rx);
-    end generate;
-
-    -- no spy link RX
-    g_no_spy_link_rx : if not CFG_USE_SPY_LINK_RX generate
-        spy_rx_data     <= MGT_16B_RX_DATA_NULL;
-        spy_rx_status   <= MGT_STATUS_NULL;
     end generate;
 
 end gem_apex_arch;

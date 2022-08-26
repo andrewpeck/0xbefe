@@ -57,6 +57,10 @@ package board_config_package is
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
+    constant CFG_SPY_10GBE                     : boolean := true; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
+    constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
+
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link
@@ -65,6 +69,7 @@ package board_config_package is
     constant CFG_DEBUG_SBIT_ME0             : boolean := true; -- if set to true, and ILA will be instantiated on sbit ME0
     constant CFG_DEBUG_IC_RX                : boolean := false; --set to true to instantiate ILA in IC rx
     constant CFG_DEBUG_TRIGGER_TX           : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any trigger TX link
+    constant CFG_DEBUG_10GBE_MAC_PCS        : boolean := false; -- if set to true, an ILA will be instantiated which allows probing the 10 GbE MAC-PCS core
     
     ----------------------------------------------------------------------------------------------
 
@@ -73,8 +78,6 @@ package board_config_package is
     constant CFG_LPGBT_EMTF_LOOP_RX_GTH     : integer := 66;
     constant CFG_LPGBT_EMTF_LOOP_TX_LINK    : integer := 7;
     constant CFG_ILA_GBT0_MGT_EN            : boolean := false; -- setting this to 1 enables the instantiation of ILA on GBT link 0 MGT
-
-    -- oh link mapping is in the project pkg file
 
     --================================--
     -- Fiber to MGT mapping

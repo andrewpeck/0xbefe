@@ -47,13 +47,6 @@ package gem_pkg is
 
     type t_oh_trig_link_type is (OH_TRIG_LINK_TYPE_3P2G, OH_TRIG_LINK_TYPE_4P0G, OH_TRIG_LINK_TYPE_GBT, OH_TRIG_LINK_TYPE_NONE);
 
-    --======================--
-    --== Config Constants ==--
-    --======================-- 
-        
-    -- DAQ
-    constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"1";
-
     --=============--
     --==  VFAT3  ==--
     --=============--
