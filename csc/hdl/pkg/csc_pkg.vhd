@@ -46,7 +46,9 @@ package csc_pkg is
     --======================-- 
     
     -- DAQ
-    constant C_DAQ_FORMAT_VERSION     : std_logic_vector(3 downto 0)  := x"7";
+    constant C_DAQ_FORMAT_VERSION               : std_logic_vector(3 downto 0)  := x"7"; -- use 7 for DDU-like format, 8 and above for ATCA specific format
+    constant C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA    : std_logic := '0'; -- if this is set to '1', then SlinkRocket or AMC13 headers/trailers will be included in the Local DAQ path
+    constant C_DAQ_INCLUDE_HEADER_4             : boolean := false; 
 
     --====================--
     --== DAQ data input ==--
