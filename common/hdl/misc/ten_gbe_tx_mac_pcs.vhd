@@ -19,6 +19,9 @@ use work.common_pkg.all;
 use work.board_config_package.all;
 
 entity ten_gbe_tx_mac_pcs is
+    generic (
+        ASYNC_GEARBOX  : boolean -- set this to true if the MGT is configured to use async 64b66b gearbox (only available on ultrascale parts)
+    );
     port (
         reset_i        : in  std_logic;
 
@@ -74,6 +77,17 @@ architecture ten_gbe_tx_mac_pcs_arch of ten_gbe_tx_mac_pcs is
             probe7 : in std_logic_vector(0 downto 0)
         );
     end component;
+
+    function get_usrclk_freq(async_gearbox : boolean) return integer is
+    begin
+        if async_gearbox then
+            return 156_250_000;
+        else
+            return 161_132_813;  
+        end if;
+    end function get_usrclk_freq;  
+    
+    constant MGT_USRCLK_FREQ    : integer := get_usrclk_freq(ASYNC_GEARBOX);
 
     -- 64b66b constants
     constant HEADER_DATA        : std_logic_vector(1 downto 0) := "01";
@@ -150,29 +164,37 @@ begin
             sync_o  => reset
         );
 
-    -- 64b66b TX MGT gearbox handling
-    process (clk_i)
-    begin
-        if (rising_edge(clk_i)) then
-            if (reset = '1') then
-                gearbox_sequence <= (others => '0');
-                gearbox_ready    <= '1';
-            else
-                if (gearbox_sequence = "100000") then
-                    gearbox_sequence <= "000000";
+    -- 64b66b TX MGT sync gearbox handling
+    g_sync_gearbox : if not ASYNC_GEARBOX generate
+        process (clk_i)
+        begin
+            if (rising_edge(clk_i)) then
+                if (reset = '1') then
+                    gearbox_sequence <= (others => '0');
+                    gearbox_ready    <= '1';
                 else
-                    gearbox_sequence <= gearbox_sequence + 1;
-                end if;
-
-                if (gearbox_sequence = "011111") then
-                    gearbox_ready <= '0';
-                else
-                    gearbox_ready <= '1';
+                    if (gearbox_sequence = "100000") then
+                        gearbox_sequence <= "000000";
+                    else
+                        gearbox_sequence <= gearbox_sequence + 1;
+                    end if;
+    
+                    if (gearbox_sequence = "011111") then
+                        gearbox_ready <= '0';
+                    else
+                        gearbox_ready <= '1';
+                    end if;
                 end if;
             end if;
-        end if;
-    end process;
+        end process;
+    end generate;
 
+    -- 64b66b TX MGT async gearbox
+    g_async_gearbox : if ASYNC_GEARBOX generate
+        gearbox_ready <= '1';
+        gearbox_sequence <= (others => '0');
+    end generate;
+    
     -- input selection
     packet_valid <= generator_valid when generator_en = '1' else packet_valid_i;
     packet_data  <= generator_data  when generator_en = '1' else packet_data_i;
@@ -343,7 +365,7 @@ begin
 
     i_word_rate : entity work.rate_counter
         generic map(
-            g_CLK_FREQUENCY => x"099ab10d", -- 161.132813 MHz
+            g_CLK_FREQUENCY => std_logic_vector(to_unsigned(MGT_USRCLK_FREQ, 32)),
             g_COUNTER_WIDTH => 30
         )
         port map(

@@ -987,6 +987,9 @@ begin
             );
 
         i_spy_ten_gbe_tx_mac_pcs : entity work.ten_gbe_tx_mac_pcs
+                generic map (
+                    ASYNC_GEARBOX => CFG_SPY_10GBE_ASYNC_GEARBOX
+                )
             port map (
                 reset_i        => reset_i or spy_gbe_reset_ipb,
 

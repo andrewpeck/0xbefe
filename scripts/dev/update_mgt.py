@@ -241,7 +241,7 @@ def main():
                 skipped_keep_props.append([name, val, props[name], lineNum])
                 vhdl += line
                 continue
-            if (is_qpll0 and "QPLL1" in name) or (is_qpll1 and "QPLL0" in name):
+            if (is_qpll0 and ("QPLL1" in name or "PPF1" in name)) or (is_qpll1 and ("QPLL0" in name or "PPF0" in name)):
                 print("SKIPPING GENERIC %s because it does not belong to %s " % (line, mgtType))
                 skipped_qpll_props.append([name, val, props[name], lineNum])
                 vhdl += line
@@ -251,7 +251,7 @@ def main():
                 print("Exiting...")
                 return
 
-            if (is_qpll0 or is_qpll1) and "QPLL0" not in name and "QPLL1" not in name and val != props[name]:
+            if (is_qpll0 or is_qpll1) and "QPLL0" not in name and "QPLL1" not in name and "PPF" not in name and val != props[name]:
                 print("ERROR: A common QPLL parameter has a different value than the props file, and we are only updating %s" % mgtType)
                 print("VHDL file has %s => %s, while props file has value %s" % (name, val, props[name]))
                 conflicting_qpll_props.append([name, val, props[name], lineNum])
@@ -267,7 +267,7 @@ def main():
         else:
             # skip if the port isn't in the map, or it is not a constant in the original file
             if name not in ports or (("'" not in line and '"' not in line) or "&" in line) or \
-               (is_qpll0 and "QPLL1" in name) or (is_qpll1 and "QPLL0" in name):
+               (is_qpll0 and ("QPLL1" in name or "SDM1" in name)) or (is_qpll1 and ("QPLL0" in name or "SDM0" in name)):
 
                 newVal = "UNKNOWN" if name not in ports else ports[name]
                 if len(newVal) > 40:
@@ -276,7 +276,7 @@ def main():
                 vhdl += line
                 continue
 
-            if (is_qpll0 or is_qpll1) and "QPLL0" not in name and "QPLL1" not in name and val != ports[name]:
+            if (is_qpll0 or is_qpll1) and "QPLL0" not in name and "QPLL1" not in name and "SDM" not in name and val != ports[name]:
                 print("ERROR: A common QPLL port has a different value than the ports file, and we are only updating %s" % mgtType)
                 print("VHDL file has %s => %s, while ports file has value %s" % (name, val, ports[name]))
                 conflicting_qpll_ports.append([name, val, ports[name], lineNum])
@@ -293,7 +293,7 @@ def main():
 
     vhdlFile.close()
 
-    if len(conflicting_qpll_ports) > 0:
+    if len(conflicting_qpll_ports) > 0 or len(conflicting_qpll_props) > 0:
         print_red("ERROR, there are conflicting common QPLL0/QPLL1 paramters:")
         printSkipped(conflicting_qpll_props)
         print_red("ERROR, there are conflicting common QPLL0/QPLL1 ports:")

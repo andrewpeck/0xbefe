@@ -15,8 +15,33 @@ use work.ttc_pkg.C_TTC_CLK_FREQUENCY;
 
 package mgt_pkg is
 
-    type t_mgt_link_type is (MGT_NULL, MGT_GBTX, MGT_LPGBT, MGT_3P2G_8B10B, MGT_TX_LPGBT_RX_3P2G_8B10B, MGT_DMB, MGT_ODMB57, MGT_GBE, MGT_TTC, MGT_ODMB57_BIDIR, MGT_TX_GBE_RX_LPGBT);
-    type t_mgt_qpll_type is (QPLL_NULL, QPLL_GBTX, QPLL_LPGBT, QPLL_ODMB57_200, QPLL_ODMB57_156, QPLL_DMB_GBE_156, QPLL_GBE_156, QPLL_3P2G, QPLL0_3P2G_QPLL1_GBTX, QPLL0_LPGBT_QPLL1_GBE);
+    type t_mgt_link_type is (MGT_NULL,
+                             MGT_GBTX,
+                             MGT_LPGBT,
+                             MGT_3P2G_8B10B,
+                             MGT_TX_LPGBT_RX_3P2G_8B10B,
+                             MGT_DMB,
+                             MGT_ODMB57,
+                             MGT_TTC,
+                             MGT_ODMB57_BIDIR,
+                             MGT_GBE,
+                             MGT_10GBE,
+                             MGT_TX_GBE_RX_LPGBT,
+                             MGT_TX_10GBE_RX_LPGBT); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
+                             
+    type t_mgt_qpll_type is (QPLL_NULL,
+                             QPLL_GBTX,
+                             QPLL_LPGBT,
+                             QPLL_ODMB57_200,
+                             QPLL_ODMB57_156,
+                             QPLL_DMB_GBE_156,
+                             QPLL_GBE_156,
+                             QPLL_3P2G,
+                             QPLL0_3P2G_QPLL1_GBTX,
+                             QPLL0_LPGBT_QPLL1_GBE,
+                             QPLL0_LPGBT_QPLL1_10GBE,
+                             QPLL_10GBE_156,
+                             QPLL0_DMB_QPLL1_10GBE_156); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -138,28 +163,30 @@ package mgt_pkg is
     end record;
 
     type t_mgt_tx_init is record
-        gttxreset    : std_logic;
-        txuserrdy    : std_logic;
-        txdlyen      : std_logic;
-        txdlysreset  : std_logic;
-        txphalign    : std_logic;
-        txphalignen  : std_logic;
-        txphdlyreset : std_logic;
-        txphinit     : std_logic;
-        txsyncallin  : std_logic;
-        txsyncin     : std_logic;
-        txsyncmode   : std_logic;
+        gttxreset       : std_logic;
+        txprogdivreset  : std_logic;
+        txuserrdy       : std_logic;
+        txdlyen         : std_logic;
+        txdlysreset     : std_logic;
+        txphalign       : std_logic;
+        txphalignen     : std_logic;
+        txphdlyreset    : std_logic;
+        txphinit        : std_logic;
+        txsyncallin     : std_logic;
+        txsyncin        : std_logic;
+        txsyncmode      : std_logic;
     end record;
 
     type t_mgt_tx_status is record
-        txresetdone     : std_logic;
-        txbufstatus     : std_logic_vector(1 downto 0);
-        txpmaresetdone  : std_logic;
-        txdlysresetdone : std_logic;
-        txphaligndone   : std_logic;
-        txphinitdone    : std_logic;
-        txsyncout       : std_logic;
-        txsyncdone      : std_logic;
+        txresetdone         : std_logic;
+        txprogdivresetdone  : std_logic;
+        txbufstatus         : std_logic_vector(1 downto 0);
+        txpmaresetdone      : std_logic;
+        txdlysresetdone     : std_logic;
+        txphaligndone       : std_logic;
+        txphinitdone        : std_logic;
+        txsyncout           : std_logic;
+        txsyncdone          : std_logic;
     end record;
 
     type t_mgt_rx_slow_ctrl is record
@@ -177,6 +204,7 @@ package mgt_pkg is
 
     type t_mgt_rx_init is record
         gtrxreset       : std_logic;
+        rxprogdivreset  : std_logic;        
         rxuserrdy       : std_logic;
         rxdlysreset     : std_logic;
         rxphalign       : std_logic;
@@ -188,18 +216,20 @@ package mgt_pkg is
     end record;
 
     type t_mgt_rx_status is record
-        rxprbserr       : std_logic;
-        rxbufstatus     : std_logic_vector(2 downto 0);
-        rxclkcorcnt     : std_logic_vector(1 downto 0);
-        rxresetdone     : std_logic;
-        rxpmaresetdone  : std_logic;
-        rxdlysresetdone : std_logic;
-        rxphaligndone   : std_logic;
-        rxsyncdone      : std_logic;
-        rxsyncout       : std_logic;
-        rxchanbondseq   : std_logic;
-        rxchanisaligned : std_logic;
-        rxchanrealign   : std_logic;
+        rxprogdivresetdone  : std_logic;
+        rxprbserr           : std_logic;
+        rxbufstatus         : std_logic_vector(2 downto 0);
+        rxclkcorcnt         : std_logic_vector(1 downto 0);
+        rxresetdone         : std_logic;
+        rxpmaresetdone      : std_logic;
+        rxdlysresetdone     : std_logic;
+        rxphaligndone       : std_logic;
+        rxsyncdone          : std_logic;
+        rxsyncout           : std_logic;
+        rxchanbondseq       : std_logic;
+        rxchanisaligned     : std_logic;
+        rxchanrealign       : std_logic;
+        rxcdrlock           : std_logic;
     end record;
 
     type t_mgt_misc_ctrl is record

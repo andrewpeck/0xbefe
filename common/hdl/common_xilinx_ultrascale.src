@@ -17,6 +17,8 @@ common/hdl/ttc/ttc_clocks_ultrascale.vhd
 common/hdl/mgt/mgt_links_gty.vhd
 common/hdl/mgt/refclk_bufs.vhd
 common/hdl/mgt/gty_channel_lpgbt.vhd
+common/hdl/mgt/gty_channel_lpgbt_rx_gbe_tx.vhd
+common/hdl/mgt/gty_channel_lpgbt_rx_10gbe_tx.vhd
 common/hdl/mgt/gty_channel_reset.vhd
 common/hdl/mgt/gty_channel_gbtx.vhd
 common/hdl/mgt/gty_channel_trig_3p2.vhd
@@ -24,6 +26,7 @@ common/hdl/mgt/gty_channel_dmb.vhd
 common/hdl/mgt/gty_channel_odmb57.vhd
 common/hdl/mgt/gty_channel_odmb57_bidir.vhd
 common/hdl/mgt/gty_channel_gbe.vhd
+common/hdl/mgt/gty_channel_10gbe.vhd
 common/hdl/mgt/gty_channel_ttc.vhd
 common/hdl/mgt/gty_qpll_gbtx.vhd
 common/hdl/mgt/gty_qpll_gbtx_156p25_ref.vhd
@@ -34,9 +37,11 @@ common/hdl/mgt/gty_qpll0_trig_3p2_qpll1_gbtx.vhd
 common/hdl/mgt/gty_qpll_odmb57_200.vhd
 common/hdl/mgt/gty_qpll_odmb57_156p25.vhd
 common/hdl/mgt/gty_qpll0_dmb_qpll1_gbe_156p25.vhd
+common/hdl/mgt/gty_qpll0_dmb_qpll1_10gbe_156p25.vhd
 common/hdl/mgt/gty_qpll_gbe_156p25.vhd
+common/hdl/mgt/gty_qpll_10gbe_156p25.vhd
 common/hdl/mgt/gty_qpll0_lpgbt_qpll1_gbe.vhd
-common/hdl/mgt/gty_channel_lpgbt_rx_gbe_tx.vhd
+common/hdl/mgt/gty_qpll0_lpgbt_qpll1_10gbe.vhd
 
 # IP
 common/ip/common_xilinx_ultrascale_ip.src

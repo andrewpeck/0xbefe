@@ -560,7 +560,7 @@ begin
             spy_rx_data <= MGT_64B_RX_DATA_NULL;
         end generate;
 
-        -- spy link statuses mapping
+        -- spy link status mapping
         g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
             spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
         else generate

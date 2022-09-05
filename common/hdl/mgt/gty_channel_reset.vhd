@@ -34,6 +34,7 @@ entity gty_channel_reset is
         power_good_i            : in  std_logic;
         check_usrclk_i          : in  std_logic;
         txrxresetdone_i         : in  std_logic;
+        txprogdivresetdone_i    : in  std_logic := '1'; -- !! tie this to '1' when connecting to RX
         usrclk_locked_i         : in  std_logic;
                 
         cpll_locked_i           : in  std_logic;
@@ -45,6 +46,7 @@ entity gty_channel_reset is
         cpllreset_o             : out std_logic;
         qpll0_reset_o           : out std_logic;
         qpll1_reset_o           : out std_logic;
+        txprogdivreset_o        : out std_logic; -- not used for RX
         
         reset_done_o            : out std_logic
     );
@@ -71,6 +73,7 @@ architecture gty_channel_reset_arch of gty_channel_reset is
     signal pll_reset        : std_logic := '1';
 
     signal pll_locked       : std_logic := '0';
+    signal txprogdivrstdone : std_logic := '0';
     signal powergood        : std_logic := '0';
     signal checkusrclk      : std_logic := '0';
     signal resetdone        : std_logic := '0';
@@ -96,6 +99,7 @@ begin
     i_sync_check_usrclk : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => check_usrclk_i, clk_i => clk_stable_i, sync_o  => checkusrclk);
     i_sync_resetdone : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txrxresetdone_i, clk_i => clk_stable_i, sync_o  => resetdone);
     i_sync_usrclk_locked : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => usrclk_locked_i, clk_i => clk_stable_i, sync_o  => usrclk_locked);
+    i_sync_txprogdivrstdone : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => txprogdivresetdone_i, clk_i => clk_stable_i, sync_o  => txprogdivrstdone);
 
     -------- wire up the PLL lock and reset signals --------
        
@@ -103,6 +107,7 @@ begin
         cpllreset_o <= pll_reset;
         qpll0_reset_o <= '0';
         qpll1_reset_o <= '0';
+        txprogdivreset_o <= not cpll_locked_i;
         i_sync_pll_locked : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => cpll_locked_i, clk_i => clk_stable_i, sync_o  => pll_locked);
     end generate; 
 
@@ -110,6 +115,7 @@ begin
         cpllreset_o <= '0';
         qpll0_reset_o <= pll_reset;
         qpll1_reset_o <= '0';
+        txprogdivreset_o <= not qpll0_locked_i;
         i_sync_pll_locked : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => qpll0_locked_i, clk_i => clk_stable_i, sync_o  => pll_locked);
     end generate; 
 
@@ -117,6 +123,7 @@ begin
         cpllreset_o <= '0';
         qpll0_reset_o <= '0';
         qpll1_reset_o <= pll_reset;
+        txprogdivreset_o <= not qpll1_locked_i;
         i_sync_pll_locked : entity work.synch generic map(N_STAGES => 3, IS_RESET => false) port map(async_i => qpll1_locked_i, clk_i => clk_stable_i, sync_o  => pll_locked);
     end generate; 
 
@@ -174,7 +181,7 @@ begin
                         pll_reset <= '0';
                         usrclkrdy <= '0';
                         
-                        if pll_locked = '1' then
+                        if pll_locked = '1' and txprogdivrstdone = '1' then
                             state <= WAIT_USRCLK;
                             timer <= 0;
                         elsif timer = TIMER_5_MS then
