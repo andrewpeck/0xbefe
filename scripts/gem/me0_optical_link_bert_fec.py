@@ -326,13 +326,13 @@ def lpgbt_fec_error_counter(oh_ver):
 
 def init_lpgbt_fec_error_counter(oh_ver):
     if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"), 0x0, 0)
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"), 0x0, 0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L").address, 0x0)
     elif oh_ver == 2:
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"), 0x0, 0)
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"), 0x0, 0)
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"), 0x0, 0)
-        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"), 0x0, 0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3").address, 0x0)
 
 if __name__ == "__main__":
     # Parsing arguments
