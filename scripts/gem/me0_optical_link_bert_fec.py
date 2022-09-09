@@ -186,6 +186,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     elif path == "downlink": # check FEC errors on lpGBT
         # Enable the counter
         if opr in ["start", "run"]:
+            init_lpgbt_fec_error_counter(oh_ver)
             if oh_ver == 1:
                 lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
             elif oh_ver == 2:
@@ -322,7 +323,17 @@ def lpgbt_fec_error_counter(oh_ver):
         error_counter_3 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
         error_counter = (error_counter_0 << 24) | (error_counter_1 << 16) | (error_counter_2 << 8) | error_counter_3
     return error_counter   
-       
+
+def init_lpgbt_fec_error_counter(oh_ver):
+    if oh_ver == 1:
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"), 0x0, 0)
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"), 0x0, 0)
+    elif oh_ver == 2:
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"), 0x0, 0)
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"), 0x0, 0)
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"), 0x0, 0)
+        lpgbt_writeReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"), 0x0, 0)
+
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 Bit Error Ratio Test (BERT) using FEC Error Counters")
