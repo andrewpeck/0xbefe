@@ -61,66 +61,6 @@ def parseList(inFile):
         dacList = [line.rstrip("\n") for line in dacList]
     return dacList
 
-def do_dac_scan(vfat, dac, lower, upper, step, niter, adc_ref, dac_scan_results, dac_scan_errors, adc_monitor_select_node, vfat_cfg_calmode_node, vfat_cfg_calselpol_node, dac_node, adc0_update_node, adc0_cached_node, adc1_update_node, adc1_cached_node):
-    # Setup DAC Monitor
-    write_backend_reg(adc_monitor_select_node[vfat], REGISTER_DAC_MONITOR_MAP[dac])
-
-    calmode_initial = read_backend_reg(vfat_cfg_calmode_node[vfat])
-    calselpol_initial = read_backend_reg(vfat_cfg_calselpol_node[vfat])
-    if dac=="CFG_CAL_DAC_I":
-        write_backend_reg(vfat_cfg_calmode_node[vfat], 0x2)
-        write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
-    elif dac in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
-        write_backend_reg(vfat_cfg_calmode_node[vfat], 0x1)
-        if dac=="CFG_CAL_DAC_V_HIGH":
-            write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
-        elif dac=="CFG_CAL_DAC_V_LOW":
-            write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x1)
-
-    # Set VFAT to Run Mode
-    #write_backend_reg(vfat_cfg_run_node[vfat], 0x1)
-
-    # Initial value of DAC
-    dac_initial = read_backend_reg(dac_node[vfat][dac])
-
-    write_backend_reg(dac_node[vfat][dac], 0x0)
-    for ii in range(0, niter):
-        if adc_ref == "internal": # use ADC0
-            adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
-            sleep(20e-6) # sleep for 20 us
-            
-    # Looping over DAC values
-    for reg in range(lower, upper + 1, step):
-
-        # Set DAC value
-        write_backend_reg(dac_node[vfat][dac], reg)
-
-        adc_value = []
-        # Taking average
-        for i in range(0,niter):
-            if adc_ref == "internal": # use ADC0
-                adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
-                sleep(20e-6) # sleep for 20 us
-                adc_value.append(read_backend_reg(adc0_cached_node[vfat]))
-            elif adc_ref == "external": # use ADC1
-                adc_update_read = read_backend_reg(adc1_update_node[vfat]) # read/write to this register triggers a cache update
-                sleep(20e-6) # sleep for 20 us
-                adc_value.append(read_backend_reg(adc1_cached_node[vfat]))
-        dac_scan_results[vfat][dac][reg] = sum(adc_value) / len(adc_value)
-        var = sum([((x - dac_scan_results[vfat][dac][reg]) ** 2) for x in adc_value]) / len(adc_value)
-        dac_scan_errors[vfat][dac][reg] = var ** 0.5
-
-    # Set VFAT to Sleep Mode
-    #write_backend_reg(vfat_cfg_run_node[vfat], 0x0)
-
-    # Set back DAC to initial value
-    write_backend_reg(dac_node[vfat][dac], dac_initial)
-    write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial)
-    write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial)
-
-    # Reset DAC Monitor
-    write_backend_reg(adc_monitor_select_node[vfat], 0)
-
 def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, upper_list, step, niter, adc_ref, vref_list):
 
     resultDir = "results"
@@ -215,27 +155,132 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
 
     sleep(1)
 
+    calmode_initial = {}
+    calselpol_initial = {}
+    dac_initial = {}
+    for vfat in vfat_list:
+        calmode_initial[vfat] = read_backend_reg(vfat_cfg_calmode_node[vfat])
+        calselpol_initial[vfat] = read_backend_reg(vfat_cfg_calselpol_node[vfat])
+        dac_initial[vfat] = {}
+        for dac in dac_list:
+            dac_initial[vfat][dac] = read_backend_reg(dac_node[vfat][dac])
+            
     if parallel:
         # Loop over DACs
         for dac in dac_list:
             print ("Scanning DAC: " + dac)
             upper = upper_list[dac]
+
             for vfat in vfat_list:
-                print ("  VFAT %02d"%vfat)
-                #write_backend_reg(vfat_hyst_en_node[vfat], 0) # disable hysteresis for testing the DACs
-                do_dac_scan(vfat, dac, lower, upper, step, niter, adc_ref, dac_scan_results, dac_scan_errors, adc_monitor_select_node, vfat_cfg_calmode_node, vfat_cfg_calselpol_node, dac_node, adc0_update_node, adc0_cached_node, adc1_update_node, adc1_cached_node)
-                #write_backend_reg(vfat_hyst_en_node[vfat], 1)
+                if dac=="CFG_CAL_DAC_I":
+                    write_backend_reg(vfat_cfg_calmode_node[vfat], 0x2)
+                    write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
+                elif dac in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
+                    write_backend_reg(vfat_cfg_calmode_node[vfat], 0x1)
+                    if dac=="CFG_CAL_DAC_V_HIGH":
+                        write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
+                    elif dac=="CFG_CAL_DAC_V_LOW":
+                        write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x1)
+                
+                # Setup DAC Monitor
+                write_backend_reg(adc_monitor_select_node[vfat], REGISTER_DAC_MONITOR_MAP[dac])
+
+                write_backend_reg(dac_node[vfat][dac], 0x0)
+                for ii in range(0, niter):
+                    if adc_ref == "internal": # use ADC0
+                        adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
+                        sleep(20e-6) # sleep for 20 us
+
+            # Looping over DAC values
+            for reg in range(lower, upper + 1, step):
+
+                # Set DAC value
+                for vfat in vfat_list:
+                    write_backend_reg(dac_node[vfat][dac], reg)
+
+                # Read the ADC
+                for vfat in vfat_list:
+                    adc_value = []
+                    # Taking average
+                    for i in range(0,niter):
+                        if adc_ref == "internal": # use ADC0
+                            adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
+                            sleep(20e-6) # sleep for 20 us
+                            adc_value.append(read_backend_reg(adc0_cached_node[vfat]))
+                        elif adc_ref == "external": # use ADC1
+                            adc_update_read = read_backend_reg(adc1_update_node[vfat]) # read/write to this register triggers a cache update
+                            sleep(20e-6) # sleep for 20 us
+                            adc_value.append(read_backend_reg(adc1_cached_node[vfat]))
+                    dac_scan_results[vfat][dac][reg] = sum(adc_value) / len(adc_value)
+                    var = sum([((x - dac_scan_results[vfat][dac][reg]) ** 2) for x in adc_value]) / len(adc_value)
+                    dac_scan_errors[vfat][dac][reg] = var ** 0.5
+            
+            for vfat in vfat_list:
+                # Set back DAC to initial value
+                write_backend_reg(dac_node[vfat][dac], dac_initial)
+                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial)
+                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial)
+
+                # Reset DAC Monitor
+                write_backend_reg(adc_monitor_select_node[vfat], 0)
     else:
         # Loop over VFATs
         for vfat in vfat_list:
             print ("VFAT %02d"%vfat)
-            #write_backend_reg(vfat_hyst_en_node[vfat], 0) # disable hysteresis for testing the DACs
+            
             # Loop over DACs
             for dac in dac_list:
                 print ("  Scanning DAC: " + dac)
                 upper = upper_list[dac]
-                do_dac_scan(vfat, dac, lower, upper, step, niter, adc_ref, dac_scan_results, dac_scan_errors, adc_monitor_select_node, vfat_cfg_calmode_node, vfat_cfg_calselpol_node, dac_node, adc0_update_node, adc0_cached_node, adc1_update_node, adc1_cached_node)
-            #write_backend_reg(vfat_hyst_en_node[vfat], 1)
+                
+                # Setup DAC Monitor
+                write_backend_reg(adc_monitor_select_node[vfat], REGISTER_DAC_MONITOR_MAP[dac])
+
+                if dac=="CFG_CAL_DAC_I":
+                    write_backend_reg(vfat_cfg_calmode_node[vfat], 0x2)
+                    write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
+                elif dac in ["CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
+                    write_backend_reg(vfat_cfg_calmode_node[vfat], 0x1)
+                    if dac=="CFG_CAL_DAC_V_HIGH":
+                        write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x0)
+                    elif dac=="CFG_CAL_DAC_V_LOW":
+                        write_backend_reg(vfat_cfg_calselpol_node[vfat], 0x1)
+
+                write_backend_reg(dac_node[vfat][dac], 0x0)
+                for ii in range(0, niter):
+                    if adc_ref == "internal": # use ADC0
+                        adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
+                        sleep(20e-6) # sleep for 20 us
+
+                # Looping over DAC values
+                for reg in range(lower, upper + 1, step):
+
+                    # Set DAC value
+                    write_backend_reg(dac_node[vfat][dac], reg)
+
+                    # Read the ADC
+                    adc_value = []
+                    # Taking average
+                    for i in range(0,niter):
+                        if adc_ref == "internal": # use ADC0
+                            adc_update_read = read_backend_reg(adc0_update_node[vfat]) # read/write to this register triggers a cache update
+                            sleep(20e-6) # sleep for 20 us
+                            adc_value.append(read_backend_reg(adc0_cached_node[vfat]))
+                        elif adc_ref == "external": # use ADC1
+                            adc_update_read = read_backend_reg(adc1_update_node[vfat]) # read/write to this register triggers a cache update
+                            sleep(20e-6) # sleep for 20 us
+                            adc_value.append(read_backend_reg(adc1_cached_node[vfat]))
+                    dac_scan_results[vfat][dac][reg] = sum(adc_value) / len(adc_value)
+                    var = sum([((x - dac_scan_results[vfat][dac][reg]) ** 2) for x in adc_value]) / len(adc_value)
+                    dac_scan_errors[vfat][dac][reg] = var ** 0.5
+
+                # Set back DAC to initial value
+                write_backend_reg(dac_node[vfat][dac], dac_initial)
+                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial)
+                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial)
+
+                # Reset DAC Monitor
+                write_backend_reg(adc_monitor_select_node[vfat], 0)
 
     # Writing results in output file
     file_out = open(filename,"a")
