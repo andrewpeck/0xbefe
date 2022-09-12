@@ -134,6 +134,22 @@ def setVfatchannelTrim(vfatN, ohN, channel, trim_polarity, trim_amp):
     write_backend_reg(channel_trim_polarity_node, trim_polarity)
     write_backend_reg(channel_trim_amp_node, trim_amp)
 
+def dump_vfat_config(ohN, vfatN):
+    dump_vfat_data = {}
+    vfat_register_config_file_path = "../resources/vfatConfig.txt"
+    if not os.path.isfile(vfat_register_config_file_path):
+        print (Colors.YELLOW + "VFAT config text file not present in resources/" + Colors.ENDC)
+        sys.exit()
+    vfat_register_config_file = open(vfat_register_config_file_path)
+    for line in vfat_register_config_file.readlines():
+        register = line.split()[0]
+        dump_vfat_data[register] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.%s"     % (ohN, vfatN, register)))
+    vfat_register_config_file.close()
+    for channel in range(0,128):
+        dump_vfat_data["CHANNEL%d_CALPULSE_ENABLE"%channel] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.CALPULSE_ENABLE"%(ohN, vfatN, channel)))
+        dump_vfat_data["CHANNEL%d_MASK"%channel] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.MASK"%(ohN, vfatN, channel)))
+    return dump_vfat_data
+
 def enableVfatchannel(vfatN, ohN, channel, mask, enable_cal):
     #channel_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i"%(ohN, vfatN, channel))
     channel_enable_node = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.VFAT_CHANNELS.CHANNEL%i.CALPULSE_ENABLE"%(ohN, vfatN, channel))

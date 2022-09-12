@@ -3,10 +3,10 @@ from time import sleep, time
 import sys
 import argparse
 import random
-from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
+from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, dump_vfat_config
 import datetime
 
-def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1a_bxgap, calpulse):
+def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1a_bxgap, calpulse, do_print):
     
     resultDir = "results"
     try:
@@ -121,6 +121,17 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     t0 = time()
     time_prev = t0
     
+    if do_print:
+        vfatDir = dataDir + "%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
+        vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
+        vfat_out_file = open(vfat_out_filename)
+        vfat_out_file.write("VFAT    register    value")
+        for vfat in vfat_list:
+            dump_vfat_data = dump_vfat_config(oh_select, vfat)
+            for reg in dump_vfat_data:
+                vfat_out_file.write("%d    %s    %d"%(vfat, reg, dump_vfat_data[reg]))
+        vfat_out_file.close()
+
     # Start the cyclic generator
     sleep(0.001)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
@@ -181,6 +192,17 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     l1a_counter = 0
                     t0 = time()
 
+                    if do_print:
+                        vfatDir = dataDir + "%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
+                        vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
+                        vfat_out_file = open(vfat_out_filename)
+                        vfat_out_file.write("VFAT    register    value")
+                        for vfat in vfat_list:
+                            dump_vfat_data = dump_vfat_config(oh_select, vfat)
+                            for reg in dump_vfat_data:
+                                vfat_out_file.write("%d    %s    %d"%(vfat, reg, dump_vfat_data[reg]))
+                        vfat_out_file.close()
+
                 # Start L1A's 
                 sleep(0.001)
                 write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
@@ -225,6 +247,7 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
     parser.add_argument("-c", "--calpulse", action="store_true", dest="calpulse", help="if calpulsing for all channels should be enabled")
+    parser.add_argument("-p", "--print", action="store_true", dest="print", help="to dump all VFAT config if errors encountered")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -299,7 +322,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan 
     try:
-        vfat_bert(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac, nl1a, l1a_bxgap, args.calpulse)
+        vfat_bert(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac, nl1a, l1a_bxgap, args.calpulse args.print)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
