@@ -18,7 +18,7 @@ REGISTER_DAC_MONITOR_MAP = {
     "CFG_BIAS_SD_I_BSF": 9,
     "CFG_BIAS_CFD_DAC_1": 10,
     "CFG_BIAS_CFD_DAC_2": 11,
-    "CFG_HYST": 12,
+    #"CFG_HYST": 12,
     #"Imon CFD Ireflocal": 13, # ??
     #"Imon SLVS Ibias": 16, # ??
     #"Vmon BGR": 32, # ??
@@ -46,7 +46,7 @@ MAX_DAC_SIZE = {
      "CFG_BIAS_SD_I_BSF": 63,
      "CFG_BIAS_CFD_DAC_1": 63,
      "CFG_BIAS_CFD_DAC_2": 63,
-     "CFG_HYST": 63,
+     #"CFG_HYST": 63,
      "CFG_THR_ARM_DAC": 255,
      "CFG_THR_ZCC_DAC": 255,
      "CFG_CAL_DAC_V_HIGH": 255,
@@ -95,7 +95,6 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
     link_good_node = {}
     sync_error_node = {}
     dac_node = {}
-    vfat_hyst_en_node = {}
     vfat_cfg_run_node = {}
     vfat_cfg_calmode_node = {}
     vfat_cfg_calselpol_node = {}
@@ -129,7 +128,6 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
             if dac in ["CFG_CAL_DAC_I", "CFG_CAL_DAC_V_HIGH", "CFG_CAL_DAC_V_LOW"]:
                 dac_actual = "CFG_CAL_DAC"
             dac_node[vfat][dac] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.%s" % (oh_select, vfat, dac_actual))
-        vfat_hyst_en_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_EN_HYST" % (oh_select, vfat))
         vfat_cfg_run_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat))
         vfat_cfg_calmode_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_CAL_MODE" % (oh_select, vfat))
         vfat_cfg_calselpol_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_CAL_SEL_POL" % (oh_select, vfat))
