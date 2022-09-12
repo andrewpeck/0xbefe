@@ -322,7 +322,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan 
     try:
-        vfat_bert(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac, nl1a, l1a_bxgap, args.calpulse args.print)
+        vfat_bert(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac, nl1a, l1a_bxgap, args.calpulse, args.print)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
