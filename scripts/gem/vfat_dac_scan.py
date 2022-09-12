@@ -154,6 +154,7 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
                 dac_scan_errors[vfat][dac][reg] = -9999
 
     sleep(1)
+    print ("")
 
     calmode_initial = {}
     calselpol_initial = {}
