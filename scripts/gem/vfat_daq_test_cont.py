@@ -126,11 +126,11 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
         os.makedirs(vfatDir)
         vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
         vfat_out_file = open(vfat_out_filename, "w")
-        vfat_out_file.write("VFAT    register    value")
+        vfat_out_file.write("VFAT    register    value\n")
         for vfat in vfat_list:
             dump_vfat_data = dump_vfat_config(oh_select, vfat)
             for reg in dump_vfat_data:
-                vfat_out_file.write("%d    %s    %d"%(vfat, reg, dump_vfat_data[reg]))
+                vfat_out_file.write("%d    %s    %d\n"%(vfat, reg, dump_vfat_data[reg]))
         vfat_out_file.close()
 
     # Start the cyclic generator
@@ -197,11 +197,11 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                         vfatDir = dataDir + "/%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
                         vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
                         vfat_out_file = open(vfat_out_filename, "w")
-                        vfat_out_file.write("VFAT    register    value")
+                        vfat_out_file.write("VFAT    register    value\n")
                         for vfat in vfat_list:
                             dump_vfat_data = dump_vfat_config(oh_select, vfat)
                             for reg in dump_vfat_data:
-                                vfat_out_file.write("%d    %s    %d"%(vfat, reg, dump_vfat_data[reg]))
+                                vfat_out_file.write("%d    %s    %d\n"%(vfat, reg, dump_vfat_data[reg]))
                         vfat_out_file.close()
 
                 # Start L1A's 
