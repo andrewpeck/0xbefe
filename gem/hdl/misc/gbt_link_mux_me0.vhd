@@ -62,7 +62,7 @@ use work.gem_pkg.all;
 entity gbt_link_mux_me0 is
     generic(
         g_NUM_OF_OHs                : integer;
-        g_NUM_GBTS_PER_OH           : integer
+        g_NUM_GBTS_PER_OH           : integer;
     );
     port(
         -- clock
@@ -84,6 +84,14 @@ entity gbt_link_mux_me0 is
 
         gbt_ready_arr_o             : out std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         vfat3_gbt_ready_arr_o       : out t_std24_array(g_NUM_OF_OHs - 1 downto 0)
+
+        --enable test
+        queso_test_en_i             : in  std_logic;
+
+        --test data
+        test_vfat3_tx_data_arr_i    : in  t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
+        test_vfat3_rx_data_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+
     );
 end gbt_link_mux_me0;
 
@@ -97,7 +105,9 @@ begin
     --inversions incorperated in ASIAGO config
 
     gbt_ready_arr_o <= gbt_rx_ready_arr;
-    gbt_tx_data_arr_o <= gbt_tx_data_arr;
+    gbt_tx_data_arr_o <= gbt_tx_data_arr when queso_test_en_i = '0' else test_vfat3_tx_data_arr_i;
+    
+
 
     g_ohs : for i in 0 to g_NUM_OF_OHs - 1 generate
 
@@ -371,6 +381,11 @@ begin
         vfat3_sbits_arr_o(i)(23)(55 downto 48) <= gbt_rx_data_arr_i(i * 8 + 7).rx_data(103 downto 096); -- VFAT23 pair 6 (GBT7 elink 12)
         vfat3_sbits_arr_o(i)(23)(63 downto 56) <= gbt_rx_data_arr_i(i * 8 + 7).rx_data(039 downto 032); -- VFAT23 pair 7 (GBT7 elink 04)
 
+
+        --========================= QUESO TEST RX =========================--
+        if queso_test_en_i = '1' then
+            test_vfat_rx_data_arr_o(i) <= gbt_rx_data_arr_i(i * 8 + 7).rx_data(151 downto 144); -- VFAT22 pair 0 (GBT7 elink 18)
+        end if;
         --======================================================--
         --========================= TX =========================--
         --======================================================--

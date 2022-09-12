@@ -718,6 +718,14 @@ begin
             ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.test)
         );
 
+    i_queso_test : entity work.queso_tests
+        generic map (
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
+        )
+        port map (
+            
+        );
+
     --==========--
     --    GBT   --
     --==========--
@@ -881,7 +889,12 @@ begin
                 vfat3_sbits_arr_o     => me0_vfat3_sbits_arr,
 
                 gbt_ready_arr_o       => gbt_ready_arr,
-                vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr
+                vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,
+
+                queso_test_en_i           => ,
+                test_vfat3_tx_data_arr_i  => ,
+                test_vfat3_rx_data_arr_o  =>
+
             );
     end generate;
 
