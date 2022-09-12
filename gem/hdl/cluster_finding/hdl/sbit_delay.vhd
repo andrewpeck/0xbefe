@@ -39,8 +39,7 @@ begin
 
     SRL16E_inst : SRL16E
       generic map (
-        INIT            => X"0000",     -- Initial contents of shift register
-        IS_CLK_INVERTED => '0'          -- Optional inversion for CLK
+        INIT            => X"0000"      -- Initial contents of shift register
         )
       port map (
         Q   => sbit_dly,                -- 1-bit output: SRL Data
