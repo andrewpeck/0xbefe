@@ -228,14 +228,14 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
     else:
         # Loop over VFATs
         for vfat in vfat_list:
-        print ("VFAT %02d"%vfat)
-        #write_backend_reg(vfat_hyst_en_node[vfat], 0) # disable hysteresis for testing the DACs
-        # Loop over DACs
-        for dac in dac_list:
-            print ("  Scanning DAC: " + dac)
-            upper = upper_list[dac]
-            do_dac_scan(vfat, dac, lower, upper, step, niter, adc_ref, dac_scan_results, dac_scan_errors, adc_monitor_select_node, vfat_cfg_calmode_node, vfat_cfg_calselpol_node, dac_node, adc0_update_node, adc0_cached_node, adc1_update_node, adc1_cached_node)
-        #write_backend_reg(vfat_hyst_en_node[vfat], 1)
+            print ("VFAT %02d"%vfat)
+            #write_backend_reg(vfat_hyst_en_node[vfat], 0) # disable hysteresis for testing the DACs
+            # Loop over DACs
+            for dac in dac_list:
+                print ("  Scanning DAC: " + dac)
+                upper = upper_list[dac]
+                do_dac_scan(vfat, dac, lower, upper, step, niter, adc_ref, dac_scan_results, dac_scan_errors, adc_monitor_select_node, vfat_cfg_calmode_node, vfat_cfg_calselpol_node, dac_node, adc0_update_node, adc0_cached_node, adc1_update_node, adc1_cached_node)
+            #write_backend_reg(vfat_hyst_en_node[vfat], 1)
 
     # Writing results in output file
     file_out = open(filename,"a")
