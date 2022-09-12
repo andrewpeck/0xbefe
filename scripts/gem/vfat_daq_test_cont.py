@@ -185,14 +185,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     print (Colors.YELLOW + "\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s; sending reset and starting again\n"%vfat_mismatch_str + Colors.ENDC)
                     file_out.write("\nEncountered L1A and DAQ Event Counter mismatches in VFATs: %s; sending reset and starting again\n\n"%vfat_mismatch_str)
 
-                    # Reset links and counters
-                    gem_link_reset()
-                    write_backend_reg(ttc_cnt_reset_node, 1)
                     n_reset += 1
-                    nl1a_reg_cycles = 0
-                    l1a_counter = 0
-                    t0 = time()
-
                     if do_print:
                         vfatDir = dataDir + "/%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
                         vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
@@ -203,6 +196,13 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                             for reg in dump_vfat_data:
                                 vfat_out_file.write("%d    %s    %d\n"%(vfat, reg, dump_vfat_data[reg]))
                         vfat_out_file.close()
+
+                    # Reset links and counters
+                    gem_link_reset()
+                    write_backend_reg(ttc_cnt_reset_node, 1)
+                    nl1a_reg_cycles = 0
+                    l1a_counter = 0
+                    t0 = time()
 
                 # Start L1A's 
                 sleep(0.001)
