@@ -164,7 +164,7 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
         dac_initial[vfat] = {}
         for dac in dac_list:
             dac_initial[vfat][dac] = read_backend_reg(dac_node[vfat][dac])
-            
+
     if parallel:
         # Loop over DACs
         for dac in dac_list:
@@ -217,9 +217,9 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
             
             for vfat in vfat_list:
                 # Set back DAC to initial value
-                write_backend_reg(dac_node[vfat][dac], dac_initial)
-                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial)
-                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial)
+                write_backend_reg(dac_node[vfat][dac], dac_initial[vfat][dac])
+                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial[vfat])
+                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial[vfat])
 
                 # Reset DAC Monitor
                 write_backend_reg(adc_monitor_select_node[vfat], 0)
@@ -275,9 +275,9 @@ def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, 
                     dac_scan_errors[vfat][dac][reg] = var ** 0.5
 
                 # Set back DAC to initial value
-                write_backend_reg(dac_node[vfat][dac], dac_initial)
-                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial)
-                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial)
+                write_backend_reg(dac_node[vfat][dac], dac_initial[vfat][dac])
+                write_backend_reg(vfat_cfg_calmode_node[vfat], calmode_initial[vfat])
+                write_backend_reg(vfat_cfg_calselpol_node[vfat], calselpol_initial[vfat])
 
                 # Reset DAC Monitor
                 write_backend_reg(adc_monitor_select_node[vfat], 0)
