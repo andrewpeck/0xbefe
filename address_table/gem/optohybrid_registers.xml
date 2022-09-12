@@ -468,7 +468,7 @@
           fw_bus_reset_signal="ipb_reset"
           fw_master_bus_signal="ipb_mosi_i"
           fw_slave_bus_signal="ipb_miso_o"
-          fw_reg_addr_msb="8"
+          fw_reg_addr_msb="9"
           fw_reg_addr_lsb="0">
 
         <node id="CTRL" address="0x0" description = "Controls and monitors various parameters of the S-bit deserialization and cluster building.">
@@ -1393,6 +1393,16 @@
             <node id="TMR_ERR_INJ" address="0x3" permission="w"
                   description="Inject a TMR Error" mask="0x1"
                   fw_write_pulse_signal="tmr_err_inj"/>
+        </node>
+
+        <node id="SBIT_BX_DELAY" address="0x1f0" description = "">
+          <!-- START: SBIT_DELAYS DO NOT EDIT -->
+          <!-- END: SBIT_DELAYS DO NOT EDIT -->
+        </node>
+
+        <node id="SBIT_BX_DELAY_EN" address="0x2b0" description = "">
+          <!-- START: SBIT_DELAY_EN DO NOT EDIT -->
+          <!-- END: SBIT_DELAY_EN DO NOT EDIT -->
         </node>
 
     </node> <!--TRIG-->

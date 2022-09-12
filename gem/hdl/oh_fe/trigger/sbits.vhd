@@ -85,7 +85,10 @@ entity sbits is
 
     tmr_err_inj_i            : in  std_logic := '0';
     cluster_tmr_err_o        : out std_logic := '0';
-    trig_alignment_tmr_err_o : out std_logic := '0'
+    trig_alignment_tmr_err_o : out std_logic := '0';
+
+    sbit_bx_dlys_enable_i : in std_logic_vector (NUM_VFATS*MXSBITS/SBIT_BX_DELAY_GRP_SIZE-1 downto 0);
+    sbit_bx_dlys_i        : in sbit_bx_dly_array_t (NUM_VFATS*64/SBIT_BX_DELAY_GRP_SIZE-1 downto 0)
 
     );
 end sbits;
@@ -103,6 +106,7 @@ architecture Behavioral of sbits is
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_delayed      : sbits_array_t(NUM_VFATS-1 downto 0);
 
   constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
 
@@ -334,6 +338,22 @@ begin
     end if;
   end process;
 
+  --------------------------------------------------------------------------------
+  -- Sbit Delays
+  --------------------------------------------------------------------------------
+
+  sbit_delay_inst : entity work.sbit_delay
+    generic map (
+      NUM_VFATS      => NUM_VFATS
+      )
+    port map (
+      clock          => clocks.clk40,
+      sbits_i        => vfat_sbits_injected,
+      sbits_o        => vfat_sbits_delayed,
+      dly_enable     => sbit_bx_dlys_enable_i,
+      sbit_bx_dlys_i => sbit_bx_dlys_i
+      );
+
   --------------------------------------------------------------------------------------------------------------------
   -- Cluster Packer
   --------------------------------------------------------------------------------------------------------------------
@@ -392,7 +412,7 @@ begin
 
           mask_output_i => mask_l1a,
 
-          sbits_i => vfat_sbits_injected,
+          sbits_i => vfat_sbits_delayed,
 
           clusters_o      => clusters_unmasked_tmr(I),
           cluster_count_o => cluster_count_unmasked(I),

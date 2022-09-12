@@ -26,6 +26,7 @@ gem/hdl/oh_fe/pkg/types_pkg.vhd 93
 
 # Cluster packer
 gem/hdl/cluster_finding/cluster_finding.src
+gem/hdl/cluster_finding/hdl/sbit_delay.vhd 93
 
 # Trigger
 gem/hdl/oh_fe/trigger/active_vfats.vhd 93
