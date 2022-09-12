@@ -122,7 +122,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
     time_prev = t0
     
     if do_print:
-        vfatDir = dataDir + "%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
+        vfatDir = dataDir + "/%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
         os.makedirs(vfatDir)
         vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
         vfat_out_file = open(vfat_out_filename)
@@ -194,7 +194,7 @@ def vfat_bert(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1
                     t0 = time()
 
                     if do_print:
-                        vfatDir = dataDir + "%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
+                        vfatDir = dataDir + "/%s_OH%d_vfat_daq_test_cont_vfat_data_"%(gem,oh_select) + now
                         vfat_out_filename = vfatDir+"/vfat_data_nreset_%d"%(n_reset) + ".txt"
                         vfat_out_file = open(vfat_out_filename)
                         vfat_out_file.write("VFAT    register    value")
