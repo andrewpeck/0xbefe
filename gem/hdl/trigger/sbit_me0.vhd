@@ -52,6 +52,8 @@ end sbit_me0;
 
 architecture sbit_me0_arch of sbit_me0 is
 
+    constant NUM_VFAT_PER_OH : integer := 24;
+
     -- Components --
     -- ila debugger for sbit_me0 --
     COMPONENT ila_sbit_me0
@@ -172,7 +174,7 @@ begin
     begin
         if rising_edge(ttc_clk_i.clk_40) then
             for oh in 0 to g_NUM_OF_OHs - 1 loop
-                for vfat in 0 to 23 loop
+                for vfat in 0 to NUM_VFAT_PER_OH-1 loop
                     vfat_sbits_arr(oh)(vfat) <= vfat3_sbits_arr_i(oh)(vfat) and not vfat_sbit_mask_arr(oh)(vfat);
                     vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
                     vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat));
@@ -189,7 +191,7 @@ begin
         i_vfat_rate_count: entity work.rate_counter32_multi
             generic map(
                 g_CLK_FREQUENCY => g_CLK_FREQUENCY,
-                g_NUM_COUNTERS  => 24
+                g_NUM_COUNTERS  => NUM_VFAT_PER_OH
             )
             port map(
                 clk_i   => ttc_clk_i.clk_40,
@@ -199,7 +201,7 @@ begin
             );
 
 
-        g_vfat_counters: for vfat in 0 to 23 generate
+        g_vfat_counters: for vfat in 0 to NUM_VFAT_PER_OH-1 generate
 
             i_vfat_trigger_cnt : entity work.counter
                 generic map(
@@ -293,11 +295,11 @@ begin
     begin
         each_oh: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
-            signal vfat_sbits_type_change : sbits_array_t(24 -1 downto 0);
+            signal vfat_sbits_type_change : sbits_array_t(NUM_VFAT_PER_OH - 1 downto 0);
             signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
         begin
-            each_vfat: for vfat in 0 to 23 generate
+            each_vfat: for vfat in 0 to NUM_VFAT_PER_OH-1 generate
 
                 each_sbit: for sbit in 0 to 63 generate
                     vfat_sbits_type_change(vfat)(sbit) <= vfat_sbits_arr(oh)(vfat)(sbit); --map onto self (t_vfat3_sbits_arr to sbits_array_t)
@@ -316,7 +318,7 @@ begin
                 ONESHOT           => true,
                 SPLIT_CLUSTERS    => 0,
                 INVERT_PARTITIONS => false,
-                NUM_VFATS         => 24,
+                NUM_VFATS         => NUM_VFAT_PER_OH,
                 NUM_PARTITIONS    => 8,
                 STATION           => 0
                 )
