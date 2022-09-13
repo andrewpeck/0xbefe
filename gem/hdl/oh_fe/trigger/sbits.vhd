@@ -122,6 +122,19 @@ architecture Behavioral of sbits is
   -- multiplex together the 1536 s-bits into a single chip-scope accessible register
   -- don't want to affect timing, so do it through a couple of flip-flop stages
 
+  -- function to replicate a std_logic bit some number of times
+  -- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
+
   attribute mark_debug              : string;
   attribute mark_debug of sbits_mux : signal is "TRUE";
   attribute mark_debug of aff_mux   : signal is "TRUE";
@@ -318,13 +331,8 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-
-      if (l1a_delayed = '1') then
-        l1a_bitmask <= l1a_mask_bitmask;
-      else
-        l1a_bitmask <= '0' & l1a_bitmask(31 downto 1);
-      end if;
-
+        l1a_bitmask <= '0' & l1a_bitmask(31 downto 1) or
+                       (l1a_mask_bitmask and repeat(l1a_delayed, l1a_mask_bitmask'length));
     end if;
   end process;
 
