@@ -78,7 +78,7 @@ architecture Behavioral of trigger is
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
   signal l1a_mask_delay : std_logic_vector(4 downto 0);
-  signal l1a_mask_width : std_logic_vector(4 downto 0);
+  signal l1a_mask_bitmask : std_logic_vector(31 downto 0);
 
   signal sbit_overflow   : std_logic;
   signal sbit_clusters, sbit_clusters_r   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
@@ -297,7 +297,7 @@ begin
 
       ttc            => ttc,
       l1a_mask_delay => l1a_mask_delay,
-      l1a_mask_width => l1a_mask_width,
+      l1a_mask_bitmask => l1a_mask_bitmask,
 
       -- sbit inputs
       sbits_p => vfat_sbits_p,
@@ -521,10 +521,11 @@ begin
     regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d9";
     regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"f9";
     regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"fa";
-    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"00";
-    regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"01";
-    regs_addresses(105)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"02";
-    regs_addresses(106)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"03";
+    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"fb";
+    regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"00";
+    regs_addresses(105)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"01";
+    regs_addresses(106)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"02";
+    regs_addresses(107)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"03";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -738,11 +739,11 @@ begin
     regs_read_arr(100)(REG_TRIG_SBIT_HITMAP_VFAT11_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_LSB_LSB) <= hitmap_sbits(11)(31 downto 0);
     regs_read_arr(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= trigger_prbs_en;
     regs_read_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= l1a_mask_delay;
-    regs_read_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= l1a_mask_width;
-    regs_read_arr(103)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
-    regs_read_arr(103)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
-    regs_read_arr(104)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
-    regs_read_arr(104)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
+    regs_read_arr(103)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB) <= l1a_mask_bitmask;
+    regs_read_arr(104)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
+    regs_read_arr(104)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
+    regs_read_arr(105)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(105)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);
@@ -891,15 +892,15 @@ begin
     hitmap_acquire <= regs_write_arr(76)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT);
     trigger_prbs_en <= regs_write_arr(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT);
     l1a_mask_delay <= regs_write_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB);
-    l1a_mask_width <= regs_write_arr(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB);
+    l1a_mask_bitmask <= regs_write_arr(103)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB);
 
     -- Connect write pulse signals
     reset_counters <= regs_write_pulse_arr(29);
     inject_sbits <= regs_write_pulse_arr(64);
     reset_monitor <= regs_write_pulse_arr(65);
     hitmap_reset <= regs_write_pulse_arr(75);
-    tmr_cnt_reset <= regs_write_pulse_arr(105);
-    tmr_err_inj <= regs_write_pulse_arr(106);
+    tmr_cnt_reset <= regs_write_pulse_arr(106);
+    tmr_err_inj <= regs_write_pulse_arr(107);
 
     -- Connect write done signals
 
@@ -1448,7 +1449,7 @@ begin
     regs_defaults(76)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= REG_TRIG_SBIT_HITMAP_ACQUIRE_DEFAULT;
     regs_defaults(101)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= REG_TRIG_TRIGGER_PRBS_EN_DEFAULT;
     regs_defaults(102)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_DELAY_DEFAULT;
-    regs_defaults(102)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_DEFAULT;
+    regs_defaults(103)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
@@ -1486,6 +1487,7 @@ begin
     regs_writable_arr(76) <= '1';
     regs_writable_arr(101) <= '1';
     regs_writable_arr(102) <= '1';
+    regs_writable_arr(103) <= '1';
 
   --==== Registers end ============================================================================
 
