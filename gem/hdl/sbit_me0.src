@@ -1,21 +1,8 @@
-# Cluster finding modules
-gem/hdl/cluster_finding/hdl/count.v
-gem/hdl/cluster_finding/hdl/priority.v
-gem/hdl/cluster_finding/hdl/consecutive_count.v
-gem/hdl/cluster_finding/hdl/x_oneshot.v
-gem/hdl/cluster_finding/hdl/find_cluster_primaries.v
-
-# set to vhdl 93 to make sure it is compatible with ge11...
-gem/hdl/cluster_finding/hdl/fixed_delay.vhd 93
-gem/hdl/cluster_finding/hdl/find_clusters.vhd 93
-gem/hdl/cluster_finding/hdl/top_cluster_packer.vhd 93
-gem/hdl/cluster_finding/hdl/truncate_lsb.vhd 93
-gem/hdl/cluster_finding/hdl/cluster_pkg.vhd 93
-gem/hdl/cluster_finding/hdl/poc_bitonic_sort_pkg.vhd 93
-gem/hdl/cluster_finding/hdl/poc_bitonic_sort.vhd 93
-gem/hdl/cluster_finding/hdl/bitonic_sort.vhd 93
+# Segment finder
+gem/hdl/me0sf/road/hdl/*.vhd
+gem/hdl/me0sf/road/hdl/bitonic_sort/*.vhd
+gem/hdl/me0sf/road/hdl/priority_encoder/hdl/*.vhd
 
 # Cluster packer
 gem/hdl/cluster_finding/cluster_finding.src
-
 gem/hdl/oh_fe/utils/clock_strobe.vhd

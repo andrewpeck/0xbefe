@@ -7,3 +7,6 @@
 [submodule "scripts/ext/python-prompt-toolkit"]
 	path = scripts/ext/python-prompt-toolkit
 	url = https://github.com/prompt-toolkit/python-prompt-toolkit.git
+[submodule "gem/hdl/me0sf"]
+	path = gem/hdl/me0sf
+	url = https://github.com/andrewpeck/me0sf/

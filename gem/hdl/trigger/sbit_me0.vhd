@@ -18,13 +18,16 @@ use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
 use work.cluster_pkg.all;
+use work.pat_types.all;
+use work.pat_pkg.all;
 
 entity sbit_me0 is
     generic(
         g_NUM_OF_OHs         : integer;
         g_NUM_VFATS_PER_OH   : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
-        g_DEBUG              : boolean
+        g_DEBUG              : boolean;
+        g_NUM_SEGMENTS       : integer := 4
     );
     port(
         -- reset
@@ -41,6 +44,9 @@ entity sbit_me0 is
         me0_cluster_count_o : out std_logic_vector(10 downto 0);
         me0_clusters_o      : out t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
+        -- segment outputs
+        me0_segments_o : out segment_list_t (g_NUM_SEGMENTS-1 downto 0);
+
         -- IPbus
         ipb_reset_i         : in  std_logic;
         ipb_clk_i           : in  std_logic;
@@ -54,6 +60,7 @@ architecture sbit_me0_arch of sbit_me0 is
 
     constant NUM_VFAT_PER_OH : integer := 24;
 
+    constant NUM_SF : integer := 1;
     -- Components --
     -- ila debugger for sbit_me0 --
     COMPONENT ila_sbit_me0
@@ -281,7 +288,7 @@ begin
         )
         port map(
             ref_clk_i => ttc_clk_i.clk_40,
-            reset_i   => sbit_test_reset,
+            reset_i   => sbit_test_reset or sump,
             en_i      => vfat3_sbit0xs_test,
             count_o   => test_sbit0xs_count_me0
         );
@@ -357,6 +364,55 @@ begin
         end process;
         end generate;
         end generate;
+    end generate;
+
+    --------------------------------------------------------------------------------
+    -- Segment Finder
+    --------------------------------------------------------------------------------
+
+    sfgen : for ichamber in 0 to NUM_SF-1 generate
+        signal segment_finder_dav : std_logic;
+        signal sbits_i            : chamber_t;
+        signal vfat_sbits_chamber : t_vfat3_sbits_arr(24*6 - 1 downto 0)
+            := (others => (others => (others => '0')));
+    begin
+
+        sbits_zero_pad : for ivfat in 0 to vfat_sbits_arr'length-1 generate
+        begin
+            vfat_sbits_chamber(ivfat) <= vfat_sbits_arr(ivfat+ichamber*24*6);
+        end generate;
+
+        layergen : for ilayer in 0 to 5 generate
+        begin
+            prtgen : for iprt in 0 to 7 generate
+            begin
+                -- sbits_i(partition)(layer) <= vfat_sbits_arr(layer)(vfat);
+                sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) & vfat_sbits_chamber(ilayer)(8 + iprt) & vfat_sbits_chamber(ilayer)(0 + iprt);
+            end generate;
+        end generate;
+
+
+        chamber_sf_inst : entity work.chamber
+            generic map (
+                NUM_SEGMENTS => g_NUM_SEGMENTS
+                )
+            port map (
+                clock      => ttc_clk_i.clk_320,
+                thresh     => "001",
+                dav_i      => segment_finder_dav,
+                dav_o      => open,
+                sbits_i    => sbits_i,
+                segments_o => me0_segments_o
+                );
+
+        clock_strobe_inst : entity work.clock_strobe
+            generic map(RATIO => 8)
+            port map (
+                fast_clk_i => ttc_clk_i.clk_320,
+                slow_clk_i => ttc_clk_i.clk_40,
+                strobe_o   => segment_finder_dav
+                );
+
     end generate;
 
     --===============================================================================================
