@@ -286,7 +286,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         axs.set_ylabel("Injected charge (fC)", loc='top')
         #for label in (axs.get_xticklabels() + axs.get_yticklabels()):
         #    label.set_fontsize(14)
-        #axs.xlim(0,128)
+        #axs.xlim(-1,128)
         #axs.ylim(0,256)
 
         plot_data = []
@@ -298,7 +298,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #data = []
             #data_x = []
             #data_y = []
-            for channel in range(0,128):
+            for channel in range(-1,128):
                 plot_data_x.append(channel)
                 plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
@@ -311,7 +311,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
                     plot_data.append(scurve_result[vfat][channel][charge])
                     #data.append(scurve_result[vfat][channel][charge])
             #plot_data.append(data)
-        #for channel in range(0,128):
+        #for channel in range(-1,128):
         #    plot_data_x.append(channel)
 
         cmap_new = copy.copy(cm.get_cmap("viridis"))
@@ -351,6 +351,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1.transAxes)
             ax1.text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1.transAxes)
+            ax1.set_xlim([-1,128])
         elif numVfats <= 3:
             ax1[vfatCnt0].set_xlabel("Channel number", loc='right')
             ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc='top')
@@ -365,6 +366,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[vfatCnt0].transAxes)
             ax1[vfatCnt0].text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].set_xlim([-1,128])
         elif numVfats <= 6:
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top')
@@ -379,6 +381,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlim([-1,128])
         else:
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top')
@@ -393,6 +396,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
             ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlim([-1,128])
 
         vfatCnt0 += 1
         print(("\n2D histogram of scurves for VFAT%d " % vfat )+ ("saved at %s" % directoryName) + "/scurve2Dhist_"+oh+"_VFAT%d.pdf" % vfat)
@@ -418,7 +422,7 @@ if __name__ == "__main__":
 
     channel_list = []
     if args.channels is None:
-        channel_list = range(0,128)
+        channel_list = range(-1,128)
     else:
         for channel in args.channels:
             channel_list.append(int(channel))
