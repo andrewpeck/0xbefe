@@ -67,7 +67,7 @@ package gem_pkg is
     
     type t_vfat3_elinks_arr is array(integer range<>) of t_std8_array(23 downto 0);   
     type t_vfat3_sbits_arr is array(integer range<>) of t_std64_array(23 downto 0);
-    type t_vfat3_queso_arr is array(integer range<>) of t_std8_array(107 downto 0);
+    type t_vfat3_queso_arr is array(integer range<>) of t_std8_array(215 downto 0);
     
     constant VFAT3_HDLC_ADDRESSES_GE11 : t_std4_array(23 downto 0) := (x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");
     constant VFAT3_HDLC_ADDRESSES_GE21 : t_std4_array(23 downto 0) := (x"0", x"1", x"2", x"3", x"4", x"5", x"6", x"7", x"8", x"9", x"a", x"b", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0", x"0");

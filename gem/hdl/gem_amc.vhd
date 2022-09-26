@@ -259,6 +259,12 @@ architecture gem_amc_arch of gem_amc is
     signal test_gbt_tx_data_arr         : t_gbt_frame_array((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
     signal test_gbt_ready_arr           : std_logic_vector((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
 
+    signal queso_reset                  : std_logic; --resets prbs error counters for queso test
+    signal queso_test_en                : std_logic; --enables queso test, generates prbs and checks
+    signal queso_prbs_err_arr           : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal queso_vfat3_rx_data_arr      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal queso_vfat3_tx_data_arr      : std_logic_vector(7 downto 0);
+
     --== TEST module ==--
     signal loopback_gbt_test_en         : std_logic;
 
@@ -719,11 +725,24 @@ begin
         );
 
     i_queso_test : entity work.queso_tests
-        generic map (
-            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
-        )
-        port map (
-            
+        generic map(
+            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_VFATS_PER_OH  => 24
+        );
+        port map(
+            reset_i                     => queso_reset,
+            ttc_clk_i                   => ttc_clocks_i,        
+            ttc_cmds_i                  => ttc_cmd,
+            queso_test_en_i             => queso_test_en,
+            ipb_reset_i                 => ipb_reset,
+            ipb_clk_i                   => ipb_clk_i,
+            ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.test),
+            ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.test),
+            gbt_frame_clk_i             => ttc_clocks_i.clk_40,
+            test_vfat3_rx_data_arr_i    => queso_vfat3_rx_data_arr,
+            test_vfat3_tx_data_arr_o    => queso_vfat3_tx_data_arr,
+            elink_error_cnt_arr_o       => queso_prbs_err_arr-- counts up to ff errors per elink
         );
 
     --==========--
@@ -891,9 +910,9 @@ begin
                 gbt_ready_arr_o       => gbt_ready_arr,
                 vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,
 
-                queso_test_en_i           => ,
-                test_vfat3_tx_data_arr_i  => ,
-                test_vfat3_rx_data_arr_o  =>
+                queso_test_en_i           => queso_test_en,
+                test_vfat3_tx_data_arr_i  => queso_vfat3_tx_data_arr,
+                test_vfat3_rx_data_arr_o  => queso_vfat3_rx_data_arr
 
             );
     end generate;
