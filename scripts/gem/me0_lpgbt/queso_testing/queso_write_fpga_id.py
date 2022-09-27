@@ -32,11 +32,11 @@ if __name__ == "__main__":
     fpga_reg_addr["3"] = 0x00
 
     if args.fpga is None:
-        print(Colors.YELLOW + "Please give at least one fpga to reset" + Colors.ENDC)
+        print(Colors.YELLOW + "Please give at least one fpga to write to" + Colors.ENDC)
         terminate()
     for f in args.fpga:
         if f not in ["1", "2", "3"]:
-            print(Colors.YELLOW + "Please give valid fpga (1, 2, 3) to reset" + Colors.ENDC)
+            print(Colors.YELLOW + "Please give valid fpga (1, 2, 3) to write to" + Colors.ENDC)
             terminate()
 
     # Set up RPi
