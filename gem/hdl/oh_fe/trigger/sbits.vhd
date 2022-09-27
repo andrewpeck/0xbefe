@@ -36,8 +36,8 @@ entity sbits is
 
     ttc : in ttc_t;
 
-    l1a_mask_delay : in std_logic_vector(4 downto 0);
-    l1a_mask_width : in std_logic_vector(4 downto 0);
+    l1a_mask_delay   : in std_logic_vector(4 downto 0);
+    l1a_mask_bitmask : in std_logic_vector(31 downto 0);
 
     reverse_partitions : in std_logic                     := '0';
     sbit_map_sel       : in std_logic_vector (1 downto 0) := (others => '0');
@@ -97,8 +97,8 @@ architecture Behavioral of sbits is
 
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
-  signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
   signal mask_l1a     : std_logic;
+  signal l1a_bitmask  : std_logic_vector (31 downto 0) := (others => '0');
 
   signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
   signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
@@ -125,6 +125,19 @@ architecture Behavioral of sbits is
 
   -- multiplex together the 1536 s-bits into a single chip-scope accessible register
   -- don't want to affect timing, so do it through a couple of flip-flop stages
+
+  -- function to replicate a std_logic bit some number of times
+  -- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
 
   attribute mark_debug              : string;
   attribute mark_debug of sbits_mux : signal is "TRUE";
@@ -322,21 +335,12 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-
-      if (l1a_delayed = '1') then
-        l1a_mask_cnt <= unsigned(l1a_mask_width);
-      elsif (l1a_mask_cnt > 0) then
-        l1a_mask_cnt <= l1a_mask_cnt - 1;
-      end if;
-
-      if (l1a_mask_cnt > 0) then
-        mask_l1a <= '1';
-      else
-        mask_l1a <= '0';
-      end if;
-
+        l1a_bitmask <= '0' & l1a_bitmask(31 downto 1) or
+                       (l1a_mask_bitmask and repeat(l1a_delayed, l1a_mask_bitmask'length));
     end if;
   end process;
+
+  mask_l1a <= l1a_bitmask(0);
 
   --------------------------------------------------------------------------------
   -- Sbit Delays
