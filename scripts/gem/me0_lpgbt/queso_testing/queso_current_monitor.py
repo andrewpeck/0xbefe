@@ -134,7 +134,7 @@ if __name__ == '__main__':
         oh_2v5 = readAdc(1)
         fpga_1v35 = readAdc(2)
         fpga_2v5 = readAdc(3)
-        with open("./results/" + filename, "a") as f:
+        with open(filename, "a") as f:
             writer = csv.writer(f)
             writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
         print("gbt_1v2 current: %.2f, gbt_2v5 current: %.2f, fpga_1v35 current: %.2f, fpga_2v5 current: %.2f"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
