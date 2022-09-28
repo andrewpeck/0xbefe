@@ -2,6 +2,7 @@ from os import terminal_size
 import gem.me0_lpgbt.rpi_chc as rpi_chc
 import time
 import argparse
+import sys
 
 class Colors:
     WHITE   = "\033[97m"
@@ -12,6 +13,14 @@ class Colors:
     GREEN   = "\033[92m"
     RED     = "\033[91m"
     ENDC    = "\033[0m"
+
+
+def terminate():
+    # Terminating RPi
+    terminate_success = gbt_rpi_chc.terminate()
+    if not terminate_success:
+        print(Colors.RED + "ERROR: Problem in RPi_CHC termination" + Colors.ENDC)
+        sys.exit()
 
 if __name__ == "__main__":
     # Parsing arguments
@@ -33,30 +42,30 @@ if __name__ == "__main__":
 
     if args.fpga is None:
         print(Colors.YELLOW + "Please give at least one fpga to write to" + Colors.ENDC)
-        terminate()
+        sys.exit()
     for f in args.fpga:
         if f not in ["1", "2", "3"]:
             print(Colors.YELLOW + "Please give valid fpga (1, 2, 3) to write to" + Colors.ENDC)
-            terminate()
+            sys.exit()
 
     # Set up RPi
-    global my_rpi_chc
-    my_rpi_chc = rpi_chc.rpi_chc()
+    global gbt_rpi_chc
+    gbt_rpi_chc = rpi_chc.rpi_chc()
 
     for i in range(len(args.fpga)):
         # enable corresponding chip select
-        spi_success = my_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 1)
+        spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 1)
         if not spi_success:
             terminate() # err already printed out in function call
 
         # write the corresponding id to fpga
-        spi_success, spi_data = my_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], args.id[i]])
+        spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], args.id[i]])
         if not spi_success:
             terminate() # err already printed out in function call
         print ("ID written to FPGA %s = 0x%02X"%(i, spi_data))
 
         # disable the chip select after finishing writing
-        spi_success = my_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
+        spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
         if not spi_success:
             terminate() # err already printed out in function call
             

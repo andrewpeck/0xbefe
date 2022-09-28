@@ -12,6 +12,13 @@ class Colors:
     RED     = "\033[91m"
     ENDC    = "\033[0m"
 
+def terminate():
+    # Terminating RPi
+    terminate_success = gbt_rpi_chc.terminate()
+    if not terminate_success:
+        print(Colors.RED + "ERROR: Problem in RPi_CHC termination" + Colors.ENDC)
+        sys.exit()
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Check the FPGA done status')
@@ -27,8 +34,8 @@ if __name__ == '__main__':
             terminate()
 
     # Set up RPi
-    global my_rpi_chc
-    my_rpi_chc = rpi_chc.rpi_chc()
+    global gbt_rpi_chc
+    gbt_rpi_chc = rpi_chc.rpi_chc()
 
     # GPIOs 
     read_gpio = {}
@@ -39,7 +46,7 @@ if __name__ == '__main__':
     # Read FPGA DONE
     for f in args.fpga:
         try:
-            fpga_done = my_rpi_chc.gpio_action("read", read_gpio[f])
+            fpga_done = gbt_rpi_chc.gpio_action("read", read_gpio[f])
             if fpga_done != -9999:
                 if fpga_done == 1:
                     print(Colors.GREEN + "FPGA %s done status:",%(f, fpga_done) + Colors.ENDC)

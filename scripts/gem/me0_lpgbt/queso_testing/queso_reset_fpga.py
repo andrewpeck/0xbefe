@@ -1,6 +1,7 @@
 import gem.me0_lpgbt.rpi_chc as rpi_chc
 import argparse
 import time
+import sys
 
 class Colors:
     WHITE   = "\033[97m"
@@ -26,15 +27,15 @@ if __name__ == '__main__':
 
     if args.fpga is None:
         print(Colors.YELLOW + "Please give at least one fpga to reset" + Colors.ENDC)
-        terminate()
+        sys.exit()
     for f in args.fpga:
         if f not in ["1", "2", "3"]:
             print(Colors.YELLOW + "Please give valid fpga (1, 2, 3) to reset" + Colors.ENDC)
-            terminate()
+            sys.exit()
 
     # Set up RPi
-    global my_rpi_chc
-    my_rpi_chc = rpi_chc.rpi_chc()
+    global gbt_rpi_chc
+    gbt_rpi_chc = rpi_chc.rpi_chc()
 
     # GPIOs 
     reset_gpio = {}
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     # Reset FPGA
     for f in args.fpga:
         try:
-            read = my_rpi_chc.gpio_action("write", reset_gpio[f], 1)
+            read = gbt_rpi_chc.gpio_action("write", reset_gpio[f], 1)
             if read != -9999:
                 print(Colors.GREEN + "GPIO %d set to high for FPGA %s reset signal"%(reset_gpio[f], f) + Colors.ENDC)
             else:
@@ -54,7 +55,7 @@ if __name__ == '__main__':
             print(Colors.RED + "ERROR: Unable to write GPIO %d to high (fpga %s)"%(reset_gpio[f], f) + Colors.ENDC)
         time.sleep(0.5)
         try:
-            read = my_rpi_chc.gpio_action("write", reset_gpio[f], 0)
+            read = gbt_rpi_chc.gpio_action("write", reset_gpio[f], 0)
             if read != -9999:
                 print(Colors.GREEN + "GPIO %d set to low for FPGA %s reset signal"%(reset_gpio[f], f) + Colors.ENDC)
             else:
