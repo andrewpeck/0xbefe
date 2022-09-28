@@ -43,22 +43,6 @@ def readAdc(channel):
         terminate()
     return processAdcValue(data)
 
-def monitor_currrent(filename):
-    while True:
-        # monitor the current value every 30 seconds unless keyboard interruption
-        try:
-            oh_1v2 = readAdc(0)
-            oh_2v5 = readAdc(1)
-            fpga_1v35 = readAdc(2)
-            fpga_2v5 = readAdc(3)
-            with open("./results/" + filename, "a") as f:
-                writer = csv.writer(f)
-                writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
-            print("gbt_1v2 current: %.2f, gbt_2v5 current: %.2f, fpga_1v35 current: %.2f, fpga_2v5 current: %.2f"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
-            time.sleep(30)
-        except KeyboardInterrupt:
-            terminate()
-
 def terminate():
     # Terminating RPi
     terminate_success = gbt_rpi_chc.terminate()
@@ -143,16 +127,19 @@ if __name__ == '__main__':
         writer = csv.writer(f)
         writer.writerow(["oh_1v2", "oh_2v5", "fpga_1v35", "fpga_2v5"])
 
-    if args.runtime:
-        p = multiprocessing.Process(target=monitor_currrent, name="Monitor_currrent", args=filename)
-        p.start()
-        time.sleep(int(args.runtime) * 60)
-        if p.is_alive():
-            p.terminate()
-            p.join()
-            terminate()
-    else:
-        monitor_currrent(filename)
+    start_time = time.time()
+    time_passed = 0
+    while (time_passed < (int(args.runtime) * 60)):
+        oh_1v2 = readAdc(0)
+        oh_2v5 = readAdc(1)
+        fpga_1v35 = readAdc(2)
+        fpga_2v5 = readAdc(3)
+        with open("./results/" + filename, "a") as f:
+            writer = csv.writer(f)
+            writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
+        print("gbt_1v2 current: %.2f, gbt_2v5 current: %.2f, fpga_1v35 current: %.2f, fpga_2v5 current: %.2f"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
+        time.sleep(30)
+        time_passed = time.time() - start_time
 
     # Terminate RPi
     terminate()
