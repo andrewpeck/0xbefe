@@ -91,8 +91,9 @@ class rpi_chc:
         return read
     
     def fpga_spi_cs(self, gpio, enable):
-        self.spi.close() 
-        self.spi.open(0,1) # bus 0 device 1 - unused
+        #self.spi.close() 
+        #self.spi.open(0,1) # bus 0 device 1 - unused
+        self.spi.no_cs = 0
         spi_success = 0
         try:
             read = self.gpio_action("write", gpio, enable)
@@ -173,28 +174,20 @@ class rpi_chc:
         except:
             print(Colors.RED + "ERROR: Unable to enable reset, check RPi connection" + Colors.ENDC)
 
-        # Setting GPIO 13 and 26 low, connected to config_select enabling I2C
-        config_channel_13 = 13
-        config_success_13 = 0
-        try:
-            read = self.gpio_action("write", config_channel_13, 0)
-            if read != -9999:
-                print("GPIO 13 (config select) set to low")
-                config_success_13 = 1
-        except:
-            print(Colors.RED + "ERROR: Unable to set GPIO 13 to low, check RPi connection" + Colors.ENDC)
+        # Setting config_select enabling I2C to low
+        config_success = 0
+        if self.config_channel != 0:
+            try:
+                read = self.gpio_action("write", self.config_channel, 0)
+                if read != -9999:
+                    print("GPIO %d (config select) set to low"%self.config_channel)
+                    config_success = 1
+            except:
+                print(Colors.RED + "ERROR: Unable to set GPIO %d to low, check RPi connection"%self.config_channel + Colors.ENDC)
+        else:
+            config_success = 1
 
-        config_channel_26 = 26
-        config_success_26 = 0
-        try:
-            read = self.gpio_action("write", config_channel_26, 0)
-            if read != -9999:
-                print("GPIO 26 (config select) set to low")
-                config_success_26 = 1
-        except:
-            print(Colors.RED + "ERROR: Unable to set GPIO 26 to low, check RPi connection" + Colors.ENDC)
-
-        return reset_success * config_success_13 * config_success_26
+        return reset_success * config_success
 
     def current_monitor_write(self, monitor, value):
         # Write to current monitor using I2C
