@@ -50,9 +50,10 @@ if __name__ == "__main__":
             terminate() # err already printed out in function call
 
         # write the corresponding id to fpga
-        spi_success = my_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], args.id[i]])
+        spi_success, spi_data = my_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], args.id[i]])
         if not spi_success:
             terminate() # err already printed out in function call
+        print ("ID written to FPGA %s = 0x%02X"%(i, spi_data))
 
         # disable the chip select after finishing writing
         spi_success = my_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
