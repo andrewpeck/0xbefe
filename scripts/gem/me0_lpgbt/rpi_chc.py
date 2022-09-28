@@ -47,7 +47,7 @@ class rpi_chc:
     def __del__(self):
         self.bus.close()
         self.spi.close() 
-        GPIO.cleanup()
+        #GPIO.cleanup()
   
     def set_lpgbt_address(self, board, oh_ver, boss):
         if oh_ver == 1:
@@ -81,11 +81,13 @@ class rpi_chc:
             if value != -9999:
                 return read
             GPIO.setup(gpio, GPIO.IN)
+            sleep(0.1)
             read = GPIO.input(gpio)
         elif operation == "write":
             if value == -9999:
                 return read
             GPIO.setup(gpio, GPIO.OUT)
+            sleep(0.1)
             GPIO.output(gpio, value)
             read = 0
         return read
