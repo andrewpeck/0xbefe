@@ -87,6 +87,7 @@ if __name__ == '__main__':
     # Configure the OH current monitors
     channel_sel_success = 0
     channel_sel_success = gbt_rpi_chc.i2c_channel_sel(None, "oh")
+    sleep (0.1)
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
@@ -102,6 +103,7 @@ if __name__ == '__main__':
     # Configure the FPGA current monitors
     channel_sel_success = 0
     channel_sel_success = gbt_rpi_chc.i2c_channel_sel(None, "fpga")
+    sleep (0.1)
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
@@ -144,7 +146,7 @@ if __name__ == '__main__':
     if args.runtime:
         p = multiprocessing.Process(target=monitor_currrent, name="Monitor_currrent", args=filename)
         p.start()
-        time.sleep(args.runtime * 60)
+        time.sleep(int(args.runtime) * 60)
         if p.is_alive():
             p.terminate()
             p.join()
