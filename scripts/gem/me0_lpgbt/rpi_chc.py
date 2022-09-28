@@ -38,10 +38,10 @@ class rpi_chc:
         self.efuse_pwr_boss = 0
         self.efuse_pwr_sub = 0
 
-        self.current_oh_1v2_addr = 0x80
-        self.current_oh_2v5_addr = 0x82
-        self.current_fpga_1v35_addr = 0x80
-        self.current_fpga_2v5_addr = 0x82
+        self.current_oh_1v2_addr = 0x40
+        self.current_oh_2v5_addr = 0x42
+        self.current_fpga_1v35_addr = 0x40
+        self.current_fpga_2v5_addr = 0x42
 
     def __del__(self):
         self.bus.close()
