@@ -29,6 +29,7 @@ class rpi_chc:
         # Set up SPI
         self.spi = spidev.SpiDev()
         self.spi.open(0,0) # bus 0 device 0 - default
+        self.spi.max_speed_hz = 1000000 # 1 MHz
         
         # Addresses
         self.reset_channel = 17

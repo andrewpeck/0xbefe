@@ -75,11 +75,11 @@ if __name__ == '__main__':
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
-    success = gbt_rpi_chc.current_monitor_write("oh_1v2", 0x78)
+    success = gbt_rpi_chc.current_monitor_write("oh_1v2", 0x58)
     if not success:
         print(Colors.RED + "ERROR: Problem in writing to OH 1.2V current monitor" + Colors.ENDC)
         terminate()
-    success = gbt_rpi_chc.current_monitor_write("oh_2v5", 0x78)
+    success = gbt_rpi_chc.current_monitor_write("oh_2v5", 0x58)
     if not success:
         print(Colors.RED + "ERROR: Problem in writing to OH 2.5V current monitor" + Colors.ENDC)
         terminate()
