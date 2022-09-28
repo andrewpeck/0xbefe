@@ -127,6 +127,7 @@ if __name__ == '__main__':
         writer = csv.writer(f)
         writer.writerow(["oh_1v2", "oh_2v5", "fpga_1v35", "fpga_2v5"])
 
+    print ("")
     start_time = time.time()
     time_passed = 0
     while (time_passed < (int(args.runtime) * 60)):
@@ -137,7 +138,7 @@ if __name__ == '__main__':
         with open(filename, "a") as f:
             writer = csv.writer(f)
             writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
-        print("gbt_1v2 current: %.2f, gbt_2v5 current: %.2f, fpga_1v35 current: %.2f, fpga_2v5 current: %.2f"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
+        print("gbt_1v2 current: %.2f A, gbt_2v5 current: %.2f A, fpga_1v35 current: %.2f A, fpga_2v5 current: %.2f A"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
         time.sleep(30)
         time_passed = time.time() - start_time
 
