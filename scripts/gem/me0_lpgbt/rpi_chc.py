@@ -134,7 +134,7 @@ class rpi_chc:
                 if current_monitor == "oh":
                     self.bus.write_byte(self.i2c_switch_addr, 0x04)
                     print("Channel for OH current monitor selected")
-                elif current_monitor == "fgpa":
+                elif current_monitor == "fpga":
                     self.bus.write_byte(self.i2c_switch_addr, 0x08)
                     print("Channel for FPGA current monitor selected")
                 else:
