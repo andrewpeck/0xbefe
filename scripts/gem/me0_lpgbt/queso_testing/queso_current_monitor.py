@@ -91,11 +91,11 @@ if __name__ == '__main__':
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
-    success = gbt_rpi_chc.current_monitor_write("fpga_1v35", 0x78)
+    success = gbt_rpi_chc.current_monitor_write("fpga_1v35", 0x58)
     if not success:
         print(Colors.RED + "ERROR: Problem in writing to FPGA 1.35V current monitor" + Colors.ENDC)
         terminate()
-    success = gbt_rpi_chc.current_monitor_write("fpga_2v5", 0x78)
+    success = gbt_rpi_chc.current_monitor_write("fpga_2v5", 0x58)
     if not success:
         print(Colors.RED + "ERROR: Problem in writing to FPGA 2.5V current monitor" + Colors.ENDC)
         terminate()
