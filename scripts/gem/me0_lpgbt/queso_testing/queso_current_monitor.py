@@ -87,7 +87,7 @@ if __name__ == '__main__':
     # Configure the OH current monitors
     channel_sel_success = 0
     channel_sel_success = gbt_rpi_chc.i2c_channel_sel(None, "oh")
-    sleep (0.1)
+    time.sleep (0.1)
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # Configure the FPGA current monitors
     channel_sel_success = 0
     channel_sel_success = gbt_rpi_chc.i2c_channel_sel(None, "fpga")
-    sleep (0.1)
+    time.sleep (0.1)
     if not channel_sel_success:
         print(Colors.RED + "ERROR: Problem in selecting channel of switch" + Colors.ENDC)
         terminate()
