@@ -149,7 +149,7 @@ class rpi_chc:
                     print("Channel for Sub selected")
             channel_sel_success = 1
         except:
-            print(Colors.RED + "ERROR: Channel for Boss/Sub in I2C Switch could not be selected, check RPi or I2C Switch on Cheesecake" + Colors.ENDC)
+            print(Colors.RED + "ERROR: Channel for Current Monitors or Boss/Sub in I2C Switch could not be selected, check RPi or I2C Switch on Cheesecake" + Colors.ENDC)
         return channel_sel_success
 
     def i2c_device_scan(self):
@@ -203,7 +203,7 @@ class rpi_chc:
             monitor_address = self.current_oh_1v2_addr
         elif monitor == "oh_2v5":
             monitor_address = self.current_oh_2v5_addr
-        elif monitor == "fpga_1v2":
+        elif monitor == "fpga_1v35":
             monitor_address = self.current_fpga_1v35_addr
         elif monitor == "fpga_2v5":
             monitor_address = self.current_fpga_2v5_addr

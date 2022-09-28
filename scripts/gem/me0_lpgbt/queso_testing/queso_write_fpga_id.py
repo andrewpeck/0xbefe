@@ -20,7 +20,7 @@ def terminate():
     terminate_success = gbt_rpi_chc.terminate()
     if not terminate_success:
         print(Colors.RED + "ERROR: Problem in RPi_CHC termination" + Colors.ENDC)
-        sys.exit()
+    sys.exit()
 
 if __name__ == "__main__":
     # Parsing arguments
