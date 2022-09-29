@@ -81,13 +81,13 @@ class rpi_chc:
             if value != -9999:
                 return read
             GPIO.setup(gpio, GPIO.IN)
-            sleep(0.1)
+            time.sleep(0.1)
             read = GPIO.input(gpio)
         elif operation == "write":
             if value == -9999:
                 return read
             GPIO.setup(gpio, GPIO.OUT)
-            sleep(0.1)
+            time.sleep(0.1)
             GPIO.output(gpio, value)
             read = 0
         return read
