@@ -146,8 +146,8 @@ CONFIG_ME0_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_sub_config_ohv*
 CONFIG_ME0_OH_GBT_CONFIGS = [CONFIG_ME0_OH_GBT0_CONFIGS, CONFIG_ME0_OH_GBT1_CONFIGS] # do not modify this line
 
 # VFAT Phases
-CONFIG_ME0_VFAT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_vfat_phase_scan.txt"
-CONFIG_ME0_VFAT_SBIT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_vfat_sbit_phase_scan.txt"
+CONFIG_ME0_VFAT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_phase_scan.txt"
+CONFIG_ME0_VFAT_SBIT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_sbit_phase_scan.txt"
 
 # VFAT HDLC addresses
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12] # replace with zeros if your setup has VFAT hybrids that don't support addressing

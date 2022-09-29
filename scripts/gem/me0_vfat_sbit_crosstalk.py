@@ -294,7 +294,7 @@ if __name__ == "__main__":
     s_bit_channel_mapping = {}
     print ("")
     if not args.latest_map:
-        default_file = "../resources/me0_vfat_sbit_mapping.py"
+        default_file = "../resources/me0_oh%s_vfat_sbit_mapping.py"%args.ohid
         with open(default_file) as input_file:
             s_bit_channel_mapping = json.load(input_file)
     else:

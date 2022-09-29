@@ -220,7 +220,9 @@ def init_gem_frontend():
             
             # Read in me0 phase scan results
             bestphase_list = {}
-            file_in = open(get_config("CONFIG_ME0_VFAT_PHASE_SCAN"))
+            phase_scan_filename = get_config("CONFIG_ME0_VFAT_PHASE_SCAN")
+            phase_scan_filename = phase_scan_filename.split("*")[0] + str(oh) + phase_scan_filename.split("*")[1]
+            file_in = open(phase_scan_filename)
             for line in file_in.readlines():
                 if "vfat" in line:
                     continue
@@ -231,7 +233,9 @@ def init_gem_frontend():
 
             # Read in sbit phase scan result
             bestphase_list_sbit = {}
-            file_in = open(get_config("CONFIG_ME0_VFAT_SBIT_PHASE_SCAN"))
+            sbit_phase_scan_filename = get_config("CONFIG_ME0_VFAT_SBIT_PHASE_SCAN")
+            sbit_phase_scan_filename = sbit_phase_scan_filename.split("*")[0] + str(oh) + sbit_phase_scan_filename.split("*")[1]
+            file_in = open(sbit_phase_scan_filename)
             for line in file_in.readlines():
                 if "vfat" in line:
                     continue

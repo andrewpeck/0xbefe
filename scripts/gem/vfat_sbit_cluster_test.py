@@ -366,7 +366,7 @@ if __name__ == "__main__":
     s_bit_cluster_mapping = {}
     print ("")
     if not args.latest_map:
-        default_file = "../resources/me0_vfat_sbit_clustermap.txt"
+        default_file = "../resources/me0_oh%s_vfat_sbit_clustermap.txt"%args.ohid
         file_in = open(default_file)
         for line in file_in.readlines():
             if "VFAT" in line:
