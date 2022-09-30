@@ -37,21 +37,28 @@ def init_gem_frontend():
 
     elif gem_station == 0: # ME0
         num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+        # Set address of different backend nodes
         initGbtRegAddrs()
 
         # Reset boss lpGBTs 
         for oh in range(max_ohs):
-            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
-                if gbt%2 != 0:
+
+                # Only do this for boss lpGBT
+                if gbt%2 != 0:  
                     continue
-                selectGbt(oh, gbt)
+
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                # Set this register to the magic number to be able to force the PUSM state
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x130, 0xA3)
                 elif gbt_ver == 1:
                     writeGbtRegAddrs(0x140, 0xA3)
                 sleep(0.1)
+
+                # Set the FSM to state 0 (ARESET)
                 if gbt_ver == 0:
                     writeGbtRegAddrs(0x12F, 0x80)
                 elif gbt_ver == 1:
@@ -59,41 +66,46 @@ def init_gem_frontend():
                 sleep(0.1)
         sleep(2)
 
-        # Reset sub lpGBTs separately for OH-v2
+        # Reset sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
-            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
-                if gbt_ver == 0:
+                if gbt_ver == 0: # Feature only available OH-v2
                     continue
+
+                # Only do this for boss lpGBT
                 if gbt%2 != 0:
                     continue
-                selectGbt(oh, gbt)
-                writeGbtRegAddrs(0x053, 0x02)
-                writeGbtRegAddrs(0x055, 0x00)
+
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                writeGbtRegAddrs(0x053, 0x02) # Configure GPIO as output
+                writeGbtRegAddrs(0x055, 0x00) # Set GPIO low - resets sub lpGBT
                 sleep(0.1)
-                writeGbtRegAddrs(0x053, 0x00)
+                writeGbtRegAddrs(0x053, 0x00) # Configure GPIO as output
                 sleep(0.1)
         sleep(2)
 
-        # Do some lpGBT read operations for sub in OH-v1s to get the EC working
+        # Do some lpGBT read operations from sub lpGBT in OH-v1s to get the EC working
         for oh in range(max_ohs):
-            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
-                selectGbt(oh, gbt)
-                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
-                if gbt%2 != 0:
-                    if gbt_ver == 0 and gbt_ready == 1:
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
+
+                # Only do this for sub lpGBT
+                if gbt%2 != 0:  
+                    if gbt_ver == 0 and gbt_ready == 1: # Only for OH-v1 if GBT is already READY
                         for i in range(0,10):
-                            read_data = readGbtRegAddrs(0x00)
+                            read_data = readGbtRegAddrs(0x00) # Just do multiple read operations on a register
                 else:
                     continue
 
         # Configure lpGBTs and vfat phase
         for oh in range(max_ohs):
-            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh]
-            # configure lpGBTs now
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
                 oh_ver = -9999
@@ -101,48 +113,56 @@ def init_gem_frontend():
                     oh_ver = 1
                 elif gbt_ver == 1:
                     oh_ver = 2
-                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt))
-                if oh_ver == 1 and gbt_ready == 0:
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
+                if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
-                gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh]
-                gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1]
+
+                # Configure lpGBT
+                gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
+                gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1] # Get the correct lpGBT config file
                 print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
-                gbt_command(oh, gbt, "config", [gbt_config])
+                gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
 
                 # Enable TX channels of VTRx+
-                if gbt%2 != 0:
+                if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
                     continue
-                selectGbt(oh, gbt)
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+
                 nbytes_write = 2
-                control_register_data = nbytes_write<<2 | 0 # using 100 kHz
+                control_register_data = nbytes_write<<2 | 0 # control register data for using 100 kHz
                 nbytes_check = 1
-                control_register_data_check = nbytes_check<<2 | 0 # using 100 kHz
-                reg_addr = 0x00
-                check_reg_addr = 0x01
-                data = 0x03
-                vtrx_slave_addr = 0x50
+                control_register_data_check = nbytes_check<<2 | 0 # control register data for using 100 kHz
+
+                vtrx_i2c_addr = 0x50 # VTRx+ I2C address
+
+                reg_addr = 0x00 # Register address on VTRx+ for enabliing TX channels 
+                check_reg_addr = 0x01 # Register address on the VTRx+ to check for old vs new
+                data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
+                
                 old_vtrx = 0
-                if oh_ver == 1:
+                if oh_ver == 1: 
+                    # For OH-v1 check if connected to old or new VTRx+
+
                     # Read first to check if old VTRx+
-                    writeGbtRegAddrs(0x100, control_register_data_check)
-                    writeGbtRegAddrs(0x104, 0x0)
+                    writeGbtRegAddrs(0x100, control_register_data_check) # I2CM2 data - for control register
+                    writeGbtRegAddrs(0x104, 0x0) # Write to I2CM2 control register
                     sleep(0.01)
-                    writeGbtRegAddrs(0x100, check_reg_addr)
-                    writeGbtRegAddrs(0x104, 0x8)
+                    writeGbtRegAddrs(0x100, check_reg_addr) # I2CM2 data - register address to read on VTRx+
+                    writeGbtRegAddrs(0x104, 0x8) # I2CM2 data stored locally for write command
                     sleep(0.01)
-                    writeGbtRegAddrs(0x0FF, vtrx_slave_addr)
-                    writeGbtRegAddrs(0x104, 0xC)
+                    writeGbtRegAddrs(0x0FF, vtrx_i2c_addr) # Set I2C address for VTRx+
+                    writeGbtRegAddrs(0x104, 0xC) # I2CM2 send write command to VTRx+
                     sleep(0.01)
-                    writeGbtRegAddrs(0x100, control_register_data_check)
-                    writeGbtRegAddrs(0x104, 0x0)
+                    writeGbtRegAddrs(0x100, control_register_data_check) # I2CM2 data - for control register
+                    writeGbtRegAddrs(0x104, 0x0) # Write to I2CM2 control register
                     sleep(0.01)
-                    writeGbtRegAddrs(0x0FF, vtrx_slave_addr)
-                    writeGbtRegAddrs(0x104, 0xD)
+                    writeGbtRegAddrs(0x0FF, vtrx_i2c_addr) # Set I2C address for VTRx+
+                    writeGbtRegAddrs(0x104, 0xD) # I2CM2 single byte read from VTRx+
                     sleep(0.01)
-                    vtrx_data = readGbtRegAddrs(0x19D)
+                    vtrx_data = readGbtRegAddrs(0x19D) # Data read out from VTRx+ register
                     if vtrx_data == 0x01:
                         old_vtrx = 1
                     writeGbtRegAddrs(0x100, 0x0)
@@ -152,16 +172,16 @@ def init_gem_frontend():
                     sleep(0.01)
 
                     # Write
-                    if not old_vtrx:
-                        writeGbtRegAddrs(0x100, control_register_data)
-                        writeGbtRegAddrs(0x104, 0x0)
+                    if not old_vtrx: # Need to enable TX channel of VTRx+ only for new VTRx+
+                        writeGbtRegAddrs(0x100, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x104, 0x0) # Write to I2CM2 control register
+                        sleep(0.01) 
+                        writeGbtRegAddrs(0x100, reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x101, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x104, 0x8)  # I2CM2 data stored locally for write command
                         sleep(0.01)
-                        writeGbtRegAddrs(0x100, reg_addr)
-                        writeGbtRegAddrs(0x101, data)
-                        writeGbtRegAddrs(0x104, 0x8)
-                        sleep(0.01)
-                        writeGbtRegAddrs(0x0FF, vtrx_slave_addr)
-                        writeGbtRegAddrs(0x104, 0xC)
+                        writeGbtRegAddrs(0x0FF, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x104, 0xC) # I2CM2 send write command to VTRx+
                         sleep(0.01)
                         writeGbtRegAddrs(0x100, 0x0)
                         writeGbtRegAddrs(0x101, 0x0)
@@ -178,13 +198,13 @@ def init_gem_frontend():
                     #writeGbtRegAddrs(0x110, check_reg_addr)
                     #writeGbtRegAddrs(0x114, 0x8)
                     #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_slave_addr)
+                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
                     #writeGbtRegAddrs(0x114, 0xC)
                     #sleep(0.01)
                     #writeGbtRegAddrs(0x110, control_register_data_check)
                     #writeGbtRegAddrs(0x114, 0x0)
                     #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_slave_addr)
+                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
                     #writeGbtRegAddrs(0x114, 0xD)
                     #sleep(0.01)
                     #vtrx_data = readGbtRegAddrs(0x1AD)
@@ -197,16 +217,16 @@ def init_gem_frontend():
                     #sleep(0.01)
 
                     # Write
-                    if not old_vtrx:
-                        writeGbtRegAddrs(0x110, control_register_data)
-                        writeGbtRegAddrs(0x114, 0x0)
+                    if not old_vtrx: # Need to enable TX channel of VTRx+ only for new VTRx+
+                        writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
                         sleep(0.01)
-                        writeGbtRegAddrs(0x110, reg_addr)
-                        writeGbtRegAddrs(0x111, data)
-                        writeGbtRegAddrs(0x114, 0x8)
+                        writeGbtRegAddrs(0x110, reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
                         sleep(0.01)
-                        writeGbtRegAddrs(0x10F, vtrx_slave_addr)
-                        writeGbtRegAddrs(0x114, 0xC)
+                        writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x114, 0xC) # I2CM2 send write command to VTRx+
                         sleep(0.01)
                         writeGbtRegAddrs(0x110, 0x0)
                         writeGbtRegAddrs(0x111, 0x0)
@@ -218,7 +238,7 @@ def init_gem_frontend():
                 if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
                     sleep(2.5)
             
-            # Read in me0 phase scan results
+            # Read in me0 DAQ phase scan results
             bestphase_list = {}
             phase_scan_filename = get_config("CONFIG_ME0_VFAT_PHASE_SCAN")
             phase_scan_filename = phase_scan_filename.split("*")[0] + str(oh) + phase_scan_filename.split("*")[1]
@@ -250,11 +270,11 @@ def init_gem_frontend():
             # Set the phases
             for vfat in range(0, 24):
                 set_bestphase = bestphase_list[vfat]
-                lpgbt, gbt_num, elink_num, gpio = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat]
+                lpgbt, gbt_num, elink_num, gpio = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat] # Get the lpGBT and elink info for this VFAT
                 gbt_ver = gbt_ver_list[gbt_num]
 
                 gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt_num))
-                if not gbt_ready:
+                if not gbt_ready: # Only set phases if GBT for this VFAT is READY
                     continue
                 print ("\nSetting DAQ and Sbit phases for VFAT# %02d"%vfat)
 
@@ -269,8 +289,9 @@ def init_gem_frontend():
                     GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
                 elif oh_ver == 2:
                     GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
-                addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink_num
+                addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink_num # lpGBT register address for DAQ phase setting for this VFAT
 
+                # Read the configuration of the corresponding lpGBT from the text file
                 if lpgbt == "boss":
                     if oh_ver == 1:
                         config = getConfig("../resources/me0_boss_config_ohv1.txt")
@@ -282,13 +303,15 @@ def init_gem_frontend():
                     elif oh_ver == 2:
                         config = getConfig("../resources/me0_sub_config_ohv2.txt")
 
+                # Write DAQ phase setting to the lpGBT register for this VFAT
                 value = (config[addr] & 0x0f) | (set_bestphase << 4)
                 selectGbt(oh, gbt_num)
                 writeGbtRegAddrs(addr, value)
                 sleep(0.01)
                 #print ("DAQ Elink phase set for VFAT#%02d to: %s" % (vfat, hex(set_bestphase)))
                 
-                sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat]
+                sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat] # Get the sbit elink info for this VFAT
+                # Get the lpGBT register address and write the phase setting for the 8 Sbit Elinks for this VFAT
                 for elink in range(0,8):
                     set_bestphase = bestphase_list_sbit[vfat][elink]
                     
