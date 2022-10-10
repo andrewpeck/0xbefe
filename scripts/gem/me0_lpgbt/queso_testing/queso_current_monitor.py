@@ -28,7 +28,7 @@ def processAdcValue(result):
        all of the third byte'''
     byte2 = (result[1] & 0x03)
     out_code = (byte2 << 8) | result[2]
-    volt = (out_code * 5) / 1024 
+    volt = (out_code * 3.3) / 1024 
     amp = volt / (0.008 * 300)
     return amp
     

@@ -209,12 +209,12 @@ class rpi_chc:
             return success
         
         try:
-            self.bus.write_byte(monitor_address, value)
+            self.bus.write_i2c_block_data(monitor_address, 0x00, [0, value])
         except IOError:
             print(Colors.YELLOW + "ERROR: I/O error in I2C connection, Trying again" + Colors.ENDC)
             time.sleep(0.00001)
             try:
-                self.bus.write_byte(monitor_address, value)
+                self.bus.write_i2c_block_data(monitor_address, 0x00, [0, value])
             except IOError:
                 print(Colors.RED + "ERROR: I/O error in I2C connection, check RPi connection" + Colors.ENDC)
                 success = 0
