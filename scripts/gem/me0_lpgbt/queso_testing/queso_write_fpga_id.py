@@ -34,11 +34,10 @@ if __name__ == "__main__":
     gpio["2"] = 16
     gpio["3"] = 12
 
-    # need to be changed after addr is decided !!!!
     fpga_reg_addr = {}
-    fpga_reg_addr["1"] = 0x00
-    fpga_reg_addr["2"] = 0x00
-    fpga_reg_addr["3"] = 0x00
+    fpga_reg_addr["1"] = 0x02
+    fpga_reg_addr["2"] = 0x02
+    fpga_reg_addr["3"] = 0x02
 
     if args.fpga is None:
         print(Colors.YELLOW + "Please give at least one fpga to write to" + Colors.ENDC)
@@ -62,7 +61,7 @@ if __name__ == "__main__":
         spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], int(args.id[i], 16)])
         if not spi_success:
             terminate() # err already printed out in function call
-        print ("ID written to FPGA %s = 0x%02X"%(i, spi_data))
+        print ("ID (register 0x%02X) written to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]))
 
         # disable the chip select after finishing writing
         spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
