@@ -59,7 +59,7 @@ if __name__ == "__main__":
             terminate() # err already printed out in function call
 
         # write the corresponding id to fpga
-        spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], args.id[i]])
+        spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], int(args.id[i])])
         if not spi_success:
             terminate() # err already printed out in function call
         print ("ID written to FPGA %s = 0x%02X"%(i, spi_data))
