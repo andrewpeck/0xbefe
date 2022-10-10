@@ -62,7 +62,7 @@ if __name__ == "__main__":
         spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], int(args.id[i], 16)])
         if not spi_success:
             terminate() # err already printed out in function call
-        print ("ID (register 0x%02X) written to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]))
+        print ("ID (register 0x%02X) written to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]))
 
         # disable the chip select after finishing writing
         spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
