@@ -73,6 +73,21 @@ class rpi_chc:
             self.efuse_pwr_boss = 12
             self.efuse_pwr_sub = 13
 
+    def init_gpio(self, gpio, state):
+        init_success = 0
+        try: 
+            if state == "out":
+                GPIO.setup(gpio, GPIO.OUT)
+                init_success = 1
+            elif state == "in":
+                GPIO.setup(gpio, GPIO.IN)
+                init_success = 1
+            else:
+                print (Colors.RED + "ERROR: Invalid GPIO state" + Colors.ENDC)
+        except:
+            print (Colors.RED + "ERROR: Unable to setup GPIO" + Colors.ENDC)
+        return init_success
+
     def gpio_action(self, operation, gpio, value = -9999):
         read = -9999
         if operation not in ["read", "write"]:
@@ -190,6 +205,9 @@ class rpi_chc:
             config_success = 1
 
         return reset_success * config_success
+
+    def gpio_terminate(self):
+        GPIO.cleanup()
 
     def current_monitor_write(self, monitor, value):
         # Write to current monitor using I2C

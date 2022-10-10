@@ -59,6 +59,17 @@ if __name__ == "__main__":
         ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
         print ("\n######################################################\n")
 
+        # Initialize RPI GPIOs
+        if not args.turn_off:
+            print(Colors.BLUE + "Initialized RPI GPIOs\n" + Colors.ENDC)
+            cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            output = ssh_stdout.readlines()
+            print(output)
+            print(Colors.GREEN + "\RPI GPIO Initialization Done" + Colors.ENDC)
+            print ("\n######################################################\n")
+            sleep(5)
+
         # Reset all FPGA if needed
         if args.reset:
             print(Colors.BLUE + "Reset FPGAs\n" + Colors.ENDC)
@@ -138,6 +149,17 @@ if __name__ == "__main__":
             print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(2)
+
+        # Terminate RPI GPIOs
+        if args.turn_off:
+            print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
+            cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            output = ssh_stdout.readlines()
+            print(output)
+            print(Colors.GREEN + "\RPI GPIO Terminate Done" + Colors.ENDC)
+            print ("\n######################################################\n")
+            sleep(5)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print ("\n#####################################################################################################################################\n")
