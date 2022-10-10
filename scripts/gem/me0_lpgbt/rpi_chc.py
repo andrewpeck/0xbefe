@@ -95,7 +95,7 @@ class rpi_chc:
     def fpga_spi_cs(self, gpio, enable):
         #self.spi.close() 
         #self.spi.open(0,1) # bus 0 device 1 - unused
-        self.spi.no_cs = 0
+        self.spi.no_cs = True
         spi_success = 0
         try:
             read = self.gpio_action("write", gpio, enable)
