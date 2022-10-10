@@ -54,7 +54,7 @@ if __name__ == '__main__':
                 else:
                     print(Colors.YELLOW + "FPGA %s done status:"%(f, fpga_done) + Colors.ENDC)
             else:
-                print(Colors.RED + "ERROR: Unable to read from GPIO %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
+                print(Colors.RED + "ERROR: Status invalid for %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
         except:
             print(Colors.RED + "ERROR: Unable to read from GPIO %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
         time.sleep(1)
