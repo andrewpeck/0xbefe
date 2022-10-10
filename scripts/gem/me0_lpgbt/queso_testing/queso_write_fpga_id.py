@@ -56,7 +56,7 @@ if __name__ == "__main__":
         spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 1)
         if not spi_success:
             terminate() # err already printed out in function call
-        sleep(0.1)
+        time.sleep(0.1)
 
         # write the corresponding id to fpga
         print ("Writing ID (register 0x%02X) to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], int(args.id[i], 16)))
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
         if not spi_success:
             terminate() # err already printed out in function call
-        sleep(0.1)
+        time.sleep(0.1)
             
     # terminate the RPi
     terminate()
