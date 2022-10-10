@@ -50,9 +50,9 @@ if __name__ == '__main__':
             fpga_done = gbt_rpi_chc.gpio_action("read", read_gpio[f])
             if fpga_done != -9999:
                 if fpga_done == 1:
-                    print(Colors.GREEN + "FPGA %s done status:",%(f, fpga_done) + Colors.ENDC)
+                    print(Colors.GREEN + "FPGA %s done status:"%(f, fpga_done) + Colors.ENDC)
                 else:
-                    print(Colors.YELLOW + "FPGA %s done status:",%(f, fpga_done) + Colors.ENDC)
+                    print(Colors.YELLOW + "FPGA %s done status:"%(f, fpga_done) + Colors.ENDC)
             else:
                 print(Colors.RED + "ERROR: Unable to read from GPIO %d (fpga %s)"%(read_gpio[f], f) + Colors.ENDC)
         except:
