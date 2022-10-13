@@ -329,7 +329,8 @@ begin
                 cluster_count_masked_o => open,
                 clusters_o             => me0_clusters,
                 clusters_masked_o      => open,
-                overflow_o             => me0_overflow(oh)
+                overflow_o             => me0_overflow(oh),
+                valid_o                => open
                 );
        
     --------------------------------------------------------------------------------

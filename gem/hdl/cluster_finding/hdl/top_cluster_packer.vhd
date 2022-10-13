@@ -36,7 +36,8 @@ entity cluster_packer is
     cluster_count_masked_o : out std_logic_vector (10 downto 0);
     clusters_o             : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     clusters_masked_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    overflow_o             : out std_logic
+    overflow_o             : out std_logic;
+    valid_o                : out std_logic
     );
 end cluster_packer;
 
@@ -305,7 +306,7 @@ begin
   --
   -- You should be able to just tweak the # of pipelines stages in the counter module
   --
-  -- Timed in on 2022/03/23
+  -- Timed in on 2022/10/13
   --
   count_clusters_inst : count_clusters
     generic map (
@@ -370,6 +371,8 @@ begin
   process (clk_fast) is
   begin
     if (rising_edge(clk_fast)) then
+
+      valid_o <= cluster_latch;
 
       if (reset = '1') then
         clusters_o <= (others => NULL_CLUSTER);

@@ -393,7 +393,8 @@ begin
           clusters_masked_o      => clusters_masked_tmr(I),
           cluster_count_masked_o => cluster_count_masked(I),
 
-          overflow_o => overflow(I)
+          overflow_o => overflow(I),
+          valid_o    => open
           );
     end generate;
 

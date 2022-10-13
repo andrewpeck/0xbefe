@@ -107,13 +107,13 @@ async def monitor_overflow(dut):
     for i in range(16):
         await RisingEdge(dut.clk_40)
 
+    overflow_last = 0
     while True:
-        await Edge(dut.overflow_o)
         await RisingEdge(dut.clk_fast)
-        await RisingEdge(dut.clk_fast)
-        await RisingEdge(dut.clk_fast)
-        await RisingEdge(dut.clk_fast)
-        assert dut.cluster_latch.value==1, "Overflow out of time with latch!"
+        if (overflow_last==0 and dut.overflow_o.value==1):
+            assert dut.valid_o.value==1, "Overflow out of time with latch!"
+
+        overflow_last = dut.overflow_o.value
 
 async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False, phase=0):
     """Test for priority encoder with randomized data on all inputs"""
