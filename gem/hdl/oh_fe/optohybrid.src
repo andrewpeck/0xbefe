@@ -55,7 +55,6 @@ gem/hdl/oh_fe/utils/dru_tmr.vhd 93
 gem/hdl/oh_fe/utils/oversample.vhd 93
 gem/hdl/oh_fe/utils/bitslip.vhd 93
 #gem/hdl/oh_fe/utils/bitslip_fast.vhd 93
-gem/hdl/oh_fe/utils/clock_strobe.vhd 93
 gem/hdl/oh_fe/utils/clocking.vhd 93
 gem/hdl/oh_fe/utils/counter_snap.vhd 93
 gem/hdl/oh_fe/utils/counter_snap_tmr.vhd 93
