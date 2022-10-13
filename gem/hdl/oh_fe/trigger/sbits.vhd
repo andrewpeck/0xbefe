@@ -222,9 +222,9 @@ begin
       REGISTER_OUTPUT     => true
       )
     port map (
-      clock       => clocks.clk160_0,
+      clock       => clocks.clk40, -- clocks.clk160_0,
       mapping     => to_integer (unsigned (sbit_map_sel)),
-      channels_in => vfat_sbits_160m,
+      channels_in => vfat_sbits_raw, -- vfat_sbits_160m,
       strips_out  => vfat_sbits_strip_mapped
       );
 
