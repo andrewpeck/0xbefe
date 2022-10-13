@@ -44,6 +44,9 @@ package cluster_pkg is
   function if_then_else (bool : boolean; a : integer; b : integer)
     return integer;
 
+  function invalid_clusterp (cluster : sbit_cluster_t; adr_max : integer)
+    return boolean;
+
 end package cluster_pkg;
 
 package body cluster_pkg is
@@ -56,6 +59,21 @@ package body cluster_pkg is
     tmp  := a.cnt & a.prt & a.adr;
     tmp2 := std_logic_vector(resize(unsigned(tmp), size));
     return tmp2;
+  end function;
+
+  function invalid_clusterp (cluster : sbit_cluster_t; adr_max : integer)
+    return boolean is
+  begin
+    if ((cluster.vpf = '0' and cluster.adr /= NULL_CLUSTER.adr) or
+        (cluster.vpf = '0' and cluster.cnt /= NULL_CLUSTER.cnt) or
+        (cluster.vpf = '0' and cluster.prt /= NULL_CLUSTER.prt) or
+        (to_integer(unsigned(cluster.adr)) >= adr_max and cluster.adr /= NULL_CLUSTER.adr))
+    then
+      return true;
+  else
+    return false;
+  end if;
+
   end function;
 
   function if_then_else (bool : boolean; a : integer; b : integer) return integer is

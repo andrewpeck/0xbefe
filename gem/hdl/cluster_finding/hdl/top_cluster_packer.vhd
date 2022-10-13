@@ -368,6 +368,19 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
+  --synthesis translate_off
+  process (clusters) is
+  begin
+    for I in clusters'range loop
+      assert invalid_clusterp(clusters(I), PARTITION_WIDTH*64) = false
+        report "Cluster invalid " & integer'image(I) & " "
+        & "adr=" & integer'image(to_integer(unsigned(clusters(I).adr))) & " "
+        & "size=" & integer'image(to_integer(unsigned(clusters(I).cnt))) & " "
+        severity error;
+    end loop;
+  end process;
+  --synthesis translate_on
+
   process (clk_fast) is
   begin
     if (rising_edge(clk_fast)) then
