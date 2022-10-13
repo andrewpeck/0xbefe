@@ -312,8 +312,6 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
             cluster.vpf = dut.clusters_o[iclst].vpf.value
             found_clusters[iclst] = cluster
 
-        # TODO: check the cluster latency
-
         # TODO: check the overflows
 
         # TODO: check the cluster masking
@@ -414,9 +412,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
 
 
 # @pytest.mark.parametrize("oneshot", [False])
-# @pytest.mark.parametrize("deadtime", [0, 1])
 @pytest.mark.parametrize("station", [1, 2])
-def test_cluster_packer(station, oneshot=False, deadtime=0):
+def test_cluster_packer(station, oneshot=False):
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
@@ -446,7 +443,6 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
 
     parameters = {}
     parameters["STATION"] = station
-    parameters["DEADTIME"] = deadtime
     parameters["ONESHOT"] = oneshot
 
     if station == 2:
@@ -468,7 +464,6 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
         toplevel="cluster_packer",
         toplevel_lang="vhdl",
         parameters=parameters,
-        vhdl_compile_args=["-2008"],
         # sim_args = ["do cluster_packer_wave.do"],
         sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
         gui=0,
@@ -478,5 +473,5 @@ def test_cluster_packer(station, oneshot=False, deadtime=0):
 if __name__ == "__main__":
     # testing the oneshot is complicated here, since the emulator doesn't take
     # into account the past :(
-    test_cluster_packer(1, False, 0)
-    test_cluster_packer(2, False, 0)
+    test_cluster_packer(1, False)
+    test_cluster_packer(2, False)
