@@ -327,6 +327,13 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
         )
 
         # -------------------------------------------------------------------------------
+        # check the phase detector
+        # -------------------------------------------------------------------------------
+
+        assert int(dut.phase_detect.value) == phase % 4, print(
+            "Phase detect = %d" % int(dut.phase_detect.value))
+
+        # -------------------------------------------------------------------------------
         # check the number of found (valid) clusters
         # -------------------------------------------------------------------------------
 
