@@ -34,8 +34,8 @@ entity sbits is
 
     ttc : in ttc_t;
 
-    l1a_mask_delay : in std_logic_vector(4 downto 0);
-    l1a_mask_width : in std_logic_vector(4 downto 0);
+    l1a_mask_delay   : in std_logic_vector(4 downto 0);
+    l1a_mask_bitmask : in std_logic_vector(31 downto 0);
 
     reverse_partitions_i : in std_logic                     := '0';
     sbit_map_sel         : in std_logic_vector (1 downto 0) := (others => '0');
@@ -78,7 +78,10 @@ entity sbits is
 
     tmr_err_inj_i            : in  std_logic := '0';
     cluster_tmr_err_o        : out std_logic := '0';
-    trig_alignment_tmr_err_o : out std_logic := '0'
+    trig_alignment_tmr_err_o : out std_logic := '0';
+
+    sbit_bx_dlys_enable_i : in std_logic_vector (NUM_VFATS*MXSBITS/SBIT_BX_DELAY_GRP_SIZE-1 downto 0);
+    sbit_bx_dlys_i        : in sbit_bx_dly_array_t (NUM_VFATS*64/SBIT_BX_DELAY_GRP_SIZE-1 downto 0)
 
     );
 end sbits;
@@ -87,8 +90,8 @@ architecture Behavioral of sbits is
 
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
-  signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
   signal mask_l1a     : std_logic;
+  signal l1a_bitmask  : std_logic_vector (31 downto 0) := (others => '0');
 
   signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
@@ -97,14 +100,27 @@ architecture Behavioral of sbits is
   signal vfat_sbits_40m          : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_160m         : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
-
-  signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
+  signal vfat_sbits_delayed      : sbits_array_t(NUM_VFATS-1 downto 0);
 
   signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0) := (others => '0');
 
-begin
+  -- multiplex together the 1536 s-bits into a single chip-scope accessible register
+  -- don't want to affect timing, so do it through a couple of flip-flop stages
 
-  active_vfats_o <= active_vfats;
+  -- function to replicate a std_logic bit some number of times
+  -- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
+
+begin
 
   --------------------------------------------------------------------------------------------------------------------
   -- S-bit Deserialization and Alignment
@@ -252,7 +268,7 @@ begin
     port map (
       clock          => clocks.clk40,
       sbits_i        => vfat_sbits_40m,
-      active_vfats_o => active_vfats
+      active_vfats_o => active_vfats_o
       );
 
   --------------------------------------------------------------------------------------------------------------------
@@ -287,21 +303,28 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-
-      if (l1a_delayed = '1') then
-        l1a_mask_cnt <= unsigned(l1a_mask_width);
-      elsif (l1a_mask_cnt > 0) then
-        l1a_mask_cnt <= l1a_mask_cnt - 1;
-      end if;
-
-      if (l1a_mask_cnt > 0) then
-        mask_l1a <= '1';
-      else
-        mask_l1a <= '0';
-      end if;
-
+        l1a_bitmask <= '0' & l1a_bitmask(31 downto 1) or
+                       (l1a_mask_bitmask and repeat(l1a_delayed, l1a_mask_bitmask'length));
     end if;
   end process;
+
+  mask_l1a <= l1a_bitmask(0);
+
+  --------------------------------------------------------------------------------
+  -- Sbit Delays
+  --------------------------------------------------------------------------------
+
+  sbit_delay_inst : entity work.sbit_delay
+    generic map (
+      NUM_VFATS      => NUM_VFATS
+      )
+    port map (
+      clock          => clocks.clk40,
+      sbits_i        => vfat_sbits_injected,
+      sbits_o        => vfat_sbits_delayed,
+      dly_enable     => sbit_bx_dlys_enable_i,
+      sbit_bx_dlys_i => sbit_bx_dlys_i
+      );
 
   --------------------------------------------------------------------------------------------------------------------
   -- Cluster Packer
@@ -362,7 +385,7 @@ begin
 
           mask_output_i => mask_l1a,
 
-          sbits_i => vfat_sbits_injected,
+          sbits_i => vfat_sbits_delayed,
 
           clusters_o      => clusters_unmasked_tmr(I),
           cluster_count_o => cluster_count_unmasked(I),

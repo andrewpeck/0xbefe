@@ -78,7 +78,7 @@ architecture Behavioral of trigger is
   signal sbitmon_l1a_delay : std_logic_vector (31 downto 0);
 
   signal l1a_mask_delay : std_logic_vector(4 downto 0);
-  signal l1a_mask_width : std_logic_vector(4 downto 0);
+  signal l1a_mask_bitmask : std_logic_vector(31 downto 0);
 
   signal sbit_overflow   : std_logic;
   signal sbit_clusters, sbit_clusters_ff   : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
@@ -123,6 +123,9 @@ architecture Behavioral of trigger is
   signal hitmap_reset   : std_logic;
   signal hitmap_acquire : std_logic;
   signal hitmap_sbits   : sbits_array_t(NUM_VFATS-1 downto 0);
+
+  signal sbit_bx_dlys : sbit_bx_dly_array_t (NUM_VFATS*64/SBIT_BX_DELAY_GRP_SIZE-1 downto 0) := (others => (others => '0'));
+  signal sbit_bx_dlys_enable : std_logic_vector (NUM_VFATS*MXSBITS/SBIT_BX_DELAY_GRP_SIZE-1 downto 0);
 
   -- control signals from gbt (verb, object)
   signal reset_counters    : std_logic;
@@ -292,7 +295,7 @@ begin
 
       ttc            => ttc,
       l1a_mask_delay => l1a_mask_delay,
-      l1a_mask_width => l1a_mask_width,
+      l1a_mask_bitmask => l1a_mask_bitmask,
 
       -- sbit inputs
       sbits_p => vfat_sbits_p,
@@ -335,7 +338,11 @@ begin
 
       tmr_err_inj_i            => tmr_err_inj,
       cluster_tmr_err_o        => cluster_tmr_err,
-      trig_alignment_tmr_err_o => trig_alignment_tmr_err
+      trig_alignment_tmr_err_o => trig_alignment_tmr_err,
+
+      -- sbit bx delays
+      sbit_bx_dlys_i        => sbit_bx_dlys,
+      sbit_bx_dlys_enable_i => sbit_bx_dlys_enable
 
       );
 
@@ -411,110 +418,111 @@ begin
       );
 
     -- Addresses
-    regs_addresses(0)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"00";
-    regs_addresses(1)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"01";
-    regs_addresses(2)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"02";
-    regs_addresses(3)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"03";
-    regs_addresses(4)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"04";
-    regs_addresses(5)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"05";
-    regs_addresses(6)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"06";
-    regs_addresses(7)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"07";
-    regs_addresses(8)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"08";
-    regs_addresses(9)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"09";
-    regs_addresses(10)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"12";
-    regs_addresses(11)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"13";
-    regs_addresses(12)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"14";
-    regs_addresses(13)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"18";
-    regs_addresses(14)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"20";
-    regs_addresses(15)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"21";
-    regs_addresses(16)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"22";
-    regs_addresses(17)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"23";
-    regs_addresses(18)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"24";
-    regs_addresses(19)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"25";
-    regs_addresses(20)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"26";
-    regs_addresses(21)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"27";
-    regs_addresses(22)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"28";
-    regs_addresses(23)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"29";
-    regs_addresses(24)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"2a";
-    regs_addresses(25)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"2b";
-    regs_addresses(26)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"38";
-    regs_addresses(27)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"39";
-    regs_addresses(28)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"3a";
-    regs_addresses(29)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"3b";
-    regs_addresses(30)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"3f";
-    regs_addresses(31)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"40";
-    regs_addresses(32)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"41";
-    regs_addresses(33)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"42";
-    regs_addresses(34)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"43";
-    regs_addresses(35)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"44";
-    regs_addresses(36)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"45";
-    regs_addresses(37)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"46";
-    regs_addresses(38)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"47";
-    regs_addresses(39)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"48";
-    regs_addresses(40)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"49";
-    regs_addresses(41)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"4a";
-    regs_addresses(42)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"60";
-    regs_addresses(43)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"61";
-    regs_addresses(44)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"62";
-    regs_addresses(45)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"63";
-    regs_addresses(46)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"64";
-    regs_addresses(47)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"65";
-    regs_addresses(48)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"66";
-    regs_addresses(49)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"67";
-    regs_addresses(50)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"68";
-    regs_addresses(51)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"69";
-    regs_addresses(52)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6a";
-    regs_addresses(53)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6b";
-    regs_addresses(54)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6c";
-    regs_addresses(55)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6d";
-    regs_addresses(56)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6e";
-    regs_addresses(57)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"6f";
-    regs_addresses(58)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"70";
-    regs_addresses(59)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"71";
-    regs_addresses(60)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"90";
-    regs_addresses(61)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"92";
-    regs_addresses(62)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a0";
-    regs_addresses(63)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a1";
-    regs_addresses(64)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a2";
-    regs_addresses(65)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a3";
-    regs_addresses(66)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a4";
-    regs_addresses(67)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a5";
-    regs_addresses(68)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a6";
-    regs_addresses(69)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a7";
-    regs_addresses(70)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"a8";
-    regs_addresses(71)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"b0";
-    regs_addresses(72)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c0";
-    regs_addresses(73)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c1";
-    regs_addresses(74)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c2";
-    regs_addresses(75)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c3";
-    regs_addresses(76)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c4";
-    regs_addresses(77)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c5";
-    regs_addresses(78)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c6";
-    regs_addresses(79)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c7";
-    regs_addresses(80)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c8";
-    regs_addresses(81)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"c9";
-    regs_addresses(82)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"ca";
-    regs_addresses(83)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"cb";
-    regs_addresses(84)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"cc";
-    regs_addresses(85)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"cd";
-    regs_addresses(86)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"ce";
-    regs_addresses(87)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"cf";
-    regs_addresses(88)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d0";
-    regs_addresses(89)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d1";
-    regs_addresses(90)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d2";
-    regs_addresses(91)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d3";
-    regs_addresses(92)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d4";
-    regs_addresses(93)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d5";
-    regs_addresses(94)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d6";
-    regs_addresses(95)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d7";
-    regs_addresses(96)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d8";
-    regs_addresses(97)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"d9";
-    regs_addresses(98)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"f9";
-    regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '0' & x"fa";
-    regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"00";
-    regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"01";
-    regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"02";
-    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= '1' & x"03";
+    regs_addresses(0)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"00";
+    regs_addresses(1)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"01";
+    regs_addresses(2)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"02";
+    regs_addresses(3)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"03";
+    regs_addresses(4)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"04";
+    regs_addresses(5)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"05";
+    regs_addresses(6)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"06";
+    regs_addresses(7)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"07";
+    regs_addresses(8)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"08";
+    regs_addresses(9)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"09";
+    regs_addresses(10)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"12";
+    regs_addresses(11)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"13";
+    regs_addresses(12)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"14";
+    regs_addresses(13)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"18";
+    regs_addresses(14)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"20";
+    regs_addresses(15)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"21";
+    regs_addresses(16)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"22";
+    regs_addresses(17)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"23";
+    regs_addresses(18)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"24";
+    regs_addresses(19)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"25";
+    regs_addresses(20)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"26";
+    regs_addresses(21)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"27";
+    regs_addresses(22)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"28";
+    regs_addresses(23)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"29";
+    regs_addresses(24)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"2a";
+    regs_addresses(25)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"2b";
+    regs_addresses(26)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"38";
+    regs_addresses(27)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"39";
+    regs_addresses(28)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"3a";
+    regs_addresses(29)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"3b";
+    regs_addresses(30)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"3f";
+    regs_addresses(31)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"40";
+    regs_addresses(32)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"41";
+    regs_addresses(33)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"42";
+    regs_addresses(34)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"43";
+    regs_addresses(35)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"44";
+    regs_addresses(36)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"45";
+    regs_addresses(37)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"46";
+    regs_addresses(38)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"47";
+    regs_addresses(39)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"48";
+    regs_addresses(40)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"49";
+    regs_addresses(41)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"4a";
+    regs_addresses(42)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"60";
+    regs_addresses(43)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"61";
+    regs_addresses(44)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"62";
+    regs_addresses(45)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"63";
+    regs_addresses(46)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"64";
+    regs_addresses(47)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"65";
+    regs_addresses(48)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"66";
+    regs_addresses(49)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"67";
+    regs_addresses(50)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"68";
+    regs_addresses(51)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"69";
+    regs_addresses(52)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6a";
+    regs_addresses(53)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6b";
+    regs_addresses(54)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6c";
+    regs_addresses(55)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6d";
+    regs_addresses(56)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6e";
+    regs_addresses(57)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"6f";
+    regs_addresses(58)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"70";
+    regs_addresses(59)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"71";
+    regs_addresses(60)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"90";
+    regs_addresses(61)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"92";
+    regs_addresses(62)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a0";
+    regs_addresses(63)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a1";
+    regs_addresses(64)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a2";
+    regs_addresses(65)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a3";
+    regs_addresses(66)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a4";
+    regs_addresses(67)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a5";
+    regs_addresses(68)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a6";
+    regs_addresses(69)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a7";
+    regs_addresses(70)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"a8";
+    regs_addresses(71)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"b0";
+    regs_addresses(72)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c0";
+    regs_addresses(73)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c1";
+    regs_addresses(74)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c2";
+    regs_addresses(75)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c3";
+    regs_addresses(76)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c4";
+    regs_addresses(77)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c5";
+    regs_addresses(78)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c6";
+    regs_addresses(79)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c7";
+    regs_addresses(80)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c8";
+    regs_addresses(81)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"c9";
+    regs_addresses(82)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"ca";
+    regs_addresses(83)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"cb";
+    regs_addresses(84)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"cc";
+    regs_addresses(85)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"cd";
+    regs_addresses(86)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"ce";
+    regs_addresses(87)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"cf";
+    regs_addresses(88)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d0";
+    regs_addresses(89)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d1";
+    regs_addresses(90)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d2";
+    regs_addresses(91)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d3";
+    regs_addresses(92)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d4";
+    regs_addresses(93)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d5";
+    regs_addresses(94)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d6";
+    regs_addresses(95)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d7";
+    regs_addresses(96)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d8";
+    regs_addresses(97)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"d9";
+    regs_addresses(98)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"f9";
+    regs_addresses(99)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"fa";
+    regs_addresses(100)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "00" & x"fb";
+    regs_addresses(101)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"00";
+    regs_addresses(102)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"01";
+    regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"02";
+    regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"03";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -724,11 +732,11 @@ begin
     regs_read_arr(97)(REG_TRIG_SBIT_HITMAP_VFAT11_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT11_LSB_LSB) <= hitmap_sbits(11)(31 downto 0);
     regs_read_arr(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= trigger_prbs_en;
     regs_read_arr(99)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= l1a_mask_delay;
-    regs_read_arr(99)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= l1a_mask_width;
-    regs_read_arr(100)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
-    regs_read_arr(100)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
-    regs_read_arr(101)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
-    regs_read_arr(101)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
+    regs_read_arr(100)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB) <= l1a_mask_bitmask;
+    regs_read_arr(101)(REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_CLUSTER_TMR_ERR_CNT_LSB) <= cluster_tmr_err_cnt;
+    regs_read_arr(101)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
+    regs_read_arr(102)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
+    regs_read_arr(102)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);
@@ -875,15 +883,15 @@ begin
     hitmap_acquire <= regs_write_arr(73)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT);
     trigger_prbs_en <= regs_write_arr(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT);
     l1a_mask_delay <= regs_write_arr(99)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB);
-    l1a_mask_width <= regs_write_arr(99)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB);
+    l1a_mask_bitmask <= regs_write_arr(100)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB);
 
     -- Connect write pulse signals
     reset_counters <= regs_write_pulse_arr(26);
     inject_sbits <= regs_write_pulse_arr(61);
     reset_monitor <= regs_write_pulse_arr(62);
     hitmap_reset <= regs_write_pulse_arr(72);
-    tmr_cnt_reset <= regs_write_pulse_arr(102);
-    tmr_err_inj <= regs_write_pulse_arr(103);
+    tmr_cnt_reset <= regs_write_pulse_arr(103);
+    tmr_err_inj <= regs_write_pulse_arr(104);
 
     -- Connect write done signals
 
@@ -1430,7 +1438,7 @@ begin
     regs_defaults(73)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= REG_TRIG_SBIT_HITMAP_ACQUIRE_DEFAULT;
     regs_defaults(98)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= REG_TRIG_TRIGGER_PRBS_EN_DEFAULT;
     regs_defaults(99)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_DELAY_DEFAULT;
-    regs_defaults(99)(REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_WIDTH_DEFAULT;
+    regs_defaults(100)(REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_BITMASK_DEFAULT;
 
     -- Define writable regs
     regs_writable_arr(0) <= '1';
@@ -1467,6 +1475,7 @@ begin
     regs_writable_arr(73) <= '1';
     regs_writable_arr(98) <= '1';
     regs_writable_arr(99) <= '1';
+    regs_writable_arr(100) <= '1';
 
   --==== Registers end ============================================================================
 

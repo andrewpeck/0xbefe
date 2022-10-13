@@ -17,6 +17,10 @@ package cluster_pkg is
 
   subtype sbits_t is std_logic_vector(63 downto 0);
 
+  constant SBIT_BX_DELAY_NBITS : integer := 3;
+  constant SBIT_BX_DELAY_GRP_SIZE : integer := 8;
+  type sbit_bx_dly_array_t is array(integer range <>) of std_logic_vector(SBIT_BX_DELAY_NBITS-1 downto 0);
+
   type sbits_array_t is array(integer range <>) of sbits_t;
 
   type sbit_cluster_t is record
