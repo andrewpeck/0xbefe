@@ -1292,6 +1292,10 @@
             <node id="L1A_DELAY" address="0x10" mask="0xffffffff" permission="r"
                   description="Number of BX between this sbit and the subsequent L1A"
                   fw_signal="sbitmon_l1a_delay"/>
+            <node id="TRIG_ON_INVALID" address="0x11" mask="0x1" permission="rw"
+                  description="Number of BX between this sbit and the subsequent L1A"
+                  fw_default="0"
+                  fw_signal="sbitmon_trig_on_invalid"/>
         </node>
 
         <node id="SBIT_HITMAP" address="0xc0"
