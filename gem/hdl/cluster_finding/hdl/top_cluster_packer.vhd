@@ -57,10 +57,10 @@ architecture behavioral of cluster_packer is
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
-  signal sbit_xor_s1 : std_logic_vector (NUM_VFATS*64/8-1 downto 0) := (others => '0');
-  signal sbit_xor_s2 : std_logic_vector (NUM_VFATS*64/8/8-1 downto 0) := (others => '0');
-  signal sbit_xor_s3 : std_logic := '0';
-  signal sbit_xor    : std_logic := '0';
+  signal sbit_or_s1 : std_logic_vector (NUM_VFATS*64/8-1 downto 0) := (others => '0');
+  signal sbit_or_s2 : std_logic_vector (NUM_VFATS*64/8/8-1 downto 0) := (others => '0');
+  signal sbit_or_s3 : std_logic := '0';
+  signal sbit_or    : std_logic := '0';
   signal sbit_delta  : std_logic := '0';
 
   signal phase_detect : integer range 0 to 3 := 2;
@@ -137,16 +137,16 @@ begin
   begin
     if (rising_edge(clk_fast)) then
 
-      for I in sbit_xor_s1'range loop
-        sbit_xor_s1(I) <= or_reduce(sbits_i(I / 8)(((I mod 8) + 1)*8-1 downto (I mod 8)*8));
+      for I in sbit_or_s1'range loop
+        sbit_or_s1(I) <= or_reduce(sbits_i(I / 8)(((I mod 8) + 1)*8-1 downto (I mod 8)*8));
       end loop;
 
-      for I in sbit_xor_s2'range loop
-        sbit_xor_s2(I) <= or_reduce(sbit_xor_s1((I+1)*8-1 downto I*8));
+      for I in sbit_or_s2'range loop
+        sbit_or_s2(I) <= or_reduce(sbit_or_s1((I+1)*8-1 downto I*8));
       end loop;
 
-      sbit_xor_s3 <= or_reduce(sbit_xor_s2);
-      sbit_xor    <= sbit_xor_s3;
+      sbit_or_s3 <= or_reduce(sbit_or_s2);
+      sbit_or    <= sbit_or_s3;
 
       if (strobe0 = '1' and sbit_delta = '1') then
         phase_detect <= 0;
@@ -164,7 +164,7 @@ begin
       strobe2 <= strobe1;
       strobe3 <= strobe2;
 
-      if (sbit_xor = '0' and sbit_xor_s3 = '1' ) then
+      if (sbit_or = '0' and sbit_or_s3 = '1' ) then
         sbit_delta <= '1';
       else
         sbit_delta <= '0';
