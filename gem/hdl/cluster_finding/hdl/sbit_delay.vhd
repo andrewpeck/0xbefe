@@ -8,12 +8,10 @@ library work;
 use work.cluster_pkg.all;
 use work.hardware_pkg.all;
 
-library UNISIM;
-use UNISIM.vcomponents.all;
-
 entity sbit_delay is
   generic (
-    NUM_VFATS : integer := 0
+    NUM_VFATS : integer := 0;
+    DEPTH     : integer := 4*(2**SBIT_BX_DELAY_NBITS)
     );
   port(
     clock          : in  std_logic;
@@ -30,29 +28,25 @@ begin
   dly_gen : for I in 0 to NUM_VFATS*MXSBITS-1 generate
     signal sbit_dly : std_logic;
     signal sbit_i   : std_logic := '0';
-    signal dly      : std_logic_vector (SBIT_BX_DELAY_NBITS-1 downto 0);
+    signal dly_line : std_logic_vector(DEPTH-1 downto 0) := (others => '0');
+    signal dly      : integer range 0 to DEPTH-1;
   begin
 
     sbit_i <= sbits_i(I / MXSBITS)(I mod MXSBITS);
 
-    dly    <= sbit_bx_dlys_i(I / SBIT_BX_DELAY_GRP_SIZE);
+    dly <= 3 + 4*to_integer(unsigned(sbit_bx_dlys_i(I / SBIT_BX_DELAY_GRP_SIZE)));
 
-    SRL16E_inst : SRL16E
-      generic map (
-        INIT            => X"0000"      -- Initial contents of shift register
-        )
-      port map (
-        Q   => sbit_dly,                -- 1-bit output: SRL Data
-        CE  => '1',                     -- 1-bit input: Clock enable
-        CLK => clock,                   -- 1-bit input: Clock
-        D   => sbit_i,                  -- 1-bit input: SRL Data
+    process (clock) is
+    begin
+      if (rising_edge(clock)) then
+        dly_line(0) <= sbit_i;
+        for J in 1 to dly_line'length-1 loop
+          dly_line(J) <= dly_line(J-1);
+        end loop;
+      end if;
+    end process;
 
-        -- Depth Selection inputs: A0-A3 select SRL depth
-        A0 => dly(0),
-        A1 => dly(1),
-        A2 => dly(2),
-        A3 => '0'
-        );
+    sbit_dly <= dly_line(dly);
 
     sbits_o(I / MXSBITS)(I mod MXSBITS) <= sbit_i when dly_enable(I / SBIT_BX_DELAY_GRP_SIZE)='0' else sbit_dly;
 
