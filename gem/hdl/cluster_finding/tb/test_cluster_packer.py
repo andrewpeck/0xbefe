@@ -330,8 +330,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
         # check the phase detector
         # -------------------------------------------------------------------------------
 
-        assert int(dut.phase_detect.value) == phase % 4, print(
-            "Phase detect = %d" % int(dut.phase_detect.value))
+        # assert int(dut.phase_detect.value) == phase % 4, print(
+        #     "Phase detect = %d" % int(dut.phase_detect.value))
 
         # -------------------------------------------------------------------------------
         # check the number of found (valid) clusters
@@ -430,7 +430,6 @@ def test_cluster_packer(station, oneshot=False):
         os.path.join(rtl_dir, f"cluster_pkg.vhd"),
         os.path.join(rtl_dir, f"fixed_delay.vhd"),
         os.path.join(rtl_dir, f"sbit_oneshot.vhd"),
-        os.path.join(rtl_dir, f"../../oh_fe/utils/clock_strobe.vhd"),
         os.path.join(rtl_dir, f"truncate_lsb.vhd"),
         os.path.join(rtl_dir, f"bitonic_exchange.vhd"),
         os.path.join(rtl_dir, f"bitonic_merge.vhd"),

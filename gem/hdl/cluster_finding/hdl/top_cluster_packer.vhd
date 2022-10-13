@@ -58,13 +58,18 @@ architecture behavioral of cluster_packer is
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
-  signal sbit_or_s1 : std_logic_vector (NUM_VFATS*64/8-1 downto 0) := (others => '0');
-  signal sbit_or_s2 : std_logic_vector (NUM_VFATS*64/8/8-1 downto 0) := (others => '0');
-  signal sbit_or_s3 : std_logic := '0';
-  signal sbit_or    : std_logic := '0';
-  signal sbit_delta  : std_logic := '0';
+  signal sbit_or_s1 : std_logic_vector (NUM_VFATS*64/4-1 downto 0)   := (others => '0');
+  signal sbit_or_s2 : std_logic_vector (NUM_VFATS*64/4/8-1 downto 0) := (others => '0');
+  signal sbit_or_s3 : std_logic                                      := '0';
+  signal sbit_or    : std_logic                                      := '0';
 
-  signal phase_detect : integer range 0 to 3 := 2;
+  signal phase_ff : std_logic_vector(3 downto 0) := (others => '0');
+  signal phase0   : std_logic                    := '0';
+  signal phase    : integer range 0 to 3         := 0;
+
+  attribute shreg_extract             : string;
+  attribute shreg_extract of phase_ff : signal is "false";
+  attribute shreg_extract of sbit_or  : signal is "false";
 
   signal partitions_i  : partition_array_t (NUM_PARTITIONS-1 downto 0);
   signal partitions_os : partition_array_t (NUM_PARTITIONS-1 downto 0);
@@ -139,7 +144,7 @@ begin
     if (rising_edge(clk_fast)) then
 
       for I in sbit_or_s1'range loop
-        sbit_or_s1(I) <= or_reduce(sbits_i(I / 8)(((I mod 8) + 1)*8-1 downto (I mod 8)*8));
+        sbit_or_s1(I) <= or_reduce(sbits_i(I / (64/4))(((I mod 4) + 1)*4-1 downto (I mod 4)*4));
       end loop;
 
       for I in sbit_or_s2'range loop
@@ -149,57 +154,21 @@ begin
       sbit_or_s3 <= or_reduce(sbit_or_s2);
       sbit_or    <= sbit_or_s3;
 
-      if (strobe0 = '1' and sbit_delta = '1') then
-        phase_detect <= 0;
-      elsif (strobe1 = '1' and sbit_delta = '1') then
-        phase_detect <= 1;
-      elsif (strobe2 = '1' and sbit_delta = '1') then
-        phase_detect <= 2;
-      elsif (strobe3 = '1' and sbit_delta = '1') then
-       phase_detect <= 3;
+      if ((sbit_or = '0' and sbit_or_s3 = '1') or phase = 3) then
+        phase <= 0;
+        phase0 <= '1';
       else
-        phase_detect <= phase_detect;
+        phase <= phase + 1;
+        phase0 <= '0';
       end if;
 
-      strobe1 <= strobe0;
-      strobe2 <= strobe1;
-      strobe3 <= strobe2;
+      -- pass the delay through a shift register to fan it out
+      phase_ff(0) <= phase0;
+      phase_ff(1) <= phase_ff(0);
+      phase_ff(2) <= phase_ff(1);
+      phase_ff(3) <= phase_ff(2);
+      strobe_dly  <= phase_ff(3);
 
-      if (sbit_or = '0' and sbit_or_s3 = '1' ) then
-        sbit_delta <= '1';
-      else
-        sbit_delta <= '0';
-      end if;
-
-    end if;
-  end process;
-
-  clock_strobe_inst : entity work.clock_strobe
-    generic map(
-      RATIO => 4
-      )
-    port map (
-      fast_clk_i => clk_fast,
-      slow_clk_i => clk_40,
-      strobe_o   => strobe0
-      );
-
-  process (clk_fast) is
-  begin
-    if (rising_edge(clk_fast)) then
-      strobe_pipeline(0) <= strobe0 after 0.1 ns;
-      for I in 1 to strobe_pipeline'length-1 loop
-        strobe_pipeline(I) <= strobe_pipeline(I-1) after 0.1 ns;
-      end loop;
-    end if;
-  end process;
-
-  process (strobe_pipeline, phase_detect) is
-  begin
-    if (phase_detect = 0) then
-      strobe_dly <= strobe0;
-    else
-      strobe_dly <= strobe_pipeline(INPUT_LATENCY + phase_detect-1);
     end if;
   end process;
 
