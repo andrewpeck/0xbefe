@@ -84,10 +84,19 @@ async def measure_latency(dut) -> float:
     print("================================================================================")
     return (cnt/4.0)
 
-async def monitor_latch_alignment(dut):
+async def monitor_latch_in_alignment(dut):
 
-    await RisingEdge(dut.clk_40)
-    await RisingEdge(dut.clk_40)
+    for i in range(32):
+        await RisingEdge(dut.clk_40)
+
+    while True:
+        await Edge(dut.vpfs)
+        assert dut.strobe_dly.value==1, "Strobe input is out of time with vpfs"
+
+async def monitor_latch_out_alignment(dut):
+
+    for i in range(8):
+        await RisingEdge(dut.clk_40)
 
     while True:
         await Edge(dut.clusters)
@@ -140,7 +149,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     cocotb.fork(Clock(dut.clk_fast, 10, units="ns").start())  # Create a clock
 
     cocotb.fork(measure_latency(dut))
-    cocotb.fork(monitor_latch_alignment(dut))
+    cocotb.fork(monitor_latch_in_alignment(dut))
+    cocotb.fork(monitor_latch_out_alignment(dut))
     cocotb.fork(monitor_overflow(dut))
 
     ngood = 0
