@@ -13,7 +13,6 @@ use work.cluster_pkg.all;
 entity cluster_packer is
   generic (
     MXSBITS           : integer := 64;     -- number of sbits / vfat
-    PHASE_OFFSET      : integer := 0;      -- set to 0 if inputs are synchronous to the LHC clock
     ONESHOT           : boolean := true;   -- set to 1 to trim pulses to be rising edge sensitive only
     SPLIT_CLUSTERS    : integer := 0;      -- set to 1 will split large clusters in 2 instead of truncating
     INVERT_PARTITIONS : boolean := false;  -- changes 0-->7 vs. 7-->0 for partition ordering
@@ -26,12 +25,12 @@ entity cluster_packer is
 
     reset : in std_logic;
 
-    clk_40   : in std_logic;
-    clk_fast : in std_logic;
+    clk_40   : in std_logic := '0';
+    clk_fast : in std_logic := '0';
 
     mask_output_i : in std_logic;
 
-    sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0);
+    sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0) := (others => (others => '0'));
 
     cluster_count_o        : out std_logic_vector (10 downto 0);
     cluster_count_masked_o : out std_logic_vector (10 downto 0);
@@ -52,11 +51,19 @@ architecture behavioral of cluster_packer is
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
-  signal strobe     : std_logic;
-  signal strobe_dly : std_logic;
+  signal strobe0, strobe1, strobe2, strobe3 : std_logic := '0';
+  signal strobe_pipeline : std_logic_vector(15 downto 0) := (others => '0');
+  signal strobe_dly      : std_logic := '0';
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
+  signal sbit_xor_s1 : std_logic_vector (NUM_VFATS*64/8-1 downto 0) := (others => '0');
+  signal sbit_xor_s2 : std_logic_vector (NUM_VFATS*64/8/8-1 downto 0) := (others => '0');
+  signal sbit_xor_s3 : std_logic := '0';
+  signal sbit_xor    : std_logic := '0';
+  signal sbit_delta  : std_logic := '0';
+
+  signal phase_detect : integer range 0 to 3 := 2;
 
   signal partitions_i  : partition_array_t (NUM_PARTITIONS-1 downto 0);
   signal partitions_os : partition_array_t (NUM_PARTITIONS-1 downto 0);
@@ -120,17 +127,51 @@ begin
 
   --------------------------------------------------------------------------------
   -- Valid
+  --
+  -- Auto-extract a data valid signal by looking for the rising edge of sbits
+  -- this involves ORing together all of the s-bits, finding the rising edge,
+  -- extracting the phase of the data, and using that to generate a valid flag
   --------------------------------------------------------------------------------
 
-  -- Create a 1 of 4 high signal synced to the 40MHZ clock
-  --            ________________              _____________
-  -- clk40    __|              |______________|
-  --            _______________________________
-  -- r80      __|                             |_____________
-  --                     _______________________________
-  -- r80_dly  ___________|                             |_____________
-  --            __________                    __________
-  -- valid    __|        |____________________|        |______
+  process (clk_fast) is
+  begin
+    if (rising_edge(clk_fast)) then
+
+      for I in sbit_xor_s1'range loop
+        sbit_xor_s1(I) <= or_reduce(sbits_i(I / 8)(((I mod 8) + 1)*8-1 downto (I mod 8)*8));
+      end loop;
+
+      for I in sbit_xor_s2'range loop
+        sbit_xor_s2(I) <= or_reduce(sbit_xor_s1((I+1)*8-1 downto I*8));
+      end loop;
+
+      sbit_xor_s3 <= or_reduce(sbit_xor_s2);
+      sbit_xor    <= sbit_xor_s3;
+
+      if (strobe0 = '1' and sbit_delta = '1') then
+        phase_detect <= 0;
+      elsif (strobe1 = '1' and sbit_delta = '1') then
+        phase_detect <= 1;
+      elsif (strobe2 = '1' and sbit_delta = '1') then
+        phase_detect <= 2;
+      elsif (strobe3 = '1' and sbit_delta = '1') then
+       phase_detect <= 3;
+      else
+        phase_detect <= phase_detect;
+      end if;
+
+      strobe1 <= strobe0;
+      strobe2 <= strobe1;
+      strobe3 <= strobe2;
+
+      if (sbit_xor = '0' and sbit_xor_s3 = '1' ) then
+        sbit_delta <= '1';
+      else
+        sbit_delta <= '0';
+      end if;
+
+    end if;
+  end process;
 
   clock_strobe_inst : entity work.clock_strobe
     generic map(
@@ -139,21 +180,27 @@ begin
     port map (
       fast_clk_i => clk_fast,
       slow_clk_i => clk_40,
-      strobe_o   => strobe
+      strobe_o   => strobe0
       );
 
-  -- Delay the strobe by a programmable amount which relates to the difference in phase between
-  -- the 40MHz clock and when the cluster finder receives processed clusters
-  strobe_delay : entity work.fixed_delay
-    generic map (
-      DELAY => PHASE_OFFSET+INPUT_LATENCY,
-      WIDTH => 1
-      )
-    port map (
-      clock     => clk_fast,
-      data_i(0) => strobe,
-      data_o(0) => strobe_dly
-      );
+  process (clk_fast) is
+  begin
+    if (rising_edge(clk_fast)) then
+      strobe_pipeline(0) <= strobe0 after 0.1 ns;
+      for I in 1 to strobe_pipeline'length-1 loop
+        strobe_pipeline(I) <= strobe_pipeline(I-1) after 0.1 ns;
+      end loop;
+    end if;
+  end process;
+
+  process (strobe_pipeline, phase_detect) is
+  begin
+    if (phase_detect = 0) then
+      strobe_dly <= strobe0;
+    else
+      strobe_dly <= strobe_pipeline(INPUT_LATENCY + phase_detect-1);
+    end if;
+  end process;
 
   ------------------------------------------------------------------------------------------------------------------------
   -- remap vfats into partitions

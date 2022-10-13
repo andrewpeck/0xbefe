@@ -27,7 +27,27 @@ def print_clusters(clusters):
         )
 
 @cocotb.test()
-async def random_data(dut, nloops=1000, nhits=128):
+async def phase_offset_test_0(dut, nloops=100, nhits=8):
+    await run_test(dut, "RANDOM", nloops, nhits, phase=0)
+
+@cocotb.test()
+async def phase_offset_test_1(dut, nloops=100, nhits=8):
+    await run_test(dut, "RANDOM", nloops, nhits, phase=1)
+
+@cocotb.test()
+async def phase_offset_test_2(dut, nloops=100, nhits=8):
+    await run_test(dut, "RANDOM", nloops, nhits, phase=2)
+
+@cocotb.test()
+async def phase_offset_test_3(dut, nloops=100, nhits=8):
+    await run_test(dut, "RANDOM", nloops, nhits, phase=3)
+
+@cocotb.test()
+async def phase_offset_test_4(dut, nloops=100, nhits=8):
+    await run_test(dut, "RANDOM", nloops, nhits, phase=4)
+
+@cocotb.test()
+async def random_data(dut, nloops=1000, nhits=8):
     await run_test(dut, "RANDOM", nloops, nhits)
 
 @cocotb.test()
@@ -75,8 +95,8 @@ async def monitor_latch_alignment(dut):
 
 async def monitor_overflow(dut):
 
-    await RisingEdge(dut.clk_40)
-    await RisingEdge(dut.clk_40)
+    for i in range(16):
+        await RisingEdge(dut.clk_40)
 
     while True:
         await Edge(dut.overflow_o)
@@ -86,7 +106,7 @@ async def monitor_overflow(dut):
         await RisingEdge(dut.clk_fast)
         assert dut.cluster_latch.value==1, "Overflow out of time with latch!"
 
-async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False):
+async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=False, phase=0):
     """Test for priority encoder with randomized data on all inputs"""
 
     # extract detector parameters
@@ -137,6 +157,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     print("Running test: %s" % test)
 
     vfat_pipeline = []
+    bit_mask_64 = 2 ** 64 - 1
+    cluster_sizes = [[0] * 8]*16
 
     for _ in range(LATENCY):
         vfat_pipeline.append([0] * NVFATS)
@@ -149,7 +171,25 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
     for _ in range(8):
         await RisingEdge(dut.clk_40)
 
-    bit_mask_64 = 2 ** 64 - 1
+    # offset the input data relative to the 40MHz clock
+    for i in range(phase):
+        await RisingEdge(dut.clk_fast)
+
+    # feed in a cluster to align the phase detector
+    vfats = [1] * NVFATS
+    dut.sbits_i.value = vfats
+    for i in range(4):
+        await RisingEdge(dut.clk_fast)
+
+    # flush the pipeline with zeroes
+    vfats = [0] * NVFATS
+    dut.sbits_i.value = vfats
+    for i in range(4*8):
+        await RisingEdge(dut.clk_fast)
+
+    # flush the pipeline with zeroes
+    for _ in range(16):
+        await RisingEdge(dut.clk_fast)
 
     # event loop
     for loop in range(nloops):
@@ -225,7 +265,8 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
             dut.sbits_i[i].value = vfats[i]
         vfat_pipeline.append(vfats)
 
-        await RisingEdge(dut.clk_40)
+        for _ in range(4):
+            await RisingEdge(dut.clk_fast)
 
         nclusters = 0
         clusters = dut.clusters_o

@@ -352,7 +352,6 @@ begin
         generic map (
           ONESHOT        => true,
           NUM_VFATS      => NUM_VFATS,
-          PHASE_OFFSET   => 2,
           NUM_PARTITIONS => NUM_PARTITIONS,
           STATION        => STATION
           )
