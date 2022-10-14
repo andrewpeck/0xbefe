@@ -12,19 +12,13 @@ from cocotb.triggers import Edge
 
 from cluster_finding import Cluster, find_clusters, equal, find_cluster_primaries
 
-
 def print_clusters(clusters):
     for i in range(len(clusters)):
-        print(
-            f" > %2d adr=%3d cnt=%X prt=%X vpf=%X"
-            % (
-                i,
-                clusters[i].adr.value,
-                clusters[i].cnt.value,
-                clusters[i].prt.value,
-                clusters[i].vpf.value,
-            )
-        )
+        print(f" > %2d adr=%3d cnt=%X prt=%X vpf=%X"
+              % (i, clusters[i].adr.value,
+                 clusters[i].cnt.value,
+                 clusters[i].prt.value,
+                 clusters[i].vpf.value,))
 
 @cocotb.test()
 async def phase_offset_test_0(dut, nloops=100, nhits=8):
@@ -47,7 +41,7 @@ async def phase_offset_test_4(dut, nloops=100, nhits=8):
     await run_test(dut, "RANDOM", nloops, nhits, phase=4)
 
 @cocotb.test()
-async def random_data(dut, nloops=1000, nhits=8):
+async def random_data(dut, nloops=1000, nhits=90):
     await run_test(dut, "RANDOM", nloops, nhits)
 
 @cocotb.test()
@@ -91,7 +85,7 @@ async def monitor_latch_in_alignment(dut):
 
     while True:
         await Edge(dut.vpfs)
-        assert dut.strobe_dly.value==1, "Strobe input is out of time with vpfs"
+        assert dut.strobe_s1.value==1, "Strobe input is out of time with vpfs"
 
 async def monitor_latch_out_alignment(dut):
 
@@ -211,64 +205,67 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
 
         vfats = [0] * NVFATS
 
-        if test == "SPECIFIC":
-            for (prt, adr, cnt) in [
-                (7, 63, 1),
-                (6, 69, 0),
-                (6, 66, 0),
-                (6, 124, 0),
-                (5, 0, 0),
-                (4, 191, 0),
-                (3, 69, 0),
-            ]:
+        # only put data on every other clock cycle so that the one-shots can reset
+        if (loop % 2 == 0):
 
-                channel = adr % 64
-                size = 2 ** (cnt + 1) - 1
-                if (STATION == 2):
-                    ivfat = prt + 2 * (adr // 64)
-                else:
-                    ivfat = prt + 8 * (adr // 64)
+            if test == "SPECIFIC":
+                for (prt, adr, cnt) in [
+                    (7, 63, 1),
+                    (6, 69, 0),
+                    (6, 66, 0),
+                    (6, 124, 0),
+                    (5, 0, 0),
+                    (4, 191, 0),
+                    (3, 69, 0),
+                ]:
 
-                val = (size << channel) & bit_mask_64
-                vfats[ivfat] |= val
+                    channel = adr % 64
+                    size = 2 ** (cnt + 1) - 1
+                    if (STATION == 2):
+                        ivfat = prt + 2 * (adr // 64)
+                    else:
+                        ivfat = prt + 8 * (adr // 64)
 
-        if test == "WALKING1":
-            # walking 1s
-            strip = loop
-            ivfat = strip // 64
-            channel = strip % 64
-            size = 1
-            vfats[ivfat] |= (size << channel) & bit_mask_64
+                    val = (size << channel) & bit_mask_64
+                    vfats[ivfat] |= val
 
-        if test == "COLLIDING1":
-            # colliding walking 1s
-            for i in range(2):
-
-                if i == 0:
-                    strip = loop
-                else:
-                    strip = NSTRIPS - 1 - loop
-
+            if test == "WALKING1":
+                # walking 1s
+                strip = loop
                 ivfat = strip // 64
                 channel = strip % 64
                 size = 1
                 vfats[ivfat] |= (size << channel) & bit_mask_64
 
-        if test == "EDGES":
-            # focus on the edges
-            for _ in range(random.randint(0, nhits)):
-                ivfat = random.randint(0, NVFATS - 1)
-                channel = random.choice((0, 63, 64, 127, 128, 191))
-                size = random.choice((1, 3))
-                vfats[ivfat] |= (size << channel) & bit_mask_64
+            if test == "COLLIDING1":
+                # colliding walking 1s
+                for i in range(2):
 
-        if test == "RANDOM":
-            # create fill a large number with some random bits
-            for _ in range(random.randint(0, nhits)):
-                ivfat = random.randint(0, NVFATS - 1)
-                channel = random.randint(0, 63)
-                size = 2 ** (random.randint(0, 15)) - 1
-                vfats[ivfat] |= (size << channel) & bit_mask_64
+                    if i == 0:
+                        strip = loop
+                    else:
+                        strip = NSTRIPS - 1 - loop
+
+                    ivfat = strip // 64
+                    channel = strip % 64
+                    size = 1
+                    vfats[ivfat] |= (size << channel) & bit_mask_64
+
+            if test == "EDGES":
+                # focus on the edges
+                for _ in range(random.randint(0, nhits)):
+                    ivfat = random.randint(0, NVFATS - 1)
+                    channel = random.choice((0, 63, 64, 127, 128, 191))
+                    size = random.choice((1, 3))
+                    vfats[ivfat] |= (size << channel) & bit_mask_64
+
+            if test == "RANDOM":
+                # create fill a large number with some random bits
+                for _ in range(random.randint(0, nhits)):
+                    ivfat = random.randint(0, NVFATS - 1)
+                    channel = random.randint(0, 63)
+                    size = 2 ** (random.randint(0, 15)) - 1
+                    vfats[ivfat] |= (size << channel) & bit_mask_64
 
         # set the dut input, and copy the input to a latency pipeline for later
         for i in range(NVFATS):
@@ -418,9 +415,9 @@ async def run_test(dut, test, nloops=1000, nhits=128, verbose=False, noassert=Fa
                     ngood = ngood + 1
 
 
-# @pytest.mark.parametrize("oneshot", [False])
+@pytest.mark.parametrize("oneshot", [True, False])
 @pytest.mark.parametrize("station", [1, 2])
-def test_cluster_packer(station, oneshot=False):
+def test_cluster_packer(station, oneshot):
 
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     rtl_dir = os.path.abspath(os.path.join(tests_dir, "..", "hdl"))
@@ -477,7 +474,7 @@ def test_cluster_packer(station, oneshot=False):
 
 
 if __name__ == "__main__":
-    # testing the oneshot is complicated here, since the emulator doesn't take
-    # into account the past :(
-    test_cluster_packer(1, False)
-    test_cluster_packer(2, False)
+    test_cluster_packer(station=1, oneshot=True)
+    test_cluster_packer(station=2, oneshot=True)
+    test_cluster_packer(station=1, oneshot=False)
+    test_cluster_packer(station=2, oneshot=False)

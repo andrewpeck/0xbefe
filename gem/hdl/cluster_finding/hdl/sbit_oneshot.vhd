@@ -15,6 +15,13 @@ architecture behavioral of sbit_oneshot is
   signal last : std_logic := '0';
 begin
 
+  --            ┌────────────────────┐
+  -- d         ─┘                    └──────
+  --               ┌────────────────────┐
+  -- last   ───────┘                    └──────
+  --            ┌───┐
+  -- d&!last ───┘   └────────────────────
+
   process (clk) is
   begin
     if (rising_edge(clk)) then

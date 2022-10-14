@@ -31,7 +31,7 @@ end find_clusters;
 
 architecture behavioral of find_clusters is
 
-  constant ENCODER_SIZE : integer := if_then_else(station = 0 or station = 1, 384, 192);
+  constant ENCODER_SIZE : integer := if_then_else(STATION = 0 or STATION = 1, 384, 192);
 
   -- std_logic_vector to integer
   function int (vec : std_logic_vector) return integer is

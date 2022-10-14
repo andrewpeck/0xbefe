@@ -47,14 +47,13 @@ architecture behavioral of cluster_packer is
 
   constant PARTITION_WIDTH : integer := NUM_VFATS/NUM_PARTITIONS;
 
-  constant INPUT_LATENCY : integer := 1;
-
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
   signal strobe0, strobe1, strobe2, strobe3 : std_logic := '0';
   signal strobe_pipeline : std_logic_vector(15 downto 0) := (others => '0');
-  signal strobe_dly      : std_logic := '0';
+  signal strobe_s1       : std_logic := '0';
+  signal strobe_s0       : std_logic := '0';
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -123,6 +122,7 @@ architecture behavioral of cluster_packer is
       );
     port (
       clock : in  std_logic;
+      en    : in  std_logic;
       sbits : in  std_logic_vector;
       vpfs  : out std_logic_vector;
       cnts  : out std_logic_vector
@@ -167,7 +167,9 @@ begin
       phase_ff(1) <= phase_ff(0);
       phase_ff(2) <= phase_ff(1);
       phase_ff(3) <= phase_ff(2);
-      strobe_dly  <= phase_ff(3);
+
+      strobe_s0   <= phase_ff(2);
+      strobe_s1   <= strobe_s0;
 
     end if;
   end process;
@@ -256,6 +258,7 @@ begin
       )
     port map (
       clock => clk_fast,
+      en    => strobe_s0,
       sbits => sbits_s0,
       vpfs  => vpfs,
       cnts  => cnts
@@ -283,7 +286,7 @@ begin
       size            => NUM_VFATS*MXSBITS)
     port map (
       clock      => clk_fast,
-      latch      => strobe_dly,
+      latch      => strobe_s1,
       vpfs_i     => vpfs,
       cnt_o      => cluster_count,
       overflow_o => overflow
@@ -329,7 +332,7 @@ begin
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => strobe_dly,
+      latch_i    => strobe_s1,
       latch_o    => cluster_latch
       );
 
