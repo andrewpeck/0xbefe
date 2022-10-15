@@ -1199,7 +1199,7 @@
           sw_val_bad="self == 0"/>
 
     <node id="VFAT_MASK" address="0x8" mask="0x00ffffff" permission="rw"
-          description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
+          description="Mask the DAQ RX of the selected VFATs (the periodic synchronization checks, slow controls, and VFAT DAQ counters, remain functional)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
     <node id="VFAT${VFAT_IDX}" address="0x10"
