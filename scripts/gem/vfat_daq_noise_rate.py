@@ -95,7 +95,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
     ttc_cyclic_start_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START")
     cyclic_running_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
-    print ("\nRunning Sbit Noise Scans for VFATs:")
+    print ("\nRunning DAQ Noise Scans for VFATs:")
     print (vfat_list)
     print ("")
 
