@@ -328,7 +328,7 @@ if __name__ == "__main__":
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
-    # Running Phase Scan
+    # Running DAQ Scurve
     try:
         vfat_scurve(args.gem, args.system, int(args.ohid), vfat_list, channel_list, cal_mode, args.parallel, threshold, step, nl1a, l1a_bxgap, args.trim)
     except KeyboardInterrupt:
