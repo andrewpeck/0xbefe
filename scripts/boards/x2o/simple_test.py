@@ -2,16 +2,26 @@ from board.manager import *
 import sys
 import re
 import time
+from datetime import datetime
+
+
+# Constants (to be moved to config file later)
+STABILIZE_SENSITIVITY = 0.01
+
+# End of constants
+
 
 def printRed(st):
-    print("\033[91m"+st+"\033[0m")
+    print("\033[91m"+st+"\033[0m",end="")
 
 def printGreen(st):
-    print("\033[92m"+st+"\033[0m")
+    print("\033[92m"+st+"\033[0m",end="")
 
 m=manager(optical_add_on_ver=2)
 m.peripheral.autodetect_optics()
-f=open("log.csv","w")
+now = datetime.now()
+c_time = now.strftime("%Y-%m-%d,%H-%M-%S")
+f=open("phys_data_"+c_time+".csv","w")
 diff_flag = True
 p_data = m.peripheral.monitor()
 
@@ -28,30 +38,62 @@ while(diff_flag):
     print("Voltages")
     for i in range(len(v_names)):
         v=data[v_names[i]]['V']
-        if(v>p_data[v_names[i]]['V']*1.05 or v<p_data[v_names[i]]['V']*0.95):
+        if(v>p_data[v_names[i]]['V']*(1+STABILIZE_SENSITIVITY) or v<p_data[v_names[i]]['V']*(1-STABILIZE_SENSITIVITY)):
             diff_flag=True
         print(v_names[i],end=": ")
         if(v>v_expected[i]*1.05 or v<v_expected[i]*0.95):
             err_cnt+=1
             printRed(str(v))
+            print("")
         else:
             printGreen(str(v))
+            print("")
         o_str+=v_names[i]+","+str(v)+"\n"
 
-    t_names=devs=['1V2_MGTAVTT_VUP_S','1V2_MGTAVTT_VUP_S','KINTEX7','0V9_MGTAVCC_VUP_S','0V9_MGTAVCC_VUP_S','2V7_INTERMEDIATE','1V2_MGTAVTT_VUP_N','1V2_MGTAVTT_VUP_N','VIRTEXUPLUS','0V9_MGTAVCC_VUP_S','0V9_MGTAVCC_VUP_S']
+    t_names=['1V2_MGTAVTT_VUP_S','1V2_MGTAVTT_VUP_S','KINTEX7','0V9_MGTAVCC_VUP_S','0V9_MGTAVCC_VUP_S','2V7_INTERMEDIATE','1V2_MGTAVTT_VUP_N','1V2_MGTAVTT_VUP_N','VIRTEXUPLUS','0V9_MGTAVCC_VUP_S','0V9_MGTAVCC_VUP_S']
     print("Temperatures")
-    for i in range(len(t_names)):
-        t=data[t_names[i]]['T'][0]
-        if(t>p_data[t_names[i]]['T']*1.05 or t<p_data[t_names[i]]['T']*0.95):
+
+    #write temp with 12
+    print("0V85_VCCINT_VUP",end="")
+    o_str+="0V85_VCCINT_VUP,"
+    for i in range(6):
+        t=data['0V85_VCCINT_VUP']['T'][i]
+        print(", "+str(i)+": ",end="")
+        if(t>p_data['0V85_VCCINT_VUP']['T'][i]*(1+STABILIZE_SENSITIVITY) or tl<p_data['0V85_VCCINT_VUP']['T'][i]*(1-STABILIZE_SENSITIVITY)):
             diff_flag=True
-        print(t_names[i],end=": ")
         if(t>45):
             err_cnt+=1
             printRed(str(t))
         else:
-            printGreeen(str(t))
-        o_str+=t_names[i]+","+str(t)+"\n"
+            printGreen(str(t))
+        o_str+=str(t)+","
+    o_str+="\n"
+    print("")
 
+    #write temp for rest
+    for i in range(len(t_names)):
+        tl=data[t_names[i]]['T'][0]
+        tr=data[t_names[i]]['T'][1]
+        if(tl>p_data[t_names[i]]['T'][0]*(1+STABILIZE_SENSITIVITY) or tl<p_data[t_names[i]]['T'][0]*(1-STABILIZE_SENSITIVITY)):
+            diff_flag=True
+        if(tr>p_data[t_names[i]]['T'][1]*(1+STABILIZE_SENSITIVITY) or tr<p_data[t_names[i]]['T'][1]*(1-STABILIZE_SENSITIVITY)):
+            diff_flag=True
+        print(t_names[i],end=", left: ")
+        if(tl>45):
+            err_cnt+=1
+            printRed(str(tl))
+        else:
+            printGreen(str(tl))
+        print(", right: ",end="")
+        if(tr>45):
+            err_cnt+=1
+            printRed(str(tr))
+        else:
+            printGreen(str(tr))
+        print("")
+        o_str+=t_names[i]+","+str(tl)+","+str(tr)+"\n"
+
+    #final outputs for read cycle
     o_str+="Total Errors,"+str(err_cnt)+"\n"
     if(err_cnt>0):
         printRed("Total Errors: "+str(err_cnt))
@@ -59,5 +101,5 @@ while(diff_flag):
         printGreen("Total Errors: "+str(err_cnt))
     f.write(o_str)
     p_data = data
-    time.sleep(3)
+    time.sleep(2)
 f.close()
