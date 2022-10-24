@@ -32,10 +32,10 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
 
     if nl1a!=0:
         print ("VFAT Bit Error Ratio Test with %.2e L1As\n" % (nl1a))
-        file_out.write("VFAT Bit Error Ratio Test with %.2e L1As\n\n" % (nl1a))
+        file_out[oh_select].write("VFAT Bit Error Ratio Test with %.2e L1As\n\n" % (nl1a))
     elif runtime!=0:
         print ("VFAT Bit Error Ratio Test for %.2f minutes\n" % (runtime))
-        file_out.write("VFAT Bit Error Ratio Test for %.2f minutes\n\n" % (runtime))
+        file_out[oh_select].write("VFAT Bit Error Ratio Test for %.2f minutes\n\n" % (runtime))
     errors = {}
     error_rates = {}
 
