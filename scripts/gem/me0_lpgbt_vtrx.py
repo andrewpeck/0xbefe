@@ -1,4 +1,4 @@
-   from gem.me0_lpgbt.rw_reg_lpgbt import *
+from gem.me0_lpgbt.rw_reg_lpgbt import *
 from time import time, sleep
 import sys
 import os
