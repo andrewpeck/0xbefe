@@ -296,8 +296,8 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
                         real_calpulse_counter = expected_l1a
                     else:
                         calpulse_counter = 0
-            print ("VFAT#: %02d, Time: %.2f minutes,  L1A rate: %.2f kHz, Expected L1As (effi=%.3f): %.2e, Nr. of L1As: %.2e,  Nr. of Calpulses: %.2e  \nDAQ Events: %.2e,  DAQ CRC Errors: %d" %(vfat, total_time/60.0, l1a_rate/1000.0, efficiency, expected_l1a, real_l1a_counter, real_calpulse_counter, daq_event_count_diff[vfat], daq_crc_error_count_diff[vfat]))
-            file_out[oh_select].write("VFAT#: %02d, Time: %.2f minutes,  L1A rate: %.2f kHz, Expected L1As (effi=%.3f): %.2e, Nr. of L1As: %.2e,  Nr. of Calpulses: %.2e  \nDAQ Events: %.2e,  DAQ CRC Errors: %d\n" %(vfat, total_time/60.0, l1a_rate/1000.0, efficiency, expected_l1a, real_l1a_counter, real_calpulse_counter, daq_event_count_diff[vfat], daq_crc_error_count_diff[vfat]))
+            print ("VFAT#: %02d, Time: %.2f minutes,  L1A rate: %.2f kHz, Expected L1As (effi=%.3f): %.2e, Nr. of L1As: %.2e,  Nr. of Calpulses: %.2e  \nDAQ Events: %.2e,  DAQ CRC Errors: %d" %(vfat, total_time/60.0, l1a_rate/1000.0, efficiency, expected_l1a, real_l1a_counter, real_calpulse_counter, daq_event_count_diff[oh_select][vfat], daq_crc_error_count_diff[oh_select][vfat]))
+            file_out[oh_select].write("VFAT#: %02d, Time: %.2f minutes,  L1A rate: %.2f kHz, Expected L1As (effi=%.3f): %.2e, Nr. of L1As: %.2e,  Nr. of Calpulses: %.2e  \nDAQ Events: %.2e,  DAQ CRC Errors: %d\n" %(vfat, total_time/60.0, l1a_rate/1000.0, efficiency, expected_l1a, real_l1a_counter, real_calpulse_counter, daq_event_count_diff[oh_select][vfat], daq_crc_error_count_diff[oh_select][vfat]))
 
             daq_data_packet_size = 176 # 176 bits 
             cl = float(cl)
