@@ -229,7 +229,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
     print ("L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes) \n"%(total_time, total_time/60.0))
     for oh_select in oh_list:
         file_out[oh_select].write("\n")
-        file_out[oh_select]write("L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes) \n\n"%(total_time, total_time/60.0))
+        file_out[oh_select].write("L1A and Calpulsing cycle completed in %.2f seconds (%.2f minutes) \n\n"%(total_time, total_time/60.0))
     l1a_counter = read_backend_reg(l1a_node)
     calpulse_counter = read_backend_reg(calpulse_node)
 
