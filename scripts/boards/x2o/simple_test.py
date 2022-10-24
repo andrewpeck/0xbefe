@@ -20,8 +20,8 @@ def printGreen(st):
 m=manager(optical_add_on_ver=2)
 m.peripheral.autodetect_optics()
 now = datetime.now()
-c_time = now.strftime("%Y-%m-%d,%H-%M-%S")
-f=open("phys_data_"+c_time+".csv","w")
+c_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+f=open("./data/phys_data/pd_"+c_time+".csv","w")
 diff_flag = True
 p_data = m.peripheral.monitor()
 
@@ -59,7 +59,7 @@ while(diff_flag):
     for i in range(6):
         t=data['0V85_VCCINT_VUP']['T'][i]
         print(", "+str(i)+": ",end="")
-        if(t>p_data['0V85_VCCINT_VUP']['T'][i]*(1+STABILIZE_SENSITIVITY) or tl<p_data['0V85_VCCINT_VUP']['T'][i]*(1-STABILIZE_SENSITIVITY)):
+        if(t>p_data['0V85_VCCINT_VUP']['T'][i]*(1+STABILIZE_SENSITIVITY) or t<p_data['0V85_VCCINT_VUP']['T'][i]*(1-STABILIZE_SENSITIVITY)):
             diff_flag=True
         if(t>45):
             err_cnt+=1
@@ -99,7 +99,12 @@ while(diff_flag):
         printRed("Total Errors: "+str(err_cnt))
     else:
         printGreen("Total Errors: "+str(err_cnt))
+    print("")
     f.write(o_str)
     p_data = data
     time.sleep(2)
 f.close()
+sum_f=open("./data/summary/s_"+c_time+".csv","w")
+sum_f.write(o_str)
+sum_f.close()
+
