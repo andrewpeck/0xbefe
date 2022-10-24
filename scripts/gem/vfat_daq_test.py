@@ -76,7 +76,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             check_gbt_link_ready(oh_select, gbt_select)
 
             print("Configuring VFAT %d" % (vfat))
-            file_out.write("Configuring VFAT %d\n" % (vfat))
+            file_out[oh_select].write("Configuring VFAT %d\n" % (vfat))
             if calpulse:
                 configureVfat(1, vfat, oh_select, 0)
                 for channel in range(128):
@@ -133,7 +133,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             file_out[oh_select].write("\nRunning for %.2e L1A cycles for VFATs:\n" % (nl1a))
     else:
         print ("\nRunning for %f minutes for VFATs:" %(runtime))
-        file_out.write("\nRunning for %f minutes for VFATs:\n" %(runtime))
+        file_out[oh_select].write("\nRunning for %f minutes for VFATs:\n" %(runtime))
     for oh_select in oh_list:
         print ("OH %d"%oh_select)
         print (vfat_list)
@@ -175,9 +175,9 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             #    else:
             #        real_calpulse_counter = calpulse_counter
                 print ("Time passed: %.2f minutes" % ((time()-t0)/60.0))
-                file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
+                file_out[oh_select].write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
             #    print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-            #    file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    file_out[oh_select].write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
             #    for oh_select in oh_list:
             #       vfat_results_string = "OH %d:  "%oh_select
             #        for vfat in vfat_list:
@@ -186,7 +186,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             #           #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp)
             #           vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
             #       print (vfat_results_string + "\n")
-            #       file_out.write(vfat_results_string + "\n\n")
+            #       file_out[oh_select].write(vfat_results_string + "\n\n")
                 time_prev = time()
     else:
         while ((time()-t0)/60.0) < runtime:
@@ -204,9 +204,9 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             #    else:
             #        real_calpulse_counter = calpulse_counter
                 print ("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed")
-                file_out.write("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed\n")
+                file_out[oh_select].write("Time passed: %.2f minutes, %.2f"%((time()-t0)/60.0,((time()-t0)*100)/(60.0*runtime)) +"% completed\n")
             #    print ("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
-            #    file_out.write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
+            #    file_out[oh_select].write("Time passed: %.2f minutes, L1A counter = %.2e,  Calpulse counter = %.2e\n" % ((time()-t0)/60.0, real_l1a_counter, real_calpulse_counter))
             #    for oh_select in oh_list:
             #       vfat_results_string = "OH %d:  "%oh_select
             #       for vfat in vfat_list:
@@ -215,7 +215,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             #           #vfat_results_string += "VFAT %02d: DAQ Event Counter = %d, L1A Counter - DAQ Event Counter = %d, DAQ Errors = %d\n"%(vfat, daq_event_count_temp, real_l1a_counter%(2**16) - daq_event_count_temp, daq_error_count_temp) 
             #           vfat_results_string += "VFAT %02d: DAQ Errors = %d\n"%(vfat, daq_error_count_temp)
             #       print (vfat_results_string + "\n")
-            #       file_out.write(vfat_results_string + "\n\n")
+            #       file_out[oh_select].write(vfat_results_string + "\n\n")
                 time_prev = time()
 
     # Stop the cyclic generator
@@ -242,16 +242,16 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
             sync_err = read_backend_reg(sync_error_node[oh_select][vfat])
             if link_good == 1:
                 print (Colors.GREEN + "VFAT#: %02d, link is GOOD"%(vfat) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, link is GOOD\n"%(vfat))
+                file_out[oh_select].write("VFAT#: %02d, link is GOOD\n"%(vfat))
             else:
                 print (Colors.RED + "VFAT#: %02d, link is BAD"%(vfat) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, link is BAD\n"%(vfat))
+                file_out[oh_select].write("VFAT#: %02d, link is BAD\n"%(vfat))
             if sync_err==0:
                 print (Colors.GREEN + "VFAT#: %02d, nr. of sync errors: %d"%(vfat, sync_err) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of sync errors: %d\n"%(vfat, sync_err))
+                file_out[oh_select].write("VFAT#: %02d, nr. of sync errors: %d\n"%(vfat, sync_err))
             else:
                 print (Colors.RED + "VFAT#: %02d, nr. of sync errors: %d"%(vfat, sync_err) + Colors.ENDC)
-                file_out.write("VFAT#: %02d, nr. of sync errors: %d\n"%(vfat, sync_err))
+                file_out[oh_select].write("VFAT#: %02d, nr. of sync errors: %d\n"%(vfat, sync_err))
 
             daq_event_count_final[oh_select][vfat] = read_backend_reg(daq_event_count_node[oh_select][vfat])
             daq_crc_error_count_final[oh_select][vfat] = read_backend_reg(daq_crc_error_node[oh_select][vfat])
@@ -275,7 +275,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
                     real_calpulse_counter = calpulse_counter
                 if daq_event_count_diff[oh_select][vfat] != real_l1a_counter%(2**16):
                     print (Colors.YELLOW + "Mismatch between DAQ_EVENT_CNT and L1A counter: %d"%(real_l1a_counter%(2**16) - daq_event_count_diff[oh_select][vfat]) + Colors.ENDC)
-                    file_out.write("Mismatch between DAQ_EVENT_CNT and L1A counter: %d\n"%(real_l1a_counter%(2**16) - daq_event_count_diff[oh_select][vfat]))
+                    file_out[oh_select].write("Mismatch between DAQ_EVENT_CNT and L1A counter: %d\n"%(real_l1a_counter%(2**16) - daq_event_count_diff[oh_select][vfat]))
                 daq_event_count_diff[oh_select][vfat] = real_l1a_counter # since DAQ_EVENT_CNT is a 16-bit rolling counter
             else:
                 if nl1a != 0:
@@ -316,7 +316,7 @@ def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runt
                 print (Colors.YELLOW + "VFAT#: %02d, Errors = %d,"%(vfat, daq_crc_error_count_diff[oh_select][vfat]) + Colors.ENDC)
                 file_out[oh_select].write("VFAT#: %02d, Errors = %d"%(vfat, daq_crc_error_count_diff[oh_select][vfat]))
                 #print (Colors.YELLOW + "VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[oh_select][vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi) + Colors.ENDC)
-                #file_out.write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[oh_select][vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi))
+                #file_out[oh_select].write("VFAT#: %02d, Errors = %d,  Bit Error Ratio (BER) = "%(vfat, daq_crc_error_count_diff[oh_select][vfat]) + "{:.2e}".format(ber) + ", Inefficiency = " + "{:.2e}".format(ineffi))
 
                 print ("")
                 file_out[oh_select].write("\n")
