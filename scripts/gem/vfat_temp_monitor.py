@@ -16,7 +16,7 @@ REGISTER_DAC_MONITOR_MAP = {
 }
 
 def convert_to_temp(V):
-    temp = (V-340.0)/3.83
+    temp = (V-340.0)/1.95
     return temp
 
 def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, calData):
@@ -132,7 +132,7 @@ def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, 
                 second = time() - start_time
                 T[vfat].append(temp)
                 minutes[vfat].append(second/60.0)
-            
+                Vin = Vin/1000.0
                 file_text[vfat].write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(temp) + "\n")
                 print("VFAT %02d: time = %.2f min, %.2fV = %.2f deg C" % (vfat, second/60.0, Vin, temp))
             t0 = time()
