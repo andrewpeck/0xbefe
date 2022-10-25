@@ -123,8 +123,8 @@ def main(system, oh_ver, oh_select, vfat_list, run_time_min, ref, vref_list, nit
                         sleep(20e-6) # sleep for 20 us
                         adc_value.append(read_backend_reg(adc1_cached_node[vfat]))
                 avg_adc_value = sum(adc_value) / len(adc_value)
-                slopeTemp = np.array(calData.loc[calData["vfat"] == vfat].slope) # get slope for VFAT
-                interTemp = np.array(calData.loc[calData["vfat"] == vfat].intercept) # get intercept for VFAT
+                slopeTemp = calData[vfat]["slope"] # get slope for VFAT
+                interTemp = calData[vfat]["intercept"] # get intercept for VFAT
                 Vin = avg_adc_value * slopeTemp + interTemp # convert adc to mV
                 temp = convert_to_temp(Vin)
             
@@ -247,7 +247,17 @@ if __name__ == "__main__":
     if not os.path.isfile(calFile):
         print(Colors.YELLOW + "Calib file for ADC0 must be present in the correct directory" + Colors.ENDC)
         sys.exit()
-    calData = pd.read_csv(calFile ,names=["vfat", "vfat_serial_num", "slope", "intercept"], sep=";", skiprows=[0])
+    calData_file = open(calFile)
+    calData = {}
+    for vfat in vfat_list:
+        calData[vfat] = {}
+    for line in calData_file.readlines():
+        vfat = line.split(";")[0]
+        slope = line.split(";")[2]
+        intercept = line.split(";")[3]
+        calData[vfat]["slope"] = slope
+        calData[vfat]["intercept"] = intercept
+    calData_file.close()
 
     # Initialization
     initialize(args.gem, args.system)
