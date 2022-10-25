@@ -255,8 +255,8 @@ if __name__ == "__main__":
         vfat = line.split(";")[0]
         slope = line.split(";")[2]
         intercept = line.split(";")[3]
-        calData[vfat]["slope"] = slope
-        calData[vfat]["intercept"] = intercept
+        calData[int(vfat)]["slope"] = slope
+        calData[int(vfat)]["intercept"] = intercept
     calData_file.close()
 
     # Initialization
