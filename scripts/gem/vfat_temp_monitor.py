@@ -252,6 +252,8 @@ if __name__ == "__main__":
     for vfat in vfat_list:
         calData[vfat] = {}
     for line in calData_file.readlines():
+        if "vfat" in line: 
+            continue
         vfat = line.split(";")[0]
         slope = line.split(";")[2]
         intercept = line.split(";")[3]
