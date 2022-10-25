@@ -19,9 +19,8 @@ def convert_to_temp(V):
     temp = (V-340.0)/3.83
     return temp
 
-def main(system, oh_ver, oh_select, vfat_list, run_time_min, ref, vref_list, niter, calData):
+def main(system, oh_select, vfat_list, run_time_min, ref, vref_list, niter, calData):
 
-    init_adc(oh_ver)
     print("Temperature Readings:")
 
     resultDir = "results"
@@ -267,7 +266,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     try:
-        main(args.system, oh_ver, int(args.ohid), vfat_list, args.minutes, args.ref, vref_list, niter, calData)
+        main(args.system, int(args.ohid), vfat_list, args.minutes, args.ref, vref_list, niter, calData)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
