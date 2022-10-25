@@ -255,8 +255,8 @@ if __name__ == "__main__":
         vfat = line.split(";")[0]
         slope = line.split(";")[2]
         intercept = line.split(";")[3]
-        if vfat not in calData:
-            calData[vfat] = {}
+        if int(vfat) not in calData:
+            calData[int(vfat)] = {}
         calData[int(vfat)]["slope"] = slope
         calData[int(vfat)]["intercept"] = intercept
     calData_file.close()
