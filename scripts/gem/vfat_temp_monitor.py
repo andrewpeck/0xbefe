@@ -101,6 +101,8 @@ def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, 
     sleep(1)
     print ("")
 
+    print ("Starting VFAT Temperature Measurements\n")
+
     start_time = int(time())
     end_time = int(time()) + (60 * run_time_min)
 
@@ -244,13 +246,13 @@ if __name__ == "__main__":
     for line in calData_file.readlines():
         if "vfat" in line: 
             continue
-        vfat = line.split(";")[0]
-        slope = line.split(";")[2]
-        intercept = line.split(";")[3]
-        if int(vfat) not in calData:
-            calData[int(vfat)] = {}
-        calData[int(vfat)]["slope"] = slope
-        calData[int(vfat)]["intercept"] = intercept
+        vfat = int(line.split(";")[0])
+        slope = float(line.split(";")[2])
+        intercept = float(line.split(";")[3])
+        if vfat not in calData:
+            calData[vfat] = {}
+        calData[vfat]["slope"] = slope
+        calData[vfat]["intercept"] = intercept
     calData_file.close()
 
     # Initialization
