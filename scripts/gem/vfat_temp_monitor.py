@@ -266,7 +266,7 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     try:
-        main(args.system, int(args.ohid), vfat_list, args.minutes, args.ref, vref_list, niter, calData)
+        main(args.system, int(args.ohid), vfat_list, args.minutes, args.ref, vref_list, int(args.niter), calData)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
