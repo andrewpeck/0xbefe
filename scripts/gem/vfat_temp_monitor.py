@@ -243,7 +243,7 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
-    calFile = "results/vfat_data/vfat_calib_data/"+args.ohid+"_vfat_calib_info_adc0.txt"
+    calFile = "results/vfat_data/vfat_calib_data/ME0_OH"+args.ohid+"_vfat_calib_info_adc0.txt"
     if not os.path.isfile(calFile):
         print(Colors.YELLOW + "Calib file for ADC0 must be present in the correct directory" + Colors.ENDC)
         sys.exit()
