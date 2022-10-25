@@ -19,7 +19,7 @@ def convert_to_temp(V):
     temp = (V-340.0)/3.83
     return temp
 
-def main(system, oh_select, vfat_list, run_time_min, ref, vref_list, niter, calData):
+def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, calData):
 
     print("Temperature Readings:")
 
