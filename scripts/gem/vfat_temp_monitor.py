@@ -46,7 +46,7 @@ def main(system, oh_select, vfat_list, run_time_min, ref, vref_list, niter, calD
     filename_text = {}
     file_text = {}
     for vfat in vfat_list:
-        filename_text[vfat] = foldername + "ME0_OH%d_vfat%02d_temp_"%(oh_select, vfat) + device + "_data_" + now + ".txt"
+        filename_text[vfat] = foldername + "ME0_OH%d_vfat%02d_temp_"%(oh_select, vfat) + "data_" + now + ".txt"
         file_text[vfat] = open(filename_text[vfat], "w")
         file_text[vfat].write("Time (min) \t Voltage (V) \t Temperature (C)\n")
     minutes, T = {}, {}
@@ -143,16 +143,9 @@ def main(system, oh_select, vfat_list, run_time_min, ref, vref_list, niter, calD
         configureVfat(0, vfat, oh_select, 0)
         file_text[vfat].close()
 
-    filename_text = {}
-    file_text = {}
-    for vfat in vfat_list:
-        filename_text[vfat] = foldername + "ME0_OH%d_vfat%02d_temp_"%(oh_select, vfat) + device + "_data_" + now + ".txt"
-        file_text[vfat] = open(filename_text[vfat], "w")
-        file_text[vfat].write("Time (min) \t Voltage (V) \t Temperature (C)\n")
-
     figure_name = {}
     for vfat in vfat_list:
-        figure_name[vfat] = foldername + "ME0_OH%d_vfat%02d_temp_"%(oh_select, vfat) + device + "_plot_" + now + ".pdf"
+        figure_name[vfat] = foldername + "ME0_OH%d_vfat%02d_temp_"%(oh_select, vfat) + "plot_" + now + ".pdf"
         fig1, ax1 = plt.subplots()
         ax1.set_xlabel("minutes")
         ax1.set_ylabel("T (C)")
