@@ -278,7 +278,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-ll", "--ul", action="store", dest="ll", default="0", help="ll = Upper limit of CALDAC register to scan (default=0)")
-    parser.add_argument("-ul", "--ll", action="store", dest="ul", default="256", help="ul = Upper limit of CALDAC register to scan (default=255)")
+    parser.add_argument("-ul", "--ll", action="store", dest="ul", default="255", help="ul = Upper limit of CALDAC register to scan (default=255)")
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for SCurve scan (default=1)")
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", help="nl1a = fixed number of L1A cycles")
     parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")

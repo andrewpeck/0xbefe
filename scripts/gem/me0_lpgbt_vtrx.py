@@ -24,21 +24,25 @@ i2c_master_timeout = 1 # 1s
 
 def i2cmaster_write(system, oh_ver, reg_addr, data, write_only=False):
 
+    readback = 1
+    if write_only:
+        readback = 0
+
     # Writing control register of I2CMaster 2
     nbytes = 2
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, readback) # I2C_WRITE_CR
     sleep(0.01)
 
     # Writing multi byte data to I2CMaster 2
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), data, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), data, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, readback) # I2C_W_MULTI_4BYTE0
     sleep(0.01)
 
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, readback) # I2C_WRITE_MULTI
     sleep(0.01)
 
     success=0
@@ -66,10 +70,10 @@ def i2cmaster_write(system, oh_ver, reg_addr, data, write_only=False):
     print ("Successful I2C write to slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
 
     # Reset the I2C Master registers
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, readback)
     sleep(0.01)
 
 
@@ -78,17 +82,17 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     # Writing control register of I2CMaster 2
     nbytes = 1
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0) # I2C_WRITE_CR
     sleep(0.01)
 
     # Writing register address to I2CMaster 2
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8) # I2C_W_MULTI_4BYTE0
     sleep(0.01)
 
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC) # I2C_WRITE_MULTI
     sleep(0.01)
 
     success=0
@@ -114,12 +118,12 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     # Reading the register value to I2CMaster 2
     nbytes = 1
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0) # I2C_WRITE_CR
     sleep(0.01)
 
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xD, 0) # I2C_READ_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xD) # I2C_READ_MULTI
     sleep(0.01)
     
     success=0
@@ -152,10 +156,10 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     print ("Successful read from slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
 
     # Reset the I2C Master registers
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00)
     sleep(0.01)
     return data
 
