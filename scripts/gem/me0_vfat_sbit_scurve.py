@@ -304,12 +304,12 @@ if __name__ == "__main__":
             sys.exit()
 
     ll = int(args.ll)
-    if ll not in range(0,255):
+    if ll not in range(0,256):
         print (Colors.YELLOW + "Lower limit can only be between 0 and 255" + Colors.ENDC)
         sys.exit()
 
     ul = int(args.ul)
-    if ul not in range(0,255):
+    if ul not in range(0,256):
         print (Colors.YELLOW + "Upper limit can only be between 0 and 255" + Colors.ENDC)
         sys.exit()
 
