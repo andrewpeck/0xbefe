@@ -357,7 +357,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list, write_only)
+        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list, args.write_only)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
