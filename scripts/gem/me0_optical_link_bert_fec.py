@@ -188,9 +188,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         if opr in ["start", "run"]:
             init_lpgbt_fec_error_counter(oh_ver)
             if oh_ver == 1:
-                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1)
             elif oh_ver == 2:
-                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1)
     
         # start error counting loop
         start_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -267,9 +267,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         # Disable the counter
         if opr in ["run", "stop"]:
             if oh_ver == 1:
-                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0)
             elif oh_ver == 2:
-                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0)
 
         if opr != "run":
             return  

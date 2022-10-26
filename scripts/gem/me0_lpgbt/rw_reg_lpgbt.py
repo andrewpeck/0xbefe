@@ -388,7 +388,7 @@ def displayReg(reg, option=None):
     if option=="hexbin": return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)+" = "+"{0:032b}".format(final_int)
     else: return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)
 
-def lpgbt_writeReg(reg, value, readback):
+def lpgbt_writeReg(reg, value, readback=1):
     try:
         address = reg.real_address
     except:
@@ -402,8 +402,11 @@ def lpgbt_writeReg(reg, value, readback):
         if (reg.mask != 0):
             value = value << reg.lsb_pos
             value = value & reg.mask
+            current_value = 0
+            if readback == 1:
+                current_value = mpeek(address)
             if "r" in reg.permission:
-                value = (value) | (mpeek(address) & ~reg.mask)
+                value = (value) | (current_value & ~reg.mask)
         # mpoke
         write_only = False
         if readback != 1:

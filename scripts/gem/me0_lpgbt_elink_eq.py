@@ -13,8 +13,8 @@ def get_elink_group_channel(elink):
 
 def set_eq_setting(elink, eq0, eq1):
     group, channel = get_elink_group_channel(elink)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX%d%dEQ0"%(group, channel)), eq0, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dEQ1"%elink), eq1, 0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX%d%dEQ0"%(group, channel)), eq0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dEQ1"%elink), eq1)
 
 def main(system, oh_select, vfat, sbit_elink_list, daq, eq):
 

@@ -187,7 +187,7 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list, write_only)
             enable_mask = (1 << enable_channel_bit)                           
             enable_data = (enable_status & (~enable_mask)) | (en << enable_channel_bit)    
             enable_status = enable_data         
-        i2cmaster_write(system, oh_ver, enable_reg, enable_data)
+        i2cmaster_write(system, oh_ver, enable_reg, enable_data, write_only)
         sleep(0.1)
         if not write_only:
             enable_status = i2cmaster_read(system, oh_ver, enable_reg)

@@ -9,8 +9,8 @@ import argparse
 def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_res0, boss):
 
     cntsel = count
-    lpgbt_writeReg(getNode("LPGBT.RW.EOM.EOMENDOFCOUNTSEL"), cntsel, 0)
-    lpgbt_writeReg(getNode("LPGBT.RW.EOM.EOMENABLE"), 1, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.EOM.EOMENDOFCOUNTSEL"), cntsel)
+    lpgbt_writeReg(getNode("LPGBT.RW.EOM.EOMENABLE"), 1)
 
     #ymin=1
     #ymax=30
@@ -65,17 +65,17 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     print ("\n")
     # Start Loop Over Equalizer Settings
     for eq_attn_setting in eq_attn:
-        lpgbt_writeReg(eq_attn_node, int(eq_attn_setting,16), 0)
+        lpgbt_writeReg(eq_attn_node, int(eq_attn_setting,16))
         for eq_cap_setting in eq_cap:
-            lpgbt_writeReg(eq_cap_node, int(eq_cap_setting,16), 0)
+            lpgbt_writeReg(eq_cap_node, int(eq_cap_setting,16))
             for eq_res3_setting in eq_res3:
-                lpgbt_writeReg(eq_res3_node, int(eq_res3_setting,16), 0)
+                lpgbt_writeReg(eq_res3_node, int(eq_res3_setting,16))
                 for eq_res2_setting in eq_res2:
-                    lpgbt_writeReg(eq_res2_node, int(eq_res2_setting,16), 0)
+                    lpgbt_writeReg(eq_res2_node, int(eq_res2_setting,16))
                     for eq_res1_setting in eq_res1:
-                        lpgbt_writeReg(eq_res1_node, int(eq_res1_setting,16), 0)
+                        lpgbt_writeReg(eq_res1_node, int(eq_res1_setting,16))
                         for eq_res0_setting in eq_res0:
-                            lpgbt_writeReg(eq_res0_node, int(eq_res0_setting,16), 0)
+                            lpgbt_writeReg(eq_res0_node, int(eq_res0_setting,16))
                             print ("Scanning EQATTENUATION = " + eq_attn_setting)
                             print ("Scanning EQCAP = " + eq_cap_setting)
                             print ("Scanning EQRES3 = " + eq_res3_setting)
@@ -90,7 +90,7 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
                             # Start loop for Eye Scan
                             for y_axis in range (ymin,ymax):
                                 # update yaxis
-                                lpgbt_writeReg(eomvofsel, y_axis, 0)
+                                lpgbt_writeReg(eomvofsel, y_axis)
 
                                 for x_axis in range (xmin,xmax):
                                     #if (x_axis >= 32):
@@ -99,13 +99,13 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
                                     x_axis_wr = x_axis
 
                                     # update xaxis
-                                    lpgbt_writeReg(eomphaseselreg, x_axis_wr, 0)
+                                    lpgbt_writeReg(eomphaseselreg, x_axis_wr)
 
                                     # wait few miliseconds
                                     sleep(0.005)
 
                                     # start measurement
-                                    lpgbt_writeReg(eomstartreg, 0x1, 0)
+                                    lpgbt_writeReg(eomstartreg, 0x1)
 
                                     # wait until measurement is finished
                                     busy = 1
@@ -126,7 +126,7 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
                                     eyeimage[x_axis][y_axis] = countervalue
 
                                     # deassert eomstart bit
-                                    lpgbt_writeReg(eomstartreg, 0x0, 0)
+                                    lpgbt_writeReg(eomstartreg, 0x0)
 
                                     #sys.stdout.write("%x" % (eyeimage[x_axis][y_axis]/1000))
                                     sys.stdout.write("%x" % (eyeimage[x_axis][y_axis]))
@@ -161,12 +161,12 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     # End Loop Over Equalizer Settings
 
     # Setting back Default Equalizer settings
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQATTENUATION"), 0x3, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQCAP"), 0x0, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES0"), 0x0, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES1"), 0x0, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES2"), 0x0, 0)
-    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES3"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQATTENUATION"), 0x3)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQCAP"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES0"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES1"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES2"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.EQUALIZER.EQRES3"), 0x0)
 
 if __name__ == "__main__":
     # Parsing arguments

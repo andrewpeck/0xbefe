@@ -8,11 +8,13 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
 
     # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
     if boss and not readback:
-        # Check if old VTRx+
-        check_data = i2cmaster_read(system, oh_ver, 0x01)
+        # Check if old VTRx+ for OH-v1
+        check_data = 0x00
+        if oh_ver == 1:
+            check_data = i2cmaster_read(system, oh_ver, 0x01)
         if check_data == 0x00:
             print ("Enabling TX2 channel for VTRX+")
-            i2cmaster_write(system, oh_ver, 0x00, 0x03)
+            i2cmaster_write(system, oh_ver, 0x00, 0x03, True)
 
     # Set the PLLCONFIGDONE and DLLCONFIGDONE first to 0 if re-configuring using I2C/IC
     if system!="dryrun":
