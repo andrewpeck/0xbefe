@@ -480,6 +480,12 @@
     <node id="RESET" address="0x0" permission="w"
           description="reset all test modules"
           fw_write_pulse_signal="reset_local"/>
+    <node id="QUESO_RESET" address="0x1" permission="w"
+          description="Resets queso test prbs counters"
+          fw_write_pulse_signal="queso_reset"/>
+    <node id="QUESO_EN" address="0x2" permission="rw"
+          description="enables queso test with prbs loopback"
+          fw_signal="queso_enable"/>
   </node>
 
   <node id="OH_LOOPBACK" address="0x1000"
@@ -574,6 +580,23 @@
             description="If manual reading is enabled, reading this register will read the first word in the fifo (and consume it)"
             fw_signal="gbe_manual_rd_data" fw_read_pulse_signal="gbe_manual_rd_en" fw_read_ready_signal="gbe_manual_rd_valid"/>
   </node>
+
+  <node id="QUESO_TEST" address="0x4000"
+          description="This module is used for QUESO testing only. It adds registers for error counters for each elink to 4 OHs.">
+    <node id="OH${OH_IDX}"  address="0x00"
+          description="QUESO prbs counters for OH${OH_IDX}"
+          generate="true" generate_size="&NUM_OHS;" generate_address_step="0xff" generate_idx_var="OH_IDX">
+      <node id="VFAT${VFAT_IDX}"  address="0x00"
+            description="PRBScounters for VFAT${VFAT_IDX}"
+            generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0xa" generate_idx_var="VFAT_IDX">
+        <node id="ELINK${ELINK_IDX}"  address="0x00"
+              description="PRBS counter for ELINK${ELINK_IDX}"
+              generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="ELINK_IDX">
+          <node id="PRBS_ERR_COUNT" mask="0x000000ff" permission="r" address="0x0"
+                description="Number of good events received from this VFAT (good event means that CRC check has passed ok)"
+                fw_signal="velink_error_cnt_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
+    </node>
+  
 
 </node>
 

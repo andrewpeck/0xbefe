@@ -17,19 +17,9 @@ entity queso_tests is
     port map(
         -- reset
         reset_i                     : in  std_logic;
-        
-        -- TTC
-        ttc_clk_i                   : in  t_ttc_clks;        
-        ttc_cmds_i                  : in  t_ttc_cmds;
-        
+                
         -- Test enable
         queso_test_en_i             : in std_logic;
-
-        -- IPbus
-        ipb_reset_i                 : in  std_logic;
-        ipb_clk_i                   : in  std_logic;
-        ipb_miso_o                  : out ipb_rbus;
-        ipb_mosi_i                  : in  ipb_wbus;
 
         --==lpGBT signals==--
         --clock
