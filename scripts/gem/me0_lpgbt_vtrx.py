@@ -22,7 +22,7 @@ TX_enable_bit["TX4"] = 3
 
 i2c_master_timeout = 1 # 1s
 
-def i2cmaster_write(system, oh_ver, reg_addr, data):
+def i2cmaster_write(system, oh_ver, reg_addr, data, write_only=False):
 
     # Writing control register of I2CMaster 2
     nbytes = 2
@@ -45,7 +45,7 @@ def i2cmaster_write(system, oh_ver, reg_addr, data):
     t0 = time()
     while(success==0):
         # Status register of I2CMaster 2
-        if system!="dryrun":
+        if system!="dryrun" and not write_only:
             status = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
@@ -159,7 +159,7 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     sleep(0.01)
     return data
 
-def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
+def main(system, oh_ver, boss, channel, enable, reg_list, data_list, write_only):
 
     if not boss:
         print (Colors.RED + "ERROR: VTRX+ control only for boss since I2C master of boss connected to VTRX+" + Colors.ENDC)
@@ -167,7 +167,10 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
 
     # Enabling TX Channel
     if channel is not None and enable is not None:
-        enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        if not write_only:
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        else:
+            enable_status = 0
         sleep(0.1)
         for c in channel:
             en = 0
@@ -182,7 +185,8 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
             enable_status = enable_data         
         i2cmaster_write(system, oh_ver, enable_reg, enable_data)
         sleep(0.1)
-        enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        if not write_only:
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
         sleep(0.1)
         print ("")
  
@@ -190,11 +194,12 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
         return
 
     # Reading registers
-    print ("Initial Reading of VTRX+ registers: ")
-    for reg in reg_list:
-        data = i2cmaster_read(system, oh_ver, reg)
-        sleep(0.1)
-    print ("")
+    if not write_only:
+        print ("Initial Reading of VTRX+ registers: ")
+        for reg in reg_list:
+            data = i2cmaster_read(system, oh_ver, reg)
+            sleep(0.1)
+        print ("")
     
     if len(data_list) == 0:
         return
@@ -202,16 +207,17 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
     # Writing registers
     print ("Writing to VTRX+ registers: ")
     for i, reg in enumerate(reg_list):
-        i2cmaster_write(system, oh_ver, reg, data_list[i])
+        i2cmaster_write(system, oh_ver, reg, data_list[i], write_only)
         sleep(0.1)
     print ("")  
 
     # Reading registers
-    print ("Final Reading of VTRX+ registers: ")
-    for reg in reg_list:
-        data = i2cmaster_read(system, oh_ver, reg)
-        sleep(0.1)
-    print ("")
+    if not write_only:
+        print ("Final Reading of VTRX+ registers: ")
+        for reg in reg_list:
+            data = i2cmaster_read(system, oh_ver, reg)
+            sleep(0.1)
+        print ("")
     
 
 if __name__ == "__main__":
@@ -227,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--enable", action="store", dest="enable", help="enable = 0 or 1; only use with type: name")
     parser.add_argument("-n", "--name", action="store", dest="name", nargs="+", help="name = biascur_reg, modcur_reg, empamp_reg; only use with type: name")
     parser.add_argument("-d", "--data", action="store", nargs="+", dest="data", help="data = list of data values to write")
+    parser.add_argument("-w", "--write_only", action="store_true", dest="write_only", help="write_only = only write, no read")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -341,16 +348,16 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend":
+    if args.system == "backend" and not args.write_only:
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun":
+    if args.system != "dryrun" and not args.write_only:
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list)
+        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list, write_only)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

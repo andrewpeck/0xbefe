@@ -575,6 +575,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", action="store", dest="input_config_file", help="input_config_file = .txt file")
     parser.add_argument("-r", "--reset_before_config", action="store", dest="reset_before_config", default="0", help="reset_before_config = 1 or 0 (default)")
     parser.add_argument("-m", "--minimal", action="store", dest="minimal", default="0", help="minimal = Set 1 for a minimal configuration, 0 by default")
+    parser.add_argument("-w", "--write_only", action="store_true", dest="write_only", help="write_only = only write, no read")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -632,35 +633,22 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend":
+    if args.system == "backend" and not args.write_only:
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun":
+    if args.system != "dryrun" and not args.write_only:
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Configuring LPGBT
-    readback = 0
+    readback = 1
+    if args.write_only:
+        readback = 0
     try:
         main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        rw_terminate()
-    except EOFError:
-        print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        rw_terminate()
-
-    print ("==================================")
-    print ("Checking register configuration...")
-    print ("==================================")
-
-    # Checking LPGBT configuration
-    readback = 1
-    try:
-        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), readback)
-    except KeyboardInterrupt:
-        print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)

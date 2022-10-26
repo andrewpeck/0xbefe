@@ -397,9 +397,6 @@ def lpgbt_writeReg(reg, value, readback):
     if "w" not in reg.permission:
         return "No write permission!"
 
-    if (readback):
-        if (value!=lpgbt_readReg(reg)):
-            print (Colors.RED + "ERROR: Failed to read back register %s. Expect=0x%x Read=0x%x" % (reg.name, value, lpgbt_readReg(reg)) + Colors.ENDC)
     else:
         # Apply Mask if applicable
         if (reg.mask != 0):
@@ -408,7 +405,10 @@ def lpgbt_writeReg(reg, value, readback):
             if "r" in reg.permission:
                 value = (value) | (mpeek(address) & ~reg.mask)
         # mpoke
-        mpoke(address, value)
+        write_only = False
+        if readback != 1:
+            write_only = True
+        mpoke(address, value, write_only)
 
 def writeandcheckReg(reg, value):
     try:
