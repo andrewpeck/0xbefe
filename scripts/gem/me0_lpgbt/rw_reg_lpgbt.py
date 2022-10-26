@@ -324,7 +324,7 @@ def mpeek(address):
         print(Colors.RED + "ERROR: Incorrect system" + Colors.ENDC)
         rw_terminate()
 
-def mpoke(address, value):
+def mpoke(address, value, write_only=False):
     global reg_list_dryrun
     if system=="chc":
         success = gbt_rpi_chc.lpgbt_write_register(address, value)
@@ -336,10 +336,11 @@ def mpoke(address, value):
         gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value)
         gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1)
         reg_list_dryrun[address] = value
-        read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
-        if read_value != value:
-            print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
-            rw_terminate()
+        if not write_only:
+            read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
+            if read_value != value:
+                print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
+                rw_terminate()
     elif system=="dryrun":
         reg_list_dryrun[address] = value
     else:
