@@ -255,21 +255,21 @@ def get_backend_node(name):
             terminate()
     return node
 
-def read_backend_reg(node, terminate = True):
+def read_backend_reg(node, do_terminate = True):
     output = 0
     if system == "backend":
         output = read_reg(node)
         if output==0xdeaddead:
-            if terminate:
+            if do_terminate:
                 terminate()
     return output
     
-def write_backend_reg(node, data, terminate = True):
+def write_backend_reg(node, data, do_terminate = True):
     output = 0
     if system == "backend":
         output = write_reg(node, data)
         if output==-1:
-            if terminate:
+            if do_terminate:
                 terminate()
     return output
 
