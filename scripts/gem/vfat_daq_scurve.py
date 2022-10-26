@@ -6,7 +6,7 @@ import argparse
 import random
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
-def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, step, nl1a, l1a_bxgap, trim):
+def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, trim):
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
@@ -87,7 +87,7 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
         daq_data[vfat] = {}
         for channel in channel_list:
             daq_data[vfat][channel] = {}
-            for c in range(0,256,step):
+            for c in range(0,256):
                 #if cal_mode[vfat] == 1:
                 #    charge = 255 - c
                 #else:
@@ -153,7 +153,7 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
         write_backend_reg(daq_monitor_select_node, channel)
 
         # Looping over charge
-        for c in range(0,256,step):
+        for c in range(ll,ul+1,step):
             #if cal_mode[vfat] == 1:
             #    charge = 255 - c
             #else:
@@ -224,6 +224,8 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--threshold", action="store", dest="threshold", help="threshold = the CFG_THR_ARM_DAC value (default=configured value of VFAT)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
+    parser.add_argument("-ll", "--ul", action="store", dest="ll", default="0", help="ll = Upper limit of CALDAC register to scan (default=0)")
+    parser.add_argument("-ul", "--ll", action="store", dest="ul", default="256", help="ul = Upper limit of CALDAC register to scan (default=255)")
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for SCurve scan (default=1)")
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", help="nl1a = fixed number of L1A cycles")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
@@ -291,6 +293,16 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Threshold has to 8 bits (0-255)" + Colors.ENDC)
             sys.exit()
 
+    ll = int(args.ll)
+    if ll not in range(0,255):
+        print (Colors.YELLOW + "Lower limit can only be between 0 and 255" + Colors.ENDC)
+        sys.exit()
+
+    ul = int(args.ul)
+    if ul not in range(0,255):
+        print (Colors.YELLOW + "Upper limit can only be between 0 and 255" + Colors.ENDC)
+        sys.exit()
+
     step = int(args.step)
     if step not in range(1,257):
         print (Colors.YELLOW + "Step size can only be between 1 and 256" + Colors.ENDC)
@@ -330,7 +342,7 @@ if __name__ == "__main__":
 
     # Running DAQ Scurve
     try:
-        vfat_scurve(args.gem, args.system, int(args.ohid), vfat_list, channel_list, cal_mode, args.parallel, threshold, step, nl1a, l1a_bxgap, args.trim)
+        vfat_scurve(args.gem, args.system, int(args.ohid), vfat_list, channel_list, cal_mode, args.parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, args.trim)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
