@@ -86,7 +86,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
             terminate()
 
         sbit_data[vfat] = {}
-        for channel in channel_list:
+        for channel in range(0,128):
             sbit_data[vfat][channel] = {}
             for c in range(0,256):
                 #if cal_mode[vfat] == 1:
@@ -218,7 +218,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
 
     # Writing Results
     for vfat in vfat_list:
-        for channel in channel_list:
+        for channel in range(0,128):
             for charge in range(0,256,1):
                 if charge not in sbit_data[vfat][channel]:
                     continue
