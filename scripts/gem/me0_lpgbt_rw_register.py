@@ -123,13 +123,13 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend" and not args.write_only:
-        check_lpgbt_ready(args.ohid, args.gbtid)
+    #if args.system == "backend" and not args.write_only:
+    #    check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and not args.write_only:
-        check_rom_readback(args.ohid, args.gbtid)
-        check_lpgbt_mode(boss, args.ohid, args.gbtid)
+    #if args.system != "dryrun" and not args.write_only:
+    #    check_rom_readback(args.ohid, args.gbtid)
+    #    check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     # Configuring LPGBT
     try:
