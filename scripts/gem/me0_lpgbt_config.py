@@ -7,7 +7,7 @@ from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
 
     # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
-    if boss and not readback:
+    if boss:
         # Check if old VTRx+ for OH-v1
         check_data = 0x00
         if oh_ver == 1:
