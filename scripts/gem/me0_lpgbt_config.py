@@ -389,11 +389,13 @@ def configure_ec_channel(oh_ver, boss):
     lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTERM"),   0x1)
     lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECENABLE"), 0x1)
     lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECPHASESELECT"), 0x0)
-
+        
     if oh_ver == 1:
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE"), 0x2) # continuous phase tracking
     elif oh_ver == 2:
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE"), 0x0)
+        if boss:
+            lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRXECPULLUPENABLE"), 0x1)
 
     #if (boss):
         # turn on 80 Mbps EC clock
