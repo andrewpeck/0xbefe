@@ -45,6 +45,10 @@ class rpi_chc:
         self.current_fpga_1v35_addr = 0x40
         self.current_fpga_2v5_addr = 0x42
 
+        self.fpga_cs_1 = 20
+        self.fpga_cs_2 = 16
+        self.fpga_cs_3 = 12
+
     def __del__(self):
         self.bus.close()
         self.spi.close() 
@@ -304,10 +308,40 @@ class rpi_chc:
         
         return success, data
   
-    def spi_rw(self, command):
+    def spi_rw(self, fpga, address, data=None):
         # Perform SPI read/write operations
         spi_data = 0
         spi_success = 1
+
+        gpio = 0
+        if fpga == "1":
+            gpio = self.fpga_cs_1
+        elif fpga == "2":
+            gpio = self.fpga_cs_2
+        elif fpga == "3":
+            gpio = self.fpga_cs_3
+        else:
+            spi_success = 0
+            print(Colors.RED + "ERROR: Incorrect FPGA number" + Colors.ENDC)
+            return spi_success, spi_data
+
+        # Enable corresponding chip select
+        spi_success = self.fpga_spi_cs(gpio, 1)
+        if not spi_success:
+            print(Colors.RED + "ERROR: Cannot enable SPI Chip Select GPIO" + Colors.ENDC)
+            return spi_success, spi_data
+        time.sleep(0.1)
+
+        # Perform the read/write
+        spi_success = 1
+        if data is None: # read
+            data = [0x00]
+        else: # write
+            address += 0x01
+        command = [address]
+        for d in data:
+            command.append(d)
+
         try:
             spi_data = self.spi.xfer2(command)
         except IOError:
@@ -321,6 +355,18 @@ class rpi_chc:
         except Exception as e:
             print(Colors.RED + "ERROR: " + str(e) + Colors.ENDC)
             spi_success = 0
+        if not spi_success:
+            return spi_success, spi_data
+        time.sleep(0.1)
+
+        # Enable corresponding chip select
+        spi_success = 1
+        spi_success = self.fpga_spi_cs(gpio, 0)
+        if not spi_success:
+            print(Colors.RED + "ERROR: Cannot disable SPI Chip Select GPIO" + Colors.ENDC)
+            return spi_success, spi_data
+        time.sleep(0.1)
+
         return spi_success, spi_data
 
     def fuse_arm_disarm(self, boss, enable):

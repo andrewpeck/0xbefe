@@ -29,11 +29,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--id", action="store",  nargs="+", dest="id", help="id = list of id write to given fpga (in order of fpga)")
     args = parser.parse_args()
 
-    gpio = {}
-    gpio["1"] = 20
-    gpio["2"] = 16
-    gpio["3"] = 12
-
     fpga_reg_addr = {}
     fpga_reg_addr["1"] = 0x02
     fpga_reg_addr["2"] = 0x02
@@ -52,31 +47,20 @@ if __name__ == "__main__":
     gbt_rpi_chc = rpi_chc.rpi_chc()
 
     for i in range(len(args.fpga)):
-        # enable corresponding chip select
-        spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 1)
-        if not spi_success:
-            terminate() # err already printed out in function call
-        time.sleep(0.1)
-
+        
         # write the corresponding id to fpga
         print ("Writing ID (register 0x%02X) to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]]+0x01, args.fpga[i], int(args.id[i], 16)))
-        spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], int(args.id[i], 16)])
+        spi_success, spi_data = gbt_rpi_chc.spi_rw(args.fpga[i], fpga_reg_addr[args.fpga[i]], int(args.id[i], 16))
         if not spi_success:
             terminate() # err already printed out in function call
         time.sleep(0.1)
 
         # read fpga id
-        spi_success, spi_data = gbt_rpi_chc.spi_rw([fpga_reg_addr[args.fpga[i]], 0x00]) # not actually writing thus sending 0x00, just reading
+        spi_success, spi_data = gbt_rpi_chc.spi_rw(args.fpga[i], fpga_reg_addr[args.fpga[i]])
         if not spi_success:
             terminate() # err already printed out in function call
         print ("ID (register 0x%02X) written to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]))
         sleep (0.1)
-
-        # disable the chip select after finishing writing
-        spi_success = gbt_rpi_chc.fpga_spi_cs(gpio[args.fpga[i]], 0)
-        if not spi_success:
-            terminate() # err already printed out in function call
-        time.sleep(0.1)
             
     # terminate the RPi
     terminate()
