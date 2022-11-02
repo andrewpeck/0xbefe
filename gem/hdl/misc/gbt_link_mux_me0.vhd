@@ -89,7 +89,7 @@ entity gbt_link_mux_me0 is
         queso_test_en_i             : in  std_logic;
 
         --test data
-        test_vfat3_tx_data_arr_i    : in  t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
+        test_vfat3_tx_data_arr_i    : in  std_logic_vector(7 downto 0);
         test_vfat3_rx_data_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0)
 
     );
@@ -105,9 +105,9 @@ begin
     --inversions incorperated in ASIAGO config
 
     gbt_ready_arr_o <= gbt_rx_ready_arr;
-    gbt_tx_data_arr_o <= gbt_tx_data_arr when queso_test_en_i = '0' else test_vfat3_tx_data_arr_i;
+    gbt_tx_data_arr_o <= gbt_tx_data_arr;
     
-    if queso_test_en_i = '0' then
+    if queso_test_en_i = '0' generate
 
         g_ohs : for i in 0 to g_NUM_OF_OHs - 1 generate
 
@@ -423,7 +423,7 @@ begin
         
 
         --========================= QUESO TEST RX =========================--
-    elsif queso_test_en_i = '1' then
+    elsif queso_test_en_i = '1' generate
         g_ohs : for i in 0 to g_NUM_OF_OHs - 1 generate
 
             test_vfat3_rx_data_arr_o(i)(00) <= gbt_rx_data_arr_i(i * 8 + 0).rx_data(207 downto 200); -- VFAT00 (GBT0 elink 25)
