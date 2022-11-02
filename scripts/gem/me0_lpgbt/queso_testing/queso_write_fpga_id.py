@@ -45,13 +45,13 @@ if __name__ == "__main__":
     # Set up RPi
     global gbt_rpi_chc
     gbt_rpi_chc = rpi_chc.rpi_chc()
+    print ("")
 
     for i in range(len(args.fpga)):
         
-        print ("")
-
         # write the corresponding id to fpga
         print ("Writing ID (register 0x%02X) to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]]+0x01, args.fpga[i], int(args.id[i], 16)))
+        print ("")
         spi_success, spi_data = gbt_rpi_chc.spi_rw(args.fpga[i], fpga_reg_addr[args.fpga[i]], [int(args.id[i], 16)])
         if not spi_success:
             terminate() # err already printed out in function call
@@ -62,9 +62,9 @@ if __name__ == "__main__":
         if not spi_success:
             terminate() # err already printed out in function call
         if spi_data[1] == int(args.id[i], 16):
-            print (Colors.GREEN + "ID (register 0x%02X) written to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]) + Colors.ENDC)
+            print (Colors.GREEN + "ID (register 0x%02X) read from FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]) + Colors.ENDC)
         else:
-            print (Colors.YELLOW + "ID (register 0x%02X) written to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]) + Colors.ENDC)
+            print (Colors.YELLOW + "ID (register 0x%02X) read from FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]) + Colors.ENDC)
         time.sleep (0.1)
         print ("")
             
