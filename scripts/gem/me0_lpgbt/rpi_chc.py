@@ -123,7 +123,7 @@ class rpi_chc:
         try:
             read = self.gpio_action("write", gpio, enable)
             if read != -9999:
-                print("Chip Select set for FPGA for Pin : " + str(gpio) + " to %d"%enable + "\n")
+                print("    Chip Select set for FPGA for Pin : " + str(gpio) + " to %d"%enable + "\n")
                 spi_success = 1
         except:
             print(Colors.RED + "ERROR: Unable to set chip select for FPGA, check RPi connection" + Colors.ENDC)
