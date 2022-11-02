@@ -50,15 +50,14 @@ if __name__ == "__main__":
     for i in range(len(args.fpga)):
         
         # write the corresponding id to fpga
-        print ("Writing ID (register 0x%02X) to FPGA %s = 0x%02X"%(fpga_reg_addr[args.fpga[i]]+0x01, args.fpga[i], int(args.id[i], 16)))
-        print ("")
+        print ("Writing ID (register 0x%02X) to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]]+0x01, args.fpga[i], int(args.id[i], 16)))
         spi_success, spi_data = gbt_rpi_chc.spi_rw(args.fpga[i], fpga_reg_addr[args.fpga[i]], [int(args.id[i], 16)])
         if not spi_success:
             terminate() # err already printed out in function call
         time.sleep(0.1)
 
         # read fpga id
-        print ("Reading ID (register 0x%02X) from FPGA %s"%(fpga_reg_addr[args.fpga[i]], args.fpga[i]))
+        print ("Reading ID (register 0x%02X) from FPGA %s\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i]))
         spi_success, spi_data = gbt_rpi_chc.spi_rw(args.fpga[i], fpga_reg_addr[args.fpga[i]])
         if not spi_success:
             terminate() # err already printed out in function call
