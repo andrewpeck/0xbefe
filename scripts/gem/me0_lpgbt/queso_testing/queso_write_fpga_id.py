@@ -60,7 +60,7 @@ if __name__ == "__main__":
         if not spi_success:
             terminate() # err already printed out in function call
         print ("ID (register 0x%02X) written to FPGA %s = 0x%02X\n"%(fpga_reg_addr[args.fpga[i]], args.fpga[i], spi_data[1]))
-        sleep (0.1)
+        time.sleep (0.1)
             
     # terminate the RPi
     terminate()
