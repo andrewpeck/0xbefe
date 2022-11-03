@@ -63,7 +63,7 @@ entity gbt_link_mux_me0 is
     generic(
         g_NUM_OF_OHs                : integer;
         g_NUM_GBTS_PER_OH           : integer;
-        g_QUESO_EN                  : integer;
+        g_QUESO_EN                  : boolean
     );
     port(
         -- clock

@@ -13,7 +13,7 @@ entity queso_tests is
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_VFATS_PER_OH  : integer;
-        g_QUESO_EN          : integer
+        g_QUESO_EN          : boolean
     );
     port map(
         -- reset

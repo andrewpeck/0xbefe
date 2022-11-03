@@ -24,7 +24,7 @@ entity gem_tests is
         g_NUM_GBTS_PER_OH   : integer;
         g_GEM_STATION       : integer;
         g_IPB_CLK_PERIOD_NS : integer;
-        g_QUESO_EN          : integer;
+        g_QUESO_EN          : boolean
     );
     port(
         -- reset
@@ -58,7 +58,7 @@ entity gem_tests is
         
         -- QUESO Test
         queso_prbs_en               : in std_logic;
-        gbt_frame_clk_i             : in  std_logic;
+        gbt_frame_clk_i             : in std_logic;
         test_vfat3_rx_data_arr_i    : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
         test_vfat3_tx_data_arr_o    : out std_logic_vector(7 downto 0)
     );

@@ -703,7 +703,8 @@ begin
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_GEM_STATION       => g_GEM_STATION,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH
+            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+            g_QUESO_EN          => CFG_QUESO_EN
         )
         port map(
             reset_i                     => reset,
@@ -875,7 +876,8 @@ begin
         i_gbt_link_mux_me0 : entity work.gbt_link_mux_me0
             generic map(
                 g_NUM_OF_OHs      => g_NUM_OF_OHs,
-                g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH
+                g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH,
+                g_QUESO_EN        => g_QUESO_EN
             )
             port map(
                 gbt_frame_clk_i       => ttc_clocks_i.clk_40,
@@ -893,7 +895,6 @@ begin
                 gbt_ready_arr_o       => gbt_ready_arr,
                 vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,
 
-                queso_test_en_i           => queso_test_en,
                 test_vfat3_tx_data_arr_i  => queso_vfat3_tx_data_arr,
                 test_vfat3_rx_data_arr_o  => queso_vfat3_rx_data_arr
 
