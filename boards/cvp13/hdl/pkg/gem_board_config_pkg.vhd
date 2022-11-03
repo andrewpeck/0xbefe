@@ -62,6 +62,9 @@ package board_config_package is
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
 
+    ------------ QUESO ENABLE ----------- 
+    constant CFG_QUESO_EN                   : boolean := true; --if set to true, mux for ME0 will be switched to prbs fannout
+
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
     constant CFG_DEBUG_OH                   : boolean := true; -- if set to true, and ILA will be instantiated on VFATs and OH trigger link

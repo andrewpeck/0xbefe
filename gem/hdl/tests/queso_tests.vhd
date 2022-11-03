@@ -12,14 +12,15 @@ entity queso_tests is
     generic map(
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
-        g_NUM_VFATS_PER_OH  : integer
+        g_NUM_VFATS_PER_OH  : integer;
+        g_QUESO_EN          : integer
     );
     port map(
         -- reset
-        reset_i                     : in  std_logic;
+        reset_i                          : in  std_logic;
                 
         -- Test enable
-        queso_test_en_i             : in std_logic;
+        queso_test_en_i                  : in std_logic;
 
         --==lpGBT signals==--
         --clock
@@ -36,6 +37,8 @@ entity queso_tests is
 end queso_tests;
 
 architecture Behavioral of queso_tests is
+
+    constant PRBS_SEED       : std_logic_vector(7 downto 0) := x"d9";
 
     -- unmasked elinks
     signal elink_unmasked    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -56,7 +59,7 @@ begin
         port map(
             reset_i       => reset_i,
             clk_i         => gbt_clk_i,
-            clken_i       => '1',
+            clken_i       => queso_test_en_i,
             err_pattern_i => tx_prbs_err_data,
             rep_delay_i   => (others => '0'),
             prbs_word_o   => tx_prbs_data,
@@ -92,7 +95,7 @@ begin
                     reset_i          => reset_i
                     clk_i            => gbt_frame_clk_i
                     clken_i          => '1'
-                    prbs_word_i      => elink_unmasked(OH)(ELINK)
+                    prbs_word_i      => elink_mapped(OH)(ELINK)
                     err_o            => open
                     err_flag_o       => rx_prbs_err_arr(OH)(ELINK)
                     rdy_o            => rx_prbs_ready_arr(OH)(ELINK)
