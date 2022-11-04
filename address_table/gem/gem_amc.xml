@@ -483,9 +483,9 @@
     <node id="QUESO_RESET" address="0x1" permission="w"
           description="Resets queso prbs counters"
           fw_write_pulse_signal="queso_reset"/>
-    <node id="QUESO_EN" address="0x2" permission="rw"
+    <node id="QUESO_EN" mask ="0x00000001" address="0x2" permission="w"
           description="enables queso prbs generator"
-          fw_signal="queso_enable" fw_default="0"/>
+          fw_signal="queso_prbs_en" fw_default="0"/>
   </node>
 
   <node id="OH_LOOPBACK" address="0x1000"
@@ -594,7 +594,7 @@
               generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="ELINK_IDX">
           <node id="PRBS_ERR_COUNT" mask="0x000000ff" permission="r" address="0x0"
                 description="Number of errors on this ELINK"
-                fw_signal="elink_error_cnt_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
+                fw_signal="queso_prbs_err_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
           <node id="ELINK_BITSLIP" mask="0x0000ff00" permission="w" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
                 fw_signal="elink_mapping_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
