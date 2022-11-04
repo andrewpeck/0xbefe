@@ -703,8 +703,7 @@ begin
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_GEM_STATION       => g_GEM_STATION,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-            g_QUESO_EN          => CFG_QUESO_EN
+            g_QUESO_EN          => true
         )
         port map(
             reset_i                     => reset,
@@ -722,11 +721,10 @@ begin
             ipb_clk_i                   => ipb_clk_i,
             ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.test),
             ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.test),
-            queso_test_en_o             => queso_test_en,
+            --queso_test_en_o             => queso_test_en,
             gbt_frame_clk_i             => ttc_clocks_i.clk_40,
             test_vfat3_rx_data_arr_i    => queso_vfat3_rx_data_arr,
-            test_vfat3_tx_data_arr_o    => queso_vfat3_tx_data_arr,
-
+            test_vfat3_tx_data_arr_o    => queso_vfat3_tx_data_arr
         );
 
     --==========--
@@ -877,7 +875,7 @@ begin
             generic map(
                 g_NUM_OF_OHs      => g_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH,
-                g_QUESO_EN        => g_QUESO_EN
+                g_QUESO_EN        => true
             )
             port map(
                 gbt_frame_clk_i       => ttc_clocks_i.clk_40,

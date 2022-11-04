@@ -9,15 +9,16 @@ use work.ipbus.all;
 use work.registers.all;
 
 entity queso_tests is
-    generic map(
+    generic(
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_VFATS_PER_OH  : integer;
         g_QUESO_EN          : boolean
     );
-    port map(
+    port(
         -- reset
-        reset_i                          : in  std_logic;
+        reset_i                          : in std_logic;
+	counter_reset                    : in std_logic;
                 
         -- Test enable
         queso_test_en_i                  : in std_logic;
@@ -40,13 +41,17 @@ architecture Behavioral of queso_tests is
 
     constant PRBS_SEED       : std_logic_vector(7 downto 0) := x"d9";
 
+    signal tx_prbs_err_data  : std_logic_vector(7 downto 0) := x"ff";
+    signal tx_prbs_data      : std_logic_vector(7 downto 0);
+
+
     -- unmasked elinks
     signal elink_unmasked    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal elink_mapped      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal rx_prbs_err_arr   : std_logic_vector(g_NUM_OF_OHs * 108 - 1);
-    signal rx_prbs_ready_arr : std_logic_vector(g_NUM_OF_OHs * 108 - 1);
+    signal rx_prbs_err_arr   : std_logic_vector(g_NUM_OF_OHs * 216 - 1 downto 0);
+    signal rx_prbs_ready_arr : std_logic_vector(g_NUM_OF_OHs * 216 - 1 downto 0);
     
 begin
 
@@ -58,7 +63,7 @@ begin
         )
         port map(
             reset_i       => reset_i,
-            clk_i         => gbt_clk_i,
+            clk_i         => gbt_frame_clk_i,
             clken_i       => queso_test_en_i,
             err_pattern_i => tx_prbs_err_data,
             rep_delay_i   => (others => '0'),
@@ -73,7 +78,7 @@ begin
         each_elink : for ELINK in 0 to 215 generate
 
             --unmask each rx elink with unique xor 
-            elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
+            elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
 
             g_rotate : entity work.bitslip
                 generic map(
@@ -92,13 +97,13 @@ begin
             --instantiate prbs7 8 bit checker
             i_prbs7_checker : entity work.prbs7_8b_checker
                 port map(
-                    reset_i          => reset_i
-                    clk_i            => gbt_frame_clk_i
-                    clken_i          => '1'
-                    prbs_word_i      => elink_mapped(OH)(ELINK)
-                    err_o            => open
-                    err_flag_o       => rx_prbs_err_arr(OH)(ELINK)
-                    rdy_o            => rx_prbs_ready_arr(OH)(ELINK)
+                    reset_i          => reset_i,
+                    clk_i            => gbt_frame_clk_i,
+                    clken_i          => '1',
+                    prbs_word_i      => elink_mapped(OH)(ELINK),
+                    err_o            => open,
+                    err_flag_o       => rx_prbs_err_arr(OH*216 + ELINK),
+                    rdy_o            => rx_prbs_ready_arr(OH*216 + ELINK)
                 );
 
             --instantiate error counter for each prbs checker
@@ -108,13 +113,13 @@ begin
                     g_ALLOW_ROLLOVER => false
                 )
                 port map(
-                    ref_clk_i => gbt_clk_i,
-                    reset_i   => reset_i,
-                    en_i      => rx_prbs_err_arr((OH * 216) + ELINK) and rx_prbs_ready_arr(OH)(ELINK) and queso_test_en_i,
+                    ref_clk_i => gbt_frame_clk_i,
+                    reset_i   => counter_reset,
+                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK) and rx_prbs_ready_arr(OH*216 + ELINK),
                     count_o   => rx_err_cnt_arr(OH)(ELINK)
                 );
             
-            elink_error_cnt_arr_o(OH)(ELINK) <= rx_err_cnt_arr(OH)(ELINK);
+            elink_error_cnt_arr_o(OH)(ELINK) <= rx_err_cnt_arr(OH)( ELINK);
 
         end generate;
     end generate;
