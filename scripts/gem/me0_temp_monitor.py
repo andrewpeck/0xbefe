@@ -24,7 +24,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain, plot, temp_cal):
+def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, niter, gain, plot, temp_cal):
 
     # PT-100 is an RTD (Resistance Temperature Detector) sensor
     # PT (ie platinum) has linear temperature-resistance relationship
@@ -106,8 +106,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     file = open(filename, "w")
     file.write("Time (min) \t Voltage (V) \t Resistance (Ohm) \t Temperature (C)\n")
     t0 = time()
-    while int(time()) <= end_time:
-        if (time()-t0)>60:
+    nrun = 0
+    while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
+        read_adc_iter = 1
+        if (run_time_min != 0 and (time()-t0)<=60):
+            read_adc_iter = 0
+
+        if read_adc_iter:
             value = read_adc(channel, gain, system)
             Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
             if len(adc_calib_results)!=0:
@@ -126,6 +131,11 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
             file.write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
             print("time = %.2f min, \tch %X: 0x%03X = %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
             t0 = time()
+
+        if run_time_min == 0:
+            nrun += 1
+            sleep(5)
+            
     file.close()
 
     figure_name = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_plot_" + now + ".pdf"
@@ -257,7 +267,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX")
-    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
+    parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
+    parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
@@ -338,7 +349,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, gain, args.plot, temp_cal)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, int(args.niter), gain, args.plot, temp_cal)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

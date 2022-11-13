@@ -22,7 +22,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
 
     gbt = gbt_select%4
     init_adc(oh_ver)
@@ -89,8 +89,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
     elif gbt == 2:
         file_out.write("Time (min) \t Asense0 (PG1.2VD current) (A) \t Asense1 (Rt3 voltage) (V) \t Asense2 (PG1.2VA current) (A) \t Asense3 (Rt4 voltage) (V)\n")
     t0 = time()
-    while int(time()) <= end_time:
-        if (time()-t0)>60:
+    nrun = 0
+    while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
+        read_adc_iter = 1
+        if (run_time_min != 0 and (time()-t0)<=60):
+            read_adc_iter = 0
+
+        if read_adc_iter:
             if oh_ver == 1:
                 asense0_value = read_adc(4, gain, system)
                 asense1_value = read_adc(2, gain, system)
@@ -139,6 +144,11 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, plot):
                 print("Time: " + "{:.2f}".format(second/60.0) + " min \t Asense0 (PG1.2VD current): " + "{:.3f}".format(asense0_converted) + " A \t Asense1 (Rt3 voltage): " + "{:.3f}".format(asense1_converted) + " V \t Asense2 (PG1.2VA current): " + "{:.3f}".format(asense2_converted) + " A \t Asense3 (Rt4 voltage): " + "{:.3f}".format(asense3_converted) + " V \n" )
 
             t0 = time()
+
+        if run_time_min == 0:
+            nrun += 1
+            sleep(5)
+
     file_out.close()
 
     asense0_label = ""
@@ -276,7 +286,8 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = # of minutes you want to run")
+    parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
+    parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
@@ -338,7 +349,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
         
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

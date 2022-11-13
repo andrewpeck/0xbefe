@@ -22,7 +22,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltage, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, voltage, plot):
 
     init_adc(oh_ver)
     print("ADC Readings:")
@@ -81,8 +81,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
     file_out = open(filename, "w")
     file_out.write("Time (min) \t RSSI (uA)\n")
     t0 = time()
-    while int(time()) <= end_time:
-        if (time()-t0)>60:
+    nrun = 0
+    while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
+        read_adc_iter = 1
+        if (run_time_min != 0 and (time()-t0)<=60):
+            read_adc_iter = 0
+
+        if read_adc_iter:
             if oh_ver == 1:
                 value = read_adc(7, gain, system)
             if oh_ver == 2:
@@ -102,6 +107,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, gain, voltag
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
             print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
             t0 = time()
+
+        if run_time_min == 0:
+            nrun += 1
+            sleep(5)
             
     file_out.close()
     figure_name = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
@@ -211,7 +220,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-v", "--voltage", action="store", dest="voltage", default = "2.5", help="voltage = exact value of the 2.5V input voltage to OH")
-    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
+    parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
+    parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
@@ -275,7 +285,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)   
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, gain, float(args.voltage), args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, float(args.voltage), args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
