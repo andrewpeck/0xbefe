@@ -27,16 +27,11 @@
   </node>
 
 
-  <node id="ME0_CLUSTER_COUNT" address="0x12" mask="0x000007ff" permission="r"
-        description="output of sbit clusterizer for me0"
-        fw_signal="me0_cluster_count"/>
-
-
   <node id="ME0_OH${OH_CNT_ID}" address="0x30" permission="r"
 	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID} of OH ${OH_CNT_ID}"
 	generate="true"
 	generate_size="&NUM_OHS;"
-	generate_address_step="0x20"
+	generate_address_step="0x31"
 	generate_idx_var="OH_CNT_ID">
       <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
             mask="0xffffffff"
@@ -46,6 +41,10 @@
             generate_size="&NUM_VFATS_PER_OH;"
             generate_address_step="0x1"
             generate_idx_var="VFAT_CNT_ID"/>
+      <node id="ME0_CLUSTER_COUNT" address="0x30" mask="0x000007ff" permission="r"
+            description="output of sbit clusterizer for me0"
+            fw_signal="me0_cluster_count(${OH_CNT_ID})"/>
+
   </node>
 
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"

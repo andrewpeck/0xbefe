@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 boards/cvp13/constraints/cvp13.xdc
 boards/cvp13/constraints/floorplan_csc.xdc
 boards/cvp13/constraints/mgt_csc.xdc

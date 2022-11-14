@@ -35,7 +35,6 @@ architecture behavioral of bitslip is
   signal buf : buf_array_t (2*g_EN_TMR downto 0);
 
   signal data     : data_array_t (2*g_EN_TMR downto 0);
-  signal dout_tmr : data_array_t (2*g_EN_TMR downto 0);
 
   signal cnt : integer;
 

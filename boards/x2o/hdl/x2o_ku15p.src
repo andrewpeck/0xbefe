@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 #### C2C ####
 boards/x2o/hdl/c2c/c2c_gth_tux.sv

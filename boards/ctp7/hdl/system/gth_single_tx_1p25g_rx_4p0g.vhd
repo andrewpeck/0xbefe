@@ -766,7 +766,7 @@ begin
       ------------------------------- Transmit Ports -----------------------------
       TXRATEMODE                 => '0',
       -------------- Transmit Ports - 64b66b and 64b67b Gearbox Ports ------------
-      TXHEADER                   => "000",
+      TXHEADER                   => gth_tx_data_i.txheader,
       ---------------- Transmit Ports - 8b10b Encoder Control Ports --------------
       TXCHARDISPMODE             => gth_tx_data_i.txchardispmode,
       TXCHARDISPVAL              => gth_tx_data_i.txchardispval,
@@ -824,7 +824,7 @@ begin
       TXRATEDONE                => open,
       --------------------- Transmit Ports - TX Gearbox Ports --------------------
       TXGEARBOXREADY            => open,
-      TXSEQUENCE                => "0000000",
+      TXSEQUENCE                => gth_tx_data_i.txsequence,
       TXSTARTSEQ                => '0',
       ------------- Transmit Ports - TX Initialization and Reset Ports -----------
       TXPCSRESET                => '0',

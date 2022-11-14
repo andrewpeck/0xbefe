@@ -24,8 +24,8 @@ package system_package is
   constant g_NUM_OF_GTH_COMMONs : integer := 17;
   constant g_NUM_OF_GTH_GTs     : integer := 68;
 
-  type t_gth_link_type is (gth_null, gth_1p6g_8b10b_buf, gth_1p25g_8b10b_buf, gth_4p8g, gth_10p24g, gth_tx_10p24g_rx_4p0g, gth_tx_1p25g_rx_4p0g, gth_9p6g, gth_2p56g); -- the 3.2Gbps and 9.6Gbps are 8b10b, while 4.8, 10.24, and 2.56Gbps are raw (used with GBT core)
-  type t_gth_txusrclk is (GTH_USRCLK_40, GTH_USRCLK_80, GTH_USRCLK_120, GTH_USRCLK_160, GTH_USRCLK_320, GTH_USRCLK_62p5, GTH_USRCLK_OUTCLK, GTH_USRCLK_NULL);
+  type t_gth_link_type is (gth_null, gth_1p6g_8b10b_buf, gth_1p25g_8b10b_buf, gth_4p8g, gth_10p24g, gth_tx_10p24g_rx_4p0g, gth_tx_1p25g_rx_4p0g, gth_tx_10p3125g_rx_4p0g, gth_9p6g, gth_2p56g); -- the 3.2Gbps and 9.6Gbps are 8b10b, while 4.8, 10.24, and 2.56Gbps are raw (used with GBT core)
+  type t_gth_txusrclk is (GTH_USRCLK_40, GTH_USRCLK_80, GTH_USRCLK_120, GTH_USRCLK_160, GTH_USRCLK_320, GTH_USRCLK_62p5, GTH_USRCLK_OUTCLK, GTH_USRCLK_10GBE, GTH_USRCLK2_10GBE, GTH_USRCLK_NULL);
 
   type t_gth_config is
   record
@@ -109,23 +109,22 @@ package system_package is
     (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320, GTH_USRCLK_160, 100, 4, "BUFH"),                  -- GTH FW Ch 55
 
     ---=== MP 2 / MP TX ===---
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 56
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 57
-    (gth_tx_1p25g_rx_4p0g,  false, GTH_USRCLK_OUTCLK, GTH_USRCLK_OUTCLK, 100, 4, "BUFG"),              -- GTH FW Ch 58 -- LDAQ TX (MTP48 LC #1)
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 59
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 60
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 61
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 62
-    (gth_tx_10p24g_rx_4p0g, false, GTH_USRCLK_320,  GTH_USRCLK_160 , 100, 4, "BUFH"),                  -- GTH FW Ch 63
---    (gth_10p24g, false, GTH_USRCLK_320, GTH_USRCLK_320, 32, 1, "BUFH"),                             -- GTH FW Ch 64 -- uncomment for LpGBT loopback
---    (gth_10p24g, false, GTH_USRCLK_320, GTH_USRCLK_320, 32, 1, "BUFH"),                             -- GTH FW Ch 65 -- uncomment for LpGBT loopback
---    (gth_10p24g, false, GTH_USRCLK_320, GTH_USRCLK_320, 32, 1, "BUFH"),                             -- GTH FW Ch 66 -- uncomment for LpGBT loopback
---    (gth_10p24g, false, GTH_USRCLK_320, GTH_USRCLK_320, 32, 1, "BUFH")                              -- GTH FW Ch 67 -- uncomment for LpGBT loopback
-    (gth_null, false, GTH_USRCLK_NULL, GTH_USRCLK_NULL, 100, 4, "NONE"),                             -- GTH FW Ch 64
-    (gth_null, false, GTH_USRCLK_NULL, GTH_USRCLK_NULL, 100, 4, "NONE"),                             -- GTH FW Ch 65
-    (gth_null, false, GTH_USRCLK_NULL, GTH_USRCLK_NULL, 100, 4, "NONE"),                             -- GTH FW Ch 66
-    (gth_null, false, GTH_USRCLK_NULL, GTH_USRCLK_NULL, 100, 4, "NONE")                              -- GTH FW Ch 67
-
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 56
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 57
+    (gth_tx_10p3125g_rx_4p0g,  true,  GTH_USRCLK_10GBE,  GTH_USRCLK2_10GBE, 100, 4, "BUFH"),         -- GTH FW Ch 58 -- LDAQ TX (MTP48 LC #1)
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 59
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 60
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 61
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 62
+    (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),         -- GTH FW Ch 63
+    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),         -- GTH FW Ch 64 -- uncomment for LpGBT loopback
+    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),         -- GTH FW Ch 65 -- uncomment for LpGBT loopback
+    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),         -- GTH FW Ch 66 -- uncomment for LpGBT loopback
+    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH")          -- GTH FW Ch 67 -- uncomment for LpGBT loopback
+    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),         -- GTH FW Ch 64
+    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),         -- GTH FW Ch 65
+    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),         -- GTH FW Ch 66
+    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE")          -- GTH FW Ch 67
     );
 
   constant c_me0_gth_config_arr : t_gth_config_arr := (

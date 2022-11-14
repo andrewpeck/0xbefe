@@ -1,6 +1,7 @@
-# -*- mode: TCL;-*-
 
 boards/ctp7/hdl/gem_ctp7.vhd top=gem_ctp7
+
+boards/ctp7/hdl/misc/ten_gbe_clocks.vhd
 boards/ctp7/hdl/misc/ttc_clocks.vhd
 
 boards/ctp7/hdl/pkg/gem_board_config_pkg.vhd
@@ -13,6 +14,7 @@ boards/ctp7/hdl/system/gth_clk_bufs.vhd
 boards/ctp7/hdl/system/gth_single_10p24g.vhd
 boards/ctp7/hdl/system/gth_single_TX_STARTUP_FSM.vhd
 boards/ctp7/hdl/system/gth_single_tx_10p24g_rx_4p0g.vhd
+boards/ctp7/hdl/system/gth_single_tx_10p3125g_rx_4p0g.vhd
 boards/ctp7/hdl/system/gth_single_tx_1p25g_rx_4p0g.vhd
 boards/ctp7/hdl/system/gth_single_2p56g.vhd
 boards/ctp7/hdl/system/drp_controller.vhd

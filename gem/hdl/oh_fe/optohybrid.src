@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 gem/hdl/oh_fe/optohybrid_fw.vhd 93 top=optohybrid_fw
 
 # Control
@@ -26,6 +25,7 @@ gem/hdl/oh_fe/pkg/types_pkg.vhd 93
 
 # Cluster packer
 gem/hdl/cluster_finding/cluster_finding.src
+gem/hdl/cluster_finding/hdl/sbit_delay.vhd 93
 
 # Trigger
 gem/hdl/oh_fe/trigger/active_vfats.vhd 93
@@ -40,6 +40,8 @@ gem/hdl/oh_fe/trigger/trig_alignment/frame_aligner_tmr.vhd 93
 gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
 
 # Utils
+common/hdl/utils/oneshot.vhd 93
+common/hdl/utils/synchronizer__generic.vhd 93
 #gem/hdl/utils/yahamm/yahamm_dec.vhd 93
 common/hdl/utils/yahamm/matrix_pkg.vhd 93
 common/hdl/utils/yahamm/yahamm_enc.vhd 93
@@ -53,7 +55,6 @@ gem/hdl/oh_fe/utils/dru_tmr.vhd 93
 gem/hdl/oh_fe/utils/oversample.vhd 93
 gem/hdl/oh_fe/utils/bitslip.vhd 93
 #gem/hdl/oh_fe/utils/bitslip_fast.vhd 93
-gem/hdl/oh_fe/utils/clock_strobe.vhd 93
 gem/hdl/oh_fe/utils/clocking.vhd 93
 gem/hdl/oh_fe/utils/counter_snap.vhd 93
 gem/hdl/oh_fe/utils/counter_snap_tmr.vhd 93

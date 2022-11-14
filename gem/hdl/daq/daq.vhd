@@ -63,13 +63,13 @@ port(
 
     -- Spy
     spy_clk_i                   : in  std_logic;
-    spy_link_o                  : out t_mgt_16b_tx_data;
+    spy_link_o                  : out t_mgt_64b_tx_data;
     
     -- IPbus
     ipb_reset_i                 : in  std_logic;
     ipb_clk_i                   : in std_logic;
-	ipb_mosi_i                  : in ipb_wbus;
-	ipb_miso_o                  : out ipb_rbus;
+    ipb_mosi_i                  : in ipb_wbus;
+    ipb_miso_o                  : out ipb_rbus;
     
     -- Other
     board_sn_i                  : in std_logic_vector(15 downto 0) -- board serial ID, needed for the header to AMC13
@@ -111,9 +111,11 @@ architecture Behavioral of daq is
 
     constant DAQ_CLK_TO_40_RATIO : integer := g_DAQ_CLK_FREQ / C_TTC_CLK_FREQUENCY;
     constant OUTFIFO_RD_WIDTH    : integer := get_outfifo_rd_width(g_IS_SLINK_ROCKET);
+    constant AMC_EVENT_VERSION   : std_logic_vector(3 downto 0) := x"1";
     constant SR_HEADER_BOE       : std_logic_vector(7 downto 0) := x"55";
     constant SR_HEADER_VERSION   : std_logic_vector(3 downto 0) := x"1";
     constant SR_TRAILER_EOE      : std_logic_vector(7 downto 0) := x"AA";
+    constant GEM_PAYLOAD_VERSION : std_logic_vector(2 downto 0) := "001";
 
     --================== SIGNALS ==================--
 
@@ -187,6 +189,7 @@ architecture Behavioral of daq is
     signal run_params           : std_logic_vector(23 downto 0) := x"000000"; -- optional run parameters (set by software and included in the AMC header)
     signal zero_suppression_en  : std_logic;
     signal ignore_daqlink       : std_logic := '0'; -- when this is set to true, DAQLink status is ignored (useful for local spy-only data taking) 
+    signal ignore_spylink       : std_logic := '0'; -- when this is set to true, the spy link status is ignored (useful for to avoid impacting DAQLink data taking)
     signal block_last_evt_fifo  : std_logic := '0'; -- if true, then events are not written to the last event fifo (could be useful to toggle this from software in order to know how many events are read exactly because sometimes you may miss empty=true)
     signal freeze_on_error      : std_logic := '0'; -- this is a debug feature which when turned on will start sending only IDLE words to all input processors as soon as TTS error is detected
     signal reset_till_resync    : std_logic := '0'; -- if this is true, then after the user removes the reset, this module will still stay in reset till the resync is received. This is handy for starting to take data in the middle of an active run.
@@ -248,7 +251,6 @@ architecture Behavioral of daq is
     -- Spy path
     signal spy_fifo_wr_en           : std_logic;
     signal spy_fifo_rd_en           : std_logic;
-    signal spy_fifo_dout            : std_logic_vector(16 downto 0);
     signal spy_fifo_ovf             : std_logic;
     signal spy_fifo_empty           : std_logic;
     signal spy_fifo_prog_full       : std_logic;
@@ -259,6 +261,8 @@ architecture Behavioral of daq is
     signal err_spy_fifo_ovf         : std_logic;
     signal spy_fifo_afull_cnt       : std_logic_vector(15 downto 0);
     
+    signal spy_gbe_reset_ipb        : std_logic;
+    signal spy_gbe_generator_en     : std_logic;
     signal spy_gbe_skip_headers     : std_logic;
     signal spy_gbe_dest_mac         : std_logic_vector(47 downto 0);
     signal spy_gbe_source_mac       : std_logic_vector(47 downto 0);
@@ -812,53 +816,199 @@ begin
     -- Spy Path
     --================================--
 
-    i_spy_fifo : xpm_fifo_async
-        generic map(
-            FIFO_MEMORY_TYPE    => "block",
-            FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
-            RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 68,
-            READ_MODE           => "fwft",
-            FIFO_READ_LATENCY   => 0,
-            FULL_RESET_VALUE    => 1,
-            USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 17,
-            CDC_SYNC_STAGES     => 2,
-            PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
-            PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
-            DOUT_RESET_VALUE    => "0",
-            ECC_MODE            => "no_ecc"
-        )
-        port map(
-            sleep         => '0',
-            rst           => reset_daq,
-            wr_clk        => daq_clk_i,
-            wr_en         => spy_fifo_wr_en and spy_prescale_keep_evt,
-            din           => daq_event_trailer & daq_event_data(63 downto 48) & "0" & daq_event_data(47 downto 32) & "0" & daq_event_data(31 downto 16) & "0" & daq_event_data(15 downto 0),
-            full          => open,
-            prog_full     => spy_fifo_prog_full,
-            wr_data_count => open,
-            overflow      => spy_fifo_ovf,
-            wr_rst_busy   => open,
-            almost_full   => open,
-            wr_ack        => open,
-            rd_clk        => spy_clk_i,
-            rd_en         => spy_fifo_rd_en,
-            dout          => spy_fifo_dout,
-            empty         => spy_fifo_empty,
-            prog_empty    => spy_fifo_prog_empty,
-            rd_data_count => open,
-            underflow     => open,
-            rd_rst_busy   => open,
-            almost_empty  => spy_fifo_aempty,
-            data_valid    => open,
-            injectsbiterr => '0',
-            injectdbiterr => '0',
-            sbiterr       => open,
-            dbiterr       => open
-        );    
+    -- 1 GbE
+    g_spy_gbe: if not CFG_SPY_10GBE generate
+        signal spy_fifo_dout : std_logic_vector(16 downto 0);
+        signal spy_link      : t_mgt_16b_tx_data;
+    begin
+        i_spy_fifo : xpm_fifo_async
+            generic map(
+                FIFO_MEMORY_TYPE    => "block",
+                FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
+                RELATED_CLOCKS      => 0,
+                WRITE_DATA_WIDTH    => 68,
+                READ_MODE           => "fwft",
+                FIFO_READ_LATENCY   => 0,
+                FULL_RESET_VALUE    => 1,
+                USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 17,
+                CDC_SYNC_STAGES     => 2,
+                PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
+                PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => spy_fifo_wr_en,
+                din           => daq_event_trailer & daq_event_data(63 downto 48) & "0" & daq_event_data(47 downto 32) & "0" & daq_event_data(31 downto 16) & "0" & daq_event_data(15 downto 0),
+                full          => open,
+                prog_full     => spy_fifo_prog_full,
+                wr_data_count => open,
+                overflow      => spy_fifo_ovf,
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_clk        => spy_clk_i,
+                rd_en         => spy_fifo_rd_en,
+                dout          => spy_fifo_dout,
+                empty         => spy_fifo_empty,
+                prog_empty    => spy_fifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open,
+                rd_rst_busy   => open,
+                almost_empty  => spy_fifo_aempty,
+                data_valid    => open,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
 
-    spy_fifo_wr_en <= daq_event_write_en; -- write the same exact data as to the AMC13 for now
+        i_spy_gbe_tx_driver : entity work.gbe_tx_driver
+            generic map(
+                g_MAX_EVT_WORDS        => 50000,
+                g_NUM_IDLES_SMALL_EVT  => 2,
+                g_NUM_IDLES_BIG_EVT    => 7,
+                g_SMALL_EVT_MAX_WORDS  => 24,
+                g_USE_TRAILER_FLAG_EOE => true,
+                g_USE_GEM_FORMAT       => true
+            )
+            port map(
+                reset_i             => reset_daq,
+                gbe_clk_i           => spy_clk_i,
+                gbe_tx_data_o       => spy_link,
+                skip_eth_header_i   => spy_gbe_skip_headers,
+                dest_mac_i          => spy_gbe_dest_mac,
+                source_mac_i        => spy_gbe_source_mac,
+                ether_type_i        => spy_gbe_ethertype,
+                min_payload_words_i => spy_min_payload_words,
+                max_payload_words_i => spy_max_payload_words,
+                data_empty_i        => spy_fifo_empty,
+                data_i              => spy_fifo_dout(15 downto 0),
+                data_trailer_i      => spy_fifo_dout(16),
+                data_rd_en          => spy_fifo_rd_en,
+                last_valid_word_i   => spy_fifo_aempty,
+                err_event_too_big_o => spy_err_evt_too_big,
+                err_eoe_not_found_o => spy_err_eoe_not_found,
+                word_rate_o         => spy_word_rate,
+                evt_cnt_o           => spy_evt_sent
+            );
+
+            spy_link_o.txdata(15 downto 0) <= spy_link.txdata;
+            spy_link_o.txcharisk(1 downto 0) <= spy_link.txcharisk;
+            spy_link_o.txchardispval(1 downto 0) <= spy_link.txchardispval;
+            spy_link_o.txchardispmode(1 downto 0) <= spy_link.txchardispmode;
+    end generate;
+
+    -- 10 GbE
+    g_spy_10gbe : if CFG_SPY_10GBE generate
+        signal spy_fifo_dout    : std_logic_vector(64 downto 0);
+        signal spy_packet_valid : std_logic;
+        signal spy_packet_data  : std_logic_vector(63 downto 0);
+        signal spy_packet_end   : std_logic;
+        signal spy_packet_rden  : std_logic;
+    begin
+        i_spy_fifo : xpm_fifo_async
+            generic map(
+                FIFO_MEMORY_TYPE    => "block",
+                FIFO_WRITE_DEPTH    => CFG_DAQ_SPYFIFO_DEPTH,
+                RELATED_CLOCKS      => 0,
+                WRITE_DATA_WIDTH    => 65,
+                READ_MODE           => "fwft",
+                FIFO_READ_LATENCY   => 0,
+                FULL_RESET_VALUE    => 1,
+                USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                READ_DATA_WIDTH     => 65,
+                CDC_SYNC_STAGES     => 2,
+                PROG_FULL_THRESH    => CFG_DAQ_SPYFIFO_PROG_FULL_SET,
+                PROG_EMPTY_THRESH   => CFG_DAQ_SPYFIFO_PROG_FULL_RESET,
+                DOUT_RESET_VALUE    => "0",
+                ECC_MODE            => "no_ecc"
+            )
+            port map(
+                sleep         => '0',
+                rst           => reset_daq,
+                wr_clk        => daq_clk_i,
+                wr_en         => spy_fifo_wr_en,
+                din           => daq_event_trailer & daq_event_data,
+                full          => open,
+                prog_full     => spy_fifo_prog_full,
+                wr_data_count => open,
+                overflow      => spy_fifo_ovf,
+                wr_rst_busy   => open,
+                almost_full   => open,
+                wr_ack        => open,
+                rd_clk        => spy_clk_i,
+                rd_en         => spy_fifo_rd_en,
+                dout          => spy_fifo_dout,
+                empty         => spy_fifo_empty,
+                prog_empty    => spy_fifo_prog_empty,
+                rd_data_count => open,
+                underflow     => open,
+                rd_rst_busy   => open,
+                almost_empty  => spy_fifo_aempty,
+                data_valid    => open,
+                injectsbiterr => '0',
+                injectdbiterr => '0',
+                sbiterr       => open,
+                dbiterr       => open
+            );
+
+        i_spy_ten_gbe_tx_data_formatter : entity work.ten_gbe_tx_data_formatter
+            port map (
+                clk_i               => spy_clk_i,
+                reset_i             => reset_i or spy_gbe_reset_ipb,
+
+                -- Event input
+                event_valid_i       => not spy_fifo_empty,
+                event_data_i        => spy_fifo_dout(63 downto 0),
+                event_end_i         => spy_fifo_dout(64),
+                event_rden_o        => spy_fifo_rd_en,
+
+                -- Packet output
+                packet_valid_o      => spy_packet_valid,
+                packet_data_o       => spy_packet_data,
+                packet_end_o        => spy_packet_end,
+                packet_rden_i       => spy_packet_rden,
+
+                -- Config
+                dest_mac_i          => spy_gbe_dest_mac,
+                source_mac_i        => spy_gbe_source_mac,
+                ether_type_i        => spy_gbe_ethertype,
+                min_payload_words_i => spy_min_payload_words, -- 16 bits words!
+                max_payload_words_i => spy_max_payload_words, -- 16 bits words!
+
+                -- Status
+                evt_cnt_o           => spy_evt_sent,
+                err_event_too_big_o => spy_err_evt_too_big
+            );
+
+        i_spy_ten_gbe_tx_mac_pcs : entity work.ten_gbe_tx_mac_pcs
+            port map (
+                reset_i        => reset_i or spy_gbe_reset_ipb,
+
+                -- GbE link
+                clk_i          => spy_clk_i,
+                tx_data_o      => spy_link_o,
+
+                -- Packet input
+                packet_valid_i => spy_packet_valid,
+                packet_data_i  => spy_packet_data,
+                packet_end_i   => spy_packet_end,
+                packet_rden_o  => spy_packet_rden,
+
+                -- Config
+                generator_en   => spy_gbe_generator_en,
+
+                -- Status
+                word_rate_o    => spy_word_rate -- 16 bits words!
+            );
+    end generate;
+
+    spy_fifo_wr_en <= daq_event_write_en and spy_prescale_keep_evt; -- pre-scaled version of the DAQLink data
 
     i_sync_spyfifo_prog_empty : entity work.synch generic map(N_STAGES => 3) port map(async_i => spy_fifo_prog_empty, clk_i => daq_clk_i, sync_o => spy_fifo_prog_empty_wrclk);
     i_latch_spyfifo_near_full : entity work.latch port map(
@@ -866,37 +1016,7 @@ begin
             clk_i   => daq_clk_i,
             input_i => spy_fifo_prog_full,
             latch_o => spy_fifo_afull
-        );        
-    
-    i_spy_ethernet_driver : entity work.gbe_tx_driver
-        generic map(
-            g_MAX_EVT_WORDS        => 50000,
-            g_NUM_IDLES_SMALL_EVT  => 2,
-            g_NUM_IDLES_BIG_EVT    => 7,
-            g_SMALL_EVT_MAX_WORDS  => 24,
-            g_USE_TRAILER_FLAG_EOE => true,
-            g_USE_GEM_FORMAT       => true
-        )
-        port map(
-            reset_i             => reset_daq,
-            gbe_clk_i           => spy_clk_i,
-            gbe_tx_data_o       => spy_link_o,
-            skip_eth_header_i   => spy_gbe_skip_headers,
-            dest_mac_i          => spy_gbe_dest_mac,
-            source_mac_i        => spy_gbe_source_mac,
-            ether_type_i        => spy_gbe_ethertype,
-            min_payload_words_i => spy_min_payload_words,
-            max_payload_words_i => spy_max_payload_words,
-            data_empty_i        => spy_fifo_empty,
-            data_i              => spy_fifo_dout(15 downto 0),
-            data_trailer_i      => spy_fifo_dout(16),
-            data_rd_en          => spy_fifo_rd_en,
-            last_valid_word_i   => spy_fifo_aempty,
-            err_event_too_big_o => spy_err_evt_too_big,
-            err_eoe_not_found_o => spy_err_eoe_not_found,
-            word_rate_o         => spy_word_rate,
-            evt_cnt_o           => spy_evt_sent
-        );    
+        );
 
     -- Near-full counter
     i_spy_near_full_counter : entity work.counter
@@ -910,7 +1030,7 @@ begin
         en_i      => spy_fifo_afull,
         count_o   => spy_fifo_afull_cnt
     );
-        
+
     -- latch the spy fifo overflow error
     process(daq_clk_i)
     begin
@@ -926,7 +1046,7 @@ begin
             end if;
         end if;
     end process;
-        
+
     --================================--
     -- Chamber Event Builders
     --================================--
@@ -1077,7 +1197,7 @@ begin
                 end if;
                 
                 -- wait for all L1As to be processed and output buffer drained and then reset everything (resync_done triggers the reset_daq)
-                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = x"0" and (daqfifo_empty = '1' or ignore_daqlink = '1')) then
+                if (resync_mode = '1' and l1afifo_empty = '1' and daq_state = x"0" and (daqfifo_empty = '1' or ignore_daqlink = '1') and (spy_fifo_empty = '1' or ignore_spylink = '1')) then
                     resync_done <= '1';
                 end if;
             end if;
@@ -1171,7 +1291,7 @@ begin
                     
                     -- have an L1A and data from all enabled inputs is ready (or these inputs have timed out)
                     if (l1afifo_empty = '0' and ((input_mask(g_NUM_OF_OHs - 1 downto 0) and ((not chmb_evtfifos_empty) or dav_timeout_flags(g_NUM_OF_OHs - 1 downto 0))) = input_mask(g_NUM_OF_OHs - 1 downto 0))) then
-                        if (((daq_ready = '1' and daqfifo_near_full = '0') or (ignore_daqlink = '1')) and daq_enable = '1') then -- everybody ready?.... GO! :)
+                        if (((daq_ready = '1' and daqfifo_near_full = '0') or (ignore_daqlink = '1')) and (spy_fifo_afull = '0' or ignore_spylink = '1') and daq_enable = '1') then -- everybody ready?.... GO! :)
                             -- start the DAQ state machine
                             daq_state <= x"1";
                             
@@ -1235,10 +1355,11 @@ begin
                                               x"0000" &  -- TCDS2 L1A types: bit field indicating all L1A types that fired for this event TODO: connect to TCDS2 when becomes available
                                               fed_id;    -- source ID
                         else
-                            daq_event_data <= x"00" & 
+                            daq_event_data <= x"0" &                  -- reserved
+                                              x"0" &                  -- slot (filled by the AMC13)
                                               e_l1a_id(23 downto 0) & -- L1A ID
                                               e_bx_id &               -- BX ID
-                                              x"fffff";
+                                              x"fffff";               -- event size placeholder
                         end if;
 
                         daq_event_header <= '1';
@@ -1264,10 +1385,10 @@ begin
                                           x"00" &              -- reserved
                                           std_logic_vector(unsigned(e_l1a_id) - 1); -- minus one to start from 0 instead of 1
                     else
-                        daq_event_data <= C_DAQ_FORMAT_VERSION &
-                                          x"000" &
-                                          e_orbit_id & 
-                                          fed_id(15 downto 0);
+                        daq_event_data <= AMC_EVENT_VERSION &  -- version of the AMC headers/trailer
+                                          x"000" &             -- unused
+                                          e_orbit_id &         -- orbit ID
+                                          fed_id(15 downto 0); -- S-link Express FED ID
                     end if;
                     daq_event_header <= '0';
                     daq_event_trailer <= '0';
@@ -1289,15 +1410,12 @@ begin
                     else
 
                         -- send the data
-                        daq_event_data <= e_dav_mask & -- DAV mask
-                                          -- buffer status (set if we've ever had a buffer overflow)
-                                          x"000000" & -- TODO: implement buffer status flag
-                                          --(err_event_too_big or e_chmb_evtfifo_full or e_chmb_infifo_underflow or e_chmb_infifo_full) &
-                                          std_logic_vector(to_unsigned(e_dav_count, 5)) &   -- DAV count
-                                          -- GLIB status
-                                          "000" & -- Not used yet
-                                          (3 downto 0 => format_calib_mode) & -- set all these bits to 1 if calibration mode is enabled
-                                          tts_state;
+                        daq_event_data <= e_dav_mask &                                    -- data available mask
+                                          x"000000" &                                     -- unused
+                                          std_logic_vector(to_unsigned(e_dav_count, 5)) & -- data available count
+                                          GEM_PAYLOAD_VERSION &                           -- GEM payload version
+                                          (3 downto 0 => format_calib_mode) &             -- VFAT paylod type (0 - lossless, 15 - calibration mode)
+                                          tts_state;                                      -- TTS state
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
@@ -1346,26 +1464,25 @@ begin
                         e_chmb_mixed_vfat_ec                := chamber_evtfifos(e_input_idx).dout(0);
                         
                         -- send the data
-                        daq_event_data <= x"0000" & -- Zero suppression flags
-                                          "0" & format_calib_chan &
-                                          std_logic_vector(to_unsigned(e_input_idx, 5)) &    -- Input ID
-                                          -- OH word count
-                                          std_logic_vector(e_chmb_payload_size(11 downto 0)) &
+                        daq_event_data <= x"0000" & "0" &                                      -- unused
+                                          format_calib_chan &                                  -- calibration channel
+                                          std_logic_vector(to_unsigned(e_input_idx, 5)) &      -- input ID (i.e. chamber index)
+                                          std_logic_vector(e_chmb_payload_size(11 downto 0)) & -- VFAT word count
                                           -- input status
                                           e_chmb_evtfifo_full &
                                           e_chmb_infifo_full &
-                                          "0" &  -- unused
-                                          e_chmb_evt_too_big &
+                                          "0" &                       -- unused
+                                          e_chmb_evt_too_big &        -- more than 4095 blocks
                                           e_chmb_evtfifo_near_full &
                                           e_chmb_infifo_near_full &
-                                          "0" & -- unused
-                                          e_chmb_evt_bigger_24 &
-                                          e_chmb_invalid_vfat_block &
-                                          "0" & -- OOS AMC-VFAT
-                                          e_chmb_mixed_vfat_ec & -- OOS VFAT-VFAT
-                                          "0" & -- AMC-VFAT BX mismatch
-                                          e_chmb_mixed_vfat_bc & -- VFAT-VFAT BX mismatch
-                                          x"00" & "00"; -- Not used
+                                          "0" &                       -- unused
+                                          e_chmb_evt_bigger_24 &      -- more than 24 VFAT blocks
+                                          e_chmb_invalid_vfat_block & -- invalid header or incorrect CRC
+                                          "0" &                       -- OOS AMC-VFAT
+                                          e_chmb_mixed_vfat_ec &      -- OOS VFAT-VFAT
+                                          "0" &                       -- AMC-VFAT BX mismatch
+                                          e_chmb_mixed_vfat_bc &      -- VFAT-VFAT BX mismatch
+                                          x"00" & "00";               -- unused
 
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
@@ -1444,10 +1561,10 @@ begin
                     
                         -- send the data
                         daq_event_data <= std_logic_vector(e_chmb_payload_size(11 downto 0)) & -- VFAT word count
-                                          chmb_infifo_underflow & -- this input had an infifo underflow
-                                          "000" & -- unused
-                                          e_chmb_zs_flags &
-                                          e_chmb_vfat_en_mask;  
+                                          chmb_infifo_underflow &                              -- chamber input FIFO underflow
+                                          "000" &                                              -- unused
+                                          e_chmb_zs_flags &                                    -- zero-suppressed VFAT mask
+                                          e_chmb_vfat_en_mask;                                 -- enabled VFAT mask
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
@@ -1469,16 +1586,17 @@ begin
                 ----==== send the GEM Event trailer ====----
                 elsif (daq_state = x"7") then
 
-                    daq_event_data <= dav_timeout_flags & -- Chamber timeout
-                                      x"0" &
-                                      run_type & run_params &
+                    daq_event_data <= dav_timeout_flags &                   -- data timeout mask
+                                      x"0" &                                -- unused
+                                      run_type & run_params &               -- run type & run params
                                       -- BE status
                                       daq_backpressure &
                                       ttc_status_i.clk_status.mmcm_locked & 
                                       daq_clk_locked_i & 
                                       daq_ready &
                                       ttc_status_i.bc0_status.locked &
-                                      "0" & -- Reserved
+                                      "0" &                                 -- unused
+                                      -- L1A FIFO status
                                       err_l1afifo_full_dclk &
                                       l1afifo_near_full_daqclk;         
                     daq_event_header <= '0';
@@ -1500,7 +1618,10 @@ begin
                 elsif (daq_state = x"8") then
                 
                     -- send the AMC trailer data
-                    daq_event_data <= x"00000000" & e_l1a_id(7 downto 0) & x"0" & std_logic_vector(e_word_count + 1);
+                    daq_event_data <= x"00000000" &                       -- CRC-32 (filled by the AMC13)
+                                      e_l1a_id(7 downto 0) &              -- L1A ID
+                                      x"0" &                              -- reserved
+                                      std_logic_vector(e_word_count + 1); -- event size
                     daq_event_header <= '0';
                     daq_event_trailer <= '1';
                     daq_event_write_en <= '1';

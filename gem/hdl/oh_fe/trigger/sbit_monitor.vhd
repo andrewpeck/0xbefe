@@ -16,7 +16,8 @@ use work.cluster_pkg.all;
 
 entity sbit_monitor is
   generic(
-    g_NUM_OF_OHs : integer := 1
+    g_NUM_OF_OHs      : integer := 1;
+    g_PARTITION_WIDTH : integer := 192
     );
   port(
     -- reset
@@ -25,6 +26,8 @@ entity sbit_monitor is
     -- TTC
     ttc_clk_i : in std_logic;
     l1a_i     : in std_logic;
+
+    trig_on_invalid_addrs : in std_logic;
 
     -- Sbit cluster inputs
     clusters_i : in sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
@@ -46,15 +49,20 @@ architecture sbit_monitor_arch of sbit_monitor is
   signal l1a_delay_run : std_logic := '0';
   signal l1a_delay     : unsigned(31 downto 0);
 
+  signal cluster_corrupted : std_logic_vector (NUM_FOUND_CLUSTERS-1 downto 0);
+
 begin
 
   l1a_delay_o <= std_logic_vector(l1a_delay);
 
   validmap : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
-    cluster_valid (I) <= clusters_i(I).vpf;
+    cluster_valid (I)    <= clusters_i(I).vpf;
+    cluster_corrupted(I) <= '1' when invalid_clusterp(clusters_i(I), g_PARTITION_WIDTH) else '0';
   end generate validmap;
 
-  link_trigger <= or_reduce(cluster_valid);
+  link_trigger <= or_reduce(cluster_valid) when
+                  trig_on_invalid_addrs='0' else
+                  or_reduce(cluster_corrupted);
 
   -- freeze the sbits on the output when a trigger comes
   freezeloop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate

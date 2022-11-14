@@ -149,8 +149,6 @@ architecture Behavioral of optohybrid_fw is
   signal ttc_rx      : ttc_t;
   signal ttc         : ttc_t;
 
-  signal vtrx_mabs : std_logic_vector (1 downto 0);
-
   -- GBT Link
   signal gbt_link_ready       : std_logic;
   signal gbt_link_error       : std_logic;
@@ -160,7 +158,6 @@ architecture Behavioral of optohybrid_fw is
   signal pll_lock   : std_logic;
   signal txfsm_done : std_logic;
 
-  signal trigger_reset : std_logic;
   signal system_reset  : std_logic;
   signal cnt_snap      : std_logic;
 

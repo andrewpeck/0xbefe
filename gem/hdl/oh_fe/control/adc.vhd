@@ -40,69 +40,70 @@ end adc;
 
 architecture Behavioral of adc is
 
+  constant N_ALARMS : integer := 3;
+
   signal ipb_slave_tmr_err : std_logic := '0';
 
   signal reset : std_logic;
 
-  signal daddr        : std_logic_vector (6 downto 0);
-  signal data_in      : std_logic_vector (15 downto 0);
-  signal data_out     : std_logic_vector (15 downto 0);
-  signal den          : std_logic;
-  signal den_os       : std_logic;
-  signal data_ready   : std_logic;
-  signal reset_local  : std_logic;
-  signal write_en     : std_logic;
-  signal write_en_os  : std_logic;      --write_en oneshot for Vivado bug https://www.xilinx.com/support/answers/67468.html
-  signal overtemp     : std_logic;
-  signal vccaux_alarm : std_logic;
-  signal vccint_alarm : std_logic;
+  signal daddr         : std_logic_vector (6 downto 0);
+  signal data_in       : std_logic_vector (15 downto 0);
+  signal data_out      : std_logic_vector (15 downto 0);
+  signal den           : std_logic;
+  signal den_os        : std_logic;
+  signal data_ready    : std_logic;
+  signal reset_local   : std_logic;
+  signal write_en      : std_logic;
+  signal write_en_os   : std_logic;                             -- write_en oneshot for Vivado bug https://www.xilinx.com/support/answers/67468.html
+  signal alarm         : std_logic_vector(N_ALARMS-1 downto 0);
+  signal alarm_sync    : std_logic_vector(N_ALARMS-1 downto 0);
+  signal alarm_sync_os : std_logic_vector(N_ALARMS-1 downto 0);
 
   component xadc
     port (
-      daddr_in         : in  std_logic_vector (6 downto 0);   -- address bus for the dynamic reconfiguration port
-      dclk_in          : in  std_logic;                       -- clock input for the dynamic reconfiguration port
-      den_in           : in  std_logic;                       -- enable signal for the dynamic reconfiguration port
-      di_in            : in  std_logic_vector (15 downto 0);  -- input data bus for the dynamic reconfiguration port
-      dwe_in           : in  std_logic;                       -- write enable for the dynamic reconfiguration port
-      reset_in         : in  std_logic;                       -- reset signal for the system monitor control logic
-      busy_out         : out std_logic;                       -- adc busy signal
-      channel_out      : out std_logic_vector (4 downto 0);   -- channel selection outputs
-      do_out           : out std_logic_vector (15 downto 0);  -- output data bus for dynamic reconfiguration port
-      drdy_out         : out std_logic;                       -- data ready signal for the dynamic reconfiguration port
-      eoc_out          : out std_logic;                       -- end of conversion signal
-      eos_out          : out std_logic;                       -- end of sequence signal
-      vp_in            : in  std_logic;                       -- dedicated analog input pair
-      vn_in            : in  std_logic;                       --
-      ot_out           : out std_logic;                       -- over-temperature alarm output
-      vccaux_alarm_out : out std_logic;                       -- vccaux-sensor alarm output
-      vccint_alarm_out : out std_logic                        -- vccint-sensor alarm output
+      daddr_in            : in  std_logic_vector (6 downto 0);   -- address bus for the dynamic reconfiguration port
+      dclk_in             : in  std_logic;                       -- clock input for the dynamic reconfiguration port
+      den_in              : in  std_logic;                       -- enable signal for the dynamic reconfiguration port
+      di_in               : in  std_logic_vector (15 downto 0);  -- input data bus for the dynamic reconfiguration port
+      dwe_in              : in  std_logic;                       -- write enable for the dynamic reconfiguration port
+      reset_in            : in  std_logic;                       -- reset signal for the system monitor control logic
+      busy_out            : out std_logic;                       -- adc busy signal
+      channel_out         : out std_logic_vector (4 downto 0);   -- channel selection outputs
+      do_out              : out std_logic_vector (15 downto 0);  -- output data bus for dynamic reconfiguration port
+      drdy_out            : out std_logic;                       -- data ready signal for the dynamic reconfiguration port
+      eoc_out             : out std_logic;                       -- end of conversion signal
+      eos_out             : out std_logic;                       -- end of sequence signal
+      vp_in               : in  std_logic;                       -- dedicated analog input pair
+      vn_in               : in  std_logic;                       --
+      ot_out              : out std_logic;                       -- over-temperature alarm output
+      user_temp_alarm_out : out std_logic;                       -- temperature-sensor alarm output
+      vccaux_alarm_out    : out std_logic;                       -- vccaux-sensor alarm output
+      vccint_alarm_out    : out std_logic                        -- vccint-sensor alarm output
       );
   end component;
 
 
   component xadc_a7
     port (
-      daddr_in    : in  std_logic_vector(6 downto 0);
-      dclk_in     : in  std_logic;
-      den_in      : in  std_logic;
-      di_in       : in  std_logic_vector(15 downto 0);
-      dwe_in      : in  std_logic;
-      reset_in    : in  std_logic;
-      busy_out    : out std_logic;
-      channel_out : out std_logic_vector(4 downto 0);
-      do_out      : out std_logic_vector(15 downto 0);
-      drdy_out    : out std_logic;
-      eoc_out     : out std_logic;
-      eos_out     : out std_logic;
-      vp_in       : in  std_logic;
-      vn_in       : in  std_logic;
-      ot_out      : out std_logic;
-
+      daddr_in            : in  std_logic_vector(6 downto 0);
+      dclk_in             : in  std_logic;
+      den_in              : in  std_logic;
+      di_in               : in  std_logic_vector(15 downto 0);
+      dwe_in              : in  std_logic;
+      reset_in            : in  std_logic;
+      busy_out            : out std_logic;
+      channel_out         : out std_logic_vector(4 downto 0);
+      do_out              : out std_logic_vector(15 downto 0);
+      drdy_out            : out std_logic;
+      eoc_out             : out std_logic;
+      eos_out             : out std_logic;
+      vp_in               : in  std_logic;
+      vn_in               : in  std_logic;
+      ot_out              : out std_logic;
       user_temp_alarm_out : out std_logic;
       alarm_out           : out std_logic;
-
-      vccaux_alarm_out : out std_logic;
-      vccint_alarm_out : out std_logic
+      vccaux_alarm_out    : out std_logic;
+      vccint_alarm_out    : out std_logic
       );
   end component;
 
@@ -152,23 +153,24 @@ begin
 
     xadc_inst : xadc
       port map(
-        daddr_in         => daddr,         -- Address bus for the dynamic reconfiguration port
-        dclk_in          => clock_i,       -- Clock input for the dynamic reconfiguration port
-        den_in           => den,           -- Enable Signal for the dynamic reconfiguration port
-        di_in            => data_in,       -- Input data bus for the dynamic reconfiguration port
-        dwe_in           => write_en,      -- Write Enable for the dynamic reconfiguration port
-        reset_in         => reset,         -- Reset signal for the System Monitor control logic
-        busy_out         => open,          -- ADC Busy signal
-        channel_out      => open,          -- Channel Selection Outputs
-        do_out           => data_out,      -- Output data bus for dynamic reconfiguration port
-        drdy_out         => data_ready,    -- Data ready signal for the dynamic reconfiguration port
-        eoc_out          => open,          -- End of Conversion Signal
-        eos_out          => open,          -- End of Sequence Signal
-        vp_in            => adc_vp,        -- Dedicated Analog Input Pair
-        vn_in            => adc_vn,        --
-        ot_out           => overtemp,      -- Over-Temperature alarm output
-        vccaux_alarm_out => vccaux_alarm,  -- VCCAUX-sensor alarm output
-        vccint_alarm_out => vccint_alarm   -- VCCINT-sensor alarm output
+        daddr_in            => daddr,         -- Address bus for the dynamic reconfiguration port
+        dclk_in             => clock_i,       -- Clock input for the dynamic reconfiguration port
+        den_in              => den,           -- Enable Signal for the dynamic reconfiguration port
+        di_in               => data_in,       -- Input data bus for the dynamic reconfiguration port
+        dwe_in              => write_en,      -- Write Enable for the dynamic reconfiguration port
+        reset_in            => reset,         -- Reset signal for the System Monitor control logic
+        busy_out            => open,          -- ADC Busy signal
+        channel_out         => open,          -- Channel Selection Outputs
+        do_out              => data_out,      -- Output data bus for dynamic reconfiguration port
+        drdy_out            => data_ready,    -- Data ready signal for the dynamic reconfiguration port
+        eoc_out             => open,          -- End of Conversion Signal
+        eos_out             => open,          -- End of Sequence Signal
+        vp_in               => adc_vp,        -- Dedicated Analog Input Pair
+        vn_in               => adc_vn,        --
+        ot_out              => open,          -- Over-Temperature alarm output
+        user_temp_alarm_out => alarm(0),      -- Temperature-sensor alarm output
+        vccaux_alarm_out    => alarm(1),      -- VCCAUX-sensor alarm output
+        vccint_alarm_out    => alarm(2)       -- VCCINT-sensor alarm output
         );
 
   end generate xadc_gen;
@@ -191,13 +193,31 @@ begin
         eos_out             => open,          -- End of Sequence Signal
         vp_in               => adc_vp,        -- Dedicated Analog Input Pair
         vn_in               => adc_vn,        --
-        alarm_out           => overtemp,      -- Over-Temperature alarm output
-        user_temp_alarm_out => open,          --
-        vccaux_alarm_out    => vccaux_alarm,  -- VCCAUX-sensor alarm output
-        vccint_alarm_out    => vccint_alarm   -- VCCINT-sensor alarm output
+        alarm_out           => open,          --
+        ot_out              => open,          -- Over-Temperature alarm output
+        user_temp_alarm_out => alarm(0),      -- Temperature-sensor alarm output
+        vccaux_alarm_out    => alarm(1),      -- VCCAUX-sensor alarm output
+        vccint_alarm_out    => alarm(2)       -- VCCINT-sensor alarm output
         );
 
   end generate xadc_gen_a7;
+
+  g_alarm_sync_os: for i in 0 to N_ALARMS-1 generate
+    i_alarm_sync: entity work.synch
+      port map (
+        async_i => alarm(i),
+        clk_i   => clock_i,
+        sync_o  => alarm_sync(i)
+      );
+
+    i_alarm_os: entity work.oneshot
+      port map (
+        reset_i   => reset,
+        clk_i     => clock_i,
+        input_i   => alarm_sync(i),
+        oneshot_o => alarm_sync_os(i)
+      );
+  end generate;
 
   --===============================================================================================
   -- (this section is generated by <optohybrid_top>/tools/generate_registers.py -- do not edit)
@@ -238,9 +258,9 @@ begin
     regs_addresses(3)(REG_ADC_ADDRESS_MSB downto REG_ADC_ADDRESS_LSB) <= x"3";
 
     -- Connect read signals
-    regs_read_arr(0)(REG_ADC_CTRL_OVERTEMP_BIT) <= overtemp;
-    regs_read_arr(0)(REG_ADC_CTRL_VCCAUX_ALARM_BIT) <= vccaux_alarm;
-    regs_read_arr(0)(REG_ADC_CTRL_VCCINT_ALARM_BIT) <= vccint_alarm;
+    regs_read_arr(0)(REG_ADC_CTRL_OVERTEMP_BIT) <= alarm_sync_os(0);
+    regs_read_arr(0)(REG_ADC_CTRL_VCCAUX_ALARM_BIT) <= alarm_sync_os(1);
+    regs_read_arr(0)(REG_ADC_CTRL_VCCINT_ALARM_BIT) <= alarm_sync_os(2);
     regs_read_arr(0)(REG_ADC_CTRL_ADR_IN_MSB downto REG_ADC_CTRL_ADR_IN_LSB) <= daddr;
     regs_read_arr(0)(REG_ADC_CTRL_ENABLE_BIT) <= den;
     regs_read_arr(0)(REG_ADC_CTRL_CNT_OVERTEMP_MSB downto REG_ADC_CTRL_CNT_OVERTEMP_LSB) <= cnt_overtemp;
@@ -271,7 +291,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => overtemp,
+        en_i      => alarm_sync(0),
         snap_i    => cnt_snap,
         count_o   => cnt_overtemp
     );
@@ -284,7 +304,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => vccaux_alarm,
+        en_i      => alarm_sync(1),
         snap_i    => cnt_snap,
         count_o   => cnt_vccaux_alarm
     );
@@ -297,7 +317,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => vccint_alarm,
+        en_i      => alarm_sync(2),
         snap_i    => cnt_snap,
         count_o   => cnt_vccint_alarm
     );

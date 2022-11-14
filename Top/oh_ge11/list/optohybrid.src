@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 gem/hdl/oh_fe/optohybrid.src lib=optohybrid
 boards/ge11_oh/optohybrid.src lib=optohybrid
 gem/hdl/oh_fe/pkg/hardware_pkg_ge11.vhd

@@ -387,16 +387,16 @@
 
             <node id="OVERTEMP" address="0x0" permission="r"
                   mask="0x00000001"
-                  description="FPGA over temperature"
-                  fw_signal="overtemp"/>
+                  description="Temperature Alarm"
+                  fw_signal="alarm_sync_os(0)"/>
             <node id="VCCAUX_ALARM" address="0x0" permission="r"
                   mask="0x00000002"
                   description="FPGA VCCAUX Alarm"
-                  fw_signal="vccaux_alarm"/>
+                  fw_signal="alarm_sync_os(1)"/>
             <node id="VCCINT_ALARM" address="0x0" permission="r"
                   mask="0x00000004"
                   description="FPGA VCCINT Alarm"
-                  fw_signal="vccint_alarm"/>
+                  fw_signal="alarm_sync_os(2)"/>
 
             <node id="ADR_IN" address="0x0" permission="rw"
                   description="XADC Addr In"
@@ -434,8 +434,8 @@
 
             <node id="CNT_OVERTEMP" address="0x0" permission="r"
                   mask="0x3f800"
-                  description="Overtemperature counter"
-                  fw_cnt_en_signal="overtemp"
+                  description="Temperature Alarm counter"
+                  fw_cnt_en_signal="alarm_sync(0)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_overtemp"/>
@@ -443,7 +443,7 @@
             <node id="CNT_VCCAUX_ALARM" address="0x0" permission="r"
                   description="VCCAUX Alarm Counter"
                   mask="0x1fc0000"
-                  fw_cnt_en_signal="vccaux_alarm"
+                  fw_cnt_en_signal="alarm_sync(1)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccaux_alarm"/>
@@ -451,7 +451,7 @@
             <node id="CNT_VCCINT_ALARM" address="0x0" permission="r"
                   mask="0xfe000000"
                   description="VCCINT Alarm Counter"
-                  fw_cnt_en_signal="vccint_alarm"
+                  fw_cnt_en_signal="alarm_sync(2)"
                   fw_cnt_reset_signal="reset"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccint_alarm"/>
@@ -468,7 +468,7 @@
           fw_bus_reset_signal="ipb_reset"
           fw_master_bus_signal="ipb_mosi_i"
           fw_slave_bus_signal="ipb_miso_o"
-          fw_reg_addr_msb="8"
+          fw_reg_addr_msb="9"
           fw_reg_addr_lsb="0">
 
         <node id="CTRL" address="0x0" description = "Controls and monitors various parameters of the S-bit deserialization and cluster building.">
@@ -478,12 +478,6 @@
                   mask="&VFAT_BITMASK;"
                   fw_signal="vfat_mask"
                   fw_default="0x0"/>
-
-            <node id="SBIT_DEADTIME" address="0x0" permission="rw"
-                  description="Set programmable oneshot deadtime which applies to retriggers on individual VFAT channels"
-                  fw_signal="trig_deadtime"
-                  mask="0x0f000000"
-                  fw_default="0x7"/>
 
             <node id="ACTIVE_VFATS" address="0x1" permission="r"
                   description="&NUM_VFATS_PER_OH; bit list of VFATs with hits in this BX"
@@ -586,26 +580,6 @@
                     fw_default="0xDD"/>
                 <!-- END: INVERT_REGS DO NOT EDIT -->
             </node> <!--INVERT-->
-
-            <node id="SBITS_MUX" address="0xf" description="Multiplexed copy of Sbits from a selected VFAT">
-
-                <node id="SBIT_MUX_SEL" address="0x0" permission="rw"
-                      description="Select a VFAT which will connect to the S-bit multiplexer"
-                      fw_signal="sbits_mux_sel"
-                      mask="0x1f0"
-                      fw_default="0x10"/>
-
-                <node id="SBITS_MUX_LSB" address="0x1" permission="r"
-                      description="Multiplexed S-bits 31 to 0"
-                      fw_signal="sbits_mux(31 downto 0)"
-                      mask="0xffffffff"/>
-
-                <node id="SBITS_MUX_MSB" address="0x2" permission="r"
-                      description="Multiplexed S-bits 63 to 32"
-                      fw_signal="sbits_mux(63 downto 32)"
-                      mask="0xffffffff"/>
-
-            </node> <!--SBITS_MUX-->
 
             <node id="TU_MASK" address="0x12" description = "VFAT Trigger Unit Mask \\ Set a pair to 1 to invert it">
 
@@ -1318,6 +1292,10 @@
             <node id="L1A_DELAY" address="0x10" mask="0xffffffff" permission="r"
                   description="Number of BX between this sbit and the subsequent L1A"
                   fw_signal="sbitmon_l1a_delay"/>
+            <node id="TRIG_ON_INVALID" address="0x11" mask="0x1" permission="rw"
+                  description="Number of BX between this sbit and the subsequent L1A"
+                  fw_default="0"
+                  fw_signal="sbitmon_trig_on_invalid"/>
         </node>
 
         <node id="SBIT_HITMAP" address="0xc0"
@@ -1351,11 +1329,11 @@
                   description="Value to delay the L1A by for masking S-bit clusters"
                   fw_default="0x0"
                   fw_signal="l1a_mask_delay"/>
-            <node id="L1A_MASK_WIDTH" address="0x0" permission="rw"
-                  mask="0x001f00"
-                  description="Width of the S-bit cluster mask in bx; 0=off"
+            <node id="L1A_MASK_BITMASK" address="0x1" permission="rw"
+                  mask="0xffffffff"
+                  description="1 to mask a bx after an L1A"
                   fw_default="0x0"
-                  fw_signal="l1a_mask_width"/>
+                  fw_signal="l1a_mask_bitmask"/>
         </node>
 
         <node id="TMR" address="0x100">
@@ -1393,6 +1371,16 @@
             <node id="TMR_ERR_INJ" address="0x3" permission="w"
                   description="Inject a TMR Error" mask="0x1"
                   fw_write_pulse_signal="tmr_err_inj"/>
+        </node>
+
+        <node id="SBIT_BX_DELAY" address="0x1f0" description = "">
+          <!-- START: SBIT_DELAYS DO NOT EDIT -->
+          <!-- END: SBIT_DELAYS DO NOT EDIT -->
+        </node>
+
+        <node id="SBIT_BX_DELAY_EN" address="0x2b0" description = "">
+          <!-- START: SBIT_DELAY_EN DO NOT EDIT -->
+          <!-- END: SBIT_DELAY_EN DO NOT EDIT -->
         </node>
 
     </node> <!--TRIG-->

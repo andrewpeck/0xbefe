@@ -422,7 +422,7 @@ begin
     -- InFIFO write rate counter
     i_infifo_write_rate : entity work.rate_counter
     generic map(
-        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(160_000_000, 32)),
+        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(80_000_000, 32)),
         g_COUNTER_WIDTH => 15
     )
     port map(
@@ -435,7 +435,7 @@ begin
     -- EvtFIFO write rate counter
     i_evtfifo_write_rate : entity work.rate_counter
     generic map(
-        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(160_000_000, 32)),
+        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(80_000_000, 32)),
         g_COUNTER_WIDTH => 17
     )
     port map(

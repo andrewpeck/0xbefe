@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 boards/cvp13/hdl/system/led_controller.vhd
 boards/cvp13/hdl/system/pcie.vhd
 boards/cvp13/hdl/system/clk_bufs.vhd

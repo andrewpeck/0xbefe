@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # APEX IP
 boards/apex/ip/slink_rocket_master/slink_rocket_master.xci
 boards/apex/ip/slink_rocket_slave/slink_rocket_slave.xci
