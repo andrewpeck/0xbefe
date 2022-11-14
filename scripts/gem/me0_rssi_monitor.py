@@ -84,7 +84,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     nrun = 0
     while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
         read_adc_iter = 1
-        if (run_time_min != 0 and (time()-t0)<=60):
+        if (run_time_min != 0 and not first_reading and (time()-t0)<=60):
             read_adc_iter = 0
 
         if read_adc_iter:
@@ -107,6 +107,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
             print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
             t0 = time()
+            if first_reading:
+                first_reading = 0
 
         if run_time_min == 0:
             nrun += 1

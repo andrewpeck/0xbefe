@@ -107,9 +107,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     file.write("Time (min) \t Voltage (V) \t Resistance (Ohm) \t Temperature (C)\n")
     t0 = time()
     nrun = 0
+    first_reading = 1
     while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
         read_adc_iter = 1
-        if (run_time_min != 0 and (time()-t0)<=60):
+        if (run_time_min != 0 and not first_reading and (time()-t0)<=60):
             read_adc_iter = 0
 
         if read_adc_iter:
@@ -131,6 +132,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
             file.write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
             print("time = %.2f min, \tch %X: 0x%03X = %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
             t0 = time()
+            if first_reading:
+                first_reading = 0
 
         if run_time_min == 0:
             nrun += 1

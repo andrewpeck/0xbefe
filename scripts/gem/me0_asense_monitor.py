@@ -92,7 +92,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     nrun = 0
     while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
         read_adc_iter = 1
-        if (run_time_min != 0 and (time()-t0)<=60):
+        if (run_time_min != 0 and not first_reading and (time()-t0)<=60):
             read_adc_iter = 0
 
         if read_adc_iter:
@@ -144,6 +144,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 print("Time: " + "{:.2f}".format(second/60.0) + " min \t Asense0 (PG1.2VD current): " + "{:.3f}".format(asense0_converted) + " A \t Asense1 (Rt3 voltage): " + "{:.3f}".format(asense1_converted) + " V \t Asense2 (PG1.2VA current): " + "{:.3f}".format(asense2_converted) + " A \t Asense3 (Rt4 voltage): " + "{:.3f}".format(asense3_converted) + " V \n" )
 
             t0 = time()
+            if first_reading:
+                first_reading = 0
 
         if run_time_min == 0:
             nrun += 1
