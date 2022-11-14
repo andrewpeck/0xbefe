@@ -90,6 +90,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         file_out.write("Time (min) \t Asense0 (PG1.2VD current) (A) \t Asense1 (Rt3 voltage) (V) \t Asense2 (PG1.2VA current) (A) \t Asense3 (Rt4 voltage) (V)\n")
     t0 = time()
     nrun = 0
+    first_reading = 1
     while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
         read_adc_iter = 1
         if (run_time_min != 0 and not first_reading and (time()-t0)<=60):

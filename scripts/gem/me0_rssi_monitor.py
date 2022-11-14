@@ -82,6 +82,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     file_out.write("Time (min) \t RSSI (uA)\n")
     t0 = time()
     nrun = 0
+    first_reading = 1
     while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
         read_adc_iter = 1
         if (run_time_min != 0 and not first_reading and (time()-t0)<=60):
