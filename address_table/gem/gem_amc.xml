@@ -196,6 +196,9 @@
           description="Reset all the GBT cores"
           fw_write_pulse_signal="gbt_reset_o"
           sw_ctrl_configure_set="0x1"/>
+    <node id="GBT_IC_RX_USE_EC" address="0x4" mask="0x00000001" permission="rw" ignore="&STATION;!=0"
+          description="When this option is set, the sub lpGBT IC communication goes fully through the boss lpBGT via the bidirectional EC channel. When unset, the sub lpGBT IC communication goes to the boss lpGBT EC, but comes back through the sub lpGBT Ic channel. With the proper configuration sequence, it completely avoids blind IC transactions with the sub lpGBT."
+          fw_signal="gbt_ic_rx_use_ec" fw_default="0b1"/>
   </node>
 
   <node id="RELEASE" address="0x30">
