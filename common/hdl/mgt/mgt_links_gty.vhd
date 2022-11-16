@@ -33,6 +33,7 @@ entity mgt_links_gty is
         g_NUM_REFCLK1           : integer;
         g_NUM_CHANNELS          : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
+        g_DATA_REG_STAGES       : integer := 0; -- optional: if set to a non-zero value, the provided number of register stages will be insterted in the data path (this can be used to ease timing where latency is not critical)  
         g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
         g_IPB_CLK_PERIOD_NS     : integer        
     );
@@ -180,13 +181,56 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal txph_syncout_arr         : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
 begin
-
-    tx_data_arr <= tx_data_arr_i;
-    rx_data_arr_o <= rx_data_arr;
     
     master_txoutclk_o <= master_txoutclk;
     master_txusrclk_o <= master_txusrclk;
     master_rxusrclk_o <= master_rxusrclk;
+    
+    g_no_reg_stages : if g_DATA_REG_STAGES = 0 generate
+        tx_data_arr <= tx_data_arr_i;
+        rx_data_arr_o <= rx_data_arr;
+    end generate;
+
+    g_reg_stages : if g_DATA_REG_STAGES > 0 generate
+        g_chan : for chan in 0 to g_NUM_CHANNELS - 1 generate
+            signal tx_pipe  : t_mgt_64b_tx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
+            signal rx_pipe  : t_mgt_64b_rx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
+        begin
+            
+            -- RX pipe
+            rx_data_arr_o(chan) <= rx_pipe(g_DATA_REG_STAGES - 1);
+            
+            process(chan_clks_in_arr(chan).rxusrclk2)
+            begin
+                if rising_edge(chan_clks_in_arr(chan).rxusrclk2) then
+                    rx_pipe(0) <= rx_data_arr(chan);
+                    
+                    if g_DATA_REG_STAGES > 1 then
+                        for stage in 1 to g_DATA_REG_STAGES - 1 loop
+                            rx_pipe(stage) <= rx_pipe(stage - 1);
+                        end loop;
+                    end if;
+                end if;
+            end process;
+
+            -- TX pipe
+            tx_data_arr(chan) <= tx_pipe(g_DATA_REG_STAGES - 1);
+            
+            process(chan_clks_in_arr(chan).txusrclk2)
+            begin
+                if rising_edge(chan_clks_in_arr(chan).txusrclk2) then
+                    tx_pipe(0) <= tx_data_arr_i(chan);
+                    
+                    if g_DATA_REG_STAGES > 1 then
+                        for stage in 1 to g_DATA_REG_STAGES - 1 loop
+                            tx_pipe(stage) <= tx_pipe(stage - 1);
+                        end loop;
+                    end if;
+                end if;
+            end process;
+            
+        end generate;
+    end generate;
     
     --================================--
     -- Refclks

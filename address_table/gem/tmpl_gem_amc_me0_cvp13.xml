@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE node [
 <!ENTITY STATION "0">
-<!ENTITY NUM_OHS "1">
+<!ENTITY NUM_OHS "3">
 <!ENTITY NUM_GBTS_PER_OH "8">
 <!ENTITY NUM_VFATS_PER_OH "24">
 <!ENTITY NUM_TRIG_TX_LINKS "8">

@@ -304,6 +304,7 @@ begin
             g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
+            g_DATA_REG_STAGES   => 4, -- TODO: this should be made a per-channel parameter in the link config
             g_STABLE_CLK_PERIOD => 10,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
