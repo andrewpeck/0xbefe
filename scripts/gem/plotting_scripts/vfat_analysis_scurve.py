@@ -130,10 +130,10 @@ def fit_scurve(vfatList, scurve_result, oh, directoryName, verbose , channel_lis
 
             if channel in channel_list:
                 fig, ax = plt.subplots(figsize = (12,10))
-                ax.set_xlabel("Charge (fC)", loc='right')
+                ax.set_xlabel("Injected charge (fC)", loc='right')
                 ax.set_ylabel("Fired events / total events", loc='top')
                 ax.grid()
-                ax.plot(scurveData[:,0], scurveData[:,1], "o", markersize= 6, label = "Channel %d" % channel) # plot raw data
+                ax.plot(scurveData[:,0], scurveData[:,1], "o", markersize= 6, label = "Channel %d" % channel) # plot raw data 
                 ax.plot(scurveData[:,0], scurveFunc(scurveData[:,0], *params), "r-", label="fit")
                 props = dict(boxstyle="round", facecolor="white",edgecolor="lightgrey", alpha=1)
                 textstr = "\n".join((
@@ -177,7 +177,7 @@ def plotENCdistributions(vfatList, scurveParams, oh, directoryName):
     fig, ax = plt.subplots(figsize = (12,10))
     ax.set_title("ENC distributions")
     ax.set_xlabel("VFAT number", loc='right')
-    ax.set_ylabel("S-curve ENC (fC)", loc='top')
+    ax.set_ylabel("S-Curve ENC (fC)", loc='top')
     ax.set_ylim(0, 4)
     ax.grid()
 
@@ -214,7 +214,7 @@ def plotThreshdistributions(vfatList, scurveParams, oh, directoryName):
     fig, ax = plt.subplots(figsize = (12,10))
     ax.set_title("Threshold distributions")
     ax.set_xlabel("VFAT number", loc='right')
-    ax.set_ylabel("S-curve Threshold (fC)", loc='top')
+    ax.set_ylabel("S-Curve Threshold (fC)", loc='top')
     ax.set_ylim(0, 30)
     ax.grid()
 
@@ -286,7 +286,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
         axs.set_ylabel("Injected charge (fC)", loc='top')
         #for label in (axs.get_xticklabels() + axs.get_yticklabels()):
         #    label.set_fontsize(14)
-        #axs.xlim(0,128)
+        #axs.xlim(-1,128)
         #axs.ylim(0,256)
 
         plot_data = []
@@ -298,7 +298,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             #data = []
             #data_x = []
             #data_y = []
-            for channel in range(0,128):
+            for channel in range(-1,128):
                 plot_data_x.append(channel)
                 plot_data_y.append(charge)
                 if channel not in scurve_result[vfat]:
@@ -311,7 +311,7 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
                     plot_data.append(scurve_result[vfat][channel][charge])
                     #data.append(scurve_result[vfat][channel][charge])
             #plot_data.append(data)
-        #for channel in range(0,128):
+        #for channel in range(-1,128):
         #    plot_data_x.append(channel)
 
         cmap_new = copy.copy(cm.get_cmap("viridis"))
@@ -343,52 +343,60 @@ def plot2Dhist(vfatList, directoryName, oh, scurve_result, slope_adc, intercept_
             ax1.set_title("VFAT%02d"%vfat)
             cf1 = ax1.scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
-            cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1.ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1.ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1 = ax1.pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1 = fig1.colorbar(cf1, ax=ax1, pad=0.01)
             #cbar1.set_label("Fired events / total events", loc='top')
             ax1.set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1.text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1.transAxes)
             ax1.text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1.transAxes)
+            ax1.set_xlim([-1,128])
         elif numVfats <= 3:
             ax1[vfatCnt0].set_xlabel("Channel number", loc='right')
             ax1[vfatCnt0].set_ylabel("Injected charge (fC)", loc='top')
             ax1[vfatCnt0].set_title("VFAT%02d"%vfat)
             cf1[vfatCnt0] = ax1[vfatCnt0].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
-            cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[vfatCnt0].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16) 
+            cbar1[vfatCnt0].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[vfatCnt0] = ax1[vfatCnt0].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[vfatCnt0] = fig1.colorbar(cf1[vfatCnt0], ax=ax1[vfatCnt0], pad=0.01)
             #cbar1[vfatCnt0].set_label("Fired events / total events", loc='top')
             ax1[vfatCnt0].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[vfatCnt0].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[vfatCnt0].transAxes)
             ax1[vfatCnt0].text(-0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[vfatCnt0].transAxes)
+            ax1[vfatCnt0].set_xlim([-1,128])
         elif numVfats <= 6:
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlabel("Channel number", loc='right')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_ylabel("Injected charge (fC)", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
-            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1[int(vfatCnt0/3), vfatCnt0%3].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[int(vfatCnt0/3), vfatCnt0%3] = ax1[int(vfatCnt0/3), vfatCnt0%3].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[int(vfatCnt0/3), vfatCnt0%3] = fig1.colorbar(cf1[int(vfatCnt0/3), vfatCnt0%3], ax=ax1[int(vfatCnt0/3), vfatCnt0%3], pad=0.01)
             #cbar1[int(vfatCnt0/3), vfatCnt0%3].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/3), vfatCnt0%3].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
             ax1[int(vfatCnt0/3), vfatCnt0%3].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/3), vfatCnt0%3].transAxes)
+            ax1[int(vfatCnt0/3), vfatCnt0%3].set_xlim([-1,128])
         else:
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlabel("Channel number", loc='right')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_ylabel("Injected charge (fC)", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_title("VFAT%02d"%vfat)
             cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].scatter(x=plot_data_x,y=plot_data_y,c=plot_data,cmap=cmap_new, norm=my_norm, s=2)
             cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
-            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            #cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.set_ylabel("Fired Events / Total Events", rotation=270, labelpad=16)
+            cbar1[int(vfatCnt0/6), vfatCnt0%6].ax.text(2.7,0.47,"Fired Events / Total Events",rotation=270)
             #cf1[int(vfatCnt0/6), vfatCnt0%6] = ax1[int(vfatCnt0/6), vfatCnt0%6].pcolormesh(plot_data_x, plot_data_y, plot_data, cmap=cm.ocean_r, shading="nearest")
             #cbar1[int(vfatCnt0/6), vfatCnt0%6] = fig1.colorbar(cf1[int(vfatCnt0/6), vfatCnt0%6], ax=ax1[int(vfatCnt0/6), vfatCnt0%6], pad=0.01)
             #cbar1[int(vfatCnt0/6), vfatCnt0%6].set_label("Fired events / total events", loc='top')
             ax1[int(vfatCnt0/6), vfatCnt0%6].set_xticks(np.arange(min(channelNum), max(channelNum)+1, 20))
             ax1[int(vfatCnt0/6), vfatCnt0%6].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
             ax1[int(vfatCnt0/6), vfatCnt0%6].text(0.02, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax1[int(vfatCnt0/6), vfatCnt0%6].transAxes)
+            ax1[int(vfatCnt0/6), vfatCnt0%6].set_xlim([-1,128])
 
         vfatCnt0 += 1
         print(("\n2D histogram of scurves for VFAT%d " % vfat )+ ("saved at %s" % directoryName) + "/scurve2Dhist_"+oh+"_VFAT%d.pdf" % vfat)
@@ -414,7 +422,7 @@ if __name__ == "__main__":
 
     channel_list = []
     if args.channels is None:
-        channel_list = range(0,128)
+        channel_list = range(-1,128)
     else:
         for channel in args.channels:
             channel_list.append(int(channel))

@@ -22,31 +22,35 @@ TX_enable_bit["TX4"] = 3
 
 i2c_master_timeout = 1 # 1s
 
-def i2cmaster_write(system, oh_ver, reg_addr, data):
+def i2cmaster_write(system, oh_ver, reg_addr, data, write_only=False):
+
+    readback = 1
+    if write_only:
+        readback = 0
 
     # Writing control register of I2CMaster 2
     nbytes = 2
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, readback) # I2C_WRITE_CR
     sleep(0.01)
 
     # Writing multi byte data to I2CMaster 2
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), data, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), data, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, readback) # I2C_W_MULTI_4BYTE0
     sleep(0.01)
 
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, readback) # I2C_WRITE_MULTI
     sleep(0.01)
 
     success=0
     t0 = time()
     while(success==0):
         # Status register of I2CMaster 2
-        if system!="dryrun":
-            status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
+        if system!="dryrun" and not write_only:
+            status = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
             sleep(0.01)
@@ -66,10 +70,10 @@ def i2cmaster_write(system, oh_ver, reg_addr, data):
     print ("Successful I2C write to slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
 
     # Reset the I2C Master registers
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, readback)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, readback)
     sleep(0.01)
 
 
@@ -78,17 +82,17 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     # Writing control register of I2CMaster 2
     nbytes = 1
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0) # I2C_WRITE_CR
     sleep(0.01)
 
     # Writing register address to I2CMaster 2
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8, 0) # I2C_W_MULTI_4BYTE0
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), reg_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x8) # I2C_W_MULTI_4BYTE0
     sleep(0.01)
 
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC, 0) # I2C_WRITE_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xC) # I2C_WRITE_MULTI
     sleep(0.01)
 
     success=0
@@ -96,7 +100,7 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     while(success==0):
         # Status register of I2CMaster 2
         if system!="dryrun":
-            status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
+            status = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
             sleep(0.01)
@@ -114,12 +118,12 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     # Reading the register value to I2CMaster 2
     nbytes = 1
     control_register_data = nbytes<<2 | 0 # using 100 kHz
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0, 0) # I2C_WRITE_CR
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), control_register_data)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x0) # I2C_WRITE_CR
     sleep(0.01)
 
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xD, 0) # I2C_READ_MULTI
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), vtrx_slave_addr)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0xD) # I2C_READ_MULTI
     sleep(0.01)
     
     success=0
@@ -127,7 +131,7 @@ def i2cmaster_read(system, oh_ver, reg_addr):
     while(success==0):
         # Status register of I2CMaster 2
         if system!="dryrun":
-            status = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
+            status = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2STATUS"))
         else:
             status = 0x04
             sleep(0.01)
@@ -144,22 +148,22 @@ def i2cmaster_read(system, oh_ver, reg_addr):
 
     data = 0x00
     if oh_ver == 1:
-        data = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ15"))
+        data = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ15"))
     elif oh_ver == 2:
-        data = readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ.I2CM2READ15"))
+        data = lpgbt_readReg(getNode("LPGBT.RO.I2CREAD.I2CM2READ.I2CM2READ15"))
     reg_addr_string = "0x%02X" % (reg_addr)
     data_string = "0x%02X" % (data)
     print ("Successful read from slave register: " + reg_addr_string + ", data: " + data_string + " (" + "{0:08b}".format(data) + ")")
 
     # Reset the I2C Master registers
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00, 0)
-    writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA0"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2DATA1"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2ADDRESS"), 0x00)
+    lpgbt_writeReg(getNode("LPGBT.RW.I2C.I2CM2CMD"), 0x00)
     sleep(0.01)
     return data
 
-def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
+def main(system, oh_ver, boss, channel, enable, reg_list, data_list, write_only):
 
     if not boss:
         print (Colors.RED + "ERROR: VTRX+ control only for boss since I2C master of boss connected to VTRX+" + Colors.ENDC)
@@ -167,7 +171,10 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
 
     # Enabling TX Channel
     if channel is not None and enable is not None:
-        enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        if not write_only:
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        else:
+            enable_status = 0
         sleep(0.1)
         for c in channel:
             en = 0
@@ -180,9 +187,10 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
             enable_mask = (1 << enable_channel_bit)                           
             enable_data = (enable_status & (~enable_mask)) | (en << enable_channel_bit)    
             enable_status = enable_data         
-        i2cmaster_write(system, oh_ver, enable_reg, enable_data)
+        i2cmaster_write(system, oh_ver, enable_reg, enable_data, write_only)
         sleep(0.1)
-        enable_status = i2cmaster_read(system, oh_ver, enable_reg)
+        if not write_only:
+            enable_status = i2cmaster_read(system, oh_ver, enable_reg)
         sleep(0.1)
         print ("")
  
@@ -190,11 +198,12 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
         return
 
     # Reading registers
-    print ("Initial Reading of VTRX+ registers: ")
-    for reg in reg_list:
-        data = i2cmaster_read(system, oh_ver, reg)
-        sleep(0.1)
-    print ("")
+    if not write_only:
+        print ("Initial Reading of VTRX+ registers: ")
+        for reg in reg_list:
+            data = i2cmaster_read(system, oh_ver, reg)
+            sleep(0.1)
+        print ("")
     
     if len(data_list) == 0:
         return
@@ -202,16 +211,17 @@ def main(system, oh_ver, boss, channel, enable, reg_list, data_list):
     # Writing registers
     print ("Writing to VTRX+ registers: ")
     for i, reg in enumerate(reg_list):
-        i2cmaster_write(system, oh_ver, reg, data_list[i])
+        i2cmaster_write(system, oh_ver, reg, data_list[i], write_only)
         sleep(0.1)
     print ("")  
 
     # Reading registers
-    print ("Final Reading of VTRX+ registers: ")
-    for reg in reg_list:
-        data = i2cmaster_read(system, oh_ver, reg)
-        sleep(0.1)
-    print ("")
+    if not write_only:
+        print ("Final Reading of VTRX+ registers: ")
+        for reg in reg_list:
+            data = i2cmaster_read(system, oh_ver, reg)
+            sleep(0.1)
+        print ("")
     
 
 if __name__ == "__main__":
@@ -227,6 +237,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--enable", action="store", dest="enable", help="enable = 0 or 1; only use with type: name")
     parser.add_argument("-n", "--name", action="store", dest="name", nargs="+", help="name = biascur_reg, modcur_reg, empamp_reg; only use with type: name")
     parser.add_argument("-d", "--data", action="store", nargs="+", dest="data", help="data = list of data values to write")
+    parser.add_argument("-w", "--write_only", action="store_true", dest="write_only", help="write_only = only write, no read")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -341,16 +352,16 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend":
+    if args.system == "backend" and not args.write_only:
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun":
+    if args.system != "dryrun" and not args.write_only:
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list)
+        main(args.system, oh_ver, boss, args.channel, args.enable, reg_list, data_list, args.write_only)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

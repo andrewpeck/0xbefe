@@ -249,9 +249,9 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
 
 def config_initialize_chc(oh_ver, boss):
     initialize_success = 1
-    gbt_rpi_chc.set_lpgbt_address(oh_ver, boss)
+    gbt_rpi_chc.set_lpgbt_address("chc", oh_ver, boss)
     if oh_ver == 1:
-        initialize_success *= gbt_rpi_chc.config_select(boss)
+        initialize_success *= gbt_rpi_chc.config_select()
     if initialize_success:
         initialize_success *= gbt_rpi_chc.en_i2c_switch()
     if initialize_success:
@@ -324,7 +324,7 @@ def mpeek(address):
         print(Colors.RED + "ERROR: Incorrect system" + Colors.ENDC)
         rw_terminate()
 
-def mpoke(address, value):
+def mpoke(address, value, write_only=False):
     global reg_list_dryrun
     if system=="chc":
         success = gbt_rpi_chc.lpgbt_write_register(address, value)
@@ -336,10 +336,11 @@ def mpoke(address, value):
         gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value)
         gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1)
         reg_list_dryrun[address] = value
-        read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
-        if read_value != value:
-            print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
-            rw_terminate()
+        if not write_only:
+            read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
+            if read_value != value:
+                print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
+                rw_terminate()
     elif system=="dryrun":
         reg_list_dryrun[address] = value
     else:
@@ -347,10 +348,10 @@ def mpoke(address, value):
         rw_terminate()
 
 def readRegStr(reg):
-    return "0x%02X"%(readReg(reg))
+    return "0x%02X"%(lpgbt_readReg(reg))
     #return "{0:#010x}".format(readReg(reg))
 
-def readReg(reg):
+def lpgbt_readReg(reg):
     try:
         address = reg.real_address
     except:
@@ -387,7 +388,7 @@ def displayReg(reg, option=None):
     if option=="hexbin": return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)+" = "+"{0:032b}".format(final_int)
     else: return hex(address).rstrip("L")+" "+reg.permission+"\t"+tabPad(reg.name,7)+"{0:#010x}".format(final_int)
 
-def writeReg(reg, value, readback):
+def lpgbt_writeReg(reg, value, readback=1):
     try:
         address = reg.real_address
     except:
@@ -396,18 +397,21 @@ def writeReg(reg, value, readback):
     if "w" not in reg.permission:
         return "No write permission!"
 
-    if (readback):
-        if (value!=readReg(reg)):
-            print (Colors.RED + "ERROR: Failed to read back register %s. Expect=0x%x Read=0x%x" % (reg.name, value, readReg(reg)) + Colors.ENDC)
     else:
         # Apply Mask if applicable
         if (reg.mask != 0):
             value = value << reg.lsb_pos
             value = value & reg.mask
+            current_value = 0
+            if readback == 1:
+                current_value = mpeek(address)
             if "r" in reg.permission:
-                value = (value) | (mpeek(address) & ~reg.mask)
+                value = (value) | (current_value & ~reg.mask)
         # mpoke
-        mpoke(address, value)
+        write_only = False
+        if readback != 1:
+            write_only = True
+        mpoke(address, value, write_only)
 
 def writeandcheckReg(reg, value):
     try:
@@ -472,7 +476,7 @@ def check_lpgbt_ready(ohIdx=None, gbtIdx=None):
     if system == "backend":
         gem_utils.check_gbt_link_ready(ohIdx, gbtIdx)
     if system != "dryrun":
-        pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
+        pusmstate = lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
         if (pusmstate==ready_value):
             print ("lpGBT status is READY")
         else:
@@ -533,7 +537,7 @@ def check_rom_readback(ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
         print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
-    romreg=readReg(getNode("LPGBT.RO.ROMREG"))
+    romreg=lpgbt_readReg(getNode("LPGBT.RO.ROMREG"))
     oh_ver = get_oh_ver(ohIdx, gbtIdx)
     if oh_ver == 1:
         if (romreg != 0xA5):
@@ -548,8 +552,8 @@ def check_lpgbt_mode(boss = None, ohIdx=None, gbtIdx=None):
     if ohIdx is None or gbtIdx is None:
         print (Colors.RED + "ERROR: OHID and GBTID not specified" + Colors.ENDC)
         rw_terminate()
-    mode = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
-    i2c_addr = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.ASICCONTROLADR")) 
+    mode = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
+    i2c_addr = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.ASICCONTROLADR")) 
     oh_ver = get_oh_ver(ohIdx, gbtIdx)
      
     if boss and mode!=11:

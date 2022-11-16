@@ -68,7 +68,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     errs = [[[0 for phase in range(16)] for elink in range(0,8)] for vfat in range(24)]
 
     gem_utils.global_reset()
-    sleep(0.1)
+    #gem_utils.gem_link_reset()
+    #sleep(0.1)
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     # Reading S-bit counters
@@ -78,7 +79,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
 
     gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.OH_SELECT"), oh_select)
     reset_sbit_monitor_node = gem_utils.get_backend_node("BEFE.GEM.TRIGGER.SBIT_MONITOR.RESET")  # To reset S-bit Monitor
-    reset_sbit_cluster_node = get_backend_node("BEFE.GEM.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
+    reset_sbit_cluster_node = gem_utils.get_backend_node("BEFE.GEM.TRIGGER.CTRL.CNT_RESET")  # To reset Cluster Counter
     sbit_monitor_nodes = []
     cluster_count_nodes = []
     for i in range(0,8):
@@ -118,7 +119,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
-            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 200)
+            cal_dur = 200
+            if l1a_bxgap < 225:
+                cal_dur = l1a_bxgap - 25
+            if cal_dur < 20:
+                cal_dur = 20
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), cal_dur)
         elif set_cal_mode == "current":
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 2)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
@@ -173,13 +179,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 gem_utils.write_backend_reg(reset_sbit_cluster_node, 1)
 
                 # Start the cyclic generator
+                sleep(0.001)
                 gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+                sleep(0.001)
                 cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
                 while cyclic_running:
                     cyclic_running = gem_utils.read_backend_reg(cyclic_running_node)
 
                 # Stop the cyclic generator
+                sleep(0.001)
                 gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+                sleep(0.001)
 
                 l1a_counter = gem_utils.read_backend_reg(l1a_node)
                 calpulse_counter = gem_utils.read_backend_reg(calpulse_node)
