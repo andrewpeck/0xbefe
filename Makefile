@@ -70,8 +70,8 @@ $(UPDATE_LIST): config
 			\
 			mkdir -p address_table/gem/generated/oh_$$system/ && \
 			cp address_table/gem/optohybrid_registers.xml address_table/gem/generated/oh_$$system/optohybrid_registers.xml && \
-			python scripts/boards/optohybrid/update_xml.py -s $$system $$type -x address_table/gem/generated/oh_$$system/optohybrid_registers.xml && \
-			cd regtools && python generate_registers.py -p generated/oh_$$system/ oh \
+			python3 scripts/boards/optohybrid/update_xml.py -s $$system $$type -x address_table/gem/generated/oh_$$system/optohybrid_registers.xml && \
+			cd regtools && python3 generate_registers.py -p generated/oh_$$system/ oh \
 			\
 		`# BACKEND ` ; \
 			\
@@ -90,7 +90,7 @@ $(UPDATE_LIST): config
 				echo "==== ERROR: cannot determine system (GEM, CSC) for flavor $${flavor} ===="; \
 				exit 1; \
 			fi; \
-			cd address_table/$${system} && python generate_xml.py; cd -; \
+			cd address_table/$${system} && python3 generate_xml.py; cd -; \
 			do_update=false; \
 			for d in address_table/$${system}/generated/$${flavor}*; do \
 				if [[ ! -f $${d}/$${module}.xml ]]; then \
@@ -114,7 +114,7 @@ $(UPDATE_LIST): config
 				else \
 					extra_args=; \
 				fi; \
-				cd regtools && python generate_registers.py -p generated/$${flavor}/ $${extra_args} -a ../$${d}/$${module}.xml -u $${do_update} $${module}; cd - ;\
+				cd regtools && python3 generate_registers.py -p generated/$${flavor}/ $${extra_args} -a ../$${d}/$${module}.xml -u $${do_update} $${module}; cd - ;\
 				do_update=true; \
 			done; \
 		fi ; \
@@ -161,7 +161,7 @@ update_csc: update_csc_cvp13 update_csc_ctp7 update_csc_apex update_csc_x2o
 update: update_ge11 update_ge21 update_me0 update_csc
 
 update_oh_base:
-	@cd regtools && python generate_registers.py oh && cd -
+	@cd regtools && python3 generate_registers.py oh && cd -
 
 update_oh: update_oh_base update_oh_ge21.200 update_oh_ge21.75 update_oh_ge11
 
