@@ -1,9 +1,10 @@
-module count_clusters #(
-                        parameter OVERFLOW_THRESH = 0,
-                        parameter SIZE = 768
-                        )
-   (
+module count_clusters
+  #(
+    parameter OVERFLOW_THRESH = 0,
+    parameter SIZE = 768
+    ) (
     input             clock,
+    input             latch,
     input [SIZE-1:0]  vpfs_i,
     output reg [10:0] cnt_o,
     output reg        overflow_o
@@ -28,7 +29,8 @@ module count_clusters #(
          reg [767:0] vpfs;
 
          always @(posedge clock) begin
-            vpfs    <= vpfs_i;
+            if (latch)
+              vpfs    <= vpfs_i;
          end
 
          genvar icnt;
@@ -97,7 +99,8 @@ module count_clusters #(
          reg [1535:0] vpfs;
 
          always @(posedge clock) begin
-            vpfs <= vpfs_i;
+            if (latch)
+              vpfs <= vpfs_i;
          end
 
          genvar icnt;

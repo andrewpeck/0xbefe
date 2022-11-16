@@ -33,7 +33,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
     file_out.write("vfat    channel    threshold    fired    time\n")
 
     gem_link_reset()
-    global_reset()
+    #global_reset()
     sleep(0.1)
 
     daq_data = {}
@@ -95,7 +95,7 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
     ttc_cyclic_start_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START")
     cyclic_running_node = get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_RUNNING")
 
-    print ("\nRunning Sbit Noise Scans for VFATs:")
+    print ("\nRunning DAQ Noise Scans for VFATs:")
     print (vfat_list)
     print ("")
 
@@ -136,10 +136,12 @@ def vfat_daq(gem, system, oh_select, vfat_list, channel_list, step, runtime, l1a
             write_backend_reg(daq_monitor_enable_node, 1)
 
             # Start the cyclic generator
+            sleep(0.001)
             write_backend_reg(ttc_cyclic_start_node, 1)
             sleep(runtime)
             # Stop the cyclic generator
             write_backend_reg(ttc_reset_node, 1)
+            sleep(0.001)
             write_backend_reg(daq_monitor_enable_node, 0)
 
             # Looping over VFATs

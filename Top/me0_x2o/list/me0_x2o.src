@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # =============== Common ===============
 common/hdl/common.src
 common/hdl/common_xilinx_ultrascale.src

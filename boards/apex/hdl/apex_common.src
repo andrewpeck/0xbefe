@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 #### C2C ####
 boards/apex/hdl/c2c/c2c_gth_tux.sv
 boards/apex/hdl/c2c/c2c_adapter.sv

@@ -6,52 +6,69 @@ use ieee.numeric_std.all;
 library work;
 use work.cluster_pkg.all;
 
--- latency = 4.25 bx as of 2022/02/24
+-- latency v0 sorter = 4.50 bx as of 2022/08/19
+-- latency v1 sorter = 4.00 bx as of 2022/08/19
+-- latency v2 sorter = 3.50 bx as of 2022/08/19
 
 entity cluster_packer is
   generic (
-    DEADTIME          : integer := 0;
-    ONESHOT           : boolean := false;
-    SPLIT_CLUSTERS    : integer := 0;
-    INVERT_PARTITIONS : boolean := false;
+    MXSBITS           : integer := 64;     -- number of sbits / vfat
+    ONESHOT           : boolean := true;   -- set to 1 to trim pulses to be rising edge sensitive only
+    SPLIT_CLUSTERS    : integer := 0;      -- set to 1 will split large clusters in 2 instead of truncating
+    INVERT_PARTITIONS : boolean := false;  -- changes 0-->7 vs. 7-->0 for partition ordering
 
-    NUM_VFATS      : integer := 0;
-    NUM_PARTITIONS : integer := 0;
-    STATION        : integer := 0
+    NUM_VFATS      : integer := 24;
+    NUM_PARTITIONS : integer := 8;
+    STATION        : integer := 1
     );
   port(
 
     reset : in std_logic;
 
-    clk_40   : in std_logic;
-    clk_fast : in std_logic;
+    clk_40   : in std_logic := '0';
+    clk_fast : in std_logic := '0';
 
     mask_output_i : in std_logic;
 
-    sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0);
+    sbits_i : in sbits_array_t (NUM_VFATS-1 downto 0) := (others => (others => '0'));
 
     cluster_count_o        : out std_logic_vector (10 downto 0);
     cluster_count_masked_o : out std_logic_vector (10 downto 0);
     clusters_o             : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     clusters_masked_o      : out sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-    overflow_o             : out std_logic
+    overflow_o             : out std_logic;
+    valid_o                : out std_logic
     );
 end cluster_packer;
 
 architecture behavioral of cluster_packer is
 
-  constant MXSBITS         : integer := 64;
+  constant SORTER_TYPE : integer := 2;
+
   constant PARTITION_WIDTH : integer := NUM_VFATS/NUM_PARTITIONS;
 
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
-  signal latch_pulse_s0 : std_logic;
-  signal latch_pulse_s1 : std_logic;
-  signal latch_pulse_s2 : std_logic;
+  signal strobe0, strobe1, strobe2, strobe3 : std_logic := '0';
+  signal strobe_pipeline : std_logic_vector(15 downto 0) := (others => '0');
+  signal strobe_s1       : std_logic := '0';
+  signal strobe_s0       : std_logic := '0';
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
+  signal sbit_or_s1 : std_logic_vector (NUM_VFATS*64/4-1 downto 0)   := (others => '0');
+  signal sbit_or_s2 : std_logic_vector (NUM_VFATS*64/4/8-1 downto 0) := (others => '0');
+  signal sbit_or_s3 : std_logic                                      := '0';
+  signal sbit_or    : std_logic                                      := '0';
+
+  signal phase_ff : std_logic_vector(3 downto 0) := (others => '0');
+  signal phase0   : std_logic                    := '0';
+  signal phase    : integer range 0 to 3         := 0;
+
+  attribute shreg_extract             : string;
+  attribute shreg_extract of phase_ff : signal is "false";
+  attribute shreg_extract of sbit_or  : signal is "false";
 
   signal partitions_i  : partition_array_t (NUM_PARTITIONS-1 downto 0);
   signal partitions_os : partition_array_t (NUM_PARTITIONS-1 downto 0);
@@ -60,9 +77,22 @@ architecture behavioral of cluster_packer is
   signal vpfs     : std_logic_vector (NUM_VFATS*MXSBITS-1 downto 0);
   signal cnts     : std_logic_vector (NUM_VFATS*MXSBITS*MXCNTB-1 downto 0);
 
+  function select_ovf_latency (stype : integer) return integer is
+  begin
+    if (stype=0) then
+      return 7;
+    elsif (stype=1) then
+      return 5;
+    elsif (stype=2) then
+      return 3;
+    end if;
+    return -1;
+  end function;
+
   signal overflow                           : std_logic;
   signal cluster_count, cluster_count_delay : std_logic_vector (10 downto 0);
-  constant OVERFLOW_LATENCY                 : natural := 5;
+
+  constant OVERFLOW_LATENCY : natural := select_ovf_latency(SORTER_TYPE);
 
   signal cluster_latch : std_logic;
 
@@ -75,6 +105,7 @@ architecture behavioral of cluster_packer is
       );
     port (
       clock      : in  std_logic;
+      latch      : in  std_logic;
       vpfs_i     : in  std_logic_vector;
       cnt_o      : out std_logic_vector;
       overflow_o : out std_logic
@@ -91,6 +122,7 @@ architecture behavioral of cluster_packer is
       );
     port (
       clock : in  std_logic;
+      en    : in  std_logic;
       sbits : in  std_logic_vector;
       vpfs  : out std_logic_vector;
       cnts  : out std_logic_vector
@@ -101,35 +133,46 @@ begin
 
   --------------------------------------------------------------------------------
   -- Valid
+  --
+  -- Auto-extract a data valid signal by looking for the rising edge of sbits
+  -- this involves ORing together all of the s-bits, finding the rising edge,
+  -- extracting the phase of the data, and using that to generate a valid flag
   --------------------------------------------------------------------------------
 
-  -- Create a 1 of 4 high signal synced to the 40MHZ clock
-  --            ________________              _____________
-  -- clk40    __|              |______________|
-  --            _______________________________
-  -- r80      __|                             |_____________
-  --                     _______________________________
-  -- r80_dly  ___________|                             |_____________
-  --            __________                    __________
-  -- valid    __|        |____________________|        |______
-
-  process (clk_fast)
+  process (clk_fast) is
   begin
     if (rising_edge(clk_fast)) then
-      latch_pulse_s1 <= latch_pulse_s0;
-      latch_pulse_s2 <= latch_pulse_s1;
+
+      for I in sbit_or_s1'range loop
+        sbit_or_s1(I) <= or_reduce(sbits_i(I / (64/4))(((I mod 4) + 1)*4-1 downto (I mod 4)*4));
+      end loop;
+
+      for I in sbit_or_s2'range loop
+        sbit_or_s2(I) <= or_reduce(sbit_or_s1((I+1)*8-1 downto I*8));
+      end loop;
+
+      sbit_or_s3 <= or_reduce(sbit_or_s2);
+      sbit_or    <= sbit_or_s3;
+
+      if ((sbit_or = '0' and sbit_or_s3 = '1') or phase = 3) then
+        phase <= 0;
+        phase0 <= '1';
+      else
+        phase <= phase + 1;
+        phase0 <= '0';
+      end if;
+
+      -- pass the delay through a shift register to fan it out
+      phase_ff(0) <= phase0;
+      phase_ff(1) <= phase_ff(0);
+      phase_ff(2) <= phase_ff(1);
+      phase_ff(3) <= phase_ff(2);
+
+      strobe_s0   <= phase_ff(2);
+      strobe_s1   <= strobe_s0;
+
     end if;
   end process;
-
-  clock_strobe_inst : entity work.clock_strobe
-    generic map(
-      RATIO => 4
-      )
-    port map (
-      fast_clk_i => clk_fast,
-      slow_clk_i => clk_40,
-      strobe_o   => latch_pulse_s0
-      );
 
   ------------------------------------------------------------------------------------------------------------------------
   -- remap vfats into partitions
@@ -186,25 +229,18 @@ begin
     os_vfatloop : for ipartition in 0 to (NUM_PARTITIONS - 1) generate
       os_sbitloop : for isbit in 0 to (MXSBITS*PARTITION_WIDTH - 1) generate
         sbit_oneshot : entity work.sbit_oneshot
-          generic map (DEADTIME => DEADTIME)
           port map (
             d   => partitions_i(ipartition)(isbit),
             q   => partitions_os(ipartition)(isbit),
-            clk => clk_40
+            clk => clk_fast
             );
       end generate;
     end generate;
   end generate;
 
-  -- without the oneshot, just have a ff
   flatten_partitions : for iprt in 0 to NUM_PARTITIONS-1 generate
-    process (clk_fast) is
-    begin
-      if (rising_edge(clk_fast)) then
-        sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
-          <= partitions_os(iprt);
-      end if;
-    end process;
+    sbits_s0 ((iprt+1)*PARTITION_WIDTH*MXSBITS-1 downto iprt*PARTITION_WIDTH*MXSBITS)
+      <= partitions_os(iprt);
   end generate;
 
   ----------------------------------------------------------------------------------
@@ -222,6 +258,7 @@ begin
       )
     port map (
       clock => clk_fast,
+      en    => strobe_s0,
       sbits => sbits_s0,
       vpfs  => vpfs,
       cnts  => cnts
@@ -241,15 +278,15 @@ begin
   --
   -- You should be able to just tweak the # of pipelines stages in the counter module
   --
-  -- Timed in on 2022/02/24
+  -- Timed in on 2022/10/13
+  --
   count_clusters_inst : count_clusters
     generic map (
       overflow_thresh => NUM_OUTPUT_CLUSTERS,
-      size            => NUM_VFATS*MXSBITS
-
-      )
+      size            => NUM_VFATS*MXSBITS)
     port map (
       clock      => clk_fast,
+      latch      => strobe_s1,
       vpfs_i     => vpfs,
       cnt_o      => cluster_count,
       overflow_o => overflow
@@ -265,7 +302,7 @@ begin
       data_o => cluster_count_delay
       );
 
-  cluster_count_o <= cluster_count_delay;
+  cluster_count_o        <= cluster_count_delay;
   cluster_count_masked_o <= (others => '0') when mask_output_i = '1' else cluster_count_delay;
 
   overflow_delay : entity work.fixed_delay
@@ -287,14 +324,15 @@ begin
       MXSBITS            => MXSBITS,
       NUM_VFATS          => NUM_VFATS,
       NUM_FOUND_CLUSTERS => NUM_FOUND_CLUSTERS,
-      STATION            => STATION
+      STATION            => STATION,
+      SORTER_TYPE        => SORTER_TYPE
       )
     port map (
       clock      => clk_fast,
       vpfs_i     => vpfs,
       cnts_i     => cnts,
       clusters_o => clusters,
-      latch_i    => latch_pulse_s2,
+      latch_i    => strobe_s1,
       latch_o    => cluster_latch
       );
 
@@ -302,9 +340,24 @@ begin
   -- Assign cluster outputs
   ------------------------------------------------------------------------------------------------------------------------
 
+  --synthesis translate_off
+  process (clusters) is
+  begin
+    for I in clusters'range loop
+      assert invalid_clusterp(clusters(I), PARTITION_WIDTH*64) = false
+        report "Cluster invalid " & integer'image(I) & " "
+        & "adr=" & integer'image(to_integer(unsigned(clusters(I).adr))) & " "
+        & "size=" & integer'image(to_integer(unsigned(clusters(I).cnt))) & " "
+        severity error;
+    end loop;
+  end process;
+  --synthesis translate_on
+
   process (clk_fast) is
   begin
     if (rising_edge(clk_fast)) then
+
+      valid_o <= cluster_latch;
 
       if (reset = '1') then
         clusters_o <= (others => NULL_CLUSTER);

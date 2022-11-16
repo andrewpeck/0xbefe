@@ -128,7 +128,7 @@ module priority_n #(
             end
 
          // Stage 6 : 3 of 6
-            for (icmp=0; icmp<6; icmp=icmp+1) begin: s6
+            for (icmp=0; icmp<3; icmp=icmp+1) begin: s6
                initial vpf_s6[icmp] = 0; initial cnt_s6[icmp] = 0; initial key_s6[icmp] = 0;
                `always_s6
                  {vpf_s6[icmp], cnt_s6[icmp], key_s6[icmp]} = vpf_s5[icmp*2] ?  {vpf_s5[icmp*2  ], cnt_s5[icmp*2], {1'b0,key_s5[icmp*2  ]}} : {vpf_s5[icmp*2+1], cnt_s5[icmp*2+1], {1'b1,key_s5[icmp*2+1]}};
@@ -302,6 +302,6 @@ module priority_n #(
       end
    endgenerate
 
-   //----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 endmodule
 //----------------------------------------------------------------------------------------------------------------------

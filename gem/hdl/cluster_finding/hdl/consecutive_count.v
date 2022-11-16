@@ -13,6 +13,7 @@
 
 module consecutive_count  ( // one logic step, could run at 320 MHz easy!
     clock, // This could be inverted lhc_clk or 80 MHz or a 1/4 phase shifted clk for optimal speed.
+    en,
     sbit,  // Here we hand the *next 7* s-bits to this module and save the result for any s-bit i...
     count  // <<-3-bit output          ...where this is true:  [i:i-1]=2'b10 || [i:i-9]=10'b1111111110
    );
@@ -25,6 +26,7 @@ module consecutive_count  ( // one logic step, could run at 320 MHz easy!
 */
 
    input  clock;
+   input  en;
    input  [6:0] sbit; // Note! This is s-bits i+1 to i+7 for candidate cluster i
    output [2:0]  count ;
 
@@ -34,8 +36,10 @@ module consecutive_count  ( // one logic step, could run at 320 MHz easy!
 
 
    always @(posedge clock) begin  // uses sbit0 here (the 2nd bit of the cluster) as a sync register reset
-      if (!sbit[0]) sum <= 0;
-      else  sum <= cons_count(sbit[6:1]);
+      if (en) begin
+        if (!sbit[0]) sum <= 0;
+        else  sum <= cons_count(sbit[6:1]);
+      end
    end
 
    function [2:0] cons_count;  // do a fast count of 6 consecutive bits, in a single logic step!

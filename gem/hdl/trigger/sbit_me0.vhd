@@ -303,7 +303,6 @@ begin
 
             cluster_packer_inst : entity work.cluster_packer
               generic map (
-                DEADTIME          => 0,
                 ONESHOT           => true,
                 SPLIT_CLUSTERS    => 0,
                 INVERT_PARTITIONS => false,
@@ -321,7 +320,8 @@ begin
                 cluster_count_masked_o => open,
                 clusters_o             => me0_clusters,
                 clusters_masked_o      => open,
-                overflow_o             => me0_overflow(oh)
+                overflow_o             => me0_overflow(oh),
+                valid_o                => open
                 );
        
     --------------------------------------------------------------------------------

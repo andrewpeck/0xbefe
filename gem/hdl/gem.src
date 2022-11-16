@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # GEM Top
 gem/hdl/gem_amc.vhd
 

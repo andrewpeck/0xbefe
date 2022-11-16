@@ -78,6 +78,10 @@
           description="Number of bx to delay the trigger (1-1024)"
           fw_default="0x7f"
           fw_signal="sbitmon_fifo_trigger_delay"/>
+    <node id="FIFO_SYNC_FROZEN_CLUSTERS" address="0xb" mask="0x00010000" permission="rw"
+          description="1 for frozen s-bits to be synced to the s-bit daq"
+          fw_default="0x1"
+          fw_signal="sbitmon_sync_frozen_sbits_to_fifo"/>
     <node id="FIFO_DATA" address="0xc" mask="0xffffffff" permission="r"
           fw_read_pulse_signal="sbitmon_fifo_rd_en"
           fw_read_ready_signal="sbitmon_fifo_valid"
@@ -196,6 +200,9 @@
           description="Reset all the GBT cores"
           fw_write_pulse_signal="gbt_reset_o"
           sw_ctrl_configure_set="0x1"/>
+    <node id="GBT_IC_RX_USE_EC" address="0x4" mask="0x00000001" permission="rw" ignore="&STATION;!=0"
+          description="When this option is set, the sub lpGBT IC communication goes fully through the boss lpBGT via the bidirectional EC channel. When unset, the sub lpGBT IC communication goes to the boss lpGBT EC, but comes back through the sub lpGBT Ic channel. With the proper configuration sequence, it completely avoids blind IC transactions with the sub lpGBT."
+          fw_signal="gbt_ic_rx_use_ec" fw_default="0b1"/>
   </node>
 
   <node id="RELEASE" address="0x30">

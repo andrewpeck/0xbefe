@@ -69,17 +69,17 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
             data_disable |= 0x00
 
     # Enable GPIO as output
-    writeReg(gpio_dir_node, dir_enable, 0)
+    lpgbt_writeReg(gpio_dir_node, dir_enable)
     print("Enable GPIO %d as output"%gpio)
     sleep(0.000001)
 
     # Set GPIO to 0 for reset
-    writeReg(gpio_out_node, data_disable, 0)
+    lpgbt_writeReg(gpio_out_node, data_disable)
     print("Set GPIO %d to 0 for reset"%gpio)
     sleep(0.1)
 
     # Disable GPIO as output
-    writeReg(gpio_dir_node, dir_disable, 0)
+    lpgbt_writeReg(gpio_dir_node, dir_disable)
     print("Disable GPIO %d as output"%gpio)
     sleep(0.000001)
 

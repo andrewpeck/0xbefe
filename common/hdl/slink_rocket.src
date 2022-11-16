@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 common/hdl/slink_rocket/qpll/QPLL_wrapper_selection.vhd
 common/hdl/slink_rocket/qpll/QPLL_wrapper_SR15_GTH_KU_ref1566.vhd

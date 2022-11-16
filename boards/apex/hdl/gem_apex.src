@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 boards/apex/hdl/gem_apex.vhd top=gem_apex
 boards/apex/hdl/pkg/gem_board_config_pkg.vhd

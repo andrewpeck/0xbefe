@@ -15,6 +15,7 @@ module find_cluster_primaries #(
   parameter SPLIT_CLUSTERS=0)
 (
   input                             clock,
+  input                             en,
   input      [MXPADS-1:0]           sbits,
   output reg [MXPADS-1:0]           vpfs,
   output     [MXPADS*MXCNTBITS-1:0] cnts
@@ -41,13 +42,16 @@ generate
         // or (2) are preceded by a Size=8 cluster (and cluster truncation is turned off)
         //        if we have size > 16 cluster, the end will get cut off
         always @(posedge clock) begin
-          if      (ikey == 0) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey];
-          else if (ikey  < 9) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey:ikey-1]==2'b10;
-          else if (ikey >= 9) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey:ikey-1]==2'b10 || (SPLIT_CLUSTERS && partition[irow][ikey:ikey-9]==10'b1111111110) ;
+           if (en==1) begin
+              if      (ikey == 0) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey];
+              else if (ikey  < 9) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey:ikey-1]==2'b10;
+              else if (ikey >= 9) vpfs [(MXKEYS*irow)+ikey] <= partition[irow][ikey:ikey-1]==2'b10 || (SPLIT_CLUSTERS && partition[irow][ikey:ikey-9]==10'b1111111110) ;
+           end;
         end
 
         consecutive_count ucntseq (
           .clock (clock),
+          .en    (en),
           .sbit  (partition_padded[irow][ikey+7:ikey+1]),
           .count (cnts[(MXKEYS*irow*3)+(ikey+1)*3-1:(MXKEYS*irow*3)+ikey*3])
         );

@@ -105,6 +105,14 @@ def main():
     MARKER_END="<!-- END: TIMING_DELAYS DO NOT EDIT -->"
     insert_code (xmlfile, xmlfile, MARKER_START, MARKER_END, write_timing_delays)
 
+    MARKER_START='<!-- START: SBIT_DELAYS DO NOT EDIT -->'
+    MARKER_END="<!-- END: SBIT_DELAYS DO NOT EDIT -->"
+    insert_code (xmlfile, xmlfile, MARKER_START, MARKER_END, write_sbit_delays)
+
+    MARKER_START='<!-- START: SBIT_DELAY_EN DO NOT EDIT -->'
+    MARKER_END="<!-- END: SBIT_DELAY_EN DO NOT EDIT -->"
+    insert_code (xmlfile, xmlfile, MARKER_START, MARKER_END, write_sbit_delay_enables)
+
     MARKER_START='<!-- START: TU_MASK DO NOT EDIT -->'
     MARKER_END="<!-- END: TU_MASK DO NOT EDIT -->"
     insert_code (xmlfile, xmlfile, MARKER_START, MARKER_END, write_tu_mask)
@@ -132,6 +140,57 @@ def write_tu_mask (file_handle):
         f.write('%s    fw_signal="TU_MASK (%d downto %d)"\n' % (padding, bithi, bitlow))
         f.write('%s    mask="0x%08X"\n' % (padding, mask))
         f.write('%s    fw_default="0x0"/>\n' % (padding))
+
+def write_sbit_delay_enables (file_handle):
+
+    f=file_handle
+
+    trig_tap_delays= []
+    sot_tap_delays = []
+
+    padding = "          " # indent
+    base_address = 0x0
+    nbits = 1
+
+    for vfat in range (num_vfats):
+
+        for group in range (8):
+
+            ibit = vfat * 8 + group
+            address = vfat
+            mask = 2**nbits-1 << (group*nbits)
+
+            f.write(f'{padding}<node id="VFAT{vfat}_GROUP{group}" address="0x%X" permission="rw"\n' %  address)
+            f.write(f'{padding}    mask="0x%08X"\n' %  mask)
+            f.write(f'{padding}    description="Set to 1 to enable BX delay for this S-bit group"\n')
+            f.write(f'{padding}    fw_signal="sbit_bx_dlys_enable({ibit})"\n')
+            f.write(f'{padding}    fw_default="0"/>\n')
+
+def write_sbit_delays (file_handle):
+
+    f=file_handle
+
+    trig_tap_delays= []
+    sot_tap_delays = []
+
+    padding = "          " # indent
+    base_address = 0x0
+    nbits = 3
+
+    for vfat in range (num_vfats):
+
+        for group in range (8):
+
+            ibit = vfat * 8 + group
+            address = vfat
+            mask = 2**nbits-1 << (group*nbits)
+
+            f.write(f'{padding}<node id="VFAT{vfat}_GROUP{group}" address="0x%X" permission="rw"\n' %  address)
+            f.write(f'{padding}    mask="0x%08X"\n' %  mask)
+            f.write(f'{padding}    description="Set the integer bx delay for this S-bit group (1 to 8 bx)"\n')
+            f.write(f'{padding}    fw_signal="sbit_bx_dlys({ibit})"\n')
+            f.write(f'{padding}    fw_default="0"/>\n')
+
 
 def write_timing_delays (file_handle):
 
