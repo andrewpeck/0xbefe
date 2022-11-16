@@ -10,6 +10,9 @@ gem/hdl/pkg/ipb_addr_decode.vhd
 gem/hdl/pkg/gem_pkg.vhd
 gem/hdl/pkg/sca_config_pkg.vhd
 
+# Trigger
+gem/hdl/sbit_me0.src
+
 # Optohybrid and VFAT communication
 #gem/hdl/oh/oh_link_regs.vhd                <-- use the generated version specific to the project
 gem/hdl/oh/optohybrid.vhd

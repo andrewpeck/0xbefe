@@ -12,9 +12,6 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
-# ME0 Trigger source
-gem/hdl/sbit_me0.src
-
 # GEM APEX source
 boards/apex/hdl/apex_common.src
 boards/apex/hdl/gem_apex.src

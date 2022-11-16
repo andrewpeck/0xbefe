@@ -10,7 +10,6 @@ common/hdl/slink_rocket.src
 # =============== GEM ===============
 gem/hdl/gem.src
 gem/ip/gem_common_ip.src
-gem/hdl/sbit_me0.src
 
 # =============== X2O ===============
 boards/x2o/hdl/x2o_common.src
