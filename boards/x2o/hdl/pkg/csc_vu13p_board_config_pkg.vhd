@@ -59,6 +59,14 @@ package board_config_package is
     constant CFG_DAQ_LASTEVT_FIFO_DEPTH     : integer := 4096;
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
+
+    constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := true; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
+    constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
+    constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
+
+    ------------ DEBUG FLAGS ------------
+    constant CFG_DEBUG_10GBE_MAC_PCS        : boolean := false; -- if set to true, an ILA will be instantiated which allows probing the 10 GbE MAC-PCS core
     
     --================================--
     -- Fiber to MGT mapping

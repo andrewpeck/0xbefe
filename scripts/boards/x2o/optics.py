@@ -27,7 +27,7 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
 
     qsfp_present_cages = qsfps.keys()
 
-    cols = ["Cage", "Type", "Vendor", "Temperature", "RX power", "Alarms"]
+    cols = ["Cage", "Type", "Vendor", "Temperature", "RX power", "Alarms", "CDR"]
     if show_opts:
         cols.append("Options")
     if show_rx_squelch:
@@ -44,6 +44,7 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
         alarms = "----"
         options = "----"
         rx_squelch_dis = "----"
+        cdr_status = "----"
         if i in qsfp_present_cages:
             qsfp = qsfps[i]
             qsfp.select()
@@ -91,8 +92,11 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
             if show_rx_squelch:
                 rx_squelch_dis = hex(qsfp.rx_squelch_disabled())
 
+            cdr_status = "TX: " + hex(qsfp.tx_cdr_enabled()) + ", RX: " + hex(qsfp.rx_cdr_enabled())
 
-        row = [cage, type, vendor, temp, rx_power, alarms]
+
+
+        row = [cage, type, vendor, temp, rx_power, alarms, cdr_status]
         if show_opts:
             row.append(options)
         if show_rx_squelch:
@@ -110,6 +114,22 @@ def x2o_disable_rx_squelch(qsfp):
 def x2o_enable_rx_squelch(qsfp):
     qsfp.select()
     qsfp.disable_rx_squelch(0x0)
+
+def x2o_enable_rx_cdr(qsfp):
+    qsfp.select()
+    qsfp.enable_rx_cdr(0xf)
+
+def x2o_disable_rx_cdr(qsfp):
+    qsfp.select()
+    qsfp.enable_rx_cdr(0x0)
+
+def x2o_enable_tx_cdr(qsfp):
+    qsfp.select()
+    qsfp.enable_tx_cdr(0xf)
+
+def x2o_disable_tx_cdr(qsfp):
+    qsfp.select()
+    qsfp.enable_tx_cdr(0x0)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -135,6 +155,26 @@ if __name__ == '__main__':
                         dest='enable_rx_squelch',
                         help="Enable RX squelch on the given cage")
 
+    parser.add_argument('-rcd',
+                        '--disable_rx_cdr',
+                        dest='disable_rx_cdr',
+                        help="Disable RX CDR on the given cage")
+
+    parser.add_argument('-rce',
+                        '--enable_rx_cdr',
+                        dest='enable_rx_cdr',
+                        help="Enable RX CDR on the given cage")
+
+    parser.add_argument('-tcd',
+                        '--disable_tx_cdr',
+                        dest='disable_tx_cdr',
+                        help="Disable TX CDR on the given cage")
+
+    parser.add_argument('-tce',
+                        '--enable_tx_cdr',
+                        dest='enable_tx_cdr',
+                        help="Enable TX CDR on the given cage")
+
     args = parser.parse_args()
 
     qsfps = x2o_get_qsfps()
@@ -155,5 +195,22 @@ if __name__ == '__main__':
             print("Enabling RX squelch on cage %d" % cage)
             x2o_enable_rx_squelch(qsfps[cage])
 
+    if args.disable_rx_cdr is not None or args.enable_rx_cdr is not None or args.disable_tx_cdr is not None or args.enable_tx_cdr is not None:
+        cage = int(args.disable_rx_cdr) if args.disable_rx_cdr is not None else int(args.enable_rx_cdr) if args.enable_rx_cdr is not None else int(args.disable_tx_cdr) if args.disable_tx_cdr is not None else int(args.enable_tx_cdr)
+        if cage not in qsfps:
+            print_red("Cannot control CDR on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            if args.disable_rx_cdr is not None:
+                print("Disabling RX CDR on cage %d" % cage)
+                x2o_disable_rx_cdr(qsfps[cage])
+            if args.enable_rx_cdr is not None:
+                print("Enabling RX CDR on cage %d" % cage)
+                x2o_enable_rx_cdr(qsfps[cage])
+            if args.disable_tx_cdr is not None:
+                print("Disabling TX CDR on cage %d" % cage)
+                x2o_disable_tx_cdr(qsfps[cage])
+            if args.enable_tx_cdr is not None:
+                print("Enabling TX CDR on cage %d" % cage)
+                x2o_enable_tx_cdr(qsfps[cage])
 
     x2o_optics(qsfps, show_opts=args.show_opts, show_rx_squelch=True)

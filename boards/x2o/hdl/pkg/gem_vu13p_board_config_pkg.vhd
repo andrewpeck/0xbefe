@@ -58,6 +58,7 @@ package board_config_package is
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
     constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := true; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
 
@@ -230,6 +231,23 @@ package board_config_package is
         rx_use_chan_bonding     => false
     );
         
+    constant CFG_MGT_LPGBT_ASYNC : t_mgt_type_config := (
+        link_type               => MGT_LPGBT,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 32,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+            
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;
     
 end board_config_package;

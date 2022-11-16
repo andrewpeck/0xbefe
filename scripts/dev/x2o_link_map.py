@@ -4,7 +4,7 @@ from common.utils import *
 # FPGA_TYPE = "VU27P"
 FPGA_TYPE = "VU13P"
 # RESERVED_GTYS = [124, 125, 126, 127] # reserved GTYs, which are e.g. used by the C2C
-RESERVED_GTYS = [126, 127, 231] # reserved GTYs, which are e.g. used by the C2C
+RESERVED_GTYS = [126, 127] # reserved GTYs, which are e.g. used by the C2C
 RESERVED_REFCLK0 = [126, 127]
 # RESERVED_REFCLK1 = [125]
 RESERVED_REFCLK1 = []
@@ -12,10 +12,12 @@ RESERVED_REFCLK1 = []
 # USE_NON_MAPPED_QSFP_CABLES = True
 USE_QSFPDD = False
 USE_NON_MAPPED_QSFP_CABLES = True
-RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
+# RESERVED_QSFPS = [5] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
+#
+# if USE_NON_MAPPED_QSFP_CABLES:
+#     RESERVED_QSFPS = [21, 20, 19, 18] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
 
-if USE_NON_MAPPED_QSFP_CABLES:
-    RESERVED_QSFPS = [21, 20, 19, 18] # will be removed from QSFP list (normally used for DTH) NOTE: MUST BE SPECIFIED IN REVERSE ORDER (high to low number)!
+RESERVED_QSFPS = []
 
 ###############################################################
 ############################# GEM #############################
@@ -70,7 +72,7 @@ if not USE_QSFPDD and USE_NON_MAPPED_QSFP_CABLES:
     # ME0_OH_QSFPS = [[9, 8, 7, 6], [14, 13, 1, 0]] # 4 layer 2 SLR
     ME0_OH_QSFPS = [[9, 8], [7, 6], [14, 13], [1, 0]] # 4 layer 4 SLR
     GEM_USE_LDAQ = True
-    GEM_LDAQ_QSFPS = [[10], [10], [10], [10]]
+    GEM_LDAQ_QSFPS = [[22], [22], [22], [22]]
     GEM_LDAQ_QSFP_CHANS = [[0], [1], [2], [3]]
 
 ###############################################################
@@ -82,13 +84,26 @@ CSC_NUM_SLR = 1
 CSC_NUM_DMB = 6
 CSC_NUM_GBT = 4
 
-# QSFP assignment per CSC BLOCK
+# QSFP assignment per CSC BLOCK (QSFP-DD)
+# CSC_DTH_QSFPS = [[5]]
+# CSC_DMB_QSFPS = [[10, 4]]
+# CSC_LDAQ_QSFPS = [[4]]
+# CSC_LDAQ_QSFP_CHANS = [[3]]
+# CSC_GBT_QSFPS = [[11]]
+# CSC_TTC_TX_QSFPS = [12] # global, not per SLR
+
+# QSFP assignment per CSC BLOCK (TAMU old cables)
+CSC_NUM_SLR = 1
+CSC_NUM_DMB = 4
+CSC_NUM_GBT = 4
+
 CSC_DTH_QSFPS = [[5]]
-CSC_DMB_QSFPS = [[10, 4]]
-CSC_LDAQ_QSFPS = [[4]]
-CSC_LDAQ_QSFP_CHANS = [[3]]
-CSC_GBT_QSFPS = [[11]]
-CSC_TTC_TX_QSFPS = [12] # global, not per SLR
+CSC_DMB_QSFPS = [[8]]
+CSC_LDAQ_QSFPS = [[7]]
+CSC_LDAQ_QSFP_CHANS = [[0]]
+CSC_GBT_QSFPS = [[18]]
+# CSC_TTC_TX_QSFPS = [22] # global, not per SLR
+CSC_TTC_TX_QSFPS = [20] # global, not per SLR
 
 
 ###############################################################
@@ -889,22 +904,22 @@ CABLE_CONNECTIONS = [
 if USE_NON_MAPPED_QSFP_CABLES:
     CABLE_CONNECTIONS = [
         # Octopus left
-        {"type": "dual", "qsfp_idx": [0,  1 ], "arf6_j_labels": ["J20"]},
-        {"type": "dual", "qsfp_idx": [2,  3 ], "arf6_j_labels": ["J19"]},
+        {"type": "dual", "qsfp_idx": [0,  1 ], "arf6_j_labels": ["J19"]},
+        {"type": "dual", "qsfp_idx": [2,  3 ], "arf6_j_labels": ["J20"]},
         {"type": "dual", "qsfp_idx": [4,  5 ], "arf6_j_labels": ["J11"]},
-        {"type": "dual", "qsfp_idx": [6,  7 ], "arf6_j_labels": ["J16"]},
-        {"type": "dual", "qsfp_idx": [8,  9 ], "arf6_j_labels": ["J15"]},
-        {"type": "dual", "qsfp_idx": [10, 11], "arf6_j_labels": ["J6" ]},
-        {"type": "dual", "qsfp_idx": [12, 13], "arf6_j_labels": ["J5" ]},
+        {"type": "dual", "qsfp_idx": [6,  7 ], "arf6_j_labels": ["J15"]},
+        {"type": "dual", "qsfp_idx": [8,  9 ], "arf6_j_labels": ["J16"]},
+        {"type": "dual", "qsfp_idx": [10, 11], "arf6_j_labels": ["J5" ]},
+        {"type": "dual", "qsfp_idx": [12, 13], "arf6_j_labels": ["J6" ]},
         # Octopus right
-        {"type": "dual", "qsfp_idx": [14, 15], "arf6_j_labels": ["J3" ]},
-        {"type": "dual", "qsfp_idx": [16, 17], "arf6_j_labels": ["J4" ]},
-        {"type": "dual", "qsfp_idx": [18, 19], "arf6_j_labels": ["J13"]},
-        {"type": "dual", "qsfp_idx": [20, 21], "arf6_j_labels": ["J14"]},
-        {"type": "dual", "qsfp_idx": [22, 23], "arf6_j_labels": ["J10"]},
-        {"type": "dual", "qsfp_idx": [24, 25], "arf6_j_labels": ["J7" ]},
-        {"type": "dual", "qsfp_idx": [26, 27], "arf6_j_labels": ["J17"]},
-        {"type": "dual", "qsfp_idx": [28, 29], "arf6_j_labels": ["J18"]}
+        {"type": "dual", "qsfp_idx": [14, 15], "arf6_j_labels": ["J4" ]},
+        {"type": "dual", "qsfp_idx": [16, 17], "arf6_j_labels": ["J3" ]},
+        {"type": "dual", "qsfp_idx": [18, 19], "arf6_j_labels": ["J14"]},
+        {"type": "dual", "qsfp_idx": [20, 21], "arf6_j_labels": ["J13"]},
+        {"type": "dual", "qsfp_idx": [22, 23], "arf6_j_labels": ["J7"]},
+        {"type": "dual", "qsfp_idx": [24, 25], "arf6_j_labels": ["J10" ]},
+        {"type": "dual", "qsfp_idx": [26, 27], "arf6_j_labels": ["J18"]},
+        {"type": "dual", "qsfp_idx": [28, 29], "arf6_j_labels": ["J17"]}
     ]
 
 def find_qsfp_cable(qsfp_idx):
