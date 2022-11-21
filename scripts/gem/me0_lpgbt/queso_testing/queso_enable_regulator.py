@@ -46,25 +46,25 @@ if __name__ == '__main__':
     for r in args.regulators:
         if not args.turn_off:
             try:
-                read = gbt_rpi_chc.gpio_action("write", regulators[r], 0)
-                if read != -9999:
-                    print(Colors.GREEN + "GPIO %d set to low for regulator %s"%(regulators[r], r) + Colors.ENDC)
-                    print(Colors.GREEN + "Regulator %s ON"%r + Colors.ENDC)
-                else:
-                    print(Colors.RED + "ERROR: Unable to write GPIO %d to low (regulator %s)"%(regulators[r], r) + Colors.ENDC)
-            except:
-                print(Colors.RED + "ERROR: Unable to write GPIO %d to low (regulator %s)"%(regulators[r], r) + Colors.ENDC)
-            time.sleep(0.5)
-        else:
-            try:
                 read = gbt_rpi_chc.gpio_action("write", regulators[r], 1)
                 if read != -9999:
                     print(Colors.GREEN + "GPIO %d set to high for regulator %s"%(regulators[r], r) + Colors.ENDC)
-                    print(Colors.GREEN + "Regulator %s OFF"%r + Colors.ENDC)
+                    print(Colors.GREEN + "Regulator %s ON"%r + Colors.ENDC)
                 else:
                     print(Colors.RED + "ERROR: Unable to write GPIO %d to high (regulator %s)"%(regulators[r], r) + Colors.ENDC)
             except:
                 print(Colors.RED + "ERROR: Unable to write GPIO %d to high (regulator %s)"%(regulators[r], r) + Colors.ENDC)
+            time.sleep(0.5)
+        else:
+            try:
+                read = gbt_rpi_chc.gpio_action("write", regulators[r], 0)
+                if read != -9999:
+                    print(Colors.GREEN + "GPIO %d set to low for regulator %s"%(regulators[r], r) + Colors.ENDC)
+                    print(Colors.GREEN + "Regulator %s OFF"%r + Colors.ENDC)
+                else:
+                    print(Colors.RED + "ERROR: Unable to write GPIO %d to low (regulator %s)"%(regulators[r], r) + Colors.ENDC)
+            except:
+                print(Colors.RED + "ERROR: Unable to write GPIO %d to low (regulator %s)"%(regulators[r], r) + Colors.ENDC)
             time.sleep(0.5)
 
     # Terminate RPi
