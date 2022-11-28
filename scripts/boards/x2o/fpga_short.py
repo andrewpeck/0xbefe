@@ -16,19 +16,12 @@ if board_type.lower() != "x2o":
 
 flavor = os.environ.get('BEFE_FLAVOR')
 fpga_idx = int(os.environ.get('BOARD_IDX'))
-bitfile = None
-if flavor.lower() == "ge11":
-    bitfile = get_config("CONFIG_X2O_GE11_BITFILE")
-elif flavor.lower() == "ge21":
-    bitfile = get_config("CONFIG_X2O_GE21_BITFILE")
-elif flavor.lower() == "me0":
-    bitfile = get_config("CONFIG_X2O_ME0_BITFILE")
-elif flavor.lower() == "csc":
-    bitfile = get_config("CONFIG_X2O_CSC_BITFILE")
 
+bitfile = sys.argv[1]
 if not path.exists(bitfile):
     print_red("ERROR: Could not find the bitfile: %s" % bitfile)
     exit()
+print(bitfile)
 
 #sync_clock_config = get_config("CONFIG_X2O_SYNC_CLOCK_CONFIG")
 #if not path.exists(sync_clock_config):
@@ -46,7 +39,7 @@ if not ("Xilinx VU13P" in fpgas):
 fpgas = m.detect_fpgas()
 if not ("Xilinx VU13P" in fpgas):
     print_red("ERROR: could not detect VU13P FPGA")
-    exit()
+    exit(1)
 else:
     print_green("VU13P FPGA detected")
 
@@ -65,6 +58,7 @@ if c2c_up:
     print_green("C2C is up!")
 else:
     print_red("C2C is down...")
+    exit(1)
 
 time.sleep(0.5)
 
@@ -74,5 +68,3 @@ parse_xml()
 befe_print_fw_info()
 
 heading("======================= DONE! =======================")
-init_script = "gem/init_backend.py" if flavor.lower() in ["ge11", "ge21", "me0"] else "csc/init.py" if flavor.lower() == "csc" else "init script"
-print("you can run %s now" % init_script)

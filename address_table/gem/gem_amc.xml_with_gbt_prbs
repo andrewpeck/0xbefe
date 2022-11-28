@@ -190,24 +190,12 @@
     <node id="GBT_RESET" address="0x3" mask="0x00000001" permission="rw"
           description="Reset all the GBT cores"
           fw_signal="gbt_reset" fw_default="0b0"/>
-    <node id="GBT_MANUAL_SLIDE_EN" address="0x3" mask="0x00000002" permission="rw"
-          description="When set to 1, it disabled the automatic RXSLIDE control and allows the user to do it manually"
-          fw_signal="gbt_manual_slip_en" fw_default="0b0"/>
+    <node id="GBT_RXSLIDE_EN" address="0x3" mask="0x00000002" permission="rw"
+          description="Enable / disable GBT RX slide (should be enabled in normal operation)"
+          fw_signal="gbt_rxslide_en" fw_default="0b1"/>
     <node id="GBT_PRBS_TX_EN" address="0x3" mask="0x00000004" permission="rw"
           description="Enable / disable GBT PRBS31 TX (should be disabled in normal operation). When enabled, this feature replaces all elink data (except IC and EC) with a PRBS31 sequence which can be checked by backend GBT RX PRBS31 checker when loopback is enabled on the chip."
           fw_signal="gbt_prbs_tx_en" fw_default="0b0"/>
-    <node id="GBT_LOCK_MIN_GOOD_HEADERS" address="0x4" mask="0x0000ffff" permission="rw"
-          description="This parameter controls the minimum number of good consecutive headers required to go from UNLOCKED to LOCKED state"
-          fw_signal="gbt_lock_min_good_cnt" fw_default="0x1e"/>
-    <node id="GBT_SLIP_MIN_BAD_HEADERS" address="0x4" mask="0xffff0000" permission="rw"
-          description="This parameter controls the maximum number of bad headers (consecutive or not) in UNLOCKED state before doing a bitslip on the MGT"
-          fw_signal="gbt_lock_max_bad_cnt" fw_default="0x1e"/>
-    <node id="GBT_TRACK_MIN_GOOD_HEADERS" address="0x5" mask="0x0000ffff" permission="rw"
-          description="This parameter controls the minimum number of good consecutive headers after the first bad one in LOCKED state required to maintain lock"
-          fw_signal="gbt_track_min_good_cnt" fw_default="0x1e"/>
-    <node id="GBT_TRACK_MAX_BAD_HEADERS" address="0x5" mask="0xffff0000" permission="rw"
-          description="This parameter controls the maximum number of bad (consecutive or not) headers after the first bad one in LOCKED state required to maintain lock"
-          fw_signal="gbt_track_max_bad_cnt" fw_default="0x28"/>
   </node>
 
   <node id="RELEASE" address="0x30">
@@ -1200,26 +1188,11 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_prbs_err_cnt"
           sw_val_warn="self > 0"/>
 
-    <node id="GBT${GBT}_GOOD_CONSEC_HEAD" address="0x10" mask="0x0000ffff" permission="r"
-          description="Maximum number of good consecutive GBT headers received"
-          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
-          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_max_good_consec_headers"/>
-
-    <node id="GBT${GBT}_BAD_CONSEC_HEAD" address="0x10" mask="0xffff0000" permission="r"
-          description="Maximum number of bad consecutive GBT headers received"
-          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
-          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_max_bad_consec_headers"/>
-
-    <node id="GBT{GBT}_MANUAL_RX_SLIDE" address="0x18" permission="w"
-          description="When GBT manual bitslip is enabled in GEM_SYSTEM, writing to this register will cause the GBT to do one bitslip on the RX MGT"
-          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
-          fw_write_pulse_signal="gbt_rx_manual_slide_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})"/>
-
-    <node id="VFAT_MASK" address="0x20" mask="0x00ffffff" permission="rw"
+    <node id="VFAT_MASK" address="0x10" mask="0x00ffffff" permission="rw"
           description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
-    <node id="VFAT${VFAT_IDX}" address="0x40"
+    <node id="VFAT${VFAT_IDX}" address="0x20"
           description="Link status of VFAT ${VFAT_IDX} on ${OH_IDX}"
           generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_IDX">
 

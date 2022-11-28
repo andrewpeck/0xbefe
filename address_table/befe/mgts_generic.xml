@@ -28,13 +28,13 @@
             fw_write_pulse_signal="cpll_reset_arr(${MGT})"/>
       <node id="QPLL0_RESET" address="0x3" permission="w"
             description="Writing 1 here resets the QPLL0 of this quad"
-            fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(0)"/>
+            fw_write_pulse_signal="qpll_ctrl_arr(${MGT}).reset(0)"/>
       <node id="QPLL1_RESET" address="0x4" permission="w"
             description="Writing 1 here resets the QPLL1 of this quad"
-            fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(1)"/>
+            fw_write_pulse_signal="qpll_ctrl_arr(${MGT}).reset(1)"/>
       <node id="QPLL_POWERDOWN" address="0x5" mask="0x30000000" permission="rw"
             description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
-            fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
+            fw_signal="qpll_ctrl_arr(${MGT}).power_down" fw_default="0b00"/>
       <node id="TX_POWERDOWN" address="0x5" mask="0x00000001" permission="rw"
             description="Setting this to 1 will powerdown the TX (writes 11 to TXPD), and 0 will put it in normal power mode (writes 00 to TXPD)"
             fw_signal="txpd_arr_async(${MGT})" fw_default="0b0"/>
@@ -68,6 +68,9 @@
       <node id="TX_MAIN_CURSOR" address="0x6" mask="0x7f000000" permission="rw"
             description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
             fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
+      <node id="RX_MANUAL_SLIDE" address="0x6" mask="0x80000000" permission="rw"
+            description="Manually trigger rxslide -- you have to write 1 and then 0 here for a single slip, and then wait at least 32 usrclk cycles"
+            fw_signal="manual_rxslide_arr_async(${MGT})" fw_default="0b0"/>
       <node id="RX_PRBS_SEL" address="0x7" mask="0x00000007" permission="rw"
             description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
             fw_signal="rxprbssel_arr_async(${MGT})" fw_default="0b000"/>
@@ -80,6 +83,15 @@
       <node id="RX_PRBS_CNT_RESET" address="0x9" permission="w"
             description="Writing 1 here resets the PRBS error counters"
             fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
+      <node id="QPLL_SDM_RESET" address="0xa" mask="0x00000001" permission="rw"
+            description="Setting this to 1 will reset the QPLL fractional divider if it is used (it's a sticky reset)"
+            fw_signal="qpll_ctrl_arr(${MGT}).sdm_reset" fw_default="0b0"/>
+      <node id="QPLL_SDM_WIDTH" address="0xa" mask="0x00000006" permission="rw"
+            description="Denominator of the QPLL fractional divider if it is used (SDM0WIDTH / SDM1WIDTH)"
+            fw_signal="qpll_ctrl_arr(${MGT}).sdm_width" fw_default="QPLL_DEFAULT_SDMWIDTH_ARR(${MGT})"/>
+      <node id="QPLL_SDM_DATA" address="0xa" mask="0x1ffffff0" permission="rw"
+            description="Numerator of the QPLL fractional divider if it is used (SDM0DATA / SDM1DATA)"
+            fw_signal="qpll_ctrl_arr(${MGT}).sdm_data" fw_default="QPLL_DEFAULT_SDMDATA_ARR(${MGT})"/>
     </node>
 
     <node id="STATUS" address="0x20">
@@ -162,6 +174,14 @@
       <node id="REFCLK1_FREQ" address="0x3" permission="r"
             description="Frequency of the refclk1 used by this MGT"
             fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"
+            sw_units="MHz"/>
+      <node id="TXUSRCLK2_FREQ" address="0x4" permission="r"
+            description="Frequency of the TXUSRCLK2 for this MGT"
+            fw_signal="txusrclk_freq_arr_i(${MGT})"
+            sw_units="MHz"/>
+      <node id="RXUSRCLK2_FREQ" address="0x5" permission="r"
+            description="Frequency of the RXUSRCLK2 for this MGT"
+            fw_signal="rxusrclk_freq_arr_i(${MGT})"
             sw_units="MHz"/>
     </node>
 
