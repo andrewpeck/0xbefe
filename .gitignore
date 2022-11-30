@@ -4,6 +4,9 @@ site
 vivado*
 bin
 *~
+planAhead.ngc2edif.log
+IP_repository/null/pa_index.xml
+IP_repository/null/xil_index.xml
 *.pyc
 .cxl.ip/
 cxl_error.log
