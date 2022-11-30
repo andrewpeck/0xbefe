@@ -17,20 +17,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
-library work;
-use work.types_pkg.all;
-
-library work;
-use work.ipbus_pkg.all;
-
 entity gbt_rx is
   generic(
+    WB_REQ_BITS       : integer := 49;  -- number of bits in a wishbone request
     g_FRAME_COUNT_MAX : integer := 8;   -- number of frames in a request packet
     g_FRAME_WIDTH     : integer := 6;   -- number of data bits per frame
-    g_READY_COUNT_MAX : integer := 64  -- number of good consecutive frames to mark the output as ready
+    g_READY_COUNT_MAX : integer := 64   -- number of good consecutive frames to mark the output as ready
     );
   port(
 

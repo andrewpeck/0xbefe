@@ -26,7 +26,7 @@ port(
     elink_data_i            : in std_logic_vector(g_ELINK_WIDTH-1 downto 0);
 
     reg_data_valid_o        : out std_logic;
-    reg_data_o              : out std_logic_vector(31 downto 0);
+    reg_data_o              : out std_logic_vector(31 downto 0) := (others => '0');
     error_o                 : out std_logic
 
 );

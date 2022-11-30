@@ -18,11 +18,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
-library work;
-
 entity gbt_tx is
   generic(
     g_FRAME_COUNT_MAX : integer := 6;
