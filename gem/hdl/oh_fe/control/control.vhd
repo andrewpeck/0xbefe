@@ -189,6 +189,7 @@ architecture Behavioral of control is
   signal sem_essential      : std_logic;
   signal sem_idle           : std_logic;
 
+  signal sem_alive               : std_logic;
   signal sem_inject_strobe       : std_logic;
   signal sem_inject_address      : std_logic_vector(39 downto 0);
   signal sem_correction_pulse    : std_logic;
@@ -526,7 +527,7 @@ begin
     port map(
       clk_i            => clocks.clk80,
       sysclk_i         => clocks.clk40,
-      heartbeat_o      => open,
+      alive_o          => sem_alive,
       inject_strobe    => sem_inject_strobe,
       inject_address   => sem_inject_address,
 
@@ -638,6 +639,7 @@ begin
     regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_ESSENTIAL_BIT) <= sem_essential;
     regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_UNCORRECTABLE_BIT) <= sem_uncorrectable;
     regs_read_arr(6)(REG_CONTROL_SEM_SEM_STATUS_IDLE_BIT) <= sem_idle;
+    regs_read_arr(6)(REG_CONTROL_SEM_SEM_ALIVE_BIT) <= sem_alive;
     regs_read_arr(8)(REG_CONTROL_VFAT_RESET_MSB downto REG_CONTROL_VFAT_RESET_LSB) <= vfat_reset(11 downto 0);
     regs_read_arr(9)(REG_CONTROL_TTC_BX0_CNT_LOCAL_MSB downto REG_CONTROL_TTC_BX0_CNT_LOCAL_LSB) <= cnt_bx0_lcl;
     regs_read_arr(10)(REG_CONTROL_TTC_BX0_CNT_TTC_MSB downto REG_CONTROL_TTC_BX0_CNT_TTC_LSB) <= cnt_bx0_rxd;

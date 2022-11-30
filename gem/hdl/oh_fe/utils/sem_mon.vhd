@@ -15,11 +15,11 @@ use work.hardware_pkg.all;
 
 entity sem_mon is
   port(
-    clk_i            : in  std_logic;
-    sysclk_i         : in  std_logic;
+    clk_i            : in  std_logic; -- 80 MHz clock for the sem core
+    sysclk_i         : in  std_logic; -- 40 MHz wishbone clock
     inject_strobe    : in  std_logic;
     inject_address   : in  std_logic_vector(39 downto 0);
-    heartbeat_o      : out std_logic;
+    alive_o          : out std_logic;
     initialization_o : out std_logic;
     observation_o    : out std_logic;
     correction_o     : out std_logic;
@@ -124,45 +124,82 @@ architecture behavioral of sem_mon is
   signal icap_csb   : std_logic;
   signal icap_rdwrb : std_logic;
 
+  signal heartbeat, heartbeat_r : std_logic := '0';
+
+  signal heartbeat_watchdog : integer range 0 to 1023 := 0;
+
 begin
+
+  process (clk_i) is
+  begin
+    if (rising_edge(clk_i)) then
+
+      heartbeat_r <= heartbeat;
+
+      if (heartbeat_r = '0' and heartbeat='1') then
+        heartbeat_watchdog <= 0;
+      elsif (heartbeat_watchdog < 1023) then
+        heartbeat_watchdog <= heartbeat_watchdog + 1;
+      end if;
+
+      if (heartbeat_watchdog = 1023) then
+        alive_o <= '0';
+      else
+        alive_o <= '1';
+      end if;
+
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Virtex-6
   --------------------------------------------------------------------------------------------------------------------
 
   sem_gen_v6 : if (FPGA_TYPE = "V6") generate
+
+    -- Virtex 6 SEM IP
+    -- https://docs.xilinx.com/v/u/3.4-English/pg036_sem
+    --
+    -- per pg036, ICAP maximum = 100 MHz
+    --
+
     sem_core_inst : sem
       port map(
-        status_heartbeat      => heartbeat_o,
-        status_initialization => initialization_o,
-        status_observation    => observation_o,
-        status_correction     => correction_o,
-        status_classification => classification_o,
-        status_injection      => injection_o,
-        status_essential      => essential_o,
-        status_uncorrectable  => uncorrectable_o,
-        monitor_txdata        => open,
-        monitor_txwrite       => open,
-        monitor_txfull        => '0',
-        monitor_rxdata        => (others => '0'),
-        monitor_rxread        => open,
-        monitor_rxempty       => '1',
-        fecc_crcerr           => fecc_crcerr,
-        fecc_eccerr           => fecc_eccerr,
-        fecc_eccerrsingle     => fecc_eccerrsingle,
-        fecc_syndromevalid    => fecc_syndromevalid,
-        fecc_syndrome         => fecc_syndrome,
-        fecc_far              => fecc_far (23 downto 0),
-        fecc_synbit           => fecc_synbit,
-        fecc_synword          => fecc_synword,
-        icap_o                => icap_o,
-        icap_i                => icap_i,
-        icap_busy             => icap_busy,
-        icap_csb              => icap_csb,
-        icap_rdwrb            => icap_rdwrb,
-        icap_clk              => clk_i,
-        icap_request          => open,
-        icap_grant            => '1'
+
+        status_heartbeat      => heartbeat,        -- out: The heartbeat signal is active while status_observation is TRUE. This output issues a single-cycle high pulse at least once every 128 clock cycles for 7 series and Virtex-6 devices,
+        status_initialization => initialization_o, -- out: The initialization signal is active during controller initialization, which occurs one time after the design begins operation.
+        status_observation    => observation_o,    -- out: The observation signal is active during controller observation of error detection signals. This signal remains active after an error detection while the controller queries the hardware for information.
+        status_correction     => correction_o,     -- out: The correction signal is active during controller correction of an error or during transition through this controller state if correction is disabled.
+        status_classification => classification_o, -- out: The classification signal is active during controller classification of an error or during transition through this controller state if classification is disabled.
+        status_injection      => injection_o,      -- out: The injection signal is active during controller injection of an error. When an error injection is complete, and the controller is ready to inject another error or return to observation, this signal returns inactive.
+        status_essential      => essential_o,      -- out: The essential signal is an error classification status signal. Prior to exiting the classification state, the controller sets this signal to reflect whether the error occurred on an essential bit(s). Then, the controller exits classification state.
+        status_uncorrectable  => uncorrectable_o,  -- out: The uncorrectable signal is an error correction status signal. Prior to exiting the correction state, the controller sets this signal to reflect the correctability of the error. Then, the controller exits correction state.
+
+        monitor_txdata        => open,            -- out: Parallel transmit data from controller
+        monitor_txwrite       => open,            -- out: Write strobe, qualifies validity of parallel transmit data.
+        monitor_txfull        => '0',             -- in: This signal implements flow control on the transmit channel, from the shim (peripheral) to the controller.
+        monitor_rxdata        => (others => '0'), -- in: Parallel receive data from the shim (peripheral).
+        monitor_rxread        => open,            -- out: Read strobe, acknowledges receipt of parallel receive data.
+        monitor_rxempty       => '1',             -- in: This signal implements flow control on the receive channel, from the shim (peripheral) to the controller.
+
+        fecc_crcerr           => fecc_crcerr,            -- in: Receives CRCERROR output of FRAME_ECC
+        fecc_eccerr           => fecc_eccerr,            -- in: Receives ECCERROR output of FRAME_ECC
+        fecc_eccerrsingle     => fecc_eccerrsingle,      -- in: Receives ECCERRORSINGLE output of FRAME_ECC.
+        fecc_syndromevalid    => fecc_syndromevalid,     -- in: Receives SYNDROMEVALID output of FRAME_ECC.
+        fecc_syndrome         => fecc_syndrome,          -- in: Receives SYNDROME output of FRAME_ECC.
+        fecc_far              => fecc_far (23 downto 0), -- in: Receives FAR output of FRAME_ECC.
+        fecc_synbit           => fecc_synbit,            -- in: Receives SYNBIT output of FRAME_ECC
+        fecc_synword          => fecc_synword,           -- in: Receives SYNWORD output of FRAME_ECC
+
+        icap_o                => icap_o,     -- in:  Receives O output of ICAP
+        icap_i                => icap_i,     -- out: Drives I input of ICAP.
+        icap_busy             => icap_busy,  -- in:  Receives BUSY output of ICAP
+        icap_csb              => icap_csb,   -- out: Drives CSB input of ICAP.
+        icap_rdwrb            => icap_rdwrb, -- out: Drives RDWRB input of ICAP.
+        icap_clk              => clk_i,      -- in:  Receives the clock for the design. This same clock also must be applied to the CLK input of ICAP.
+        icap_request          => open,       -- out: This signal is reserved for future use. Leave this port OPEN.
+        icap_grant            => '1'         -- in:  Tie this port to VCC.
+
         );
 
     --==========--
@@ -175,14 +212,14 @@ begin
         farsrc                => "EFAR"
         )
       port map (
-        crcerror       => fecc_crcerr,
-        eccerror       => fecc_eccerr,
-        eccerrorsingle => fecc_eccerrsingle,
-        far            => fecc_far (23 downto 0),
-        synbit         => fecc_synbit,
-        syndrome       => fecc_syndrome,
-        syndromevalid  => fecc_syndromevalid,
-        synword        => fecc_synword
+        crcerror       => fecc_crcerr,            -- out: Output indicating a CRC error
+        eccerror       => fecc_eccerr,            -- out: Output indicating a ECC error
+        eccerrorsingle => fecc_eccerrsingle,      -- out: Indicates single-bit Frame ECC error detected
+        far            => fecc_far (23 downto 0), -- out: Frame Address Register Value
+        synbit         => fecc_synbit,            -- out: Bit address of error
+        syndrome       => fecc_syndrome,          -- out: Output location of erroneous bit
+        syndromevalid  => fecc_syndromevalid,     -- out: Frame ECC output indicating the SYNDROME output is valid
+        synword        => fecc_synword            -- out: Word in the frame where an ECC error has been detected
         );
 
 
@@ -212,6 +249,9 @@ begin
   --------------------------------------------------------------------------------------------------------------------
 
   sem_gen_a7 : if (FPGA_TYPE = "A7") generate
+
+    -- Artix-7 SEM IP Documentation
+    -- https://docs.xilinx.com/v/u/en-US/ds796_sem
 
     signal status_initialization, status_observation, status_correction,
       status_classification, status_injection, status_essential,
@@ -272,7 +312,7 @@ begin
     sem_a7_inst : sem_a7
 
       port map (
-        status_heartbeat      => heartbeat_o,
+        status_heartbeat      => heartbeat,
         status_initialization => status_initialization,
         status_observation    => status_observation,
         status_correction     => status_correction,

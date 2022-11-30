@@ -94,8 +94,12 @@
                   fw_signal="sem_uncorrectable"/>
             <node id="SEM_STATUS_IDLE" address="0x5" permission="r"
                   mask="0x80"
-                  description=""
+                  description="SEM core is idle and can be injected"
                   fw_signal="sem_idle"/>
+            <node id="SEM_ALIVE" address="0x5" permission="r"
+                  mask="0x100"
+                  description="1 if the SEM heart is beating"
+                  fw_signal="sem_alive"/>
             <node id="SEM_CNT_RESET" address="0x6" permission="w"
                   description="Pulse to reset SEM counters"
                   mask="0x1"
