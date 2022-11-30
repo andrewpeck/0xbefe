@@ -58,6 +58,8 @@ architecture behavioral of sem_mon is
       monitor_rxdata        : in  std_logic_vector(7 downto 0);
       monitor_rxread        : out std_logic;
       monitor_rxempty       : in  std_logic;
+      inject_strobe         : in  std_logic;
+      inject_address        : in  std_logic_vector(35 downto 0);
       icap_busy             : in  std_logic;
       icap_o                : in  std_logic_vector(31 downto 0);
       icap_csb              : out std_logic;
@@ -237,6 +239,9 @@ begin
         monitor_rxdata        => (others => '0'),
         monitor_rxread        => open,
         monitor_rxempty       => '1',
+
+        inject_strobe         => inject_strobe_os,
+        inject_address        => inject_address (35 downto 0),
 
         icap_o                => icap_o,
         icap_i                => icap_i,

@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Thu Jun 18 16:28:34 2020
+# Date: Wed Nov 30 16:32:18 2022
 #
 ##############################################################
 #
@@ -45,13 +45,13 @@ CSET correction_method=repair
 CSET enable_bottom_gt_scan=true
 CSET enable_classification=false
 CSET enable_correction=true
-CSET enable_injection=false
+CSET enable_injection=true
 CSET enable_top_gt_scan=true
-CSET injection_shim=none
+CSET injection_shim=pins
 CSET retrieval_shim=none
 # END Parameters
 # BEGIN Extra information
 MISC pkg_timestamp=2013-04-08T13:40:10Z
 # END Extra information
 GENERATE
-# CRC: 349de664
+# CRC: b642e9e1
