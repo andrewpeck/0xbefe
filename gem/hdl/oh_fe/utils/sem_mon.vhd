@@ -128,11 +128,39 @@ architecture behavioral of sem_mon is
   signal fecc_synbit        : std_logic_vector(4 downto 0);
   signal fecc_synword       : std_logic_vector(6 downto 0);
 
-  signal status_heartbeat, heartbeat_r : std_logic := '0';
+  -- state
+  signal status_initialization                   : std_logic;
+  signal status_observation, status_heartbeat    : std_logic;
+  signal status_correction, status_uncorrectable : std_logic;
+  signal status_classification, status_essential : std_logic;
+  signal status_injection                        : std_logic;
 
+  -- heartbeat
+  signal heartbeat_r        : std_logic := '0';
   signal heartbeat_watchdog : integer range 0 to 1023 := 0;
 
+  -- injection
+  signal inject_strobe_r  : std_logic := '0';
+  signal inject_strobe_os : std_logic := '0';
+
+  -- action events
+  signal correction_r     : std_logic;
+  signal uncorrectable_r  : std_logic;
+  signal essential_r      : std_logic;
+
 begin
+
+  -- state
+  idle_o <= not (status_initialization or status_observation or
+                 status_correction or status_classification or status_injection);
+
+  initialization_o <= status_initialization;
+  observation_o    <= status_observation;
+  correction_o     <= status_correction;
+  uncorrectable_o  <= status_uncorrectable;
+  classification_o <= status_classification;
+  essential_o      <= status_essential;
+  injection_o      <= status_injection;
 
   -- heartbeat
   process (clk_i) is
@@ -156,6 +184,34 @@ begin
     end if;
   end process;
 
+  -- The error injection control is used to indicate an error injection
+  -- request. The inject_strobe signal should be pulsed high for one cycle,
+  -- synchronous to icap_clk, concurrent with the application of a valid
+  -- address to the inject_address input. The error injection control must
+  -- only be used when the controller is idle.
+  process (clk_i) is
+  begin
+    if (rising_edge(clk_i)) then
+      inject_strobe_r <= inject_strobe;
+    end if;
+  end process;
+
+  inject_strobe_os <= '1' when inject_strobe_r = '0' and inject_strobe = '1' else '0';
+
+  -- for counting, make rising edge sensitive versions of these signals
+  process (sysclk_i) is
+  begin
+    if (rising_edge(sysclk_i)) then
+      correction_r    <= status_correction;
+      uncorrectable_r <= status_uncorrectable;
+      essential_r     <= status_essential;
+    end if;
+  end process;
+
+  correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
+  uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
+  essential_pulse_o     <= '1' when essential_r = '0' and status_essential = '1'         else '0';
+
   --------------------------------------------------------------------------------------------------------------------
   -- Virtex-6
   --------------------------------------------------------------------------------------------------------------------
@@ -167,13 +223,13 @@ begin
     i_sem_core_v6 : sem
       port map(
         status_heartbeat      => status_heartbeat,
-        status_initialization => initialization_o,
-        status_observation    => observation_o,
-        status_correction     => correction_o,
-        status_classification => classification_o,
-        status_injection      => injection_o,
-        status_essential      => essential_o,
-        status_uncorrectable  => uncorrectable_o,
+        status_initialization => status_initialization,
+        status_observation    => status_observation,
+        status_correction     => status_correction,
+        status_classification => status_classification,
+        status_injection      => status_injection,
+        status_essential      => status_essential,
+        status_uncorrectable  => status_uncorrectable,
 
         monitor_txdata        => open,
         monitor_txwrite       => open,
@@ -248,60 +304,7 @@ begin
 
   g_sem_a7 : if (FPGA_TYPE = "A7") generate
 
-    signal status_initialization, status_observation, status_correction,
-      status_classification, status_injection, status_essential,
-      status_uncorrectable  : std_logic;
-
-    signal idle             : std_logic;
-
-    signal correction_r     : std_logic;
-    signal uncorrectable_r  : std_logic;
-    signal essential_r      : std_logic;
-    signal inject_strobe_r  : std_logic := '0';
-    signal inject_strobe_os : std_logic := '0';
-
   begin
-
-    -- The error injection control is used to indicate an error injection
-    -- request. The inject_strobe signal should be pulsed high for one cycle,
-    -- synchronous to icap_clk, concurrent with the application of a valid
-    -- address to the inject_address input. The error injection control must
-    -- only be used when the controller is idle
-
-    idle <= not (status_initialization or status_observation or
-                 status_correction or status_classification or status_injection);
-
-    initialization_o <= status_initialization;
-    observation_o    <= status_observation;
-    correction_o     <= status_correction;
-    classification_o <= status_classification;
-    injection_o      <= status_injection;
-    essential_o      <= status_essential;
-    uncorrectable_o  <= status_uncorrectable;
-    idle_o           <= idle;
-
-    -- for counting, make rising edge sensitive versions of these signals
-    process (sysclk_i) is
-    begin
-      if (rising_edge(sysclk_i)) then
-        correction_r    <= status_correction;
-        uncorrectable_r <= status_uncorrectable;
-        essential_r     <= status_essential;
-      end if;
-    end process;
-
-    process (clk_i) is
-    begin
-      if (rising_edge(clk_i)) then
-        inject_strobe_r <= inject_strobe;
-      end if;
-    end process;
-
-    inject_strobe_os <= '1' when inject_strobe_r = '0' and inject_strobe = '1' else '0';
-
-    correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
-    uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
-    essential_pulse_o     <= '1' when essential_r = '0' and status_essential = '1'         else '0';
 
     -- SEM IP Core v4.1 Documentation
     -- https://docs.amd.com/r/en-US/pg036_sem
