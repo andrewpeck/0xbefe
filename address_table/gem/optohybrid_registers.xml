@@ -33,6 +33,7 @@
                   mask="0x0000ffff"
                   description="Counts of uncorrectable single event upsets"
                   fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_en_signal="sem_uncorrectable_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_uncorrectable"/>
@@ -40,6 +41,7 @@
                   mask="0xffff0000"
                   description="Counts of corrected single event upsets"
                   fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_en_signal="sem_correction_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_correction"/>
@@ -61,6 +63,7 @@
                   mask="0xffff0000"
                   description="Counts of completed injected sem errors"
                   fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_en_signal="sem_injection"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_injection"/>
@@ -120,6 +123,7 @@
                   description="TTC BX0 Local Counter"
                   fw_cnt_en_signal="bx0_local"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bx0_lcl"/>
             <node id="BX0_CNT_TTC" address="0x1" permission="r"
@@ -127,6 +131,7 @@
                   description="TTC BX0 Received Counter"
                   fw_cnt_en_signal="ttc_i.bc0"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bx0_rxd"/>
             <node id="BXN_CNT_LOCAL" address="0x2" permission="r"
@@ -155,6 +160,7 @@
                   description="L1A Received Counter"
                   fw_cnt_en_signal="ttc_i.l1a"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_l1a"/>
             <node id="BXN_SYNC_ERR_CNT" address="0x7" permission="r"
@@ -162,6 +168,7 @@
                   description="BXN Sync Error Counter"
                   fw_cnt_en_signal="ttc_bxn_sync_err"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bxn_sync_err"/>
             <node id="BX0_SYNC_ERR_CNT" address="0x7" permission="r"
@@ -169,6 +176,7 @@
                   description="BX0 Sync Error Counter"
                   fw_cnt_en_signal="ttc_bx0_sync_err"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_bx0_sync_err"/>
             <node id="RESYNC_CNT" address="0x8" permission="r"
@@ -176,6 +184,7 @@
                   description="Count of sesyncs received"
                   fw_cnt_en_signal="ttc_i.resync"
                   fw_cnt_reset_signal="reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_resync"/>
         </node> <!--TTC-->
@@ -349,6 +358,7 @@
                   fw_cnt_en_signal="ttc_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="ttc_tmr_err_cnt"/>
             <node id="IPB_SWITCH_TMR_ERR_CNT" address="0x1" permission="r"
                   mask="0xffff0000"
@@ -356,6 +366,7 @@
                   fw_cnt_en_signal="ipb_switch_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="ipb_switch_tmr_err_cnt"/>
             <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x2" permission="r"
                   mask="0x0000ffff"
@@ -363,6 +374,7 @@
                   fw_cnt_en_signal="ipb_slave_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
             <node id="TMR_CNT_RESET" address="0x3" permission="w" mask="0x1"
                   description="Reset Control TMR Error counters"
@@ -441,6 +453,7 @@
                   description="Temperature Alarm counter"
                   fw_cnt_en_signal="alarm_sync(0)"
                   fw_cnt_reset_signal="reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_overtemp"/>
 
@@ -449,6 +462,7 @@
                   mask="0x1fc0000"
                   fw_cnt_en_signal="alarm_sync(1)"
                   fw_cnt_reset_signal="reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccaux_alarm"/>
 
@@ -457,6 +471,7 @@
                   description="VCCINT Alarm Counter"
                   fw_cnt_en_signal="alarm_sync(2)"
                   fw_cnt_reset_signal="reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_vccint_alarm"/>
         </node> <!--CTRL-->
@@ -493,6 +508,7 @@
                   description="Overflow Counter (more than 8 clusters in a bx)"
                   fw_cnt_en_signal="sbit_overflow"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sbit_overflow"/>
 
@@ -673,6 +689,7 @@
                   fw_cnt_en_signal="active_vfats(${VFAT_CNT_IDX})"
                   fw_cnt_snap_signal="sbit_cnt_snap"
                   fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_clk_signal="clk_40_sbit"
                   fw_signal="cnt_vfat${VFAT_CNT_IDX}"
                   generate="true"
@@ -704,6 +721,7 @@
                   fw_cnt_en_signal="valid_clusters_or"
                   fw_cnt_snap_signal="sbit_cnt_snap"
                   fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_cnt_use_tmr="True"
                   fw_signal="cnt_clusters"/>
 
             <node id="SBITS_OVER_64x${OVERFLOW_IDX}" address="0x1f" permission="r"
@@ -712,6 +730,7 @@
                   fw_cnt_en_signal="sbits_comparator_over_threshold(${OVERFLOW_IDX})"
                   fw_cnt_snap_signal="sbit_cnt_snap"
                   fw_cnt_reset_signal="cnt_reset_strobed"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_clk_signal="clk_40_sbit"
                   fw_signal="cnt_over_threshold${OVERFLOW_IDX}"
                   generate="true"
@@ -1347,6 +1366,7 @@
                   fw_cnt_en_signal="cluster_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="cluster_tmr_err_cnt"/>
             <node id="SBIT_RX_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0xffff0000"
@@ -1354,6 +1374,7 @@
                   fw_cnt_en_signal="trig_alignment_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="trig_alignment_tmr_err_cnt"/>
             <node id="TRIG_FORMATTER_TMR_ERR_CNT" address="0x1" permission="r"
                   mask="0xffff0000"
@@ -1361,6 +1382,7 @@
                   fw_cnt_en_signal="trig_formatter_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="trig_formatter_tmr_err_cnt"/>
             <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x1" permission="r"
                   mask="0x0000ffff"
@@ -1368,6 +1390,7 @@
                   fw_cnt_en_signal="ipb_slave_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
             <node id="TMR_CNT_RESET" address="0x2" permission="w"
                   description="Reset trigger TMR Error counters" mask="0x1"
@@ -1408,6 +1431,7 @@
                   description="Number of wishbone responses sent back"
                   fw_cnt_en_signal="ipb_miso.ipb_ack"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_ipb_response"/>
             <node id="TX_READY" address="0x1" permission="r"
@@ -1430,6 +1454,7 @@
                   description="Number of wishbone requests received"
                   fw_cnt_en_signal="ipb_mosi.ipb_strobe"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_ipb_request"/>
             <node id="CNT_LINK_ERR" address="0x1" permission="r"
@@ -1437,6 +1462,7 @@
                   description="Number of GBT link errrors detected"
                   fw_cnt_en_signal="gbt_link_err_ready"
                   fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_link_err"/>
         </node> <!--RX-->
@@ -1460,6 +1486,7 @@
                   fw_cnt_en_signal="gbt_link_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="gbt_link_tmr_err_cnt"/>
             <node id="GBT_SERDES_TMR_ERR_CNT" address="0x0" permission="r"
                   mask="0xffff0000"
@@ -1467,6 +1494,7 @@
                   fw_cnt_en_signal="gbt_serdes_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="gbt_serdes_tmr_err_cnt"/>
             <node id="IPB_SLAVE_TMR_ERR_CNT" address="0x1" permission="r"
                   mask="0x0000ffff"
@@ -1474,6 +1502,7 @@
                   fw_cnt_en_signal="ipb_slave_tmr_err"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_cnt_reset_signal="reset or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
                   fw_signal="ipb_slave_tmr_err_cnt"/>
             <node id="TMR_CNT_RESET" address="0x2" permission="w"
                   description="Reset GBT TMR Error counters" mask="0x1"
