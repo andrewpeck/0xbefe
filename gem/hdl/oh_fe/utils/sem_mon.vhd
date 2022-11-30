@@ -22,7 +22,7 @@ entity sem_mon is
     idle_o           : out std_logic;
     initialization_o : out std_logic;
     observation_o    : out std_logic;
-    heartbeat_o      : out std_logic;
+    alive_o          : out std_logic;
     correction_o     : out std_logic;
     uncorrectable_o  : out std_logic;
     classification_o : out std_logic;
@@ -128,7 +128,33 @@ architecture behavioral of sem_mon is
   signal fecc_synbit        : std_logic_vector(4 downto 0);
   signal fecc_synword       : std_logic_vector(6 downto 0);
 
+  signal status_heartbeat, heartbeat_r : std_logic := '0';
+
+  signal heartbeat_watchdog : integer range 0 to 1023 := 0;
+
 begin
+
+  -- heartbeat
+  process (clk_i) is
+  begin
+    if (rising_edge(clk_i)) then
+
+      heartbeat_r <= status_heartbeat;
+
+      if (heartbeat_r = '0' and status_heartbeat='1') then
+        heartbeat_watchdog <= 0;
+      elsif (heartbeat_watchdog < 1023) then
+        heartbeat_watchdog <= heartbeat_watchdog + 1;
+      end if;
+
+      if (heartbeat_watchdog = 1023) then
+        alive_o <= '0';
+      else
+        alive_o <= '1';
+      end if;
+
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Virtex-6
@@ -140,7 +166,7 @@ begin
     -- https://docs.amd.com/v/u/en-US/ug764_sem
     i_sem_core_v6 : sem
       port map(
-        status_heartbeat      => heartbeat_o,
+        status_heartbeat      => status_heartbeat,
         status_initialization => initialization_o,
         status_observation    => observation_o,
         status_correction     => correction_o,
@@ -281,7 +307,7 @@ begin
     -- https://docs.amd.com/r/en-US/pg036_sem
     i_sem_core_a7 : sem_a7
       port map (
-        status_heartbeat      => heartbeat_o,
+        status_heartbeat      => status_heartbeat,
         status_initialization => status_initialization,
         status_observation    => status_observation,
         status_correction     => status_correction,
