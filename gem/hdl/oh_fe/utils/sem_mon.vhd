@@ -54,6 +54,8 @@ architecture behavioral of sem_mon is
       monitor_rxdata        : in  std_logic_vector(7 downto 0);
       monitor_rxread        : out std_logic;
       monitor_rxempty       : in  std_logic;
+      inject_strobe         : in  std_logic;
+      inject_address        : in  std_logic_vector(35 downto 0);
       icap_busy             : in  std_logic;
       icap_o                : in  std_logic_vector(31 downto 0);
       icap_csb              : out std_logic;
@@ -226,6 +228,9 @@ begin
         status_injection      => status_injection,      -- out: The injection signal is active during controller injection of an error. When an error injection is complete, and the controller is ready to inject another error or return to observation, this signal returns inactive.
         status_essential      => status_essential,      -- out: The essential signal is an error classification status signal. Prior to exiting the classification state, the controller sets this signal to reflect whether the error occurred on an essential bit(s). Then, the controller exits classification state.
         status_uncorrectable  => status_uncorrectable,  -- out: The uncorrectable signal is an error correction status signal. Prior to exiting the correction state, the controller sets this signal to reflect the correctability of the error. Then, the controller exits correction state.
+
+        inject_strobe         => inject_strobe_os,
+        inject_address        => inject_address (35 downto 0),
 
         monitor_txdata        => open,            -- out: Parallel transmit data from controller
         monitor_txwrite       => open,            -- out: Write strobe, qualifies validity of parallel transmit data.
