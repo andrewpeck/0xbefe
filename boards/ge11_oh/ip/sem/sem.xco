@@ -39,7 +39,7 @@ SET vhdlsim = true
 SELECT Soft_Error_Mitigation xilinx.com:ip:sem:3.6
 # END Select
 # BEGIN Parameters
-CSET clock_freq=40
+CSET clock_freq=80
 CSET component_name=sem
 CSET correction_method=repair
 CSET enable_bottom_gt_scan=true
