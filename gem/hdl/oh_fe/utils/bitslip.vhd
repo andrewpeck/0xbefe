@@ -11,7 +11,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.types_pkg.all;
 
 entity bitslip is
   generic (
@@ -37,6 +36,14 @@ architecture behavioral of bitslip is
   signal data     : data_array_t (2*g_EN_TMR downto 0);
 
   signal cnt : integer;
+
+  function majority (a : std_logic_vector; b : std_logic_vector; c : std_logic_vector)
+    return std_logic_vector is
+    variable tmp : std_logic_vector (a'length-1 downto 0);
+  begin
+    tmp := (a and b) or (b and c) or (a and c);
+    return tmp;
+  end function;
 
 begin
 

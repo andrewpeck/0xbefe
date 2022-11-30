@@ -7,29 +7,24 @@
 -- Description:
 --   This module decodes received GBT frames and outputs a wishbone request
 ----------------------------------------------------------------------------------
--- 2017/07/24 -- Removal of VFAT2 event building
--- 2017/08/03 -- Addition of 10 bit decoding for OHv3a w/ 1x 80Mhz + 1x 320 Mhz
--- 2017/11/07 -- Add idle state
--- 2018/09/27 -- Conversion to single-link 6b8b format
--- 2018/09/28 -- Cleanup of module and conversion to generic frame sizes
-----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
+use ieee.numeric_std.all;
 
 entity gbt_rx is
   generic(
-    WB_REQ_BITS       : integer := 49;  -- number of bits in a wishbone request
-    g_FRAME_COUNT_MAX : integer := 8;   -- number of frames in a request packet
-    g_FRAME_WIDTH     : integer := 6;   -- number of data bits per frame
-    g_READY_COUNT_MAX : integer := 64   -- number of good consecutive frames to mark the output as ready
+    WB_REQ_BITS         : integer := 49;  -- number of bits in a wishbone request
+    g_READY_COUNT_MAX   : integer := 64  -- number of good consecutive frames to mark the output as ready
     );
   port(
 
     -- reset
     reset_i : in std_logic;
 
-    -- 40 MHz fabric clock
+
+-- 40 MHz fabric clock
     clock : in std_logic;
 
     -- parallel data input from deserializer
@@ -53,92 +48,115 @@ end gbt_rx;
 
 architecture Behavioral of gbt_rx is
 
-  type state_t is (ERR, SYNCING, IDLE, HEADER, START, DATA);
+  constant BITSLIP_ERR_CNT_MAX : integer := g_READY_COUNT_MAX*2;
 
-  signal req_valid    : std_logic;
-  signal req_data_buf : std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
+  type state_t is (ERR, SYNCING, IDLE, DATA, CRC, DONE);
+
+  signal req_valid : std_logic;
+  signal req_data  : std_logic_vector(51 downto 0) := (others => '0');
 
   signal state : state_t := SYNCING;
 
-  signal data_frame_cnt : integer range 0 to g_FRAME_COUNT_MAX-1 := 0;
+  constant FRAME_CNT_MAX : integer := req_data'length / 4;
+
+  signal data_frame_cnt : integer range 0 to FRAME_CNT_MAX-1 := 0;
 
   signal ready_cnt : integer range 0 to g_READY_COUNT_MAX-1 := 0;
   signal ready     : std_logic;
 
-  signal frame_data       : std_logic_vector (5 downto 0);
-  signal frame_data_delay : std_logic_vector (5 downto 0);
-
-  signal char_is_data   : std_logic;
-  signal char_is_ttc    : std_logic;
-  signal char_is_header : std_logic;
-  signal not_in_table   : std_logic;
-
   signal reset : std_logic;
 
-  signal last_data_frame : std_logic;
+  signal crc_rx : std_logic_vector (7 downto 0) := (others => '0');
 
-  signal l1a     : std_logic;
-  signal bc0     : std_logic;
-  signal idle_rx : std_logic;
-  signal resync  : std_logic;
+  signal special_bit : std_logic := '0';
+
+  signal data_slip       : std_logic_vector(7 downto 0);
+  signal bitslip_cnt     : integer range 0 to 7                     := 0;
+  signal bitslip_err_cnt : integer range 0 to BITSLIP_ERR_CNT_MAX-1 := 0;
+  signal bitslip_cnt_slv : std_logic_vector (2 downto 0)            := (others => '0');
+
+
+  signal error_detect : std_logic := '0';
 
 begin
 
-  -- fanout reset tree
+  special_bit <= data_slip(7);
+  reset       <= reset_i;
+  error_o     <= error_detect;
+
+  --------------------------------------------------------------------------------
+  -- Bitslip
+  --------------------------------------------------------------------------------
 
   process (clock)
   begin
     if (rising_edge(clock)) then
-      reset <= reset_i;
+      if (ready = '1') then
+        bitslip_err_cnt <= 0;
+      elsif (bitslip_err_cnt = BITSLIP_ERR_CNT_MAX-1) then
+        bitslip_err_cnt <= 0;
+      elsif (state = SYNCING or error_detect = '1') then
+        bitslip_err_cnt <= bitslip_err_cnt + 1;
+      end if;
     end if;
   end process;
 
-  --== ERROR ==--
-
-  process(clock)
+  process (clock)
   begin
     if (rising_edge(clock)) then
-
-      if (ready = '1') then
-        if (STATE = ERR) then error_o <= '1';
-        else error_o                  <= '0';
-        end if;
-      else
-        if (idle_rx = '1' or char_is_ttc = '1') then error_o <= '0';
-        else error_o                                         <= '1';
+      if (bitslip_err_cnt = BITSLIP_ERR_CNT_MAX-1) then
+        if (bitslip_cnt = 7) then
+          bitslip_cnt <= 0;
+        else
+          bitslip_cnt <= bitslip_cnt + 1;
         end if;
       end if;
-
     end if;
   end process;
 
-  --== TTC ==--
+  bitslip_cnt_slv <= std_logic_vector(to_unsigned(bitslip_cnt, 3));
+
+  bitslip_inst : entity work.bitslip
+    generic map (
+      g_WORD_SIZE => 8,
+      g_EN_TMR    => 1
+      )
+    port map (
+      clock       => clock,
+      reset       => reset,
+      bitslip_cnt => bitslip_cnt_slv,
+      din         => data_i,
+      dout        => data_slip
+      );
+
+  --------------------------------------------------------------------------------
+  -- TTC
+  --------------------------------------------------------------------------------
 
   process(clock)
   begin
     if (rising_edge(clock)) then
-      if (reset = '1') then
+      if (ready = '0' or reset = '1') then
         l1a_o    <= '0';
         resync_o <= '0';
         bc0_o    <= '0';
       else
-        l1a_o    <= ready and l1a;
-        resync_o <= ready and resync;
-        bc0_o    <= ready and bc0;
+        l1a_o    <= data_slip(6);
+        bc0_o    <= data_slip(5);
+        resync_o <= data_slip(4);
       end if;
     end if;
   end process;
 
+  -- sync to the special bit 0x80 pattern
   process (clock)
   begin
     if (rising_edge(clock)) then
-
       if (reset = '1' or state = ERR) then
         ready_cnt <= 0;
-      elsif ((idle_rx = '1' or char_is_ttc = '1') and (ready_cnt < g_READY_COUNT_MAX-1)) then
+      elsif (data_slip = x"80" and (ready_cnt < g_READY_COUNT_MAX-1)) then
         ready_cnt <= ready_cnt + 1;
       end if;
-
     end if;
   end process;
 
@@ -146,153 +164,79 @@ begin
 
   ready_o <= ready;
 
-  -- 8b to 6b conversion
-  eightbit_sixbit_inst : entity work.eightbit_sixbit
-    port map (
-      clock          => clock,
-      eightbit       => data_i,
-      sixbit         => frame_data,
-      not_in_table   => not_in_table,
-      char_is_data   => char_is_data,
-      char_is_ttc    => char_is_ttc,
-      char_is_header => char_is_header,
-      l1a            => l1a,
-      bc0            => bc0,
-      resync         => resync,
-      idle           => idle_rx
-      );
-
-  process (clock)
-  begin
-    if (rising_edge(clock)) then
-      -- only latch if char_is_data so that we can "pause" the sequencer if a ttc command is received
-      -- during a packet
-      if (char_is_data = '1') then frame_data_delay <= frame_data;
-      else frame_data_delay                         <= frame_data_delay;
-      end if;
-    end if;
-  end process;
+  --------------------------------------------------------------------------------
+  -- State machine
+  --------------------------------------------------------------------------------
 
   process(clock)
   begin
     if (rising_edge(clock)) then
 
-      if (reset = '1') then
-        state          <= SYNCING;
-        data_frame_cnt <= 0;
-      elsif (not_in_table = '1') then
-        state          <= ERR;
-        data_frame_cnt <= 0;
-      else
-        case state is
+      error_detect <= '0';
+      req_en_o     <= '0';
 
-          when ERR =>
+      case state is
 
-            if (not_in_table = '0') then
-              state          <= SYNCING;
-              data_frame_cnt <= 0;
-            end if;
 
-          when SYNCING =>
+        when ERR =>
+          error_detect <= '1';
+          state        <= SYNCING;
 
-            if (ready = '1') then
-              state <= IDLE;
-            end if;
+        when SYNCING =>
+          if (ready = '1') then
+            state <= IDLE;
+          end if;
+
+        when IDLE =>
+
+          if (special_bit = '0') then
+            state                 <= DATA;
+            req_data (3 downto 0) <= data_slip(3 downto 0);
+            data_frame_cnt        <= 1;
+          else
             data_frame_cnt <= 0;
+          end if;
 
-          when IDLE =>
+        when DATA =>
 
-            if (char_is_header = '1') then
-              state <= HEADER;
-            end if;
+          if (special_bit = '1') then
+            state <= ERR;
+          elsif (data_frame_cnt = FRAME_CNT_MAX - 1) then
             data_frame_cnt <= 0;
+            state          <= CRC;
+          else
+            data_frame_cnt <= data_frame_cnt + 1;
+            state          <= DATA;
+          end if;
 
-          when HEADER =>
+          req_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4) <= data_slip (3 downto 0);
 
-            if (char_is_ttc = '1') then state     <= HEADER;
-            elsif (char_is_data = '1') then state <= START;
-            else state                            <= ERR;
-            end if;
-            data_frame_cnt                        <= 0;
+        when CRC =>
 
-          when START =>
+          if (special_bit = '1') then
+            state <= ERR;
+          elsif (data_frame_cnt = 1) then
+            data_frame_cnt <= 0;
+            state          <= DONE;
+          else
+            data_frame_cnt <= data_frame_cnt + 1;
+            state          <= CRC;
+          end if;
 
-            if (char_is_ttc = '1') then state     <= START;
-            elsif (char_is_data = '1') then state <= DATA;
-            else state                            <= ERR;
-            end if;
-            data_frame_cnt                        <= 0;
+          crc_rx((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4) <= data_slip (3 downto 0);
 
-          when DATA =>
+        when DONE =>
 
-            if (char_is_ttc = '1') then
+          if (crc_rx = crc_rx) then
+            req_data_o <= req_data(req_data_o'length-1 downto 0);
+            req_en_o   <= '1';
+            state      <= IDLE;
+          else
+            state <= ERR;
+          end if;
 
-              state <= DATA;
-
-            elsif (data_frame_cnt = g_FRAME_COUNT_MAX-1) then
-
-              data_frame_cnt <= 0;
-
-              if (char_is_data = '1') then state <= START;  -- process consecutive frames
-              elsif (idle_rx = '1') then state   <= IDLE;  -- or go back to idle
-              end if;
-
-            else
-              if (char_is_data = '0') then
-                state          <= ERR;
-                data_frame_cnt <= 0;
-              else
-                data_frame_cnt <= data_frame_cnt + 1;
-              end if;
-
-            end if;
-
-          when others => state <= ERR;
-
-        end case;
-      end if;
+      end case;
     end if;
   end process;
-
-  --== REQUEST ==--
-
-  process(clock)
-  begin
-    if (rising_edge(clock)) then
-
-      -- latch request after data frame 4
-      if (state = DATA and ((g_FRAME_COUNT_MAX-1) = data_frame_cnt) and char_is_ttc = '0') then
-        last_data_frame <= '1';
-      else
-        last_data_frame <= '0';
-      end if;
-
-      if (last_data_frame = '1') then
-        req_en_o   <= req_valid;        -- fifo_wr
-        req_data_o <= req_data_buf;  -- 49 bit stable output (1 bit WE, 16 bit adr, 32 bit data)
-      else
-        req_en_o <= '0';
-      end if;
-
-      if (reset = '1' or ready = '0') then
-        req_valid <= '0';
-      else
-        case state is
-          when SYNCING => req_valid <= '0';
-          when IDLE    => req_valid <= '0';
-          when HEADER  => req_valid <= '0';
-          when START   => req_valid <= frame_data_delay(5);  -- request valid
-                        req_data_buf(WB_REQ_BITS-1) <= frame_data_delay(4);  -- write enable
-          -- reserved                    <= frame_data(3 downto 0);
-          when DATA => req_data_buf (
-            (g_FRAME_COUNT_MAX - data_frame_cnt) * g_FRAME_WIDTH - 1 downto
-            (g_FRAME_COUNT_MAX-1-data_frame_cnt) * g_FRAME_WIDTH) <= frame_data_delay;
-          when others => req_valid <= '0';
-
-        end case;
-      end if;
-    end if;
-  end process;
-
 
 end Behavioral;

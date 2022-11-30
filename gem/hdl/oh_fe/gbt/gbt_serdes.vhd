@@ -29,8 +29,7 @@ use work.hardware_pkg.all;
 
 entity gbt_serdes is
   generic(
-    BITSLIP_ERR_CNT_MAX : integer := 16;
-    MXBITS              : integer := 8
+    MXBITS : integer := 8
     );
   port(
 
@@ -65,8 +64,6 @@ end gbt_serdes;
 architecture Behavioral of gbt_serdes is
 
   signal oversample_tmr_err : std_logic;
-
-  signal from_gbt_raw : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
 
   signal to_gbt : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
 
@@ -139,7 +136,7 @@ begin
       reset_i           => rst_serdes,
       rxd_p             => elink_i_p,
       rxd_n             => elink_i_n,
-      rxdata_o          => from_gbt_raw,
+      rxdata_o          => data_o,
       invert            => '0',
       tap_delay_i       => (others => '0'),
       e4_in             => (others => '0'),
@@ -148,58 +145,6 @@ begin
       phase_sel_out     => sump_vector (5 downto 4),
       invalid_bitskip_o => open,
       tmr_err_o         => oversample_tmr_err
-      );
-
-  --------------------------------------------------------------------------------------------------------------------
-  -- Bitslip
-  --------------------------------------------------------------------------------------------------------------------
-
-  -- TODO: add TMR
-
-  process (clk_1x)
-  begin
-    if (rising_edge(clk_1x)) then
-
-      if (gbt_link_rdy = '1') then
-        bitslip_err_cnt <= 0;
-      elsif (bitslip_err_cnt = BITSLIP_ERR_CNT_MAX-1) then
-        bitslip_err_cnt <= 0;
-      elsif (gbt_link_err = '1') then
-        bitslip_err_cnt <= bitslip_err_cnt + 1;
-      end if;
-    end if;
-  end process;
-
-  bitslip_increment <= '1' when bitslip_err_cnt = BITSLIP_ERR_CNT_MAX-1 else '0';
-
-  process (clk_1x)
-  begin
-    if (rising_edge(clk_1x)) then
-      if (bitslip_increment = '1') then
-        if (rx_bitslip_cnt = 7) then
-          rx_bitslip_cnt <= 0;
-        else
-          rx_bitslip_cnt <= rx_bitslip_cnt + 1;
-        end if;
-      end if;
-    end if;
-  end process;
-
-  -- typecasting
-  rx_bitslip_cnt_stdlog <= std_logic_vector(to_unsigned(rx_bitslip_cnt, rx_bitslip_cnt_stdlog'length));
-
-  i_gbt_rx_bitslip : entity work.bitslip
-    generic map(
-      g_WORD_SIZE => MXBITS,
-      g_EN_TMR    => 1
-
-      )
-    port map(
-      clock       => clk_1x,
-      reset       => rst,
-      bitslip_cnt => rx_bitslip_cnt_stdlog,
-      din         => from_gbt_raw,
-      dout        => data_o
       );
 
   --------------------------------------------------------------------------------------------------------------------

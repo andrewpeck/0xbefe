@@ -30,8 +30,13 @@ end gbt_link_tb;
 
 architecture behavioral of gbt_link_tb is
 
-  signal backend_to_oh_elink : std_logic_vector (7 downto 0) := (others => '0');
-  signal oh_to_backend_elink : std_logic_vector (7 downto 0) := (others => '0');
+  signal backend_to_oh_elink            : std_logic_vector (7 downto 0) := (others => '0');
+  signal backend_to_oh_elink_r          : std_logic_vector (7 downto 0) := (others => '0');
+  signal backend_to_oh_elink_bitslipped : std_logic_vector (7 downto 0) := (others => '0');
+
+  signal oh_to_backend_elink            : std_logic_vector (7 downto 0) := (others => '0');
+  signal oh_to_backend_elink_r          : std_logic_vector (7 downto 0) := (others => '0');
+  signal oh_to_backend_elink_bitslipped : std_logic_vector (7 downto 0) := (others => '0');
 
   -- 49 bit output packet to fifo
   signal req_en_o   : std_logic;
@@ -42,8 +47,8 @@ architecture behavioral of gbt_link_tb is
   signal ipb_wdata  : std_logic_vector(31 downto 0);
   signal ipb_addr   : std_logic_vector(15 downto 0);
 
-  signal req_valid : std_logic                      := '0';
-  signal req_data  : std_logic_vector (31 downto 0) := (others => '0');
+  signal req_valid : std_logic := '0';
+  signal req_data : std_logic_vector (31 downto 0) := (others => '0');
 
   type mem_array_t is array (integer range <>) of std_logic_vector(31 downto 0);
 
@@ -77,12 +82,23 @@ begin
   -- backend ~> oh rx
   --------------------------------------------------------------------------------
 
+  bitslip_1: entity work.bitslip
+    generic map (g_WORD_SIZE => 8)
+    port map (
+      clock       => clock,
+      reset       => reset,
+      bitslip_cnt => "001",
+      din         => backend_to_oh_elink,
+      dout        => backend_to_oh_elink_bitslipped
+      );
+
+
   gbt_rx_1 : entity work.gbt_rx
     port map (
       reset_i => reset,
       clock   => clock,
 
-      data_i => backend_to_oh_elink,
+      data_i => backend_to_oh_elink_bitslipped,
 
       l1a_o    => l1a_o,
       bc0_o    => bc0_o,
@@ -104,7 +120,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      if (ipb_strobe = '1' and ipb_write = '1') then
+      if (ipb_strobe='1' and ipb_write='1') then
         mem(to_integer(unsigned(ipb_addr))) <= ipb_wdata;
       end if;
 

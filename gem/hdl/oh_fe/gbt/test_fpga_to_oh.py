@@ -26,7 +26,7 @@ async def test_sc(dut):
     dut.resync_i.value = 0;
 
     dut.request_valid_i.value = 0;
-    dut.request_write_i.value = 0;
+    dut.request_write_i.value = 1;
     dut.request_addr_i.value = 0;
     dut.request_data_i.value = 0;
 
@@ -48,7 +48,9 @@ async def test_sc(dut):
 
     for i in range(100):
 
-        wr_data = random.randint(0,2**32-1);
+        wr_data = i #random.randint(0,2**32-1);
+
+        await RisingEdge(dut.clock)
 
         dut.request_valid_i.value = 1
         dut.request_write_i.value = 1
@@ -99,6 +101,7 @@ def test_oh_sc():
         os.path.join(tests_dir, "../../oh/link/8b6b.vhd"),
         os.path.join(tests_dir, "../../oh/link/link_oh_fpga_tx.vhd"),
         os.path.join(tests_dir, "../../oh/link/link_oh_fpga_rx.vhd"),
+        os.path.join(tests_dir, "../utils/bitslip.vhd"),
         os.path.join(tests_dir, "./gbt_rx.vhd"),
         os.path.join(tests_dir, "./gbt_tx.vhd"),
         os.path.join(tests_dir, "./gbt_link_tb.vhd"),
@@ -113,7 +116,7 @@ def test_oh_sc():
         toplevel="gbt_link_tb",
         toplevel_lang="vhdl",
         parameters=None,
-        #sim_args=["-do", '"set NumericStdNoWarnings 1;"'],
+         #sim_args=["-do", "set NumericStdNoWarnings 1;"],
         gui=0,
     )
 

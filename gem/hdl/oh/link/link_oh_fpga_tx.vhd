@@ -12,186 +12,111 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity link_oh_fpga_tx is
-generic(
-    g_FRAME_COUNT_MAX : integer := 8;
-    g_FRAME_WIDTH     : integer := 6
-);
-port(
+    generic(
+        g_FRAME_COUNT_MAX : integer := 8;
+        g_FRAME_WIDTH     : integer := 6
+        );
+    port(
 
-    reset_i                 : in  std_logic;
-    ttc_clk_40_i            : in  std_logic;
+        reset_i      : in std_logic;
+        ttc_clk_40_i : in std_logic;
 
-    l1a_i                   : in std_logic;
-    bc0_i                   : in std_logic;
-    resync_i                : in std_logic;
+        l1a_i    : in std_logic;
+        bc0_i    : in std_logic;
+        resync_i : in std_logic;
 
-    elink_data_o            : out std_logic_vector(7 downto 0);
+        elink_data_o : out std_logic_vector(7 downto 0);
 
-    request_valid_i         : in  std_logic;
-    request_write_i         : in  std_logic;
-    request_addr_i          : in  std_logic_vector(15 downto 0);
-    request_data_i          : in  std_logic_vector(31 downto 0);
+        request_valid_i : in std_logic;
+        request_write_i : in std_logic;
+        request_addr_i  : in std_logic_vector(15 downto 0);
+        request_data_i  : in std_logic_vector(31 downto 0);
 
-    busy_o                  : out std_logic
+        busy_o : out std_logic
 
-);
+        );
 end link_oh_fpga_tx;
 
 architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
-    type state_t is (IDLE, HEADER, START, DATA);
+    signal special : std_logic := '0';
+
+    type state_t is (IDLE, DATA, CRC);
+    signal state : state_t := IDLE;
 
 
-    signal state            : state_t := IDLE;
-    signal data_frame_cnt   : integer range 0 to g_FRAME_COUNT_MAX-1 := 0;
+    signal crc_data   : std_logic_vector (7 downto 0) := (others => '0');
+    signal frame_data : std_logic_vector (3 downto 0) := (others => '0');
 
-    signal elink_data       : std_logic_vector(7 downto 0);
-    signal frame_data       : std_logic_vector(g_FRAME_WIDTH-1 downto 0);
+    signal req_data : std_logic_vector(51 downto 0);
 
-    signal reg_data         : std_logic_vector(47 downto 0);
+    constant FRAME_CNT_MAX : integer := req_data'length / 4;
 
-    signal send_idle        : std_logic;
-    signal send_header      : std_logic;
-    signal ttc_cmd_rx       : std_logic;
-
-    signal l1a    : std_logic;
-    signal bc0    : std_logic;
-    signal resync : std_logic;
+    signal data_frame_cnt : integer range 0 to FRAME_CNT_MAX-1 := 0;
 
 begin
+
+
     busy_o <= '0' when state = IDLE else '1';
-    reg_data <= request_addr_i & request_data_i;
-    ttc_cmd_rx <=  '1' when (l1a_i ='1' or resync_i ='1'  or bc0_i ='1') else '0';
 
-    -- need to delay ttc signals to encoder so that state machine has time to "pause" while
-    -- ttc signals are being sent
-
-    process(ttc_clk_40_i)
+    process (ttc_clk_40_i)
     begin
         if (rising_edge(ttc_clk_40_i)) then
-            l1a    <= l1a_i;
-            bc0    <= bc0_i;
-            resync <= resync_i;
-   end if;
-   end process;
+            case state is
 
-    --== State FSM ==--
+                when IDLE =>
 
-    process(ttc_clk_40_i)
-    begin
-        if (rising_edge(ttc_clk_40_i)) then
+                    special        <= '1';
+                    frame_data     <= x"0";
+                    data_frame_cnt <= 0;
+
+                    if (request_valid_i = '1') then
+                        req_data <= "000" & request_write_i &
+                                    request_addr_i &
+                                    request_data_i;
+                        state <= DATA;
+                    end if;
+
+                when DATA =>
+
+                    special    <= '0';
+                    frame_data <= req_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4);
+
+                    if (data_frame_cnt = FRAME_CNT_MAX - 1) then
+                        data_frame_cnt <= 0;
+                        state          <= CRC;
+                    else
+                        data_frame_cnt <= data_frame_cnt + 1;
+                        state          <= DATA;
+                    end if;
+
+                when CRC =>
+
+                    frame_data <= crc_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4);
+
+                    if (data_frame_cnt = 1) then
+                        data_frame_cnt <= 0;
+                        state          <= IDLE;
+                    else
+                        data_frame_cnt <= data_frame_cnt + 1;
+                        state          <= CRC;
+                    end if;
+
+                when others =>
+
+            end case;
+
             if (reset_i = '1') then
                 state <= IDLE;
-                data_frame_cnt <= 0;
-            else
-                case state is
-
-                    when IDLE =>
-
-                        data_frame_cnt <= 0;
-
-                        if (request_valid_i = '1') then
-                            state <= HEADER;
-                        end if;
-
-                    when HEADER =>
-
-                        data_frame_cnt <= 0;
-
-                        -- ttc command not received; send header on next available cycle
-                        if (ttc_cmd_rx='0') then
-                           state <= START;
-                        end if;
-
-
-                    when START =>
-
-                        data_frame_cnt <= 0;
-
-                        -- ttc command not received; send start on next available cycle
-                        if (ttc_cmd_rx='0') then
-                            state <= DATA;
-                        end if;
-
-                    when DATA =>
-
-                        -- ttc command received; send data frame on next available cycle
-                        if (ttc_cmd_rx='0') then
-                            if (data_frame_cnt = g_FRAME_COUNT_MAX-1) then
-                              data_frame_cnt <= 0;
-                              if (request_valid_i = '1') then
-                                 state <= START;
-                              else
-                                state <= IDLE;
-                              end if;
-                            else
-                                data_frame_cnt <= data_frame_cnt + 1;
-                            end if;
-                        end if;
-
-                    when others =>
-                        state <= IDLE;
-                        data_frame_cnt <= 0;
-                end case;
             end if;
+
         end if;
     end process;
 
-    --== Data transmission ==--
-
-    process(ttc_clk_40_i)
-    begin
-        if (rising_edge(ttc_clk_40_i)) then
-
-            if (reset_i = '1') then
-                frame_data <= (others => '0');
-                send_idle <= '1';
-                send_header <= '0';
-            else
-                case state is
-                    when IDLE =>
-                        frame_data <= "000000";
-                        send_idle <= '1';
-                        send_header <= '0';
-                    when HEADER =>
-                        frame_data <= "000000";
-                        send_idle <= '0';
-                        send_header <= '1';
-                    when START =>
-                        frame_data <= "1" & request_write_i & x"b";
-                        send_idle <= '0';
-                        send_header <= '0';
-                    when DATA =>
-                        frame_data <= reg_data(((g_FRAME_COUNT_MAX - data_frame_cnt) * g_FRAME_WIDTH) - 1 downto (g_FRAME_COUNT_MAX-1-data_frame_cnt)*g_FRAME_WIDTH);
-                        send_idle <= '0';
-                        send_header <= '0';
-                    when others =>
-                        frame_data <= (others => '0');
-                        send_idle <= '0';
-                        send_header <= '0';
-                end case;
-            end if;
-        end if;
-    end process;
-
-    -- 8b to 6b conversion
-    sixbit_eightbit_inst : entity work.sixbit_eightbit
-    port map (
-        clock        => ttc_clk_40_i,
-        sixbit       => frame_data,  -- 6 bit data input
-        eightbit     => elink_data,  -- 8 bit encoded output
-        l1a          => l1a,         -- send l1a
-        bc0          => bc0,         -- send bc0
-        resync       => resync,      -- send resync character
-        header       => send_header, -- send header character
-        idle         => send_idle    -- send idle
-    );
-
-    process(ttc_clk_40_i)
-    begin
-        if (rising_edge(ttc_clk_40_i)) then
-            elink_data_o <= elink_data;
-        end if;
-    end process;
+    elink_data_o(7)          <= special;
+    elink_data_o(6)          <= l1a_i;
+    elink_data_o(5)          <= bc0_i;
+    elink_data_o(4)          <= resync_i;
+    elink_data_o(3 downto 0) <= frame_data;
 
 end link_oh_fpga_tx_arch;
