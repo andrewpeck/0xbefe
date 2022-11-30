@@ -191,7 +191,9 @@ begin
         port map(
             reset_i         => reset_i,
             ttc_clk_40_i    => ttc_clk_i.clk_40,
-            ttc_cmds_i      => ttc_cmds_i,
+            l1a_i           => ttc_cmds_i.l1a,
+            bc0_i           => ttc_cmds_i.bc0,
+            resync_i        => ttc_cmds_i.resync,
             elink_data_o    => tx_elink_o,
             request_valid_i => tx_command_en_sync,
             request_write_i => tx_is_write,
