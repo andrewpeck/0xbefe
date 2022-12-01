@@ -37,9 +37,9 @@ entity gbt_serdes is
 
     -- input clocks
 
-    clk_1x    : in std_logic;           -- 40 MHz phase shiftable frame clock from GBT
-    clk_4x    : in std_logic;           -- 160 MHz phase shiftable frame clock from GBT
-    clk_4x_90 : in std_logic;           -- 160 MHz phase shiftable frame clock from GBT
+    clk_1x    : in std_logic;  -- 40 MHz phase shiftable frame clock from GBT
+    clk_4x    : in std_logic;  -- 160 MHz phase shiftable frame clock from GBT
+    clk_4x_90 : in std_logic;  -- 160 MHz phase shiftable frame clock from GBT
 
     -- serial data to/from GBTx
     elink_o_p : out std_logic;
@@ -47,9 +47,6 @@ entity gbt_serdes is
 
     elink_i_p : in std_logic;
     elink_i_n : in std_logic;
-
-    gbt_link_err_i : in std_logic;      -- err on gbt rx
-    gbt_link_rdy_i : in std_logic;
 
     -- parallel data to/from FPGA logic
     data_i : in  std_logic_vector (MXBITS-1 downto 0);
@@ -65,22 +62,10 @@ architecture Behavioral of gbt_serdes is
 
   signal oversample_tmr_err : std_logic;
 
-  signal to_gbt : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
-
+  signal to_gbt     : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
   signal to_gbt_inv : std_logic_vector(MXBITS-1 downto 0) := (others => '0');
 
-  signal gbt_link_rdy : std_logic := '0';
-  signal gbt_link_err : std_logic := '0';
-
-  signal bitslip_err_cnt : integer range 0 to BITSLIP_ERR_CNT_MAX-1 := 0;
-
-  signal rx_bitslip_cnt        : integer range 0 to MXBITS-1  := 0;
-  signal rx_bitslip_cnt_stdlog : std_logic_vector(2 downto 0) := (others => '0');
-
-  signal bitslip_increment : std_logic := '0';
-
-  signal rst : std_logic := '0';
-
+  signal rst        : std_logic := '0';
   signal rst_serdes : std_logic := '1';
 
   attribute MAX_FANOUT        : string;
@@ -115,9 +100,6 @@ begin
   --------------------------------------------------------------------------------------------------------------------
   -- synchronize resets from logic clock to gbt clock domains
   --------------------------------------------------------------------------------------------------------------------
-
-  gbt_link_err <= gbt_link_err_i;
-  gbt_link_rdy <= gbt_link_rdy_i;
 
   --================--
   --== INPUT DATA ==--

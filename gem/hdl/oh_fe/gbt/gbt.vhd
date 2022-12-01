@@ -161,9 +161,6 @@ begin
       elink_i_p => elink_i_p,           -- input e-links
       elink_i_n => elink_i_n,           -- input e-links
 
-      gbt_link_err_i => gbt_link_error,
-      gbt_link_rdy_i => gbt_link_ready,
-
       -- parallel data
       data_o => gbt_rx_data,            -- Parallel data out
       data_i => gbt_tx_data,            -- Parallel data in
