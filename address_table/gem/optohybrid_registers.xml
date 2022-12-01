@@ -1459,12 +1459,20 @@
                   fw_signal="cnt_ipb_request"/>
             <node id="CNT_LINK_ERR" address="0x1" permission="r"
                   mask="0x00ffffff"
-                  description="Number of GBT link errrors detected"
+                  description="Number of GBT link errors detected"
                   fw_cnt_en_signal="gbt_link_err_ready"
                   fw_cnt_reset_signal="cnt_reset"
                   fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_link_err"/>
+            <node id="CNT_LINK_CRC_ERR" address="0x2" permission="r"
+                  mask="0x00ffffff"
+                  description="Number of GBT link CRC errors detected"
+                  fw_cnt_en_signal="gbt_link_crc_error"
+                  fw_cnt_reset_signal="cnt_reset"
+                  fw_cnt_use_tmr="True"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_link_crc_err"/>
         </node> <!--RX-->
 
         <node id="TTC" address="0x6" description = "Emulates the TTC commands from GBTx through Wishbone">

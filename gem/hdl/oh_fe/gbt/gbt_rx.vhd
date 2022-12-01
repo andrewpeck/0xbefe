@@ -40,8 +40,9 @@ entity gbt_rx is
     req_data_o : out std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
 
     -- status
-    ready_o : out std_logic;
-    error_o : out std_logic
+    ready_o     : out std_logic;
+    error_o     : out std_logic;
+    crc_error_o : out std_logic
 
     );
 end gbt_rx;
@@ -211,6 +212,7 @@ begin
       req_en_o     <= '0';
       crc_en       <= '0';
       crc_rst      <= '0';
+      crc_error_o  <= '1';
 
       case state is
 
@@ -280,13 +282,13 @@ begin
         when DONE =>
 
           crc_rst <= '1';
+          state   <= IDLE;
 
           if (crc_calcd = crc_rx) then
             req_data_o <= req_data(req_data_o'length-1 downto 0);
             req_en_o   <= '1';
-            state      <= IDLE;
           else
-            state <= ERR;
+            crc_error_o <= '1';
           end if;
 
       end case;

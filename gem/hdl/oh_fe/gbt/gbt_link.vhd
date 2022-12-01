@@ -52,9 +52,10 @@ entity gbt_link is
     resync_o : out std_logic;
 
     -- status
-    ready_o    : out std_logic;
-    error_o    : out std_logic;
-    unstable_o : out std_logic
+    ready_o     : out std_logic;
+    error_o     : out std_logic;
+    crc_error_o : out std_logic;
+    unstable_o  : out std_logic
 
     );
 end gbt_link;
@@ -65,7 +66,8 @@ architecture Behavioral of gbt_link is
 
   signal ready       : std_logic := '0';  -- gbt rx link is good
   signal rx_unstable : std_logic := '1';  -- gbt rx link was good then went bad
-  signal rx_error    : std_logic := '1';  -- error on gbt rx link
+  signal rx_error    : std_logic := '0';  -- error on gbt rx link
+  signal crc_error   : std_logic := '0';  -- crc error on gbt rx link
 
   signal gbt_rx_req  : std_logic                                 := '0';  -- rx fifo write request
   signal gbt_rx_data : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
@@ -91,8 +93,9 @@ begin
     end if;
   end process;
 
-  ready_o <= ready;
-  error_o <= rx_error;
+  ready_o     <= ready;
+  error_o     <= rx_error;
+  crc_error_o <= crc_error;
 
   process (clock)
   begin
@@ -100,7 +103,7 @@ begin
 
       if (reset = '1') then
         rx_unstable <= '0';
-      elsif (ready = '1' and rx_error = '1') then
+      elsif (ready = '1' and (crc_error = '1' or rx_error = '1')) then
         rx_unstable <= '1';
       end if;
 
@@ -132,8 +135,9 @@ begin
       req_data_o => gbt_rx_data,  -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
 
       -- status
-      ready_o => ready,
-      error_o => rx_error
+      ready_o     => ready,
+      error_o     => rx_error,
+      crc_error_o => crc_error
       );
 
   --============--
@@ -174,7 +178,7 @@ begin
   link_request : entity work.link_request
     port map(
       -- clocks
-      clock => clock,          -- 40 MHz logic clock
+      clock => clock,                   -- 40 MHz logic clock
 
       -- reset
       reset_i => reset,
