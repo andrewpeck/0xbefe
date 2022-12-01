@@ -9,7 +9,8 @@ from datetime import datetime
 # Constants (to be moved to config file later)
 STABILIZE_SENSITIVITY = 0.01
 MAX_TEMP=70.0
-MIN_ITERS=1
+MIN_ITERS=30
+CYCLE_TIME=3
 TOLERANCE=0.05
 HEADERS = ["12V0_V","3V3_STANDBY_V","3V3_SI5395J_V","1V8_SI5395J_XO2_V","2V5_OSC_NE_V","1V8_MGTVCCAUX_VUP_N_V","2V5_OSC_NW_V","2V5_OSC_K7_V","1V2_MGTAVTT_K7_V","1V0_MGTAVCC_K7_V","0V675_DDRVTT_V","1V35_DDR_V","1V8_VCCAUX_K7_V","2V5_OSC_SE_V","1V8_MGTVCCAUX_VUP_S_V","2V5_OSC_SW_V",
             "0V85_VCCINT_VUP_T0","0V85_VCCINT_VUP_T1","0V85_VCCINT_VUP_T2","0V85_VCCINT_VUP_T3","0V85_VCCINT_VUP_T4","0V85_VCCINT_VUP_T5",'1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','KINTEX7_TL','KINTEX7_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','2V7_INTERMEDIATE_TL','2V7_INTERMEDIATE_TR','1V2_MGTAVTT_VUP_N_TL','1V2_MGTAVTT_VUP_N_TR','VIRTEXUPLUS_TL','VIRTEXUPLUS_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','TOTAL_ERRORS']
@@ -146,7 +147,7 @@ while(diff_flag):
     print(st)
     f.write(o_str)
     p_data = data
-    time.sleep(2)
+    time.sleep(CYCLE_TIME)
 
 print("Physical data stable, generating statistics")
 stable_iters=0
@@ -247,22 +248,22 @@ while(stable_iters<MIN_ITERS):
     print(st)
     f.write(o_str)
     
-    time.sleep(2)
+    time.sleep(CYCLE_TIME)
 
 #Calculate means
 summary_header_str="TOTAL_ERRORS,STABLE_ITERS,TIME_TO_STABILIZE,"
 data_str=""
-DATA_DICT['STABLE_ITERS']=stable_iters
-DATA_DICT['TOTAL_ERRORS']=DATA_DICT['TOTAL_ERRORS']/stable_iters
-DATA_DICT['TIME_TO_STABILIZE']=(n_iters-stable_iters)*2
 
-data_str+=str(DATA_DICT['TOTAL_ERRORS'])+","
-data_str+=str(DATA_DICT['STABLE_ITERS'])+","
-data_str+=str(DATA_DICT['TIME_TO_STABILIZE'])+","
+data_str+=str(DATA_DICT['TOTAL_ERRORS']/stable_iters)+","
+data_str+=str(stable_iters)+","
+data_str+=str((n_iters-stable_iters)*CYCLE_TIME)+","
 
 for i in range(len(list(DATA_DICT.keys()))-1,0,-1):
     device = list(DATA_DICT.keys())[i]
-    
+    if device in ['optics']:
+        continue
+    if device in ['STABLE_ITERS','TOTAL_ERRORS','TIME_TO_STABILIZE']:
+        continue
     if 'V' in DATA_DICT[device].keys():
         summary_header_str+=device+"_V,"
         DATA_DICT[device]['V']=DATA_DICT[device]['V']/stable_iters
@@ -286,6 +287,9 @@ for i in range(len(list(DATA_DICT.keys()))-1,0,-1):
 
 
 
+DATA_DICT['STABLE_ITERS']=stable_iters
+DATA_DICT['TOTAL_ERRORS']=DATA_DICT['TOTAL_ERRORS']/stable_iters
+DATA_DICT['TIME_TO_STABILIZE']=(n_iters-stable_iters)*CYCLE_TIME
 f.close()
 filename="/root/jessica/0xbefe/scripts/boards/x2o/data/summary/"+d_time+"/"+run_type+"_"+c_time+".csv"
 isExist = os.path.exists("./data/summary/"+d_time)

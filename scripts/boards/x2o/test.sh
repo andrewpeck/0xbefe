@@ -13,6 +13,8 @@ do
   fi
 done
 echo "Successful FPGA Program Cycles: $count"
+echo "Testing Reflck Frequencies"
+python3 /root/jessica/0xbefe/scripts/boards/x2o/refclk_freq_monitor.py
 /root/jessica/0xbefe/scripts/boards/x2o/fan_level_5.sh
 sleep 30
 python3 $BEFE_SCRIPT_DIR/boards/x2o/fpga_short.py $BEFE_SCRIPT_DIR/resources/hot_x2o.bit
