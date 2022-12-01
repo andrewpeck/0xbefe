@@ -19,7 +19,16 @@ add wave -noupdate /gbt_link_tb/link_oh_fpga_tx_inst/req_data
 add wave -noupdate /gbt_link_tb/link_oh_fpga_tx_inst/state
 add wave -noupdate /gbt_link_tb/link_oh_fpga_tx_inst/elink_data_o
 add wave -noupdate /gbt_link_tb/link_oh_fpga_tx_inst/data_frame_cnt
+add wave -noupdate -divider CRC
+add wave -noupdate -color Thistle /gbt_link_tb/link_oh_fpga_tx_inst/elink_data_o
+add wave -noupdate -color Thistle /gbt_link_tb/link_oh_fpga_tx_inst/crc_en
+add wave -noupdate -color Thistle /gbt_link_tb/link_oh_fpga_tx_inst/crc_data
+add wave -noupdate -color {Cadet Blue} /gbt_link_tb/gbt_rx_1/data_slip
+add wave -noupdate -color {Cadet Blue} /gbt_link_tb/gbt_rx_1/crc_en
+add wave -noupdate -color {Cadet Blue} /gbt_link_tb/gbt_rx_1/crc_calcd
 add wave -noupdate -divider {OH RX}
+add wave -noupdate /gbt_link_tb/gbt_rx_1/crc_rx
+add wave -noupdate /gbt_link_tb/gbt_rx_1/crc_rst
 add wave -noupdate -color {Light Steel Blue} /gbt_link_tb/backend_to_oh_elink
 add wave -noupdate /gbt_link_tb/gbt_rx_1/data_slip
 add wave -noupdate -color {Light Steel Blue} /gbt_link_tb/l1a_o
@@ -43,7 +52,7 @@ add wave -noupdate -divider {Backend RX}
 add wave -noupdate /gbt_link_tb/reg_data_valid_o
 add wave -noupdate /gbt_link_tb/reg_data_o
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {20379 ns} 0}
+WaveRestoreCursors {{Cursor 1} {44519 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 248
 configure wave -valuecolwidth 100
@@ -59,4 +68,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {19206 ns} {22476 ns}
+WaveRestoreZoom {43697 ns} {44620 ns}

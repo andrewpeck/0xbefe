@@ -50,7 +50,7 @@ architecture Behavioral of gbt_rx is
 
   constant BITSLIP_ERR_CNT_MAX : integer := g_READY_COUNT_MAX*2;
 
-  type state_t is (ERR, SYNCING, IDLE, DATA, CRC, DONE);
+  type state_t is (ERR, SYNCING, IDLE, DATA, CRC_CALC, CRC, DONE);
 
   signal req_valid : std_logic;
   signal req_data  : std_logic_vector(51 downto 0) := (others => '0');
@@ -66,13 +66,17 @@ architecture Behavioral of gbt_rx is
 
   signal reset : std_logic;
 
-  signal crc_rx : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_rx    : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_calcd : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_en    : std_logic                     := '0';
+  signal crc_rst   : std_logic                     := '0';
 
   signal special_bit : std_logic := '0';
 
   signal idle_cnt, idle_cnt_next : integer range 0 to 15;
 
   signal data_slip       : std_logic_vector(7 downto 0);
+  signal data_slip_r1    : std_logic_vector(7 downto 0);
   signal bitslip_cnt     : integer range 0 to 7                     := 0;
   signal bitslip_err_cnt : integer range 0 to BITSLIP_ERR_CNT_MAX-1 := 0;
   signal bitslip_cnt_slv : std_logic_vector (2 downto 0)            := (others => '0');
@@ -176,9 +180,28 @@ begin
   ready_o <= ready;
 
   --------------------------------------------------------------------------------
-  -- State machine
+  -- CRC
   --------------------------------------------------------------------------------
 
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      data_slip_r1 <= data_slip;
+    end if;
+  end process;
+
+  oh_gbt_crc_inst : entity work.oh_gbt_crc
+    port map (
+      data_in => data_slip_r1,
+      crc_en  => crc_en,
+      rst     => crc_rst,
+      clk     => clock,
+      crc_out => crc_calcd
+      );
+
+  --------------------------------------------------------------------------------
+  -- State machine
+  --------------------------------------------------------------------------------
 
   process(clock)
   begin
@@ -186,6 +209,8 @@ begin
 
       error_detect <= '0';
       req_en_o     <= '0';
+      crc_en       <= '0';
+      crc_rst      <= '0';
 
       case state is
 
@@ -213,23 +238,30 @@ begin
             state                 <= DATA;
             req_data (3 downto 0) <= data_slip(3 downto 0);
             data_frame_cnt        <= 1;
+            crc_en                <= '1';
           else
             data_frame_cnt <= 0;
+            crc_rst        <= '1';
           end if;
 
         when DATA =>
+
+          crc_en <= '1';
 
           if (special_bit = '1') then
             state <= ERR;
           elsif (data_frame_cnt = FRAME_CNT_MAX - 1) then
             data_frame_cnt <= 0;
-            state          <= CRC;
+            state          <= CRC_CALC;
           else
             data_frame_cnt <= data_frame_cnt + 1;
             state          <= DATA;
           end if;
 
           req_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4) <= data_slip (3 downto 0);
+
+        when CRC_CALC =>
+          state <= CRC;
 
         when CRC =>
 
@@ -247,7 +279,9 @@ begin
 
         when DONE =>
 
-          if (crc_rx = crc_rx) then
+          crc_rst <= '1';
+
+          if (crc_calcd = crc_rx) then
             req_data_o <= req_data(req_data_o'length-1 downto 0);
             req_en_o   <= '1';
             state      <= IDLE;

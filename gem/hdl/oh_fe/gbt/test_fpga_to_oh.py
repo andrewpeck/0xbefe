@@ -96,6 +96,7 @@ def test_oh_sc():
     module = os.path.splitext(os.path.basename(__file__))[0]
 
     vhdl_sources = [
+        os.path.join(tests_dir, "./oh_gbt_crc.vhd"),
         os.path.join(tests_dir, "../../oh/link/6b8b_pkg.vhd"),
         os.path.join(tests_dir, "../../oh/link/6b8b.vhd"),
         os.path.join(tests_dir, "../../oh/link/8b6b.vhd"),

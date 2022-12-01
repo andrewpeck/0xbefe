@@ -41,11 +41,10 @@ architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
     signal special : std_logic := '0';
 
-    type state_t is (IDLE, DATA, CRC);
+    type state_t is (IDLE, DATA, CRC_CALC, CRC);
     signal state : state_t := IDLE;
 
 
-    signal crc_data   : std_logic_vector (7 downto 0) := (others => '0');
     signal frame_data : std_logic_vector (3 downto 0) := (others => '0');
 
     signal req_data : std_logic_vector(51 downto 0);
@@ -56,13 +55,29 @@ architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
     signal idle_counter : integer range 0 to 15 := 0;
 
+    signal elink_data : std_logic_vector (7 downto 0);
+
+    signal crc_data : std_logic_vector (7 downto 0) := (others => '0');
+    signal crc_en   : std_logic                     := '0';
+    signal crc_rst  : std_logic                     := '0';
+
 begin
+
+
+    oh_gbt_crc_inst : entity work.oh_gbt_crc
+        port map (
+            data_in => elink_data,
+            crc_en  => crc_en,
+            rst     => crc_rst,
+            clk     => ttc_clk_40_i,
+            crc_out => crc_data
+            );
 
     process (ttc_clk_40_i) is
     begin
         if (rising_edge(ttc_clk_40_i)) then
-            if (state=IDLE) then
-                if (idle_counter=15) then
+            if (state = IDLE) then
+                if (idle_counter = 15) then
                     idle_counter <= 0;
                 else
                     idle_counter <= idle_counter + 1;
@@ -76,6 +91,10 @@ begin
     process (ttc_clk_40_i)
     begin
         if (rising_edge(ttc_clk_40_i)) then
+
+            crc_en  <= '0';
+            crc_rst <= '0';
+
             case state is
 
                 when IDLE =>
@@ -83,6 +102,7 @@ begin
                     special        <= '1';
                     frame_data     <= std_logic_vector(to_unsigned(idle_counter, 4));
                     data_frame_cnt <= 0;
+                    crc_rst        <= '1';
 
                     if (request_valid_i = '1') then
                         req_data <= "000" & request_write_i &
@@ -95,14 +115,19 @@ begin
 
                     special    <= '0';
                     frame_data <= req_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4);
+                    crc_en     <= '1';
 
                     if (data_frame_cnt = FRAME_CNT_MAX - 1) then
                         data_frame_cnt <= 0;
-                        state          <= CRC;
+                        state          <= CRC_CALC;
                     else
                         data_frame_cnt <= data_frame_cnt + 1;
                         state          <= DATA;
                     end if;
+
+                when CRC_CALC =>
+                    state      <= CRC;
+                    frame_data <= x"0";
 
                 when CRC =>
 
@@ -127,10 +152,12 @@ begin
         end if;
     end process;
 
-    elink_data_o(7)          <= special;
-    elink_data_o(6)          <= l1a_i;
-    elink_data_o(5)          <= bc0_i;
-    elink_data_o(4)          <= resync_i;
-    elink_data_o(3 downto 0) <= frame_data;
+    elink_data(7)          <= special;
+    elink_data(6)          <= l1a_i;
+    elink_data(5)          <= bc0_i;
+    elink_data(4)          <= resync_i;
+    elink_data(3 downto 0) <= frame_data;
+
+    elink_data_o <= elink_data;
 
 end link_oh_fpga_tx_arch;

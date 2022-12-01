@@ -14,6 +14,7 @@ gem/hdl/oh_fe/control/ttc_tmr.vhd 93
 gem/hdl/oh_fe/gbt/gbt_link.vhd 93
 gem/hdl/oh_fe/gbt/gbt_link_tmr.vhd 93
 gem/hdl/oh_fe/gbt/gbt_rx.vhd 93
+gem/hdl/oh_fe/gbt/oh_gbt_crc.vhd 93
 gem/hdl/oh_fe/gbt/gbt_serdes.vhd 93
 gem/hdl/oh_fe/gbt/gbt_tx.vhd 93
 gem/hdl/oh_fe/gbt/link_request.vhd 93
