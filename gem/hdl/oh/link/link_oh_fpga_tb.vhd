@@ -12,9 +12,10 @@ entity gbt_link_tb is
     l1a_i, bc0_i, resync_i : in  std_logic;
     l1a_o, bc0_o, resync_o : out std_logic;
 
-    oh_rx_ready, be_rx_ready : out std_logic;
-    oh_rx_err, be_rx_err     : out std_logic;
-    oh_crc_err, be_crc_err   : out std_logic;
+    oh_rx_ready, be_rx_ready     : out std_logic;
+    oh_rx_err, be_rx_err         : out std_logic;
+    oh_crc_err, be_crc_err       : out std_logic;
+    oh_precrc_err, be_precrc_err : out std_logic;
 
     crc_error_be : out std_logic;
 
@@ -114,9 +115,10 @@ begin
       req_addr_o => ipb_addr,
       req_wr_o   => ipb_write,
 
-      ready_o     => oh_rx_ready,
-      error_o     => oh_rx_err,
-      crc_error_o => oh_crc_err
+      ready_o        => oh_rx_ready,
+      error_o        => oh_rx_err,
+      crc_error_o    => oh_crc_err,
+      precrc_error_o => oh_precrc_err
       );
 
   process (clock) is
@@ -176,9 +178,10 @@ begin
       req_addr_o => open,
       req_wr_o   => open,
 
-      ready_o     => be_rx_ready,
-      error_o     => be_rx_err,
-      crc_error_o => be_crc_err
+      ready_o        => be_rx_ready,
+      error_o        => be_rx_err,
+      precrc_error_o => be_precrc_err,
+      crc_error_o    => be_crc_err
       );
 
 end behavioral;

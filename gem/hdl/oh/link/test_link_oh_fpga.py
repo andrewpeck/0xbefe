@@ -47,7 +47,7 @@ async def test_sc(dut):
     # write data loop
     #-------------------------------------------------------------------------------
 
-    for i in range(1000):
+    for i in range(100):
 
         wr_data = random.randint(0,2**32-1);
 
@@ -64,10 +64,13 @@ async def test_sc(dut):
 
         await RisingEdge(dut.reg_data_valid_o)
         print(f"wr=%08X, rd=%08X" % (wr_data, int(dut.reg_data_o)))
-        #assert dut.reg_data_o == wr_data
-        assert dut.oh_rx_err == 0
-        assert dut.be_rx_err == 0
-        assert dut.oh_rx_ready == 1
+        assert dut.reg_data_o.value == wr_data
+        assert dut.oh_precrc_err.value == 0
+        assert dut.be_precrc_err.value == 0
+        assert dut.oh_crc_err.value == 0
+        assert dut.be_crc_err.value == 0
+        assert dut.be_rx_err.value == 0
+        assert dut.oh_rx_ready.value == 1
 
     #-------------------------------------------------------------------------------
     # ttc tests

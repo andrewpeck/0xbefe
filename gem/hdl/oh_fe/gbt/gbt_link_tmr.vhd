@@ -40,10 +40,11 @@ entity gbt_link_tmr is
     resync_o : out std_logic;
 
     -- status
-    ready_o     : out std_logic;
-    error_o     : out std_logic;
-    crc_error_o : out std_logic;
-    unstable_o  : out std_logic;
+    ready_o        : out std_logic;
+    error_o        : out std_logic;
+    crc_error_o    : out std_logic;
+    precrc_error_o : out std_logic;
+    unstable_o     : out std_logic;
 
     tmr_err_inj_i : in  std_logic := '0';
     tmr_err_o     : out std_logic := '0'
@@ -89,16 +90,17 @@ begin
 
   TMR : if (g_ENABLE_TMR = 1) generate
 
-    signal resync_tmr    : std_logic_vector(2 downto 0);
-    signal l1a_tmr       : std_logic_vector(2 downto 0);
-    signal bc0_tmr       : std_logic_vector(2 downto 0);
-    signal unstable_tmr  : std_logic_vector(2 downto 0);
-    signal rdy_tmr       : std_logic_vector(2 downto 0);
-    signal error_tmr     : std_logic_vector(2 downto 0);
-    signal crc_error_tmr : std_logic_vector(2 downto 0);
-    signal ready_tmr     : std_logic_vector(2 downto 0);
-    signal ipb_mosi_tmr  : ipb_wbus_array (2 downto 0);
-    signal data_tmr      : t_std8_array (2 downto 0);
+    signal resync_tmr       : std_logic_vector(2 downto 0);
+    signal l1a_tmr          : std_logic_vector(2 downto 0);
+    signal bc0_tmr          : std_logic_vector(2 downto 0);
+    signal unstable_tmr     : std_logic_vector(2 downto 0);
+    signal rdy_tmr          : std_logic_vector(2 downto 0);
+    signal error_tmr        : std_logic_vector(2 downto 0);
+    signal crc_error_tmr    : std_logic_vector(2 downto 0);
+    signal precrc_error_tmr : std_logic_vector(2 downto 0);
+    signal ready_tmr        : std_logic_vector(2 downto 0);
+    signal ipb_mosi_tmr     : ipb_wbus_array (2 downto 0);
+    signal data_tmr         : t_std8_array (2 downto 0);
 
     signal tmr_err : std_logic_vector (11 downto 0) := (others => '0');
 
@@ -143,9 +145,10 @@ begin
           bc0_o    => bc0_tmr(I),
 
           -- outputs
-          unstable_o  => unstable_tmr(I),
-          crc_error_o => crc_error_tmr(I),
-          error_o     => error_tmr(I)
+          unstable_o     => unstable_tmr(I),
+          crc_error_o    => crc_error_tmr(I),
+          precrc_error_o => precrc_error_tmr(I),
+          error_o        => error_tmr(I)
 
           );
 
@@ -162,7 +165,8 @@ begin
     majority_err (unstable_o, tmr_err(8), unstable_tmr(0), unstable_tmr(1), unstable_tmr(2));
     majority_err (error_o, tmr_err(9), error_tmr(0), error_tmr(1), error_tmr(2));
     majority_err (crc_error_o, tmr_err(10), crc_error_tmr(0), crc_error_tmr(1), crc_error_tmr(2));
-    majority_err (ready_o, tmr_err(11), ready_tmr(0), ready_tmr(1), ready_tmr(2));
+    majority_err (precrc_error_o, tmr_err(11), precrc_error_tmr(0), precrc_error_tmr(1), precrc_error_tmr(2));
+    majority_err (ready_o, tmr_err(12), ready_tmr(0), ready_tmr(1), ready_tmr(2));
 
     process (clock) is
     begin

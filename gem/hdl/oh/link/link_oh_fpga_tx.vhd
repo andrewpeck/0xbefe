@@ -41,7 +41,7 @@ architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
     signal special : std_logic := '0';
 
-    type state_t is (IDLE, DATA, CRC_CALC, CRC);
+    type state_t is (IDLE, PRE_CRC, DATA, CRC_CALC, CRC);
     signal state : state_t := IDLE;
 
 
@@ -102,13 +102,29 @@ begin
                     special        <= '1';
                     frame_data     <= std_logic_vector(to_unsigned(idle_counter, 4));
                     data_frame_cnt <= 0;
-                    crc_rst        <= '1';
 
                     if (req_valid_i = '1') then
                         req_data <= "000" & req_write_i &
                                     req_addr_i &
                                     req_data_i;
-                        state <= DATA;
+                        state <= PRE_CRC;
+                        crc_en     <= '0';
+                    else
+                        crc_en         <= '1';
+                    end if;
+
+                when PRE_CRC =>
+
+                    special    <= '0';
+                    frame_data <= crc_data((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4);
+
+                    if (data_frame_cnt = 1) then
+                        data_frame_cnt <= 0;
+                        state          <= DATA;
+                        crc_rst        <= '1';
+                    else
+                        data_frame_cnt <= data_frame_cnt + 1;
+                        state          <= PRE_CRC;
                     end if;
 
                 when DATA =>
@@ -136,6 +152,7 @@ begin
                     if (data_frame_cnt = 1) then
                         data_frame_cnt <= 0;
                         state          <= IDLE;
+                        crc_rst        <= '1';
                     else
                         data_frame_cnt <= data_frame_cnt + 1;
                         state          <= CRC;
@@ -146,7 +163,8 @@ begin
             end case;
 
             if (reset_i = '1') then
-                state <= IDLE;
+                state   <= IDLE;
+                crc_rst <= '1';
             end if;
 
         end if;

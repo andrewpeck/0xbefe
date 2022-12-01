@@ -230,9 +230,10 @@ begin
             req_addr_o   => open,
             req_wr_o     => open,
 
-            ready_o      => open,
-            crc_error_o  => rx_crc_error,
-            error_o      => rx_error
+            ready_o        => open,
+            crc_error_o    => rx_crc_error,
+            precrc_error_o => open,
+            error_o        => rx_error
         );
     
 end link_oh_fpga_arch;

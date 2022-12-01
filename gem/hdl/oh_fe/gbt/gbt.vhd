@@ -68,10 +68,11 @@ architecture Behavioral of gbt is
   signal gbt_tx_data : std_logic_vector(7 downto 0) := (others => '0');
   signal gbt_rx_data : std_logic_vector(7 downto 0) := (others => '0');
 
-  signal gbt_link_crc_error : std_logic;
-  signal gbt_link_error     : std_logic;
-  signal gbt_link_unstable  : std_logic;
-  signal gbt_link_ready     : std_logic;
+  signal gbt_link_crc_error    : std_logic;
+  signal gbt_link_precrc_error : std_logic;
+  signal gbt_link_error        : std_logic;
+  signal gbt_link_unstable     : std_logic;
+  signal gbt_link_ready        : std_logic;
 
   signal gbt_link_err_ready : std_logic;
 
@@ -109,6 +110,7 @@ architecture Behavioral of gbt is
     signal cnt_ipb_request : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_link_err : std_logic_vector (23 downto 0) := (others => '0');
     signal cnt_link_crc_err : std_logic_vector (23 downto 0) := (others => '0');
+    signal cnt_link_precrc_err : std_logic_vector (23 downto 0) := (others => '0');
     signal gbt_link_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal gbt_serdes_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal ipb_slave_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
@@ -196,10 +198,11 @@ begin
 
       -- outputs
 
-      unstable_o  => gbt_link_unstable,
-      ready_o     => gbt_link_ready,
-      error_o     => gbt_link_error,
-      crc_error_o => gbt_link_crc_error,
+      unstable_o     => gbt_link_unstable,
+      ready_o        => gbt_link_ready,
+      error_o        => gbt_link_error,
+      crc_error_o    => gbt_link_crc_error,
+      precrc_error_o => gbt_link_precrc_error,
 
       tmr_err_inj_i => tmr_err_inj,
       tmr_err_o     => gbt_link_tmr_err
@@ -264,6 +267,7 @@ begin
     regs_read_arr(2)(REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB downto REG_GBT_RX_CNT_REQUEST_RECEIVED_LSB) <= cnt_ipb_request;
     regs_read_arr(3)(REG_GBT_RX_CNT_LINK_ERR_MSB downto REG_GBT_RX_CNT_LINK_ERR_LSB) <= cnt_link_err;
     regs_read_arr(4)(REG_GBT_RX_CNT_LINK_CRC_ERR_MSB downto REG_GBT_RX_CNT_LINK_CRC_ERR_LSB) <= cnt_link_crc_err;
+    regs_read_arr(5)(REG_GBT_RX_CNT_LINK_PRECRC_ERR_MSB downto REG_GBT_RX_CNT_LINK_PRECRC_ERR_LSB) <= cnt_link_precrc_err;
     regs_read_arr(7)(REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_LINK_TMR_ERR_CNT_LSB) <= gbt_link_tmr_err_cnt;
     regs_read_arr(7)(REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_MSB downto REG_GBT_TMR_GBT_SERDES_TMR_ERR_CNT_LSB) <= gbt_serdes_tmr_err_cnt;
     regs_read_arr(8)(REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_GBT_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
@@ -332,6 +336,19 @@ begin
         en_i      => gbt_link_crc_error,
         snap_i    => cnt_snap,
         count_o   => cnt_link_crc_err
+    );
+
+
+    COUNTER_GBT_RX_CNT_LINK_PRECRC_ERR : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 24
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => cnt_reset,
+        en_i      => gbt_link_precrc_error,
+        snap_i    => cnt_snap,
+        count_o   => cnt_link_precrc_err
     );
 
 
