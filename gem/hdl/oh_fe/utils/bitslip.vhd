@@ -12,7 +12,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity bitslip is
+entity bitslip_tmr is
   generic (
     g_WORD_SIZE : integer := 8;
     g_EN_TMR    : integer := 0
@@ -24,9 +24,9 @@ entity bitslip is
     din         : in  std_logic_vector(g_WORD_SIZE-1 downto 0);
     dout        : out std_logic_vector(g_WORD_SIZE-1 downto 0)
     );
-end bitslip;
+end bitslip_tmr;
 
-architecture behavioral of bitslip is
+architecture behavioral of bitslip_tmr is
 
   type buf_array_t is array(integer range <>) of std_logic_vector(g_WORD_SIZE*2-1 downto 0);
   type data_array_t is array(integer range <>) of std_logic_vector(g_WORD_SIZE-1 downto 0);

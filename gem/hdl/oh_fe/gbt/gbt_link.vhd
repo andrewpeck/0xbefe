@@ -9,11 +9,6 @@
 --   and puts them into a FIFO for handling in the OH, and takes wishbone responses
 --   from the OH and builds packets to send out to the GBTx
 ----------------------------------------------------------------------------------
--- 2017/07/24 -- Removal of VFAT2 event building and Calpulse
--- 2018/01/23 -- Add link ready and link unstable monitors
--- 2018/08/24 -- Correct ready circuit to not latch
--- 2018/08/24 -- Increase ready time
-----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -62,26 +57,30 @@ end gbt_link;
 
 architecture Behavioral of gbt_link is
 
-  --== GTX requests ==--
+  signal l1a, bc0, resync : std_logic := '0';
 
   signal ready       : std_logic := '0';  -- gbt rx link is good
   signal rx_unstable : std_logic := '1';  -- gbt rx link was good then went bad
   signal rx_error    : std_logic := '0';  -- error on gbt rx link
   signal crc_error   : std_logic := '0';  -- crc error on gbt rx link
 
-  signal gbt_rx_req  : std_logic                                 := '0';  -- rx fifo write request
-  signal gbt_rx_data : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
+  signal gbt_rx_req_valid : std_logic                                 := '0';  -- rx fifo write request
+  signal gbt_rx_req       : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
 
-  signal gbt_rx_req_reg  : std_logic                                 := '0';  -- rx fifo write request
-  signal gbt_rx_data_reg : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
+  signal gbt_rx_req_valid_reg : std_logic                                 := '0';  -- rx fifo write request
+  signal gbt_rx_req_reg       : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
 
-  signal oh_tx_req   : std_logic                     := '0';  -- tx fifo read request
+  signal oh_tx_busy  : std_logic                     := '0';  -- tx fifo read request
   signal oh_tx_valid : std_logic                     := '0';  -- tx fifo data available
   signal oh_tx_data  : std_logic_vector(31 downto 0) := (others => '0');
 
   signal reset : std_logic := '1';
 
 begin
+
+  l1a_o    <= l1a;
+  bc0_o    <= bc0;
+  resync_o <= resync;
 
   -- outputs
 
@@ -115,24 +114,24 @@ begin
   --== GBT RX ==--
   --============--
 
-  gbt_rx : entity work.gbt_rx
+  gbt_rx : entity work.link_oh_fpga_rx
     port map(
-      -- reset
+      -- clock & reset
+      clock   => clock,
       reset_i => reset,
 
-      -- ttc clock input
-      clock => clock,
-
       -- parallel data input from deserializer
-      data_i => data_i,
+      elink_data_i => data_i,
 
       -- decoded ttc commands
-      l1a_o    => l1a_o,
-      bc0_o    => bc0_o,
-      resync_o => resync_o,
+      l1a_o    => l1a,
+      bc0_o    => bc0,
+      resync_o => resync,
 
-      req_en_o   => gbt_rx_req,   -- 1 bit, wishbone request recevied from GBTx
-      req_data_o => gbt_rx_data,  -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
+      req_en_o   => gbt_rx_req_valid,  -- 1 bit, wishbone request recevied from GBTx
+      req_data_o => gbt_rx_req(31 downto 0),  -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
+      req_addr_o => gbt_rx_req(47 downto 32),  -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
+      req_wr_o   => gbt_rx_req(48),  -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
 
       -- status
       ready_o     => ready,
@@ -144,21 +143,28 @@ begin
   --== GBT TX ==--
   --============--
 
-  gbt_tx : entity work.gbt_tx
+  gbt_tx : entity work.link_oh_fpga_tx
     port map(
-      -- reset
+      -- clock & reset
       reset_i => reset,
+      clock   => clock,
 
-      -- ttc clock input
-      clock => clock,
-
-      -- parallel data input from fifo
-      req_valid_i => oh_tx_valid,  -- 1  bit write request from OH logic (through request fifo)
-      req_data_i  => oh_tx_data,        -- 32 bit data from OH logic
-      req_en_o    => oh_tx_req,         -- fifo read enable
+      --
+      l1a_i    => l1a,
+      bc0_i    => bc0,
+      resync_i => resync,
 
       -- parallel data output to serializer
-      data_o => data_o                  -- 8 bit output frames
+      elink_data_o => data_o,
+
+      -- parallel data input from fifo
+      req_valid_i => oh_tx_valid,  -- 1  bit write req from OH logic (through req fifo)
+      req_write_i => gbt_rx_req(48),
+      req_addr_i  => gbt_rx_req(47 downto 32),
+      req_data_i  => oh_tx_data,        -- 32 bit data from OH logic
+
+      busy_o => oh_tx_busy              -- fifo read enable
+
       );
 
   --========================--
@@ -170,33 +176,30 @@ begin
   process (clock)
   begin
     if (rising_edge(clock)) then
-      gbt_rx_req_reg  <= gbt_rx_req;
-      gbt_rx_data_reg <= gbt_rx_data;
+      gbt_rx_req_valid_reg <= gbt_rx_req_valid;
+      gbt_rx_req_reg       <= gbt_rx_req;
     end if;
   end process;
 
   link_request : entity work.link_request
     port map(
-      -- clocks
-      clock => clock,                   -- 40 MHz logic clock
-
-      -- reset
+      -- clock & reset
+      clock   => clock,                 -- 40 MHz logic clock
       reset_i => reset,
 
       -- rx parallel data (from GBT)
       ipb_mosi_o => ipb_mosi_o,         -- 16 bit adr + 32 bit data + we
-      rx_en_i    => gbt_rx_req_reg,
-      rx_data_i  => gbt_rx_data_reg,    -- 16 bit adr + 32 bit data
+      rx_en_i    => gbt_rx_req_valid_reg,
+      rx_data_i  => gbt_rx_req_reg,     -- 16 bit adr + 32 bit data
 
       -- tx parallel data (to GBT)
 
       -- input
       ipb_miso_i => ipb_miso_i,         -- 32 bit data
-      tx_en_i    => oh_tx_req,          -- read enable
+      tx_en_i    => not oh_tx_busy,     -- read enable
 
       -- output
       tx_valid_o => oh_tx_valid,        -- data available
       tx_data_o  => oh_tx_data          -- 32 bit data
       );
-
 end Behavioral;

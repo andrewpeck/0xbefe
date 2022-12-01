@@ -13,12 +13,12 @@ gem/hdl/oh_fe/control/ttc_tmr.vhd 93
 # GBT
 gem/hdl/oh_fe/gbt/gbt_link.vhd 93
 gem/hdl/oh_fe/gbt/gbt_link_tmr.vhd 93
-gem/hdl/oh_fe/gbt/gbt_rx.vhd 93
-gem/hdl/oh_fe/gbt/oh_gbt_crc.vhd 93
 gem/hdl/oh_fe/gbt/gbt_serdes.vhd 93
-gem/hdl/oh_fe/gbt/gbt_tx.vhd 93
 gem/hdl/oh_fe/gbt/link_request.vhd 93
 gem/hdl/oh_fe/gbt/to_gbt_ser.vhd 93
+gem/hdl/oh/link/link_oh_fpga_tx.vhd 93
+gem/hdl/oh/link/link_oh_fpga_rx.vhd 93
+gem/hdl/oh/link/link_oh_fpga_crc.vhd 93
 
 # Pkg
 gem/hdl/oh_fe/pkg/ipbus_pkg.vhd 93
@@ -42,15 +42,13 @@ gem/hdl/oh_fe/trigger/trig_alignment/trig_alignment.vhd 93
 
 # Utils
 common/hdl/utils/oneshot.vhd 93
+common/hdl/utils/bitslip.vhd 93
 common/hdl/utils/synchronizer__generic.vhd 93
 #gem/hdl/utils/yahamm/yahamm_dec.vhd 93
 common/hdl/utils/yahamm/matrix_pkg.vhd 93
 common/hdl/utils/yahamm/yahamm_enc.vhd 93
 common/hdl/utils/yahamm/yahamm_pkg.vhd 93
 
-gem/hdl/oh/link/6b8b.vhd 93
-gem/hdl/oh/link/6b8b_pkg.vhd 93
-gem/hdl/oh/link/8b6b.vhd 93
 gem/hdl/oh_fe/utils/dru.vhd 93
 gem/hdl/oh_fe/utils/dru_tmr.vhd 93
 gem/hdl/oh_fe/utils/oversample.vhd 93

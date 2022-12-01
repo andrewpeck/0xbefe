@@ -12,9 +12,11 @@ entity gbt_link_tb is
     l1a_i, bc0_i, resync_i : in  std_logic;
     l1a_o, bc0_o, resync_o : out std_logic;
 
-    oh_rx_ready : out std_logic;
-    oh_rx_err   : out std_logic;
-    be_rx_err   : out std_logic;
+    oh_rx_ready, be_rx_ready : out std_logic;
+    oh_rx_err, be_rx_err     : out std_logic;
+    oh_crc_err, be_crc_err   : out std_logic;
+
+    crc_error_be : out std_logic;
 
     request_valid_i : in  std_logic;
     request_write_i : in  std_logic;
@@ -47,8 +49,10 @@ architecture behavioral of gbt_link_tb is
   signal ipb_wdata  : std_logic_vector(31 downto 0);
   signal ipb_addr   : std_logic_vector(15 downto 0);
 
-  signal req_valid : std_logic := '0';
-  signal req_data : std_logic_vector (31 downto 0) := (others => '0');
+  signal l1a, bc0, resync : std_logic;
+
+  signal req_valid : std_logic                      := '0';
+  signal req_data  : std_logic_vector (31 downto 0) := (others => '0');
 
   type mem_array_t is array (integer range <>) of std_logic_vector(31 downto 0);
 
@@ -62,8 +66,8 @@ begin
 
   link_oh_fpga_tx_inst : entity work.link_oh_fpga_tx
     port map (
-      reset_i      => reset,
-      ttc_clk_40_i => clock,
+      reset_i => reset,
+      clock   => clock,
 
       l1a_i    => l1a_i,
       bc0_i    => bc0_i,
@@ -71,56 +75,55 @@ begin
 
       elink_data_o => backend_to_oh_elink,
 
-      request_valid_i => request_valid_i,
-      request_write_i => request_write_i,
-      request_addr_i  => request_addr_i,
-      request_data_i  => request_data_i,
-      busy_o          => busy_o
+      req_valid_i => request_valid_i,
+      req_write_i => request_write_i,
+      req_addr_i  => request_addr_i,
+      req_data_i  => request_data_i,
+      busy_o      => busy_o
       );
 
   --------------------------------------------------------------------------------
   -- backend ~> oh rx
   --------------------------------------------------------------------------------
 
-  bitslip_1: entity work.bitslip
-    generic map (g_WORD_SIZE => 8)
+  bitslip_inst : entity work.bitslip
+    generic map (
+      g_DATA_WIDTH     => 8,
+      g_SLIP_CNT_WIDTH => 3
+      )
     port map (
-      clock       => clock,
-      reset       => reset,
-      bitslip_cnt => "001",
-      din         => backend_to_oh_elink,
-      dout        => backend_to_oh_elink_bitslipped
+      clk_i      => clock,
+      slip_cnt_i => "001",
+      data_i     => backend_to_oh_elink,
+      data_o     => backend_to_oh_elink_bitslipped
       );
 
-
-  gbt_rx_1 : entity work.gbt_rx
+  gbt_rx_1 : entity work.link_oh_fpga_rx
     port map (
       reset_i => reset,
       clock   => clock,
 
-      data_i => backend_to_oh_elink_bitslipped,
+      elink_data_i => backend_to_oh_elink_bitslipped,
 
-      l1a_o    => l1a_o,
-      bc0_o    => bc0_o,
-      resync_o => resync_o,
+      l1a_o    => l1a,
+      bc0_o    => bc0,
+      resync_o => resync,
 
-      req_en_o   => req_en_o,
-      req_data_o => req_data_o,
-      ready_o    => oh_rx_ready,
+      req_en_o   => ipb_strobe,
+      req_data_o => ipb_wdata,
+      req_addr_o => ipb_addr,
+      req_wr_o   => ipb_write,
 
-      error_o => oh_rx_err
+      ready_o     => oh_rx_ready,
+      error_o     => oh_rx_err,
+      crc_error_o => oh_crc_err
       );
-
-  ipb_strobe <= req_en_o;
-  ipb_write  <= req_data_o(48);
-  ipb_addr   <= req_data_o(47 downto 32);
-  ipb_wdata  <= req_data_o(31 downto 0);
 
   process (clock) is
   begin
     if (rising_edge(clock)) then
 
-      if (ipb_strobe='1' and ipb_write='1') then
+      if (ipb_strobe = '1' and ipb_write = '1') then
         mem(to_integer(unsigned(ipb_addr))) <= ipb_wdata;
       end if;
 
@@ -135,28 +138,47 @@ begin
   -- oh ~> backend tx
   --------------------------------------------------------------------------------
 
-  gbt_tx_1 : entity work.gbt_tx
+  link_oh_to_be_tx : entity work.link_oh_fpga_tx
     port map (
-      clock       => clock,
-      reset_i     => reset,
-      data_o      => oh_to_backend_elink,
-      req_en_o    => open,
+      reset_i => reset,
+      clock   => clock,
+
+      l1a_i    => l1a,
+      bc0_i    => bc0,
+      resync_i => resync,
+
+      elink_data_o => oh_to_backend_elink,
+
       req_valid_i => req_valid,
-      req_data_i  => req_data
+      req_write_i => '1',
+      req_addr_i  => ipb_addr,
+      req_data_i  => req_data,
+      busy_o      => open
       );
 
   --------------------------------------------------------------------------------
   -- oh ~> backend rx
   --------------------------------------------------------------------------------
 
-  link_oh_fpga_rx_1 : entity work.link_oh_fpga_rx
+  link_oh_to_be_rx : entity work.link_oh_fpga_rx
     port map (
-      reset_i          => reset,
-      ttc_clk_40_i     => clock,
-      elink_data_i     => oh_to_backend_elink,
-      reg_data_valid_o => reg_data_valid_o,
-      reg_data_o       => reg_data_o,
-      error_o          => be_rx_err
+      reset_i => reset,
+      clock   => clock,
+
+      elink_data_i => oh_to_backend_elink,
+
+      l1a_o    => l1a_o,
+      bc0_o    => bc0_o,
+      resync_o => resync_o,
+
+      req_en_o   => reg_data_valid_o,
+      req_data_o => reg_data_o,
+      req_addr_o => open,
+      req_wr_o   => open,
+
+      ready_o     => be_rx_ready,
+      error_o     => be_rx_err,
+      crc_error_o => be_crc_err
       );
 
 end behavioral;

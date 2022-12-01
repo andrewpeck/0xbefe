@@ -1,11 +1,11 @@
-------------------------------------------------------------------------------------------------------------------------------------------------------
--- Company: TAMU
--- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
--- Create Date:    03:10 2017-11-04
--- Module Name:    link_oh_fpga_tx
--- Description:    this module handles the OH FPGA packet encoding for register access and ttc commands
-------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- CMS Muon Endcap
+-- GEM Collaboration
+-- E. Juska, A. Peck
+----------------------------------------------------------------------------------
+-- This module formats transmit packets in the slow control path from
+--  backend -> OH and from OH -> backend
+----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -18,8 +18,8 @@ entity link_oh_fpga_tx is
         );
     port(
 
-        reset_i      : in std_logic;
-        ttc_clk_40_i : in std_logic;
+        reset_i : in std_logic;
+        clock   : in std_logic;
 
         l1a_i    : in std_logic;
         bc0_i    : in std_logic;
@@ -27,10 +27,10 @@ entity link_oh_fpga_tx is
 
         elink_data_o : out std_logic_vector(7 downto 0);
 
-        request_valid_i : in std_logic;
-        request_write_i : in std_logic;
-        request_addr_i  : in std_logic_vector(15 downto 0);
-        request_data_i  : in std_logic_vector(31 downto 0);
+        req_valid_i : in std_logic;
+        req_write_i : in std_logic;
+        req_addr_i  : in std_logic_vector(15 downto 0);
+        req_data_i  : in std_logic_vector(31 downto 0);
 
         busy_o : out std_logic
 
@@ -69,13 +69,13 @@ begin
             data_in => elink_data,
             crc_en  => crc_en,
             rst     => crc_rst,
-            clk     => ttc_clk_40_i,
+            clk     => clock,
             crc_out => crc_data
             );
 
-    process (ttc_clk_40_i) is
+    process (clock) is
     begin
-        if (rising_edge(ttc_clk_40_i)) then
+        if (rising_edge(clock)) then
             if (state = IDLE) then
                 if (idle_counter = 15) then
                     idle_counter <= 0;
@@ -88,9 +88,9 @@ begin
 
     busy_o <= '0' when state = IDLE else '1';
 
-    process (ttc_clk_40_i)
+    process (clock)
     begin
-        if (rising_edge(ttc_clk_40_i)) then
+        if (rising_edge(clock)) then
 
             crc_en  <= '0';
             crc_rst <= '0';
@@ -104,10 +104,10 @@ begin
                     data_frame_cnt <= 0;
                     crc_rst        <= '1';
 
-                    if (request_valid_i = '1') then
-                        req_data <= "000" & request_write_i &
-                                    request_addr_i &
-                                    request_data_i;
+                    if (req_valid_i = '1') then
+                        req_data <= "000" & req_write_i &
+                                    req_addr_i &
+                                    req_data_i;
                         state <= DATA;
                     end if;
 

@@ -68,7 +68,9 @@ architecture link_oh_fpga_arch of link_oh_fpga is
     signal rx_valid             : std_logic;
     signal rx_valid_sync        : std_logic;
     signal rx_error             : std_logic;
+    signal rx_crc_error         : std_logic;
     signal rx_error_sync        : std_logic;
+    signal rx_crc_error_sync    : std_logic;
     signal rx_reg_value         : std_logic_vector(31 downto 0) := (others => '0');
     
 begin
@@ -121,7 +123,7 @@ begin
                         elsif (rx_valid_sync = '1') then
                             ipb_miso_o <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => rx_reg_value);
                             state <= RST;
-                        elsif (rx_error_sync = '1') then
+                        elsif (rx_crc_error_sync = '1' or rx_error_sync = '1') then
                             ipb_miso_o <= (ipb_ack => '1', ipb_err => '1', ipb_rdata => rx_reg_value);
                             state <= RST;
                         elsif (transaction_timer = TRANSACTION_TIMEOUT) then
@@ -186,30 +188,51 @@ begin
             clk_i   => ipb_clk_i,
             sync_o  => rx_error_sync
         );
+
+    i_rx_crc_error_sync : entity work.synch
+        generic map(
+            N_STAGES => 2
+        )
+        port map(
+            async_i => rx_crc_error,
+            clk_i   => ipb_clk_i,
+            sync_o  => rx_crc_error_sync
+        );
     
     i_link_tx : entity work.link_oh_fpga_tx
         port map(
-            reset_i         => reset_i,
-            ttc_clk_40_i    => ttc_clk_i.clk_40,
-            l1a_i           => ttc_cmds_i.l1a,
-            bc0_i           => ttc_cmds_i.bc0,
-            resync_i        => ttc_cmds_i.resync,
-            elink_data_o    => tx_elink_o,
-            request_valid_i => tx_command_en_sync,
-            request_write_i => tx_is_write,
-            request_addr_i  => tx_reg_addr,
-            request_data_i  => tx_reg_value,
-            busy_o          => tx_busy
+            reset_i      => reset_i,
+            clock        => ttc_clk_i.clk_40,
+            l1a_i        => ttc_cmds_i.l1a,
+            bc0_i        => ttc_cmds_i.bc0,
+            resync_i     => ttc_cmds_i.resync,
+            elink_data_o => tx_elink_o,
+            req_valid_i  => tx_command_en_sync,
+            req_write_i  => tx_is_write,
+            req_addr_i   => tx_reg_addr,
+            req_data_i   => tx_reg_value,
+            busy_o       => tx_busy
         );
     
     i_link_rx : entity work.link_oh_fpga_rx
         port map(
-            reset_i          => reset_i,
-            ttc_clk_40_i     => ttc_clk_i.clk_40,
-            elink_data_i     => rx_elink_i,
-            reg_data_valid_o => rx_valid,
-            reg_data_o       => rx_reg_value,
-            error_o          => rx_error
+            reset_i      => reset_i,
+            clock        => ttc_clk_i.clk_40,
+
+            elink_data_i => rx_elink_i,
+
+            l1a_o        => open,
+            bc0_o        => open,
+            resync_o     => open,
+
+            req_en_o     => rx_valid,
+            req_data_o   => rx_reg_value,
+            req_addr_o   => open,
+            req_wr_o     => open,
+
+            ready_o      => open,
+            crc_error_o  => rx_crc_error,
+            error_o      => rx_error
         );
     
 end link_oh_fpga_arch;
