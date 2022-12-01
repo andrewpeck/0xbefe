@@ -20,12 +20,9 @@ entity gbt_rx is
     );
   port(
 
-    -- reset
+    -- reset + 40MHz clock
     reset_i : in std_logic;
-
-
-    -- 40 MHz fabric clock
-    clock : in std_logic;
+    clock   : in std_logic;
 
     -- parallel data input from deserializer
     data_i : in std_logic_vector(7 downto 0);
@@ -51,7 +48,7 @@ architecture Behavioral of gbt_rx is
 
   constant BITSLIP_ERR_CNT_MAX : integer := g_READY_COUNT_MAX*2;
 
-  type state_t is (ERR, SYNCING, IDLE, DATA, CRC_CALC, CRC, DONE);
+  type state_t is (SYNCING, IDLE, DATA, CRC_CALC, CRC, DONE);
 
   signal req_valid : std_logic;
   signal req_data  : std_logic_vector(51 downto 0) := (others => '0');
@@ -81,7 +78,6 @@ architecture Behavioral of gbt_rx is
   signal bitslip_cnt     : integer range 0 to 7                     := 0;
   signal bitslip_err_cnt : integer range 0 to BITSLIP_ERR_CNT_MAX-1 := 0;
   signal bitslip_cnt_slv : std_logic_vector (2 downto 0)            := (others => '0');
-
 
   signal error_detect : std_logic := '0';
 
@@ -168,7 +164,7 @@ begin
         idle_cnt_next <= idle_cnt + 1;
       end if;
 
-      if (reset = '1' or state = ERR) then
+      if (reset = '1' or error_detect = '1') then
         ready_cnt <= 0;
       elsif (ready_cnt < g_READY_COUNT_MAX-1) then
         ready_cnt <= ready_cnt + 1;
@@ -216,18 +212,10 @@ begin
 
       case state is
 
-
-        when ERR =>
-          error_detect <= '1';
-
-          if (data_slip(7) = '1' and idle_cnt = idle_cnt_next) then
-            state <= SYNCING;
-          end if;
-
         when SYNCING =>
 
           if (data_slip(7) /= '1' or idle_cnt /= idle_cnt_next) then
-            state <= ERR;
+            error_detect <= '1';
           elsif (ready = '1') then
             state <= IDLE;
           end if;
@@ -235,7 +223,8 @@ begin
         when IDLE =>
 
           if (special_bit = '1' and idle_cnt /= idle_cnt_next) then
-            state <= ERR;
+            state        <= SYNCING;
+            error_detect <= '1';
           elsif (special_bit = '0') then
             state                 <= DATA;
             req_data (3 downto 0) <= data_slip(3 downto 0);
@@ -251,7 +240,8 @@ begin
           crc_en <= '1';
 
           if (special_bit = '1') then
-            state <= ERR;
+            state        <= SYNCING;
+            error_detect <= '1';
           elsif (data_frame_cnt = FRAME_CNT_MAX - 1) then
             data_frame_cnt <= 0;
             state          <= CRC_CALC;
@@ -268,7 +258,8 @@ begin
         when CRC =>
 
           if (special_bit = '1') then
-            state <= ERR;
+            state        <= SYNCING;
+            error_detect <= '1';
           elsif (data_frame_cnt = 1) then
             data_frame_cnt <= 0;
             state          <= DONE;
