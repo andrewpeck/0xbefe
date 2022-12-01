@@ -54,8 +54,22 @@ architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
     signal data_frame_cnt : integer range 0 to FRAME_CNT_MAX-1 := 0;
 
+    signal idle_counter : integer range 0 to 15 := 0;
+
 begin
 
+    process (ttc_clk_40_i) is
+    begin
+        if (rising_edge(ttc_clk_40_i)) then
+            if (state=IDLE) then
+                if (idle_counter=15) then
+                    idle_counter <= 0;
+                else
+                    idle_counter <= idle_counter + 1;
+                end if;
+            end if;
+        end if;
+    end process;
 
     busy_o <= '0' when state = IDLE else '1';
 
@@ -67,7 +81,7 @@ begin
                 when IDLE =>
 
                     special        <= '1';
-                    frame_data     <= x"0";
+                    frame_data     <= std_logic_vector(to_unsigned(idle_counter, 4));
                     data_frame_cnt <= 0;
 
                     if (request_valid_i = '1') then

@@ -15,8 +15,8 @@ use ieee.numeric_std.all;
 
 entity gbt_rx is
   generic(
-    WB_REQ_BITS         : integer := 49;  -- number of bits in a wishbone request
-    g_READY_COUNT_MAX   : integer := 64  -- number of good consecutive frames to mark the output as ready
+    WB_REQ_BITS       : integer := 49;  -- number of bits in a wishbone request
+    g_READY_COUNT_MAX : integer := 64  -- number of good consecutive frames to mark the output as ready
     );
   port(
 
@@ -24,7 +24,7 @@ entity gbt_rx is
     reset_i : in std_logic;
 
 
--- 40 MHz fabric clock
+    -- 40 MHz fabric clock
     clock : in std_logic;
 
     -- parallel data input from deserializer
@@ -69,6 +69,8 @@ architecture Behavioral of gbt_rx is
   signal crc_rx : std_logic_vector (7 downto 0) := (others => '0');
 
   signal special_bit : std_logic := '0';
+
+  signal idle_cnt, idle_cnt_next : integer range 0 to 15;
 
   signal data_slip       : std_logic_vector(7 downto 0);
   signal bitslip_cnt     : integer range 0 to 7                     := 0;
@@ -148,13 +150,22 @@ begin
     end if;
   end process;
 
+  idle_cnt <= to_integer(unsigned(data_slip(3 downto 0)));
+
   -- sync to the special bit 0x80 pattern
   process (clock)
   begin
     if (rising_edge(clock)) then
+
+      if (idle_cnt = 15) then
+        idle_cnt_next <= 0;
+      else
+        idle_cnt_next <= idle_cnt + 1;
+      end if;
+
       if (reset = '1' or state = ERR) then
         ready_cnt <= 0;
-      elsif (data_slip = x"80" and (ready_cnt < g_READY_COUNT_MAX-1)) then
+      elsif (ready_cnt < g_READY_COUNT_MAX-1) then
         ready_cnt <= ready_cnt + 1;
       end if;
     end if;
@@ -168,6 +179,7 @@ begin
   -- State machine
   --------------------------------------------------------------------------------
 
+
   process(clock)
   begin
     if (rising_edge(clock)) then
@@ -180,16 +192,24 @@ begin
 
         when ERR =>
           error_detect <= '1';
-          state        <= SYNCING;
+
+          if (data_slip(7) = '1' and idle_cnt = idle_cnt_next) then
+            state <= SYNCING;
+          end if;
 
         when SYNCING =>
-          if (ready = '1') then
+
+          if (data_slip(7) /= '1' or idle_cnt /= idle_cnt_next) then
+            state <= ERR;
+          elsif (ready = '1') then
             state <= IDLE;
           end if;
 
         when IDLE =>
 
-          if (special_bit = '0') then
+          if (special_bit = '1' and idle_cnt /= idle_cnt_next) then
+            state <= ERR;
+          elsif (special_bit = '0') then
             state                 <= DATA;
             req_data (3 downto 0) <= data_slip(3 downto 0);
             data_frame_cnt        <= 1;
