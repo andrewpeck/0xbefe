@@ -34,8 +34,9 @@ entity oh_link_regs is
         clk_i                   : in  std_logic;
 
         -- Link statuses
-        gbt_link_status_arr_i   : in t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-        vfat3_link_status_arr_i : in t_oh_vfat_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
+        oh_fpga_link_status_arr_i : in t_oh_fpga_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
+        gbt_link_status_arr_i     : in t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+        vfat3_link_status_arr_i   : in t_oh_vfat_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- Control
         vfat_mask_arr_o         : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);

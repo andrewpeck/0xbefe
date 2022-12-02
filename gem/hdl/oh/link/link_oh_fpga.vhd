@@ -38,10 +38,10 @@ entity link_oh_fpga is
         
         -- fifo I/O
         rx_elink_i      : in  std_logic_vector(7 downto 0);
-        tx_elink_o      : out std_logic_vector(7 downto 0)
+        tx_elink_o      : out std_logic_vector(7 downto 0);
         
         -- monitoring
---        status_o        : out t_vfat_slow_control_status
+        status_o        : out t_oh_fpga_link_status
         
     );
 end link_oh_fpga;
@@ -65,12 +65,12 @@ architecture link_oh_fpga_arch of link_oh_fpga is
     signal tx_command_en        : std_logic := '0';
     signal tx_command_en_sync   : std_logic := '0';
 
-    signal rx_valid             : std_logic;
-    signal rx_valid_sync        : std_logic;
-    signal rx_error             : std_logic;
-    signal rx_crc_error         : std_logic;
-    signal rx_error_sync        : std_logic;
-    signal rx_crc_error_sync    : std_logic;
+    signal rx_valid, rx_valid_sync               : std_logic;
+    signal rx_ready, rx_ready_sync               : std_logic;
+    signal rx_error, rx_error_sync               : std_logic;
+    signal rx_crc_error, rx_crc_error_sync       : std_logic;
+    signal rx_precrc_error, rx_precrc_error_sync : std_logic;
+
     signal rx_reg_value         : std_logic_vector(31 downto 0) := (others => '0');
     
 begin
@@ -198,6 +198,26 @@ begin
             clk_i   => ipb_clk_i,
             sync_o  => rx_crc_error_sync
         );
+
+    i_rx_precrc_error_sync : entity work.synch
+        generic map(
+            N_STAGES => 2
+        )
+        port map(
+            async_i => rx_precrc_error,
+            clk_i   => ipb_clk_i,
+            sync_o  => rx_precrc_error_sync
+        );
+
+    i_rx_ready_sync : entity work.synch
+        generic map(
+            N_STAGES => 2
+        )
+        port map(
+            async_i => rx_ready,
+            clk_i   => ipb_clk_i,
+            sync_o  => rx_ready_sync
+        );
     
     i_link_tx : entity work.link_oh_fpga_tx
         port map(
@@ -230,10 +250,46 @@ begin
             req_addr_o   => open,
             req_wr_o     => open,
 
-            ready_o        => open,
+            ready_o        => rx_ready,
             crc_error_o    => rx_crc_error,
-            precrc_error_o => open,
+            precrc_error_o => rx_precrc_error,
             error_o        => rx_error
         );
-    
+
+    status_o.ready       <= rx_ready_sync;
+    status_o.timeout_cnt <= std_logic_vector(timeout_err_cnt);
+
+    i_cnt_link_error : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH => 16
+        )
+        port map(
+            ref_clk_i => ipb_clk_i,
+            reset_i   => reset_i,
+            en_i      => rx_ready_sync and rx_error_sync,
+            count_o   => status_o.link_error_cnt
+        );
+
+    i_cnt_crc_error : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH => 16
+        )
+        port map(
+            ref_clk_i => ipb_clk_i,
+            reset_i   => reset_i,
+            en_i      => rx_crc_error_sync,
+            count_o   => status_o.crc_error_cnt
+        );
+
+    i_cnt_precrc_error : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH => 16
+        )
+        port map(
+            ref_clk_i => ipb_clk_i,
+            reset_i   => reset_i,
+            en_i      => rx_precrc_error_sync,
+            count_o   => status_o.precrc_error_cnt
+        );
+
 end link_oh_fpga_arch;

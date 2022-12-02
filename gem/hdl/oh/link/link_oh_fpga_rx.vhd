@@ -66,7 +66,7 @@ architecture Behavioral of link_oh_fpga_rx is
 
   signal reset : std_logic;
 
-  signal precrc_rdy  : std_logic; -- during syncing the first precrc will always be bad
+  signal precrc_rdy  : std_logic;  -- during syncing the first precrc will always be bad
   signal precrc_rx   : std_logic_vector (7 downto 0) := (others => '0');
   signal precrc_calc : std_logic_vector (7 downto 0) := (others => '0');
   signal crc_rx      : std_logic_vector (7 downto 0) := (others => '0');
@@ -127,16 +127,16 @@ begin
   bitslip_cnt_slv <= std_logic_vector(to_unsigned(bitslip_cnt, 3));
 
   bitslip_inst : entity work.bitslip
-      generic map (
-          g_DATA_WIDTH     => 8,
-          g_SLIP_CNT_WIDTH => 3
-          )
-      port map (
-          clk_i       => clock,
-          slip_cnt_i  => bitslip_cnt_slv,
-          data_i      => elink_data_i,
-          data_o      => data_slip
-          );
+    generic map (
+      g_DATA_WIDTH     => 8,
+      g_SLIP_CNT_WIDTH => 3
+      )
+    port map (
+      clk_i      => clock,
+      slip_cnt_i => bitslip_cnt_slv,
+      data_i     => elink_data_i,
+      data_o     => data_slip
+      );
 
   --------------------------------------------------------------------------------
   -- TTC
@@ -192,10 +192,10 @@ begin
 
       data_slip_r1 <= data_slip;
 
-      if (reset='1' or state=SYNCING) then
-          precrc_rdy <= '0';
-      elsif (ready='1' and state=DONE) then
-          precrc_rdy <= '1';
+      if (reset = '1' or state = SYNCING) then
+        precrc_rdy <= '0';
+      elsif (ready = '1' and state = DONE) then
+        precrc_rdy <= '1';
       end if;
 
     end if;
@@ -249,7 +249,7 @@ begin
             precrc_calc           <= crc_data;
             data_frame_cnt        <= 1;
           else
-            crc_en       <= '1';
+            crc_en         <= '1';
             data_frame_cnt <= 0;
           end if;
 
@@ -295,24 +295,24 @@ begin
         when CRC =>
 
           if (special_bit = '1') then
-              state        <= SYNCING;
-              error_detect <= '1';
+            state        <= SYNCING;
+            error_detect <= '1';
           elsif (data_frame_cnt = 1) then
-              data_frame_cnt <= 0;
-              state          <= DONE;
-              crc_rst        <= '1';
+            data_frame_cnt <= 0;
+            state          <= DONE;
+            crc_rst        <= '1';
           else
-              crc_data_r    <= crc_data;
-              data_frame_cnt <= data_frame_cnt + 1;
-              state          <= CRC;
+            crc_data_r     <= crc_data;
+            data_frame_cnt <= data_frame_cnt + 1;
+            state          <= CRC;
           end if;
 
           crc_rx((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4) <= data_slip (3 downto 0);
 
         when DONE =>
 
-          state   <= IDLE;
-          crc_en  <= '1';
+          state  <= IDLE;
+          crc_en <= '1';
 
           if (crc_data_r = crc_rx) then
             req_data_o <= req(31 downto 0);
@@ -326,8 +326,8 @@ begin
       end case;
 
       if (reset_i = '1') then
-          state   <= IDLE;
-          crc_rst <= '1';
+        state   <= IDLE;
+        crc_rst <= '1';
       end if;
 
     end if;

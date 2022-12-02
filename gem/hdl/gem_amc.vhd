@@ -229,6 +229,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat3_rx_data_arr            : t_vfat3_elinks_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_vfat3_sbits_arr          : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
     signal ge21_gbt_trig_data_arr       : t_std88_array(g_NUM_OF_OHs - 1 downto 0);
+    signal oh_fpga_link_status_arr      : t_oh_fpga_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
 
     --== VFAT3 ==--
     signal vfat3_sc_only_mode           : std_logic;
@@ -432,6 +433,7 @@ begin
 
                 fpga_tx_data_o          => oh_fpga_tx_data_arr(i),
                 fpga_rx_data_i          => oh_fpga_rx_data_arr(i),
+                oh_fpga_link_status_o   => oh_fpga_link_status_arr(i),
 
                 vfat3_tx_data_o         => vfat3_tx_data_arr(i),
                 vfat3_rx_data_i         => vfat3_rx_data_arr(i),
@@ -649,6 +651,8 @@ begin
 
             gbt_link_status_arr_i   => gbt_link_status_arr,
             vfat3_link_status_arr_i => vfat3_link_status_arr,
+
+            oh_fpga_link_status_arr_i => oh_fpga_link_status_arr,
 
             vfat_mask_arr_o         => vfat_mask_arr,
             gbt_tx_bitslip_arr_o    => gbt_tx_bitslip_arr,

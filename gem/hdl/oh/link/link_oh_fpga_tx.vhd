@@ -107,10 +107,10 @@ begin
                         req_data <= "000" & req_write_i &
                                     req_addr_i &
                                     req_data_i;
-                        state <= PRE_CRC;
-                        crc_en     <= '0';
+                        state  <= PRE_CRC;
+                        crc_en <= '0';
                     else
-                        crc_en         <= '1';
+                        crc_en <= '1';
                     end if;
 
                 when PRE_CRC =>

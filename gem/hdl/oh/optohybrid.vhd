@@ -45,6 +45,7 @@ entity optohybrid is
         -- FPGA control link
         fpga_tx_data_o          : out std_logic_vector(7 downto 0);
         fpga_rx_data_i          : in  std_logic_vector(7 downto 0);
+        oh_fpga_link_status_o   : out t_oh_fpga_link_status;
 
         -- VFAT3 links
         vfat3_tx_data_o         : out t_std8_array(23 downto 0);
@@ -264,7 +265,8 @@ begin
                 ipb_mosi_i => oh_reg_ipb_mosi_i,
                 ipb_miso_o => oh_reg_ipb_miso_o,
                 rx_elink_i => fpga_rx_data,
-                tx_elink_o => fpga_tx_data_o
+                tx_elink_o => fpga_tx_data_o,
+                status_o   => oh_fpga_link_status_o
             );
     end generate;
     

@@ -220,7 +220,21 @@ package gem_pkg is
     
     type t_trig_link_status_arr is array(integer range <>) of t_trig_link_status;    
     type t_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status;    
-    type t_oh_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status_arr(23 downto 0);    
+    type t_oh_vfat_link_status_arr is array(integer range <>) of t_vfat_link_status_arr(23 downto 0);
+
+    --====================--
+    --==   OH FPGA Link ==--
+    --====================--
+
+    type t_oh_fpga_link_status is record
+        ready            : std_logic;
+        timeout_cnt      : std_logic_vector(15 downto 0);
+        link_error_cnt   : std_logic_vector(15 downto 0);
+        crc_error_cnt    : std_logic_vector(15 downto 0);
+        precrc_error_cnt : std_logic_vector(15 downto 0);
+    end record;
+
+    type t_oh_fpga_link_status_arr is array (integer range <>) of t_oh_fpga_link_status;
 
     --==================--
     --==   VFAT3 DAQ  ==--
