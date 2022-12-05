@@ -102,7 +102,7 @@ begin
     signal ipb_mosi_tmr     : ipb_wbus_array (2 downto 0);
     signal data_tmr         : t_std8_array (2 downto 0);
 
-    signal tmr_err : std_logic_vector (11 downto 0) := (others => '0');
+    signal tmr_err : std_logic_vector (12 downto 0) := (others => '0');
 
 
     attribute DONT_TOUCH                 : string;
