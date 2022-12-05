@@ -16,6 +16,7 @@ gem/hdl/oh_fe/mgt/legacy_link/a7_gtp_wrapper.vhd 93
 
 # gtx
 gem/hdl/oh_fe/mgt/legacy_link/gem_data_out.v
+gem/hdl/oh_fe/mgt/legacy_link/crc8.vhd 93
 gem/hdl/oh_fe/mgt/gtx/gtx_single.vhd 93
 gem/hdl/oh_fe/mgt/gtx/gtx_quad.vhd 93
 gem/hdl/oh_fe/mgt/gtx/gtx_tx_sync.vhd 93

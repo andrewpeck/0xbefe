@@ -260,12 +260,26 @@ module   gem_data_out
    wire gtxtest_reset = (gtxtest_cnt > 0 && gtxtest_cnt < 256) || (gtxtest_cnt > 511 && gtxtest_cnt < 768);
 
    //------------------------------------------------------------------------------
-   // Data framer
+   // Data framer + CRC Calculation
    //------------------------------------------------------------------------------
+
+   wire [7:0] crc [3:0];
+   reg  [3:0] crc_en;
+   reg  [3:0] crc_rst;
 
    generate
       for (ilink=0; ilink < N_MGTS; ilink=ilink+1)
         begin: linkgen1
+
+           crc_trig_link
+                 u_crc_trig_link
+                 (
+                  .data_in   (trg_tx_data[ilink]),
+                  .crc_out   (crc[ilink]),
+                  .crc_en    (crc_en[ilink]),
+                  .rst       (crc_rst[ilink]),
+                  .clk       (usrclks[ilink])
+                  );
 
            always @(posedge usrclks[ilink]) begin
 
@@ -278,22 +292,32 @@ module   gem_data_out
                    3'd0: begin
                       trg_tx_data[ilink] <= {gem_link_data[ilink][7:0] , frame_sep[ilink]};
                       trg_tx_isk [ilink] <= 2'b01;
+                      crc_en [ilink]     <= 1'b1;
+                      crc_rst [ilink]    <= 1'b0;
                    end
                    3'd1: begin
                       trg_tx_data[ilink] <= {gem_link_data[ilink][23:8]};
                       trg_tx_isk [ilink] <= 2'b00;
+                      crc_en [ilink]     <= 1'b1;
+                      crc_rst [ilink]    <= 1'b0;
                    end
                    3'd2: begin
                       trg_tx_data[ilink] <= {gem_link_data[ilink][39:24]};
                       trg_tx_isk [ilink] <= 2'b00;
+                      crc_en [ilink]     <= 1'b1;
+                      crc_rst [ilink]    <= 1'b0;
                    end
                    3'd3: begin
                       trg_tx_data[ilink] <= {gem_link_data[ilink][55:40]};
                       trg_tx_isk [ilink] <= 2'b00;
+                      crc_en [ilink]     <= 1'b1;
+                      crc_rst [ilink]    <= 1'b0;
                    end
                    3'd4: begin // for 200mhz only
-                      trg_tx_data[ilink] <= 0;
+                      trg_tx_data[ilink] <= {8'b0, crc[ilink]};
                       trg_tx_isk [ilink] <= 2'b00;
+                      crc_en  [ilink]    <= 1'b0;
+                      crc_rst [ilink]    <= 1'b1;
                    end
                    default: begin // should never happen
                       trg_tx_data[ilink] <= 0;
