@@ -1,0 +1,67 @@
+* Optohybrid / Backend Communication
+
+** Protocol
+
+Optohybrid slow and fast control is done through 320 Mbps elinks, one
+in the uplink and one in the downlink direction. 320 Mbps means that
+there are 8 bits / bx transmitted in each direction.
+
+The meaning of the 8 bit frame is:
+
+- Bit 7 is a special bit marking idle frames
+- Bit 6 = L1A
+- Bit 5 = BC0
+- Bit 4 = Resync
+- Bit [3:0] = Data
+
+During idle sequences, bit 7 is set to '1' and the TTC bits will
+operate normally. Bit 3:0 contains a simple up-counter (0->15) which
+is monitored on the receiving side to do some continuous crude error
+detection to check the health of the link.
+
+The OH-FPGA slow control protocol symmetric in uplink and downlink
+directions, so the same source code is used in both backend/frontend.
+The OH now also loops back the TTC commands and similarly sends an
+upcounter.
+
+A CRC-8 (polynomial = ~lfsr(7:0)=1+x^2+x^4+x^6+x^7+x^8~) is now
+appended to the end of the packet and checked in both uplink and
+downlink directions. Packets with CRC errors are dropped, and should
+time out out on the backend to generate a bus error.
+
+The link supports automatic bitslipping in both directions, achieved
+by locking onto the idle upcount pattern.
+
+Additionally, some more robust error checking was also added during
+the idle state of the link. The 8-bit frame (header bit, 3x ttc bits,
+4x upcounter) has a CRC-8 that is calculated on it during idle
+periods.
+
+The first 8 bits of a packet is the CRC-8 calculated on the
+transmitter end for the idle data during this same period. On the
+receiving side, the CRCs are compared. The idle CRC checker does not
+halt the packet decoding (since the error was in the idle state rather
+than in the packet) but is connected to a counter on the OH side for
+monitoring the health of the link. This should be connected to a
+counter on the backend as well (counters have not been added on the
+backend yet). This should make monitoring the long-term health of the
+slow control link very easy, since it will be checked continuously
+instead of only for slow control packets.
+
+** Test Bench
+A self-checking test bench exists that loops data from Backend
+-> OH rx -> OH tx -> Backend to make testing and development on this
+link easier and more reliable. It can be run as
+
+#+begin_src bash
+python test_link_oh_fpga.py
+#+end_src
+
+Dependencies are
+1. GHDL
+2. Python with ~cocotb~ and ~cocotb-test~ installed
+
+* Local Variables :noexport:
+# Local Variables:
+# fill-column: 70
+# End:
