@@ -503,7 +503,7 @@ module   gem_data_out
          gtx_quad_inst
            (
             // rx loopback
-            .rxpowerdown_in   (rxpowerdown_in),
+            .rxpowerdown_in   ({2{rxpowerdown_in}}),
 
             .rx_notintable_0  (rx_notintable_0),
             .rx_notintable_1  (rx_notintable_1),
@@ -581,7 +581,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[0]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_0),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_0)
     );
 
@@ -590,7 +590,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[1]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_1),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_1)
     );
 
@@ -599,7 +599,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[2]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_2),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_2)
     );
 
@@ -608,7 +608,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[3]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_3),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_3)
     );
 
