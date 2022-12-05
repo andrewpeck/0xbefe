@@ -107,7 +107,7 @@ def test_oh_sc():
         os.path.join(tests_dir, "./link_oh_fpga_tb.vhd"),
     ]
 
-    os.environ["SIM"] = "questa"
+    os.environ["SIM"] = "ghdl"
 
     run(
         verilog_sources=None,
