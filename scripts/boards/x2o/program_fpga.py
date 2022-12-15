@@ -66,7 +66,7 @@ if c2c_up:
 else:
     print_red("C2C is down...")
 
-time.sleep(0.5)
+time.sleep(1.5)
 
 ######## check reg access ########
 heading("Checking register access and firmware version")

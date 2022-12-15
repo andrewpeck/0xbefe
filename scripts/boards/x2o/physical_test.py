@@ -9,8 +9,8 @@ from datetime import datetime
 # Constants (to be moved to config file later)
 STABILIZE_SENSITIVITY = 0.01
 MAX_TEMP=70.0
-MIN_ITERS=30
-CYCLE_TIME=3
+MIN_ITERS=1
+CYCLE_TIME=4
 TOLERANCE=0.05
 HEADERS = ["12V0_V","3V3_STANDBY_V","3V3_SI5395J_V","1V8_SI5395J_XO2_V","2V5_OSC_NE_V","1V8_MGTVCCAUX_VUP_N_V","2V5_OSC_NW_V","2V5_OSC_K7_V","1V2_MGTAVTT_K7_V","1V0_MGTAVCC_K7_V","0V675_DDRVTT_V","1V35_DDR_V","1V8_VCCAUX_K7_V","2V5_OSC_SE_V","1V8_MGTVCCAUX_VUP_S_V","2V5_OSC_SW_V",
             "0V85_VCCINT_VUP_T0","0V85_VCCINT_VUP_T1","0V85_VCCINT_VUP_T2","0V85_VCCINT_VUP_T3","0V85_VCCINT_VUP_T4","0V85_VCCINT_VUP_T5",'1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','KINTEX7_TL','KINTEX7_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','2V7_INTERMEDIATE_TL','2V7_INTERMEDIATE_TR','1V2_MGTAVTT_VUP_N_TL','1V2_MGTAVTT_VUP_N_TR','VIRTEXUPLUS_TL','VIRTEXUPLUS_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','TOTAL_ERRORS']
@@ -29,20 +29,38 @@ m=manager(optical_add_on_ver=2)
 m.peripheral.autodetect_optics()
 now = datetime.now()
 d_time = now.strftime("%Y-%m-%d")
-isExist = os.path.exists("./data/phys_data/"+d_time)
+isExist = os.path.exists("/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time)
 if not isExist:
-   os.makedirs("./data/phys_data/"+d_time)
-c_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-filename="/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time+"/"+run_type+"_"+c_time+".csv"
+   os.makedirs("/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time)
+run_num=1
+filename="/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+while(os.path.exists(filename)):
+    run_num+=1
+    filename="/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+
 f=open(filename,"w")
 o_str=""
-for i in HEADERS:
-    o_str+=i+","
-f.write(o_str+"\n")
 diff_flag = True
 n_iters=0
 p_data = m.peripheral.monitor(verbose=False)
+for device in p_data.keys():
+    if device in ['optics']:
+        continue
+    if 'V' in p_data[device].keys():
+        o_str+=device+"_V,"
 
+    if 'I' in p_data[device].keys():
+        o_str+=device+"_I,"
+
+    if 'P' in p_data[device].keys():
+        o_str+=device+"_P,"
+
+    if 'T' in p_data[device].keys():
+        for i in range(len(p_data[device]['T'])):
+            o_str+=device+"_T_"+str(i)+","
+
+o_str+="\n"
+f.write(o_str)
 while(diff_flag):
     data = m.peripheral.monitor(verbose=False)
     diff_flag=False
@@ -104,6 +122,7 @@ while(diff_flag):
                     err_cnt+=1
                     tstr+=printRed(str(t))+" C,"
                     print("Temperature too high, aborting run")
+                    print("Device:: "+device+", temp: "+str(t))
                     sys.exit(1)
                 else:
                     tstr+=printGreen(str(t))+" C,"
@@ -130,6 +149,7 @@ while(diff_flag):
             if(info['T']>MAX_TEMP):
                 err_cnt+=1
                 st+= printRed(str(round(info['T'],3)))+" C    "
+                print("Device:QSFP: "+str(cage)+", temp: "+str(t))
                 print("Temperature too high, aborting run")
                 sys.exit(1)
             else:
@@ -204,6 +224,7 @@ while(stable_iters<MIN_ITERS):
                     err_cnt+=1
                     tstr+=printRed(str(t))+" C,"
                     print("Temperature too high, aborting run")
+                    print("Device:: "+device+", temp: "+str(t))
                     sys.exit(1)
                 else:
                     tstr+=printGreen(str(t))+" C,"
@@ -231,6 +252,7 @@ while(stable_iters<MIN_ITERS):
                 err_cnt+=1
                 st+= printRed(str(round(info['T'],3)))+" C    "
                 print("Temperature too high, aborting run")
+                print("Device: QSFP : "+str(cage)+", temp: "+str(t))
                 sys.exit(1)
             else:
                 st+=printGreen(str(round(info['T'],3)))+" C    "
@@ -291,7 +313,7 @@ DATA_DICT['STABLE_ITERS']=stable_iters
 DATA_DICT['TOTAL_ERRORS']=DATA_DICT['TOTAL_ERRORS']/stable_iters
 DATA_DICT['TIME_TO_STABILIZE']=(n_iters-stable_iters)*CYCLE_TIME
 f.close()
-filename="/root/jessica/0xbefe/scripts/boards/x2o/data/summary/"+d_time+"/"+run_type+"_"+c_time+".csv"
+filename="/root/jessica/0xbefe/scripts/boards/x2o/data/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
 isExist = os.path.exists("./data/summary/"+d_time)
 if not isExist:
    os.makedirs("./data/summary/"+d_time)

@@ -57,7 +57,7 @@ c2c_up = m.reset_c2c_bridge(port=0)
 if c2c_up:
     print_green("C2C is up!")
 else:
-    print_red("C2C is down...")
+    print_red("C2C is down..., exiting")
     exit(1)
 
 time.sleep(0.5)

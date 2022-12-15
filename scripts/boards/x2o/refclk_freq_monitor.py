@@ -5,8 +5,8 @@ import statistics
 
 def main():
     num_mgts = read_reg("BEFE.SYSTEM.RELEASE.NUM_MGTS")
-    num_mgts = 8
-    
+    #num_mgts = 8
+    print(num_mgts)
     #header
     header = "CLK40"
     results=[[]]
@@ -19,8 +19,8 @@ def main():
     max_iters=30
     
     while n_iters<max_iters:
-        data = "%d" % read_reg("BEFE.GEM.TTC.STATUS.CLK.CLK40_FREQUENCY")
-        results[0].append(read_reg("BEFE.GEM.TTC.STATUS.CLK.CLK40_FREQUENCY"))
+        data = "%d" % read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY")
+        results[0].append(read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY"))
         for i in range(0, num_mgts, 4):
             results[i//2+1].append(read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK0_FREQ" % i))
             results[i//2+2].append(read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK1_FREQ" % i))
@@ -33,10 +33,10 @@ def main():
     print("CLK40_AVG:"+str(statistics.mean(results[0])))
     print("CLK40_STDEV:"+str(statistics.stdev(results[0])))
     for i in range(0,num_mgts,4):
-        print("MGT%d_0_AVG: %s" % (i,statistics.mean(results[i//2+1])))
-        print("MGT%d_0_DEV: %s" % (i,statistics.stdev(results[i//2+1])))
-        print("MGT%d_1_AVG: %s" % (i,statistics.mean(results[i//2+2])))
-        print("MGT%d_1_DEV: %s" % (i,statistics.stdev(results[i//2+2])))
+        print("MGT%d_0_AVG: %d" % (i,statistics.mean(results[i//2+1])))
+        print("MGT%d_0_DEV: %d" % (i,statistics.stdev(results[i//2+1])))
+        print("MGT%d_1_AVG: %d" % (i,statistics.mean(results[i//2+2])))
+        print("MGT%d_1_DEV: %d" % (i,statistics.stdev(results[i//2+2])))
 
 
 
