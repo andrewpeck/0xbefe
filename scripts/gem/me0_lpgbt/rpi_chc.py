@@ -308,39 +308,48 @@ class rpi_chc:
         
         return success, data
   
-    def spi_rw(self, fpga, address, data=None):
+    def spi_rw(self, fpga=None, address=None, data=None):
         # Perform SPI read/write operations
         spi_data = 0
         spi_success = 1
 
         gpio = 0
-        if fpga == "1":
-            gpio = self.fpga_cs_1
-        elif fpga == "2":
-            gpio = self.fpga_cs_2
-        elif fpga == "3":
-            gpio = self.fpga_cs_3
-        else:
-            spi_success = 0
-            print(Colors.RED + "ERROR: Incorrect FPGA number" + Colors.ENDC)
-            return spi_success, spi_data
+        if fpga is not None:
+            if fpga == "1":
+                gpio = self.fpga_cs_1
+            elif fpga == "2":
+                gpio = self.fpga_cs_2
+            elif fpga == "3":
+                gpio = self.fpga_cs_3
+            else:
+                spi_success = 0
+                print(Colors.RED + "ERROR: Incorrect FPGA number" + Colors.ENDC)
+                return spi_success, spi_data
 
-        # Enable corresponding chip select
-        spi_success = self.fpga_spi_cs(gpio, 1)
-        if not spi_success:
-            print(Colors.RED + "ERROR: Cannot enable SPI Chip Select GPIO" + Colors.ENDC)
-            return spi_success, spi_data
-        time.sleep(0.1)
+            # Enable corresponding chip select
+            spi_success = self.fpga_spi_cs(gpio, 1)
+            if not spi_success:
+                print(Colors.RED + "ERROR: Cannot enable SPI Chip Select GPIO" + Colors.ENDC)
+                return spi_success, spi_data
+            time.sleep(0.1)
 
         # Perform the read/write
+        command = []
         spi_success = 1
-        if data is None: # read
-            data = [0x00]
-        else: # write
-            address += 0x01
-        command = [address]
-        for d in data:
-            command.append(d)
+        if fpga is not None:
+            if address is None:
+                print(Colors.RED + "ERROR: Invalid Register Address" + Colors.ENDC)
+                spi_success = 0
+                return spi_success, spi_data
+            if data is None: # read
+                data = [0x00]
+            else: # write
+                address += 0x01
+            command = [address]
+            for d in data:
+                command.append(d)
+        else:
+            command = data
 
         try:
             spi_data = self.spi.xfer2(command)
@@ -359,13 +368,14 @@ class rpi_chc:
             return spi_success, spi_data
         time.sleep(0.1)
 
-        # Enable corresponding chip select
-        spi_success = 1
-        spi_success = self.fpga_spi_cs(gpio, 0)
-        if not spi_success:
-            print(Colors.RED + "ERROR: Cannot disable SPI Chip Select GPIO" + Colors.ENDC)
-            return spi_success, spi_data
-        time.sleep(0.1)
+        if fpga is not None:
+        # Disable corresponding chip select
+            spi_success = 1
+            spi_success = self.fpga_spi_cs(gpio, 0)
+            if not spi_success:
+                print(Colors.RED + "ERROR: Cannot disable SPI Chip Select GPIO" + Colors.ENDC)
+                return spi_success, spi_data
+            time.sleep(0.1)
 
         return spi_success, spi_data
 
