@@ -148,7 +148,8 @@ begin
           unstable_o     => unstable_tmr(I),
           crc_error_o    => crc_error_tmr(I),
           precrc_error_o => precrc_error_tmr(I),
-          error_o        => error_tmr(I)
+          error_o        => error_tmr(I),
+          ready_o        => ready_tmr(I)
 
           );
 
