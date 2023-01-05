@@ -185,9 +185,6 @@ architecture Behavioral of optohybrid_fw is
   signal ipb_mosi_gbt : ipb_wbus;
   signal ipb_miso_gbt : ipb_rbus;
 
-  signal ipb_mosi_vio : ipb_wbus;
-  signal ipb_miso_vio : ipb_rbus;
-
   -- Master
   signal ipb_mosi_masters : ipb_wbus_array (WB_MASTERS-1 downto 0);
   signal ipb_miso_masters : ipb_rbus_array (WB_MASTERS-1 downto 0);
@@ -282,24 +279,10 @@ begin
   -- Wishbone
   --------------------------------------------------------------------------------
 
-  vio_ipb_master_1 : entity work.vio_ipb_master
-    generic map (
-      GE21 => GE21,
-      GE11 => GE11
-      )
-    port map (
-      clock      => clocks.clk40,
-      ipb_mosi_o => ipb_mosi_vio,
-      ipb_miso_i => ipb_miso_vio
-      );
-
   -- This module is the Wishbone switch which redirects requests from the masters to the slaves.
 
   ipb_mosi_masters(0) <= ipb_mosi_gbt;
   ipb_miso_gbt        <= ipb_miso_masters(0);
-
-  ipb_mosi_masters(1) <= ipb_mosi_vio;
-  ipb_miso_vio        <= ipb_miso_masters(1);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
     generic map (EN_TMR_IPB_SWITCH)
