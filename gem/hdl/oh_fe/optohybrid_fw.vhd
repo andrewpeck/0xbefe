@@ -23,8 +23,6 @@ use unisim.vcomponents.all;
 entity optohybrid_fw is
   generic (
 
-    STANDALONE_MODE : boolean := false;
-
     -- turn off to disable the MGTs (for simulation and such)
     GEN_TRIG_PHY : boolean := true;
 
@@ -213,7 +211,7 @@ begin
   --------------------------------------------------------------------------------
 
   clocking_inst : entity work.clocking
-    generic map (ASYNC_MODE => STANDALONE_MODE)
+    generic map (ASYNC_MODE => FALSE)
     port map(
       async_clock_i => async_clock,
       clock_p       => clock_p,
@@ -394,7 +392,6 @@ begin
   --------------------------------------------------------------------------------
 
   trigger_inst : entity work.trigger
-    generic map (STANDALONE_MODE => STANDALONE_MODE)
     port map (
 
       -- wishbone
