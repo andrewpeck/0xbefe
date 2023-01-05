@@ -93,6 +93,7 @@ architecture trigger_arch of trigger is
     signal sbit_overflow_cnt    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal bc0_misalign_cnt     : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal missed_comma_cnt     : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
+    signal crc_error_cnt        : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_overflow_cnt    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal link_underflow_cnt   : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
     signal not_in_table_err_cnt : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
@@ -188,6 +189,7 @@ begin
                 sbit_overflow_cnt_o  => sbit_overflow_cnt(i),
                 bc0_misalign_cnt_o   => bc0_misalign_cnt(i),
                 missed_comma_cnt_o   => missed_comma_cnt(i),
+                crc_error_cnt_o      => crc_error_cnt(i),
                 link_overflow_cnt_o  => link_overflow_cnt(i),
                 link_underflow_cnt_o => link_underflow_cnt(i),
                 not_in_table_cnt_o   => not_in_table_err_cnt(i),

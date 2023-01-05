@@ -302,6 +302,7 @@ begin
                         bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
                         sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
                         missed_comma_err_o  => sbit_links_status_o(i).missed_comma,
+                        crc_err_o           => sbit_links_status_o(i).crc_error,
                         not_in_table_err_o  => sbit_links_status_o(i).not_in_table,
                         fifo_ovf_o          => sbit_links_status_o(i).overflow,
                         fifo_unf_o          => sbit_links_status_o(i).underflow
@@ -363,6 +364,7 @@ begin
                         sbit_cluster3_o     => sbit_clusters_o(i * 4 + 3),
                         sbit_overflow_o     => sbit_links_status_o(i).sbit_overflow,
                         bc0_marker_o        => sbit_links_status_o(i).bc0_marker,
+                        crc_err_o           => sbit_links_status_o(i).crc_error,
                         missed_comma_err_o  => sbit_links_status_o(i).missed_comma
                     );
                     
@@ -388,6 +390,7 @@ begin
                 bc0_o           => bc0,
                 resync_o        => open,
                 sbit_overflow_o => sbit_links_status_o(0).sbit_overflow,
+                crc_err_o       => sbit_links_status_o(0).crc_error,
                 ecc_err_o       => open,
                 oh_err_o        => open,
                 protocol_err_o  => sbit_links_status_o(0).missed_comma
@@ -397,7 +400,7 @@ begin
         sbit_links_status_o(0).underflow <= '0';
         sbit_links_status_o(0).overflow <= '0';
         sbit_links_status_o(0).not_in_table <= '0';
-        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', underflow => '0', overflow => '0', not_in_table => '0', bc0_marker => bc0);
+        sbit_links_status_o(1) <= (sbit_overflow => '0', missed_comma => '1', crc_error => '0', underflow => '0', overflow => '0', not_in_table => '0', bc0_marker => bc0);
 
     end generate;        
         

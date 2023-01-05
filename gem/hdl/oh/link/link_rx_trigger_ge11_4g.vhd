@@ -39,6 +39,7 @@ entity link_rx_trigger_ge11_4g is
         sbit_overflow_o     : out std_logic;
         bc0_marker_o        : out std_logic;
         
+        crc_err_o           : out std_logic;
         missed_comma_err_o  : out std_logic;
         not_in_table_err_o  : out std_logic;
         fifo_ovf_o          : out std_logic;
@@ -82,10 +83,17 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal fifo_ovf             : std_logic;
     signal fifo_unf             : std_logic;
 
+    signal crc_din     : std_logic_vector (15 downto 0);
+    signal crc_calc    : std_logic_vector (7 downto 0);
+    signal crc_calc_40 : std_logic_vector (7 downto 0);
+    signal crc_en      : std_logic := '0';
+    signal crc_rst     : std_logic := '0';
+
     -- frame decoding
     signal frame_counter        : integer range 0 to FRAME_MARKERS'length - 1;
     signal frame_counter_valid  : std_logic := '0'; -- this is set on reset, and deasserted when the first frame marker comes and a valid initial value is assigned to the frame_counter
     signal missed_comma_err     : std_logic := '0'; -- asserted if a comma character is not found when FSM is in COMMA state
+    signal crc_err              : std_logic := '0'; -- asserted if there is a crc error
     signal sbit_overflow        : std_logic := '0'; -- asserted when an overflow K-char is detected at the BX boundary (0xFC)
     signal bc0_marker           : std_logic := '0';
     signal not_in_table_err     : std_logic := '0';  
@@ -95,17 +103,9 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal sbit_cluster2        : t_sbit_cluster;
     signal sbit_cluster3        : t_sbit_cluster;
 
-begin  
+    signal crc_rx : std_logic_vector (7 downto 0);
 
---    sbit_cluster0_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster1_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster2_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster3_o     <= NULL_SBIT_CLUSTER;
---    sbit_overflow_o     <= '0';
---    missed_comma_err_o  <= '1';
---    not_in_table_err_o  <= '0';
---    fifo_ovf_o <= '0';
---    fifo_unf_o <= '0';
+begin  
 
     --== Input and output registers ==--
 
@@ -136,6 +136,7 @@ begin
                 sbit_overflow_o    <= sbit_overflow;
                 bc0_marker_o       <= bc0_marker;
                 missed_comma_err_o <= missed_comma_err;
+                crc_err_o          <= crc_err;
                 not_in_table_err_o <= not_in_table_err;           
             end if;
         end process;
@@ -150,7 +151,8 @@ begin
         sbit_overflow_o    <= sbit_overflow;
         bc0_marker_o       <= bc0_marker;
         missed_comma_err_o <= missed_comma_err;
-        not_in_table_err_o <= not_in_table_err;           
+        crc_err_o          <= crc_err;
+        not_in_table_err_o <= not_in_table_err;
     end generate;
 
     --== Glue the words from a single BX together ==--
@@ -208,7 +210,20 @@ begin
             end if;
         end if;
     end process;
-    
+
+    crc_din <= rx_data.rxdata;
+    crc_en  <= '1' when state /= DATA_3 else '0';
+    crc_rst <= '1' when state = DATA_3  else '0';
+
+    crc_trig_link_inst : entity work.crc_trig_link
+        port map (
+            data_in => crc_din,
+            crc_en  => crc_en,
+            rst     => crc_rst,
+            clk     => rx_usrclk_i,
+            crc_out => crc_calc
+            );
+
     -- glue the words
     -- this implementation just spells out each word, could use an index, but this is probably easier to synthesize (to be checked)
     process(rx_usrclk_i)
@@ -219,9 +234,10 @@ begin
                 frame_200(84 downto 16) <= (others => '0');
                 fifo_wr_en <= '0';
             else
+
                 case state is
                     when COMMA =>
-                        frame_200(15 downto 0) <= rx_data.rxdata;
+                        frame_200(15 downto 0)  <= rx_data.rxdata;
                         frame_200(81 downto 80) <= rx_data.rxcharisk;
                         frame_200(83 downto 82) <= rx_data.rxchariscomma;
                         frame_200(84) <= '0';
@@ -257,7 +273,7 @@ begin
         generic map(
             FIFO_MEMORY_TYPE    => "auto",
             FIFO_WRITE_DEPTH    => 16,
-            WRITE_DATA_WIDTH    => 85,
+            WRITE_DATA_WIDTH    => 93,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
@@ -267,19 +283,20 @@ begin
             DOUT_RESET_VALUE    => "0"
         )
         port map(
-            sleep         => '0',
-            rst           => reset_200,
-            wr_clk        => rx_usrclk_i,
-            wr_en         => fifo_wr_en,
-            din           => frame_200,
-            overflow      => fifo_ovf_200,
-            rd_clk        => ttc_clk_40_i,
-            rd_en         => '1',
-            dout          => frame_40,
-            underflow     => fifo_unf,
-            empty         => fifo_empty,
-            injectsbiterr => '0',
-            injectdbiterr => '0'
+            sleep              => '0',
+            rst                => reset_200,
+            wr_clk             => rx_usrclk_i,
+            wr_en              => fifo_wr_en,
+            din                => crc_calc & frame_200,
+            overflow           => fifo_ovf_200,
+            rd_clk             => ttc_clk_40_i,
+            rd_en              => '1',
+            dout(84 downto 0)  => frame_40,
+            dout(92 downto 85) => crc_calc_40,
+            underflow          => fifo_unf,
+            empty              => fifo_empty,
+            injectsbiterr      => '0',
+            injectdbiterr      => '0'
         );    
     
     fifo_valid <= not fifo_empty;
@@ -321,10 +338,11 @@ begin
     begin
         if rising_edge(ttc_clk_40_i) then
             if check_errors_40 = '0' then
-                missed_comma_err <= '0'; 
-                sbit_overflow <= '0';
+                missed_comma_err <= '0';
+                crc_err          <= '0';
+                sbit_overflow    <= '0';
                 not_in_table_err <= '0';
-                bc0_marker <= '0';                   
+                bc0_marker       <= '0';
             else
                 not_in_table_err <= frame_40(84);
                 
@@ -340,12 +358,21 @@ begin
                     bc0_marker <= '0';
                 end if;
 
-                if (frame_40(7 downto 0) /= FRAME_MARKERS(frame_counter)) and (frame_40(7 downto 0) /= OVERFLOW_FRAME_MARKER) and (frame_40(7 downto 0) /= BC0_FRAME_MARKER) and (frame_40(7 downto 0) /= RESYNC_FRAME_MARKER) then
+                if (frame_40(7 downto 0) /= FRAME_MARKERS(frame_counter)) and
+                   (frame_40(7 downto 0) /= OVERFLOW_FRAME_MARKER) and
+                   (frame_40(7 downto 0) /= BC0_FRAME_MARKER) and
+                   (frame_40(7 downto 0) /= RESYNC_FRAME_MARKER) then
                     missed_comma_err <= '1';
                 else
                     missed_comma_err <= '0';
                 end if;
-                
+
+                if (frame_40 (71 downto 64) /= crc_calc_40) then
+                    crc_err <= '0';
+                else
+                    crc_err <= '0';
+                end if;
+
             end if;
         end if;
     end process;
@@ -367,7 +394,7 @@ begin
                 sbit_cluster2.address <= frame_40(46 downto 36);
                 sbit_cluster2.size    <= frame_40(49 downto 47);
                 sbit_cluster3.address <= frame_40(60 downto 50);
-                sbit_cluster3.size    <= frame_40(63 downto 61);                
+                sbit_cluster3.size    <= frame_40(63 downto 61);
             end if;
         end if;
     end process;

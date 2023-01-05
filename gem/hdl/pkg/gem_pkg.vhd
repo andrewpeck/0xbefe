@@ -92,12 +92,13 @@ package gem_pkg is
         bc0_marker      : std_logic;
         sbit_overflow   : std_logic;
         missed_comma    : std_logic;
+        crc_error       : std_logic;
         underflow       : std_logic;
         overflow        : std_logic;
         not_in_table    : std_logic;
     end record;
 
-    constant NULL_SBIT_LINK : t_sbit_link_status := (bc0_marker => '0', sbit_overflow => '0', missed_comma => '1', underflow => '1', overflow => '1', not_in_table => '1');
+    constant NULL_SBIT_LINK : t_sbit_link_status := (bc0_marker => '0', sbit_overflow => '0', missed_comma => '1', crc_error => '1', underflow => '1', overflow => '1', not_in_table => '1');
 
     type t_oh_sbit_links is array(1 downto 0) of t_sbit_link_status;    
     type t_oh_sbit_links_arr is array(integer range <>) of t_oh_sbit_links;
