@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 package ipbus_pkg is
 
-    constant WB_MASTERS : integer := 2;
+    constant WB_MASTERS : integer := 1;
     constant WB_SLAVES : integer := 5;
 
     constant WB_ADDR_SIZE : integer := 16;
