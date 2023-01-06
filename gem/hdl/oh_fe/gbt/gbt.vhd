@@ -183,8 +183,9 @@ begin
       elink_i_n => elink_i_n,           -- input e-links
 
       -- parallel data
-      data_o => gbt_rx_data,            -- Parallel data out
-      data_i => gbt_tx_data,            -- Parallel data in
+      data_o => gbt_rx_data,               -- Parallel data out
+      data_i => gbt_tx_data (3 downto 0) & -- Parallel data in
+                gbt_tx_data (7 downto 4),
 
       tmr_err_o => gbt_serdes_tmr_err
       );
