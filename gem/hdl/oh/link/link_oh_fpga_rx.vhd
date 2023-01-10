@@ -74,11 +74,11 @@ architecture Behavioral of link_oh_fpga_rx is
   signal crc_data_r  : std_logic_vector (7 downto 0) := (others => '0');
   signal crc_en      : std_logic                     := '0';
   signal crc_rst     : std_logic                     := '0';
-  signal crc_ok      : std_logic                     := '0';
 
   signal special_bit : std_logic := '0';
 
   signal idle_cnt, idle_cnt_next : integer range 0 to 15;
+  signal idle_ok, idle_ok_r      : std_logic := '0';
 
   signal data_slip       : std_logic_vector(7 downto 0);
   signal data_slip_r1    : std_logic_vector(7 downto 0);
@@ -226,13 +226,21 @@ begin
       crc_error_o    <= '0';
       precrc_error_o <= '0';
 
+      if (idle_cnt = idle_cnt_next) then
+        idle_ok <= '1';
+      else
+        idle_ok <= '0';
+      end if;
+
+      idle_ok_r <= idle_ok;
+
       case state is
 
         when SYNCING =>
 
           crc_rst <= '1';
 
-          if (data_slip(7) /= '1' or idle_cnt /= idle_cnt_next) then
+          if (data_slip(7) /= '1' or idle_ok='0') then
             error_detect <= '1';
           elsif (ready = '1') then
             state <= IDLE;
@@ -240,14 +248,18 @@ begin
 
         when IDLE =>
 
-          if (special_bit = '1' and idle_cnt /= idle_cnt_next) then
-            state        <= SYNCING;
-            error_detect <= '1';
-          elsif (special_bit = '0') then
+          -- only start a data packet if it is preceeded by 1 clock of OK idle
+          -- pattern to make sure we don't get stuck in a loop from DONE->IDLE->DATA
+          -- without ever checking the idle pattern
+
+          if (special_bit = '0' and idle_ok_r='1') then
             state                 <= PRE_CRC;
             precrc_rx(3 downto 0) <= data_slip(3 downto 0);
             precrc_calc           <= crc_data;
             data_frame_cnt        <= 1;
+          elsif (idle_ok='0') then
+            state        <= SYNCING;
+            error_detect <= '1';
           else
             crc_en         <= '1';
             data_frame_cnt <= 0;
@@ -313,6 +325,10 @@ begin
 
           state  <= IDLE;
           crc_en <= '1';
+
+          if (special_bit /= '1') then
+            state <= SYNCING;
+          end if;
 
           if (crc_data_r = crc_rx) then
             req_data_o <= req(31 downto 0);

@@ -1,20 +1,32 @@
 #!/usr/bin/env python3
 import os
 import random
-import pytest
 
 import cocotb
 from cocotb_test.simulator import run
-from cocotb.triggers import Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import Edge
 
+async def monitor_error_outputs(dut):
+
+    await RisingEdge(dut.oh_rx_ready)
+
+    while True:
+        await RisingEdge(dut.clock)
+
+        assert dut.oh_precrc_err.value == 0
+        assert dut.be_precrc_err.value == 0
+        assert dut.oh_crc_err.value == 0
+        assert dut.be_crc_err.value == 0
+        assert dut.be_rx_err.value == 0
+        assert dut.oh_rx_ready.value == 1
 @cocotb.test()
 async def test_sc(dut):
 
     # setup clocks
     cocotb.fork(Clock(dut.clock, 40, units="ns").start())  # Create a clock
+    cocotb.fork(monitor_error_outputs(dut))
 
     #-------------------------------------------------------------------------------
     # initialize
@@ -65,12 +77,6 @@ async def test_sc(dut):
         await RisingEdge(dut.reg_data_valid_o)
         print(f"wr=%08X, rd=%08X" % (wr_data, int(dut.reg_data_o)))
         assert dut.reg_data_o.value == wr_data
-        assert dut.oh_precrc_err.value == 0
-        assert dut.be_precrc_err.value == 0
-        assert dut.oh_crc_err.value == 0
-        assert dut.be_crc_err.value == 0
-        assert dut.be_rx_err.value == 0
-        assert dut.oh_rx_ready.value == 1
 
     #-------------------------------------------------------------------------------
     # ttc tests
