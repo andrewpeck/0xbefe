@@ -32,10 +32,10 @@ entity link_oh_fpga_rx is
     resync_o : out std_logic;
 
     -- 49 bit output packet to fifo
-    req_en_o   : out std_logic;
-    req_data_o : out std_logic_vector(31 downto 0);
-    req_addr_o : out std_logic_vector(15 downto 0);
-    req_wr_o   : out std_logic;
+    req_en_o   : out std_logic := '0';
+    req_data_o : out std_logic_vector(31 downto 0) := (others => '0');
+    req_addr_o : out std_logic_vector(15 downto 0) := (others => '0');
+    req_wr_o   : out std_logic := '0';
 
     -- status
     ready_o        : out std_logic;
@@ -105,7 +105,7 @@ begin
         bitslip_err_cnt <= 0;
       elsif (bitslip_err_cnt = BITSLIP_ERR_CNT_MAX-1) then
         bitslip_err_cnt <= 0;
-      elsif (state = SYNCING or error_detect = '1') then
+      elsif (state = SYNCING and error_detect = '1') then
         bitslip_err_cnt <= bitslip_err_cnt + 1;
       end if;
     end if;
@@ -157,17 +157,19 @@ begin
     end if;
   end process;
 
-  idle_cnt <= to_integer(unsigned(data_slip(3 downto 0)));
+  idle_cnt <= to_integer(unsigned(data_slip(3 downto 0))) when special_bit = '1' else 0;
 
   -- sync to the special bit 0x80 pattern
   process (clock)
   begin
     if (rising_edge(clock)) then
 
-      if (idle_cnt = 15) then
-        idle_cnt_next <= 0;
-      else
-        idle_cnt_next <= idle_cnt + 1;
+      if (special_bit='1') then
+        if (idle_cnt = 15) then
+          idle_cnt_next <= 0;
+        else
+          idle_cnt_next <= idle_cnt + 1;
+        end if;
       end if;
 
       if (reset = '1' or error_detect = '1') then
@@ -252,12 +254,10 @@ begin
           -- pattern to make sure we don't get stuck in a loop from DONE->IDLE->DATA
           -- without ever checking the idle pattern
 
-          if (special_bit = '0' and idle_ok_r='1') then
-            state                 <= PRE_CRC;
-            precrc_rx(3 downto 0) <= data_slip(3 downto 0);
-            precrc_calc           <= crc_data;
-            data_frame_cnt        <= 1;
-          elsif (idle_ok='0') then
+          if (special_bit = '0' and idle_ok_r='1' and data_slip(3 downto 0) = x"A") then
+            state          <= PRE_CRC;
+            data_frame_cnt <= 0;
+          elsif (idle_ok='0') then -- TODO: require some number of errors before resyncing
             state        <= SYNCING;
             error_detect <= '1';
           else
@@ -270,14 +270,22 @@ begin
           crc_rst        <= '1';
           data_frame_cnt <= 0;
 
+          if (data_frame_cnt = 0) then
+            precrc_calc    <= crc_data;
+          end if;
+
           if (special_bit = '1') then
             state        <= SYNCING;
             error_detect <= '1';
+          elsif (data_frame_cnt = 1) then
+            data_frame_cnt <= 0;
+            state          <= DATA;
           else
-            state                  <= DATA;
-            precrc_rx (7 downto 4) <= data_slip (3 downto 0);
+            data_frame_cnt <= data_frame_cnt + 1;
+            state          <= PRE_CRC;
           end if;
 
+          precrc_rx((data_frame_cnt+1)*4 -1 downto data_frame_cnt * 4) <= data_slip (3 downto 0);
 
         when DATA =>
 

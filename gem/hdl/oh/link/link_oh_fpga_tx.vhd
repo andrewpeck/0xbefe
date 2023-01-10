@@ -41,7 +41,7 @@ architecture link_oh_fpga_tx_arch of link_oh_fpga_tx is
 
     signal special : std_logic := '0';
 
-    type state_t is (IDLE, PRE_CRC, DATA, CRC_CALC, CRC);
+    type state_t is (IDLE, HEADER, PRE_CRC, DATA, CRC_CALC, CRC);
     signal state : state_t := IDLE;
 
 
@@ -99,19 +99,22 @@ begin
 
                 when IDLE =>
 
-                    special        <= '1';
-                    frame_data     <= std_logic_vector(to_unsigned(idle_counter, 4));
-                    data_frame_cnt <= 0;
+                    crc_en     <= '1';
+                    special    <= '1';
+                    frame_data <= std_logic_vector(to_unsigned(idle_counter, 4));
 
                     if (req_valid_i = '1') then
-                        req_data <= "000" & req_write_i &
-                                    req_addr_i &
-                                    req_data_i;
-                        state  <= PRE_CRC;
-                        crc_en <= '0';
-                    else
-                        crc_en <= '1';
+                        req_data <= "000" & req_write_i & req_addr_i & req_data_i;
+                        state  <= HEADER;
                     end if;
+
+                when HEADER =>
+
+                    special        <= '0';
+                    frame_data     <= x"A";
+                    data_frame_cnt <= 0;
+                    crc_en         <= '0';
+                    state          <= PRE_CRC;
 
                 when PRE_CRC =>
 
