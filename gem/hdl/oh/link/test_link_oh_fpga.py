@@ -21,6 +21,7 @@ async def monitor_error_outputs(dut):
         assert dut.be_crc_err.value == 0
         assert dut.be_rx_err.value == 0
         assert dut.oh_rx_ready.value == 1
+
 @cocotb.test()
 async def test_sc(dut):
 
@@ -32,20 +33,20 @@ async def test_sc(dut):
     # initialize
     #-------------------------------------------------------------------------------
 
-    dut.reset.value = 1;
-    dut.l1a_i.value = 0;
-    dut.bc0_i.value = 0;
-    dut.resync_i.value = 0;
+    dut.reset.value = 1
+    dut.l1a_i.value = 0
+    dut.bc0_i.value = 0
+    dut.resync_i.value = 0
 
-    dut.request_valid_i.value = 0;
-    dut.request_write_i.value = 1;
-    dut.request_addr_i.value = 0;
-    dut.request_data_i.value = 0;
+    dut.request_valid_i.value = 0
+    dut.request_write_i.value = 1
+    dut.request_addr_i.value = 0
+    dut.request_data_i.value = 0
 
     for i in range(10):
         await RisingEdge(dut.clock)
 
-    dut.reset.value = 0;
+    dut.reset.value = 0
 
     #-------------------------------------------------------------------------------
     # wait some time for rx to lock and go ready
@@ -85,20 +86,20 @@ async def test_sc(dut):
     for _ in range(10):
         await RisingEdge(dut.clock)
 
-    dut.l1a_i.value = 1;
-    await RisingEdge(dut.l1a_o);
-    dut.l1a_i.value = 0;
-    assert dut.l1a_o.value==1
+    dut.l1a_i.value = 1
+    await RisingEdge(dut.l1a_o)
+    dut.l1a_i.value = 0
+    assert dut.l1a_o.value == 1
 
-    dut.bc0_i.value = 1;
-    await RisingEdge(dut.bc0_o);
-    dut.bc0_i.value = 0;
-    assert dut.bc0_o.value==1
+    dut.bc0_i.value = 1
+    await RisingEdge(dut.bc0_o)
+    dut.bc0_i.value = 0
+    assert dut.bc0_o.value == 1
 
-    dut.resync_i.value = 1;
-    await RisingEdge(dut.resync_o);
-    dut.resync_i.value = 0;
-    assert dut.resync_o.value==1
+    dut.resync_i.value = 1
+    await RisingEdge(dut.resync_o)
+    dut.resync_i.value = 0
+    assert dut.resync_o.value == 1
 
 def test_oh_sc():
 
