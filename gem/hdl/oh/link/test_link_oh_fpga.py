@@ -12,6 +12,8 @@ async def monitor_error_outputs(dut):
 
     await RisingEdge(dut.oh_rx_ready)
 
+    await RisingEdge(dut.reg_data_valid_o)
+
     while True:
         await RisingEdge(dut.clock)
 
@@ -62,7 +64,7 @@ async def test_sc(dut):
 
     for i in range(100):
 
-        wr_data = random.randint(0,2**32-1);
+        wr_data = random.randint(0,2**32-1)
 
         await RisingEdge(dut.clock)
 
