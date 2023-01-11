@@ -84,7 +84,8 @@ begin
         -- outputs
         unstable_o  => unstable_o,
         crc_error_o => crc_error_o,
-        error_o     => error_o
+        error_o     => error_o,
+        ready_o     => ready_o
         );
   end generate NO_TMR;
 
