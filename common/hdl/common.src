@@ -54,6 +54,7 @@ common/hdl/utils/lfsr.v
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project
 common/hdl/ttc/ttc_cmd.vhd
 common/hdl/ttc/ttc_generator.vhd
+common/hdl/ttc/ttc_random_trigger_generator.vhd
 common/hdl/ttc/ttc_decoder.vhd
 #common/hdl/ttc/release-1.1/TTC_decoder.vhd
 

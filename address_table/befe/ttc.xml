@@ -334,4 +334,18 @@
           fw_write_pulse_signal="gen_cyclic_l1a_start"/>
   </node>
 
+  <node id="RANDOM_L1A_GENERATOR" address="0x80"
+        description="This generator can be used to generate pseudo-random L1A for calibration, debugging, or test purposes.">
+    <node id="RESET" address="0x0" permission="w"
+          description="Reset the random L1A generator module."
+          fw_write_pulse_signal="random_l1a_reset"/>
+    <node id="ENABLE" address="0x1" mask="0x00000001" permission="rw"
+          description="Enable the random L1A generator module. It adds L1A on top of the current L1A source(s), i.e. the TTC stream, the TTC generator, or the external copper input."
+          fw_signal="random_l1a_enable" fw_default="0b0"
+          sw_units="bool"/>
+    <node id="THRESHOLD" address="0x2" mask="0xffffffff" permission="rw"
+          description="This register is used to configure the desired random L1A rate. This configuration parameter - technically a threshold on a pseudo-random number generator - can be computed from the desired rate via the formula 'THRESHOLD = L1A_RATE / (40007900 / 2**32)'. Defaults to ~400Hz."
+        fw_signal="random_l1a_threshold" fw_default="0xa7bd"/>
+  </node>
+
 </node>

@@ -126,6 +126,12 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_l1a_start     : std_logic;
     signal gen_cyclic_l1a_running   : std_logic;
 
+    -- random L1A generator
+    signal random_l1a_reset         : std_logic := '0';
+    signal random_l1a_enable        : std_logic := '0';
+    signal random_l1a_threshold     : std_logic_vector(31 downto 0) := (others => '0');
+    signal random_l1a_req           : std_logic := '0';
+
     -- fake multi-BX readout mode
     signal fake_multi_bx_cnt        : unsigned(3 downto 0) := (others => '0');
 
@@ -327,6 +333,17 @@ begin
         );
     
     i_l1a_reset_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_reset_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_reset);
+
+    ------------- Random L1A generator -------------
+
+    i_random_trigger_generator : entity work.ttc_random_trigger_generator
+        port map(
+            reset_i     => reset or random_l1a_reset,
+            clk_i       => ttc_clks_i.clk_40,
+            enable_i    => random_l1a_enable,
+            threshold_i => random_l1a_threshold,
+            trigger_o   => random_l1a_req
+        );
     
     ------------- TTC generator -------------
 
@@ -395,7 +412,7 @@ begin
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
     hard_reset_cmd <= hard_reset_cmd_real when gen_enable = '0' else gen_ttc_cmds.hard_reset;
     calpulse_cmd   <= calpulse_cmd_real when gen_enable = '0' and gen_enable_cal_only = '0' else gen_ttc_cmds.calpulse;
-    real_l1a_cmd   <= l1a_cmd_real or l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req;
+    real_l1a_cmd   <= l1a_cmd_real or l1a_req or random_l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req or random_l1a_req;
     l1a_cmd        <= real_l1a_cmd or fake_l1a_cmd;
 
     ------------- TTC counters -------------
