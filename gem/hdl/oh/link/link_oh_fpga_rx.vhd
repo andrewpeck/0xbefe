@@ -78,7 +78,7 @@ architecture Behavioral of link_oh_fpga_rx is
   signal special_bit : std_logic := '0';
 
   signal idle_cnt, idle_cnt_next : integer range 0 to 15;
-  signal idle_ok, idle_ok_r      : std_logic := '0';
+  signal idle_ok                 : std_logic := '0';
 
   signal data_slip       : std_logic_vector(7 downto 0);
   signal data_slip_r1    : std_logic_vector(7 downto 0);
@@ -234,8 +234,6 @@ begin
         idle_ok <= '0';
       end if;
 
-      idle_ok_r <= idle_ok;
-
       case state is
 
         when SYNCING =>
@@ -254,7 +252,7 @@ begin
           -- pattern to make sure we don't get stuck in a loop from DONE->IDLE->DATA
           -- without ever checking the idle pattern
 
-          if (special_bit = '0' and idle_ok_r='1' and data_slip(3 downto 0) = x"A") then
+          if (special_bit = '0' and idle_ok='1' and data_slip(3 downto 0) = x"A") then
             state          <= PRE_CRC;
             data_frame_cnt <= 0;
           elsif (idle_ok='0') then -- TODO: require some number of errors before resyncing
