@@ -141,7 +141,7 @@ begin
     generic map (
       g_DATA_WIDTH           => 8,
       g_SLIP_CNT_WIDTH       => 3,
-      g_TRANSMIT_LOW_TO_HIGH => true
+      g_TRANSMIT_LOW_TO_HIGH => false
       )
     port map (
       clk_i      => clock,
