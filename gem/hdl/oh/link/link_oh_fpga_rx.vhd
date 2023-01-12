@@ -32,10 +32,10 @@ entity link_oh_fpga_rx is
     resync_o : out std_logic;
 
     -- 49 bit output packet to fifo
-    req_en_o   : out std_logic := '0';
+    req_en_o   : out std_logic                     := '0';
     req_data_o : out std_logic_vector(31 downto 0) := (others => '0');
     req_addr_o : out std_logic_vector(15 downto 0) := (others => '0');
-    req_wr_o   : out std_logic := '0';
+    req_wr_o   : out std_logic                     := '0';
 
     -- status
     ready_o        : out std_logic;
@@ -66,14 +66,16 @@ architecture Behavioral of link_oh_fpga_rx is
 
   signal reset : std_logic;
 
-  signal precrc_rdy  : std_logic;  -- during syncing the first precrc will always be bad
-  signal precrc_rx   : std_logic_vector (7 downto 0) := (others => '0');
-  signal precrc_calc : std_logic_vector (7 downto 0) := (others => '0');
-  signal crc_rx      : std_logic_vector (7 downto 0) := (others => '0');
-  signal crc_data    : std_logic_vector (7 downto 0) := (others => '0');
-  signal crc_data_r  : std_logic_vector (7 downto 0) := (others => '0');
-  signal crc_en      : std_logic                     := '0';
-  signal crc_rst     : std_logic                     := '0';
+  signal precrc_error : std_logic                     := '0';
+  signal crc_error    : std_logic                     := '0';
+  signal precrc_rdy   : std_logic;  -- during syncing the first precrc will always be bad
+  signal precrc_rx    : std_logic_vector (7 downto 0) := (others => '0');
+  signal precrc_calc  : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_rx       : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_data     : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_data_r   : std_logic_vector (7 downto 0) := (others => '0');
+  signal crc_en       : std_logic                     := '0';
+  signal crc_rst      : std_logic                     := '0';
 
   signal special_bit : std_logic := '0';
 
@@ -88,11 +90,20 @@ architecture Behavioral of link_oh_fpga_rx is
 
   signal error_detect : std_logic := '0';
 
+  signal l1a, bc0, resync : std_logic := '0';
+
 begin
+
+  crc_error_o    <= crc_error;
+  ready_o        <= ready;
+  precrc_error_o <= precrc_error;
+
+  l1a_o    <= l1a;
+  bc0_o    <= bc0;
+  resync_o <= resync;
 
   special_bit <= data_slip(7);
   reset       <= reset_i;
-  error_o     <= error_detect;
 
   --------------------------------------------------------------------------------
   -- Bitslip
@@ -128,8 +139,9 @@ begin
 
   bitslip_inst : entity work.bitslip
     generic map (
-      g_DATA_WIDTH     => 8,
-      g_SLIP_CNT_WIDTH => 3
+      g_DATA_WIDTH           => 8,
+      g_SLIP_CNT_WIDTH       => 3,
+      g_TRANSMIT_LOW_TO_HIGH => true
       )
     port map (
       clk_i      => clock,
@@ -146,13 +158,13 @@ begin
   begin
     if (rising_edge(clock)) then
       if (ready = '0' or reset = '1') then
-        l1a_o    <= '0';
-        resync_o <= '0';
-        bc0_o    <= '0';
+        l1a    <= '0';
+        resync <= '0';
+        bc0    <= '0';
       else
-        l1a_o    <= data_slip(6);
-        bc0_o    <= data_slip(5);
-        resync_o <= data_slip(4);
+        l1a    <= data_slip(6);
+        bc0    <= data_slip(5);
+        resync <= data_slip(4);
       end if;
     end if;
   end process;
@@ -164,7 +176,7 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      if (special_bit='1') then
+      if (special_bit = '1') then
         if (idle_cnt = 15) then
           idle_cnt_next <= 0;
         else
@@ -181,8 +193,6 @@ begin
   end process;
 
   ready <= '1' when (ready_cnt = g_READY_COUNT_MAX-1) else '0';
-
-  ready_o <= ready;
 
   --------------------------------------------------------------------------------
   -- CRC
@@ -221,12 +231,12 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      error_detect   <= '0';
-      req_en_o       <= '0';
-      crc_en         <= '0';
-      crc_rst        <= '0';
-      crc_error_o    <= '0';
-      precrc_error_o <= '0';
+      error_detect <= '0';
+      req_en_o     <= '0';
+      crc_en       <= '0';
+      crc_rst      <= '0';
+      crc_error    <= '0';
+      precrc_error <= '0';
 
       if (idle_cnt = idle_cnt_next) then
         idle_ok <= '1';
@@ -240,7 +250,7 @@ begin
 
           crc_rst <= '1';
 
-          if (data_slip(7) /= '1' or idle_ok='0') then
+          if (data_slip(7) /= '1' or idle_ok = '0') then
             error_detect <= '1';
           elsif (ready = '1') then
             state <= IDLE;
@@ -252,10 +262,10 @@ begin
           -- pattern to make sure we don't get stuck in a loop from DONE->IDLE->DATA
           -- without ever checking the idle pattern
 
-          if (special_bit = '0' and idle_ok='1' and data_slip(3 downto 0) = x"A") then
+          if (special_bit = '0' and idle_ok = '1' and data_slip(3 downto 0) = x"A") then
             state          <= PRE_CRC;
             data_frame_cnt <= 0;
-          elsif (idle_ok='0') then -- TODO: require some number of errors before resyncing
+          elsif (idle_ok = '0') then  -- TODO: require some number of errors before resyncing
             state        <= SYNCING;
             error_detect <= '1';
           else
@@ -269,7 +279,7 @@ begin
           data_frame_cnt <= 0;
 
           if (data_frame_cnt = 0) then
-            precrc_calc    <= crc_data;
+            precrc_calc <= crc_data;
           end if;
 
           if (special_bit = '1') then
@@ -288,7 +298,7 @@ begin
         when DATA =>
 
           if (precrc_rdy = '1' and data_frame_cnt = 0 and precrc_calc /= precrc_rx) then
-            precrc_error_o <= '1';
+            precrc_error <= '1';
           end if;
 
           crc_en <= '1';
@@ -342,7 +352,7 @@ begin
             req_wr_o   <= req(48);
             req_en_o   <= '1';
           else
-            crc_error_o <= '1';
+            crc_error <= '1';
           end if;
 
       end case;
