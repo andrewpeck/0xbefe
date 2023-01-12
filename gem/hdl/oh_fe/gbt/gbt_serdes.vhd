@@ -73,6 +73,17 @@ architecture Behavioral of gbt_serdes is
 
   signal sump_vector : std_logic_vector (5 downto 0);
 
+  function reverse_vector (a: std_logic_vector)
+    return std_logic_vector is
+    variable result: std_logic_vector(a'RANGE);
+    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+  begin
+    for i in aa'RANGE loop
+      result(i) := aa(i);
+    end loop;
+    return result;
+  end; -- function reverse_vector
+
 begin
 
   sump <= or_reduce (sump_vector);
@@ -136,7 +147,7 @@ begin
   process(clk_1x)
   begin
     if (rising_edge(clk_1x)) then
-      to_gbt <= data_i(0) & data_i(1) & data_i(2) & data_i(3) & data_i(4) & data_i(5) & data_i(6) & data_i(7);
+      to_gbt <= reverse_vector(data_i);
     end if;
   end process;
 
