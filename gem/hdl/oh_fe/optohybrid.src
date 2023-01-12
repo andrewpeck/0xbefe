@@ -5,7 +5,6 @@ gem/hdl/oh_fe/control/device_dna.v
 gem/hdl/oh_fe/control/external.v
 gem/hdl/oh_fe/control/led_control.v
 gem/hdl/oh_fe/control/startup_reset.vhd 93
-gem/hdl/oh_fe/control/vio_ipb_master.vhd 93
 gem/hdl/oh_fe/control/startup.vhd 93
 gem/hdl/oh_fe/control/ttc.vhd 93
 gem/hdl/oh_fe/control/ttc_tmr.vhd 93
