@@ -67,11 +67,11 @@ def invert_eptx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x0) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0) 
 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX12INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX20INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX12INVERT"), 0x1) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX20INVERT"), 0x1) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x1) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)
 
 
 if __name__ == "__main__":
