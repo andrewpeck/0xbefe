@@ -67,10 +67,10 @@ def invert_eptx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x0) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0) 
 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX6INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX8INVERT"), 0x0) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX12INVERT"), 0x0) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX20INVERT"), 0x0) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x0) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX11INVERT"), 0x0) 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0)
 
 
@@ -124,11 +124,11 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend" and not args.write_only:
+    if args.system == "backend":
         check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun" and not args.write_only:
+    if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
