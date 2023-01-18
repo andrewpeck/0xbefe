@@ -40,6 +40,11 @@ if __name__ == "__main__":
     password = "queso"
     ssh = paramiko.SSHClient()
 
+    # QUESO to OH-GBT mapping
+    queso_oh_gbt_map = {}
+    queso_oh_gbt_map["0"]["OH"] = 0
+    queso_oh_gbt_map["0"]["GBT"] = [0, 1]
+
     # Load SSH host keys
     ssh.load_system_host_keys()
     # Add SSH host key automatically if needed
@@ -136,6 +141,17 @@ if __name__ == "__main__":
             print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
             os.system("python3 init_frontend.py")
             print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
+            print ("\n######################################################\n")
+            sleep(2)
+
+        # Invert Elinks in OH
+        if not args.turn_off:
+            print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
+            ohid = queso_oh_gbt_map[queso]["OH"]
+            gbtid_list = queso_oh_gbt_map[queso]["GBT"]
+            for gbtid in gbtid_list:
+                os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
+            print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(2)
 
