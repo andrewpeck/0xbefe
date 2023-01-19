@@ -276,7 +276,7 @@ def init_gem_frontend():
                 gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt_num))
                 if not gbt_ready: # Only set phases if GBT for this VFAT is READY
                     continue
-                print ("\nSetting DAQ and Sbit phases for VFAT# %02d"%vfat)
+                print ("\nSetting DAQ and Sbit phases for OH %d VFAT# %02d"%(oh,vfat))
 
                 oh_ver = -9999
                 if gbt_ver == 0:
@@ -308,7 +308,7 @@ def init_gem_frontend():
                 selectGbt(oh, gbt_num)
                 writeGbtRegAddrs(addr, value)
                 sleep(0.01)
-                #print ("DAQ Elink phase set for VFAT#%02d to: %s" % (vfat, hex(set_bestphase)))
+                #print ("  DAQ Elink phase set for OH %d VFAT#%02d to: %s" % (oh, vfat, hex(set_bestphase)))
                 
                 sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat] # Get the sbit elink info for this VFAT
                 # Get the lpGBT register address and write the phase setting for the 8 Sbit Elinks for this VFAT
@@ -319,7 +319,7 @@ def init_gem_frontend():
                     value = (config[addr] & 0x0f) | (set_bestphase << 4)
                     writeGbtRegAddrs(addr, value)
                     sleep(0.1)
-                    #print ("VFAT %02d: Sbit Elink phase set for ELINK %02d to: %s" % (vfat, elink, hex(set_bestphase)))
+                    #print ("    OH %d VFAT %02d: Sbit Elink phase set for ELINK %02d to: %s" % (oh, vfat, elink, hex(set_bestphase)))
 
 
     print("\nSetting VFAT HDLC addresses")

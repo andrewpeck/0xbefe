@@ -337,7 +337,7 @@ def init_lpgbt_fec_error_counter(oh_ver):
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 Bit Error Ratio Test (BERT) using FEC Error Counters")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", nargs="+", dest="gbtid", help="gbtid = list of GBT numbers (multiple only possible for uplink)")
@@ -352,12 +352,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for BERT")
+    elif args.system == "queso":
+        print("Using QUESO for BERT")
     elif args.system == "backend":
         print ("Using Backend for BERT")
     elif args.system == "dryrun":
         print ("Dry Run - not actually running BERT on lpGBT")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

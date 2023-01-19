@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="VFAT RESET")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc, backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc, queso, backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -138,12 +138,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for VFAT reset")
+    elif args.system == "queso":
+        print("Using QUESO for VFAT reset")
     elif args.system == "backend":
         print ("Using Backend for VFAT reset")
     elif args.system == "dryrun":
         print ("Dry Run - not actually doing vfat reset")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

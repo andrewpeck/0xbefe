@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="RSSI Monitor for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -231,12 +231,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print("Using Rpi CHeeseCake for rssi monitoring")
+    elif args.system == "queso":
+        print("Using QUESO for rssi monitoring")
     elif args.system == "backend":
         print ("Using Backend for rssi monitoring")
     elif args.system == "dryrun":
         print("Dry Run - not actually running rssi monitoring")
     else:
-        print(Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":
