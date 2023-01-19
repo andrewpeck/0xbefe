@@ -70,8 +70,6 @@ def invert_eptx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX12INVERT"), 0x1) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX20INVERT"), 0x1) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x1) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1) 
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)
 
 
 if __name__ == "__main__":
@@ -137,6 +135,7 @@ if __name__ == "__main__":
         invert_eprx(boss)
         invert_eptx(boss)
         invert_epclk(boss)
+
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
