@@ -48,8 +48,7 @@ architecture Behavioral of queso_tests is
     signal elink_mapped      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal rx_prbs_err_arr   : std_logic_vector(g_NUM_OF_OHs * 216 - 1 downto 0);
-    signal rx_prbs_ready_arr : std_logic_vector(g_NUM_OF_OHs * 216 - 1 downto 0);
+    signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
     
 begin
 
@@ -66,7 +65,7 @@ begin
         port map(
             RST      => reset_i,
             CLK      => gbt_frame_clk_i,
-            DATA_IN  => open,
+            DATA_IN  => (others => '0'),
             EN       => queso_test_en_i,
             DATA_OUT => tx_prbs_data
         );
@@ -98,7 +97,7 @@ begin
             i_rx_prbs_check : entity work.PRBS_ANY
                 generic map(
                     CHK_MODE    => false,
-                    INV_PATTERN => true,
+                    INV_PATTERN => false,
                     POLY_LENGHT => 7,
                     POLY_TAP    => 6,
                     NBITS       => 8
@@ -107,7 +106,7 @@ begin
                     RST      => reset_i,
                     CLK      => gbt_frame_clk_i,
                     DATA_IN  => elink_mapped(OH)(ELINK),
-                    EN       => '1',
+                    EN       => queso_test_en_i,
                     DATA_OUT => rx_prbs_err_arr(OH*216 + ELINK)
                 );
 
@@ -120,7 +119,7 @@ begin
                 port map(
                     ref_clk_i => gbt_frame_clk_i,
                     reset_i   => counter_reset,
-                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK),
+                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK)(0),
                     count_o   => rx_err_cnt_arr(OH)(ELINK)
                 );
             
