@@ -18,7 +18,7 @@ entity queso_tests is
     port(
         -- reset
         reset_i                          : in std_logic;
-	counter_reset                    : in std_logic;
+	    counter_reset                    : in std_logic;
                 
         -- Test enable
         queso_test_en_i                  : in std_logic;
@@ -39,8 +39,6 @@ end queso_tests;
 
 architecture Behavioral of queso_tests is
 
-    constant PRBS_SEED       : std_logic_vector(7 downto 0) := x"d9";
-
     signal tx_prbs_err_data  : std_logic_vector(7 downto 0) := x"ff";
     signal tx_prbs_data      : std_logic_vector(7 downto 0);
 
@@ -57,20 +55,22 @@ begin
 
     --===Generate TX data===--
     -- generator (fanned out to all elinks)
-    i_prbs7_8b_gen : entity work.prbs7_8b_generator
+    i_tx_prbs_gen : entity work.PRBS_ANY
         generic map(
-            INIT_c => PRBS_SEED
+            CHK_MODE    => false,
+            INV_PATTERN => false,
+            POLY_LENGHT => 7,
+            POLY_TAP    => 6,
+            NBITS       => 8
         )
         port map(
-            reset_i       => reset_i,
-            clk_i         => gbt_frame_clk_i,
-            clken_i       => queso_test_en_i,
-            err_pattern_i => tx_prbs_err_data,
-            rep_delay_i   => (others => '0'),
-            prbs_word_o   => tx_prbs_data,
-            rdy_o         => open
+            RST      => reset_i,
+            CLK      => gbt_frame_clk_i,
+            DATA_IN  => open,
+            EN       => queso_test_en_i,
+            DATA_OUT => tx_prbs_data
         );
-
+        
     test_vfat3_tx_data_arr_o <= tx_prbs_data;
     
     --===Take in RX and apply prbs checker + error counter===--
@@ -95,15 +95,20 @@ begin
 
 
             --instantiate prbs7 8 bit checker
-            i_prbs7_checker : entity work.prbs7_8b_checker
+            i_rx_prbs_check : entity work.PRBS_ANY
+                generic map(
+                    CHK_MODE    => false,
+                    INV_PATTERN => true,
+                    POLY_LENGHT => 7,
+                    POLY_TAP    => 6,
+                    NBITS       => 8
+                )
                 port map(
-                    reset_i          => reset_i,
-                    clk_i            => gbt_frame_clk_i,
-                    clken_i          => '1',
-                    prbs_word_i      => elink_mapped(OH)(ELINK),
-                    err_o            => open,
-                    err_flag_o       => rx_prbs_err_arr(OH*216 + ELINK),
-                    rdy_o            => rx_prbs_ready_arr(OH*216 + ELINK)
+                    RST      => reset_i,
+                    CLK      => gbt_frame_clk_i,
+                    DATA_IN  => elink_mapped(OH)(ELINK),
+                    EN       => '1',
+                    DATA_OUT => rx_prbs_err_arr(OH*216 + ELINK)
                 );
 
             --instantiate error counter for each prbs checker
@@ -115,7 +120,7 @@ begin
                 port map(
                     ref_clk_i => gbt_frame_clk_i,
                     reset_i   => counter_reset,
-                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK) and rx_prbs_ready_arr(OH*216 + ELINK),
+                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK),
                     count_o   => rx_err_cnt_arr(OH)(ELINK)
                 );
             
