@@ -57,7 +57,7 @@ begin
     i_tx_prbs_gen : entity work.PRBS_ANY
         generic map(
             CHK_MODE    => false,
-            INV_PATTERN => false,
+            INV_PATTERN => true,
             POLY_LENGHT => 7,
             POLY_TAP    => 6,
             NBITS       => 8
@@ -96,8 +96,8 @@ begin
             --instantiate prbs7 8 bit checker
             i_rx_prbs_check : entity work.PRBS_ANY
                 generic map(
-                    CHK_MODE    => false,
-                    INV_PATTERN => false,
+                    CHK_MODE    => true,
+                    INV_PATTERN => true,
                     POLY_LENGHT => 7,
                     POLY_TAP    => 6,
                     NBITS       => 8
@@ -118,8 +118,8 @@ begin
                 )
                 port map(
                     ref_clk_i => gbt_frame_clk_i,
-                    reset_i   => counter_reset,
-                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK)(0),
+                    reset_i   => counter_reset or reset_i,
+                    en_i      => rx_prbs_err_arr(OH * 216 + ELINK)(0) or rx_prbs_err_arr(OH * 216 + ELINK)(1) or rx_prbs_err_arr(OH * 216 + ELINK)(2) or rx_prbs_err_arr(OH * 216 + ELINK)(3) or rx_prbs_err_arr(OH * 216 + ELINK)(4) or rx_prbs_err_arr(OH * 216 + ELINK)(5) or rx_prbs_err_arr(OH * 216 + ELINK)(6) or rx_prbs_err_arr(OH * 216 + ELINK)(7),
                     count_o   => rx_err_cnt_arr(OH)(ELINK)
                 );
             
