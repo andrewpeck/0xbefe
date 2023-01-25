@@ -14,7 +14,7 @@ entity queso_tests is
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_VFATS_PER_OH  : integer;
-        g_QUESO_CRAWL       : boolean
+        g_QUESO_PRBS       : boolean
     );
     port(
         -- reset
@@ -55,7 +55,7 @@ architecture Behavioral of queso_tests is
 begin
 
 
-    g_QUESO_COUNT_EN : if not g_QUESO_CRAWL generate
+    g_QUESO_COUNT_EN : if not g_QUESO_PRBS generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
        i_crawl_gen : entity work.counter
@@ -85,7 +85,7 @@ begin
     end generate;
 
 
-    g_QUESO_PRBS_EN : if g_QUESO_CRAWL generate
+    g_QUESO_PRBS_EN : if g_QUESO_PRBS generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
         i_tx_prbs_gen : entity work.PRBS_ANY

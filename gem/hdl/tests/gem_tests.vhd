@@ -24,7 +24,7 @@ entity gem_tests is
         g_NUM_GBTS_PER_OH   : integer;
         g_GEM_STATION       : integer;
         g_IPB_CLK_PERIOD_NS : integer;
-        g_QUESO_EN          : boolean
+        g_QUESO_PRBS        : boolean
     );
     port(
         -- reset
@@ -236,7 +236,7 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_VFATS_PER_OH  => 24,
-            g_QUESO_EN          => g_QUESO_EN 
+            g_QUESO_PRBS        => g_QUESO_PRBS 
         )
         port map(
             reset_i                     => reset, --resets prbs generator
