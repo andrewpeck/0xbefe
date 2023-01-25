@@ -49,7 +49,24 @@ if __name__ == '__main__':
                 read = gbt_rpi_chc.gpio_action("write", regulators[r], 1)
                 if read != -9999:
                     print(Colors.GREEN + "GPIO %d set to high for regulator %s"%(regulators[r], r) + Colors.ENDC)
+                    
+                    # Turn ON Red LED of FPGAs
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("1", 0x06, [0x01])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("2", 0x06, [0x01])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("3", 0x06, [0x01])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    print(Colors.GREEN + "RED LEDs turned ON for all 3 FPAGs" + Colors.ENDC)
+
                     print(Colors.GREEN + "Regulator %s ON"%r + Colors.ENDC)
+
                 else:
                     print(Colors.RED + "ERROR: Unable to write GPIO %d to high (regulator %s)"%(regulators[r], r) + Colors.ENDC)
             except:
@@ -60,6 +77,22 @@ if __name__ == '__main__':
                 read = gbt_rpi_chc.gpio_action("write", regulators[r], 0)
                 if read != -9999:
                     print(Colors.GREEN + "GPIO %d set to low for regulator %s"%(regulators[r], r) + Colors.ENDC)
+
+                    # Turn OFF Red LED of FPGAs
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("1", 0x06, [0x00])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("2", 0x06, [0x00])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("3", 0x06, [0x00])
+                    if not spi_success:
+                        terminate() # err already printed out in function call
+                    time.sleep(0.1)
+                    print(Colors.GREEN + "RED LEDs turned ON for all 3 FPAGs" + Colors.ENDC)
+
                     print(Colors.GREEN + "Regulator %s OFF"%r + Colors.ENDC)
                 else:
                     print(Colors.RED + "ERROR: Unable to write GPIO %d to low (regulator %s)"%(regulators[r], r) + Colors.ENDC)
