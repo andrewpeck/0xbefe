@@ -55,10 +55,10 @@ architecture Behavioral of queso_tests is
 begin
 
 
-    g_QUESO_CRAWL : if not g_QUESO_PRBS generate
+    g_QUESO_COUNT_EN : if not g_QUESO_CRAWL generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
-        entity work.counter
+       i_crawl_gen : entity work.counter
                 generic map(
                     g_COUNTER_WIDTH  => 8,
                     g_ALLOW_ROLLOVER => true
@@ -85,7 +85,7 @@ begin
     end generate;
 
 
-    g_QUESO_PRBS : if g_QUESO_PRBS generate
+    g_QUESO_PRBS_EN : if g_QUESO_CRAWL generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
         i_tx_prbs_gen : entity work.PRBS_ANY

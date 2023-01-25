@@ -703,7 +703,7 @@ begin
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_GEM_STATION       => g_GEM_STATION,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_QUESO_CRAWL       => true
+            g_QUESO_PRBS        => true
         )
         port map(
             reset_i                     => reset,
