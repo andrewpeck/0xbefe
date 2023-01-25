@@ -51,15 +51,15 @@ if __name__ == '__main__':
                     print(Colors.GREEN + "GPIO %d set to high for regulator %s"%(regulators[r], r) + Colors.ENDC)
                     
                     # Turn ON Red LED of FPGAs
-                    spi_success, spi_data = gbt_rpi_chc.spi_rw("1", 0x06, [0x01])
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("1", 0x06, [0x04])
                     if not spi_success:
                         terminate() # err already printed out in function call
                     time.sleep(0.1)
-                    spi_success, spi_data = gbt_rpi_chc.spi_rw("2", 0x06, [0x01])
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("2", 0x06, [0x04])
                     if not spi_success:
                         terminate() # err already printed out in function call
                     time.sleep(0.1)
-                    spi_success, spi_data = gbt_rpi_chc.spi_rw("3", 0x06, [0x01])
+                    spi_success, spi_data = gbt_rpi_chc.spi_rw("3", 0x06, [0x04])
                     if not spi_success:
                         terminate() # err already printed out in function call
                     time.sleep(0.1)
