@@ -77,7 +77,7 @@ begin
             each_elink : for ELINK in 0 to 215 generate
 
                 --send raw test data directly to error counting registers(now just displays count)
-                elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); 
+                elink_error_cnt_arr_o(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); 
 
             end generate;
         end generate;
@@ -111,7 +111,7 @@ begin
             each_elink : for ELINK in 0 to 215 generate
 
                 --unmask each rx elink with unique xor 
-                elink_error_cnt_arr_o(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
+                elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
 
                 g_rotate : entity work.bitslip
                     generic map(
