@@ -68,14 +68,14 @@ class rpi_chc:
                 self.config_channel = 13
             else:
                 self.config_channel = 26
-            self.efuse_pwr_boss = 26
+            self.efuse_pwr_boss = 12
             self.efuse_pwr_sub = 19
         elif board == "queso":
             if boss:
                 self.config_channel = 21
             else:
                 self.config_channel = 19
-            self.efuse_pwr_boss = 12
+            self.efuse_pwr_boss = 26
             self.efuse_pwr_sub = 13
 
     def init_gpio(self, gpio, state):
