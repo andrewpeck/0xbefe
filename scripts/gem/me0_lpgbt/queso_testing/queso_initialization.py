@@ -148,12 +148,13 @@ if __name__ == "__main__":
 
         # Do not use HDLC address
         vfats_per_oh = 24
-        for vfat in range(vfats_per_oh):
-            print(Colors.BLUE + "Setting HDLC addresses to 0\n" + Colors.ENDC)
-            write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, 0)
-            print(Colors.GREEN + "\nSetting HDLC addresses Done" + Colors.ENDC)
-            print ("\n######################################################\n")
-            sleep(0.1)
+        if not args.turn_off:
+            for vfat in range(vfats_per_oh):
+                print(Colors.BLUE + "Setting HDLC addresses to 0\n" + Colors.ENDC)
+                write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, 0)
+                print(Colors.GREEN + "\nSetting HDLC addresses Done" + Colors.ENDC)
+                print ("\n######################################################\n")
+                sleep(0.1)
 
         # Invert Elinks in OH (do not need, already in fw)
         #if not args.turn_off:
