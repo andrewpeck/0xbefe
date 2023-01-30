@@ -241,7 +241,7 @@ begin
         port map(
             reset_i                     => reset, --resets prbs generator
             counter_reset               => queso_reset, --resets prbs counter
-            queso_test_en_i             => queso_prbs_en, --enables prbs generator
+            queso_test_en_i             => queso_prbs_en, --enables prbs generator & checker
             gbt_frame_clk_i             => ttc_clk_i.clk_40,
             test_vfat3_rx_data_arr_i    => test_vfat3_rx_data_arr_i,
             test_vfat3_tx_data_arr_o    => test_vfat3_tx_data_arr_o,

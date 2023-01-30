@@ -14,7 +14,7 @@ entity queso_tests is
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_VFATS_PER_OH  : integer;
-        g_QUESO_PRBS       : boolean
+        g_QUESO_PRBS        : boolean
     );
     port(
         -- reset
@@ -55,6 +55,7 @@ architecture Behavioral of queso_tests is
 begin
 
 
+    --=======QUESO Crawl Counter, no PRBS=======--
     g_QUESO_COUNT_EN : if not g_QUESO_PRBS generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
@@ -84,35 +85,37 @@ begin
 
     end generate;
 
-
+    --=======QUESO Full PRBS test=======--
     g_QUESO_PRBS_EN : if g_QUESO_PRBS generate
-        --===Generate TX data===--
+    ----====Generate TX data====-----
         -- generator (fanned out to all elinks)
         i_tx_prbs_gen : entity work.PRBS_ANY
             generic map(
-                CHK_MODE    => false,
+                CHK_MODE    => false, --generate mode
                 INV_PATTERN => true,
-                POLY_LENGHT => 7,
+                POLY_LENGHT => 7, --prbs7
                 POLY_TAP    => 6,
                 NBITS       => 8
             )
             port map(
                 RST      => reset_i,
                 CLK      => gbt_frame_clk_i,
-                DATA_IN  => (others => '0'),
-                EN       => queso_test_en_i,
-                DATA_OUT => tx_prbs_data
+                DATA_IN  => (others => '0'), --error injection possible here
+                EN       => queso_test_en_i, 
+                DATA_OUT => tx_prbs_data --prbs word
             );
-            
-        test_vfat3_tx_data_arr_o <= tx_prbs_data;
         
-        --===Take in RX and apply prbs checker + error counter===--
+        -- Send prbs word to tx fannout in ME0 mux
+        test_vfat3_tx_data_arr_o <= tx_prbs_data;
+         
+    ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate
 
                 --unmask each rx elink with unique xor 
                 elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
 
+                --bitslip logic vector to account for any rotation in data packet
                 g_rotate : entity work.bitslip
                     generic map(
                         g_DATA_WIDTH              => 8,
@@ -130,22 +133,22 @@ begin
                 --instantiate prbs7 8 bit checker
                 i_rx_prbs_check : entity work.PRBS_ANY
                     generic map(
-                        CHK_MODE    => true,
+                        CHK_MODE    => true, --check mode
                         INV_PATTERN => true,
-                        POLY_LENGHT => 7,
+                        POLY_LENGHT => 7, --prbs7
                         POLY_TAP    => 6,
                         NBITS       => 8
                     )
                     port map(
                         RST      => reset_i,
                         CLK      => gbt_frame_clk_i,
-                        DATA_IN  => elink_mapped(OH)(ELINK),
-                        EN       => queso_test_en_i,
-                        DATA_OUT => rx_prbs_err_arr(OH*216 + ELINK)
+                        DATA_IN  => elink_mapped(OH)(ELINK), --unmasked & mapped data is checked
+                        EN       => queso_test_en_i, 
+                        DATA_OUT => rx_prbs_err_arr(OH*216 + ELINK) --error array (each bit)
                     );
 
                 --instantiate error counter for each prbs checker
-                i_prbs7_err_cnt : entity work.counter
+                i_prbs_err_cnt : entity work.counter
                     generic map(
                         g_COUNTER_WIDTH  => 8,
                         g_ALLOW_ROLLOVER => false
