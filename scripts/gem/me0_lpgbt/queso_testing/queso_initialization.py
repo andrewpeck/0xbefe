@@ -157,15 +157,15 @@ if __name__ == "__main__":
                 sleep(0.1)
 
         # Invert Elinks in OH (do not need, already in fw)
-        #if not args.turn_off:
-        #    print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
-        #    ohid = queso_oh_gbt_map[queso]["OH"]
-        #    gbtid_list = queso_oh_gbt_map[queso]["GBT"]
-        #    for gbtid in gbtid_list:
-        #        os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
-        #    print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
-        #    print ("\n######################################################\n")
-        #    sleep(2)
+        if not args.turn_off:
+            print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
+            ohid = queso_oh_gbt_map[queso]["OH"]
+            gbtid_list = queso_oh_gbt_map[queso]["GBT"]
+            for gbtid in gbtid_list:
+                os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
+            print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
+            print ("\n######################################################\n")
+            sleep(2)
 
         # Set elink phases for QUESO
         if not args.turn_off:
