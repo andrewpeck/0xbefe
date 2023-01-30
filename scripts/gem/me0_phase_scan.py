@@ -481,7 +481,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 Phase Scan")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun or chc")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -496,14 +496,12 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--bestphase_file", action="store", dest="bestphase_file", help="bestphase_file = Text file with best value of the elinkRX phase for each VFAT (in hex), calculated from phase scan by default")
     args = parser.parse_args()
 
-    if args.system == "chc":
-        print ("Using Cheesecake for phase scan")
-    elif args.system == "backend":
+    if args.system == "backend":
         print ("Using Backend for Phase Scan")
     elif args.system == "dryrun":
         print ("Dry Run - not actually running phase scan")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: backend, dryrun" + Colors.ENDC)
         sys.exit()
     
     if args.gem != "ME0":
@@ -530,9 +528,6 @@ if __name__ == "__main__":
 
     if args.bestphase is not None and args.bestphase_file is not None:
         print (Colors.YELLOW + "Provide either best phase (same for all VFATs) or text file of best phases for each VFAT" + Colors.ENDC)
-        sys.exit()
-    if args.system == "chc" and args.bestphase_file is None:
-        print (Colors.YELLOW + "For Cheesecake can only load phases in from input file" + Colors.ENDC)
         sys.exit()
     bestphase_list = {}
     if args.bestphase is not None:
@@ -567,8 +562,7 @@ if __name__ == "__main__":
 
     # Initialization 
     rw_initialize(args.gem, args.system)
-    if args.system != "chc":
-        initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
+    initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
     config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
