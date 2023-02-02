@@ -19,7 +19,7 @@ entity queso_tests is
     port(
         -- reset
         reset_i                          : in std_logic;
-	    counter_reset                    : in std_logic;
+	counter_reset                    : in std_logic;
                 
         -- Test enable
         queso_test_en_i                  : in std_logic;
@@ -51,7 +51,20 @@ architecture Behavioral of queso_tests is
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
-    
+   
+
+	COMPONENT ila_queso
+	PORT (
+		clk : IN STD_LOGIC;
+
+		probe0 : IN STD_LOGIC_VECTOR(7 DOWNTO 0); 
+		probe1 : IN STD_LOGIC_VECTOR(63 DOWNTO 0); 
+		probe2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
+	);
+	END COMPONENT  ;
+
+ 
 begin
 
 
@@ -120,7 +133,7 @@ begin
                     generic map(
                         g_DATA_WIDTH              => 8,
                         g_SLIP_CNT_WIDTH          => 8,
-                        g_TRANSMIT_LOW_TO_HIGH    => TRUE
+                        g_TRANSMIT_LOW_TO_HIGH    => false
                     )
                     port map(
                         clk_i       => gbt_frame_clk_i,
@@ -166,6 +179,27 @@ begin
         end generate;
     end generate;
 
+	ila_queso_debug : ila_queso
+	PORT MAP (
+		clk                    => gbt_frame_clk_i,
+
+		probe0                 => tx_prbs_data, 
+		probe1(63 downto 56)   => elink_unmasked(0)(0),
+		probe1(55 downto 48)   => elink_unmasked(0)(1),
+		probe1(47 downto 40)   => elink_unmasked(0)(2),
+		probe1(39 downto 32)   => elink_unmasked(0)(3),
+		probe1(31 downto 24)   => elink_mapped(0)(0),
+		probe1(23 downto 16)   => elink_mapped(0)(1),
+		probe1(15 downto 8)    => elink_mapped(0)(2),
+		probe1(7 downto 0)     => elink_mapped(0)(3), 
+		probe2(15 downto 8)    => rx_prbs_err_arr(0),
+		probe2(7 downto 0)     => rx_prbs_err_arr(1),
+		probe3(31 downto 24)   => rx_err_cnt_arr(0)(0),
+		probe3(23 downto 16)   => rx_err_cnt_arr(0)(1),
+		probe3(15)             => queso_test_en_i,
+		probe3(14 downto 8)    => open,
+		probe3(7 downto 0)     => tx_crawl_data
+	);
 
 end Behavioral;
 
