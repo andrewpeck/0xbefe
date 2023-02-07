@@ -306,7 +306,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running S-bit Cluster Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
     logfile.close()
-    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l >> %s"%filename)
+    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -f >> %s"%filename)
     logfile = open(filename, "a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
