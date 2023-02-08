@@ -69,6 +69,8 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
 
         # Scan over bitslip and check PRBS errors
         for bitslip in range(0,9):
+            print ("Checking Bitslip %d\n"%bitslip)
+
             # Set the bitslip for all vfats and elinks
             for vfat in queso_bitslip_nodes:
                 for elink in queso_bitslip_nodes[vfat]:
@@ -77,7 +79,7 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
 
             # Reset and wait
             write_backend_reg(queso_reset_node, 1)
-            sleep(1)
+            sleep(0.1)
 
             # Check PRBS errors
             for vfat in queso_bitslip_nodes:
