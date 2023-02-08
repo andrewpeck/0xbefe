@@ -28,6 +28,7 @@ def invert_eprx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX23INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX24INVERT"), 0x1)
 
+        
     else:
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX21INVERT"), 0x0)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX23INVERT"), 0x0)
@@ -52,6 +53,9 @@ def invert_eprx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX13INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX19INVERT"), 0x1)
 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX15INVERT"), 0x1)
+        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX17INVERT"), 0x0)
+
 def invert_epclk(boss):
     if (boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"), 0x0)
@@ -63,9 +67,9 @@ def invert_eptx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX10INVERT"), 0x0) 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x0) 
 
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX00INVERT"), 0x0)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX11INVERT"), 0x1)
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)
-	
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)	
 
 if __name__ == "__main__":
 
