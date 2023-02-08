@@ -55,10 +55,13 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
         file_out = open(dataDir+"/queso%d_vfat_elink_bitslip_results_"%(queso_select)+now+".txt", "w")
 
         bitslip_list = {}
+        prbs_min_err_list = {}
         for vfat in vfat_list:
             bitslip_list[vfat] = {}
+            prbs_min_err_list[vfat] = {}
             for elink in range(0,9):
                 bitslip_list[vfat][elink] = -9999
+                prbs_min_err_list[vfat][elink] = 9999
 
         # Enable QUESO BERT
         write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 1)
@@ -85,8 +88,9 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
             for vfat in queso_bitslip_nodes:
                 for elink in queso_bitslip_nodes[vfat]:
                     prbs_err = read_backend_reg(queso_prbs_nodes[vfat][elink])
-                    if prbs_err == 0:
+                    if prbs_err <= prbs_min_err_list[vfat][elink]:
                         bitslip_list[vfat][elink] = bitslip
+                        prbs_min_err_list[vfat][elink] = prbs_err
 
         # Disable QUESO BERT 
         sleep(0.1)
@@ -100,6 +104,8 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
                 if bitslip_list[vfat][elink] == -9999:
                     print (Colors.YELLOW + "Correct bitslip not found for VFAT %d Elink %d"%(vfat, elink) + Colors.ENDC)
                     bitslip_list[vfat][elink] = 0
+                if prbs_min_err_list[vfat][elink] != 0:
+                    print (Colors.YELLOW + "PRBS errors not zero best bitslip for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink]) + Colors.ENDC)
 
         print ("Setting bitslips:")
         set_bitslip(bitslip_list, queso_bitslip_nodes)
