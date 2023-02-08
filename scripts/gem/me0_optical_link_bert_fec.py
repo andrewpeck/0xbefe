@@ -172,7 +172,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 time_prev = time()
 
         print ("\nEnd Error Counting:")
-        file_out.write("\nEnd Error Counting: \n" %(end_fec_errors))
+        file_out.write("\nEnd Error Counting: \n")
         for gbt in fec_node_list:
             fec_node = fec_node_list[gbt]
             end_fec_errors[gbt] = gem_utils.read_backend_reg(fec_node)
@@ -426,7 +426,7 @@ if __name__ == "__main__":
             sys.exit()
     else:
         if args.time is not None or args.ber is not None:
-            print (Colors.YELLOW + "BERT measurement time or VER limit not required" + Colors.ENDC)
+            print (Colors.YELLOW + "BERT measurement time or BER limit not required" + Colors.ENDC)
             sys.exit()
         args.time = "0"
         args.ber = "0"
