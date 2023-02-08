@@ -23,7 +23,7 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
 
     # Check if GBT is READY
     for gbt in [0,1]:
-        link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+        link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             file_out.close()

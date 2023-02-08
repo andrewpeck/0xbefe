@@ -1,4 +1,4 @@
-from gem.me0_lpgbt.rw_reg_lpgbt import *
+from gem.gem_utils import *
 from time import sleep, time
 import datetime
 import sys
@@ -25,7 +25,7 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
     
     # Check if GBT is READY
     for gbt in [0,1]:
-        link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+        link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             file_out.close()
