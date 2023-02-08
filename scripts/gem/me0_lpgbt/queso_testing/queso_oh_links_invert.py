@@ -28,7 +28,6 @@ def invert_eprx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX23INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX24INVERT"), 0x1)
 
-        
     else:
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX21INVERT"), 0x0)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX23INVERT"), 0x0)
@@ -52,6 +51,7 @@ def invert_eprx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX12INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX13INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX19INVERT"), 0x1)
+    print ("EPRX inversions done")
 
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX15INVERT"), 0x1)
         #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX17INVERT"), 0x0)
@@ -61,6 +61,7 @@ def invert_epclk(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"), 0x0)
     
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK3INVERT"), 0x1)
+    print ("EPCLK inversions done")
 
 def invert_eptx(boss):
     if (boss):
@@ -70,7 +71,9 @@ def invert_eptx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX00INVERT"), 0x0)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX11INVERT"), 0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)	
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTTX.EPTX23INVERT"), 0x1)
 
+    print ("EPTX inversions done")
 if __name__ == "__main__":
 
     # Parsing arguments
@@ -131,7 +134,8 @@ if __name__ == "__main__":
         check_rom_readback(args.ohid, args.gbtid)
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
-    # Configuring LPGBT
+    print ("")
+    # Elink inverisons 
     try:
         invert_eprx(boss)
         invert_eptx(boss)
