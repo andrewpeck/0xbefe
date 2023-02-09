@@ -595,9 +595,9 @@
           <node id="PRBS_ERR_COUNT" mask="0x000000ff" permission="r" address="0x0"
                 description="Number of errors on this ELINK"
                 fw_signal="queso_prbs_err_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
-          <node id="ELINK_BITSLIP" mask="0xff000000" permission="w" address="0x0"
+          <node id="ELINK_BITSLIP" mask="0xff000000" permission="rw" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
-                fw_signal="elink_mapping_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x03"/>
+                fw_signal="elink_mapping_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
                 
         </node>
       </node>       
