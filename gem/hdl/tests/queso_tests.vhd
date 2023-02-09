@@ -50,6 +50,7 @@ architecture Behavioral of queso_tests is
     signal elink_mapped      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal rx_prbs_err_arr_o   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
     signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
    
 
@@ -157,8 +158,15 @@ begin
                         CLK      => gbt_frame_clk_i,
                         DATA_IN  => elink_mapped(OH)(ELINK), --unmasked & mapped data is checked
                         EN       => queso_test_en_i, 
-                        DATA_OUT => rx_prbs_err_arr(OH*216 + ELINK) --error array (each bit)
+                        DATA_OUT => rx_prbs_err_arr_o(OH*216 + ELINK) --error array (each bit)
                     );
+
+                process(gbt_frame_clk_i) is
+                begin
+                    if (rising_edge(gbt_frame_clk_i)) then
+                        rx_prbs_err_arr(OH*216 + ELINK) <= rx_prbs_err_arr_o(OH*216 + ELINK) while (queso_test_en_i = '1') else (others => '0');
+                    end if;
+                end process;
 
                 --instantiate error counter for each prbs checker
                 i_prbs_err_cnt : entity work.counter
