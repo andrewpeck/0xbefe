@@ -156,7 +156,7 @@ if __name__ == "__main__":
                 print ("\n######################################################\n")
                 sleep(0.1)
 
-        # Invert Elinks in OH (do not need, already in fw)
+        # Invert Elinks in OH
         if not args.turn_off:
             print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
             ohid = queso_oh_gbt_map[queso]["OH"]
@@ -169,17 +169,14 @@ if __name__ == "__main__":
 
         # Set elink phases for QUESO
         if not args.turn_off:
-            print(Colors.BLUE + "Set Elink Phases in OH\n" + Colors.ENDC)
+            print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
             ohid = queso_oh_gbt_vfat_map[queso]["OH"]
             gbtid_list = queso_oh_gbt_vfat_map[queso]["GBT"]
             vfat_list = queso_oh_gbt_vfat_map[queso]["VFAT"]
             vfat_list_str = ' '.join(str(v) for v in vfat_list)
-            bestphase_file = "me0_lpgbt/queso_testing/me0_queso_vfat_phase_scan.txt"
-            sbit_bestphase_file = "me0_lpgbt/queso_testing/me0_queso_vfat_sbit_phase_scan.txt"
-            os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -f %s"%(ohid, vfat_list_str, bestphase_file))
+            os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
             sleep(2)
-            os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -f %s"%(ohid, vfat_list_str, sbit_bestphase_file))
-            print(Colors.GREEN + "\nSetting Elink Phases Done" + Colors.ENDC)
+            print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(2)
 
