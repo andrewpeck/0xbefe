@@ -132,6 +132,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-n", "--oh_ser_nr", action="store", dest="oh_ser_nr", help="oh_ser_nr = OH serial number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
@@ -181,7 +182,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        queso_bert(args.system, int(args.ohid), vfat_list, args.time, args.ber, float(args.cl))
+        queso_bert(args.system, int(args.ohid), int(args.oh_ser_nr), vfat_list, args.time, args.ber, float(args.cl))
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
