@@ -12,13 +12,26 @@ def set_bitslips(queso_bitslip_nodes, phase_bitslip_list):
 
 def set_phase(oh_select, vfat, elink, phase):
     gbt, gbt_select, rx_elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
+    oh_ver = get_oh_ver(oh_select, gbt_select)
     sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
     select_ic_link(oh_select, gbt_select)
+
+    GBT_ELINK_SAMPLE_PHASE_BASE_REG = -9999
+    if oh_ver == 1:
+        GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0CC
+    elif oh_ver == 2:
+        GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
+
+    elink_set = -9999
     if elink==0:
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dPHASESELECT"%rx_elink), phase)
+        elink_set = rx_elink
     else:
-        sbit_elink = sbit_elinks[elink-1]
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dPHASESELECT"%sbit_elink), phase)
+        elink_set = sbit_elinks[elink-1]
+
+    addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink_set
+    value = (mpeek(addr) & 0x0f) | (phase << 4)        
+    mpoke(addr, value)
+    #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dPHASESELECT"%elink_set), phase)
     sleep(0.000001) 
 
 def set_phases(oh_select, phase_bitslip_list):
@@ -144,6 +157,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
             prbs_min_err_list[vfat] = {}
             bitslip_list_perphase[vfat] = {}
             for elink in range(0,9):
+                phase_bitslip_list[vfat][elink] = {}
                 phase_bitslip_list[vfat][elink]["phase"] = -9999
                 phase_bitslip_list[vfat][elink]["bitslip"] = -9999
                 prbs_min_err_list[vfat][elink] = {}
