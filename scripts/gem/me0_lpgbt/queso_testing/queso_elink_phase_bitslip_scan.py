@@ -1,4 +1,5 @@
-from gem.gem_utils import *
+from gem.me0_lpgbt.rw_reg_lpgbt import *
+import gem.gem_utils as gem_utils
 from time import sleep, time
 import datetime
 import sys
@@ -7,11 +8,11 @@ import argparse
 def set_bitslips(queso_bitslip_nodes, phase_bitslip_list):
     for vfat in queso_bitslip_nodes:
         for elink in queso_bitslip_nodes[vfat]:
-            write_backend_reg(queso_bitslip_nodes[vfat][elink], phase_bitslip_list[vfat][elink]["bitslip"])
+            gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink], phase_bitslip_list[vfat][elink]["bitslip"])
 
 def set_phase(oh_select, vfat, elink, phase):
-    gbt, gbt_select, rx_elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
-    sbit_elinks = me0_vfat_to_sbit_elink(vfat)
+    gbt, gbt_select, rx_elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
+    sbit_elinks = gem_utils.me0_vfat_to_sbit_elink(vfat)
     select_ic_link(oh_select, gbt_select)
     if elink==0:
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dPHASESELECT"%rx_elink), phase)
@@ -91,19 +92,19 @@ def find_phase_center(err_list):
 
 def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bitslip_list):
     
-    queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
+    queso_reset_node = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
     queso_bitslip_nodes = {}
     queso_prbs_nodes = {}
     for vfat in vfat_list:
         queso_bitslip_nodes[vfat] = {}
         queso_prbs_nodes[vfat] = {}
         for elink in range(0,9):
-            queso_bitslip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
-            queso_prbs_nodes[vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
+            queso_bitslip_nodes[vfat][elink] = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
+            queso_prbs_nodes[vfat][elink] = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
 
     # Check if GBT is READY
     for gbt in [0,1]:
-        link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+        link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             file_out.close()
@@ -152,10 +153,10 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
                     bitslip_list_perphase[vfat][elink][phase] = -9999
 
         # Enable QUESO BERT
-        write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 1)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 1)
 
         # Reset QUESO BERT registers
-        write_backend_reg(queso_reset_node, 1)
+        gem_utils.write_backend_reg(queso_reset_node, 1)
         sleep(0.1)
 
         print ("")
@@ -164,7 +165,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
             print ("Scanning Phase %d\n:"%phase)
             for vfat in queso_bitslip_nodes:
                 for elink in queso_bitslip_nodes[vfat]:
-                    set_phase(oh_select, vfat, elink, phase):
+                    set_phase(oh_select, vfat, elink, phase)
 
             # Scan over bitslip and check PRBS errors
             for bitslip in range(0,9):
@@ -173,27 +174,27 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
                 # Set the bitslip for all vfats and elinks
                 for vfat in queso_bitslip_nodes:
                     for elink in queso_bitslip_nodes[vfat]:
-                    write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip)
+                    gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip)
                 sleep(0.1)
 
                 # Reset and wait
-                write_backend_reg(queso_reset_node, 1)
+                gem_utils.write_backend_reg(queso_reset_node, 1)
                 sleep(0.1)
 
                 # Check PRBS errors
                 for vfat in queso_bitslip_nodes:
                     for elink in queso_bitslip_nodes[vfat]:
-                        prbs_err = read_backend_reg(queso_prbs_nodes[vfat][elink])
+                        prbs_err = gem_utils.read_backend_reg(queso_prbs_nodes[vfat][elink])
                         if prbs_err <= prbs_min_err_list[vfat][elink][phase]:
                             bitslip_list_perphase[vfat][elink][phase] = bitslip
                             prbs_min_err_list[vfat][elink][phase] = prbs_err
 
         # Disable QUESO BERT 
         sleep(0.1)
-        write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 0)
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 0)
 
         # Reset QUESO BERT registers
-        write_backend_reg(queso_reset_node, 1)
+        gem_utils.write_backend_reg(queso_reset_node, 1)
 
         # Find best phase and bitslip
         print ("\nPhase Scan Results:")
