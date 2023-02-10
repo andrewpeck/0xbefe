@@ -8,6 +8,8 @@ bin
 .cxl.ip/
 cxl_error.log
 *.DS_Store
+sim_build
+hdl-prj.json
 
 /gem/ip/*/*
 /csc/ip/*/*

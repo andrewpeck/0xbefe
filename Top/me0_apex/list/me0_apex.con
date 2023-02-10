@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 boards/apex/constraints/ku15p.xdc
 boards/apex/constraints/mgt_me0.xdc

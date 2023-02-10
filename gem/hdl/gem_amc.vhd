@@ -212,6 +212,8 @@ architecture gem_amc_arch of gem_amc is
     signal gbt_link_status_arr          : t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     signal gbt_ready_arr                : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
+    signal gbt_ic_rx_use_ec             : std_logic;
+
     signal lpgbt_reset_tx               : std_logic;
     signal lpgbt_reset_rx               : std_logic;
 
@@ -625,6 +627,7 @@ begin
             vfat3_sc_only_mode_o        => vfat3_sc_only_mode,
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
             vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
+            gbt_ic_rx_use_ec_o          => gbt_ic_rx_use_ec,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
@@ -879,6 +882,8 @@ begin
             )
             port map(
                 gbt_frame_clk_i       => ttc_clocks_i.clk_40,
+
+                gbt_ic_rx_use_ec_i    => gbt_ic_rx_use_ec,
 
                 gbt_rx_data_arr_i     => lpgbt_rx_data_arr,
                 gbt_tx_data_arr_o     => lpgbt_tx_data_arr,

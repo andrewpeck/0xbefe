@@ -10,9 +10,9 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits):
     print ("%s VFAT S-Bit Mapping\n"%gem)
 
-    gem_link_reset()
     global_reset()
-    sleep(0.1)
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     # Configure TTC generator
@@ -58,7 +58,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
-            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 200)
+            cal_dur = 200
+            if l1a_bxgap < 225:
+                cal_dur = l1a_bxgap - 25
+            if cal_dur < 20:
+                cal_dur = 20
+            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), cal_dur)
         elif set_cal_mode == "current":
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 2)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
@@ -107,13 +112,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                     write_backend_reg(channel_sbit_select_node, sbit) # Select S-bit for S-bit counter
 
                     # Start the cyclic generator
+                    sleep(0.001)
                     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+                    sleep(0.001)
                     cyclic_running = read_backend_reg(cyclic_running_node)
                     while cyclic_running:
                         cyclic_running = read_backend_reg(cyclic_running_node)
 
                     # Stop the cyclic generator
+                    sleep(0.001)
                     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+                    sleep(0.001)
 
                     elink_sbit_counter_final = read_backend_reg(elink_sbit_counter_node)
                     l1a_counter = read_backend_reg(l1a_node)

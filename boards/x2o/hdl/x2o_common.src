@@ -1,3 +1,2 @@
-# -*- mode: TCL;-*-
 
 boards/x2o/hdl/pkg/ipb_sys_addr_decode.vhd

@@ -41,10 +41,13 @@ port(
     ipb_mon_miso_arr_i          : in ipb_rbus_array(g_NUM_IPB_MON_SLAVES - 1 downto 0);
     
     loopback_gbt_test_en_o      : out std_logic;
+
+    vfat3_sc_only_mode_o        : out std_logic;
     use_v3b_elink_mapping_o     : out std_logic;
     vfat_hdlc_address_arr_o     : out t_std4_array(23 downto 0);
 
-    vfat3_sc_only_mode_o        : out std_logic;
+    gbt_ic_rx_use_ec_o          : out std_logic;
+
     manual_link_reset_o         : out std_logic;
     global_reset_o              : out std_logic;
     gbt_reset_o                 : out std_logic;
@@ -64,9 +67,10 @@ architecture gem_system_regs_arch of gem_system_regs is
     signal loopback_gbt_test_en     : std_logic;
     
     signal vfat3_sc_only_mode       : std_logic;
-    
     signal use_v3b_elink_mapping    : std_logic;
     signal vfat_hdlc_address_arr    : t_std4_array(23 downto 0);
+
+    signal gbt_ic_rx_use_ec         : std_logic := '1';
 
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
@@ -102,6 +106,9 @@ begin
     vfat3_sc_only_mode_o <= vfat3_sc_only_mode;
     use_v3b_elink_mapping_o <= use_v3b_elink_mapping;
     vfat_hdlc_address_arr_o <= vfat_hdlc_address_arr;
+
+    --=== GBT conf === --
+    gbt_ic_rx_use_ec_o <= gbt_ic_rx_use_ec;
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;

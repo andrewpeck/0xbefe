@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 boards/ctp7/hdl/gem_ctp7.vhd top=gem_ctp7
 

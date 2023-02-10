@@ -80,6 +80,8 @@ Use -h option for any script to check usage
 
 ```vfat_slow_control_test.py```: error tests by read/write on VFAT registers using slow control
 
+```vfat_temp_monitor.py```: temp monitor for VFAT
+
 ## Retrieving VFAT Calibrbation Data
 
 To execute the script get_cal_info_vfat.py:
@@ -109,7 +111,7 @@ and login using your CERN credentials. (To execute from any directory, place `DB
  
 7. Execute the script:
 ```
-python3 get_cal_info_vfat.py -s backend -o <oh_id> -t <input_type> -w
+python3 get_cal_info_vfat.py -s backend -q ME0 -o <oh_id> -t <input_type> -w
 ```
 For more information on usage, run `# python3 get_cal_info_vfat.py -h`.
 

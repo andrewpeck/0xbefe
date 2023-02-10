@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 # Pkg
 common/hdl/pkg/mgt_pkg.vhd

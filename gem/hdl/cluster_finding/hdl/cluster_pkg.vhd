@@ -17,6 +17,10 @@ package cluster_pkg is
 
   subtype sbits_t is std_logic_vector(63 downto 0);
 
+  constant SBIT_BX_DELAY_NBITS : integer := 3;
+  constant SBIT_BX_DELAY_GRP_SIZE : integer := 8;
+  type sbit_bx_dly_array_t is array(integer range <>) of std_logic_vector(SBIT_BX_DELAY_NBITS-1 downto 0);
+
   type sbits_array_t is array(integer range <>) of sbits_t;
 
   type sbit_cluster_t is record
@@ -37,6 +41,12 @@ package cluster_pkg is
   function cluster_to_vector (a : sbit_cluster_t; size : integer)
     return std_logic_vector;
 
+  function if_then_else (bool : boolean; a : integer; b : integer)
+    return integer;
+
+  function invalid_clusterp (cluster : sbit_cluster_t; adr_max : integer)
+    return boolean;
+
 end package cluster_pkg;
 
 package body cluster_pkg is
@@ -50,5 +60,29 @@ package body cluster_pkg is
     tmp2 := std_logic_vector(resize(unsigned(tmp), size));
     return tmp2;
   end function;
+
+  function invalid_clusterp (cluster : sbit_cluster_t; adr_max : integer)
+    return boolean is
+  begin
+    if ((cluster.vpf = '0' and cluster.adr /= NULL_CLUSTER.adr) or
+        (cluster.vpf = '0' and cluster.cnt /= NULL_CLUSTER.cnt) or
+        (cluster.vpf = '0' and cluster.prt /= NULL_CLUSTER.prt) or
+        (to_integer(unsigned(cluster.adr)) >= adr_max and cluster.adr /= NULL_CLUSTER.adr))
+    then
+      return true;
+  else
+    return false;
+  end if;
+
+  end function;
+
+  function if_then_else (bool : boolean; a : integer; b : integer) return integer is
+  begin
+    if (bool) then
+      return a;
+    else
+      return b;
+    end if;
+  end if_then_else;
 
 end package body cluster_pkg;

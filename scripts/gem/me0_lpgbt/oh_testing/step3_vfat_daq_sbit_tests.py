@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 1 - DAQ SCurve
+    # Step 1 - DAQ SCurve 
     print (Colors.BLUE + "Step 1: DAQ SCurve\n" + Colors.ENDC)
     logfile.write("Step 1: DAQ SCurve\n\n")
     
@@ -198,8 +198,9 @@ if __name__ == "__main__":
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
     latest_dir = latest_file.split(".txt")[0]
     if os.path.isdir(latest_dir):
-        os.system("cp %s/scurve2Dhist_ME0_OH0.pdf %s/sbit_cluster_scurve_2D_hist.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_cluster_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_cluster_scurve_ENC.pdf"%(latest_dir, dataDir))
+        os.system("cp %s/scurveThreshdistribution_ME0_OH0.pdf %s/sbit_cluster_scurve_Threshold.pdf"%(latest_dir, dataDir))
     else:
         print (Colors.RED + "S-bit Cluster Scurve result directory not found" + Colors.ENDC)
         logfile.write("S-bit Cluster SCurve result directory not found\n")    

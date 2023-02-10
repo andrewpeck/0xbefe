@@ -24,7 +24,7 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain, plot, temp_cal):
+def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, niter, gain, plot, temp_cal):
 
     # PT-100 is an RTD (Resistance Temperature Detector) sensor
     # PT (ie platinum) has linear temperature-resistance relationship
@@ -95,9 +95,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     find_temp = temp_res_fit(temp_cal=temp_cal)
 
     reg_data = convert_adc_reg(channel)
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1, 0)  # Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data, 0)
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC, 0)  # Sets output current for the current DAC.
+    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1)  # Enables current DAC.
+    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data)
+    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC)  # Sets output current for the current DAC.
     sleep(0.01)
 
     start_time = int(time())
@@ -106,8 +106,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     file = open(filename, "w")
     file.write("Time (min) \t Voltage (V) \t Resistance (Ohm) \t Temperature (C)\n")
     t0 = time()
-    while int(time()) <= end_time:
-        if (time()-t0)>60:
+    nrun = 0
+    first_reading = 1
+    while ((run_time_min != 0 and int(time()) <= end_time) or (nrun < niter)):
+        read_adc_iter = 1
+        if (run_time_min != 0 and not first_reading and (time()-t0)<=60):
+            read_adc_iter = 0
+
+        if read_adc_iter:
             value = read_adc(channel, gain, system)
             Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
             if len(adc_calib_results)!=0:
@@ -126,6 +132,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
             file.write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
             print("time = %.2f min, \tch %X: 0x%03X = %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
             t0 = time()
+            if first_reading:
+                first_reading = 0
+
+        if run_time_min == 0:
+            nrun += 1
+            sleep(5)
+            
     file.close()
 
     figure_name = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_plot_" + now + ".pdf"
@@ -135,9 +148,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, gain
     ax1.plot(minutes, T, color="turquoise")
     fig1.savefig(figure_name, bbox_inches="tight")
 
-    writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0, 0)  # Enables current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0, 0)  #Sets output current for the current DAC.
-    writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0)  # Enables current DAC.
+    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0)  #Sets output current for the current DAC.
+    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0)
     sleep(0.01)
 
     powerdown_adc(oh_ver)
@@ -190,36 +203,36 @@ def live_plot(ax, x, y):
 
 
 def init_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)  # enable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0)  # resets temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)  # enable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1)  # resets temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1)  # enable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0)  # vref enable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1)  # vref enable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
     sleep(0.01)
 
 
 def powerdown_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0)  # disable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0)  # disable temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0)  # disable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0)  # disable temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0)  # disable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0)  # disable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0)  # vref disable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0)  # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0)  # vref disable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
 
 
 def read_adc(channel, gain, system):
 
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
 
     gain_settings = {
         2: 0x00,
@@ -227,23 +240,23 @@ def read_adc(channel, gain, system):
         16: 0x10,
         32: 0x11
     }
-    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain], 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
 
     done = 0
     while (done == 0):
         if system != "dryrun":
-            done = readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
         else:
             done = 1
 
-    val = readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
 
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
     return val
 
@@ -257,7 +270,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX")
-    parser.add_argument("-m", "--minutes", action="store", dest="minutes", help="minutes = int. # of minutes you want to run")
+    parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
+    parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
     parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
     args = parser.parse_args()
@@ -338,7 +352,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
 
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, gain, args.plot, temp_cal)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.temp, args.minutes, int(args.niter), gain, args.plot, temp_cal)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
