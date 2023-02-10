@@ -108,7 +108,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             file_out.close()
-            terminate()
+            rw_terminate()
 
     if phase_bitslip_list != {}:
         print ("Setting phases and bitslips:")
@@ -174,7 +174,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
                 # Set the bitslip for all vfats and elinks
                 for vfat in queso_bitslip_nodes:
                     for elink in queso_bitslip_nodes[vfat]:
-                    gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip)
+                        gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip)
                 sleep(0.1)
 
                 # Reset and wait
@@ -212,7 +212,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
                         char=Colors.GREEN + "+" + Colors.ENDC
                         phase_bitslip_list[vfat][elink]["phase"] = phase
                         phase_bitslip_list[vfat][elink]["bitslip"] = bitslip_list_perphase[vfat][elink][phase]
-                elif (prbs_min_err_list[vfat][elink][phase] > 0):
+                    elif (prbs_min_err_list[vfat][elink][phase] > 0):
                         char=Colors.RED + "-" + Colors.ENDC
                     else:
                         char = Colors.YELLOW + "x" + Colors.ENDC
@@ -345,7 +345,7 @@ if __name__ == "__main__":
                     print(Colors.YELLOW + "Bitslip for VFAT %d not in input file"%vfat + Colors.ENDC)
 
     # Initialization 
-    initialize(args.gem, args.system)
+    rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     # Scanning/setting bitslips
@@ -353,10 +353,10 @@ if __name__ == "__main__":
         scan_set_phase_bitslip(args.system, int(args.ohid), int(args.queso), vfat_list, phase_bitslip_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+        rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        rw_terminate()
 
     # Termination
-    terminate()
+    rw_terminate()
