@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 boards/ge11_oh/constraints/clocking.ucf
 boards/ge11_oh/constraints/pinout.ucf
 boards/ge11_oh/constraints/rlocs.ucf

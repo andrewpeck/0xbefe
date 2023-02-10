@@ -32,9 +32,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     file_out = open(filename,"w+")
     file_out.write("vfat    sbit    threshold    fired    time\n")
 
-    gem_link_reset()
     global_reset()
-    sleep(0.1)
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     sbit_data = {}
@@ -225,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for threshold scan (default=1)")
     parser.add_argument("-m", "--time", action="store", dest="time", default="0.001", help="time = time for each elink in sec (default = 0.001 s or 1 ms)")
     parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", default=False, help="Set for more verbosity")
+    parser.add_argument("-f", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -273,41 +274,68 @@ if __name__ == "__main__":
     sbit_list = ["all"] + sbit_list
     s_bit_cluster_mapping = {}
     print ("")
-    if not os.path.isdir("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
-        print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
-        sys.exit()
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
-    if len(list_of_files)==0:
-        print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
-        sys.exit()
-    elif len(list_of_files)>1:
-        print ("Mutliple S-bit cluster mapping results found, using latest file")
-    latest_file = max(list_of_files, key=os.path.getctime)
-    print ("Using S-bit cluster mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/")[1]))
-    file_in = open(latest_file)
-    for line in file_in.readlines():
-        if "VFAT" in line:
-            continue
-        if len(line.split())==0:
-            continue
-        vfat = int(line.split()[0])
-        channel = int(line.split()[1])
-        sbit = int(line.split()[2])
-        cluster_count = line.split()[3]
-        cluster_address = -9999
-        cluster_size = -9999
-        if len(line.split())>4:
-            cluster_size = int(line.split()[4].split(",")[0])
-            cluster_address = int(line.split()[4].split(",")[1])
-        if cluster_address == 2047 or cluster_size == 8:
+    if not args.latest_map:
+        default_file = "../resources/me0_oh%s_vfat_sbit_clustermap.txt"%args.ohid
+        file_in = open(default_file)
+        for line in file_in.readlines():
+            if "VFAT" in line:
+                continue
+            if len(line.split())==0:
+                continue
+            vfat = int(line.split()[0])
+            channel = int(line.split()[1])
+            sbit = int(line.split()[2])
+            cluster_count = line.split()[3]
             cluster_address = -9999
             cluster_size = -9999
-        if vfat not in s_bit_cluster_mapping:
-            s_bit_cluster_mapping[vfat] = {}
-        s_bit_cluster_mapping[vfat][channel] = {}
-        s_bit_cluster_mapping[vfat][channel]["sbit"] = sbit
-        s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
-    file_in.close()
+            if len(line.split())>4:
+                cluster_size = int(line.split()[4].split(",")[0])
+                cluster_address = int(line.split()[4].split(",")[1])
+            if cluster_address == 2047 or cluster_size == 8:
+                cluster_address = -9999
+                cluster_size = -9999
+            if vfat not in s_bit_cluster_mapping:
+                s_bit_cluster_mapping[vfat] = {}
+            s_bit_cluster_mapping[vfat][channel] = {}
+            s_bit_cluster_mapping[vfat][channel]["sbit"] = sbit
+            s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
+        file_in.close()
+    else:
+        if not os.path.isdir("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
+            print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
+            sys.exit()
+        list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+        if len(list_of_files)==0:
+            print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
+            sys.exit()
+        elif len(list_of_files)>1:
+            print ("Mutliple S-bit cluster mapping results found, using latest file")
+        latest_file = max(list_of_files, key=os.path.getctime)
+        print ("Using S-bit cluster mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/")[1]))
+        file_in = open(latest_file)
+        for line in file_in.readlines():
+            if "VFAT" in line:
+                continue
+            if len(line.split())==0:
+                continue
+            vfat = int(line.split()[0])
+            channel = int(line.split()[1])
+            sbit = int(line.split()[2])
+            cluster_count = line.split()[3]
+            cluster_address = -9999
+            cluster_size = -9999
+            if len(line.split())>4:
+                cluster_size = int(line.split()[4].split(",")[0])
+                cluster_address = int(line.split()[4].split(",")[1])
+            if cluster_address == 2047 or cluster_size == 8:
+                cluster_address = -9999
+                cluster_size = -9999
+            if vfat not in s_bit_cluster_mapping:
+                s_bit_cluster_mapping[vfat] = {}
+            s_bit_cluster_mapping[vfat][channel] = {}
+            s_bit_cluster_mapping[vfat][channel]["sbit"] = sbit
+            s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
+        file_in.close()
 
     # Initialization 
     initialize(args.gem, args.system)

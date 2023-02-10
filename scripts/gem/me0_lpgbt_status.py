@@ -8,25 +8,25 @@ def main(system, oh_ver, boss):
     # Checking Status of Registers
 
     print ("CHIP ID:")
-    print ("\t0x%08x" % (readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
+    print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
 
     print ("USER ID:")
-    print ("\t0x%08x" % (readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 8  | \
-                        readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
+    print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 8  | \
+                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
 
     print ("Lock mode:")
-    if (readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LOCKMODE"))):
+    if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LOCKMODE"))):
         print ("\t1 = Reference-less locking. Recover frequency from the data stream.")
     else:
         print ("\t0 = Use external 40 MHz reference clock.")
 
     print ("LpGBT Mode:")
-    mode = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
+    mode = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LPGBTMODE"))
 
     if (mode==0) : print ("\t4b0000    5 Gbps     FEC5    Off")
     if (mode==1) : print ("\t4b0001    5 Gbps     FEC5    Simplex TX")
@@ -47,7 +47,7 @@ def main(system, oh_ver, boss):
         
     if oh_ver == 2:
         print ("Boot Config:")
-        boot_config = readReg(getNode("LPGBT.RO.LPGBTSETTINGS.BOOTCONFIG"))
+        boot_config = lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.BOOTCONFIG"))
         if boot_config == 0:
             print ("\tLoad register values from fuses. If checksum does not match copy values from ROM")
         elif boot_config == 1:
@@ -59,24 +59,24 @@ def main(system, oh_ver, boss):
 
     if oh_ver == 1:
         print ("State Override:")
-        if (readReg(getNode("LPGBT.RO.LPGBTSETTINGS.STATEOVERRIDE"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.STATEOVERRIDE"))):
             print ("\t1 = Power up state machine halted.")
         else:
             print ("\t0 = Normal operation.")
             
         print ("VCO Bypass:")
-        if (readReg(getNode("LPGBT.RO.LPGBTSETTINGS.VCOBYPASS"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.VCOBYPASS"))):
             print ("\t1 = VCO Bypass mode. System clock come from TSTCLKINP/N (5.12 GHz).")
         else:
             print ("\t0 = Normal operation. System clocks comes from PLL/CDR.")
 
     print ("VCO Bypass:")
-    if (readReg(getNode("LPGBT.RO.LPGBTSETTINGS.VCOBYPASS"))):
+    if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.VCOBYPASS"))):
         print ("\t1 = VCO Bypass mode. System clock come from TSTCLKINP/N (5.12 GHz).")
     else:
         print ("\t0 = Normal operation. System clocks comes from PLL/CDR.")
 
-    pusmstate = readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
+    pusmstate = lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
 
     print ("PUSM State:")
     if oh_ver == 1:
@@ -122,65 +122,65 @@ def main(system, oh_ver, boss):
         if (pusmstate==19): print ("\t19 = READY - initialization is completed. Chip is operational. READY signal is asserted. For more details please refer to Section 8.7.3.")
 
     if oh_ver == 1:
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMPLLTIMEOUTACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMPLLTIMEOUTACTION"))):
             print ("PLL timeout:")
             print ("\tPLL timeout action has been executed since the last chip reset.")
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMDLLTIMEOUTACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMDLLTIMEOUTACTION"))):
             print("DLL timeout:")
             print("\tDLL timeout action has been executed since the last chip reset.")
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMCHANNELSTIMEOUTACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMCHANNELSTIMEOUTACTION"))):
             print("Channels timeout:")
             print("\tWait for channels locked timeout action has been executed since the last chip reset.")
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMBROWNOUTACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMBROWNOUTACTION"))):
             print("Brownout:")
             print("\tThe brownout action has been executed since the last chip reset.")
 
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMPLLWATCHDOGACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMPLLWATCHDOGACTION"))):
             print("PLL Watchdog:")
             print("\tPLL watchdog action has been executed since the last chip reset.")
 
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMDLLWATCHDOGACTION"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMDLLWATCHDOGACTION"))):
             print("DLL Watchdog:")
             print("\tDLL watchdog action has been executed since the last chip reset.")
     elif oh_ver == 2:
         print("PLL watchdog action counter:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMPLLWATCHDOGACTIONS"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMPLLWATCHDOGACTIONS"))))
 
         print ("DLL watchdog action counter:")
-        print ("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMDLLWATCHDOGACTIONS"))))
+        print ("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMDLLWATCHDOGACTIONS"))))
 
         print("Checksum watchdog action counter:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMCHECKSUMWATCHDOGACTIONS"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMCHECKSUMWATCHDOGACTIONS"))))
 
-        if (readReg(getNode("LPGBT.RO.PUSM.PUSMBROWNOUTACTIONFLAG"))):
+        if (lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMBROWNOUTACTIONFLAG"))):
             print("Brownout status register:")
             print("\tBrownout condition detected (VDD lower than brownout voltage level)")
 
         print("PLL timeout action counter:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMPLLTIMEOUTACTIONS"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMPLLTIMEOUTACTIONS"))))
 
         print("DLL timeout action counter:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMDLLTIMEOUTACTIONS"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMDLLTIMEOUTACTIONS"))))
 
         print("Channels locking timeout action counter:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.PUSM.PUSMCHANNELSTIMEOUTACTIONS"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMCHANNELSTIMEOUTACTIONS"))))
 
     if oh_ver == 1:
         print ("Frame Aligner State:")
-        print ("\t" + str(readReg(getNode("LPGBT.RO.PUSM.FASTATE"))))
+        print ("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.PUSM.FASTATE"))))
 
         print ("Frame Aligner Counter:")
-        print ("\t%d" % readReg(getNode("LPGBT.RO.PUSM.FACOUNTER")))
+        print ("\t%d" % lpgbt_readReg(getNode("LPGBT.RO.PUSM.FACOUNTER")))
     elif oh_ver == 2:
         print("Frame Aligner State:")
-        print("\t" + str(readReg(getNode("LPGBT.RO.DEBUG.FASTATE"))))
+        print("\t" + str(lpgbt_readReg(getNode("LPGBT.RO.DEBUG.FASTATE"))))
 
         print("Frame Aligner Status register:")
-        print("\tValid headers found: %d" % readReg(getNode("LPGBT.RO.DEBUG.FAHEADERFOUNDCOUNT")))
-        print("\tInvalid headers found: %d" % readReg(getNode("LPGBT.RO.DEBUG.FAHEADERNOTFOUNDCOUNT")))
-        print("\tFrame aligner unlocks: %d" % readReg(getNode("LPGBT.RO.DEBUG.FALOSSOFLOCKCOUNT")))
+        print("\tValid headers found: %d" % lpgbt_readReg(getNode("LPGBT.RO.DEBUG.FAHEADERFOUNDCOUNT")))
+        print("\tInvalid headers found: %d" % lpgbt_readReg(getNode("LPGBT.RO.DEBUG.FAHEADERNOTFOUNDCOUNT")))
+        print("\tFrame aligner unlocks: %d" % lpgbt_readReg(getNode("LPGBT.RO.DEBUG.FALOSSOFLOCKCOUNT")))
 
-    clkgfmstate = readReg(getNode("LPGBT.RO.CLKG.CLKG_SMSTATE"))
+    clkgfmstate = lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_SMSTATE"))
     print ("LJCDR State:")
 
     if (clkgfmstate==0x0):  print ("\t0x0 = smResetState reset state")
@@ -197,7 +197,7 @@ def main(system, oh_ver, boss):
     if (clkgfmstate==0xb):  print ("\t0xb = smPLLEnd PLL step; PLL is locked")
     if (clkgfmstate==0xc):  print ("\t0xc = smCDREnd CDR step; CDR is locked")
 
-    clkglfstate = readReg(getNode("LPGBT.RO.CLKG.CLKG_LFSTATE"))
+    clkglfstate = lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_LFSTATE"))
     print ("LJCDR Lock Filter State:")
     if (clkglfstate==0): print ("\t0 = lfUnlfLockedState low-pass lock filter is unlocked")
     if (clkglfstate==1): print ("\t1 = lfConfirmLockState low-pass lock filter is confirming lock")
@@ -205,43 +205,43 @@ def main(system, oh_ver, boss):
     if (clkglfstate==3): print ("\t3 = lfConfirmUnlockState")
 
     print ("Lock Filter Loss of Lock Count:")
-    print ("\t%d" % readReg(getNode("LPGBT.RO.CLKG.CLKG_LFLOSSOFLOCKCOUNT")))
+    print ("\t%d" % lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_LFLOSSOFLOCKCOUNT")))
 
     print ("LJCDR Locked Flag:")
-    print ("\t%d" % readReg(getNode("LPGBT.RO.CLKG.CLKG_SMLOCKED")))
+    print ("\t%d" % lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_SMLOCKED")))
 
     print ("Downlink FEC Errors:")
     if oh_ver == 1:
-        print ("\t%d" % (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H")) << 8 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))))
+        print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H")) << 8 | lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))))
     elif oh_ver == 2:
-        print ("\t%d" % (readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0")) << 24 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1")) << 16 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2")) << 8 | readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3")) ))
+        print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0")) << 24 | lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1")) << 16 | lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2")) << 8 | lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3")) ))
 
     print ("CDR Resistor:")
-    if (readReg(getNode("LPGBT.RO.CLKG.CLKG_ENABLE_CDR_R"))):
+    if (lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_ENABLE_CDR_R"))):
         print ("\t1 = connected")
     else:
         print ("\t0 = disconnected")
 
     print ("CDR Proportional Charge Pump Current:")
-    print ("\t%f uA" % (5.46 * readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_P_CDR"))))
+    print ("\t%f uA" % (5.46 * lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_P_CDR"))))
 
     print ("CDR Proportional Feedforward Current:")
-    print ("\t%f uA" % (5.46 * readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_P_FF_CDR"))))
+    print ("\t%f uA" % (5.46 * lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_P_FF_CDR"))))
 
     print ("CDR Integral Current:")
-    print ("\t%f uA" % (5.46 * readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_I_CDR"))))
+    print ("\t%f uA" % (5.46 * lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_I_CDR"))))
 
     print ("CDR FLL Current:")
-    print ("\t%f uA" % (5.46 * readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_I_FLL"))))
+    print ("\t%f uA" % (5.46 * lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_CONFIG_I_FLL"))))
 
     print ("VCO Cap Select:")
-    print ("\t%d" % (readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTH")) << 1 | readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTL"))))
+    print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTH")) << 1 | lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTL"))))
 
    #print ("Configuring adc...")
-   #writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0)
-   #writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x15, 0)
-   #writeReg(getNode("LPGBT.RW.ADC.CONVERT"), 0x1, 0)
-   #writeReg(getNode("LPGBT.RW.ADC.GAINSELECT"), 0x1, 0)
+   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)
+   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x15)
+   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.CONVERT"), 0x1)
+   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.GAINSELECT"), 0x1)
 
     init_adc(oh_ver)
     print ("ADC Readings:")
@@ -350,22 +350,22 @@ def main(system, oh_ver, boss):
 
         print ("CRC value written in EFuses: ")
         crc_registers = 4*[0]
-        crc_registers[0] = readReg(getNode("LPGBT.RWF.POWERUP.CRC0"))
-        crc_registers[1] = readReg(getNode("LPGBT.RWF.POWERUP.CRC1"))
-        crc_registers[2] = readReg(getNode("LPGBT.RWF.POWERUP.CRC2"))
-        crc_registers[3] = readReg(getNode("LPGBT.RWF.POWERUP.CRC3"))
+        crc_registers[0] = lpgbt_readReg(getNode("LPGBT.RWF.POWERUP.CRC0"))
+        crc_registers[1] = lpgbt_readReg(getNode("LPGBT.RWF.POWERUP.CRC1"))
+        crc_registers[2] = lpgbt_readReg(getNode("LPGBT.RWF.POWERUP.CRC2"))
+        crc_registers[3] = lpgbt_readReg(getNode("LPGBT.RWF.POWERUP.CRC3"))
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
         print ("CRC: 0x%X\n"%crc)
 
         print ("CRC value last computed: ")
         crc_registers = 4*[0]
-        crc_registers[0] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE0"))
-        crc_registers[1] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE1"))
-        crc_registers[2] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE2"))
-        crc_registers[3] = readReg(getNode("LPGBT.RO.PUSM.CRCVALUE3"))
+        crc_registers[0] = lpgbt_readReg(getNode("LPGBT.RO.PUSM.CRCVALUE0"))
+        crc_registers[1] = lpgbt_readReg(getNode("LPGBT.RO.PUSM.CRCVALUE1"))
+        crc_registers[2] = lpgbt_readReg(getNode("LPGBT.RO.PUSM.CRCVALUE2"))
+        crc_registers[3] = lpgbt_readReg(getNode("LPGBT.RO.PUSM.CRCVALUE3"))
         crc = crc_registers[0] | (crc_registers[1] << 8) | (crc_registers[2] << 16) | (crc_registers[3] << 24)
         print ("CRC: 0x%X\n"%crc)
-        print ("Number of CRC calculations which resulted in invalid checksum: %d\n"%(readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
+        print ("Number of CRC calculations which resulted in invalid checksum: %d\n"%(lpgbt_readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
     
     # Writing lpGBT configuration to text file
     resultDir = "results"
@@ -390,50 +390,50 @@ def main(system, oh_ver, boss):
 
 
 def init_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1, 0) # enable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1, 0) # resets temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1, 0) # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1, 0) # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1, 0) # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1) # enable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1) # resets temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1) # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1) # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1) # enable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1, 0)  # enable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1, 0) # enable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1, 0) # vref enable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1) # enable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1) # vref enable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
     sleep (0.01)
 
 def powerdown_adc(oh_ver):
-    writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0, 0) # disable ADC
-    writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0, 0) # disable temp sensor
-    writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0, 0) # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0, 0) # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0, 0) # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0) # disable ADC
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0) # disable temp sensor
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0) # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0) # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0) # disable dividers
     if oh_ver == 1:
-        writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0, 0) # disable dividers
-    writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0, 0) # disable dividers
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0, 0) # vref disable
-    writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0, 0) # vref tune
+        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0) # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0) # disable dividers
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0) # vref disable
+    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
 
 def read_adc(channel, system):
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
 
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
 
     done = 0
     while (done==0):
         if system!="dryrun":
-            done = readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
         else:
             done=1
 
-    val = readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
 
-    writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0, 0)
-    writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0, 0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
     return val
 

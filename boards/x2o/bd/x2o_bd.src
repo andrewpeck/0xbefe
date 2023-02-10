@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # X2O BD
 boards/x2o/bd/blobfish/framework.bd
 boards/x2o/hdl/bd/c2c_reset_fsm.v

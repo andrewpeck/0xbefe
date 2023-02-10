@@ -11,9 +11,9 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping):
     print ("LPGBT VFAT S-Bit Cluster Mapping\n")
 
-    gem_link_reset()
     global_reset()
-    sleep(0.1)
+    #gem_link_reset()
+    #sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
     # Configure TTC generator
@@ -62,7 +62,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         configureVfat(1, vfat, oh_select, 0)
         if set_cal_mode == "voltage":
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 1)
-            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 200)
+            cal_dur = 200
+            if l1a_bxgap < 225:
+                cal_dur = l1a_bxgap - 25
+            if cal_dur < 20:
+                cal_dur = 20
+            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), cal_dur)
         elif set_cal_mode == "current":
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 2)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
@@ -107,13 +112,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             write_backend_reg(reset_sbit_cluster_node, 1)
 
             # Start the cyclic generator
+            sleep(0.001)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_START"), 1)
+            sleep(0.001)
             cyclic_running = read_backend_reg(cyclic_running_node)
             while cyclic_running:
                 cyclic_running = read_backend_reg(cyclic_running_node)
 
             # Stop the cyclic generator
+            sleep(0.001)
             write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
+            sleep(0.001)
 
             l1a_counter = read_backend_reg(l1a_node)
             calpulse_counter = read_backend_reg(calpulse_node)
@@ -220,6 +229,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
+    parser.add_argument("-f", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -255,19 +265,24 @@ if __name__ == "__main__":
     s_bit_channel_mapping = {}
     print ("")
     if args.gem == "ME0":
-        if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
-            print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-            sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
-        if len(list_of_files)==0:
-            print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-            sys.exit()
-        elif len(list_of_files)>1:
-            print ("Mutliple S-bit mapping results found, using latest file")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
-        with open(latest_file) as input_file:
-            s_bit_channel_mapping = json.load(input_file)
+        if not args.latest_map:
+            default_file = "../resources/me0_oh%s_vfat_sbit_mapping.py"%args.ohid
+            with open(default_file) as input_file:
+                s_bit_channel_mapping = json.load(input_file)
+        else:
+            if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+                print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+                sys.exit()
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+            if len(list_of_files)==0:
+                print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+                sys.exit()
+            elif len(list_of_files)>1:
+                print ("Mutliple S-bit mapping results found, using latest file")
+                latest_file = max(list_of_files, key=os.path.getctime)
+                print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
+                with open(latest_file) as input_file:
+                    s_bit_channel_mapping = json.load(input_file)
 
     if args.use_channel_trimming is not None:
         if args.use_channel_trimming not in ["daq", "sbit"]:

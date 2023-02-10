@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 # GBT slow control
 common/hdl/slow_control/gbt_ic_controller.vhd

@@ -258,9 +258,9 @@ begin
     regs_addresses(3)(REG_ADC_ADDRESS_MSB downto REG_ADC_ADDRESS_LSB) <= x"3";
 
     -- Connect read signals
-    regs_read_arr(0)(REG_ADC_CTRL_OVERTEMP_BIT) <= overtemp;
-    regs_read_arr(0)(REG_ADC_CTRL_VCCAUX_ALARM_BIT) <= vccaux_alarm;
-    regs_read_arr(0)(REG_ADC_CTRL_VCCINT_ALARM_BIT) <= vccint_alarm;
+    regs_read_arr(0)(REG_ADC_CTRL_OVERTEMP_BIT) <= alarm_sync_os(0);
+    regs_read_arr(0)(REG_ADC_CTRL_VCCAUX_ALARM_BIT) <= alarm_sync_os(1);
+    regs_read_arr(0)(REG_ADC_CTRL_VCCINT_ALARM_BIT) <= alarm_sync_os(2);
     regs_read_arr(0)(REG_ADC_CTRL_ADR_IN_MSB downto REG_ADC_CTRL_ADR_IN_LSB) <= daddr;
     regs_read_arr(0)(REG_ADC_CTRL_ENABLE_BIT) <= den;
     regs_read_arr(0)(REG_ADC_CTRL_CNT_OVERTEMP_MSB downto REG_ADC_CTRL_CNT_OVERTEMP_LSB) <= cnt_overtemp;
@@ -291,7 +291,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => overtemp,
+        en_i      => alarm_sync(0),
         snap_i    => cnt_snap,
         count_o   => cnt_overtemp
     );
@@ -304,7 +304,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => vccaux_alarm,
+        en_i      => alarm_sync(1),
         snap_i    => cnt_snap,
         count_o   => cnt_vccaux_alarm
     );
@@ -317,7 +317,7 @@ begin
     port map (
         ref_clk_i => clock_i,
         reset_i   => reset,
-        en_i      => vccint_alarm,
+        en_i      => alarm_sync(2),
         snap_i    => cnt_snap,
         count_o   => cnt_vccint_alarm
     );

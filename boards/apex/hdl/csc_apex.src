@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 boards/apex/hdl/csc_apex.vhd top=csc_apex
 boards/apex/hdl/pkg/csc_board_config_pkg.vhd

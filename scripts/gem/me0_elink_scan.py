@@ -46,8 +46,8 @@ def me0_elink_scan(system, oh_select, vfat_list):
             hwid_node = gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_ID" % (oh_select, vfat))
             n_err = 0
             for iread in range(10):
-                hwid = gem_utils.simple_read_backend_reg(hwid_node, -9999)
-                if hwid==-9999:
+                hwid = gem_utils.read_backend_reg(hwid_node, False)
+                if hwid==0xdeaddead:
                     n_err+=1
             n_err_vfat_elink[vfat][elink] = n_err
 

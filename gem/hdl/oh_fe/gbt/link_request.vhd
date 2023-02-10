@@ -49,8 +49,6 @@ architecture Behavioral of link_request is
 
   signal rd_valid     : std_logic;
   signal rd_data      : std_logic_vector(IPB_REQ_BITS-1 downto 0);
-  signal tx_dout_sump : std_logic_vector(64-32-1 downto 0);
-  signal rx_dout_sump : std_logic_vector(64-49-1 downto 0);
 
   signal rx_din : std_logic_vector (63 downto 0);
   signal tx_din : std_logic_vector (63 downto 0);

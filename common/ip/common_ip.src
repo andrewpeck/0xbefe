@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 common/ip/ila_axi_ipbus_bridge_ipbclk/ila_axi_ipbus_bridge_ipbclk.xci
 common/ip/ila_axi_ipbus_bridge/ila_axi_ipbus_bridge.xci

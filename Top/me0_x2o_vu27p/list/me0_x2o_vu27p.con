@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 boards/x2o/constraints/vup.xdc
 boards/x2o/constraints/mgt_vu27p.xdc
