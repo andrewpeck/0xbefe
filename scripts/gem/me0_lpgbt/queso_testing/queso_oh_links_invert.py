@@ -59,6 +59,7 @@ def invert_eprx(boss):
 def invert_epclk(boss):
     if (boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"), 0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK5INVERT"), 0x1)
     
     print ("EPCLK inversions done")
 

@@ -1,7 +1,7 @@
 import paramiko
 from time import time, sleep
 import argparse
-import os
+import os, sys
 from common.rw_reg import *
 
 class Colors:
@@ -43,9 +43,16 @@ if __name__ == "__main__":
 
     # QUESO to OH-GBT mapping
     queso_oh_gbt_vfat_map = {}
+    queso_oh_gbt_vfat_map["0"] = {}
     queso_oh_gbt_vfat_map["0"]["OH"] = 0
     queso_oh_gbt_vfat_map["0"]["GBT"] = [0, 1]
     queso_oh_gbt_vfat_map["0"]["VFAT"] = [0, 1, 8, 9, 16, 17]
+
+    # OH, GBT, VFAT list overall
+    oh_gbt_vfat_map = {}
+    oh_gbt_vfat_map[0] = {}
+    oh_gbt_vfat_map[0]["GBT"] = [0, 1]
+    oh_gbt_vfat_map[0]["VFAT"] = [0, 1, 8, 9, 16, 17]
 
     # Load SSH host keys
     ssh.load_system_host_keys()
@@ -138,59 +145,6 @@ if __name__ == "__main__":
         print ("\n######################################################\n")
         sleep(10)
 
-        # Initialize frontend
-        if not args.turn_off:
-            print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
-            os.system("python3 init_frontend.py")
-            print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
-            print ("\n######################################################\n")
-            sleep(2)
-
-        # Do not use HDLC address
-        vfats_per_oh = 24
-        if not args.turn_off:
-            for vfat in range(vfats_per_oh):
-                print(Colors.BLUE + "Setting HDLC addresses to 0\n" + Colors.ENDC)
-                write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, 0)
-                print(Colors.GREEN + "\nSetting HDLC addresses Done" + Colors.ENDC)
-                print ("\n######################################################\n")
-                sleep(0.1)
-
-        # Invert Elinks in OH
-        if not args.turn_off:
-            print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
-            ohid = queso_oh_gbt_map[queso]["OH"]
-            gbtid_list = queso_oh_gbt_map[queso]["GBT"]
-            for gbtid in gbtid_list:
-                os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
-            print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
-            print ("\n######################################################\n")
-            sleep(2)
-
-        # Set elink phases for QUESO
-        if not args.turn_off:
-            print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
-            ohid = queso_oh_gbt_vfat_map[queso]["OH"]
-            gbtid_list = queso_oh_gbt_vfat_map[queso]["GBT"]
-            vfat_list = queso_oh_gbt_vfat_map[queso]["VFAT"]
-            vfat_list_str = ' '.join(str(v) for v in vfat_list)
-            os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
-            sleep(2)
-            print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
-            print ("\n######################################################\n")
-            sleep(2)
-
-        # Read currents after OH initialization
-        if not args.turn_off:
-            print (Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            print(output)
-            print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
-            print ("\n######################################################\n")
-            sleep(2)
-
         # Terminate RPI GPIOs
         if args.turn_off:
             print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
@@ -206,3 +160,70 @@ if __name__ == "__main__":
         print ("\n#####################################################################################################################################\n")
         ssh.close()
     
+    print ("")
+    if args.turn_off:
+        sys.exit()
+
+    # Initialize frontend
+    print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
+    os.system("python3 init_frontend.py")
+    print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
+    print ("\n######################################################\n")
+    sleep(2)
+
+    # Do not use HDLC address
+    vfats_per_oh = 24
+    for vfat in range(vfats_per_oh):
+        print(Colors.BLUE + "Setting HDLC addresses to 0\n" + Colors.ENDC)
+        write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, 0)
+        print(Colors.GREEN + "\nSetting HDLC addresses Done" + Colors.ENDC)
+        print ("\n######################################################\n")
+        sleep(0.1)
+
+    # Invert Elinks in OH
+    print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
+    for ohid in oh_gbt_vfat_map:
+        gbtid_list = oh_gbt_vfat_map[ohid]["GBT"]
+        for gbtid in gbtid_list:
+            os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
+    print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
+    print ("\n######################################################\n")
+    sleep(2)
+
+    # Set elink phases for QUESO
+    print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
+    for ohid in oh_gbt_vfat_map:
+        vfat_list = oh_gbt_vfat_map[ohid]["VFAT"]
+        vfat_list_str = ' '.join(str(v) for v in vfat_list)
+        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
+    sleep(2)
+    print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
+    print ("\n######################################################\n")
+    sleep(2)
+
+    print ("")
+    for queso in args.queso_list:
+        print(Colors.BLUE + "Connecting again to QUESO %s\n"%queso + Colors.ENDC)
+        # Connect to each RPi using username/password authentication
+        if queso in pi_list:
+            pi_ip = pi_list[queso]
+        else:
+            print (Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+            continue
+        ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+        print ("\n######################################################\n")
+
+        # Read currents after OH initialization
+        if not args.turn_off:
+            print (Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
+            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            output = ssh_stdout.readlines()
+            print(output)
+            print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
+            print ("\n######################################################\n")
+            sleep(2)
+
+        print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
+        print ("\n#####################################################################################################################################\n")
+        ssh.close()
