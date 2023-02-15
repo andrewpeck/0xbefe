@@ -176,7 +176,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
         print ("")
         # Scan over phases
         for phase in range(0, 15):
-            print ("Scanning Phase %d\n:"%phase)
+            print ("Scanning Phase %d:\n"%phase)
             for vfat in queso_bitslip_nodes:
                 for elink in queso_bitslip_nodes[vfat]:
                     set_phase(oh_select, vfat, elink, phase)

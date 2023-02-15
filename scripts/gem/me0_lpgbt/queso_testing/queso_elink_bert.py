@@ -77,11 +77,51 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
 
     t0 = time()
     time_prev = t0
+
+    # Initial errors
+    n_elink_errors = 0
+    print ("Starting PRBS errors: ")
+    file_out.write("Starting PRBS errors: \n")
+    err_str = Colors.RED + "  PRBS errors on: "
+    for vfat in queso_bitslip_nodes:
+        for elink in queso_bitslip_nodes[vfat]:
+            prbs_errors[vfat][elink] = read_backend_reg(queso_prbs_nodes[vfat][elink])
+            if prbs_errors[vfat][elink] != 0:
+                err_str += "VFAT %d ELINK %d, "%(vfat, elink)
+                n_elink_errors += 1
+    err_str += "\n" + Colors.ENDC
+    if n_elink_errors == 0:
+        print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
+        file_out.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
+    else:
+        print (err_str)
+        file_out.write(err_str + "\n")
+
     while ((time()-t0)/60.0) < runtime:
         time_passed = (time()-time_prev)/60.0
         if time_passed >= 1:
             print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
             file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
+
+            # Checking errors
+            n_elink_errors = 0
+            print ("Checking PRBS errors: ")
+            file_out.write("Checking PRBS errors: \n")
+            err_str = Colors.RED + "  PRBS errors on: "
+            for vfat in queso_bitslip_nodes:
+                for elink in queso_bitslip_nodes[vfat]:
+                    prbs_errors[vfat][elink] = read_backend_reg(queso_prbs_nodes[vfat][elink])
+                    if prbs_errors[vfat][elink] != 0:
+                        err_str += "VFAT %d ELINK %d, "%(vfat, elink)
+                        n_elink_errors += 1
+            err_str += "\n" + Colors.ENDC
+            if n_elink_errors == 0:
+                print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
+                file_out.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
+            else:
+                print (err_str)
+                file_out.write(err_str + "\n")
+
             time_prev = time()
 
     print ("\nEnd Error Counting:")
@@ -91,6 +131,7 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 0)
 
+    # Final errors
     for vfat in queso_bitslip_nodes:
         for elink in queso_bitslip_nodes[vfat]:
             prbs_errors[vfat][elink] = read_backend_reg(queso_prbs_nodes[vfat][elink])
