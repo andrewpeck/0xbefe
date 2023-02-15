@@ -87,7 +87,7 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
         for elink in queso_bitslip_nodes[vfat]:
             prbs_errors[vfat][elink] = read_backend_reg(queso_prbs_nodes[vfat][elink])
             if prbs_errors[vfat][elink] != 0:
-                err_str += "VFAT %d ELINK %d, "%(vfat, elink)
+                err_str += "VFAT %d ELINK %d %d errors, "%(vfat, elink, prbs_errors[vfat][elink])
                 n_elink_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_elink_errors == 0:
@@ -112,7 +112,7 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
                 for elink in queso_bitslip_nodes[vfat]:
                     prbs_errors[vfat][elink] = read_backend_reg(queso_prbs_nodes[vfat][elink])
                     if prbs_errors[vfat][elink] != 0:
-                        err_str += "VFAT %d ELINK %d, "%(vfat, elink)
+                        err_str += "VFAT %d ELINK %d %d errors, "%(vfat, elink, prbs_errors[vfat][elink])
                         n_elink_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_elink_errors == 0:
