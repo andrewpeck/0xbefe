@@ -31,6 +31,15 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     file_out.write("Checking FEC Errors for: " + path + "\n\n")
     fec_errors = 0
 
+    # Check if GBT is READY
+    if path == "uplink":
+        for gbt in gbtid:
+            link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (ohid, gbt)))
+            if (link_ready!=1):
+                print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
+                file_out.close()
+                rw_terminate()
+        
     if system != "chc" and opr in ["start", "run"]:
         gem_utils.gem_link_reset()
     sleep(0.1)
@@ -54,7 +63,6 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 
     if runtime is None:
         ber_limit = float(ber_limit)
-        cl = float(cl)
         runtime = (-math.log(1-cl))/(data_rate * ber_limit * 60)
     elif ber_limit is None:
         runtime = float(runtime)
@@ -178,10 +186,11 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     elif path == "downlink": # check FEC errors on lpGBT
         # Enable the counter
         if opr in ["start", "run"]:
+            init_lpgbt_fec_error_counter(oh_ver)
             if oh_ver == 1:
-                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1)
             elif oh_ver == 2:
-                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1)
     
         # start error counting loop
         start_fec_errors = lpgbt_fec_error_counter(oh_ver)
@@ -258,9 +267,9 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         # Disable the counter
         if opr in ["run", "stop"]:
             if oh_ver == 1:
-                writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0)
             elif oh_ver == 2:
-                writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0, 0)
+                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0)
 
         if opr != "run":
             return  
@@ -290,6 +299,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
         if fec_error_gbt == 0:
             result_string += "  Bit Error Ratio (BER) " + ber_str + "\n"
             result_string += "  Inefficiency " + ineffi_str + Colors.ENDC + "\n"
+        else:
+            result_string += Colors.ENDC
         result_string_write += "GBT %d\n"%gbt
         result_string_write += "  Number of FEC errors in %.2f minutes: %d\n"%(runtime, fec_error_gbt)
         if fec_error_gbt == 0:
@@ -302,17 +313,27 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
     if oh_ver == 1:
-        error_counter_h = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
-        error_counter_l = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
+        error_counter_h = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
+        error_counter_l = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
         error_counter = (error_counter_h << 8) | error_counter_l
     elif oh_ver == 2:
-        error_counter_0 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
-        error_counter_1 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
-        error_counter_2 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
-        error_counter_3 = readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
+        error_counter_0 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
+        error_counter_1 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
+        error_counter_2 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
+        error_counter_3 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
         error_counter = (error_counter_0 << 24) | (error_counter_1 << 16) | (error_counter_2 << 8) | error_counter_3
     return error_counter   
-       
+
+def init_lpgbt_fec_error_counter(oh_ver):
+    if oh_ver == 1:
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L").address, 0x0)
+    elif oh_ver == 2:
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2").address, 0x0)
+        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3").address, 0x0)
+
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 Bit Error Ratio Test (BERT) using FEC Error Counters")
@@ -440,13 +461,13 @@ if __name__ == "__main__":
         for gbt in args.gbtid:
             check_lpgbt_ready(args.ohid, gbt)
 
-    # Readback rom register to make sure communication is OK
+    # Readback rom register to make sure communication is OK  
     if args.system != "dryrun" and args.path == "downlink":
         check_rom_readback(args.ohid, args.gbtid[0])
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
     try:
-        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, args.cl, vfat_list, args.verbose)
+        check_fec_errors(args.gem, args.system, oh_ver, boss, args.path, args.opr, int(args.ohid), args.gbtid, args.time, args.ber, float(args.cl), vfat_list, args.verbose)
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

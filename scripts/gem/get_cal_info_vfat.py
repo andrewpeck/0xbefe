@@ -30,16 +30,17 @@ def main(gem, oh_select, id_type, write):
     gem_link_reset()
     sleep(0.1)
 
+    print ("Optohybrid: %d"%oh_select)
     for vfat in range(0,24):
         register = get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.HW_CHIP_ID"%(oh_select, vfat))
-        serialN[vfat] = simple_read_backend_reg(register, -9999)
+        serialN[vfat] = read_backend_reg(register, False)
     print("=" * 31)
     print("====== VFAT Chip Numbers ======")
     print("=" * 31)
     print("VFAT\t|\t Chip Number")
     print("-" * 31)
     for vfat in range(0,24):
-        if serialN[vfat] == -9999:
+        if serialN[vfat] == 0xdeaddead:
             print(Colors.RED + "%s" % vfat + Colors.ENDC + "\t|\t" + Colors.RED + "Link bad" + Colors.ENDC)
         else:
             print(Colors.GREEN + "%s" % vfat + Colors.ENDC + "\t|\t" + Colors.GREEN + "%s" % hex(serialN[vfat]) + Colors.ENDC)
@@ -63,7 +64,7 @@ def main(gem, oh_select, id_type, write):
     if id_type=="hw_id":
         vfatList = serialN
     elif id_type=="file":
-        inFile = "../resources/vfatID.txt"
+        inFile = "../resources/me0_oh%d_vfatID.txt"%oh_select
         if not os.path.isfile(inFile):
             print (Colors.YELLOW + "Missing vfatID file for OH %d"%(oh_select) + Colors.ENDC)
             sys.exit()
@@ -159,7 +160,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Retrieve VFAT calibration info from database.')
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 or GE21 or GE11")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
+    parser.add_argument("-o", "--ohid", action="store", nargs="+", dest="ohid", help="ohid = OH number")
     parser.add_argument("-w", "--write", action="store_true", dest="write", help="write calib data to file")
     parser.add_argument("-t", "--type", action="store", dest="type", help="type = hw_id or file")
     #parser.add_argument("-i", "--inFile", action="store", dest="inFile", help="input file with list of VFAT serial numbers")
@@ -177,9 +178,12 @@ if __name__ == '__main__':
         print(Colors.YELLOW + "Valid gem stations: ME0, GE21, GE11" + Colors.ENDC)
         sys.exit()
 
+    oh_list = []
     if args.ohid is None:
         print(Colors.YELLOW + "Need OHID" + Colors.ENDC)
         sys.exit()
+    for oh in args.ohid:
+        oh_list.append(int(oh))
     #if int(args.ohid) > 1:
     #    print(Colors.YELLOW + "Only OHID 0-1 allowed" + Colors.ENDC)
     #    sys.exit()
@@ -194,10 +198,11 @@ if __name__ == '__main__':
     initialize(args.gem, args.system)
     print("Initialization Done\n")
 
-    try: 
-        main(args.gem, int(args.ohid), args.type, args.write)
-    except KeyboardInterrupt:
-        print(Colors.YELLOW + "\nKeyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
+    for oh in oh_list:
+        try: 
+            main(args.gem, oh, args.type, args.write)
+        except KeyboardInterrupt:
+            print(Colors.YELLOW + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+            terminate()
     
     terminate()

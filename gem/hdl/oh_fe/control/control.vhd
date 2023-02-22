@@ -191,7 +191,6 @@ architecture Behavioral of control is
 
   signal sem_inject_strobe       : std_logic;
   signal sem_inject_address      : std_logic_vector(39 downto 0);
-  signal sem_critical_pulse      : std_logic;
   signal sem_correction_pulse    : std_logic;
   signal sem_uncorrectable_pulse : std_logic;
   signal sem_essential_pulse     : std_logic;

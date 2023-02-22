@@ -2,6 +2,7 @@ from common.rw_reg import *
 from common.utils import *
 import tableformatter as tf
 import sys
+from time import sleep
 
 try:
     imp.find_module('colorama')
@@ -241,6 +242,9 @@ def enable_hdlc_addressing(addr_list):
 
 def global_reset():
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 0x1)
+    sleep(0.1)
+    gem_link_reset()
+    sleep(0.1)
 
 def get_backend_node(name):
     node = None
@@ -251,50 +255,23 @@ def get_backend_node(name):
             terminate()
     return node
 
-def simple_read_backend_reg(node, error_value):
-    output_value = 0
-    if system == "backend":
-        output = read_reg(node)
-        if output != 0xdeaddead:
-          output_value = output
-        else:
-          output_value = error_value
-    return output_value
-
-def simple_write_backend_reg(node, data, error_value):
-    output_value = 0
-    if system == "backend":
-        output = write_reg(node, data)
-        if output != -1:
-            output_value = 1
-        else:
-            output_value = error_value
-    return output_value
-
-def read_backend_reg(node, n_tries = 1):
+def read_backend_reg(node, do_terminate = True):
     output = 0
     if system == "backend":
-        for i in range(0,n_tries):
-            output = read_reg(node)
-            if output!=0xdeaddead:
-                break
-            print (Colors.YELLOW + "WARNING: Bus Error, Nr. of tries: %d"%(i+1) + Colors.ENDC)
-    if output==0xdeaddead:
-        print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
-        terminate()
+        output = read_reg(node)
+        if output==0xdeaddead:
+            if do_terminate:
+                terminate()
     return output
     
-def write_backend_reg(node, data, n_tries = 1):
+def write_backend_reg(node, data, do_terminate = True):
+    output = 0
     if system == "backend":
-        for i in range(0,n_tries):
-            output = write_reg(node, data)
-            if output!=-1:
-                break
-            print (Colors.YELLOW + "ERROR: Bus Error, Nr. of tries: %d"%(i+1) + Colors.ENDC)
-            output = write_reg(node, data)
-    if output==-1:
-        print (Colors.RED + "ERROR: Bus Error" + Colors.ENDC)
-        terminate()
+        output = write_reg(node, data)
+        if output==-1:
+            if do_terminate:
+                terminate()
+    return output
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 
 # APEX IP
 boards/x2o/ip/slink_rocket_sender_kintex/slink_rocket_sender_kintex.xci

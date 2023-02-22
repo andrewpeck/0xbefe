@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 # CVP13 IP
 boards/cvp13/ip/pcie_qdma/pcie_qdma.xci
 boards/cvp13/ip/pcie_xdma/pcie_xdma.xci

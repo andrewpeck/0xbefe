@@ -33,7 +33,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     file_out.write("vfat    sbit    threshold    fired    time\n")
 
     gem_link_reset()
-    global_reset()
+    #global_reset()
     sleep(0.1)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 1)
 
@@ -81,7 +81,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     dac = "CFG_THR_ARM_DAC"
     for vfat in vfat_list:
         dac_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%d.%s"%(oh_select, vfat, dac))
-        vfat_counter_node[vfat] = get_backend_node("BEFE.GEM.SBIT_ME0.ME0_VFAT%d_SBIT_RATE"%vfat) # S-bit counter for enitre VFAT
+        vfat_counter_node[vfat] = get_backend_node("BEFE.GEM.SBIT_ME0.ME0_OH%d.ME0_VFAT%d_SBIT_RATE"%(oh_select,vfat)) # S-bit counter for enitre VFAT
 
     print ("\nRunning Sbit Noise Scans for VFATs:")
     print (vfat_list)
@@ -226,6 +226,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--step", action="store", dest="step", default="1", help="step = Step size for threshold scan (default = 1)")
     parser.add_argument("-m", "--time", action="store", dest="time", default="0.001", help="time = time for each elink in sec (default = 0.001 s or 1 ms)")
     parser.add_argument("-z", "--verbose", action="store_true", dest="verbose", default=False, help="Set for more verbosity")
+    parser.add_argument("-f", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -269,21 +270,27 @@ if __name__ == "__main__":
 
     sbit_list = [i for i in range(0,64)]
     sbit_list.append("all")
+
     s_bit_channel_mapping = {}
     print ("")
-    if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
-        print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-        sys.exit()
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
-    if len(list_of_files)==0:
-        print (Colors.YELLOW + "Run the S-bit mapping first" + Colors.ENDC)
-        sys.exit()
-    elif len(list_of_files)>1:
-        print ("Mutliple S-bit mapping results found, using latest file")
-    latest_file = max(list_of_files, key=os.path.getctime)
-    print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
-    with open(latest_file) as input_file:
-        s_bit_channel_mapping = json.load(input_file)
+    if not args.latest_map:
+        default_file = "../resources/me0_oh%s_vfat_sbit_mapping.py"%args.ohid
+        with open(default_file) as input_file:
+            s_bit_channel_mapping = json.load(input_file)
+    else:
+        if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+            print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+            sys.exit()
+        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+        if len(list_of_files)==0:
+            print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
+            sys.exit()
+        elif len(list_of_files)>1:
+            print ("Mutliple S-bit mapping results found, using latest file")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
+            with open(latest_file) as input_file:
+                s_bit_channel_mapping = json.load(input_file)
 
     if args.use_channel_trimming is not None:
         if args.use_channel_trimming not in ["daq", "sbit"]:

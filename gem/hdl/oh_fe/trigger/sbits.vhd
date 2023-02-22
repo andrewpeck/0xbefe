@@ -5,12 +5,10 @@
 -- A. Peck
 ----------------------------------------------------------------------------------
 -- Description:
+--
 --   This module wraps up all the functionality for deserializing 320 MHz S-bits
 --   as well as the cluster packer
-----------------------------------------------------------------------------------
--- 2017/11/01 -- Add description / comments
--- 2018/04/17 -- Add options for "light" oh firmware
--- 2018/09/18 -- Add module for S-bit remapping in firmware
+--
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -36,27 +34,22 @@ entity sbits is
 
     ttc : in ttc_t;
 
-    l1a_mask_delay : in std_logic_vector(4 downto 0);
-    l1a_mask_width : in std_logic_vector(4 downto 0);
+    l1a_mask_delay   : in std_logic_vector(4 downto 0);
+    l1a_mask_bitmask : in std_logic_vector(31 downto 0);
 
-    reverse_partitions : in std_logic                     := '0';
-    sbit_map_sel       : in std_logic_vector (1 downto 0) := (others => '0');
+    reverse_partitions_i : in std_logic                     := '0';
+    sbit_map_sel         : in std_logic_vector (1 downto 0) := (others => '0');
 
     vfat_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
 
     inject_sbits_mask_i : in std_logic_vector (NUM_VFATS-1 downto 0);
     inject_sbits_i      : in std_logic;
 
-    sbits_mux_sel_i : in  std_logic_vector (4 downto 0);
-    sbits_mux_o     : out std_logic_vector (63 downto 0);
-
     sot_invert_i : in std_logic_vector (NUM_VFATS-1 downto 0);    -- 24 or 12
     tu_invert_i  : in std_logic_vector (NUM_VFATS*8-1 downto 0);  -- 192 or 96
     tu_mask_i    : in std_logic_vector (NUM_VFATS*8-1 downto 0);  -- 192 or 96
 
     aligned_count_to_ready : in std_logic_vector (11 downto 0);
-
-    trigger_deadtime_i : in std_logic_vector (3 downto 0);
 
     sbits_p : in std_logic_vector (NUM_VFATS*8-1 downto 0);
     sbits_n : in std_logic_vector (NUM_VFATS*8-1 downto 0);
@@ -85,7 +78,10 @@ entity sbits is
 
     tmr_err_inj_i            : in  std_logic := '0';
     cluster_tmr_err_o        : out std_logic := '0';
-    trig_alignment_tmr_err_o : out std_logic := '0'
+    trig_alignment_tmr_err_o : out std_logic := '0';
+
+    sbit_bx_dlys_enable_i : in std_logic_vector (NUM_VFATS*MXSBITS/SBIT_BX_DELAY_GRP_SIZE-1 downto 0);
+    sbit_bx_dlys_i        : in sbit_bx_dly_array_t (NUM_VFATS*64/SBIT_BX_DELAY_GRP_SIZE-1 downto 0)
 
     );
 end sbits;
@@ -94,52 +90,37 @@ architecture Behavioral of sbits is
 
   signal l1a_pipeline : std_logic_vector (31 downto 0) := (others => '0');
   signal l1a_delayed  : std_logic;
-  signal l1a_mask_cnt : unsigned (4 downto 0)          := (others => '0');
   signal mask_l1a     : std_logic;
+  signal l1a_bitmask  : std_logic_vector (31 downto 0) := (others => '0');
 
   signal inject_sbits   : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
-  signal inject_sbits_r : std_logic_vector (NUM_VFATS-1 downto 0) := (others => '0');
 
   signal vfat_sbits_strip_mapped : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_raw          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_40m          : sbits_array_t(NUM_VFATS-1 downto 0);
+  signal vfat_sbits_160m         : sbits_array_t(NUM_VFATS-1 downto 0);
   signal vfat_sbits_injected     : sbits_array_t(NUM_VFATS-1 downto 0);
-
-  constant empty_vfat : std_logic_vector (63 downto 0) := x"0000000000000000";
-
-  signal active_vfats : std_logic_vector (NUM_VFATS-1 downto 0);
+  signal vfat_sbits_delayed      : sbits_array_t(NUM_VFATS-1 downto 0);
 
   signal sbits : std_logic_vector (MXSBITS_CHAMBER-1 downto 0) := (others => '0');
-
-  signal active_vfats_s1 : std_logic_vector (NUM_VFATS*8-1 downto 0);
-
-  signal sbits_mux_s0 : std_logic_vector (63 downto 0);
-  signal sbits_mux_s1 : std_logic_vector (63 downto 0);
-  signal sbits_mux    : std_logic_vector (63 downto 0);
-  signal aff_mux      : std_logic;
-
-  signal sbits_mux_sel : std_logic_vector (4 downto 0);
 
   -- multiplex together the 1536 s-bits into a single chip-scope accessible register
   -- don't want to affect timing, so do it through a couple of flip-flop stages
 
-  attribute mark_debug              : string;
-  attribute mark_debug of sbits_mux : signal is "TRUE";
-  attribute mark_debug of aff_mux   : signal is "TRUE";
+  -- function to replicate a std_logic bit some number of times
+  -- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
 
 begin
-
-  process (clocks.clk40)
-  begin
-    if (rising_edge(clocks.clk40)) then
-      if (unsigned(sbits_mux_sel_i) > to_unsigned(NUM_VFATS, sbits_mux_sel_i'length)-1) then
-        sbits_mux_sel <= (others => '0');
-      else
-        sbits_mux_sel <= sbits_mux_sel_i;
-      end if;
-    end if;
-  end process;
-
-  active_vfats_o <= active_vfats;
 
   --------------------------------------------------------------------------------------------------------------------
   -- S-bit Deserialization and Alignment
@@ -190,9 +171,29 @@ begin
   -- Channel to Strip Mapping
   --------------------------------------------------------------------------------------------------------------------
 
+  process (clocks.clk160_0) is
+  begin
+    if (rising_edge(clocks.clk160_0)) then
+      vfat_sbits_160m <= vfat_sbits_raw;
+    end if;
+  end process;
+
+  process (clocks.clk40) is
+  begin
+    if (rising_edge(clocks.clk40)) then
+      vfat_sbits_40m <= vfat_sbits_raw;
+    end if;
+  end process;
+
   sbit_reverse : for I in 0 to (NUM_VFATS-1) generate
   begin
 
+    -- deserializer --> sbits --> reverse? --> vfat_sbits_raw -->
+    --
+    --  raw --> vfat_sbits_40m --> active vfats / hitmap
+    --
+    --  raw --> vfat_sbits_160m --> vfat_sbits_strip_mapped --> vfat_sbits_injected --> clusterizer
+    --
 
     -- optionally reverse the sbit order... needed for some slots on ge11 ?
 
@@ -217,12 +218,13 @@ begin
   channel_to_strip_inst : entity work.channel_to_strip
     generic map (
       USE_DYNAMIC_MAPPING => true,
+      REGISTER_INPUT      => false,
       REGISTER_OUTPUT     => true
       )
     port map (
-      clock       => clocks.clk40,
+      clock       => clocks.clk160_0,
       mapping     => to_integer (unsigned (sbit_map_sel)),
-      channels_in => vfat_sbits_raw,
+      channels_in => vfat_sbits_160m,
       strips_out  => vfat_sbits_strip_mapped
       );
 
@@ -265,26 +267,9 @@ begin
   active_vfats_inst : entity work.active_vfats
     port map (
       clock          => clocks.clk40,
-      sbits_i        => sbits,
-      active_vfats_o => active_vfats
+      sbits_i        => vfat_sbits_40m,
+      active_vfats_o => active_vfats_o
       );
-
-  --------------------------------------------------------------------------------------------------------------------
-  -- Sbits Monitor Multiplexer
-  --------------------------------------------------------------------------------------------------------------------
-
-  process (clocks.clk40)
-  begin
-    if (rising_edge(clocks.clk40)) then
-      sbits_mux_s0 <= vfat_sbits_raw(to_integer(unsigned(sbits_mux_sel)));
-      sbits_mux_s1 <= sbits_mux_s0;
-      sbits_mux    <= sbits_mux_s1;
-      sbits_mux_o  <= sbits_mux;
-
-      aff_mux <= active_vfats(to_integer(unsigned(sbits_mux_sel)));
-
-    end if;
-  end process;
 
   --------------------------------------------------------------------------------------------------------------------
   -- Sbits hitmap
@@ -295,7 +280,7 @@ begin
       clock_i   => clocks.clk40,
       reset_i   => hitmap_reset_i,
       acquire_i => hitmap_acquire_i,
-      sbits_i   => vfat_sbits_raw,
+      sbits_i   => vfat_sbits_40m,
       hitmap_o  => hitmap_sbits_o
       );
 
@@ -318,21 +303,28 @@ begin
   process (clocks.clk40) is
   begin
     if (rising_edge(clocks.clk40)) then
-
-      if (l1a_delayed = '1') then
-        l1a_mask_cnt <= unsigned(l1a_mask_width);
-      elsif (l1a_mask_cnt > 0) then
-        l1a_mask_cnt <= l1a_mask_cnt - 1;
-      end if;
-
-      if (l1a_mask_cnt > 0) then
-        mask_l1a <= '1';
-      else
-        mask_l1a <= '0';
-      end if;
-
+        l1a_bitmask <= '0' & l1a_bitmask(31 downto 1) or
+                       (l1a_mask_bitmask and repeat(l1a_delayed, l1a_mask_bitmask'length));
     end if;
   end process;
+
+  mask_l1a <= l1a_bitmask(0);
+
+  --------------------------------------------------------------------------------
+  -- Sbit Delays
+  --------------------------------------------------------------------------------
+
+  sbit_delay_inst : entity work.sbit_delay
+    generic map (
+      NUM_VFATS      => NUM_VFATS
+      )
+    port map (
+      clock          => clocks.clk160_0,
+      sbits_i        => vfat_sbits_injected,
+      sbits_o        => vfat_sbits_delayed,
+      dly_enable     => sbit_bx_dlys_enable_i,
+      sbit_bx_dlys_i => sbit_bx_dlys_i
+      );
 
   --------------------------------------------------------------------------------------------------------------------
   -- Cluster Packer
@@ -355,6 +347,8 @@ begin
     signal cluster_count_unmasked : t_std11_array (2 downto 0);
 
     signal overflow : std_logic_vector (2 downto 0);
+
+    signal reverse_partitions : std_logic := '0';
 
     attribute DONT_TOUCH                           : string;
     attribute DONT_TOUCH of clusters_unmasked_tmr  : signal is "true";
@@ -379,7 +373,6 @@ begin
 
       cluster_packer_inst : entity work.cluster_packer
         generic map (
-          DEADTIME       => 0,
           ONESHOT        => true,
           NUM_VFATS      => NUM_VFATS,
           NUM_PARTITIONS => NUM_PARTITIONS,
@@ -392,7 +385,7 @@ begin
 
           mask_output_i => mask_l1a,
 
-          sbits_i => vfat_sbits_injected,
+          sbits_i => vfat_sbits_delayed,
 
           clusters_o      => clusters_unmasked_tmr(I),
           cluster_count_o => cluster_count_unmasked(I),
@@ -400,11 +393,12 @@ begin
           clusters_masked_o      => clusters_masked_tmr(I),
           cluster_count_masked_o => cluster_count_masked(I),
 
-          overflow_o => overflow(I)
+          overflow_o => overflow(I),
+          valid_o    => open
           );
     end generate;
 
-    tmr_gen : if (EN_TMR = 1) generate
+    tmr_gen : if (EN_TMR_CLUSTER_PACKER = 1) generate
     begin
 
       majority_err (overflow_o, cluster_tmr_err(0), tmr_err_inj xor overflow(0), overflow(1), overflow(2));
@@ -430,7 +424,7 @@ begin
       end generate;
     end generate;
 
-    notmr_gen : if (EN_TMR /= 1) generate
+    notmr_gen : if (EN_TMR_CLUSTER_PACKER /= 1) generate
       clusters_masked          <= clusters_masked_tmr(0);
       clusters_unmasked        <= clusters_unmasked_tmr(0);
       overflow_o               <= overflow(0);
@@ -465,6 +459,13 @@ begin
     --------------------------------------------------------------------------------
     -- Cluster Outputs
     --------------------------------------------------------------------------------
+
+    process (clocks.clk160_0) is
+    begin
+      if (rising_edge(clocks.clk160_0)) then
+        reverse_partitions <= reverse_partitions_i;
+      end if;
+    end process;
 
     process (clocks.clk160_0) is
     begin

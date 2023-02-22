@@ -82,10 +82,6 @@ architecture xilinx of to_gbt_ser is
   attribute CORE_GENERATION_INFO           : string;
   attribute CORE_GENERATION_INFO of xilinx : architecture is "to_gbt_ser,selectio_wiz_v4_1,{component_name=to_gbt_ser,bus_dir=OUTPUTS,bus_sig_type=DIFF,bus_io_std=LVDS_25,use_serialization=true,use_phase_detector=false,serialization_factor=8,enable_bitslip=false,enable_train=false,system_data_width=1,bus_in_delay=NONE,bus_out_delay=NONE,clk_sig_type=DIFF,clk_io_std=LVCMOS18,clk_buf=BUFIO2,active_edge=RISING,clk_delay=NONE,v6_bus_in_delay=NONE,v6_bus_out_delay=NONE,v6_clk_buf=MMCM,v6_active_edge=DDR,v6_ddr_alignment=SAME_EDGE_PIPELINED,v6_oddr_alignment=SAME_EDGE,ddr_alignment=C0,v6_interface_type=NETWORKING,interface_type=NETWORKING,v6_bus_in_tap=0,v6_bus_out_tap=0,v6_clk_io_std=LVDS_25,v6_clk_sig_type=DIFF}";
   constant clock_enable                    : std_logic := '1';
-  signal unused                            : std_logic;
-  signal clk_in_int                        : std_logic;
-  signal clk_in_int_buf                    : std_logic;
-  signal clk_div_in_int                    : std_logic;
 
   -- Before the buffer
   signal data_out_to_pins_int      : std_logic_vector(sys_w-1 downto 0);
@@ -96,10 +92,7 @@ architecture xilinx of to_gbt_ser is
   -- Array to use intermediately from the serdes to the internal
   -- devices. bus "0" is the leftmost bus
   -- * fills in from higher order
-  signal oserdes_d                 : serdarr := ((others => (others => '0')));
-  signal serdesstrobe              : std_logic;
-  signal ocascade_ms_d             : std_logic_vector(sys_w-1 downto 0);
-  signal ocascade_ms_t             : std_logic_vector(sys_w-1 downto 0);
+  signal oserdes_d                 : serdarr := (others => (others => '0'));
   signal ocascade_sm_d             : std_logic_vector(sys_w-1 downto 0);
   signal ocascade_sm_t             : std_logic_vector(sys_w-1 downto 0);
 
