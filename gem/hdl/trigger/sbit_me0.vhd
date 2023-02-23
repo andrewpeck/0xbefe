@@ -392,6 +392,7 @@ begin
         signal sbits_i            : chamber_t;
         signal vfat_sbits_chamber : t_vfat3_sbits_arr(24*6 - 1 downto 0)
             := (others => (others => (others => '0')));
+        signal me0_segments : segment_list_t (g_NUM_SEGMENTS-1 downto 0);
     begin
 
         sbits_zero_pad : for ivfat in 0 to vfat_sbits_arr'length-1 generate
@@ -403,7 +404,6 @@ begin
         begin
             prtgen : for iprt in 0 to 7 generate
             begin
-                -- sbits_i(partition)(layer) <= vfat_sbits_arr(layer)(vfat);
                 sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) &
                                          vfat_sbits_chamber(ilayer)(8 + iprt) &
                                          vfat_sbits_chamber(ilayer)(0 + iprt);
@@ -429,8 +429,17 @@ begin
                 dav_i      => segment_finder_dav,
                 dav_o      => open,
                 sbits_i    => sbits_i,
-                segments_o => me0_segments_o
+                segments_o => me0_segments
                 );
+
+        -- transfer to 40MHz clock
+        process (ttc_clk_i.clk_40) is
+        begin
+            if (rising_edge(ttc_clk_i.clk_40)) then
+                me0_segments_o <= me0_segments;
+            end if;
+        end process;
+
 
     end generate;
 
