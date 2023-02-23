@@ -258,7 +258,11 @@ begin
 
     --== COUNT of summed sbits on selectable elink ==--
     -- assigned array of sbits for selected vfat (x) and elink (e)
-    vfat3_sbit0xe_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+    vfat3_sbit0xe_test <= vfat3_sbits_arr_i
+                          (to_integer(unsigned(test_sel_oh_sbit_me0)))
+                          (to_integer(unsigned(test_sel_vfat_sbit_me0)))
+                          ((((to_integer(unsigned(test_sel_elink_sbit_me0)) + 1) * 8) - 1)
+                           downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i: for i in 0 to 7 generate
         me0_sbit0xe_count : entity work.counter
@@ -275,11 +279,21 @@ begin
     end generate;
 
     -- assigned sum of all sbit counts on a selected vfat (x) and elink (e)
-    test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
+    test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) +
+                                               unsigned(test_sbit0xe_presum(1)) +
+                                               unsigned(test_sbit0xe_presum(2)) +
+                                               unsigned(test_sbit0xe_presum(3)) +
+                                               unsigned(test_sbit0xe_presum(4)) +
+                                               unsigned(test_sbit0xe_presum(5)) +
+                                               unsigned(test_sbit0xe_presum(6)) +
+                                               unsigned(test_sbit0xe_presum(7)));
 
     --== COUNTER for selectable sbit ==--
     -- assigned sbit of selected vfat (x) and sbit (s) 
-    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
+    vfat3_sbit0xs_test <= vfat3_sbits_arr_i
+                          (to_integer(unsigned(test_sel_oh_sbit_me0)))
+                          (to_integer(unsigned(test_sel_vfat_sbit_me0)))
+                          (to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
         generic map(
@@ -387,7 +401,9 @@ begin
             prtgen : for iprt in 0 to 7 generate
             begin
                 -- sbits_i(partition)(layer) <= vfat_sbits_arr(layer)(vfat);
-                sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) & vfat_sbits_chamber(ilayer)(8 + iprt) & vfat_sbits_chamber(ilayer)(0 + iprt);
+                sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) &
+                                         vfat_sbits_chamber(ilayer)(8 + iprt) &
+                                         vfat_sbits_chamber(ilayer)(0 + iprt);
             end generate;
         end generate;
 
