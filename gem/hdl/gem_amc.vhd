@@ -736,7 +736,7 @@ begin
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
                 RX_ENCODING_ODD     => g_GBT_WIDEBUS,
-                g_USE_RX_SYNC_FIFOS => true
+                g_USE_RX_SYNC_FIFOS => false -- no need when using RX_OPTIMIZATION = 0
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
