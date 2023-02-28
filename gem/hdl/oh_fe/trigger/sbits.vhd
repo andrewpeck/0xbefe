@@ -402,7 +402,47 @@ begin
 
       cluster_assign_loop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
         signal err : std_logic_vector (7 downto 0) := (others => '0');
+
+        component ila_cluster_tmr
+          port (
+            clk    : in std_logic;
+            probe0 : in std_logic_vector(8 downto 0);
+            probe1 : in std_logic_vector(8 downto 0);
+            probe2 : in std_logic_vector(8 downto 0);
+            probe3 : in std_logic_vector(2 downto 0);
+            probe4 : in std_logic_vector(2 downto 0);
+            probe5 : in std_logic_vector(2 downto 0);
+            probe6 : in std_logic_vector(2 downto 0);
+            probe7 : in std_logic_vector(2 downto 0);
+            probe8 : in std_logic_vector(2 downto 0);
+            probe9 : in std_logic_vector(0 downto 0);
+            probe10: in std_logic_vector(0 downto 0);
+            probe11: in std_logic_vector(0 downto 0);
+            probe12: in std_logic_vector(7 downto 0)
+            );
+        end component;
+
       begin
+
+        ila_gen : if (GE21 = 1 and I=0) generate
+          i_ila_cluster_tmr : ila_cluster_tmr
+            port map(
+              clk                 => clocks.clk40,
+              probe0(8 downto 0)  => clusters_unmasked_tmr(0)(I).adr,
+              probe1(8 downto 0)  => clusters_unmasked_tmr(1)(I).adr,
+              probe2(8 downto 0)  => clusters_unmasked_tmr(2)(I).adr,
+              probe3(2 downto 0)  => clusters_unmasked_tmr(0)(I).cnt,
+              probe4(2 downto 0)  => clusters_unmasked_tmr(1)(I).cnt,
+              probe5(2 downto 0)  => clusters_unmasked_tmr(2)(I).cnt,
+              probe6(2 downto 0)  => clusters_unmasked_tmr(0)(I).prt,
+              probe7(2 downto 0)  => clusters_unmasked_tmr(1)(I).prt,
+              probe8(2 downto 0)  => clusters_unmasked_tmr(2)(I).prt,
+              probe9(0)           => clusters_unmasked_tmr(0)(I).vpf,
+              probe10(0)          => clusters_unmasked_tmr(1)(I).vpf,
+              probe11(0)          => clusters_unmasked_tmr(2)(I).vpf,
+              probe12(7 downto 0) => err
+              );
+        end generate;
 
         majority_err (clusters_unmasked(I).adr, err(0), clusters_unmasked_tmr(0)(I).adr, clusters_unmasked_tmr(1)(I).adr, clusters_unmasked_tmr(2)(I).adr);
         majority_err (clusters_unmasked(I).cnt, err(1), clusters_unmasked_tmr(0)(I).cnt, clusters_unmasked_tmr(1)(I).cnt, clusters_unmasked_tmr(2)(I).cnt);
