@@ -4,7 +4,7 @@ proc update_project_makefile {name} {
 
     set PATH_REPO "[file normalize [file dirname [info script]]]/../../"
 
-    if { [string first PlanAhead [version]] != 0 } {
+    if {[IsVivado]} {
         #https://www.xilinx.com/support/answers/72570.html
         set PYTHONPATH $::env(PYTHONPATH)
         set PYTHONHOME $::env(PYTHONHOME)
@@ -14,7 +14,7 @@ proc update_project_makefile {name} {
 
     puts [exec bash -c "make -C $PATH_REPO $name"]
 
-    if { [string first PlanAhead [version]] != 0 } {
+    if {[IsVivado]} {
         set env(PYTHONPATH) $PYTHONPATH
         set env(PYTHONHOME) $PYTHONHOME
     }
