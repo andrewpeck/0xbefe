@@ -73,16 +73,16 @@ architecture Behavioral of gbt_serdes is
 
   signal sump_vector : std_logic_vector (5 downto 0);
 
-  function reverse_vector (a: std_logic_vector)
+  function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
-    variable result: std_logic_vector(a'RANGE);
-    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+    variable result : std_logic_vector(a'range);
+    alias aa        : std_logic_vector(a'REVERSe_range) is a;
   begin
-    for i in aa'RANGE loop
+    for i in aa'range loop
       result(i) := aa(i);
     end loop;
     return result;
-  end; -- function reverse_vector
+  end;  -- function reverse_vector
 
 begin
 
@@ -147,7 +147,14 @@ begin
   process(clk_1x)
   begin
     if (rising_edge(clk_1x)) then
-      to_gbt <= reverse_vector(data_i);
+
+      if (rst = '1') then
+        to_gbt <= (others => '0');
+      else
+        -- correct for gbt endianness
+        to_gbt <= reverse_vector(data_i);
+      end if;
+
     end if;
   end process;
 
@@ -157,16 +164,15 @@ begin
   --  3) Use the same reset signal for the register as for the OSERDESE1.
 
   -- Output serializer
-  -- we want to output the data on the falling edge of the clock so that the GBT can sample on the rising edge
 
   --------------------------------------------------------------------------------------------------------------------
   to_gbt_inv_v6 : if (FPGA_TYPE = "V6") generate
-    to_gbt_inv <= "not"(to_gbt);
+    to_gbt_inv <= "not"(to_gbt); -- GE11 polarity is inverted
   end generate to_gbt_inv_v6;
   --------------------------------------------------------------------------------------------------------------------
   --------------------------------------------------------------------------------------------------------------------
   to_gbt_inv_a7 : if (FPGA_TYPE = "A7") generate
-    to_gbt_inv <= to_gbt;
+    to_gbt_inv <= to_gbt; -- GE21 polarity is NOT inverted
   end generate to_gbt_inv_a7;
   --------------------------------------------------------------------------------------------------------------------
 
