@@ -15,6 +15,8 @@ entity dru is
     clk1x : in std_logic;               -- 40 MHz clock
     clk4x : in std_logic;               -- 160 MHz clock
 
+    reset : in std_logic;
+
     i : in  std_logic_vector(7 downto 0);  -- 8-bit input, the even bits are inverted!
     o : out std_logic_vector(7 downto 0);  -- 8-bit recovered output
 
@@ -129,6 +131,10 @@ begin
           when others => null;
 
         end case;
+
+        if (reset = '1') then
+          phase_sel_state <= "00";
+        end if;
 
       end if;
     end process;

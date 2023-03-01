@@ -169,6 +169,8 @@ begin
       clk1x => clk1x,
       clk4x => clk4x_0,
 
+      reset => reset_i,
+
       i => q,                           -- the even bits are inverted!
       o => rxdata,                      -- 8-bit deserialized data
 

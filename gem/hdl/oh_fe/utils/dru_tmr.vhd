@@ -18,6 +18,8 @@ entity dru_tmr is
     clk1x : in std_logic;               -- 40 MHz clock
     clk4x : in std_logic;               -- 160 MHz clock
 
+    reset : in std_logic;
+
     i : in  std_logic_vector(7 downto 0);  -- 8-bit input, the even bits are inverted!
     o : out std_logic_vector(7 downto 0);  -- 8-bit recovered output
 
@@ -51,6 +53,7 @@ begin
         g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
         )
       port map(
+        reset => reset,
         clk1x => clk1x,
         clk4x => clk4x,
 
@@ -89,6 +92,7 @@ begin
           g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
           )
         port map(
+          reset        => reset,
           clk1x        => clk1x,
           clk4x        => clk4x,
           e4_in        => e4_in,
