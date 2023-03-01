@@ -2,6 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.common_pkg.all;
+use work.gem_pkg.all;
+use work.cluster_pkg.all;
+
 entity me0_sbit_allign is
     generic(
         g_NUM_OF_VFATs : integer := 24;
