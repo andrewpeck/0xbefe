@@ -296,8 +296,8 @@ begin
 
     i_l1a_delay : entity work.shift_reg
         generic map(
+            DEPTH           => 1024,
             TAP_DELAY_WIDTH => 10,
-            DATA_WIDTH      => 0,
             OUTPUT_REG      => false,
             SUPPORT_RESET   => false
         )

@@ -21,7 +21,7 @@ entity me0_sbit_allign is
     );
 end entity me0_sbit_allign;
 
-architecture RTL of me0_sbit_allign is
+architecture me0_sbit_allign_arch of me0_sbit_allign is
 
 begin
     
@@ -50,7 +50,7 @@ begin
             );
         
         -- next run sbits through shift reg to delay all sbits of one VFAT by selected amount
-        g_sbit_delay : entity work.shift_reg
+        g_sbit_delay : entity work.shift_reg_multi
             generic map(
                 TAP_DELAY_WIDTH => 16,
                 DATA_WIDTH      => 64,
@@ -69,4 +69,4 @@ begin
 
 
 
-end architecture RTL;
+end architecture me0_sbit_allign_arch;
