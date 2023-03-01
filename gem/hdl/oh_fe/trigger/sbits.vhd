@@ -512,6 +512,61 @@ begin
       end if;
     end process;
 
+    ila_gen : if (GE21 = 1) generate
+      component ila_cluster
+        port (
+          clk    : in std_logic;
+          probe0 : in std_logic_vector(1+3+3+8 downto 0);
+          probe1 : in std_logic_vector(1+3+3+8 downto 0);
+          probe2 : in std_logic_vector(1+3+3+8 downto 0);
+          probe3 : in std_logic_vector(1+3+3+8 downto 0);
+          probe4 : in std_logic_vector(1+3+3+8 downto 0);
+          probe5 : in std_logic_vector(1+3+3+8 downto 0);
+          probe6 : in std_logic_vector(1+3+3+8 downto 0);
+          probe7 : in std_logic_vector(1+3+3+8 downto 0)
+          );
+      end component;
+    begin
+
+      i_ila_cluster : ila_cluster
+        port map (
+          clk                  => clocks.clk40,
+          probe0(8 downto 0)   => clusters_norev(0).adr,
+          probe0(11 downto 9)  => clusters_norev(0).cnt,
+          probe0(14 downto 12) => clusters_norev(0).prt,
+          probe0(15)           => clusters_norev(0).vpf,
+          probe1(8 downto 0)   => clusters_norev(1).adr,
+          probe1(11 downto 9)  => clusters_norev(1).cnt,
+          probe1(14 downto 12) => clusters_norev(1).prt,
+          probe1(15)           => clusters_norev(1).vpf,
+          probe2(8 downto 0)   => clusters_norev(2).adr,
+          probe2(11 downto 9)  => clusters_norev(2).cnt,
+          probe2(14 downto 12) => clusters_norev(2).prt,
+          probe2(15)           => clusters_norev(2).vpf,
+          probe3(8 downto 0)   => clusters_norev(3).adr,
+          probe3(11 downto 9)  => clusters_norev(3).cnt,
+          probe3(14 downto 12) => clusters_norev(3).prt,
+          probe3(15)           => clusters_norev(3).vpf,
+          probe4(8 downto 0)   => clusters_norev(4).adr,
+          probe4(11 downto 9)  => clusters_norev(4).cnt,
+          probe4(14 downto 12) => clusters_norev(4).prt,
+          probe4(15)           => clusters_norev(4).vpf,
+          probe5(8 downto 0)   => clusters_norev(5).adr,
+          probe5(11 downto 9)  => clusters_norev(5).cnt,
+          probe5(14 downto 12) => clusters_norev(5).prt,
+          probe5(15)           => clusters_norev(5).vpf,
+          probe6(8 downto 0)   => clusters_norev(6).adr,
+          probe6(11 downto 9)  => clusters_norev(6).cnt,
+          probe6(14 downto 12) => clusters_norev(6).prt,
+          probe6(15)           => clusters_norev(6).vpf,
+          probe7(8 downto 0)   => clusters_norev(7).adr,
+          probe7(11 downto 9)  => clusters_norev(7).cnt,
+          probe7(14 downto 12) => clusters_norev(7).prt,
+          probe7(15)           => clusters_norev(7).vpf
+          );
+
+    end generate;
+
     --------------------------------------------------------------------------------
     -- Cluster TMR Output
     --------------------------------------------------------------------------------
