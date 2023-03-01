@@ -17,7 +17,7 @@ entity me0_sbit_allign is
         clk_i               : in std_logic;
         rst_i               : in std_logic;
 
-        vfat_mapping_arr    : in t_vfat_mapping_arr(g_NUM_OF_VFATs)(g_NUM_ELINKs); -- values to rotate each VFAT sbit array by
+        vfat_mapping_arr    : in t_vfat_mapping_arr(g_NUM_OF_VFATs); -- values to rotate each VFAT sbit array by
         vfat_delay_arr      : in t_std32_array(g_MAX_SR_DELAY - 1 downto 0); -- values of how much to delay each VFAT by
         
         vfat_sbits_i        : in sbits_array_t(g_NUM_OF_VFATs -1 downto 0);
