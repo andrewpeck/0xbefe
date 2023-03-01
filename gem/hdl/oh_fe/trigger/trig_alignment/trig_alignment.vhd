@@ -53,7 +53,10 @@ entity trig_alignment is
 
     sbits : out std_logic_vector ((MXSBITS_CHAMBER - 1) downto 0);
 
-    tmr_err_o : out std_logic := '0'
+    sbit_tmr_err_o          : out std_logic := '0';
+    sot_tmr_err_o           : out std_logic := '0';
+    frame_aligner_tmr_err_o : out std_logic := '0';
+    tmr_err_o               : out std_logic := '0'
     );
 end trig_alignment;
 
@@ -64,6 +67,10 @@ architecture Behavioral of trig_alignment is
   signal frame_aligner_tmr_err : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sot_tmr_err           : std_logic_vector (NUM_VFATS-1 downto 0);
   signal sbit_tmr_err          : std_logic_vector (NUM_VFATS*8-1 downto 0);
+
+  signal frame_aligner_tmr_err_rdx : std_logic;
+  signal sot_tmr_err_rdx           : std_logic;
+  signal sbit_tmr_err_rdx          : std_logic;
 
   signal start_of_frame_8b  : t_std8_array (NUM_VFATS-1 downto 0);
   signal vfat_phase_sel     : t_std2_array (NUM_VFATS-1 downto 0);
@@ -100,7 +107,18 @@ begin
       vfat_mask  <= vfat_mask_i;
       tu_mask    <= tu_mask_i;
 
-      tmr_err_o <= or_reduce (frame_aligner_tmr_err) or or_reduce(sot_tmr_err) or or_reduce(sbit_tmr_err);
+      -- OR reduce the std_logic_vectors
+      frame_aligner_tmr_err_rdx <= or_reduce(frame_aligner_tmr_err);
+      sot_tmr_err_rdx           <= or_reduce(sot_tmr_err);
+      sbit_tmr_err_rdx          <= or_reduce(sbit_tmr_err);
+
+      -- Copy them to the outputs
+      frame_aligner_tmr_err_o <= frame_aligner_tmr_err_rdx;
+      sot_tmr_err_o           <= sot_tmr_err_rdx;
+      sbit_tmr_err_o          <= sbit_tmr_err_rdx;
+
+      -- OR them together for backwards compatiblity
+      tmr_err_o               <= frame_aligner_tmr_err_rdx or sot_tmr_err_rdx or sbit_tmr_err_rdx;
 
     end if;
   end process;

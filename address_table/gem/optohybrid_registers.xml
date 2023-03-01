@@ -1398,6 +1398,30 @@
             <node id="TMR_ERR_INJ" address="0x3" permission="w"
                   description="Inject a TMR Error" mask="0x1"
                   fw_write_pulse_signal="tmr_err_inj"/>
+            <node id="SBIT_RX_ALIGNER_TMR_ERR_CNT" address="0x4" permission="r"
+                  mask="0x0000ffff"
+                  description="Sbit Rx Frame Aligner TMR Error Count"
+                  fw_cnt_en_signal="frame_aligner_tmr_err"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
+                  fw_signal="frame_alignment_tmr_err_cnt"/>
+            <node id="SBIT_DRU_TMR_ERR_CNT" address="0x4" permission="r"
+                  mask="0xffff0000"
+                  description="Sbit DRU TMR Error Count"
+                  fw_cnt_en_signal="sbit_tmr_err"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
+                  fw_signal="sbit_tmr_err_cnt"/>
+            <node id="SOT_DRU_TMR_ERR_CNT" address="0x5" permission="r"
+                  mask="0x0000ffff"
+                  description="Sot DRU TMR Error Count"
+                  fw_cnt_en_signal="sot_tmr_err"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_cnt_reset_signal="reset_i or tmr_cnt_reset"
+                  fw_cnt_use_tmr="True"
+                  fw_signal="sot_tmr_err_cnt"/>
         </node>
 
         <node id="SBIT_BX_DELAY" address="0x1f0" description = "">

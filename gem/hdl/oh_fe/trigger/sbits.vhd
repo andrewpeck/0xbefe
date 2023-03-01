@@ -77,6 +77,9 @@ entity sbits is
 
     tmr_err_inj_i            : in  std_logic := '0';
     cluster_tmr_err_o        : out std_logic := '0';
+    sbit_tmr_err_o           : out std_logic := '0';
+    sot_tmr_err_o            : out std_logic := '0';
+    frame_aligner_tmr_err_o  : out std_logic := '0';
     trig_alignment_tmr_err_o : out std_logic := '0';
 
     sbit_bx_dlys_enable_i : in std_logic_vector (NUM_VFATS*MXSBITS/SBIT_BX_DELAY_GRP_SIZE-1 downto 0);
@@ -158,7 +161,10 @@ begin
 
       sbits => sbits,
 
-      tmr_err_o => trig_alignment_tmr_err_o
+      sbit_tmr_err_o          => sbit_tmr_err_o,
+      sot_tmr_err_o           => sot_tmr_err_o,
+      frame_aligner_tmr_err_o => frame_aligner_tmr_err_o,
+      tmr_err_o               => trig_alignment_tmr_err_o
       );
 
   --------------------------------------------------------------------------------------------------------------------

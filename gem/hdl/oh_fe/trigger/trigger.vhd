@@ -145,6 +145,9 @@ architecture Behavioral of trigger is
   signal tmr_err_inj            : std_logic;
   signal tmr_cnt_reset          : std_logic;
   signal cluster_tmr_err        : std_logic;
+  signal sbit_tmr_err           : std_logic;
+  signal sot_tmr_err            : std_logic;
+  signal frame_aligner_tmr_err  : std_logic;
   signal trig_alignment_tmr_err : std_logic;
   signal ipb_slave_tmr_err      : std_logic;
 
@@ -192,6 +195,9 @@ architecture Behavioral of trigger is
     signal trig_alignment_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal ipb_slave_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
     signal trig_formatter_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
+    signal frame_alignment_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
+    signal sbit_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
+    signal sot_tmr_err_cnt : std_logic_vector (15 downto 0) := (others => '0');
   ------ Register signals end ----------------------------------------------
 
 begin
@@ -337,6 +343,9 @@ begin
 
       tmr_err_inj_i            => tmr_err_inj,
       cluster_tmr_err_o        => cluster_tmr_err,
+      sbit_tmr_err_o           => sbit_tmr_err,
+      sot_tmr_err_o            => sot_tmr_err,
+      frame_aligner_tmr_err_o  => frame_aligner_tmr_err,
       trig_alignment_tmr_err_o => trig_alignment_tmr_err,
 
       -- sbit bx delays
@@ -525,6 +534,8 @@ begin
     regs_addresses(103)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"01";
     regs_addresses(104)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"02";
     regs_addresses(105)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"03";
+    regs_addresses(106)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"04";
+    regs_addresses(107)(REG_TRIG_ADDRESS_MSB downto REG_TRIG_ADDRESS_LSB) <= "01" & x"05";
 
     -- Connect read signals
     regs_read_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB) <= vfat_mask;
@@ -740,6 +751,9 @@ begin
     regs_read_arr(102)(REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_TMR_ERR_CNT_LSB) <= trig_alignment_tmr_err_cnt;
     regs_read_arr(103)(REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_IPB_SLAVE_TMR_ERR_CNT_LSB) <= ipb_slave_tmr_err_cnt;
     regs_read_arr(103)(REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_TRIG_FORMATTER_TMR_ERR_CNT_LSB) <= trig_formatter_tmr_err_cnt;
+    regs_read_arr(106)(REG_TRIG_TMR_SBIT_RX_ALIGNER_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_RX_ALIGNER_TMR_ERR_CNT_LSB) <= frame_alignment_tmr_err_cnt;
+    regs_read_arr(106)(REG_TRIG_TMR_SBIT_DRU_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SBIT_DRU_TMR_ERR_CNT_LSB) <= sbit_tmr_err_cnt;
+    regs_read_arr(107)(REG_TRIG_TMR_SOT_DRU_TMR_ERR_CNT_MSB downto REG_TRIG_TMR_SOT_DRU_TMR_ERR_CNT_LSB) <= sot_tmr_err_cnt;
 
     -- Connect write signals
     vfat_mask <= regs_write_arr(0)(REG_TRIG_CTRL_VFAT_MASK_MSB downto REG_TRIG_CTRL_VFAT_MASK_LSB);
@@ -1290,6 +1304,45 @@ begin
         en_i      => trig_formatter_tmr_err,
         snap_i    => cnt_snap,
         count_o   => trig_formatter_tmr_err_cnt
+    );
+
+
+    COUNTER_TRIG_TMR_SBIT_RX_ALIGNER_TMR_ERR_CNT : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset_i or tmr_cnt_reset,
+        en_i      => frame_aligner_tmr_err,
+        snap_i    => cnt_snap,
+        count_o   => frame_alignment_tmr_err_cnt
+    );
+
+
+    COUNTER_TRIG_TMR_SBIT_DRU_TMR_ERR_CNT : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset_i or tmr_cnt_reset,
+        en_i      => sbit_tmr_err,
+        snap_i    => cnt_snap,
+        count_o   => sbit_tmr_err_cnt
+    );
+
+
+    COUNTER_TRIG_TMR_SOT_DRU_TMR_ERR_CNT : entity work.counter_snap_tmr
+    generic map (
+        g_COUNTER_WIDTH  => 16
+    )
+    port map (
+        ref_clk_i => clocks.clk40,
+        reset_i   => reset_i or tmr_cnt_reset,
+        en_i      => sot_tmr_err,
+        snap_i    => cnt_snap,
+        count_o   => sot_tmr_err_cnt
     );
 
 
