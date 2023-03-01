@@ -476,7 +476,7 @@ begin
           );
     end generate;
 
-    tmr_gen : if (EN_TMR = 1) generate
+    tmr_gen : if (EN_TMR_TRIG_FORMATTER = 1 and EN_TMR = 1) generate
       signal fiber_packets_tmr_err   : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0)    := (others => '0');
       signal fiber_kchars_tmr_err    : std_logic_vector (NUM_OPTICAL_PACKETS-1 downto 0)    := (others => '0');
       signal elink_packets_tmr_err   : std_logic_vector (NUM_ELINK_PACKETS-1 downto 0)      := (others => '0');
