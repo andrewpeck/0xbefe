@@ -67,7 +67,7 @@
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
  
  
-  <node id="ME0_VFAT_MAP" address="0x60" description="slip count for bitslip of VFATs for mapping sbits">
+  <node id="ME0_VFAT_MAP" address="0x70" description="slip count for bitslip of VFATs for mapping sbits">
     <node id="ME0_VFAT0_MAP" address="0x0" mask="0x0000000f" permission="rw"
 	description="slip count for VFAT0"
 	fw_signal="vfat_sbit_mapping_arr(0)"

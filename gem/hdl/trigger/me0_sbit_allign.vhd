@@ -20,8 +20,8 @@ entity me0_sbit_allign is
         vfat_mapping_arr    : in t_std4_array(g_NUM_OF_VFATs -1 downto 0); -- values to rotate each VFAT sbit array by
         vfat_delay_arr      : in t_std4_array(g_NUM_OF_VFATs -1 downto 0); -- values of how much to delay each VFAT by
         
-        vfat_sbits_i        : in sbits_array_t(g_NUM_OF_VFATs -1 downto 0);
-        vfat_sbits_o        : out sbits_array_t(g_NUM_OF_VFATs -1 downto 0)
+        vfat_sbits_i        : in t_std64_array(g_NUM_OF_VFATs -1 downto 0);
+        vfat_sbits_o        : out t_std64_array(g_NUM_OF_VFATs -1 downto 0)
     );
 end entity me0_sbit_allign;
 
