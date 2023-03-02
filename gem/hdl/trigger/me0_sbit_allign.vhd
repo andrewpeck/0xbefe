@@ -17,7 +17,7 @@ entity me0_sbit_allign is
         clk_i               : in std_logic;
         rst_i               : in std_logic;
 
-        vfat_mapping_arr    : in t_vfat_mapping_arr(g_NUM_OF_VFATs - 1 downto 0); -- values to rotate each VFAT sbit array by
+        vfat_mapping_arr    : in t_vfat_mapping(g_NUM_OF_VFATs - 1 downto 0); -- values to rotate each VFAT sbit array by
         vfat_delay_arr      : in t_std32_array(g_MAX_SR_DELAY - 1 downto 0); -- values of how much to delay each VFAT by
         
         vfat_sbits_i        : in sbits_array_t(g_NUM_OF_VFATs -1 downto 0);
@@ -29,7 +29,7 @@ architecture me0_sbit_allign_arch of me0_sbit_allign is
 
 begin
     
-    g_vfat : for VFAT in 0 to NUM_OF_VFATs - 1 generate
+    g_vfat : for VFAT in 0 to g_NUM_OF_VFATs - 1 generate
 
         signal vfat_sbits_unmapped : std_logic_vector(63 downto 0);
         signal vfat_sbits_mapped   : std_logic_vector(63 downto 0);
@@ -43,7 +43,7 @@ begin
         g_sbit_mapping : entity work.bitslip
             generic map(
                 g_DATA_WIDTH              => 8,
-                g_SLIP_CNT_WIDTH          => 8,
+                g_SLIP_CNT_WIDTH          => 4,
                 g_TRANSMIT_LOW_TO_HIGH    => TRUE
             )
             port map(
