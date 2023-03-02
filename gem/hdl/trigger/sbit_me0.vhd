@@ -91,7 +91,7 @@ architecture sbit_me0_arch of sbit_me0 is
     -- VFAT constants
     constant g_NUM_ELINKs   : integer:= 8;
     constant g_MAX_SLIP_CNT   : integer:= 8;
-    constant g_MAX_SR_DELAY   : integer:= 8;
+    constant g_MAX_SR_DELAY   : integer:= 4;
 
     -- control signals
     signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
