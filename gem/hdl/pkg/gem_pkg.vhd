@@ -74,7 +74,7 @@ package gem_pkg is
 
     function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
 
-    type t_vfat_mapping is array(7 downto 0)of std_logic_vector(2 downto 0);
+    type t_vfat_mapping is array(7 downto 0)of std_logic_vector(2 downto 0); --number of elinks per vfat is 8
     type t_vfat_mapping_arr is array(integer range<>) of t_vfat_mapping;
 
     --========================--
