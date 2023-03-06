@@ -283,7 +283,7 @@ begin
   ipb_miso_gbt        <= ipb_miso_masters(0);
 
   ipb_switch_inst : entity work.ipb_switch_tmr
-    generic map (EN_TMR_IPB_SWITCH)
+    generic map (g_ENABLE_TMR => EN_TMR_IPB_SWITCH)
     port map(
       clock_i => clocks.clk40,
       reset_i => system_reset,
