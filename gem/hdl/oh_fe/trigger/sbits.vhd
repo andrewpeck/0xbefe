@@ -343,19 +343,19 @@ begin
     signal clusters_rev      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal clusters_norev    : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-    signal cluster_count_masked   : t_std11_array (2 downto 0);
-    signal cluster_count_unmasked : t_std11_array (2 downto 0);
+    signal cluster_count_masked_tmr   : t_std11_array (2 downto 0);
+    signal cluster_count_unmasked_tmr : t_std11_array (2 downto 0);
 
-    signal overflow : std_logic_vector (2 downto 0);
+    signal overflow_tmr : std_logic_vector (2 downto 0);
 
     signal reverse_partitions : std_logic := '0';
 
-    attribute DONT_TOUCH                           : string;
-    attribute DONT_TOUCH of clusters_unmasked_tmr  : signal is "true";
-    attribute DONT_TOUCH of clusters_masked_tmr    : signal is "true";
-    attribute DONT_TOUCH of cluster_count_masked   : signal is "true";
-    attribute DONT_TOUCH of cluster_count_unmasked : signal is "true";
-    attribute DONT_TOUCH of overflow               : signal is "true";
+    attribute DONT_TOUCH                               : string;
+    attribute DONT_TOUCH of clusters_unmasked_tmr      : signal is "true";
+    attribute DONT_TOUCH of clusters_masked_tmr        : signal is "true";
+    attribute DONT_TOUCH of cluster_count_masked_tmr   : signal is "true";
+    attribute DONT_TOUCH of cluster_count_unmasked_tmr : signal is "true";
+    attribute DONT_TOUCH of overflow_tmr               : signal is "true";
 
     signal cluster_tmr_err     : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0) := (others => '0');
     signal cluster_tmr_err_reg : std_logic := '0';
@@ -388,12 +388,12 @@ begin
           sbits_i => vfat_sbits_delayed,
 
           clusters_o      => clusters_unmasked_tmr(I),
-          cluster_count_o => cluster_count_unmasked(I),
+          cluster_count_o => cluster_count_unmasked_tmr(I),
 
           clusters_masked_o      => clusters_masked_tmr(I),
-          cluster_count_masked_o => cluster_count_masked(I),
+          cluster_count_masked_o => cluster_count_masked_tmr(I),
 
-          overflow_o => overflow(I),
+          overflow_o => overflow_tmr(I),
           valid_o    => open
           );
     end generate;
@@ -405,10 +405,10 @@ begin
     tmr_gen : if (EN_TMR_CLUSTER_PACKER = 1) generate
     begin
 
-      majority_err (overflow_o, cluster_tmr_err(0), tmr_err_inj xor overflow(0), overflow(1), overflow(2));
+      majority_err (overflow_o, cluster_tmr_err(0), tmr_err_inj xor overflow_tmr(0), overflow_tmr(1), overflow_tmr(2));
 
-      majority_err (cluster_count_masked_o, cluster_tmr_err(1), cluster_count_masked(0), cluster_count_masked(1), cluster_count_masked(2));
-      majority_err (cluster_count_unmasked_o, cluster_tmr_err(2), cluster_count_unmasked(0), cluster_count_unmasked(1), cluster_count_unmasked(2));
+      majority_err (cluster_count_masked_o, cluster_tmr_err(1), cluster_count_masked_tmr(0), cluster_count_masked_tmr(1), cluster_count_masked_tmr(2));
+      majority_err (cluster_count_unmasked_o, cluster_tmr_err(2), cluster_count_unmasked_tmr(0), cluster_count_unmasked_tmr(1), cluster_count_unmasked_tmr(2));
 
       cluster_assign_loop : for I in 0 to NUM_FOUND_CLUSTERS-1 generate
         signal err : std_logic_vector (7 downto 0) := (others => '0');
@@ -475,9 +475,9 @@ begin
     notmr_gen : if (EN_TMR_CLUSTER_PACKER /= 1) generate
       clusters_masked          <= clusters_masked_tmr(0);
       clusters_unmasked        <= clusters_unmasked_tmr(0);
-      overflow_o               <= overflow(0);
-      cluster_count_masked_o   <= cluster_count_masked(0);
-      cluster_count_unmasked_o <= cluster_count_unmasked(0);
+      overflow_o               <= overflow_tmr(0);
+      cluster_count_masked_o   <= cluster_count_masked_tmr(0);
+      cluster_count_unmasked_o <= cluster_count_unmasked_tmr(0);
     end generate;
 
     --------------------------------------------------------------------------------
