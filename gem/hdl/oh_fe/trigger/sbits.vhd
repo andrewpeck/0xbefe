@@ -398,6 +398,10 @@ begin
           );
     end generate;
 
+    --------------------------------------------------------------------------------
+    -- Yes TMR, merge all three outputs
+    --------------------------------------------------------------------------------
+
     tmr_gen : if (EN_TMR_CLUSTER_PACKER = 1) generate
     begin
 
@@ -464,6 +468,10 @@ begin
       end generate;
     end generate;
 
+    --------------------------------------------------------------------------------
+    -- No TMR, just use the 0th output
+    --------------------------------------------------------------------------------
+
     notmr_gen : if (EN_TMR_CLUSTER_PACKER /= 1) generate
       clusters_masked          <= clusters_masked_tmr(0);
       clusters_unmasked        <= clusters_unmasked_tmr(0);
@@ -472,11 +480,13 @@ begin
       cluster_count_unmasked_o <= cluster_count_unmasked(0);
     end generate;
 
+    --------------------------------------------------------------------------------
+    -- Cluster Reversal
+    --------------------------------------------------------------------------------
+
     reverse_gen : for I in clusters_o'range generate
 
-      --------------------------------------------------------------------------------
       -- Reversed
-      --------------------------------------------------------------------------------
 
       clusters_rev(I).vpf <= clusters_masked(I).vpf;
       clusters_rev(I).cnt <= clusters_masked(I).cnt;
@@ -488,24 +498,11 @@ begin
                                      (to_integer(unsigned(clusters_masked(I).adr)) +
                                       to_integer(unsigned(clusters_masked(I).cnt))), clusters_rev(I).adr'length));
 
-      --------------------------------------------------------------------------------
       -- Non-reversed
-      --------------------------------------------------------------------------------
 
       clusters_norev(I) <= clusters_masked(I);
 
     end generate;
-
-    --------------------------------------------------------------------------------
-    -- Cluster Outputs
-    --------------------------------------------------------------------------------
-
-    process (clocks.clk160_0) is
-    begin
-      if (rising_edge(clocks.clk160_0)) then
-        reverse_partitions <= reverse_partitions_i;
-      end if;
-    end process;
 
     process (clocks.clk160_0) is
     begin
@@ -517,6 +514,10 @@ begin
         end if;
       end if;
     end process;
+
+    --------------------------------------------------------------------------------
+    -- Cluster ILA
+    --------------------------------------------------------------------------------
 
     ila_gen : if (GE21 = 1) generate
       component ila_cluster
