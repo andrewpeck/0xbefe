@@ -201,10 +201,10 @@ begin
                           when REVERSE_VFAT_SBITS(I) = '0'
                           else reverse_vector(sbits ((I+1)*MXSBITS-1 downto (I)*MXSBITS));
 
-    -- inject sbits into the 0th channel
 
     stripgen : for J in 0 to 63 generate
     begin
+      -- inject sbits into the fixed channels
       inj : if (J = 23 or J=24 or J=25) generate
         vfat_sbits_injected(I)(J) <= vfat_sbits_strip_mapped(I)(J) or inject_sbits(I);
       end generate;
