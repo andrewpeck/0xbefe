@@ -170,6 +170,11 @@ begin
   -- synchronous to icap_clk, concurrent with the application of a valid
   -- address to the inject_address input. The error injection control must
   -- only be used when the controller is idle
+  --
+  -- FIXME: the controller never goes into idle, so error injection never works
+  -- there is some way to bring the controller into an idle state so that
+  -- errors can be injected but I need to read the documentation to understand
+  -- details
 
   idle <= not (status_initialization or status_observation or
                status_correction or status_classification or status_injection);
