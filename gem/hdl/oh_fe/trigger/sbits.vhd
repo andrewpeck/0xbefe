@@ -357,8 +357,8 @@ begin
     attribute DONT_TOUCH of cluster_count_unmasked : signal is "true";
     attribute DONT_TOUCH of overflow               : signal is "true";
 
-    signal cluster_tmr_err     : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0);
-    signal cluster_tmr_err_reg : std_logic;
+    signal cluster_tmr_err     : std_logic_vector (3+NUM_FOUND_CLUSTERS-1 downto 0) := (others => '0');
+    signal cluster_tmr_err_reg : std_logic := '0';
 
     signal tmr_err_inj : std_logic := '0';
 
