@@ -1226,23 +1226,33 @@
     <node id="FPGA_LINK_ERR_CNT" address="0x42"
           description="OH ${OH_IDX} Link Error Count"
           mask="0x0000ffff" permission="r" ignore="&STATION;==0"
-          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).link_error_cnt"/>
+          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).link_error_cnt"
+          sw_val_good="self == 0"
+          sw_val_warn="self &gt; 0"/>
     <node id="FPGA_LINK_CRC_ERR_CNT" address="0x42"
           description="OH ${OH_IDX} CRC Error Count"
           mask="0xffff0000" permission="r" ignore="&STATION;==0"
-          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).crc_error_cnt"/>
+          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).crc_error_cnt"
+          sw_val_good="self == 0"
+          sw_val_warn="self &gt; 0"/>
     <node id="FPGA_LINK_PRECRC_ERR_CNT" address="0x43"
           description="OH ${OH_IDX} PRECRC Error Count"
           mask="0x0000ffff" permission="r" ignore="&STATION;==0"
-          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).precrc_error_cnt"/>
+          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).precrc_error_cnt"
+          sw_val_good="self == 0"
+          sw_val_warn="self &gt; 0"/>
     <node id="FPGA_LINK_TIMEOUT_CNT" address="0x43"
           description="OH ${OH_IDX} Timeout Count"
           mask="0xffff0000" permission="r" ignore="&STATION;==0"
-          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).timeout_cnt"/>
+          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).timeout_cnt"
+          sw_val_good="self == 0"
+          sw_val_warn="self &gt; 0"/>
     <node id="FPGA_LINK_READY" address="0x44"
           description="OH ${OH_IDX} Link Ready"
           mask="0x00000001" permission="r" ignore="&STATION;==0"
-          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).ready"/>
+          fw_signal="oh_fpga_link_status_arr_i(${OH_IDX}).ready"
+          sw_val_good="self == 1"
+          sw_val_bad="self == 0"/>
 
   </node>
 

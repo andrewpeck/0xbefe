@@ -79,7 +79,9 @@
             <node id="SEM_STATUS_OBSERVATION" address="0x5" permission="r"
                   mask="0x2"
                   description=""
-                  fw_signal="sem_observation"/>
+                  fw_signal="sem_observation"
+                  sw_val_good="self == 1"
+                  sw_val_warn="self == 0" />
             <node id="SEM_STATUS_CORRECTION" address="0x5" permission="r"
                   mask="0x4"
                   description=""
@@ -148,11 +150,15 @@
             <node id="BXN_SYNC_ERR" address="0x3" permission="r"
                   mask="0x1000"
                   description="BXN Synchronization Error; Local BXN and received BXN do not match"
-                  fw_signal="ttc_bxn_sync_err"/>
+                  fw_signal="ttc_bxn_sync_err"
+                  sw_val_good="self == 0"
+                  sw_val_bad="self &gt; 0" />
             <node id="BX0_SYNC_ERR" address="0x4" permission="r"
                   mask="0x2000"
                   description="BX0 Synchronization Error"
-                  fw_signal="ttc_bx0_sync_err"/>
+                  fw_signal="ttc_bx0_sync_err"
+                  sw_val_good="self == 0"
+                  sw_val_bad="self &gt; 0" />
             <node id="BXN_OFFSET" address="0x5" permission="rw"
                   mask="0xfff0000"
                   description="Local BXN counter offset (starting value at resync)"
@@ -177,7 +183,9 @@
                   fw_cnt_reset_signal="cnt_reset"
                   fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
-                  fw_signal="cnt_bxn_sync_err"/>
+                  fw_signal="cnt_bxn_sync_err"
+                  sw_val_good="self == 0"
+                  sw_val_bad="self &gt; 0" />
             <node id="BX0_SYNC_ERR_CNT" address="0x7" permission="r"
                   mask="0xffff0000"
                   description="BX0 Sync Error Counter"
@@ -185,7 +193,9 @@
                   fw_cnt_reset_signal="cnt_reset"
                   fw_cnt_use_tmr="True"
                   fw_cnt_snap_signal="cnt_snap"
-                  fw_signal="cnt_bx0_sync_err"/>
+                  fw_signal="cnt_bx0_sync_err"
+                  sw_val_good="self == 0"
+                  sw_val_bad="self &gt; 0" />
             <node id="RESYNC_CNT" address="0x8" permission="r"
                   mask="0xffff"
                   description="Count of sesyncs received"
