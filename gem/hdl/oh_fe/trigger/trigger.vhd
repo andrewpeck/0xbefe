@@ -74,8 +74,9 @@ architecture Behavioral of trigger is
 
   signal trigger_prbs_en : std_logic;
 
-  signal sbitmon_l1a_delay       : std_logic_vector (31 downto 0);
-  signal sbitmon_trig_on_invalid : std_logic := '0';
+  signal sbitmon_l1a_delay         : std_logic_vector (31 downto 0);
+  signal sbitmon_trig_on_invalid   : std_logic := '0';
+  signal sbitmon_trig_on_duplicate : std_logic := '0';
 
   signal l1a_mask_delay : std_logic_vector(4 downto 0);
   signal l1a_mask_bitmask : std_logic_vector(31 downto 0);
@@ -372,13 +373,13 @@ begin
 
   sbit_monitor_inst : entity work.sbit_monitor
     generic map (
-        g_NUM_OF_OHs      => 1,
         g_PARTITION_WIDTH => PARTITION_SIZE*MXSBITS
       )
     port map (
         reset_i               => (reset_i or reset_monitor),
         ttc_clk_i             => clocks.clk40,
         trig_on_invalid_addrs => sbitmon_trig_on_invalid,
+        trig_on_duplicates    => sbitmon_trig_on_duplicate,
         l1a_i                 => ttc.l1a,
         clusters_i            => sbit_clusters_ff,
         frozen_clusters_o     => frozen_clusters,
@@ -719,6 +720,7 @@ begin
     regs_read_arr(70)(REG_TRIG_SBIT_MONITOR_CLUSTER7_MSB downto REG_TRIG_SBIT_MONITOR_CLUSTER7_LSB) <= cluster_to_vector(frozen_clusters(7),16);
     regs_read_arr(71)(REG_TRIG_SBIT_MONITOR_L1A_DELAY_MSB downto REG_TRIG_SBIT_MONITOR_L1A_DELAY_LSB) <= sbitmon_l1a_delay;
     regs_read_arr(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_INVALID_BIT) <= sbitmon_trig_on_invalid;
+    regs_read_arr(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_DUP_BIT) <= sbitmon_trig_on_duplicate;
     regs_read_arr(74)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= hitmap_acquire;
     regs_read_arr(75)(REG_TRIG_SBIT_HITMAP_VFAT0_MSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT0_MSB_LSB) <= hitmap_sbits(0)(63 downto 32);
     regs_read_arr(76)(REG_TRIG_SBIT_HITMAP_VFAT0_LSB_MSB downto REG_TRIG_SBIT_HITMAP_VFAT0_LSB_LSB) <= hitmap_sbits(0)(31 downto 0);
@@ -898,6 +900,7 @@ begin
     inject_sbits_mask <= regs_write_arr(60)(REG_TRIG_SBIT_INJECT_MASK_MSB downto REG_TRIG_SBIT_INJECT_MASK_LSB);
     cyclic_inject_en <= regs_write_arr(60)(REG_TRIG_CYCLIC_INJECT_EN_BIT);
     sbitmon_trig_on_invalid <= regs_write_arr(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_INVALID_BIT);
+    sbitmon_trig_on_duplicate <= regs_write_arr(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_DUP_BIT);
     hitmap_acquire <= regs_write_arr(74)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT);
     trigger_prbs_en <= regs_write_arr(99)(REG_TRIG_TRIGGER_PRBS_EN_BIT);
     l1a_mask_delay <= regs_write_arr(100)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB);
@@ -1493,6 +1496,7 @@ begin
     regs_defaults(60)(REG_TRIG_SBIT_INJECT_MASK_MSB downto REG_TRIG_SBIT_INJECT_MASK_LSB) <= REG_TRIG_SBIT_INJECT_MASK_DEFAULT;
     regs_defaults(60)(REG_TRIG_CYCLIC_INJECT_EN_BIT) <= REG_TRIG_CYCLIC_INJECT_EN_DEFAULT;
     regs_defaults(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_INVALID_BIT) <= REG_TRIG_SBIT_MONITOR_TRIG_ON_INVALID_DEFAULT;
+    regs_defaults(72)(REG_TRIG_SBIT_MONITOR_TRIG_ON_DUP_BIT) <= REG_TRIG_SBIT_MONITOR_TRIG_ON_DUP_DEFAULT;
     regs_defaults(74)(REG_TRIG_SBIT_HITMAP_ACQUIRE_BIT) <= REG_TRIG_SBIT_HITMAP_ACQUIRE_DEFAULT;
     regs_defaults(99)(REG_TRIG_TRIGGER_PRBS_EN_BIT) <= REG_TRIG_TRIGGER_PRBS_EN_DEFAULT;
     regs_defaults(100)(REG_TRIG_L1A_MASK_L1A_MASK_DELAY_MSB downto REG_TRIG_L1A_MASK_L1A_MASK_DELAY_LSB) <= REG_TRIG_L1A_MASK_L1A_MASK_DELAY_DEFAULT;
