@@ -12,10 +12,10 @@ use work.cluster_pkg.all;
 
 entity cluster_packer is
   generic (
-    MXSBITS           : integer := 64;     -- number of sbits / vfat
-    ONESHOT           : boolean := true;   -- set to 1 to trim pulses to be rising edge sensitive only
-    SPLIT_CLUSTERS    : integer := 0;      -- set to 1 will split large clusters in 2 instead of truncating
-    INVERT_PARTITIONS : boolean := false;  -- changes 0-->7 vs. 7-->0 for partition ordering
+    MXSBITS           : integer := 64;    -- number of sbits / vfat
+    ONESHOT           : boolean := true;  -- set to 1 to trim pulses to be rising edge sensitive only
+    SPLIT_CLUSTERS    : integer := 0;     -- set to 1 will split large clusters in 2 instead of truncating
+    INVERT_PARTITIONS : boolean := false; -- changes 0-->7 vs. 7-->0 for partition ordering
 
     NUM_VFATS      : integer := 24;
     NUM_PARTITIONS : integer := 8;
@@ -50,8 +50,8 @@ architecture behavioral of cluster_packer is
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
-  signal strobe_s1       : std_logic := '0';
-  signal strobe_s0       : std_logic := '0';
+  signal strobe_s1 : std_logic := '0';
+  signal strobe_s0 : std_logic := '0';
 
   signal sbits_os : sbits_array_t (NUM_VFATS-1 downto 0);
 
@@ -77,11 +77,11 @@ architecture behavioral of cluster_packer is
 
   function select_ovf_latency (stype : integer) return integer is
   begin
-    if (stype=0) then
+    if (stype = 0) then
       return 7;
-    elsif (stype=1) then
+    elsif (stype = 1) then
       return 5;
-    elsif (stype=2) then
+    elsif (stype = 2) then
       return 3;
     end if;
     return -1;
@@ -153,10 +153,10 @@ begin
       sbit_or    <= sbit_or_s3;
 
       if ((sbit_or = '0' and sbit_or_s3 = '1') or phase = 3) then
-        phase <= 0;
+        phase  <= 0;
         phase0 <= '1';
       else
-        phase <= phase + 1;
+        phase  <= phase + 1;
         phase0 <= '0';
       end if;
 
@@ -166,8 +166,8 @@ begin
       phase_ff(2) <= phase_ff(1);
       phase_ff(3) <= phase_ff(2);
 
-      strobe_s0   <= phase_ff(2);
-      strobe_s1   <= strobe_s0;
+      strobe_s0 <= phase_ff(2);
+      strobe_s1 <= strobe_s0;
 
     end if;
   end process;
@@ -180,12 +180,8 @@ begin
     invert_gen : if (INVERT_PARTITIONS) generate
       partitions_i(0) <= sbits_i(5) & sbits_i(4) & sbits_i(3) & sbits_i(2) & sbits_i(1) & sbits_i(0);
       partitions_i(1) <= sbits_i(11) & sbits_i(10) & sbits_i(9) & sbits_i(8) & sbits_i(7) & sbits_i(6);
-    --partitions_i(0) <= sbits_i(0) & sbits_i(1) & sbits_i(2) & sbits_i(3) & sbits_i(4) & sbits_i(5);
-    --partitions_i(1) <= sbits_i(6) & sbits_i(7) & sbits_i(8) & sbits_i(9) & sbits_i(10) & sbits_i(11);
     end generate;
     noninvert_gen : if (not INVERT_PARTITIONS) generate
-      --partitions_i(1) <= sbits_i(0) & sbits_i(1) & sbits_i(2) & sbits_i(3) & sbits_i(4) & sbits_i(5);
-      --partitions_i(0) <= sbits_i(6) & sbits_i(7) & sbits_i(8) & sbits_i(9) & sbits_i(10) & sbits_i(11);
       partitions_i(1) <= sbits_i(5) & sbits_i(4) & sbits_i(3) & sbits_i(2) & sbits_i(1) & sbits_i(0);
       partitions_i(0) <= sbits_i(11) & sbits_i(10) & sbits_i(9) & sbits_i(8) & sbits_i(7) & sbits_i(6);
     end generate;
