@@ -50,8 +50,6 @@ architecture behavioral of cluster_packer is
   subtype partition_t is std_logic_vector(PARTITION_WIDTH*MXSBITS-1 downto 0);
   type partition_array_t is array(integer range <>) of partition_t;
 
-  signal strobe0, strobe1, strobe2, strobe3 : std_logic := '0';
-  signal strobe_pipeline : std_logic_vector(15 downto 0) := (others => '0');
   signal strobe_s1       : std_logic := '0';
   signal strobe_s0       : std_logic := '0';
 
