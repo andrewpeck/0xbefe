@@ -5,12 +5,10 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 entity ttc is
-  generic (
-    MXBXN : integer := 12
-    );
+  generic (MXBXN : integer := 12);
   port(
     clock             : in  std_logic;
-    sync_on_resync    : in  std_logic := '0';
+    sync_on_resync    : in  std_logic                           := '0';
     reset             : in  std_logic;
     ttc_bx0           : in  std_logic;
     ttc_resync        : in  std_logic;
@@ -25,6 +23,9 @@ end ttc;
 
 architecture behavioral of ttc is
   constant LHC_CYCLE : integer := 3564;
+
+  -- don't output errors until after the first BC0 is received
+  signal synced : std_logic := '0';
 
   signal bxn_counter : integer range 0 to LHC_CYCLE-1 := 0;
 
@@ -100,11 +101,11 @@ begin
   begin
     if (rising_edge(clock)) then
       -- ok
-      if (ttc_bx0 = '1' and bxn_counter  = to_integer(unsigned(bxn_offset_lim))) then
-        bxn_sync_err_o <= '0'; -- good
+      if (ttc_bx0 = '1' and bxn_counter = to_integer(unsigned(bxn_offset_lim))) then
+        bxn_sync_err_o <= '0';          -- good
       end if;
-      if (ttc_bx0 = '1' and bxn_counter /= to_integer(unsigned(bxn_offset_lim))) then
-        bxn_sync_err_o <= '1'; -- err
+      if (synced = '1' and ttc_bx0 = '1' and bxn_counter /= to_integer(unsigned(bxn_offset_lim))) then
+        bxn_sync_err_o <= '1';          -- err
       end if;
     end if;
   end process;
@@ -112,10 +113,10 @@ begin
   bx0_local_o <= '1' when bxn_counter = 0 else '0';  -- This OHs bxn is at 0
 
   -- single clock strobe of sync error at bx0
-  bx0_sync_err_o <= '1' when
+  bx0_sync_err_o <= '1' when synced = '1' and
                     -- at the time a bx0 is received from the backend, the local counter should be at its offset limit
-                    (bxn_counter = to_integer(unsigned(bxn_offset_lim)) and ttc_bx0 = '0') or
-                    (bxn_counter /= to_integer(unsigned(bxn_offset_lim)) and ttc_bx0 = '1')
+                    ((bxn_counter = to_integer(unsigned(bxn_offset_lim)) and ttc_bx0 = '0') or
+                     (bxn_counter /= to_integer(unsigned(bxn_offset_lim)) and ttc_bx0 = '1'))
                     else '0';
 
   process (clock) is
@@ -128,5 +129,17 @@ begin
   end process;
 
   bxn_counter_o <= std_logic_vector(to_unsigned(bxn_counter, bxn_counter_o'length));
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      if (reset = '1') then
+        synced <= '0';
+      elsif (ttc_bx0 = '1') then
+        synced <= '1';
+      end if;
+    end if;
+  end process;
+
 
 end behavioral;
