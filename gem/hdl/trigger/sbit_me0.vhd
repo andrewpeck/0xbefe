@@ -105,7 +105,8 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat_sbits_or_arr    : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
 
     -- probe signal for raw sbits --
-    signal sbits_probe : sbits_t;
+    signal sbits_probe         : sbits_t;
+    signal me0_clusters_probe  : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- counters
     signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -254,14 +255,14 @@ begin
             PORT MAP (
                 clk => ttc_clk_i.clk_40,
 
-                probe0 => me0_clusters_o(0)(0).size & me0_clusters_o(0)(0).address,
-                probe1 => me0_clusters_o(0)(1).size & me0_clusters_o(0)(1).address,
-                probe2 => me0_clusters_o(0)(2).size & me0_clusters_o(0)(2).address,
-                probe3 => me0_clusters_o(0)(3).size & me0_clusters_o(0)(3).address,
-                probe4 => me0_clusters_o(0)(4).size & me0_clusters_o(0)(4).address,
-                probe5 => me0_clusters_o(0)(5).size & me0_clusters_o(0)(5).address,
-                probe6 => me0_clusters_o(0)(6).size & me0_clusters_o(0)(6).address,
-                probe7 => me0_clusters_o(0)(7).size & me0_clusters_o(0)(7).address,
+                probe0 => me0_clusters_probe(0)(0).size & me0_clusters_probe(0)(0).address,
+                probe1 => me0_clusters_probe(0)(1).size & me0_clusters_probe(0)(1).address,
+                probe2 => me0_clusters_probe(0)(2).size & me0_clusters_probe(0)(2).address,
+                probe3 => me0_clusters_probe(0)(3).size & me0_clusters_probe(0)(3).address,
+                probe4 => me0_clusters_probe(0)(4).size & me0_clusters_probe(0)(4).address,
+                probe5 => me0_clusters_probe(0)(5).size & me0_clusters_probe(0)(5).address,
+                probe6 => me0_clusters_probe(0)(6).size & me0_clusters_probe(0)(6).address,
+                probe7 => me0_clusters_probe(0)(7).size & me0_clusters_probe(0)(7).address,
                 probe8 => sbits_probe,
                 probe9 => vfat_sbits_arr(0)(1),
                 probe10 => vfat_sbits_arr(0)(8),
@@ -382,6 +383,9 @@ begin
                     me0_clusters_o(oh)(I).address <= (others => '1');
                     me0_clusters_o(oh)(I).size <= (others => '1');
                 end if;
+                
+                me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I)
+
             end if;
         end process;
         end generate;
