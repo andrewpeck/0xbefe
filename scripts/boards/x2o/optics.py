@@ -115,6 +115,14 @@ def x2o_enable_rx_squelch(qsfp):
     qsfp.select()
     qsfp.disable_rx_squelch(0x0)
 
+def x2o_disable_tx_squelch(qsfp):
+    qsfp.select()
+    qsfp.disable_tx_squelch(0xf)
+
+def x2o_enable_tx_squelch(qsfp):
+    qsfp.select()
+    qsfp.disable_tx_squelch(0x0)
+
 def x2o_enable_rx_cdr(qsfp):
     qsfp.select()
     qsfp.enable_rx_cdr(0xf)
@@ -131,6 +139,28 @@ def x2o_disable_tx_cdr(qsfp):
     qsfp.select()
     qsfp.enable_tx_cdr(0x0)
 
+def x2o_enable_tx(qsfp, channel=None):
+    qsfp.select()
+    mask = 0xf
+    if channel is not None:
+        mask = qsfp.tx_enabled() | (1 << channel)
+    qsfp.enable_tx(mask)
+
+def x2o_disable_tx(qsfp, channel=None):
+    qsfp.select()
+    mask = 0x0
+    if channel is not None:
+        mask = qsfp.tx_enabled() & ~(1 << channel)
+    qsfp.enable_tx(mask)
+
+def set_qsfp_rx_emphasis(qsfp, emphasis):
+    qsfp.select()
+    qsfp.set_rx_output_emphasis([emphasis]*4)
+
+def set_qsfp_rx_amplitude(qsfp, amplitude):
+    qsfp.select()
+    qsfp.set_rx_output_amplitude([amplitude]*4)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-o',
@@ -145,15 +175,25 @@ if __name__ == '__main__':
     #                     dest='show_rx_squelch',
     #                     help="Show if RX squelch disabled mask")
 
-    parser.add_argument('-sd',
+    parser.add_argument('-rsd',
                         '--disable_rx_squelch',
                         dest='disable_rx_squelch',
                         help="Disable RX squelch on the given cage")
 
-    parser.add_argument('-se',
+    parser.add_argument('-rse',
                         '--enable_rx_squelch',
                         dest='enable_rx_squelch',
                         help="Enable RX squelch on the given cage")
+
+    parser.add_argument('-tsd',
+                        '--disable_tx_squelch',
+                        dest='disable_tx_squelch',
+                        help="Disable TX squelch on the given cage")
+
+    parser.add_argument('-tse',
+                        '--enable_tx_squelch',
+                        dest='enable_tx_squelch',
+                        help="Enable TX squelch on the given cage")
 
     parser.add_argument('-rcd',
                         '--disable_rx_cdr',
@@ -175,6 +215,27 @@ if __name__ == '__main__':
                         dest='enable_tx_cdr',
                         help="Enable TX CDR on the given cage")
 
+    parser.add_argument('-vit100',
+                        '--configure_vitex_100g',
+                        dest='configure_vitex_100g',
+                        help="Configures Vitex 100G QSFP for CSC operation (sets RX emphasis to 0, and amplitude to max)")
+
+    parser.add_argument('-vit100all',
+                        '--configure_vitex_100g_all',
+                        action="store_true",
+                        dest='configure_vitex_100g_all',
+                        help="Configures all Vitex 100G QSFP for CSC operation (sets RX emphasis to 0, and amplitude to max)")
+
+    parser.add_argument('-te',
+                        '--enable_tx',
+                        dest='enable_tx',
+                        help="Enable TX on the given cage or channel: if only one number is provided, that whole cage will be switched on, and if two numbers separated by a comma are provided then only one channel will be turned on")
+
+    parser.add_argument('-td',
+                        '--disable_tx',
+                        dest='disable_tx',
+                        help="Disable TX on the given cage or channel: if only one number is provided, that whole cage will be switched off, and if two numbers separated by a comma are provided then only one channel will be turned off")
+
     args = parser.parse_args()
 
     qsfps = x2o_get_qsfps()
@@ -195,6 +256,22 @@ if __name__ == '__main__':
             print("Enabling RX squelch on cage %d" % cage)
             x2o_enable_rx_squelch(qsfps[cage])
 
+    if args.disable_tx_squelch is not None:
+        cage = int(args.disable_tx_squelch)
+        if cage not in qsfps:
+            print_red("Cannot disable TX squelch on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Disabling TX squelch on cage %d" % cage)
+            x2o_disable_tx_squelch(qsfps[cage])
+
+    if args.enable_tx_squelch is not None:
+        cage = int(args.enable_tx_squelch)
+        if cage not in qsfps:
+            print_red("Cannot enable TX squelch on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Enabling TX squelch on cage %d" % cage)
+            x2o_enable_tx_squelch(qsfps[cage])
+
     if args.disable_rx_cdr is not None or args.enable_rx_cdr is not None or args.disable_tx_cdr is not None or args.enable_tx_cdr is not None:
         cage = int(args.disable_rx_cdr) if args.disable_rx_cdr is not None else int(args.enable_rx_cdr) if args.enable_rx_cdr is not None else int(args.disable_tx_cdr) if args.disable_tx_cdr is not None else int(args.enable_tx_cdr)
         if cage not in qsfps:
@@ -212,5 +289,46 @@ if __name__ == '__main__':
             if args.enable_tx_cdr is not None:
                 print("Enabling TX CDR on cage %d" % cage)
                 x2o_enable_tx_cdr(qsfps[cage])
+
+    if args.configure_vitex_100g is not None:
+        cage = int(args.configure_vitex_100g)
+        if cage not in qsfps:
+            print_red("Cannot configure Vitex QSFP on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Configuring 100G QSFP for CSC operation: setting RX emphasis to 0, amplitude to max, and disable TX and RX CDR on cage %d" % cage)
+            x2o_disable_rx_cdr(qsfps[cage])
+            x2o_disable_tx_cdr(qsfps[cage])
+            set_qsfp_rx_emphasis(qsfps[cage], 0)
+            set_qsfp_rx_amplitude(qsfps[cage], 3)
+
+    if args.configure_vitex_100g_all is not None and args.configure_vitex_100g_all == True:
+        for i in range(X2O_NUM_CAGES):
+            if i in qsfps.keys():
+                qsfp = qsfps[i]
+                qsfp.select()
+                type = qsfp.identifier().replace(" or later", "")
+                vendor = qsfp.vendor()
+                if type == "QSFP28" and vendor == "Vitex":
+                    print("Configuring Vitex 100G in cage %d for low speed operation (e.g. 10 or 12.5Gb/s)" % i)
+                    x2o_disable_rx_cdr(qsfp)
+                    x2o_disable_tx_cdr(qsfp)
+                    set_qsfp_rx_emphasis(qsfp, 0)
+                    set_qsfp_rx_amplitude(qsfp, 3)
+
+    if args.enable_tx is not None:
+        cage = int(args.enable_tx)
+        if cage not in qsfps:
+            print_red("Cannot enable/disable TX on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Enabling TX on cage %d" % cage)
+            x2o_enable_tx(qsfps[cage])
+
+    if args.disable_tx is not None:
+        cage = int(args.disable_tx)
+        if cage not in qsfps:
+            print_red("Cannot enable/disable TX on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Disable TX on cage %d" % cage)
+            x2o_disable_tx(qsfps[cage])
 
     x2o_optics(qsfps, show_opts=args.show_opts, show_rx_squelch=True)
