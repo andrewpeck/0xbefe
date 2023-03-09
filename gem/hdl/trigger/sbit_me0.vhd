@@ -318,7 +318,7 @@ begin
 
 
     ---------------------------------------------------------------------------------
-    -- Clusterizer 
+    -- Clusterizer
     ---------------------------------------------------------------------------------
     cluster_packer_me0 : if (true) generate
 
@@ -329,6 +329,8 @@ begin
             signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
         begin
+
+
             each_vfat: for vfat in 0 to 23 generate
 
                 each_sbit: for sbit in 0 to 63 generate
@@ -384,7 +386,7 @@ begin
                     me0_clusters_o(oh)(I).size <= (others => '1');
                 end if;
                 
-                me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I)
+                me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I);
 
             end if;
         end process;
