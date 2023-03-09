@@ -338,6 +338,10 @@ begin
             ipb_clk_i            => ipb_clk,
             ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
             ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
+--            ipb_mosi_chan_drp_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt_chan_drp),
+--            ipb_miso_chan_drp_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt_chan_drp),
+--            ipb_mosi_qpll_drp_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt_qpll_drp),
+--            ipb_miso_qpll_drp_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt_qpll_drp)
         );
 
     --================================--

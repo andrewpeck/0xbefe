@@ -1,0 +1,19 @@
+<!-- MGT QPLL DRP module -->
+<node id="MGT_QPLL_DRP"  address="0x000d0000"
+      description="This module contains MGT QPLL DRP registers"
+      fw_is_module="true"
+      fw_is_module_external="true">
+
+  <node id="CHAN${MGT}" address="0x0"
+        description="MGT qpll ${MGT} DRP registers"
+        generate="true" generate_size="&NUM_MGTS;" generate_address_step="0x00000400" generate_idx_var="MGT">
+
+    <node id="REG${REG}" address="0x0" permission="rw"
+          description="DRP register at address ${REG}"
+          generate="true" generate_size="177" generate_address_step="0x00000001" generate_idx_var="REG"/>
+
+
+  </node>
+
+</node>
+<!-- End of MGT QPLL DRP module -->

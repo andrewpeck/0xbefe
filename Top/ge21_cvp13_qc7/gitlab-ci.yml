@@ -1,0 +1,8 @@
+GEN:ge21_cvp13_qc7:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: ge21_cvp13_qc7
+    tags:
+      - vivado_2021_1
+      - much_ram

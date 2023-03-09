@@ -48,6 +48,8 @@ common/hdl/utils/ila_mgt_tx_16b_wrapper.vhd
 common/hdl/utils/ila_mgt_rx_64b_wrapper.vhd
 common/hdl/utils/ila_mgt_tx_64b_wrapper.vhd
 common/hdl/utils/lfsr.v
+common/hdl/utils/ipbus_drp_bridge.vhd
+common/hdl/utils/drp_mux.vhd
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project

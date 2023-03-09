@@ -107,7 +107,7 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 36
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 37
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 036, refclk0_idx => 09, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 38
-        (mgt_type => CFG_MGT_GBE      , qpll_inst_type => QPLL_GBE_156    , qpll_idx => 039, refclk0_idx => 09, refclk1_idx => 2, is_master => true , chbond_master => 0, ibert_inst => true ), -- MGT 39
+        (mgt_type => CFG_MGT_GBE      , qpll_inst_type => QPLL_GBE_156    , qpll_idx => 039, refclk0_idx => 09, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => true ), -- MGT 39
         ----------------------------- quad 132 (SLR 3) -----------------------------
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 040, refclk0_idx => 10, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 40
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 040, refclk0_idx => 10, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 41

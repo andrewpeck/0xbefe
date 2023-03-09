@@ -33,9 +33,10 @@ entity mgt_links_gty is
         g_NUM_REFCLK1           : integer;
         g_NUM_CHANNELS          : integer;
         g_LINK_CONFIG           : t_mgt_config_arr;
-        g_DATA_REG_STAGES       : integer := 0; -- optional: if set to a non-zero value, the provided number of register stages will be insterted in the data path (this can be used to ease timing where latency is not critical)  
+        g_DATA_REG_STAGES       : integer := 0; -- optional: if set to a non-zero value, the provided number of register stages will be insterted in the data path (this can be used to ease timing where latency is not critical)
+        g_DRP_SEPARATE_IPBUS    : boolean := false; -- if set to true, the DRP interface will be provided over a separate IPBus (ipb_mosi/miso_chan_drp_i/o and ipb_mosi/miso_qpll_drp_i/o) 
         g_STABLE_CLK_PERIOD     : integer range 4 to 250 := 20;  -- Period of the stable clock driving the state machines (ns)
-        g_IPB_CLK_PERIOD_NS     : integer        
+        g_IPB_CLK_PERIOD_NS     : integer
     );
     port(
         
@@ -75,7 +76,13 @@ entity mgt_links_gty is
         ipb_reset_i             : in  std_logic;
         ipb_clk_i               : in  std_logic;
         ipb_mosi_i              : in  ipb_wbus;
-        ipb_miso_o              : out ipb_rbus
+        ipb_miso_o              : out ipb_rbus;
+
+        ipb_mosi_chan_drp_i     : in  ipb_wbus := IPB_M2S_NULL; -- 17 address bits are needed
+        ipb_miso_chan_drp_o     : out ipb_rbus := IPB_S2M_NULL; -- 17 address bits are needed
+
+        ipb_mosi_qpll_drp_i     : in  ipb_wbus := IPB_M2S_NULL; -- 15 address bits are needed
+        ipb_miso_qpll_drp_o     : out ipb_rbus := IPB_S2M_NULL  -- 15 address bits are needed
         
     );
 end mgt_links_gty;
@@ -144,9 +151,18 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal qpll_ctrl_arr            : t_mgt_qpll_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
     signal qpll_status_tmp_arr      : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
     signal qpll_status_arr          : t_mgt_qpll_status_arr(g_NUM_CHANNELS-1 downto 0) := (others => MGT_QPLL_STATUS_NULL);
+                        
+    signal drp_clk                  : std_logic;
                                     
-    signal chan_drp_in_arr          : t_drp_in_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_IN_NULL);
-    signal chan_drp_out_arr         : t_drp_out_arr(g_NUM_CHANNELS-1 downto 0);
+    signal chan_drp_mosi_ipb_arr    : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal chan_drp_mosi_ipb_sc_arr : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal chan_drp_mosi_ibert_arr  : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal chan_drp_mosi_arr        : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal chan_drp_miso_arr        : t_drp_miso_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MISO_NULL);
+
+    signal qpll_drp_mosi_sc_arr     : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal qpll_drp_mosi_arr        : t_drp_mosi_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MOSI_NULL);
+    signal qpll_drp_miso_arr        : t_drp_miso_arr(g_NUM_CHANNELS-1 downto 0) := (others => DRP_MISO_NULL);
                                     
     signal tx_slow_ctrl_arr         : t_mgt_tx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
     signal rx_slow_ctrl_arr         : t_mgt_rx_slow_ctrl_arr(g_NUM_CHANNELS-1 downto 0);
@@ -181,6 +197,8 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal txph_syncout_arr         : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
 begin
+    
+    drp_clk <= ipb_clk_i;
     
     master_txoutclk_o <= master_txoutclk;
     master_txusrclk_o <= master_txusrclk;
@@ -379,8 +397,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -457,8 +476,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -527,8 +547,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -602,8 +623,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -669,8 +691,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -757,8 +780,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -791,14 +815,23 @@ begin
                         DIV     => "000",
                         I       => chan_clks_out_arr(chan).txoutclk -- 312.5MHz
                     );                  
-                master_txusrclk.odmb57 <= chan_clks_in_arr(chan).txusrclk2;
                 master_rxusrclk.odmb57 <= chan_clks_in_arr(chan).rxusrclk2;
             end generate;
-            
+
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.odmb57;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.odmb57;
-            
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 312.5MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 312.5MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+                        
             -- ODMB57 links always use elastic buffers
             chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.odmb57;
             chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.odmb57;
@@ -826,8 +859,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -849,30 +883,25 @@ begin
         -- GbE MGT type (1.25Gb/s)
         --================================--
         g_chan_gbe : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_GBE generate
-        
-            -- master clocks       
-            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
-                i_bufg_master_txoutclk : BUFG_GT
-                    port map(
-                        O       => master_txoutclk.gbe,
-                        CE      => '1',
-                        CEMASK  => '0',
-                        CLR     => '0',
-                        CLRMASK => '0',
-                        DIV     => "000",
-                        I       => chan_clks_out_arr(chan).txoutclk
-                    );                  
-                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
-                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
-            end generate;
-            
+
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.gbe;
-            
-            -- GbE links always use elastic buffers
-            chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.gbe;
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 62.5MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 62.5MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+
+            -- RX user clocks
+            -- GbE links always use elastic buffers, so use TX user clock for RX too
+            chan_clks_in_arr(chan).rxusrclk <= chan_clks_in_arr(chan).txusrclk;
+            chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).txusrclk2;
 
             -- generic control signals
             rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
@@ -895,8 +924,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -917,34 +947,43 @@ begin
         --================================--
         g_chan_10gbe : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_10GBE generate
         
-            -- master clocks       
-            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
-                i_bufg_master_txoutclk : BUFG_GT
-                    port map(
-                        O       => master_txoutclk.gbe, -- 156.25MHz
-                        CE      => '1',
-                        CEMASK  => '0',
-                        CLR     => '0',
-                        CLRMASK => '0',
-                        DIV     => "000",
-                        I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
-                    );                  
-                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
-                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
-            end generate;
-            
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.gbe;
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 156.25MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+
+            -- RX user clocks
             
-            -- GbE links always use elastic buffers
-            chan_clks_in_arr(chan).rxusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).rxusrclk2 <= master_txoutclk.gbe;
+            i_bufg_rxoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).rxusrclk, -- 156.25MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).rxoutclk -- 156.25MHz
+                );            
+
+            chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).rxusrclk;
+            
+            -- GbE links always use elastic buffers, so use TX user clock for RX too
+--            chan_clks_in_arr(chan).rxusrclk <= chan_clks_in_arr(chan).txusrclk;
+--            chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).txusrclk2;
 
             -- generic control signals
             rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
             
-            i_chan_gbe : entity work.gty_channel_10gbe
+            i_chan_10gbe : entity work.gty_channel_10gbe
                 generic map(
                     g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
                     g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
@@ -962,8 +1001,121 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --================================--
+        -- 25GbE MGT type (25.78125Gb/s)
+        --================================--
+        g_chan_25gbe : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_25GBE generate
+        
+--            TODO:
+--              * clocking for 25G: there should be no master, just use the txoutclk of the same channel (probably should be like this for all async links: all GBE, and DMB links)
+--              * use 128b instead of the 64b data interface (update connections in the 25G channel modules, currently only 64 bits are connected)
+--              * ASYNC gearbox RX SLIP input should be routed out
+--              * hmm, figure out how clock correction is done in 64b66b..
+        
+--            -- master clocks       
+--            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
+--                i_bufg_master_txoutclk : BUFG_GT
+--                    port map(
+--                        O       => master_txoutclk.gbe, -- 156.25MHz
+--                        CE      => '1',
+--                        CEMASK  => '0',
+--                        CLR     => '0',
+--                        CLRMASK => '0',
+--                        DIV     => "000",
+--                        I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
+--                    );                  
+--                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
+--                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
+--            end generate;
+            
+            -- TX user clocks
+            i_bufg_txusrclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 390.625MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 390.625MHz
+                );                  
+
+            i_bufg_txusrclk2 : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk2, -- 195.3125MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "001",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 390.625MHz
+                );                  
+            
+            -- RX user clocks
+            i_bufg_rxusrclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).rxusrclk, -- 390.625MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).rxoutclk -- 390.625MHz
+                );                  
+
+            i_bufg_rxusrclk2 : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).rxusrclk2, -- 195.3125MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "001",
+                    I       => chan_clks_out_arr(chan).rxoutclk -- 390.625MHz
+                );                  
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= '0'; -- rxslide not used on GbE links
+            
+            i_chan_25gbe : entity work.gty_channel_25gbe
+                generic map(
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
+                    g_TXOUTCLKSEL    => "101", -- from TXPROGDIV
+                    g_RXOUTCLKSEL    => "101" -- from RXPROGDIV
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -983,27 +1135,21 @@ begin
         -- GbE TX + LpGBT RX MGT type (1.25Gb/s + 10.24Gb/s)
         --====================================================--
         g_chan_gbe_tx_lpgbt_rx : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_TX_GBE_RX_LPGBT generate
-        
-            -- master clocks       
-            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
-                i_bufg_master_txoutclk : BUFG_GT
-                    port map(
-                        O       => master_txoutclk.gbe,
-                        CE      => '1',
-                        CEMASK  => '0',
-                        CLR     => '0',
-                        CLRMASK => '0',
-                        DIV     => "000",
-                        I       => chan_clks_out_arr(chan).txoutclk
-                    );                  
-                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
-                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
-            end generate;
-            
+
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.gbe;
-            
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 62.5MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 62.5MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+                    
             -- RX user clocks when using elastic buffer
             g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_320;
@@ -1030,7 +1176,7 @@ begin
             -- generic control signals
             rx_fast_ctrl_arr(chan).rxslide <= ctrl_arr_i(chan).rxslide;            
             
-            i_chan_gbe : entity work.gty_channel_lpgbt_rx_gbe_tx
+            i_chan_lpgbt_rx_gbe_tx : entity work.gty_channel_lpgbt_rx_gbe_tx
                 generic map(
                     g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
                     g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
@@ -1049,8 +1195,9 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -1071,26 +1218,20 @@ begin
         --====================================================--
         g_chan_10gbe_tx_lpgbt_rx : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_TX_10GBE_RX_LPGBT generate
         
-            -- master clocks       
-            g_master_clks : if g_LINK_CONFIG(chan).is_master generate
-                i_bufg_master_txoutclk : BUFG_GT
-                    port map(
-                        O       => master_txoutclk.gbe,
-                        CE      => '1',
-                        CEMASK  => '0',
-                        CLR     => '0',
-                        CLRMASK => '0',
-                        DIV     => "000",
-                        I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
-                    );                  
-                master_txusrclk.gbe <= chan_clks_in_arr(chan).txusrclk2;
-                master_rxusrclk.gbe <= chan_clks_in_arr(chan).rxusrclk2;
-            end generate;
-            
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= master_txoutclk.gbe;
-            chan_clks_in_arr(chan).txusrclk2 <= master_txoutclk.gbe;
-            
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 156.25MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+        
             -- RX user clocks when using elastic buffer
             g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_320;
@@ -1117,7 +1258,7 @@ begin
             -- generic control signals
             rx_fast_ctrl_arr(chan).rxslide <= ctrl_arr_i(chan).rxslide;            
             
-            i_chan_gbe : entity work.gty_channel_lpgbt_rx_10gbe_tx
+            i_chan_lpgbt_rx_10gbe_tx : entity work.gty_channel_lpgbt_rx_10gbe_tx
                 generic map(
                     g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
                     g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
@@ -1136,8 +1277,91 @@ begin
                     clks_o         => chan_clks_out_arr(chan),
                     cpllreset_i    => cpll_reset_arr(chan),
                     cpll_status_o  => cpll_status_arr(chan),
-                    drp_i          => chan_drp_in_arr(chan),
-                    drp_o          => chan_drp_out_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
+                    tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
+                    tx_init_i      => tx_init_arr(chan),
+                    tx_status_o    => tx_status_arr(chan),
+                    rx_slow_ctrl_i => rx_slow_ctrl_arr(chan),
+                    rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
+                    rx_init_i      => rx_init_arr(chan),
+                    rx_status_o    => rx_status_arr(chan),
+                    misc_ctrl_i    => misc_ctrl_arr(chan),
+                    misc_status_o  => misc_status_arr(chan),
+                    tx_data_i      => tx_data_arr(chan),
+                    rx_data_o      => rx_data_arr(chan)
+                );
+        
+        end generate;
+
+        --====================================================--
+        -- 10GbE TX + Trigger 3.2Gbps RX MGT type (10.3125Gb/s + 3.2Gb/s)
+        --====================================================--
+        g_chan_10gbe_tx_trig_rx : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_TX_10GBE_RX_TRIG_3P2 generate
+        
+            -- TX user clocks
+            i_bufg_txoutclk : BUFG_GT
+                port map(
+                    O       => chan_clks_in_arr(chan).txusrclk, -- 156.25MHz
+                    CE      => '1',
+                    CEMASK  => '0',
+                    CLR     => '0',
+                    CLRMASK => '0',
+                    DIV     => "000",
+                    I       => chan_clks_out_arr(chan).txoutclk -- 156.25MHz
+                );
+                    
+            chan_clks_in_arr(chan).txusrclk2 <= chan_clks_in_arr(chan).txusrclk;
+        
+            -- RX user clocks when using elastic buffer
+            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_160;
+                chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_160;
+            end generate;
+            
+            -- RX user clocks when elastic buffer is bypassed
+            g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+                
+                i_rxoutclk_buf : BUFG_GT
+                    port map(
+                        O       => chan_clks_in_arr(chan).rxusrclk,
+                        CE      => '1',
+                        CEMASK  => '0',
+                        CLR     => '0',
+                        CLRMASK => '0',
+                        DIV     => "000",
+                        I       => chan_clks_out_arr(chan).rxoutclk
+                    );                
+
+                chan_clks_in_arr(chan).rxusrclk2 <= chan_clks_in_arr(chan).rxusrclk;
+            end generate;
+
+            -- generic control signals
+            rx_fast_ctrl_arr(chan).rxslide <= '0';            
+            
+            i_chan_trig_3p2_rx_10gbe_tx : entity work.gty_channel_trig_3p2_rx_10gbe_tx
+                generic map(
+                    g_CPLL_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.cpll_refclk_01,
+                    g_TX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.tx_use_qpll,
+                    g_RX_USE_QPLL    => g_LINK_CONFIG(chan).mgt_type.rx_use_qpll,
+                    g_TX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.tx_qpll_01,
+                    g_RX_QPLL_01     => g_LINK_CONFIG(chan).mgt_type.rx_qpll_01,
+                    g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
+                    g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
+                    g_TXOUTCLKSEL    => "101", -- from TXPROGDIV, actually could just take the refclk directly here..
+                    g_RXOUTCLKSEL    => "010", -- recovered clock by default
+                    g_USE_TX_SYNC    => g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign
+                )
+                port map(
+                    clk_stable_i   => clk_stable_i,
+                    clks_i         => chan_clks_in_arr(chan),
+                    clks_o         => chan_clks_out_arr(chan),
+                    cpllreset_i    => cpll_reset_arr(chan),
+                    cpll_status_o  => cpll_status_arr(chan),
+                    drp_clk_i      => drp_clk,
+                    drp_i          => chan_drp_mosi_arr(chan),
+                    drp_o          => chan_drp_miso_arr(chan),
                     tx_slow_ctrl_i => tx_slow_ctrl_arr(chan),
                     tx_init_i      => tx_init_arr(chan),
                     tx_status_o    => tx_status_arr(chan),
@@ -1171,8 +1395,9 @@ begin
                         ctrl_i       => qpll_ctrl_arr(chan),
                         clks_o       => qpll_clks_tmp_arr(chan),
                         status_o     => qpll_status_tmp_arr(chan),
-                        drp_i        => DRP_IN_NULL,
-                        drp_o        => open
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
                     );
             end generate;
 
@@ -1188,8 +1413,9 @@ begin
                         ctrl_i       => qpll_ctrl_arr(chan),
                         clks_o       => qpll_clks_tmp_arr(chan),
                         status_o     => qpll_status_tmp_arr(chan),
-                        drp_i        => DRP_IN_NULL,
-                        drp_o        => open
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
                     );
             end generate;
             
@@ -1215,8 +1441,9 @@ begin
                         ctrl_i       => qpll_ctrl_arr(chan),
                         clks_o       => qpll_clks_tmp_arr(chan),
                         status_o     => qpll_status_tmp_arr(chan),
-                        drp_i        => DRP_IN_NULL,
-                        drp_o        => open
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
                     );
             end generate;
 
@@ -1232,8 +1459,9 @@ begin
                         ctrl_i       => qpll_ctrl_arr(chan),
                         clks_o       => qpll_clks_tmp_arr(chan),
                         status_o     => qpll_status_tmp_arr(chan),
-                        drp_i        => DRP_IN_NULL,
-                        drp_o        => open
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
                     );
             end generate;
             
@@ -1258,8 +1486,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
             
             assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 3.2Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1283,8 +1512,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 3.2Gb/s + GBTX type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1308,8 +1538,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "ODMB57 MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1333,8 +1564,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "ODMB57 MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1358,8 +1590,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "DMB / GBE MGT has tx refclk frequency that is not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1383,8 +1616,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "DMB / 10GBE MGT has tx refclk frequency that is not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1408,8 +1642,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "GBE MGT has tx refclk frequency that is not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1433,11 +1668,38 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "10GBE MGT has tx refclk frequency that is not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
+
+        --===================================--
+        -- 25GbE QPLL0 with 156.25MHz refclk
+        --===================================--
+
+        g_qpll_25gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_25GBE_156 generate
+            
+            i_qpll_25gbe_156 : entity work.gty_qpll_25gbe_156p25
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+
+            assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "25GBE MGT has tx refclk frequency that is not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
 
@@ -1459,8 +1721,9 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "LpGBT_RX_GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
@@ -1485,11 +1748,39 @@ begin
                     ctrl_i       => qpll_ctrl_arr(chan),
                     clks_o       => qpll_clks_tmp_arr(chan),
                     status_o     => qpll_status_tmp_arr(chan),
-                    drp_i        => DRP_IN_NULL,
-                    drp_o        => open
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "LpGBT_RX_10GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
+
+        --========================================--
+        -- RX: Trigger 3.2Gbps QPLL0 with 160MHz LHC refclk
+        -- TX: 10GbE QPLL1 with 156.25MHz refclk
+        --========================================--
+
+        g_qpll0_trig_3p2_qpll1_10gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_TRIG_3P2_QPLL1_10GBE generate
+            
+            i_qpll0_trig_3p2_qpll1_10gbe : entity work.gty_qpll0_trig_3p2_qpll1_10gbe
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+
+            assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "TRIG_3P2_RX_10GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
         
@@ -1591,13 +1882,13 @@ begin
         g_insys_ibert : if g_LINK_CONFIG(chan).ibert_inst generate
             i_ibert : ibert_insys_gty
                 port map(
-                    drpclk_o       => chan_drp_in_arr(chan).clk,
-                    gt0_drpen_o    => chan_drp_in_arr(chan).en,
-                    gt0_drpwe_o    => chan_drp_in_arr(chan).we,
-                    gt0_drpaddr_o  => chan_drp_in_arr(chan).addr(9 downto 0),
-                    gt0_drpdi_o    => chan_drp_in_arr(chan).di,
-                    gt0_drprdy_i   => chan_drp_out_arr(chan).rdy,
-                    gt0_drpdo_i    => chan_drp_out_arr(chan).do,
+                    drpclk_o       => open,
+                    gt0_drpen_o    => chan_drp_mosi_ibert_arr(chan).en,
+                    gt0_drpwe_o    => chan_drp_mosi_ibert_arr(chan).we,
+                    gt0_drpaddr_o  => chan_drp_mosi_ibert_arr(chan).addr(9 downto 0),
+                    gt0_drpdi_o    => chan_drp_mosi_ibert_arr(chan).di,
+                    gt0_drprdy_i   => chan_drp_miso_arr(chan).rdy,
+                    gt0_drpdo_i    => chan_drp_miso_arr(chan).do,
                     eyescanreset_o => ibert_scanreset_arr(chan),
                     rxrate_o       => open,
                     txdiffctrl_o   => open,
@@ -1607,6 +1898,23 @@ begin
                     rxoutclk_i     => chan_clks_in_arr(chan).rxusrclk2,
                     clk            => clk_stable_i
                 );
+                
+            -- MUX between IBERT and IPBUS DRP
+            process(drp_clk)
+            begin
+                if rising_edge(drp_clk) then
+                    if chan_drp_mosi_ibert_arr(chan).en = '1' then
+                        chan_drp_mosi_arr(chan) <= chan_drp_mosi_ibert_arr(chan); 
+                    else
+                        chan_drp_mosi_arr(chan) <= chan_drp_mosi_ipb_arr(chan);
+                    end if;
+                end if;
+            end process;
+                
+        end generate;
+
+        g_no_insys_ibert : if not g_LINK_CONFIG(chan).ibert_inst generate
+            chan_drp_mosi_arr(chan) <= chan_drp_mosi_ipb_arr(chan);
         end generate;
         
     end generate;
@@ -1637,15 +1945,69 @@ begin
         );
 
     --=========================================--
+    -- Channel DRP
+    --=========================================--
+
+    g_chan_drp : if g_DRP_SEPARATE_IPBUS generate
+        i_ipb_chan_drp_bridge: entity work.ipbus_drp_bridge
+            generic map(
+                g_NUM_DRP_ADDR_BITS  => 10,
+                g_NUM_DRP_SEL_BITS   => 7,
+                g_NUM_DRP_BUSES      => g_NUM_CHANNELS,
+                g_TOP_ADDR_DRP_RESET => true
+            )
+            port map(
+                ipb_reset_i    => ipb_reset_i,
+                ipb_clk_i      => ipb_clk_i,
+                ipb_mosi_i     => ipb_mosi_chan_drp_i,
+                ipb_miso_o     => ipb_miso_chan_drp_o,
+                drp_mosi_arr_o => chan_drp_mosi_ipb_arr,
+                drp_miso_arr_i => chan_drp_miso_arr
+            );
+    end generate;
+
+    g_no_chan_drp : if not g_DRP_SEPARATE_IPBUS generate
+        chan_drp_mosi_ipb_arr <= chan_drp_mosi_ipb_sc_arr;
+    end generate;
+
+    --=========================================--
+    -- QPLL DRP
+    --=========================================--
+
+    g_qpll_drp : if g_DRP_SEPARATE_IPBUS generate
+        i_ipb_qpll_drp_bridge: entity work.ipbus_drp_bridge
+            generic map(
+                g_NUM_DRP_ADDR_BITS  => 8,
+                g_NUM_DRP_SEL_BITS   => 7,
+                g_NUM_DRP_BUSES      => g_NUM_CHANNELS,
+                g_TOP_ADDR_DRP_RESET => false
+            )
+            port map(
+                ipb_reset_i    => ipb_reset_i,
+                ipb_clk_i      => ipb_clk_i,
+                ipb_mosi_i     => ipb_mosi_qpll_drp_i,
+                ipb_miso_o     => ipb_miso_qpll_drp_o,
+                drp_mosi_arr_o => qpll_drp_mosi_arr,
+                drp_miso_arr_i => qpll_drp_miso_arr
+            );
+    end generate;
+
+    g_no_qpll_drp : if not g_DRP_SEPARATE_IPBUS generate
+        qpll_drp_mosi_arr <= qpll_drp_mosi_sc_arr;
+    end generate;
+        
+    --=========================================--
     -- Slow control
     --=========================================--
 
     i_slow_control : entity work.mgt_slow_control
         generic map(
-            g_NUM_CHANNELS      => g_NUM_CHANNELS,
-            g_LINK_CONFIG       => g_LINK_CONFIG,
-            g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-            g_STABLE_CLK_PERIOD_NS => g_STABLE_CLK_PERIOD
+            g_NUM_CHANNELS          => g_NUM_CHANNELS,
+            g_LINK_CONFIG           => g_LINK_CONFIG,
+            g_ENABLE_CHAN_DRP       => not g_DRP_SEPARATE_IPBUS,
+            g_ENABLE_QPLL_DRP       => not g_DRP_SEPARATE_IPBUS,
+            g_IPB_CLK_PERIOD_NS     => g_IPB_CLK_PERIOD_NS,
+            g_STABLE_CLK_PERIOD_NS  => g_STABLE_CLK_PERIOD
         )
         port map(
             clk_stable_i          => clk_stable_i,
@@ -1668,6 +2030,10 @@ begin
             tx_phalign_done_arr_i => tx_phalign_done_arr,
             rx_phalign_done_arr_i => rx_phalign_done_arr,
             cpll_status_arr_i     => cpll_status_arr,
+            chan_drp_mosi_arr_o   => chan_drp_mosi_ipb_sc_arr,
+            chan_drp_miso_arr_i   => chan_drp_miso_arr,
+            qpll_drp_mosi_arr_o   => qpll_drp_mosi_sc_arr,
+            qpll_drp_miso_arr_i   => qpll_drp_miso_arr,            
             ipb_clk_i             => ipb_clk_i,
             ipb_reset_i           => ipb_reset_i,
             ipb_mosi_i            => ipb_mosi_i,

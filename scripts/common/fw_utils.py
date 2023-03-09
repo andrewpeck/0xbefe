@@ -86,7 +86,28 @@ class Mgt:
             write_reg("BEFE.MGTS.MGT%d.CTRL.TX_POST_CURSOR" % self.idx, tx_post_cursor)
 
     def set_prbs_mode(self, mode):
-        write_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name), mode)
+        if self.txrx == MgtTxRx.TX and self.type.to_string() in ["MGT_25GBE", "MGT_10GBE", "MGT_TX_10GBE_RX_LPGBT"]:
+            if mode != 0:
+                # UG578 section "Using TX Pattern Generator" (selecting TXOUTCLKSEL is done in the firmware)
+                print("MGT %d TX is using async gearbox, which due to a silicon bug needs to be disabled over DRP to enable PRBS. Disabling async gearbox..." % self.idx)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 1)
+                reg124 = read_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx)
+                reg124 = reg124 & 0xdfff # TXGEARBOX_EN = 0
+                reg124 = reg124 | 0x0080 # TXBUF_EN = 1
+                write_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx, reg124)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_SEL" % self.idx, mode)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 0)
+            else:
+                print("MGT %d TX is using async gearbox, which due to a silicon bug needs to be disabled over DRP to enable PRBS. Disabling PRBS, enabling back the async gearbox..." % self.idx)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 1)
+                reg124 = read_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx)
+                reg124 = reg124 | 0x2000 # TXGEARBOX_EN = 1
+                reg124 = reg124 & 0xff7f # TXBUF_EN = 1
+                write_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx, reg124)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_SEL" % self.idx, mode)
+                write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 0)
+        else:
+            write_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name), mode)
 
     def get_prbs_mode(self):
         return read_reg("BEFE.MGTS.MGT%d.CTRL.%s_PRBS_SEL" % (self.idx, self.txrx.name))
@@ -257,7 +278,7 @@ def befe_print_mgt_status(txrx):
         rows.append(status)
     print(tf.generate_table(rows, cols, grid_style=DEFAULT_TABLE_GRID_STYLE))
 
-def befe_get_all_links():
+def befe_get_all_links(skip_usage_data=False):
     num_links = read_reg("BEFE.SYSTEM.RELEASE.NUM_LINKS")
 
     # get the link usage (depends if it's CSC or GEM)
@@ -266,7 +287,7 @@ def befe_get_all_links():
     flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
 
     ############### GEM ###############
-    if flavor.to_string() == "GEM":
+    if flavor.to_string() == "GEM" and not skip_usage_data:
         ### OH links ###
         num_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
         num_gbts = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
@@ -298,7 +319,7 @@ def befe_get_all_links():
                 rx_usage[ldaq_link] = color_string("Local DAQ", Colors.GREEN)
 
     ############### CSC ###############
-    elif flavor.to_string() == "CSC_FED":
+    elif flavor.to_string() == "CSC_FED" and not skip_usage_data:
         ### DMB links ###
         num_dmbs = read_reg("BEFE.CSC_FED.CSC_SYSTEM.RELEASE.NUM_OF_DMBS")
         for i in range(num_dmbs):

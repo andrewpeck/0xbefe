@@ -47,8 +47,9 @@ entity gty_channel_odmb57 is
         cpllreset_i     : in  std_logic;
         cpll_status_o   : out t_mgt_cpll_status;
         
-        drp_i           : in  t_drp_in;
-        drp_o           : out t_drp_out;
+        drp_clk_i       : in  std_logic;
+        drp_i           : in  t_drp_mosi;
+        drp_o           : out t_drp_miso;
         
         tx_slow_ctrl_i  : in  t_mgt_tx_slow_ctrl;
         tx_init_i       : in  t_mgt_tx_init;
@@ -920,7 +921,7 @@ begin
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),
-            DRPCLK               => drp_i.clk,
+            DRPCLK               => drp_clk_i,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
             DRPRST               => drp_i.rst,

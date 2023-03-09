@@ -32,8 +32,8 @@ package project_config is
         ( ------------------------------------------------ SLR0 ------------------------------------------------
             (((0,  0),  (1,  1),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((TXRX_NULL, 8),  (TXRX_NULL, 9 ))), 
             (((2,  2),  (3,  3),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((TXRX_NULL, 10), (TXRX_NULL, 11))),
-            (((4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL,        LINK_NULL)), 
-            (((6,  6),  (7,  7),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL,        LINK_NULL))
+            (((4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((TXRX_NULL, 12), (TXRX_NULL, 13))), 
+            (((6,  6),  (7,  7),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((TXRX_NULL, 14), (TXRX_NULL, 15)))
         ),
         ( ------------------------------------------------ SLR1 ------------------------------------------------
             (((8,  8),  (9,  9),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), 
@@ -90,8 +90,8 @@ package project_config is
         (TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL, TXRX_NULL)
     );
     
-    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (true, true, true, true);
-    constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (true, true, true, true);
+    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => true);
+    constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => false);
     constant CFG_SPY_LINK : t_spy_link_config := (12, 13, 14, 15);
 
     --================================--
@@ -109,63 +109,16 @@ package project_config is
         (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_NULL,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_NULL,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),
 
---        (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_GBTX,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,     qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),
-
---        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
-                                                                                                                       
         (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_3P2G,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
         (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
         (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
                                                                                                                        
---        (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_3P2G,    qpll_idx => 12,  refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
---        (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 12,  refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
---        (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 12,  refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_TRIG_3P2, qpll_inst_type => QPLL_NULL,    qpll_idx => 12,  refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
-
-        (mgt_type => CFG_MGT_10GBE,    qpll_inst_type => QPLL_10GBE_156, qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => TRUE,  chbond_master => 0, ibert_inst => TRUE),
-        (mgt_type => CFG_MGT_10GBE,    qpll_inst_type => QPLL_NULL,      qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
-        (mgt_type => CFG_MGT_10GBE,    qpll_inst_type => QPLL_NULL,      qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
-        (mgt_type => CFG_MGT_10GBE,    qpll_inst_type => QPLL_NULL,      qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
-
---        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_GBTX, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false)        
+        (mgt_type => CFG_MGT_TX_10GBE_RX_TRIG_3P2, qpll_inst_type => QPLL0_TRIG_3P2_QPLL1_10GBE, qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_TX_10GBE_RX_TRIG_3P2, qpll_inst_type => QPLL_NULL,                  qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TX_10GBE_RX_TRIG_3P2, qpll_inst_type => QPLL_NULL,                  qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
+        (mgt_type => CFG_MGT_TX_10GBE_RX_TRIG_3P2, qpll_inst_type => QPLL_NULL,                  qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)   
     );
-
---    constant CFG_MGT_LINK_CONFIG_GE21_ME0_MIX : t_mgt_config_arr := (
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_GBTX,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
---                                                                                                                        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_GBTX,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => TRUE,  chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_GBTX,  qpll_inst_type => QPLL_NULL,    qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),
---                                                                                                                       
---        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT,   qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
---                                                                                                                       
---        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => TRUE,  chbond_master => 0, ibert_inst => TRUE),
---        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
---        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
---        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
---
-----        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_GBTX, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
-----        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
-----        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false),        
-----        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL, qpll_idx => 12, is_master => false, chbond_master => 0, ibert_inst => false)        
---    );
 
 end package project_config;
 

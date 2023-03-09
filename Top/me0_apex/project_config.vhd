@@ -55,7 +55,7 @@ package project_config is
 
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
         -------------------- quad 128 --------------------
-        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => true,  chbond_master => 0, ibert_inst => true),        
+        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156, qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => true),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 0, refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),     

@@ -69,7 +69,7 @@ package project_config is
         --======================== 130 ========================-- 
         (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => true,  chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
-        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => true,  chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),
  
         --======================== 131 ========================-- 

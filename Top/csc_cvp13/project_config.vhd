@@ -83,12 +83,12 @@ package project_config is
         (mgt_type => CFG_MGT_TTC,          qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => true),        
         (mgt_type => CFG_MGT_TTC,          qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => true),        
  
-        (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_GBE_156,     qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => true,  chbond_master => 0, ibert_inst => true),
+        (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_GBE_156,     qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => true),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
 
---        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_10GBE_156,   qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => true,  chbond_master => 0, ibert_inst => true),
+--        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_10GBE_156,   qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => true),
 --        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
 --        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
 --        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)

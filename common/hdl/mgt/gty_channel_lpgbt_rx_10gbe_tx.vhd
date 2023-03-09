@@ -5,7 +5,7 @@
 -- Create Date:    2020-06-09
 -- Module Name:    GTY_CHANNEL_LPGBT_RX_10GBE_TX
 -- Description:    This is a wrapper for a single GTY channel that has LpGBT RX and 10GbE TX
---                 This channel implementation can only be used with QPLL (gty_qpll0_lpgbt_qpll1_10gbe.vhd). User clock for RX is 320MHz LHC freq, and for TX it's 62.5MHz 
+--                 This channel implementation can only be used with QPLL (gty_qpll0_lpgbt_qpll1_10gbe.vhd). User clock for RX is 320MHz LHC freq, and for TX it's 156.25MHz 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -40,8 +40,9 @@ entity gty_channel_lpgbt_rx_10gbe_tx is
         cpllreset_i     : in  std_logic;
         cpll_status_o   : out t_mgt_cpll_status;
         
-        drp_i           : in  t_drp_in;
-        drp_o           : out t_drp_out;
+        drp_clk_i       : in  std_logic;
+        drp_i           : in  t_drp_mosi;
+        drp_o           : out t_drp_miso;
         
         tx_slow_ctrl_i  : in  t_mgt_tx_slow_ctrl;
         tx_init_i       : in  t_mgt_tx_init;
@@ -135,12 +136,18 @@ architecture gty_channel_lpgbt_rx_10gbe_tx_arch of gty_channel_lpgbt_rx_10gbe_tx
     signal rxctrl1              : std_logic_vector(15 downto 0);
     signal rxctrl2              : std_logic_vector(7 downto 0);
     signal rxctrl3              : std_logic_vector(7 downto 0);
+
+    -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
+    signal txoutclksel          : std_logic_vector(2 downto 0) := g_TXOUTCLKSEL;
     
 begin
 
-    assert g_TX_USE_QPLL and g_RX_USE_QPLL report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX must use QPLL for both TX and RX (GTY_QPLL0_LPGBT_QPLL1_GBE implementation), using CPLL is not supported" severity failure;
-    assert g_TX_QPLL_01 = 1 and g_RX_QPLL_01 = 0 report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX must use QPLL1 for TX and QPLL0 for RX" severity failure;
-    assert not g_USE_TX_SYNC report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX does not support TX sync, but g_USE_TX_SYNC is set to true" severity failure;
+    -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
+    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "000" else "010";
+
+    assert g_TX_USE_QPLL and g_RX_USE_QPLL report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_10GBE_TX must use QPLL for both TX and RX (GTY_QPLL0_LPGBT_QPLL1_GBE implementation), using CPLL is not supported" severity failure;
+    assert g_TX_QPLL_01 = 1 and g_RX_QPLL_01 = 0 report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_10GBE_TX must use QPLL1 for TX and QPLL0 for RX" severity failure;
+    assert not g_USE_TX_SYNC report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_10GBE_TX does not support TX sync, but g_USE_TX_SYNC is set to true" severity failure;
 
     -- Do not support RXPROGDIV, this is because it's sourced from CDR, so generally we don't want to use it, and also this requires updating the reset FSM to reset the RXPROGDIV after CDRLOCK goes high (this of course can be implemented later if needed)
     assert g_RXOUTCLKSEL /= "101" report "Using RXPROGDIV is not supported, because it's sourced from CDR, so normally we don't want to use it" severity failure;
@@ -866,7 +873,7 @@ begin
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),
-            DRPCLK               => drp_i.clk,
+            DRPCLK               => drp_clk_i,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
             DRPRST               => drp_i.rst,
@@ -1047,7 +1054,7 @@ begin
             TXMUXDCDEXHOLD       => '0',
             TXMUXDCDORWREN       => '0',
             TXONESZEROS          => '0',
-            TXOUTCLKSEL          => g_TXOUTCLKSEL,
+            TXOUTCLKSEL          => txoutclksel,
             TXPCSRESET           => '0',
             TXPD                 => tx_slow_ctrl_i.txpd,
             TXPDELECIDLEMODE     => '0',

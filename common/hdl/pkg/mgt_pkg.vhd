@@ -27,7 +27,9 @@ package mgt_pkg is
                              MGT_GBE,
                              MGT_10GBE,
                              MGT_TX_GBE_RX_LPGBT,
-                             MGT_TX_10GBE_RX_LPGBT); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
+                             MGT_TX_10GBE_RX_LPGBT,
+                             MGT_25GBE,
+                             MGT_TX_10GBE_RX_TRIG_3P2); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
                              
     type t_mgt_qpll_type is (QPLL_NULL,
                              QPLL_GBTX,
@@ -41,7 +43,9 @@ package mgt_pkg is
                              QPLL0_LPGBT_QPLL1_GBE,
                              QPLL0_LPGBT_QPLL1_10GBE,
                              QPLL_10GBE_156,
-                             QPLL0_DMB_QPLL1_10GBE_156); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
+                             QPLL0_DMB_QPLL1_10GBE_156,
+                             QPLL_25GBE_156,
+                             QPLL0_TRIG_3P2_QPLL1_10GBE); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -54,7 +58,7 @@ package mgt_pkg is
         rx_qpll_01              : integer range 0 to 1;     -- when rx_use_qpll is true, this defines if RX is using QPLL0 or QPLL1
         tx_refclk_freq          : integer;                  -- expected refclk frequency for the TX CPLL or QPLL
         rx_refclk_freq          : integer;                  -- expected refclk frequency for the TX CPLL or QPLL
-        tx_bus_width            : integer range 16 to 64;   -- the width of the TX user data bus
+        tx_bus_width            : integer range 16 to 128;  -- the width of the TX user data bus
         tx_multilane_phalign    : boolean;                  -- set to true if you want this channel to use a multi-lane phase alignment (with the master channel driving it) 
         rx_use_buf              : boolean;                  -- defines if the MGT RX is using elastic buffer or not
         rx_use_chan_bonding     : boolean;                  -- defines if the MGT RX is using channel bonding or not
@@ -82,24 +86,25 @@ package mgt_pkg is
         gbt    : std_logic;
         dmb    : std_logic;
         odmb57 : std_logic;
-        gbe    : std_logic;
+--        gbe    : std_logic;
     end record;
 
-    type t_drp_in is record
+    type t_drp_mosi is record
         addr : std_logic_vector(15 downto 0);
-        clk  : std_logic;
         di   : std_logic_vector(15 downto 0);
         en   : std_logic;
         rst  : std_logic;
         we   : std_logic;
     end record;
 
-    constant DRP_IN_NULL : t_drp_in := (addr => (others => '0'), clk => '0', di => (others => '0'), en => '0', rst => '0', we => '0');
+    constant DRP_MOSI_NULL : t_drp_mosi := (addr => (others => '0'), di => (others => '0'), en => '0', rst => '0', we => '0');
 
-    type t_drp_out is record
+    type t_drp_miso is record
         do  : std_logic_vector(15 downto 0);
         rdy : std_logic;
     end record;
+
+    constant DRP_MISO_NULL : t_drp_miso := (do => (others => '0'), rdy => '0');
 
     type t_mgt_cpll_status is record
         cpllfbclklost  : std_logic;
@@ -160,6 +165,7 @@ package mgt_pkg is
         txprbssel      : std_logic_vector(2 downto 0);
         txprbsforceerr : std_logic;
         txpd           : std_logic_vector(1 downto 0);
+        txpcsreset     : std_logic;
     end record;
 
     type t_mgt_tx_init is record
@@ -243,8 +249,8 @@ package mgt_pkg is
         powergood        : std_logic;
     end record;
 
-    type t_drp_in_arr is array (integer range <>) of t_drp_in;
-    type t_drp_out_arr is array (integer range <>) of t_drp_out;
+    type t_drp_mosi_arr is array (integer range <>) of t_drp_mosi;
+    type t_drp_miso_arr is array (integer range <>) of t_drp_miso;
 
     type t_mgt_qpll_clk_out_arr is array (integer range <>) of t_mgt_qpll_clk_out;
     type t_mgt_qpll_ctrl_arr is array (integer range <>) of t_mgt_qpll_ctrl;

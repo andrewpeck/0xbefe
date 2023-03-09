@@ -181,7 +181,7 @@ package project_config is
         ----------------------------- quad 228 (SLR 2) -----------------------------
         (mgt_type => CFG_MGT_DMB      , qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 88
         (mgt_type => CFG_MGT_DMB      , qpll_inst_type => QPLL_NULL       , qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 89
-        (mgt_type => CFG_MGT_GBE      , qpll_inst_type => QPLL_NULL       , qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => true , chbond_master => 0, ibert_inst => false), -- MGT 90
+        (mgt_type => CFG_MGT_GBE      , qpll_inst_type => QPLL_NULL       , qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 90
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 088, refclk0_idx => 22, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 91
         ----------------------------- quad 229 (SLR 2) -----------------------------
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 092, refclk0_idx => 23, refclk1_idx => 6, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 92

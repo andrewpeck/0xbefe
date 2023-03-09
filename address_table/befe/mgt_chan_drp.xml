@@ -1,0 +1,19 @@
+<!-- MGT DRP module -->
+<node id="MGT_CHAN_DRP"  address="0x000e0000"
+      description="This module contains MGT channel DRP registers"
+      fw_is_module="true"
+      fw_is_module_external="true">
+
+  <node id="CHAN${MGT}" address="0x0"
+        description="MGT channel ${MGT} DRP registers"
+        generate="true" generate_size="&NUM_MGTS;" generate_address_step="0x00000400" generate_idx_var="MGT">
+
+    <node id="REG${REG}" address="0x0" permission="rw"
+          description="DRP register at address ${REG}"
+          generate="true" generate_size="653" generate_address_step="0x00000001" generate_idx_var="REG"/>
+
+
+  </node>
+
+</node>
+<!-- End of MGT DRP module -->

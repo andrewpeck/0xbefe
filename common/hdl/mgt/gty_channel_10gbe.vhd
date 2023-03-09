@@ -4,13 +4,10 @@
 -- 
 -- Create Date:    2021-03-09
 -- Module Name:    GTY_CHANNEL_10GBE
--- Description:    This is a wrapper for a single GTY channel that can be used for 10 Gigabit Ethernet: it's a 64b66b encoded 10.3125Gb/s link with elastic buffers.
+-- Description:    This is a wrapper for a single GTY channel that can be used for 10 Gigabit Ethernet: it's a 64b66b encoded 10.3125Gb/s link with async gearbox.
 --                 User data bus width is 64 bits, user clocks are 156.25MHz
 --                 Only QPLL mode is implemented at the moment, see QPLL implementation for refclk requirement
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-
--- expected refclk is 200MHz
--- txoutclk 
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -43,8 +40,9 @@ entity gty_channel_10gbe is
         cpllreset_i     : in  std_logic;
         cpll_status_o   : out t_mgt_cpll_status;
         
-        drp_i           : in  t_drp_in;
-        drp_o           : out t_drp_out;
+        drp_clk_i       : in  std_logic;
+        drp_i           : in  t_drp_mosi;
+        drp_o           : out t_drp_miso;
         
         tx_slow_ctrl_i  : in  t_mgt_tx_slow_ctrl;
         tx_init_i       : in  t_mgt_tx_init;
@@ -140,7 +138,13 @@ architecture gty_channel_10gbe_arch of gty_channel_10gbe is
     signal rxctrl2              : std_logic_vector(7 downto 0);
     signal rxctrl3              : std_logic_vector(7 downto 0);
     
+    -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
+    signal txoutclksel          : std_logic_vector(2 downto 0) := g_TXOUTCLKSEL;
+    
 begin
+
+    -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
+    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "000" else "010";
 
     -- Only QPLL mode is implemented, fail if CPLL is selected in generics
     assert g_TX_USE_QPLL and g_RX_USE_QPLL report "Only QPLL mode is implemented in gty_channel_10gbe module, but generics are set to use CPLL" severity failure;
@@ -839,7 +843,7 @@ begin
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),
-            DRPCLK               => drp_i.clk,
+            DRPCLK               => drp_clk_i,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
             DRPRST               => drp_i.rst,
@@ -1020,7 +1024,7 @@ begin
             TXMUXDCDEXHOLD       => '0',
             TXMUXDCDORWREN       => '0',
             TXONESZEROS          => '0',
-            TXOUTCLKSEL          => g_TXOUTCLKSEL,
+            TXOUTCLKSEL          => txoutclksel,
             TXPCSRESET           => '0',
             TXPD                 => tx_slow_ctrl_i.txpd,
             TXPDELECIDLEMODE     => '0',

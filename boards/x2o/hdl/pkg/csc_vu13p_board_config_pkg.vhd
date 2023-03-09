@@ -192,6 +192,23 @@ package board_config_package is
         rx_use_chan_bonding     => false
     );
 
+    constant CFG_MGT_25GBE : t_mgt_type_config := (
+        link_type               => MGT_25GBE,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 128,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
+    );
+
     constant CFG_MGT_TTC : t_mgt_type_config := (
         link_type               => MGT_TTC,
         cpll_refclk_01          => 1, 
