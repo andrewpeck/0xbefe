@@ -129,7 +129,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
                 live_plot(ax, minutes, T)
 
             file.write(str(second/60.0) + "\t" + str(Vin) + "\t" + str(R_m) + "\t" + str(temp) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, value, Vin, R_m/1000.0, temp))
+            print("time = %.2f min, \tch %X: %.2fV = %.2f kOhm = %.2f deg C" % (second/60.0, channel, Vin, R_m/1000.0, temp))
             t0 = time()
             if first_reading:
                 first_reading = 0

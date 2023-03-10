@@ -105,7 +105,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 live_plot(ax, minutes, rssi)
 
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
+            print("time = %.2f min, \tch %X: %.2fV =  %f uA RSSI" % (second/60.0, 7, Vin, rssi_current))
             t0 = time()
             if first_reading:
                 first_reading = 0
