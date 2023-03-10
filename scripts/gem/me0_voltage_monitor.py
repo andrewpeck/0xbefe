@@ -103,19 +103,12 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             read_adc_iter = 0
 
         if read_adc_iter:
-            vssa_value = read_adc(9, gain, system)
-            vddtx_value = read_adc(10, gain, system)
-            vddrx_value = read_adc(11, gain, system)
-            vdd_value = read_adc(12, gain, system)
-            vdda_value = read_adc(13, gain, system)
-            vref_value = read_adc(15, gain, system)
-
-            vssa_Vout = 1.0 * (vssa_value/1024.0) # 10-bit ADC, range 0-1 V
-            vddtx_Vout = 1.0 * (vddtx_value/1024.0) # 10-bit ADC, range 0-1 V
-            vddrx_Vout = 1.0 * (vddrx_value/1024.0) # 10-bit ADC, range 0-1 V
-            vdd_Vout = 1.0 * (vdd_value/1024.0) # 10-bit ADC, range 0-1 V
-            vdda_Vout = 1.0 * (vdda_value/1024.0) # 10-bit ADC, range 0-1 V
-            vref_Vout = 1.0 * (vref_value/1024.0) # 10-bit ADC, range 0-1 V
+            vssa_Vout = read_adc(9, gain, system)
+            vddtx_Vout = read_adc(10, gain, system)
+            vddrx_Vout = read_adc(11, gain, system)
+            vdd_Vout = read_adc(12, gain, system)
+            vdda_Vout = read_adc(13, gain, system)
+            vref_Vout = read_adc(15, gain, system)
 
             if len(adc_calib_results)!=0:
                 vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
@@ -246,6 +239,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 

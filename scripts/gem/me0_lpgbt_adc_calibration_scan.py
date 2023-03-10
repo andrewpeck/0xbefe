@@ -69,7 +69,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
         if system == "dryrun":
             Vout = Vin
         else:
-            Vout = read_adc(channel, gain, system) * (1.0/1024.0)
+            Vout = read_adc(channel, gain, system)
 
         Vin_range.append(Vin)
         Vout_range.append(Vout)
@@ -159,6 +159,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 

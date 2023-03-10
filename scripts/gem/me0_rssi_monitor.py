@@ -90,10 +90,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if read_adc_iter:
             if oh_ver == 1:
-                value = read_adc(7, gain, system)
+                Vout = read_adc(7, gain, system)
             if oh_ver == 2:
-                value = read_adc(5, gain, system)
-            Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
+                Vout = read_adc(5, gain, system)
             if len(adc_calib_results)!=0:
                 Vin = get_vin(Vout, adc_calib_results_array)
             else:
@@ -186,6 +185,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 

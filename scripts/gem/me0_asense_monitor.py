@@ -98,20 +98,16 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if read_adc_iter:
             if oh_ver == 1:
-                asense0_value = read_adc(4, gain, system)
-                asense1_value = read_adc(2, gain, system)
-                asense2_value = read_adc(1, gain, system)
-                asense3_value = read_adc(3, gain, system)
+                asense0_Vout = read_adc(4, gain, system)
+                asense1_Vout = read_adc(2, gain, system)
+                asense2_Vout = read_adc(1, gain, system)
+                asense3_Vout = read_adc(3, gain, system)
             if oh_ver == 2:
-                asense0_value = read_adc(6, gain, system)
-                asense1_value = read_adc(1, gain, system)
-                asense2_value = read_adc(0, gain, system)
-                asense3_value = read_adc(3, gain, system)
+                asense0_Vout = read_adc(6, gain, system)
+                asense1_Vout = read_adc(1, gain, system)
+                asense2_Vout = read_adc(0, gain, system)
+                asense3_Vout = read_adc(3, gain, system)
 
-            asense0_Vout = 1.0 * (asense0_value/1024.0) # 10-bit ADC, range 0-1 V
-            asense1_Vout = 1.0 * (asense1_value/1024.0) # 10-bit ADC, range 0-1 V
-            asense2_Vout = 1.0 * (asense2_value/1024.0) # 10-bit ADC, range 0-1 V
-            asense3_Vout = 1.0 * (asense3_value/1024.0) # 10-bit ADC, range 0-1 V
             if len(adc_calib_results)!=0:
                 asense0_Vin = get_vin(asense0_Vout, adc_calib_results_array)
                 asense1_Vin = get_vin(asense1_Vout, adc_calib_results_array)
@@ -264,6 +260,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 
