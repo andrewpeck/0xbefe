@@ -24,7 +24,6 @@ def get_vin(vout, fit_results):
 
 def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
 
-    gbt = gbt_select%4
     init_adc(oh_ver)
     print("ADC Readings:")
 
@@ -84,16 +83,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     end_time = int(time()) + (60 * run_time_min)
 
     file_out = open(filename, "w")
-    if gbt == 0:
-        if oh_ver == 1:
-            file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
-        elif oh_ver == 2:
-            file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
-    elif gbt == 2:
-        if oh_ver == 1:
-            file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
-        elif oh_ver == 2:
-            file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+    if oh_ver == 1:
+        file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+    elif oh_ver == 2:
+        file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
     t0 = time()
     nrun = 0
     first_reading = 1
@@ -145,7 +138,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             minutes.append(second/60.0)
             
             if plot:
-                live_plot_voltage(ax1, minutes, vssa, vddtx, vddrx, vdd, vdda, vref, run_time_min, gbt)
+                live_plot_voltage(ax1, minutes, vssa, vddtx, vddrx, vdd, vdda, vref, run_time_min)
 
             file_out.write(str(second/60.0) + "\t" + str(vssa_converted) + "\t" + str(vddtx_converted) + "\t" + str(vddrx_converted) + "\t" + str(vdd_converted) + "\t" + str(vdda_converted) + "\t" + str(vref_converted) + "\n" )
             print("Time: " + "{:.2f}".format(second/60.0) + " min \t VSSA (Internal Signal): " + "{:.3f}".format(vssa_converted) + " V \t VDDTX (Internal Signal): " + "{:.3f}".format(vddtx_converted) + " V \t VDDRX (Internal Signal): " + "{:.3f}".format(vddrx_converted) + " V \t VDD (Internal Signal): " + "{:.3f}".format(vdd_converted) + " V \t VDDA (Internal Signal): " + "{:.3f}".format(vdda_converted) + " V \t VREF (Internal Signal): " + "{:.3f}".format(vref_converted) + "\n")
@@ -175,7 +168,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
     powerdown_adc(oh_ver)
 
-def live_plot_voltage(ax1, x, y0, y1, y2, y3, y4, y5, run_time_min, gbt):
+def live_plot_voltage(ax1, x, y0, y1, y2, y3, y4, y5, run_time_min):
     line0, = ax1.plot(x, y0, "red")
     line1, = ax1.plot(x, y1, "blue")
     line2, = ax1.plot(x, y2, "black")
