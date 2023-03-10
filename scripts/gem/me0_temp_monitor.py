@@ -243,22 +243,25 @@ def read_adc(channel, gain, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
 
-    done = 0
-    while (done == 0):
-        if system != "dryrun":
-            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-        else:
-            done = 1
-
-    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    vals = []
+    for i in range(0,100):
+        done = 0
+        while (done==0):
+            if system!="dryrun":
+                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            else:
+                done=1
+        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        vals.append(val)
+    mean_val = sum(vals)/len(vals)
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
-    return val
+    return mean_val
 
 
 if __name__ == "__main__":

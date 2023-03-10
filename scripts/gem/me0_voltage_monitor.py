@@ -22,8 +22,9 @@ def get_vin(vout, fit_results):
             vin = vin_range[i]
     return vin
 
-def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, voltage, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
 
+    gbt = gbt_select%4
     init_adc(oh_ver)
     print("ADC Readings:")
 
@@ -54,32 +55,45 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data"
+    dataDir = "results/me0_lpgbt_data/lpgbt_voltage_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + ".txt"
+    foldername = dataDir + "/"
+    filename = foldername + "ME0_OH%d_GBT%d_voltage_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
-    minutes, rssi = [], []
+    minutes, vssa, vddtx, vddrx, vdd, vdda, vref = [], [], [], [], [], [], []
 
     run_time_min = float(run_time_min)
 
-    fig, ax = plt.subplots()
-    ax.set_xlabel("minutes")
-    ax.set_ylabel("RSSI (uA)")
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlabel("minutes")
+    ax1.set_ylabel("PG Current (A)")
+    fig2, ax2 = plt.subplots()
+    ax2.set_xlabel("minutes")
+    ax2.set_ylabel("Rt Voltage (V)")
     #ax.set_xticks(range(0,run_time_min+1))
     #ax.set_xlim([0,run_time_min])
-
     start_time = int(time())
     end_time = int(time()) + (60 * run_time_min)
 
     file_out = open(filename, "w")
-    file_out.write("Time (min) \t RSSI (uA)\n")
+    if gbt == 0:
+        if oh_ver == 1:
+            file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+        elif oh_ver == 2:
+            file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+    elif gbt == 2:
+        if oh_ver == 1:
+            file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+        elif oh_ver == 2:
+            file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
     t0 = time()
     nrun = 0
     first_reading = 1
@@ -89,24 +103,57 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             read_adc_iter = 0
 
         if read_adc_iter:
-            if oh_ver == 1:
-                value = read_adc(7, gain, system)
-            if oh_ver == 2:
-                value = read_adc(5, gain, system)
-            Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
-            if len(adc_calib_results)!=0:
-                Vin = get_vin(Vout, adc_calib_results_array)
-            else:
-                Vin = Vout
-            rssi_current = rssi_current_conversion(Vin, gain, voltage, oh_ver) * 1e6 # in uA
-            second = time() - start_time
-            rssi.append(rssi_current)
-            minutes.append(second/60.0)
-            if plot:
-                live_plot(ax, minutes, rssi)
+            vssa_value = read_adc(9, gain, system)
+            vddtx_value = read_adc(10, gain, system)
+            vddrx_value = read_adc(11, gain, system)
+            vdd_value = read_adc(12, gain, system)
+            vdda_value = read_adc(13, gain, system)
+            vref_value = read_adc(15, gain, system)
 
-            file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
+            vssa_Vout = 1.0 * (vssa_value/1024.0) # 10-bit ADC, range 0-1 V
+            vddtx_Vout = 1.0 * (vddtx_value/1024.0) # 10-bit ADC, range 0-1 V
+            vddrx_Vout = 1.0 * (vddrx_value/1024.0) # 10-bit ADC, range 0-1 V
+            vdd_Vout = 1.0 * (vdd_value/1024.0) # 10-bit ADC, range 0-1 V
+            vdda_Vout = 1.0 * (vdda_value/1024.0) # 10-bit ADC, range 0-1 V
+            vref_Vout = 1.0 * (vref_value/1024.0) # 10-bit ADC, range 0-1 V
+
+            if len(adc_calib_results)!=0:
+                vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
+                vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
+                vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
+                vdd_Vin = get_vin(vdd_Vout, adc_calib_results_array)
+                vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
+                vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
+            else:
+                vssa_Vin = vssa_Vout
+                vddtx_Vin = vddtx_Vout
+                vddrx_Vin = vddrx_Vout
+                vdd_Vin = vdd_Vout
+                vdda_Vin = vdda_Vout
+                vref_Vin = vref_Vout
+
+            vssa_converted = vssa_Vin/0.42
+            vddtx_converted = vddtx_Vin/0.42
+            vddrx_converted = vddrx_Vin/0.42
+            vdd_converted = vdd_Vin/0.42
+            vdda_converted = vdda_Vin/0.42
+            vref_converted = vref_Vin/0.42
+            
+            second = time() - start_time
+            vssa.append(vssa_converted)
+            vddtx.append(vddtx_converted)
+            vddrx.append(vddrx_converted)
+            vdd.append(vdd_converted)
+            vdda.append(vdda_converted)
+            vref.append(vref_converted)
+            minutes.append(second/60.0)
+            
+            if plot:
+                live_plot_voltage(ax1, minutes, vssa, vddtx, vddrx, vdd, vdda, vref, run_time_min, gbt)
+
+            file_out.write(str(second/60.0) + "\t" + str(vssa_converted) + "\t" + str(vddtx_converted) + "\t" + str(vddrx_converted) + "\t" + str(vdd_converted) + "\t" + str(vdda_converted) + "\t" + str(vref_converted) + "\n" )
+            print("Time: " + "{:.2f}".format(second/60.0) + " min \t VSSA (Internal Signal): " + "{:.3f}".format(vssa_converted) + " V \t VDDTX (Internal Signal): " + "{:.3f}".format(vddtx_converted) + " V \t VDDRX (Internal Signal): " + "{:.3f}".format(vddrx_converted) + " V \t VDD (Internal Signal): " + "{:.3f}".format(vdd_converted) + " V \t VDDA (Internal Signal): " + "{:.3f}".format(vdda_converted) + " V \t VREF (Internal Signal): " + "{:.3f}".format(vref_converted) + "\n")
+            
             t0 = time()
             if first_reading:
                 first_reading = 0
@@ -114,27 +161,40 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         if run_time_min == 0:
             nrun += 1
             sleep(5)
-            
+
     file_out.close()
-    figure_name = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
-    fig1, ax1 = plt.subplots()
-    ax1.set_xlabel("minutes")
-    ax1.set_ylabel("RSSI (uA)")
-    ax1.plot(minutes, rssi, color="turquoise")
-    fig1.savefig(figure_name, bbox_inches="tight")
+
+    figure_name1 = foldername + "ME0_OH%d_GBT%d_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    fig3, ax3 = plt.subplots()
+    ax3.set_xlabel("minutes")
+    ax3.set_ylabel("Voltage (V)")
+    ax3.plot(minutes, vssa, color="red", label="VSSA")
+    ax3.plot(minutes, vddtx, color="blue", label="VDDTX")
+    ax3.plot(minutes, vddrx, color="black", label="VDDRX")
+    ax3.plot(minutes, vdd, color="green", label="VDD")
+    ax3.plot(minutes, vdda, color="orange", label="VDDA")
+    ax3.plot(minutes, vref, color="cyan", label="VREF")
+    ax3.legend(loc="center right")
+    fig3.savefig(figure_name1, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
-    
+
+def live_plot_voltage(ax1, x, y0, y1, y2, y3, y4, y5, run_time_min, gbt):
+    line0, = ax1.plot(x, y0, "red")
+    line1, = ax1.plot(x, y1, "blue")
+    line2, = ax1.plot(x, y2, "black")
+    line3, = ax1.plot(x, y2, "green")
+    line4, = ax1.plot(x, y2, "orange")
+    line5, = ax1.plot(x, y2, "cyan")
+    ax1.legend((line0, line1, line2, line3, line4, line5), ("VSSA", "VDDTX", "VDDRX", "VDD", "VDDA", "VREF"), loc="center right")
+    plt.draw()
+    plt.pause(0.01)
+
 def convert_adc_reg(adc):
     reg_data = 0
     bit = adc
     reg_data |= (0x01 << bit)
     return reg_data
-
-def live_plot(ax, x, y):
-    ax.plot(x, y, "turquoise")
-    plt.draw()
-    plt.pause(0.01)
 
 def init_adc(oh_ver):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)  # enable ADC
@@ -196,36 +256,24 @@ def read_adc(channel, gain, system):
 
     return mean_val
 
-def rssi_current_conversion(Vin, gain, input_voltage, oh_ver):
+def asense_current_conversion(Vin):
+    # Resistor values
+    R = 0.01 # 0.01 Ohm
 
-    rssi_current = -9999
-    #rssi_voltage = Vin/gain # Gain
-    rssi_voltage = Vin
+    asense_voltage = Vin
+    asense_voltage /= 20 # Gain in current sense circuit
+    asense_current = asense_voltage/R # asense current
+    return asense_current
 
-    if oh_ver == 1:
-        # Resistor values
-        R1 = 4.7 * 1000 # 4.7 kOhm
-        v_r = rssi_voltage
-        rssi_current = (input_voltage - v_r)/R1 # rssi current
-    elif oh_ver == 2:
-        # Resistor values
-        R1 = 4.7 * 1000 # 4.7 kOhm
-        R2 = 1000.0 * 1000 # 1 MOhm
-        R3 = 470.0 * 1000 # 470 kOhm
-        v_r = rssi_voltage * ((R2+R3)/R3) # voltage divider
-        rssi_current = (input_voltage - v_r)/R1 # rssi current
-
-    return rssi_current
 
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="RSSI Monitor for ME0 Optohybrid")
+    parser = argparse.ArgumentParser(description="Voltage monitoring for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-v", "--voltage", action="store", dest="voltage", default = "2.5", help="voltage = exact value of the 2.5V input voltage to OH")
     parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
@@ -233,13 +281,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.system == "chc":
-        print("Using Rpi CHeeseCake for rssi monitoring")
+        print("Using Rpi CHeeseCake for voltage monitoring")
     elif args.system == "queso":
-        print("Using QUESO for rssi monitoring")
+        print("Using QUESO for voltage monitoring")
     elif args.system == "backend":
-        print ("Using Backend for rssi monitoring")
+        print ("Using Backend for voltage monitoring")
     elif args.system == "dryrun":
-        print("Dry Run - not actually running rssi monitoring")
+        print("Dry Run - not actually running voltage monitoring")
     else:
         print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
@@ -268,13 +316,7 @@ if __name__ == "__main__":
         boss = 1
     else:
         boss = 0
-    if oh_ver == 1 and not boss:
-        print(Colors.YELLOW + "Only boss lpGBT allowed for ME0 OH-v1" + Colors.ENDC)
-        sys.exit()
-    if oh_ver == 2 and boss:
-        print(Colors.YELLOW + "Only sub lpGBT allowed for ME0 OH-v2" + Colors.ENDC)
-        sys.exit()
-
+        
     if args.gain not in ["2", "8", "16", "32"]:
         print(Colors.YELLOW + "Allowed values of gain = 2, 8, 16, 32" + Colors.ENDC)
         sys.exit()
@@ -285,15 +327,16 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    check_lpgbt_ready(args.ohid, args.gbtid)
+    if args.system == "backend":
+        check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
     if args.system != "dryrun":
         check_rom_readback(args.ohid, args.gbtid)
-        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
-
+        check_lpgbt_mode(boss, args.ohid, args.gbtid)
+        
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, float(args.voltage), args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

@@ -303,12 +303,12 @@ def main(system, oh_ver, boss):
                 if (i == 7 ):  conv = 1; name = "Precision calibration resistor"
                 if (i == 8 ):  conv = 1; name = "Voltage DAC output (internal signal)"
                 if (i == 9 ):  conv = 1/0.42; name = "VSSA (internal signal)"
-                if (i == 10):  conv = 1/0.42; name = "VDDTX * 0.42 (internal signal)"
-                if (i == 11):  conv = 1/0.42; name = "VDDRX * 0.42 (internal signal)"
-                if (i == 12):  conv = 1/0.42; name = "VDD * 0.42 (internal signal)"
-                if (i == 13):  conv = 1/0.42; name = "VDDA * 0.42 (internal signal)"
+                if (i == 10):  conv = 1/0.42; name = "VDDTX (internal signal)"
+                if (i == 11):  conv = 1/0.42; name = "VDDRX (internal signal)"
+                if (i == 12):  conv = 1/0.42; name = "VDD (internal signal)"
+                if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
-                if (i == 15):  conv = 1/0.50; name = "VREF/2 (internal signal)"
+                if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
                 print("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read / 1024., conv * read / 1024., name))
         elif boss == 0:
@@ -324,12 +324,12 @@ def main(system, oh_ver, boss):
                 if (i == 7 ):  conv = 1; name = "Unused"
                 if (i == 8 ):  conv = 1; name = "Voltage DAC output (internal signal)"
                 if (i == 9 ):  conv = 1/0.42; name = "VSSA (internal signal)"
-                if (i == 10):  conv = 1/0.42; name = "VDDTX * 0.42 (internal signal)"
-                if (i == 11):  conv = 1/0.42; name = "VDDRX * 0.42 (internal signal)"
-                if (i == 12):  conv = 1/0.42; name = "VDD * 0.42 (internal signal)"
-                if (i == 13):  conv = 1/0.42; name = "VDDA * 0.42 (internal signal)"
+                if (i == 10):  conv = 1/0.42; name = "VDDTX (internal signal)"
+                if (i == 11):  conv = 1/0.42; name = "VDDRX (internal signal)"
+                if (i == 12):  conv = 1/0.42; name = "VDD (internal signal)"
+                if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
-                if (i == 15):  conv = 1/0.50; name = "VREF/2 (internal signal)"
+                if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
                 print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
 
@@ -419,23 +419,25 @@ def read_adc(channel, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-
-    done = 0
-    while (done==0):
-        if system!="dryrun":
-            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-        else:
-            done=1
-
-    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    vals = []
+    for i in range(0,100):
+        done = 0
+        while (done==0):
+            if system!="dryrun":
+                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            else:
+                done=1
+        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        vals.append(val)
+    mean_val = sum(vals)/len(vals)
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
-    return val
+    return mean_val
 
 if __name__ == "__main__":
 
