@@ -125,7 +125,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 vdda_Vin = vdda_Vout
                 vref_Vin = vref_Vout
 
-            vssa_converted = vssa_Vin/0.42
+            if oh_ver == 1:
+                vssa_converted = vssa_Vin/0.42
+            elif oh_ver == 2:
+                vssa_converted = vssa_Vin
             vddtx_converted = vddtx_Vin/0.42
             vddrx_converted = vddrx_Vin/0.42
             vdd_converted = vdd_Vin/0.42
