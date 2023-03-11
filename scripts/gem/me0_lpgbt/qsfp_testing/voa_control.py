@@ -19,28 +19,9 @@ if __name__ == "__main__":
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
-    '''''
-    # Setting GPIO17 to High to disable Reset for I2C switch
-    reset_channel = 17
-    GPIO.setup(reset_channel, GPIO.OUT)
-    GPIO.output(reset_channel, 1)
-    print ("GPIO17 set to high, can now select channels in I2C Switch")
-    '''''
-
     # Set up the I2C bus 
     device_bus = 1 # for SDA1 and SCL1 
     bus = smbus.SMBus(device_bus)
-
-    '''''
-    # Select the slave address for I2C Switch
-    i2c_switch_addr = 0x73 # 01110011
-
-    # Control Register for channel selection in I2C Switch
-    ctrl_reg = {}
-    ctrl_reg["Boss"] = 0x01 # 00000001
-    ctrl_reg["Sub"] = 0x02 # 00000010
-    bus.write_byte(i2c_switch_addr, ctrl_reg["Boss"])
-    '''''
 
     # VOA
     device_addr = 0x49
@@ -113,12 +94,6 @@ if __name__ == "__main__":
         current_attenuation = (current_attenuation_data[0]<<8 | current_attenuation_data[1])/100.0
         print("Current attenuation: %.2f dB ([0x%02X, 0x%02X])"%(current_attenuation, current_attenuation_data[0], current_attenuation_data[1]))
         print("")
-
-    '''''
-    # Setting GPIO17 to Low to deselect both channels for I2C switch
-    GPIO.output(reset_channel, 0)
-    print ("GPIO17 set to low, deselect both channels in I2C Switch")
-    '''''
 
     # Cleanup
     bus.close()
