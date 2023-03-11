@@ -45,11 +45,13 @@ if __name__ == "__main__":
 
     # Initialize  
     os.system("python3 init_frontend.py")
+    sleep (5)
 
     # Set VFATs to low threshold if needed
     if args.vfat_lt:
         os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 -lt")
-    
+    sleep (5)
+
     n_fec_errors = []
     for i in range(0, len(attenuation_list)):
         n_fec_errors.append(-9999) 
