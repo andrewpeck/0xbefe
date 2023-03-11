@@ -114,11 +114,11 @@ if __name__ == "__main__":
         print("Current attenuation: %.2f dB ([0x%02X, 0x%02X])"%(current_attenuation, current_attenuation_data[0], current_attenuation_data[1]))
         print("")
 
-    ''''
+    '''''
     # Setting GPIO17 to Low to deselect both channels for I2C switch
     GPIO.output(reset_channel, 0)
     print ("GPIO17 set to low, deselect both channels in I2C Switch")
-    ''''
+    '''''
 
     # Cleanup
     bus.close()

@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--gbtid", action="store", nargs="+", dest="gbtid", help="gbtid = list of GBT numbers (multiple only possible for uplink)")
     parser.add_argument("-p", "--path", action="store", dest="path", help="path = uplink, downlink")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
+    parser.add_argument("-v", "--vfat_lt", action="store_true", dest="vfat_lt", help="vfat_lt = if you want to set the VFATs to low threshold")
     args = parser.parse_args()
 
     # VOA Control Parameters
@@ -35,8 +36,8 @@ if __name__ == "__main__":
                 look_for_keys=False)
 
     # Set Attenuation to 0
-    #ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -r -a 0"    
-    ssh_command = "python3 Documents/voa_control.py -r -a 0"
+    ssh_command = "cd devel_scripts_update_0xbefe/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/qsfp_testing/voa_control.py -r -a 0"    
+    #ssh_command = "python3 Documents/voa_control.py -r -a 0"
     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
     output = ssh_stdout.readlines()
     print(output)
@@ -45,6 +46,10 @@ if __name__ == "__main__":
 
     # Initialize  
     os.system("python3 init_frontend.py")
+
+    # Set VFATs to low threshold if needed
+    if args.vfat_lt:
+        os.system("python3 vfat_config.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c 1 -lt")
     
     n_fec_errors = []
     for i in range(0, len(attenuation_list)):
