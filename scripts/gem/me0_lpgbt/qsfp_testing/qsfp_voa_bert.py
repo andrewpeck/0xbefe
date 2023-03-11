@@ -17,7 +17,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # VOA Control Parameters
-    attenuation_list = [8, 9, 10, 11, 11.2, 11.4, 11.6, 11.8, 12, 12.2, 12.4, 12.6, 12.8, 13, 13.2, 13.4, 13.6, 13.8, 14, 14.2, 14.4, 14.6, 14.8, 15.0]
+    attenuation_list = [8, 9, 10, 11, 12, 13, 13.2, 13.4, 13.6, 13.8, 14, 14.2, 14.4, 14.6, 14.8, 15.0, 15.2, 15.4]
     router_ip = "169.254.119.34"
     router_username = "pi"
     router_password = "queso"
