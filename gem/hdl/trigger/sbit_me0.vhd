@@ -47,6 +47,8 @@ entity sbit_me0 is
         -- segment outputs
         me0_segments_o : out segment_list_t (g_NUM_SEGMENTS-1 downto 0);
 
+        segment_pretrigger_o : out std_logic;
+
         -- IPbus
         ipb_reset_i : in  std_logic;
         ipb_clk_i   : in  std_logic;
@@ -86,10 +88,11 @@ architecture sbit_me0_arch of sbit_me0 is
             probe13 : in std_logic_vector(63 downto 0);
             probe14 : in std_logic;
             probe15 : in std_logic;
-            probe16 : in std_logic_vector(15 downto 0);
-            probe17 : in std_logic_vector(15 downto 0);
-            probe18 : in std_logic_vector(15 downto 0);
-            probe19 : in std_logic_vector(15 downto 0)
+            probe16 : in std_logic;
+            probe17 : in std_logic_vector(22 downto 0);
+            probe18 : in std_logic_vector(22 downto 0);
+            probe19 : in std_logic_vector(22 downto 0);
+            probe20 : in std_logic_vector(22 downto 0)
             );
     end component;
 
@@ -250,10 +253,11 @@ begin
                 probe13 => vfat_sbits_arr(0)(17),
                 probe14 => ttc_cmds_i.calpulse,
                 probe15 => ttc_cmds_i.l1a,
-                probe16 => me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf,
-                probe17 => me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf,
-                probe18 => me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf,
-                probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
+                probe16 => segment_pretrigger_o,
+                probe17 => std_logic_vector(me0_segments_o(0).partition) & std_logic_vector(me0_segments_o(0).strip) & std_logic_vector(me0_segments_o(0).lc) & std_logic_vector(me0_segments_o(0).hc) & std_logic_vector(me0_segments_o(0).id),
+                probe18 => std_logic_vector(me0_segments_o(1).partition) & std_logic_vector(me0_segments_o(1).strip) & std_logic_vector(me0_segments_o(1).lc) & std_logic_vector(me0_segments_o(1).hc) & std_logic_vector(me0_segments_o(1).id),
+                probe19 => std_logic_vector(me0_segments_o(2).partition) & std_logic_vector(me0_segments_o(2).strip) & std_logic_vector(me0_segments_o(2).lc) & std_logic_vector(me0_segments_o(2).hc) & std_logic_vector(me0_segments_o(2).id),
+                probe20 => std_logic_vector(me0_segments_o(3).partition) & std_logic_vector(me0_segments_o(3).strip) & std_logic_vector(me0_segments_o(3).lc) & std_logic_vector(me0_segments_o(3).hc) & std_logic_vector(me0_segments_o(3).id)
                 );
 
     end generate;
@@ -367,8 +371,6 @@ begin
                 process (ttc_clk_i.clk_40)
                 begin
                     if (rising_edge(ttc_clk_i.clk_40)) then
-                        --me0_clusters_probe_raw <= me0_clusters;
-                        me0_clusters <= me0_clusters;
 
                         if (me0_clusters(I).vpf = '1') then
                             me0_clusters_o(oh)(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);
@@ -421,25 +423,20 @@ begin
         chamber_sf_inst : entity work.chamber
             generic map (
                 NUM_SEGMENTS   => g_NUM_SEGMENTS,
-                NUM_PARTITIONS => 8
+                NUM_PARTITIONS => 8,
+                REG_OUTPUTS    => true -- true to register outputs on 40MHz
                 )
             port map (
-                clock      => ttc_clk_i.clk_320,
-                thresh     => "100",
-                dav_i      => segment_finder_dav,
-                dav_o      => open,
-                sbits_i    => sbits_i,
-                segments_o => me0_segments
+                clock             => ttc_clk_i.clk_320,
+                clock40           => ttc_clk_i.clk_40,
+                ly_thresh         => "100",
+                dav_i             => segment_finder_dav,
+                dav_o             => open,
+                sbits_i           => sbits_i,
+                segments_o        => me0_segments_o,
+                pretrigger_o      => segment_pretrigger_o,
+                vfat_pretrigger_o => open
                 );
-
-        -- transfer to 40MHz clock
-        process (ttc_clk_i.clk_40) is
-        begin
-            if (rising_edge(ttc_clk_i.clk_40)) then
-                me0_segments_o <= me0_segments;
-            end if;
-        end process;
-
 
     end generate;
 
@@ -455,10 +452,10 @@ begin
                 or_reduce(std_logic_vector(me0_segments_o(1).strip)) or
                 or_reduce(std_logic_vector(me0_segments_o(2).strip)) or
                 or_reduce(std_logic_vector(me0_segments_o(3).strip)) or
-                or_reduce(std_logic_vector(me0_segments_o(0).cnt)) or
-                or_reduce(std_logic_vector(me0_segments_o(1).cnt)) or
-                or_reduce(std_logic_vector(me0_segments_o(2).cnt)) or
-                or_reduce(std_logic_vector(me0_segments_o(3).cnt)) or
+                or_reduce(std_logic_vector(me0_segments_o(0).lc)) or
+                or_reduce(std_logic_vector(me0_segments_o(1).lc)) or
+                or_reduce(std_logic_vector(me0_segments_o(2).lc)) or
+                or_reduce(std_logic_vector(me0_segments_o(3).lc)) or
                 or_reduce(std_logic_vector(me0_segments_o(0).id)) or
                 or_reduce(std_logic_vector(me0_segments_o(1).id)) or
                 or_reduce(std_logic_vector(me0_segments_o(2).id)) or
