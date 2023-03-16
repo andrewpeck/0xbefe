@@ -74,9 +74,6 @@ package gem_pkg is
 
     function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
 
-    type t_vfat_mapping is array(integer range<>)of std_logic_vector(3 downto 0); --assuming same bitslip for all elinks
-    --type t_vfat_mapping_arr is array(integer range<>) of t_vfat_mapping;
-
     --========================--
     --== SBit cluster data  ==--
     --========================--
@@ -104,6 +101,10 @@ package gem_pkg is
 
     type t_oh_sbit_links is array(1 downto 0) of t_sbit_link_status;    
     type t_oh_sbit_links_arr is array(integer range <>) of t_oh_sbit_links;
+
+    type t_elink_mapping_arr is array (integer range<>) of std_logic_vector(3 downto 0); --4 bits per elink
+    type t_vfat_mapping_arr is array(integer range<>) of t_elink_mapping_arr(7 downto 0); --8 elinks per vfat
+    type t_oh_vfat_mapping_arr is array(integer range<>) of t_vfat_mapping_arr(23 downto 0); --24 vfats per OH
 
     --===================--
     --==  ME0 trigger  ==--

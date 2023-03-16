@@ -66,204 +66,115 @@
         description="Select sbit for sbit test"
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
  
- 
-  <node id="ME0_VFAT_MAP" address="0x70" description="slip count for bitslip of VFATs for mapping sbits">
-    <node id="ME0_VFAT0_MAP" address="0x0" mask="0x0000000f" permission="rw"
-	description="slip count for VFAT0"
-	fw_signal="vfat_sbit_mapping_arr(0)"
-	fw_default="0x0"/>
-    <node id="ME0_VFAT1_MAP" address="0x0" mask="0x000000f0" permission="rw"
-        description="slip count for VFAT1"
-        fw_signal="vfat_sbit_mapping_arr(1)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT2_MAP" address="0x0" mask="0x00000f00" permission="rw"
-        description="slip count for VFAT2"
-        fw_signal="vfat_sbit_mapping_arr(2)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT3_MAP" address="0x0" mask="0x0000f000" permission="rw"
-        description="slip count for VFAT3"
-        fw_signal="vfat_sbit_mapping_arr(3)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT4_MAP" address="0x0" mask="0x000f0000" permission="rw"
-        description="slip count for VFAT4"
-        fw_signal="vfat_sbit_mapping_arr(4)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT5_MAP" address="0x0" mask="0x00f00000" permission="rw"
-        description="slip count for VFAT5"
-        fw_signal="vfat_sbit_mapping_arr(5)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT6_MAP" address="0x0" mask="0x0f000000" permission="rw"
-        description="slip count for VFAT6"
-        fw_signal="vfat_sbit_mapping_arr(6)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT7_MAP" address="0x0" mask="0xf0000000" permission="rw"
-        description="slip count for VFAT7"
-        fw_signal="vfat_sbit_mapping_arr(7)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT8_MAP" address="0x1" mask="0x0000000f" permission="rw"
-        description="slip count for VFAT8"
-        fw_signal="vfat_sbit_mapping_arr(8)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT9_MAP" address="0x1" mask="0x000000f0" permission="rw"
-        description="slip count for VFAT9"
-        fw_signal="vfat_sbit_mapping_arr(9)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT10_MAP" address="0x1" mask="0x00000f00" permission="rw"
-        description="slip count for VFAT10"
-        fw_signal="vfat_sbit_mapping_arr(10)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT11_MAP" address="0x1" mask="0x0000f000" permission="rw"
-        description="slip count for VFAT11"
-        fw_signal="vfat_sbit_mapping_arr(11)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT12_MAP" address="0x1" mask="0x000f0000" permission="rw"
-        description="slip count for VFAT12"
-        fw_signal="vfat_sbit_mapping_arr(12)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT13_MAP" address="0x1" mask="0x00f00000" permission="rw"
-        description="slip count for VFAT13"
-        fw_signal="vfat_sbit_mapping_arr(13)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT14_MAP" address="0x1" mask="0x0f000000" permission="rw"
-        description="slip count for VFAT14"
-        fw_signal="vfat_sbit_mapping_arr(14)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT15_MAP" address="0x1" mask="0xf0000000" permission="rw"
-        description="slip count for VFAT15"
-        fw_signal="vfat_sbit_mapping_arr(1)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT16_MAP" address="0x2" mask="0x0000000f" permission="rw"
-        description="slip count for VFAT16"
-        fw_signal="vfat_sbit_mapping_arr(16)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT17_MAP" address="0x2" mask="0x000000f0" permission="rw"
-        description="slip count for VFAT17"
-        fw_signal="vfat_sbit_mapping_arr(17)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT18_MAP" address="0x2" mask="0x00000f00" permission="rw"
-        description="slip count for VFAT18"
-        fw_signal="vfat_sbit_mapping_arr(18)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT19_MAP" address="0x2" mask="0x0000f000" permission="rw"
-        description="slip count for VFAT19"
-        fw_signal="vfat_sbit_mapping_arr(19)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT20_MAP" address="0x2" mask="0x000f0000" permission="rw"
-        description="slip count for VFAT20"
-        fw_signal="vfat_sbit_mapping_arr(20)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT21_MAP" address="0x2" mask="0x00f00000" permission="rw"
-        description="slip count for VFAT21"
-        fw_signal="vfat_sbit_mapping_arr(21)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT22_MAP" address="0x2" mask="0x0f000000" permission="rw"
-        description="slip count for VFAT22"
-        fw_signal="vfat_sbit_mapping_arr(22)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT23_MAP" address="0x2" mask="0xf0000000" permission="rw"
-        description="slip count for VFAT23"
-        fw_signal="vfat_sbit_mapping_arr(23)"
-        fw_default="0x0"/>
-  </node>
+<node id="OH${OH_CNT_ID}_VFAT_MAP" address="0x70" 
+    description="slip count for bitslip of VFATs for mapping sbits of each elink"
+    generate="true"
+	generate_size="&NUM_OHS;"
+	generate_address_step="0x30"
+	generate_idx_var="OH_CNT_ID">
+    <node id="VFAT${VFAT_CNT_ID}" address="0x0"
+            description="slip count for bitslip of VFAT${VFAT_CNT_ID}"
+            generate="true"
+            generate_size="&NUM_VFATS_PER_OH;"
+            generate_address_step="0x1"
+            generate_idx_var="VFAT_CNT_ID"/>
+            <node id="ELINK0_MAP" address="0x0" permission="rw"
+                mask="0x0000000f"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 0"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
+                fw_default="0x0"/>
+            <node id="ELINK1_MAP" address="0x0" permission="rw"
+                mask="0x000000f0"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 1"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
+                fw_default="0x0"/>
+            <node id="ELINK2_MAP" address="0x0" permission="rw"
+                mask="0x00000f00"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 2"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
+                fw_default="0x0"/>
+            <node id="ELINK3_MAP" address="0x0" permission="rw"
+                mask="0x0000f000"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 3"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
+                fw_default="0x0"/>
+            <node id="ELINK4_MAP" address="0x0" permission="rw"
+                mask="0x000f0000"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 4"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
+                fw_default="0x0"/>
+            <node id="ELINK5_MAP" address="0x0" permission="rw"
+                mask="0x00f00000"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 5"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
+                fw_default="0x0"/>
+            <node id="ELINK6_MAP" address="0x0" permission="rw"
+                mask="0x0f000000"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 6"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
+                fw_default="0x0"/>
+            <node id="ELINK7_MAP" address="0x0" permission="rw"
+                mask="0xf0000000"
+                description="slip count for VFAT${VFAT_CNT_ID} ELINK 7"
+                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
+                fw_default="0x0"/>
+        </node>
+    </node>
 
-  <node id="ME0_VFAT_DELAY" address="0x90" description="number of clock cycles to delay VFATs by for phase allignment">
-    <node id="ME0_VFAT0_DELAY" address="0x0" mask="0x0000000f" permission="rw"
-        description="delay count for VFAT0"
-        fw_signal="vfat_sbit_delay_arr(0)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT1_DELAY" address="0x0" mask="0x000000f0" permission="rw"
-        description="delay count for VFAT1"
-        fw_signal="vfat_sbit_delay_arr(1)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT2_DELAY" address="0x0" mask="0x00000f00" permission="rw"
-        description="delay count for VFAT2"
-        fw_signal="vfat_sbit_delay_arr(2)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT3_DELAY" address="0x0" mask="0x0000f000" permission="rw"
-        description="delay count for VFAT3"
-        fw_signal="vfat_sbit_delay_arr(3)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT4_DELAY" address="0x0" mask="0x000f0000" permission="rw"
-        description="delay count for VFAT4"
-        fw_signal="vfat_sbit_delay_arr(4)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT5_DELAY" address="0x0" mask="0x00f00000" permission="rw"
-        description="delay count for VFAT5"
-        fw_signal="vfat_sbit_delay_arr(5)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT6_DELAY" address="0x0" mask="0x0f000000" permission="rw"
-        description="delay count for VFAT6"
-        fw_signal="vfat_sbit_delay_arr(6)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT7_DELAY" address="0x0" mask="0xf0000000" permission="rw"
-        description="delay count for VFAT7"
-        fw_signal="vfat_sbit_delay_arr(7)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT8_DELAY" address="0x1" mask="0x0000000f" permission="rw"
-        description="delay count for VFAT8"
-        fw_signal="vfat_sbit_delay_arr(8)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT9_DELAY" address="0x1" mask="0x000000f0" permission="rw"
-        description="delay count for VFAT9"
-        fw_signal="vfat_sbit_delay_arr(9)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT10_DELAY" address="0x1" mask="0x00000f00" permission="rw"
-        description="delay count for VFAT10"
-        fw_signal="vfat_sbit_delay_arr(10)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT11_DELAY" address="0x1" mask="0x0000f000" permission="rw"
-        description="delay count for VFAT11"
-        fw_signal="vfat_sbit_delay_arr(11)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT12_DELAY" address="0x1" mask="0x000f0000" permission="rw"
-        description="delay count for VFAT12"
-        fw_signal="vfat_sbit_delay_arr(12)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT13_DELAY" address="0x1" mask="0x00f00000" permission="rw"
-        description="delay count for VFAT13"
-        fw_signal="vfat_sbit_delay_arr(13)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT14_DELAY" address="0x1" mask="0x0f000000" permission="rw"
-        description="delay count for VFAT14"
-        fw_signal="vfat_sbit_delay_arr(14)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT15_DELAY" address="0x1" mask="0xf0000000" permission="rw"
-        description="delay count for VFAT15"
-        fw_signal="vfat_sbit_delay_arr(1)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT16_DELAY" address="0x2" mask="0x0000000f" permission="rw"
-        description="delay count for VFAT16"
-        fw_signal="vfat_sbit_delay_arr(16)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT17_DELAY" address="0x2" mask="0x000000f0" permission="rw"
-        description="delay count for VFAT17"
-        fw_signal="vfat_sbit_delay_arr(17)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT18_DELAY" address="0x2" mask="0x00000f00" permission="rw"
-        description="delay count for VFAT18"
-        fw_signal="vfat_sbit_delay_arr(18)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT19_DELAY" address="0x2" mask="0x0000f000" permission="rw"
-        description="delay count for VFAT19"
-        fw_signal="vfat_sbit_delay_arr(19)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT20_DELAY" address="0x2" mask="0x000f0000" permission="rw"
-        description="delay count for VFAT20"
-        fw_signal="vfat_sbit_delay_arr(20)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT21_DELAY" address="0x2" mask="0x00f00000" permission="rw"
-        description="delay count for VFAT21"
-        fw_signal="vfat_sbit_delay_arr(21)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT22_DELAY" address="0x2" mask="0x0f000000" permission="rw"
-        description="delay count for VFAT22"
-        fw_signal="vfat_sbit_delay_arr(22)"
-        fw_default="0x0"/>
-    <node id="ME0_VFAT23_DELAY" address="0x2" mask="0xf0000000" permission="rw"
-        description="delay count for VFAT23"
-        fw_signal="vfat_sbit_delay_arr(23)"
-        fw_default="0x0"/>
-  </node>
+<node id="OH${OH_CNT_ID}_VFAT_DELAY" address="0x500" 
+    description="Bx count for delay of VFATs sbits of each elink"
+    generate="true"
+    generate_size="&NUM_OHS;"
+    generate_address_step="0x30"
+    generate_idx_var="OH_CNT_ID">
+    <node id="VFAT${VFAT_CNT_ID}" address="0x0"
+            description="Bx count for delay of VFAT${VFAT_CNT_ID}"
+            generate="true"
+            generate_size="&NUM_VFATS_PER_OH;"
+            generate_address_step="0x1"
+            generate_idx_var="VFAT_CNT_ID"/>
+            <node id="ELINK0_DELAY" address="0x0" permission="rw"
+                mask="0x0000000f"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 0"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
+                fw_default="0x0"/>
+            <node id="ELINK1_DELAY" address="0x0" permission="rw"
+                mask="0x000000f0"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 1"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
+                fw_default="0x0"/>
+            <node id="ELINK2_DELAY" address="0x0" permission="rw"
+                mask="0x00000f00"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 2"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
+                fw_default="0x0"/>
+            <node id="ELINK3_DELAY" address="0x0" permission="rw"
+                mask="0x0000f000"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 3"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
+                fw_default="0x0"/>
+            <node id="ELINK4_DELAY" address="0x0" permission="rw"
+                mask="0x000f0000"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 4"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
+                fw_default="0x0"/>
+            <node id="ELINK5_DELAY" address="0x0" permission="rw"
+                mask="0x00f00000"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 5"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
+                fw_default="0x0"/>
+            <node id="ELINK6_DELAY" address="0x0" permission="rw"
+                mask="0x0f000000"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 6"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
+                fw_default="0x0"/>
+            <node id="ELINK7_DELAY" address="0x0" permission="rw"
+                mask="0xf0000000"
+                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 7"
+                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
+                fw_default="0x0"/>
+        </node>
+    </node>
 
 </node>
 <!--end sbit_me0 module -->

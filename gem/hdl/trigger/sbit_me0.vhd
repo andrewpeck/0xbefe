@@ -95,8 +95,8 @@ architecture sbit_me0_arch of sbit_me0 is
 
     -- control signals
     signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
-    signal vfat_sbit_mapping_arr : t_std4_array(g_NUM_VFATS_PER_OH - 1 downto 0);
-    signal vfat_sbit_delay_arr   : t_std4_array(g_NUM_VFATS_PER_OH - 1 downto 0);
+    signal vfat_sbit_mapping_arr : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- trigger signals
     signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking (before maoping & allignment)
@@ -200,14 +200,14 @@ begin
                 g_MAX_SR_DELAY => g_MAX_SR_DELAY
             )
             port map(
-                clk_i            => ttc_clk_i.clk_40,
-                rst_i            => reset_i,
+                clk_i              => ttc_clk_i.clk_40,
+                rst_i              => reset_i,
         
-                vfat_mapping_arr =>  vfat_sbit_mapping_arr,
-                vfat_delay_arr   =>  vfat_sbit_delay_arr,
+                vfat_mapping_arr_i =>  vfat_sbit_mapping_arr(OH),
+                vfat_delay_arr_i   =>  vfat_sbit_delay_arr(OH),
                 
-                vfat_sbits_i     =>  vfat_sbits_arr(OH),
-                vfat_sbits_o     =>  vfat_sbits_alligned(OH) 
+                vfat_sbits_i       =>  vfat_sbits_arr(OH),
+                vfat_sbits_o       =>  vfat_sbits_alligned(OH) 
             );
     
     end generate;
@@ -376,7 +376,6 @@ begin
         begin
             if (rising_edge(ttc_clk_i.clk_40)) then
                 --me0_clusters_probe_raw <= me0_clusters;
-                me0_clusters <= me0_clusters;
 
                 if (me0_clusters(I).vpf = '1') then
                     me0_clusters_o(oh)(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);

@@ -17,8 +17,8 @@ entity me0_sbit_allign is
         clk_i               : in std_logic;
         rst_i               : in std_logic;
 
-        vfat_mapping_arr    : in t_std4_array(g_NUM_OF_VFATs -1 downto 0); -- values to rotate each VFAT sbit array by
-        vfat_delay_arr      : in t_std4_array(g_NUM_OF_VFATs -1 downto 0); -- values of how much to delay each VFAT by
+        vfat_mapping_arr_i  : in t_vfat_mapping_arr(g_NUM_OF_VFATs -1 downto 0); -- values to rotate each VFAT sbit array by
+        vfat_delay_arr_i    : in t_vfat_mapping_arr(g_NUM_OF_VFATs -1 downto 0); -- values of how much to delay each VFAT by
         
         vfat_sbits_i        : in t_std64_array(g_NUM_OF_VFATs -1 downto 0);
         vfat_sbits_o        : out t_std64_array(g_NUM_OF_VFATs -1 downto 0)
@@ -49,26 +49,28 @@ begin
                 )
                 port map(
                     clk_i       => clk_i,
-                    slip_cnt_i  => vfat_mapping_arr(VFAT),
+                    slip_cnt_i  => vfat_mapping_arr(VFAT)(ELINK),
                     data_i      => vfat_sbits_unmapped((ELINK+1)*8 - 1 downto ELINK*8),
                     data_o      => vfat_sbits_mapped((ELINK+1)*8 - 1 downto ELINK*8)
                 );
-        end generate;
         -- next run sbits through shift reg to delay all sbits of one VFAT by selected amount
-        g_sbit_delay : entity work.shift_reg_multi
-            generic map(
-                TAP_DELAY_WIDTH => 16,
-                DATA_WIDTH      => 64,
-                OUTPUT_REG      => FALSE,
-                SUPPORT_RESET   => FALSE
-            )
-            port map(
-                clk_i       => clk_i,
-                reset_i     => rst_i,
-                tap_delay_i => vfat_delay_arr(VFAT),
-                data_i      => vfat_sbits_mapped,
-                data_o      => vfat_sbits_delayed
-            );
+            g_sbit_delay : entity work.shift_reg_multi
+                generic map(
+                    TAP_DELAY_WIDTH => 4,
+                    DATA_WIDTH      => 8,
+                    OUTPUT_REG      => FALSE,
+                    SUPPORT_RESET   => FALSE
+                )
+                port map(
+                    clk_i       => clk_i,
+                    reset_i     => rst_i,
+                    tap_delay_i => vfat_delay_arr(VFAT)(ELINK),
+                    data_i      => vfat_sbits_mapped((ELINK+1)*8 - 1 downto ELINK*8),
+                    data_o      => vfat_sbits_delayed((ELINK+1)*8 - 1 downto ELINK*8)
+                );
+        end generate;
+        
+        vfat_sbits_o <= vfat_sbits_delayed(VFAT)
 
     end generate;
 
