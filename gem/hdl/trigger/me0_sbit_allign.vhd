@@ -70,7 +70,7 @@ begin
                 );
         end generate;
         
-        vfat_sbits_o <= vfat_sbits_delayed(VFAT)
+        vfat_sbits_o(VFAT) <= vfat_sbits_delayed
 
     end generate;
 

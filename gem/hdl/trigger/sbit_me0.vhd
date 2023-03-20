@@ -183,8 +183,8 @@ begin
             for oh in 0 to g_NUM_OF_OHs - 1 loop
                 for vfat in 0 to 23 loop
                     vfat_sbits_arr(oh)(vfat) <= vfat3_sbits_arr_i(oh)(vfat) and not vfat_sbit_mask_arr(oh)(vfat);
-                    vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
-                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat));
+                    vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_alligned(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
+                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_alligned(oh)(vfat));
                 end loop;
             end loop;
         end if;
@@ -281,7 +281,7 @@ begin
 
     --== COUNT of summed sbits on selectable elink ==--
     -- assigned array of sbits for selected vfat (x) and elink (e)
-    vfat3_sbit0xe_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+    vfat3_sbit0xe_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i: for i in 0 to 7 generate
         me0_sbit0xe_count : entity work.counter
@@ -302,7 +302,7 @@ begin
 
     --== COUNTER for selectable sbit ==--
     -- assigned sbit of selected vfat (x) and sbit (s)
-    vfat3_sbit0xs_test <= vfat3_sbits_arr_i(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
+    vfat3_sbit0xs_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
         generic map(
