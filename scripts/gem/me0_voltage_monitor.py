@@ -67,26 +67,23 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     filename = foldername + "ME0_OH%d_GBT%d_voltage_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
-    minutes, vssa, vddtx, vddrx, vdd, vdda, vref = [], [], [], [], [], [], []
+    minutes, v2v5, vssa, vddtx, vddrx, vdd, vdda, vref = [], [], [], [], [], [], [], []
 
     run_time_min = float(run_time_min)
 
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("minutes")
     ax1.set_ylabel("PG Current (A)")
-    fig2, ax2 = plt.subplots()
-    ax2.set_xlabel("minutes")
-    ax2.set_ylabel("Rt Voltage (V)")
-    #ax.set_xticks(range(0,run_time_min+1))
-    #ax.set_xlim([0,run_time_min])
+    #ax1.set_xticks(range(0,run_time_min+1))
+    #ax1.set_xlim([0,run_time_min])
     start_time = int(time())
     end_time = int(time()) + (60 * run_time_min)
 
     file_out = open(filename, "w")
     if oh_ver == 1:
-        file_out.write("Time (min) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+        file_out.write("Time (min) \t V2V5 (V) \t VDDIO (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
     elif oh_ver == 2:
-        file_out.write("Time (min) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
+        file_out.write("Time (min) \t V2V5 (V) \t VSSA (internal signal) (V) \t VDDTX (internal signal) (V) \t VDDRX (internal signal) (V) \t VDD (internal signal) (V) \t VDDA (internal signal) (V) \t VREF (internal signal) (V)\n")
     t0 = time()
     nrun = 0
     first_reading = 1
@@ -96,6 +93,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             read_adc_iter = 0
 
         if read_adc_iter:
+            if oh_ver == 1:
+                v2v5_Vout = read_adc(6, gain, system)
+            elif oh_ver == 2:
+                v2v5_Vout = read_adc(1, gain, system)
             vssa_Vout = read_adc(9, gain, system)
             vddtx_Vout = read_adc(10, gain, system)
             vddrx_Vout = read_adc(11, gain, system)
@@ -104,6 +105,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vref_Vout = read_adc(15, gain, system)
 
             if len(adc_calib_results)!=0:
+                v2v5_Vin = get_vin(v2v5_Vout, adc_calib_results_array)
                 vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
                 vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
                 vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
@@ -111,6 +113,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
                 vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
             else:
+                v2v5_Vin = v2v5_Vout
                 vssa_Vin = vssa_Vout
                 vddtx_Vin = vddtx_Vout
                 vddrx_Vin = vddrx_Vout
@@ -119,8 +122,16 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 vref_Vin = vref_Vout
 
             if oh_ver == 1:
+                if gbt_select%2 == 0:
+                    v2v5_converted = v2v5_Vin*3.0
+                else:
+                    v2v5_converted = -9999
                 vssa_converted = vssa_Vin/0.42
             elif oh_ver == 2:
+                if gbt_select%2 == 0:
+                    v2v5_converted = -9999
+                else:
+                    v2v5_converted = v2v5_Vin*3.0
                 vssa_converted = vssa_Vin
             vddtx_converted = vddtx_Vin/0.42
             vddrx_converted = vddrx_Vin/0.42
@@ -129,6 +140,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vref_converted = vref_Vin/0.42
             
             second = time() - start_time
+            v2v5.append(v2v5_converted)
             vssa.append(vssa_converted)
             vddtx.append(vddtx_converted)
             vddrx.append(vddrx_converted)
@@ -138,10 +150,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             minutes.append(second/60.0)
             
             if plot:
-                live_plot_voltage(ax1, minutes, vssa, vddtx, vddrx, vdd, vdda, vref, run_time_min)
+                live_plot_voltage(ax1, minutes, v2v5, vssa, vddtx, vddrx, vdd, vdda, vref, run_time_min)
 
-            file_out.write(str(second/60.0) + "\t" + str(vssa_converted) + "\t" + str(vddtx_converted) + "\t" + str(vddrx_converted) + "\t" + str(vdd_converted) + "\t" + str(vdda_converted) + "\t" + str(vref_converted) + "\n" )
-            print("Time: " + "{:.2f}".format(second/60.0) + " min \t VSSA (Internal Signal): " + "{:.3f}".format(vssa_converted) + " V \t VDDTX (Internal Signal): " + "{:.3f}".format(vddtx_converted) + " V \t VDDRX (Internal Signal): " + "{:.3f}".format(vddrx_converted) + " V \t VDD (Internal Signal): " + "{:.3f}".format(vdd_converted) + " V \t VDDA (Internal Signal): " + "{:.3f}".format(vdda_converted) + " V \t VREF (Internal Signal): " + "{:.3f}".format(vref_converted) + "\n")
+            file_out.write(str(second/60.0) + "\t" + str(v2v5_converted) + "\t" + str(vssa_converted) + "\t" + str(vddtx_converted) + "\t" + str(vddrx_converted) + "\t" + str(vdd_converted) + "\t" + str(vdda_converted) + "\t" + str(vref_converted) + "\n" )
+            print("Time: " + "{:.2f}".format(second/60.0) + " min \t V2V5: " + "{:.3f}".format(v2v5_converted) + " V \t VSSA (Internal Signal): " + "{:.3f}".format(vssa_converted) + " V \t VDDTX (Internal Signal): " + "{:.3f}".format(vddtx_converted) + " V \t VDDRX (Internal Signal): " + "{:.3f}".format(vddrx_converted) + " V \t VDD (Internal Signal): " + "{:.3f}".format(vdd_converted) + " V \t VDDA (Internal Signal): " + "{:.3f}".format(vdda_converted) + " V \t VREF (Internal Signal): " + "{:.3f}".format(vref_converted) + "\n")
             
             t0 = time()
             if first_reading:
@@ -157,25 +169,27 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     fig3, ax3 = plt.subplots()
     ax3.set_xlabel("minutes")
     ax3.set_ylabel("Voltage (V)")
-    ax3.plot(minutes, vssa, color="red", label="VSSA")
-    ax3.plot(minutes, vddtx, color="blue", label="VDDTX")
-    ax3.plot(minutes, vddrx, color="black", label="VDDRX")
-    ax3.plot(minutes, vdd, color="green", label="VDD")
-    ax3.plot(minutes, vdda, color="orange", label="VDDA")
-    ax3.plot(minutes, vref, color="cyan", label="VREF")
+    ax3.plot(minutes, vssa, color="red", label="V2V5")
+    ax3.plot(minutes, vssa, color="blue", label="VSSA")
+    ax3.plot(minutes, vddtx, color="black", label="VDDTX")
+    ax3.plot(minutes, vddrx, color="green", label="VDDRX")
+    ax3.plot(minutes, vdd, color="yellow", label="VDD")
+    ax3.plot(minutes, vdda, color="cyan", label="VDDA")
+    ax3.plot(minutes, vref, color="magenta", label="VREF")
     ax3.legend(loc="center right")
     fig3.savefig(figure_name1, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
 
-def live_plot_voltage(ax1, x, y0, y1, y2, y3, y4, y5, run_time_min):
-    line0, = ax1.plot(x, y0, "red")
-    line1, = ax1.plot(x, y1, "blue")
-    line2, = ax1.plot(x, y2, "black")
-    line3, = ax1.plot(x, y2, "green")
-    line4, = ax1.plot(x, y2, "orange")
-    line5, = ax1.plot(x, y2, "cyan")
-    ax1.legend((line0, line1, line2, line3, line4, line5), ("VSSA", "VDDTX", "VDDRX", "VDD", "VDDA", "VREF"), loc="center right")
+def live_plot_voltage(ax1, x, y0, y1, y2, y3, y4, y5, y6, run_time_min):
+    line0 = ax1.plot(x, y0, "red")
+    line1 = ax1.plot(x, y1, "blue")
+    line2 = ax1.plot(x, y2, "black")
+    line3 = ax1.plot(x, y3, "green")
+    line4 = ax1.plot(x, y4, "yellow")
+    line5 = ax1.plot(x, y5, "cyan")
+    line6 = ax1.plot(x, y6, "magenta")
+    ax1.legend((line0, line1, line2, line3, line4, line5, line6), ("V2V5", "VSSA", "VDDTX", "VDDRX", "VDD", "VDDA", "VREF"), loc="center right")
     plt.draw()
     plt.pause(0.01)
 
