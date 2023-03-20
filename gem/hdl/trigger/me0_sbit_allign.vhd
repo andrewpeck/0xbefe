@@ -49,7 +49,7 @@ begin
                 )
                 port map(
                     clk_i       => clk_i,
-                    slip_cnt_i  => vfat_mapping_arr(VFAT)(ELINK),
+                    slip_cnt_i  => vfat_mapping_arr_i(VFAT)(ELINK),
                     data_i      => vfat_sbits_unmapped((ELINK+1)*8 - 1 downto ELINK*8),
                     data_o      => vfat_sbits_mapped((ELINK+1)*8 - 1 downto ELINK*8)
                 );
@@ -64,13 +64,13 @@ begin
                 port map(
                     clk_i       => clk_i,
                     reset_i     => rst_i,
-                    tap_delay_i => vfat_delay_arr(VFAT)(ELINK),
+                    tap_delay_i => vfat_delay_arr_i(VFAT)(ELINK),
                     data_i      => vfat_sbits_mapped((ELINK+1)*8 - 1 downto ELINK*8),
                     data_o      => vfat_sbits_delayed((ELINK+1)*8 - 1 downto ELINK*8)
                 );
         end generate;
         
-        vfat_sbits_o(VFAT) <= vfat_sbits_delayed
+        vfat_sbits_o(VFAT) <= vfat_sbits_delayed;
 
     end generate;
 
