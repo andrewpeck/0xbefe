@@ -77,7 +77,7 @@
             generate="true"
             generate_size="&NUM_VFATS_PER_OH;"
             generate_address_step="0x1"
-            generate_idx_var="VFAT_CNT_ID"/>
+            generate_idx_var="VFAT_CNT_ID">
             <node id="ELINK0_MAP" address="0x0" permission="rw"
                 mask="0x0000000f"
                 description="slip count for VFAT${VFAT_CNT_ID} ELINK 0"
@@ -118,10 +118,10 @@
                 description="slip count for VFAT${VFAT_CNT_ID} ELINK 7"
                 fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
                 fw_default="0x0"/>
-        </node>
     </node>
+  </node>
 
-<node id="OH${OH_CNT_ID}_VFAT_DELAY" address="0x500" 
+  <node id="OH${OH_CNT_ID}_VFAT_DELAY" address="0x500" 
     description="Bx count for delay of VFATs sbits of each elink"
     generate="true"
     generate_size="&NUM_OHS;"
@@ -132,7 +132,7 @@
             generate="true"
             generate_size="&NUM_VFATS_PER_OH;"
             generate_address_step="0x1"
-            generate_idx_var="VFAT_CNT_ID"/>
+            generate_idx_var="VFAT_CNT_ID">
             <node id="ELINK0_DELAY" address="0x0" permission="rw"
                 mask="0x0000000f"
                 description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 0"
@@ -173,8 +173,8 @@
                 description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 7"
                 fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
                 fw_default="0x0"/>
-        </node>
-    </node>
 
+    </node>
+  </node>
 </node>
 <!--end sbit_me0 module -->
