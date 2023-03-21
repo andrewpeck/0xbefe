@@ -502,7 +502,8 @@ begin
             g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
             g_DAQ_CLK_FREQ      => 100_000_000,
-            g_DISABLE_TTC_DATA  => true
+            g_DISABLE_TTC_DATA  => true,
+            g_QUESO_TEST_EN     => false
         )
         port map(
             reset_i                 => usr_logic_reset,
