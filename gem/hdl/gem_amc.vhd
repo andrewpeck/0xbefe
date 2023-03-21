@@ -41,7 +41,8 @@ entity gem_amc is
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQ_CLK_FREQ       : integer;
         g_IS_SLINK_ROCKET    : boolean;
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_QUESO_TEST_EN      : boolean
     );
     port(
         reset_i                 : in   std_logic;
@@ -871,14 +872,16 @@ begin
     end generate;
 
     g_gbt_link_mux_me0 : if g_GEM_STATION = 0 generate
-        i_gbt_link_mux_me0 : entity work.gbt_link_mux_me0
+        g_me0 : if not g_QUESO_TEST_EN generate
+            i_gbt_link_mux_me0 : entity work.gbt_link_mux_me0
             generic map(
                 g_NUM_OF_OHs      => g_NUM_OF_OHs,
-                g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH,
-                g_QUESO_EN        => true
+                g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH
             )
             port map(
                 gbt_frame_clk_i       => ttc_clocks_i.clk_40,
+
+                gbt_ic_rx_use_ec_i    => gbt_ic_rx_use_ec,
 
                 gbt_rx_data_arr_i     => lpgbt_rx_data_arr,
                 gbt_tx_data_arr_o     => lpgbt_tx_data_arr,
@@ -891,12 +894,35 @@ begin
                 vfat3_sbits_arr_o     => me0_vfat3_sbits_arr,
 
                 gbt_ready_arr_o       => gbt_ready_arr,
-                vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,
-
-                test_vfat3_tx_data_arr_i  => queso_vfat3_tx_data_arr,
-                test_vfat3_rx_data_arr_o  => queso_vfat3_rx_data_arr
-
+                vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr
             );
+
+        g_queso_test : if g_QUESO_TEST_EN generate
+            i_gbt_link_mux_me0 : entity work.gbt_link_mux_me0_queso
+                generic map(
+                    g_NUM_OF_OHs      => g_NUM_OF_OHs,
+                    g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH
+                )
+                port map(
+                    gbt_frame_clk_i       => ttc_clocks_i.clk_40,
+
+                    gbt_rx_data_arr_i     => lpgbt_rx_data_arr,
+                    gbt_tx_data_arr_o     => lpgbt_tx_data_arr,
+                    gbt_link_status_arr_i => gbt_link_status_arr,
+
+                    gbt_ic_tx_data_arr_i  => gbt_ic_tx_data_arr,
+                    gbt_ic_rx_data_arr_o  => gbt_ic_rx_data_arr,
+                    vfat3_tx_data_arr_i   => vfat3_tx_data_arr,
+                    vfat3_rx_data_arr_o   => vfat3_rx_data_arr,
+                    vfat3_sbits_arr_o     => me0_vfat3_sbits_arr,
+
+                    gbt_ready_arr_o       => gbt_ready_arr,
+                    vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,
+
+                    test_vfat3_tx_data_arr_i  => queso_vfat3_tx_data_arr,
+                    test_vfat3_rx_data_arr_o  => queso_vfat3_rx_data_arr
+                );
+        end generate;
     end generate;
 
     --===========================--

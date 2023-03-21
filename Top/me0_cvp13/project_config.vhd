@@ -23,6 +23,7 @@ package project_config is
     constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
 
+    constant CFG_QUESO_TEST             : boolean := false; -- if true, me0 mux file will be changed to allow for PRBS loopback test through QUESO board
     --========================--
     --== Link configuration ==--
     --========================--

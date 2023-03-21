@@ -361,7 +361,8 @@ begin
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS  => 20,
                 g_DAQ_CLK_FREQ       => 62_500_000, --50_000_000
-                g_IS_SLINK_ROCKET    => false
+                g_IS_SLINK_ROCKET    => false,
+                g_QUESO_TEST_EN      => false
             )
             port map(
                 reset_i                 => '0',

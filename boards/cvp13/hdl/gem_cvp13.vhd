@@ -442,7 +442,8 @@ begin
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
                 g_IS_SLINK_ROCKET   => false,
-                g_DISABLE_TTC_DATA  => true
+                g_DISABLE_TTC_DATA  => true,
+                g_QUESO_TEST_EN     => CFG_QUESO_TEST
             )
             port map(
                 reset_i                 => usr_logic_reset,
