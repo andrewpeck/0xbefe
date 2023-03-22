@@ -82,7 +82,7 @@ def init_gem_frontend():
                 writeGbtRegAddrs(0x053, 0x02) # Configure GPIO as output
                 writeGbtRegAddrs(0x055, 0x00) # Set GPIO low - resets sub lpGBT
                 sleep(0.1)
-                writeGbtRegAddrs(0x053, 0x00) # Configure GPIO as output
+                writeGbtRegAddrs(0x053, 0x00) # Configure GPIO as input
                 sleep(0.1)
         sleep(2)
 

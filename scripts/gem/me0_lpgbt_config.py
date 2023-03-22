@@ -407,31 +407,39 @@ def configure_gpio(oh_ver, boss):
     print ("Configuring gpio...")
     if oh_ver == 1:
         if (boss):
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80) # set as outputs (15) - only LED
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00)
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80 | 0x01) # set as outputs (15, 1)
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04) # set as outputs (1, 2)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80) # set as outputs (15) - only LED
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x80 | 0x01) # set as outputs (15, 1) - LED and reset
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04) # set as outputs (1, 2) - reset
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0xFF) # set all GPIOs to output 
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0xFF) # set all GPIOs to output 
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x80) # enable LED
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00)
         else:
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x00)
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x02 | 0x04 | 0x08) # set as outputs (9, 10, 11)
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x00)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x02 | 0x04 | 0x08) # set as outputs (9, 10, 11) - reset
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x00)
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0xFF) # set all GPIOs to output 
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0xFF) # set all GPIOs to output
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00)
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00)
     elif oh_ver == 2:
         if (boss):
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x00)
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x20) # set as outputs (5) - only LED
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x20) # set as outputs (8, 9, 13)
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04 | 0x20) # set as outputs (0, 2, 5)
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x00)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x20) # set as outputs (5) - only LED
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x20) # set as outputs (8, 9, 13) - reset
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x04 | 0x20) # set as outputs (0, 2, 5) - reset and LED
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0xFF) # set all GPIOs to output 
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0xFF) # set all GPIOs to output
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00)
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x02 | 0x20) # set the sub lpGBT and VTRx+ to high (no reset state)
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x20) # enable LED
         else:
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x20) # set as outputs (8, 13) - only LEDs
-            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x02 | 0x08) # set as outputs (0, 1, 3) - only LEDs
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x04 | 0x08 | 0x20) # set as outputs (8, 9, 10, 11, 13)
-            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x02 | 0x08) # set as outputs (0, 1, 3)
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x20) # set as outputs (8, 13) - only LEDs
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0x01 | 0x02 | 0x08) # set as outputs (0, 1, 3) - only LEDs
+            #lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0x01 | 0x02 | 0x04 | 0x08 | 0x20) # set as outputs (8, 9, 10, 11, 13) - LEDs and reset
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRH"), 0xFF) # set all GPIOs to output 
+            lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIODIRL"), 0xFF) # set all GPIOs to output
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTH"), 0x00)
             lpgbt_writeReg(getNode("LPGBT.RWF.PIO.PIOOUTL"), 0x00)
 
