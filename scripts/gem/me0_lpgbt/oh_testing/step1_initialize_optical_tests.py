@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # Step 2 - check lpGBT status
     print (Colors.BLUE + "Step 2: Checking lpGBT Status\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Status\n\n")
-    
+
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)

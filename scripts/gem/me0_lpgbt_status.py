@@ -417,7 +417,6 @@ def powerdown_adc(oh_ver):
 def read_adc(channel, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
     done = 0
     while (done==0):
