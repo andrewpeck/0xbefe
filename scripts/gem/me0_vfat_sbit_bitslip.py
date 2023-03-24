@@ -109,10 +109,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             write_backend_reg(elink_sbit_select_node, elink) # Select elink for S-bit counter
 
             sbit_bitslip_values[vfat][elink] = -9999
-            s_bit_matches = {}
-            
-            for sbit in range(elink*8,elink*8+8):
-                s_bit_matches[sbit] = 0
 
             channel = elink*16
             correct_sbit = elink*8
@@ -170,18 +166,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                             print (Colors.YELLOW + "WARNING: Multiple S-bits registered hits for calpulse on channel %02d"%(channel) + Colors.ENDC)
                             sbit_matched = -9999
                             break
-                        if s_bit_matches[sbit] >= 2:
-                            print (Colors.YELLOW + "WARNING: S-bit %02d already matched to 2 channels"%(sbit) + Colors.ENDC)
-                            sbit_matched = -9999
-                            break
-                        if s_bit_matches[sbit] == 1:
-                            if channel%2==0:
-                                print (Colors.YELLOW + "WARNING: S-bit %02d already matched to an earlier odd numbered channel"%(sbit) + Colors.ENDC)
-                                sbit_matched = -9999
-                                break
                         sbit_matched = sbit
                         sbit_channel_match = 1
-                        s_bit_matches[sbit] += 1
                 # End of S-bit loop for this channel
 
                 if sbit_matched == correct_sbit:
