@@ -175,10 +175,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                             sbit_matched = -9999
                             break
                         if s_bit_matches[sbit] == 1:
-                            if s_bit_channel_mapping[vfat][elink][channel-1] != sbit:
-                                print (Colors.YELLOW + "WARNING: S-bit %02d matched to a different channel than the previous one"%(sbit) + Colors.ENDC)
-                                sbit_matched = -9999
-                                break
                             if channel%2==0:
                                 print (Colors.YELLOW + "WARNING: S-bit %02d already matched to an earlier odd numbered channel"%(sbit) + Colors.ENDC)
                                 sbit_matched = -9999
