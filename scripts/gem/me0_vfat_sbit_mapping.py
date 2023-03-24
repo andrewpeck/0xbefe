@@ -249,7 +249,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         file_out_data.write(Colors.GREEN + "No Rotated Elinks in Mapping\n\n" + Colors.ENDC)
 
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
-    print ("\nS-bit mapping done\n")
+    print ("\nS-bit Mapping done\n")
     file_out_data.close()
 
 if __name__ == "__main__":

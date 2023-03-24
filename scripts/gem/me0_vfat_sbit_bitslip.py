@@ -7,8 +7,22 @@ import random
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits, input_file):
     print ("%s VFAT S-Bit Bitslipping\n"%gem)
+
+    if input_file is not None:
+        file_in = open(input_file)
+        for line in file_in.readlines():
+            if "VFAT" in line:
+                continue
+            vfat_in = line.split()[0]
+            elink_in = line.split()[1]
+            bitslip_in = line.split()[2]
+            write_backend_node(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
+
+        file_in.close()
+        print ("\nS-bit Bitslipping done\n")
+        return
 
     global_reset()
     #gem_link_reset()
@@ -276,6 +290,7 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
+    parser.add_argument("-f", "--input_file", action="store", dest="input_file", help="input_file = write bitslip from this input file")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -323,7 +338,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss))
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
