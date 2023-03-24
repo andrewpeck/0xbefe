@@ -8,7 +8,7 @@ import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits):
-    print ("%s VFAT S-Bit Mapping\n"%gem)
+    print ("%s VFAT S-Bit Bitslipping\n"%gem)
 
     global_reset()
     #gem_link_reset()
@@ -42,6 +42,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     elink_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink
     channel_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
     reset_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
+    sbit_bistlip_nodes = {}
+    for vfat in vfat_list:
+        sbit_bistlip_nodes[vfat] = {}
+        for elink in range(8):
+            sbit_bistlip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat,elink))
 
     # Configure all VFATs
     for vfat in vfat_list:
@@ -77,31 +82,38 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     print ("")
 
     # Starting VFAT loop
-    s_bit_channel_mapping = {}
+    sbit_bitslip_values = {}
     for vfat in vfat_list:
         print ("Testing VFAT#: %02d" %(vfat))
         print ("")
         write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SEL_VFAT_SBIT_ME0"), vfat) # Select VFAT for reading S-bits
 
-        s_bit_channel_mapping[vfat] = {}
+        sbit_bitslip_values[vfat] = {}
         # Looping over all 8 elinks
         for elink in range(0,8):
             print ("Phase scan for S-bits in ELINK# %02d" %(elink))
             write_backend_reg(elink_sbit_select_node, elink) # Select elink for S-bit counter
 
-            s_bit_channel_mapping[vfat][elink] = {}
+            sbit_bitslip_values[vfat][elink] = -9999
             s_bit_matches = {}
+            
             for sbit in range(elink*8,elink*8+8):
                 s_bit_matches[sbit] = 0
 
-            # Looping over all channels in that elink
-            for channel in range(elink*16,elink*16+16):
-                # Enabling the pulsing channel
-                enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
+            channel = elink*16
+            correct_sbit = elink*8
+            # Enabling the pulsing channel
+            enableVfatchannel(vfat, oh_select, channel, 0, 1) # unmask this channel and enable calpulsing
+
+            # Looping over all bitslip values
+            for bitslip in range(8):
+                
+                # Set bitslip
+                write_backend_reg(sbit_bistlip_nodes[vfat][elink], bitslip)
 
                 channel_sbit_counter_final = {}
                 sbit_channel_match = 0
-                s_bit_channel_mapping[vfat][elink][channel] = -9999
+                sbit_matched = -9999
 
                 # Looping over all s-bits in that elink
                 for sbit in range(elink*8,elink*8+8):
@@ -130,41 +142,48 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
 
                     if calpulse_counter == 0:
                         # Calpulse Counter is 0
-                        s_bit_channel_mapping[vfat][elink][channel] = -9999
+                        sbit_matched = -9999
                         break
 
                     if system!="dryrun" and abs(elink_sbit_counter_final - calpulse_counter) > n_allowed_missing_hits:
                         print (Colors.YELLOW + "WARNING: Elink %02d did not register the correct number of hits on channel %02d"%(elink, channel) + Colors.ENDC)
-                        s_bit_channel_mapping[vfat][elink][channel] = -9999
+                        sbit_matched = -9999
                         break
                     channel_sbit_counter_final[sbit] = read_backend_reg(channel_sbit_counter_node)
 
                     if abs(channel_sbit_counter_final[sbit] - calpulse_counter) <= n_allowed_missing_hits:
                         if sbit_channel_match == 1:
                             print (Colors.YELLOW + "WARNING: Multiple S-bits registered hits for calpulse on channel %02d"%(channel) + Colors.ENDC)
-                            s_bit_channel_mapping[vfat][elink][channel] = -9999
+                            sbit_matched = -9999
                             break
                         if s_bit_matches[sbit] >= 2:
                             print (Colors.YELLOW + "WARNING: S-bit %02d already matched to 2 channels"%(sbit) + Colors.ENDC)
-                            s_bit_channel_mapping[vfat][elink][channel] = -9999
+                            sbit_matched = -9999
                             break
                         if s_bit_matches[sbit] == 1:
                             if s_bit_channel_mapping[vfat][elink][channel-1] != sbit:
                                 print (Colors.YELLOW + "WARNING: S-bit %02d matched to a different channel than the previous one"%(sbit) + Colors.ENDC)
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
+                                sbit_matched = -9999
                                 break
                             if channel%2==0:
                                 print (Colors.YELLOW + "WARNING: S-bit %02d already matched to an earlier odd numbered channel"%(sbit) + Colors.ENDC)
-                                s_bit_channel_mapping[vfat][elink][channel] = -9999
+                                sbit_matched = -9999
                                 break
-                        s_bit_channel_mapping[vfat][elink][channel] = sbit
+                        sbit_matched = sbit
                         sbit_channel_match = 1
                         s_bit_matches[sbit] += 1
                 # End of S-bit loop for this channel
 
-                # Disabling the pulsing channels
-                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
-            # End of Channel loop
+                if sbit_matched == correct_sbit:
+                    sbit_bitslip_values[vfat][elink] = bitslip
+                    break
+
+            # End of bitslip loop
+
+            # Disabling the pulsing channels
+            enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask this channel and disable calpulsing
+            # Set bitslip back to 0
+            write_backend_reg(sbit_bistlip_nodes[vfat][elink], 0)
 
             print ("")
         # End of Elink loop
@@ -191,7 +210,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_mapping_results"
+    dataDir = "results/vfat_data/vfat_sbit_bitslip_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -199,43 +218,47 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/%s_OH%d_vfat_sbit_mapping_results_"%(gem,oh_select) + now + ".py"
-    filename_data = dataDir + "/%s_OH%d_vfat_sbit_mapping_data_"%(gem,oh_select) + now + ".txt"
-    with open(filename, "w") as file:
-        file.write(json.dumps(s_bit_channel_mapping))
+    filename = dataDir + "/%s_OH%d_vfat_sbit_bitslip_results_"%(gem,oh_select) + now + ".txt"
+    filename_data = dataDir + "/%s_OH%d_vfat_sbit_bitslip_data_"%(gem,oh_select) + now + ".txt"
+    file_out = open(filename, "w")
     file_out_data = open(filename_data, "w")
+    file_out.write("VFAT    Elink    Bitslip\n")
 
-    print ("S-bit Mapping Results: \n")
-    file_out_data.write("S-bit Mapping Results: \n\n")
-    bad_channels_string = Colors.RED + "\n Bad Channels: \n"
-    bad_channel_count = 0
-    for vfat in s_bit_channel_mapping:
+    print ("S-bit Bitslipping Results: \n")
+    file_out_data.write("S-bit Bitslipping Results: \n\n")
+    bad_elinks_string = Colors.RED + "\n Bad Elinks: \n"
+    bad_elink_count = 0
+    for vfat in sbit_bitslip_values:
         print ("VFAT %02d: "%(vfat))
         file_out_data.write("VFAT %02d: \n"%(vfat))
-        for elink in s_bit_channel_mapping[vfat]:
+        for elink in sbit_bitslip_values[vfat]:
             print ("  ELINK %02d: "%(elink))
             file_out_data.write("  ELINK %02d: \n"%(elink))
-            for channel in s_bit_channel_mapping[vfat][elink]:
-                if s_bit_channel_mapping[vfat][elink][channel] == -9999:
-                    print (Colors.RED + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
-                    file_out_data.write(Colors.RED + "    Channel %02d:  S-bit %02d\n"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
-                    bad_channels_string += "  VFAT %02d, Elink %02d, Channel %02d\n"%(vfat, elink, channel)
-                    bad_channel_count += 1
-                else:
-                    print (Colors.GREEN + "    Channel %02d:  S-bit %02d"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
-                    file_out_data.write(Colors.GREEN + "    Channel %02d:  S-bit %02d\n"%(channel, s_bit_channel_mapping[vfat][elink][channel]) + Colors.ENDC)
+            file_out.write("%d    %d    %d\n"%(vfat, elink, sbit_bitslip_values[vfat][elink]))
+            if sbit_bitslip_values[vfat][elink] == -9999:
+                print (Colors.RED + "    Bit slip not set, value %02d"%(sbit_bitslip_values[vfat][elink]) + Colors.ENDC)
+                file_out_data.write(Colors.RED + "    Bit slip not set, value %02d\n"%(sbit_bitslip_values[vfat][elink]) + Colors.ENDC)
+                bad_elinks_string += "  VFAT %02d, Elink %02d\n"%(vfat, elink)
+                bad_elink_count += 1
+            else:
+                print (Colors.GREEN + "    Bit slip set to value %02d"%(sbit_bitslip_values[vfat][elink]) + Colors.ENDC)
+                file_out_data.write(Colors.GREEN + "    Bit slip set to value %02d\n"%(sbit_bitslip_values[vfat][elink]) + Colors.ENDC)
+                # Set bitslip
+                write_backend_reg(sbit_bistlip_nodes[vfat][elink], sbit_bitslip_values[vfat][elink])
+
         print ("")
         file_out_data.write("\n")
-    bad_channels_string += "\n" + Colors.ENDC
-    if bad_channel_count != 0:
-        print (bad_channels_string)
-        file_out_data.write(bad_channels_string)
+    bad_elinks_string += "\n" + Colors.ENDC
+    if bad_elink_count != 0:
+        print (bad_elinks_string)
+        file_out_data.write(bad_elinks_string)
     else:
-        print (Colors.GREEN + "No Bad Channels in Mapping\n" + Colors.ENDC)
-        file_out_data.write(Colors.GREEN + "No Bad Channels in Mapping\n\n" + Colors.ENDC)
+        print (Colors.GREEN + "No Bad Elinks in Bitslipping\n" + Colors.ENDC)
+        file_out_data.write(Colors.GREEN + "No Bad Elinks in Bitslipping\n\n" + Colors.ENDC)
 
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
-    print ("\nS-bit mapping done\n")
+    print ("\nS-bit Bistlipping done\n")
+    file_out.close()
     file_out_data.close()
 
 if __name__ == "__main__":

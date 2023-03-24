@@ -48,6 +48,8 @@ Use -h option for any script to check usage
 
 ```me0_vfat_reset.py```: reset VFAT for ME0 Optohyrbid
 
+```me0_vfat_sbit_bitslip.py```: Find the bitslip needed for Sbits in each Elink
+
 ```me0_vfat_sbit_crosstalk.py```: Scan for checking cross talk using S-bits for VFATs for ME0 Optohyrbid
 
 ```me0_vfat_sbit_mapping.py```: S-bit mapping for VFATs for ME0 Optohyrbid
