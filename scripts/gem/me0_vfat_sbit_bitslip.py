@@ -13,7 +13,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     if bitslip_all is not None:
         for vfat_in in vfat_list:
             for elink_in in range(8):
-                bitslip_in = bitslip_all
+                bitslip_in = int(bitslip_all)
                 print ("Bitslip set for VFAT %d Elink %d: %d"%(vfat_in, elink_in, bitslip_in))
                 write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
         print ("\nS-bit Bitslipping done\n")
@@ -341,7 +341,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file, bitslip_all)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file, args.bitslip)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
