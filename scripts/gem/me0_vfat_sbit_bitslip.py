@@ -7,8 +7,15 @@ import random
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits, input_file):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits, input_file, bitslip_all):
     print ("%s VFAT S-Bit Bitslipping\n"%gem)
+
+    if bitslip_all is not None:
+        for vfat_in in vfat_list:
+            for elink_in in range(8):
+                bitslip_in = bitslip_all
+                print ("Bitslip set for VFAT %d Elink %d: %d"%(vfat_in, elink_in, bitslip_in))
+                write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
 
     if input_file is not None:
         file_in = open(input_file)
@@ -273,6 +280,7 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
+    parser.add_argument("-t", "--bitslip", action="store", dest="bitslip", help="bitslip = write this bitslip to all elinks of vfats")
     parser.add_argument("-f", "--input_file", action="store", dest="input_file", help="input_file = write bitslip from this input file")
     args = parser.parse_args()
 
@@ -311,6 +319,16 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
+    if args.input_file is not None and args.bitslip is not None:
+        print (Colors.YELLOW + "Can't give input file and bitslip value at the same time" + Colors.ENDC)
+        sys.exit()
+
+    if args.bitslip is not None:
+        bitslip_all = int(args.bitslip)
+        if bitslip_all not in range(8):
+            print (Colors.YELLOW + "Only allowed bitslip values 0-7" + Colors.ENDC)
+            sys.exit()
+
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
         
@@ -321,7 +339,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file, bitslip_all)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
