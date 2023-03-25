@@ -18,7 +18,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             vfat_in = line.split()[0]
             elink_in = line.split()[1]
             bitslip_in = line.split()[2]
-            write_backend_node(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
+            write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
 
         file_in.close()
         print ("\nS-bit Bitslipping done\n")
