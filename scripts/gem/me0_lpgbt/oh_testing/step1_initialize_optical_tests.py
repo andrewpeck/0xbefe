@@ -280,13 +280,23 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 7 - S-bit Phase Scan, Mapping, Cluster Mapping
-    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
-    logfile.write("Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
+    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
+    logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
     print (Colors.BLUE + "Running S-bit Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
+    logfile = open(filename, "a")
+    time.sleep(5)
+
+    print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on all VFATs\n" + Colors.ENDC)
+    logfile.write("\n\nRunning S-bit Bitslipping on all VFATs\n\n")
+    os.system("python3 me0_vfat_sbit_bitslip.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -313,8 +323,8 @@ if __name__ == "__main__":
     os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
 
     logfile = open(filename, "a")
-    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
+    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
     time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
