@@ -268,8 +268,25 @@ def init_gem_frontend():
                         bestphase_list_sbit[vfat] = {}
                     bestphase_list_sbit[vfat][elink] = phase
                 file_in.close()
+            
+            # Read in sbit bitslip result
+            bitslip_list_sbit = {}
+            sbit_bitslip_filename = get_config("CONFIG_ME0_VFAT_SBIT_BITSLIP")
+            if sbit_bitslip_filename != "":
+                sbit_bitslip_filename = sbit_bitslip_filename.split("*")[0] + str(oh) + sbit_bitslip_filename.split("*")[1]
+                file_in = open(sbit_bitslip_filename)
+                for line in file_in.readlines():
+                    if "VFAT" in line:
+                        continue
+                    vfat = int(line.split()[0])
+                    elink = int(line.split()[1])
+                    bitslip = int(line.split()[2])
+                    if vfat not in bitslip_list_sbit:
+                        bitslip_list_sbit[vfat] = {}
+                    bitslip_list_sbit[vfat][elink] = bitslip
+                file_in.close()
 
-            # Set the phases
+            # Set the phases and bitslipsb
             for vfat in range(0, 24):
                 lpgbt, gbt_num, elink_num, gpio = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat] # Get the lpGBT and elink info for this VFAT
                 sbit_elinks = ME0_VFAT_TO_SBIT_ELINK[vfat] # Get the sbit elink info for this VFAT
@@ -304,12 +321,20 @@ def init_gem_frontend():
                     elif oh_ver == 2:
                         config = getConfig("../resources/me0_sub_config_ohv2.txt")
 
-                if vfat in bestphase_list and vfat in bestphase_list_sbit:
-                    print ("\nSetting DAQ and Sbit phases for OH %d VFAT# %02d"%(oh,vfat))
-                elif vfat in bestphase_list and vfat not in bestphase_list_sbit:
+                if vfat in bestphase_list and vfat in bestphase_list_sbit and vfat in bitslip_list_sbit:
+                    print ("\nSetting DAQ, Sbit Phases and Bitslips for OH %d VFAT# %02d"%(oh,vfat))
+                elif vfat in bestphase_list and vfat in bestphase_list_sbit and vfat not in bitslip_list_sbit:
+                    print ("\nSetting DAQ and Sbit Phases for OH %d VFAT# %02d"%(oh,vfat))
+                elif vfat in bestphase_list and vfat not in bestphase_list_sbit and vfat in bitslip_list_sbit:
+                    print ("\nSetting DAQ phases and Sbit Bitslips for OH %d VFAT# %02d"%(oh,vfat))
+                elif vfat not in bestphase_list and vfat in bestphase_list_sbit and vfat in bitslip_list_sbit:
+                    print ("\nSetting Sbit Phases and Bitslips for OH %d VFAT# %02d"%(oh,vfat))
+                elif vfat in bestphase_list and vfat not in bestphase_list_sbi and vfat not in bitslip_list_sbit:
                     print ("\nSetting DAQ phases for OH %d VFAT# %02d"%(oh,vfat))
-                elif vfat not in bestphase_list and vfat in bestphase_list_sbit:
+                elif vfat not in bestphase_list and vfat in bestphase_list_sbit and vfat not in bitslip_list_sbit:
                     print ("\nSetting Sbit phases for OH %d VFAT# %02d"%(oh,vfat))
+                elif vfat not in bestphase_list and vfat not in bestphase_list_sbit and vfat in bitslip_list_sbit:
+                    print ("\nSetting Sbit Bitslips for OH %d VFAT# %02d"%(oh,vfat))
                 else:
                     continue
 
@@ -332,6 +357,12 @@ def init_gem_frontend():
                         writeGbtRegAddrs(addr, value)
                         sleep(0.1)
                         #print ("    OH %d VFAT %02d: Sbit Elink phase set for ELINK %02d to: %s" % (oh, vfat, elink, hex(set_bestphase)))
+
+                # Write the Sbit bitslips
+                if vfat in bitslip_list_sbit:
+                    for elink in range(0,8):
+                        set_bitslip = bitslip_list_sbit[vfat][elink]
+                        write_reg("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh,vfat,elink), set_bitslip)
 
 
     print("\nSetting VFAT HDLC addresses")
