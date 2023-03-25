@@ -16,6 +16,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                 bitslip_in = bitslip_all
                 print ("Bitslip set for VFAT %d Elink %d: %d"%(vfat_in, elink_in, bitslip_in))
                 write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
+        print ("\nS-bit Bitslipping done\n")
+        return
 
     if input_file is not None:
         file_in = open(input_file)
