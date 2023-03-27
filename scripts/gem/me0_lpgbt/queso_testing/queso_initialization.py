@@ -67,8 +67,8 @@ if __name__ == "__main__":
             oh_gbt_vfat_map[oh] = {}
             oh_gbt_vfat_map[oh]["GBT"] = []
             oh_gbt_vfat_map[oh]["VFAT"] = []
-        oh_gbt_vfat_map[oh]["GBT"] += queso_oh_map[queso]["OH"]["GBT"]
-        oh_gbt_vfat_map[oh]["VFAT"] += queso_oh_map[queso]["OH"]["VFAT"]
+        oh_gbt_vfat_map[oh]["GBT"] += queso_oh_map[queso]["GBT"]
+        oh_gbt_vfat_map[oh]["VFAT"] += queso_oh_map[queso]["VFAT"]
 
     # Load SSH host keys
     ssh.load_system_host_keys()
