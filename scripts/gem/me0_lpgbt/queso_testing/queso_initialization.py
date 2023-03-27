@@ -81,7 +81,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(5)
@@ -92,7 +93,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_reset_fpga.py -f 1 2 3"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print(Colors.GREEN + "\nReset Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(5)
@@ -103,7 +105,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_check_fpga_done.py -f 1 2 3"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print(Colors.GREEN + "\nCheck FPGA Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(1)
@@ -114,7 +117,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_write_fpga_id.py -f 1 2 3 -i 0x00 0x01 0x02"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print(Colors.GREEN + "\nWriting FPGA ID Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(1)
@@ -125,7 +129,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(2)
@@ -139,7 +144,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5 -o"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
         output = ssh_stdout.readlines()
-        print(output)
+        for line in output:
+            print (line)
         if not args.turn_off:
             print(Colors.GREEN + "\nRegulators Enabled" + Colors.ENDC)
         else:
@@ -153,7 +159,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print(Colors.GREEN + "\RPI GPIO Terminate Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(5)
@@ -212,7 +219,8 @@ if __name__ == "__main__":
             cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            print(output)
+            for line in output:
+                print (line)
             print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(2)
