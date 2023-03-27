@@ -37,28 +37,30 @@ if __name__ == "__main__":
     # List of QUESO Pi's
     pi_list = {}
     pi_list["0"] =  "169.254.119.34"
+    pi_list["1"] =  "169.254.181.119"
     username = "pi"
     password = "queso"
     ssh = paramiko.SSHClient()
 
-    # QUESO to OH-GBT mapping
-    queso_oh_gbt_vfat_map = {}
-    queso_oh_gbt_vfat_map["0"] = {}
-    queso_oh_gbt_vfat_map["0"]["OH"] = 0
-    queso_oh_gbt_vfat_map["0"]["GBT"] = [0, 1]
-    queso_oh_gbt_vfat_map["0"]["VFAT"] = [0, 1, 8, 9, 16, 17]
+    # QUESO to OH mapping
+    queso_oh_map = {}
+    queso_oh_map["0"] = 0
+    queso_oh_map["1"] = 0
 
     # OH, GBT, VFAT list overall
     oh_gbt_vfat_map = {}
     oh_gbt_vfat_map[0] = {}
     oh_gbt_vfat_map[0]["GBT"] = [0, 1]
     oh_gbt_vfat_map[0]["VFAT"] = [0, 1, 8, 9, 16, 17]
+    oh_gbt_vfat_map[1] = {}
+    oh_gbt_vfat_map[1]["GBT"] = [2, 3]
+    oh_gbt_vfat_map[1]["VFAT"] = [2, 3, 10, 11, 18, 19]
 
     # Load SSH host keys
     ssh.load_system_host_keys()
     # Add SSH host key automatically if needed
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    base_ssh_command = "python3 Documents/0xbefe/scripts/gem/me0_lpgbt/queso_testing/"
+    base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/queso_testing/"
 
     print ("\n#####################################################################################################################################\n")
 
@@ -75,12 +77,12 @@ if __name__ == "__main__":
 
         # Initialize RPI GPIOs
         if not args.turn_off:
-            print(Colors.BLUE + "Initialized RPI GPIOs\n" + Colors.ENDC)
+            print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
             cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
             print(output)
-            print(Colors.GREEN + "\RPI GPIO Initialization Done" + Colors.ENDC)
+            print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
             print ("\n######################################################\n")
             sleep(5)
 
@@ -170,15 +172,6 @@ if __name__ == "__main__":
     print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
     print ("\n######################################################\n")
     sleep(2)
-
-    # Do not use HDLC address
-    vfats_per_oh = 24
-    for vfat in range(vfats_per_oh):
-        print(Colors.BLUE + "Setting HDLC addresses to 0\n" + Colors.ENDC)
-        write_reg("BEFE.GEM.GEM_SYSTEM.VFAT3.VFAT%d_HDLC_ADDRESS" % vfat, 0)
-        print(Colors.GREEN + "\nSetting HDLC addresses Done" + Colors.ENDC)
-        print ("\n######################################################\n")
-        sleep(0.1)
 
     # Invert Elinks in OH
     print(Colors.BLUE + "Invert Elinks in OH\n" + Colors.ENDC)
