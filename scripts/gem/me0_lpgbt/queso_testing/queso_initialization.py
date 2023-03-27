@@ -140,7 +140,7 @@ if __name__ == "__main__":
         # Read currents before OH powered on
         if not args.turn_off:
             print (Colors.BLUE + "Reading Currents before OH powered on" + Colors.ENDC)
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
+            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 1"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
             for line in output:
@@ -199,17 +199,18 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         gbtid_list = oh_gbt_vfat_map[ohid]["GBT"]
         for gbtid in gbtid_list:
-            os.system("python3 me0_lpgbt/queso_testing/queso_oh_link_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
+            os.system("python3 me0_lpgbt/queso_testing/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
     print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
     print ("\n######################################################\n")
     sleep(2)
 
     # Set elink phases for QUESO
     print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
-    for ohid in oh_gbt_vfat_map:
-        vfat_list = oh_gbt_vfat_map[ohid]["VFAT"]
+    for queso in args.queso_list:
+        ohid = queso_oh_map[queso]
+        vfat_list = queso_oh_map[queso]["VFAT"]
         vfat_list_str = ' '.join(str(v) for v in vfat_list)
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
+        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -u %s -v %s"%(ohid, queso, vfat_list_str))
     sleep(2)
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print ("\n######################################################\n")
@@ -230,7 +231,7 @@ if __name__ == "__main__":
         # Read currents after OH initialization
         if not args.turn_off:
             print (Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 2"
+            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 1"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
             for line in output:
