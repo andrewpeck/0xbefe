@@ -24,12 +24,17 @@ def queso_bert(system, oh_select, oh_ser_nr, vfat_list, runtime, ber_limit, cl):
     file_out.write("Checking BER for elinks: \n\n")
     
     # Check if GBT is READY
-    for gbt in [0,1]:
+    gbt_list = []
+    for vfat in vfat_list:
+        gbt, gbt_select, rx_elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
+        if gbt_select not in gbt_list:
+            gbt_list.append(gbt_select)
+    for gbt in gbt_list:
         link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             file_out.close()
-            terminate()
+            rw_terminate()
 
     print ("Checking PRBS errors for OH serial number: %d\n"%oh_ser_nr)
     file_out.write("Checking PRBS errors for OH serial number: %d\n\n"%oh_ser_nr)
