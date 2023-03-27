@@ -116,11 +116,15 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
             queso_prbs_nodes[vfat][elink] = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
 
     # Check if GBT is READY
-    for gbt in [0,1]:
+    gbt_list = []
+    for vfat in vfat_list:
+        gbt, gbt_select, rx_elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
+        if gbt_select not in gbt_list:
+            gbt_list.append(gbt_select)
+    for gbt in gbt_list:
         link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
         if (link_ready!=1):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
-            file_out.close()
             rw_terminate()
 
     if phase_bitslip_list != {}:
