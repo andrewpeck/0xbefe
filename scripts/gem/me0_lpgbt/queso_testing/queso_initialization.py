@@ -17,7 +17,7 @@ class Colors:
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off")
+    parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off (1-8)")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
     args = parser.parse_args()
@@ -34,27 +34,41 @@ if __name__ == "__main__":
         print("  QUESO: %s"%queso)
     print("")
 
+    for q in args.queso_list:
+        q = int(q)
+        if q not in range(1,9):
+            print (Colors.YELLOW + "QUESO number can only be between 1 and 8" + Colors.ENDC)
+            sys.exit()
+
     # List of QUESO Pi's
     pi_list = {}
-    pi_list["0"] =  "169.254.119.34"
-    pi_list["1"] =  "169.254.181.119"
+    pi_list["1"] =  "169.254.119.34"
+    pi_list["2"] =  "169.254.181.119"
     username = "pi"
     password = "queso"
     ssh = paramiko.SSHClient()
 
     # QUESO to OH mapping
     queso_oh_map = {}
-    queso_oh_map["0"] = 0
-    queso_oh_map["1"] = 0
+    queso_oh_map["1"] = {}
+    queso_oh_map["1"]["OH"] = 0
+    queso_oh_map["1"]["GBT"] = [0, 1]
+    queso_oh_map["1"]["VFAT"] = [0, 1, 8, 9, 16, 17]
+    queso_oh_map["2"] = {}
+    queso_oh_map["2"]["OH"] = 0
+    queso_oh_map["2"]["GBT"] = [2, 3]
+    queso_oh_map["2"]["VFAT"] = [2, 3, 10, 11, 18, 19]
 
     # OH, GBT, VFAT list overall
     oh_gbt_vfat_map = {}
-    oh_gbt_vfat_map[0] = {}
-    oh_gbt_vfat_map[0]["GBT"] = [0, 1]
-    oh_gbt_vfat_map[0]["VFAT"] = [0, 1, 8, 9, 16, 17]
-    oh_gbt_vfat_map[1] = {}
-    oh_gbt_vfat_map[1]["GBT"] = [2, 3]
-    oh_gbt_vfat_map[1]["VFAT"] = [2, 3, 10, 11, 18, 19]
+    for queso in args.queso_list:
+        oh = queso_oh_map[queso]["OH"]
+        if oh not in oh_gbt_vfat_map:
+            oh_gbt_vfat_map[oh] = {}
+            oh_gbt_vfat_map[oh]["GBT"] = []
+            oh_gbt_vfat_map[oh]["VFAT"] = []
+        oh_gbt_vfat_map[oh]["GBT"] += queso_oh_map[queso]["OH"]["GBT"]
+        oh_gbt_vfat_map[oh]["VFAT"] += queso_oh_map[queso]["OH"]["VFAT"]
 
     # Load SSH host keys
     ssh.load_system_host_keys()
