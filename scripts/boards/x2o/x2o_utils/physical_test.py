@@ -7,14 +7,15 @@ from datetime import datetime
 
 
 # Constants (to be moved to config file later)
-STABILIZE_SENSITIVITY = 0.01
+STABILIZE_SENSITIVITY = 0.015
 MAX_TEMP=70.0
-MIN_ITERS=1
-CYCLE_TIME=4
+QSFP_MAX_T=50
+MIN_ITERS=30
+CYCLE_TIME=5
 TOLERANCE=0.05
-HEADERS = ["12V0_V","3V3_STANDBY_V","3V3_SI5395J_V","1V8_SI5395J_XO2_V","2V5_OSC_NE_V","1V8_MGTVCCAUX_VUP_N_V","2V5_OSC_NW_V","2V5_OSC_K7_V","1V2_MGTAVTT_K7_V","1V0_MGTAVCC_K7_V","0V675_DDRVTT_V","1V35_DDR_V","1V8_VCCAUX_K7_V","2V5_OSC_SE_V","1V8_MGTVCCAUX_VUP_S_V","2V5_OSC_SW_V",
-            "0V85_VCCINT_VUP_T0","0V85_VCCINT_VUP_T1","0V85_VCCINT_VUP_T2","0V85_VCCINT_VUP_T3","0V85_VCCINT_VUP_T4","0V85_VCCINT_VUP_T5",'1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','1V2_MGTAVTT_VUP_S_TL','1V2_MGTAVTT_VUP_S_TR','KINTEX7_TL','KINTEX7_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','2V7_INTERMEDIATE_TL','2V7_INTERMEDIATE_TR','1V2_MGTAVTT_VUP_N_TL','1V2_MGTAVTT_VUP_N_TR','VIRTEXUPLUS_TL','VIRTEXUPLUS_TR','0V9_MGTAVCC_VUP_S_TL','0V9_MGTAVCC_VUP_S_TR','TOTAL_ERRORS']
-V_EXPECT={'12V0':12,'3V3_STANDBY':3.3,'3V3_SI5395J':3.3,'1V8_SI5395J_XO2':1.8,'2V5_OSC_NE':2.5,'1V8_MGTVCCAUX_VUP_N':1.8,'2V5_OSC_NW':2.5,'2V5_OSC_K7':2.5,'1V2_MGTAVTT_K7':1.2,'1V0_MGTAVCC_K7':1.0,'0V675_DDRVTT':0.675,'1V35_DDR':1.35,'1V8_VCCAUX_K7':1.8,'2V5_OSC_SE':2.5,'1V8_MGTVCCAUX_VUP_S':1.8,'2V5_OSC_SW':2.5,'0V9_MGTAVCC_VUP_N':0.9,'1V8_VCCAUX_VUP':1.8,'1V0_VCCINT_K7':1.0,'1V2_MGTAVTT_VUP_N':1.2,'2V7_INTERMEDIATE':2.7,'0V9_MGTAVCC_VUP_S':0.9,'1V2_MGTAVTT_VUP_S':1.2}
+V_EXPECT={'0V85_VCCINT_VUP':0.85,'12V0':12,'3V3_STANDBY':3.3,'3V3_SI5395J':3.3,'1V8_SI5395J_XO2':1.8,'2V5_OSC_NE':2.5,'1V8_MGTVCCAUX_VUP_N':1.8,'2V5_OSC_NW':2.5,'2V5_OSC_K7':2.5,'1V2_MGTAVTT_K7':1.2,'1V0_MGTAVCC_K7':1.0,'0V675_DDRVTT':0.675,'1V35_DDR':1.35,'1V8_VCCAUX_K7':1.8,'2V5_OSC_SE':2.5,'1V8_MGTVCCAUX_VUP_S':1.8,'2V5_OSC_SW':2.5,'0V9_MGTAVCC_VUP_N':0.9,'1V8_VCCAUX_VUP':1.8,'1V0_VCCINT_K7':1.0,'1V2_MGTAVTT_VUP_N':1.2,'2V7_INTERMEDIATE':2.7,'0V9_MGTAVCC_VUP_S':0.9,'1V2_MGTAVTT_VUP_S':1.2}
+DATA_DIR="/root/gem/0xbefe_test_refclks/scripts/boards/x2o/data"
+
 # End of constants
 
 DATA_DICT = {}
@@ -29,41 +30,53 @@ m=manager(optical_add_on_ver=2)
 m.peripheral.autodetect_optics()
 now = datetime.now()
 d_time = now.strftime("%Y-%m-%d")
-isExist = os.path.exists("/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time)
+isExist = os.path.exists(DATA_DIR+"/phys_data/"+d_time)
 if not isExist:
-   os.makedirs("/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time)
+   os.makedirs(DATA_DIR+"/phys_data/"+d_time)
+isExist = os.path.exists(DATA_DIR+"/summary/"+d_time)
+if not isExist:
+   os.makedirs(DATA_DIR+"/summary/"+d_time)
 run_num=1
-filename="/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
-while(os.path.exists(filename)):
-    run_num+=1
-    filename="/root/jessica/0xbefe/scripts/boards/x2o/data/phys_data/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+if(len(list(sys.argv))>2):
+    run_num=int(sys.argv[2])
+else:
+    while(os.path.exists(filename)):
+        run_num+=1
+        filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
 
-f=open(filename,"w")
-o_str=""
+filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+sum_f=open(filename,"a")
+f=open(DATA_DIR+"/phys_data/"+d_time+"/"+d_time+"_"+str(run_num)+run_type+".csv","w")
 diff_flag = True
 n_iters=0
+header=""
 p_data = m.peripheral.monitor(verbose=False)
-for device in p_data.keys():
+for i in range(len(list(p_data.keys()))-1,-1,-1):
+    device = list(p_data.keys())[i]
     if device in ['optics']:
         continue
     if 'V' in p_data[device].keys():
-        o_str+=device+"_V,"
+        header+=device+"_V,"
 
     if 'I' in p_data[device].keys():
-        o_str+=device+"_I,"
+        header+=device+"_I,"
 
     if 'P' in p_data[device].keys():
-        o_str+=device+"_P,"
+        header+=device+"_P,"
 
     if 'T' in p_data[device].keys():
         for i in range(len(p_data[device]['T'])):
-            o_str+=device+"_T_"+str(i)+","
+            header+=device+"_T_"+str(i)+","
 
-o_str+="\n"
-f.write(o_str)
+header+="\n"
+f.write(header)
+sum_f.write(header)
+
 while(diff_flag):
     data = m.peripheral.monitor(verbose=False)
     diff_flag=False
+    
     n_iters+=1
 
     o_str=""
@@ -72,7 +85,7 @@ while(diff_flag):
 
     st=""
     st=st+"{0:20}".format("Device")+'\tV\t\t'+"I\t\t"+'P\t\t'+'T\n'
-    for i in range(len(list(data.keys()))-1,0,-1):
+    for i in range(len(list(data.keys()))-1,-1,-1):
         device = list(data.keys())[i]
         DATA_DICT[device]={}
         if device in ['optics']:
@@ -118,7 +131,7 @@ while(diff_flag):
                 o_str+=str(t)+","
                 if(t>p_data[device]['T'][i]*(1+STABILIZE_SENSITIVITY)or t<p_data[device]['T'][i]*(1-STABILIZE_SENSITIVITY)):
                     diff_flag=True
-                if t>MAX_TEMP:
+                if (t>MAX_TEMP and device!='0V85_VCCINT_VUP'):
                     err_cnt+=1
                     tstr+=printRed(str(t))+" C,"
                     print("Temperature too high, aborting run")
@@ -146,7 +159,7 @@ while(diff_flag):
                 st+= printRed(str(round(info['V'],3)))+" V"
             else:
                 st+=printGreen(str(round(info['V'],3)))+" V"
-            if(info['T']>MAX_TEMP):
+            if(info['T']>QSFP_MAX_T):
                 err_cnt+=1
                 st+= printRed(str(round(info['T'],3)))+" C    "
                 print("Device:QSFP: "+str(cage)+", temp: "+str(t))
@@ -183,7 +196,7 @@ while(stable_iters<MIN_ITERS):
 
     st=""
     st=st+"{0:20}".format("Device")+'\tV\t\t'+"I\t\t"+'P\t\t'+'T\n'
-    for i in range(len(list(data.keys()))-1,0,-1):
+    for i in range(len(list(data.keys()))-1,-1,-1):
         device = list(data.keys())[i]
         
         if device in ['optics']:
@@ -220,7 +233,7 @@ while(stable_iters<MIN_ITERS):
                 t=data[device]['T'][i]
                 DATA_DICT[device]['T'][i]+=data[device]['T'][i]
                 o_str+=str(t)+","
-                if t>MAX_TEMP:
+                if (t>MAX_TEMP and device!='0V85_VCCINT_VUP'):
                     err_cnt+=1
                     tstr+=printRed(str(t))+" C,"
                     print("Temperature too high, aborting run")
@@ -313,11 +326,6 @@ DATA_DICT['STABLE_ITERS']=stable_iters
 DATA_DICT['TOTAL_ERRORS']=DATA_DICT['TOTAL_ERRORS']/stable_iters
 DATA_DICT['TIME_TO_STABILIZE']=(n_iters-stable_iters)*CYCLE_TIME
 f.close()
-filename="/root/jessica/0xbefe/scripts/boards/x2o/data/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
-isExist = os.path.exists("./data/summary/"+d_time)
-if not isExist:
-   os.makedirs("./data/summary/"+d_time)
-sum_f=open(filename,"w")
 sum_f.write(summary_header_str+"\n")
 sum_f.write(data_str)
 sum_f.close()

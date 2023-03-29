@@ -6,22 +6,27 @@ import sys
 import random
 from datetime import datetime
 
+DATA_DIR="/root/gem/0xbefe_test_refclks/scripts/boards/x2o/data"
 now = datetime.now()
 d_time = now.strftime("%Y-%m-%d")
-isExist = os.path.exists("./data/reg_performance/"+d_time)
+isExist = os.path.exists(DATA_DIR+"/reg_performance/"+d_time)
 if not isExist:
-   os.makedirs("./data/reg_performance/"+d_time)
+   os.makedirs(DATA_DIR+"/reg_performance/"+d_time)
+isExist = os.path.exists(DATA_DIR+"/summary/"+d_time)
+if not isExist:
+   os.makedirs(DATA_DIR+"/summary/"+d_time)
 run_num=1
-filename="/root/jessica/0xbefe/scripts/boards/x2o/data/reg_performance/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
-while(os.path.exists(filename)):
-    run_num+=1
-    filename="/root/jessica/0xbefe/scripts/boards/x2o/data/reg_performance/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
-ofile=open(filename,"w")
-isExist = os.path.exists("./data/summary/"+d_time)
-if not isExist:
-   os.makedirs("./data/summary/"+d_time)
+filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+if(len(list(sys.argv))>2):
+    run_num=int(sys.argv[2])
+else:
+    while(os.path.exists(filename)):
+        run_num+=1
+        filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+filename=DATA_DIR+"/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv"
+sum_file=open(filename,"a")
 
-sum_file=open("/root/jessica/0xbefe/scripts/boards/x2o/data/summary/"+d_time+"/"+d_time+"_"+str(run_num)+".csv","a")
+ofile=open(DATA_DIR+"/reg_performance/"+d_time+"/"+d_time+"_"+str(run_num)+".csv","a")
 
 def reg_perf(num_iter):
     board_id_node = get_node("BEFE.SYSTEM.CTRL.BOARD_ID")
@@ -33,6 +38,8 @@ def reg_perf(num_iter):
     rand_avg = regTest([board_id_node.address], [0xbefe], [0xffff], True, num_iter, rand_write_read=True)
     sum_file.write("Static average reg access: %dus\n" % static_avg)
     sum_file.write("Random average reg access: %dus\n" % rand_avg)
+    ofile.close()
+    sum_file.close()
     if(static_avg>100):
         print_red("FAILURE: Average static read/write >100 us")
         exit(1)
@@ -51,12 +58,15 @@ def regTest(regAddresses, initValues, regMasks, doInitWrite, numIterations, rand
 
     busErrors = 0
     valueErrors = 0
-
-
-    timeStart = time.clock()
+    randValues=[]
+    if rand_write_read:
+        for i in range(numIterations*len(regAddresses)):
+            randValues.append(random.getrandbits(32))
     chunkSize = int(numIterations / 10)
     numChunks = int(numIterations / chunkSize)
-
+    
+    listIter = 0
+    timeStart = time.clock()
     for chunk in range(0, numChunks):
         for chi in range(0, chunkSize):
             for regi in range(len(regAddresses)):
@@ -66,8 +76,9 @@ def regTest(regAddresses, initValues, regMasks, doInitWrite, numIterations, rand
                 regMask = regMasks[regi]
 
                 if rand_write_read:
-                    initValue = random.getrandbits(32)
+                    initValue = randValues[listIter]
                     wReg(regAddress, initValue)
+                    listIter+=1
 
                 value = rReg(regAddress) & regMask
                 if value != initValue & regMask:
@@ -88,6 +99,7 @@ def regTest(regAddresses, initValues, regMasks, doInitWrite, numIterations, rand
     avg_reg_access_time_us = ((totalTime / numIterations) / len(regAddresses)) * 1000000.0
     print_cyan("Average reg access time: %dus" % avg_reg_access_time_us)
     ofile.write(("Average reg access time: %dus\n" % avg_reg_access_time_us))
+    sum_file.write(("Average reg access time: %dus\n" % avg_reg_access_time_us))
     return avg_reg_access_time_us
 
 if __name__ == '__main__':
@@ -100,3 +112,4 @@ if __name__ == '__main__':
 
     parse_xml()
     reg_perf(num_iter)
+
