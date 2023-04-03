@@ -136,7 +136,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
 
         if run_time_min == 0:
             nrun += 1
-            sleep(5)
+            sleep(0.1)
             
     file.close()
 

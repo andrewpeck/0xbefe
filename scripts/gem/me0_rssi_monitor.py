@@ -112,7 +112,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if run_time_min == 0:
             nrun += 1
-            sleep(5)
+            sleep(0.1)
             
     file_out.close()
     figure_name = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
