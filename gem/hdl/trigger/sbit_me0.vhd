@@ -102,16 +102,25 @@ architecture sbit_me0_arch of sbit_me0 is
     signal reset        : std_logic;
     signal reset_cnt    : std_logic;
 
+    -- VFAT constants
+    constant g_NUM_ELINKs   : integer := 8;
+    constant g_MAX_SLIP_CNT : integer := 8;
+    constant g_MAX_SR_DELAY : integer := 4;
+
     -- control signals
-    signal vfat_sbit_mask_arr : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
+    signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
+    signal vfat_sbit_mapping_arr : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- trigger signals
-    signal vfat_sbits_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after masking
-    signal vfat_trigger_arr  : t_std24_array(g_NUM_OF_OHs - 1 downto 0);  -- trigger per vfat (or of all unmasked sbits)
-    signal vfat_sbits_or_arr : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_sbits_arr      : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after masking (before maoping & allignment)
+    signal vfat_sbits_alligned : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after mapping & phase allign
+    signal vfat_trigger_arr    : t_std24_array(g_NUM_OF_OHs - 1 downto 0);      -- trigger per vfat (or of all unmasked sbits)
+    signal vfat_sbits_or_arr   : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
 
     -- probe signal for raw sbits --
-    signal sbits_probe : sbits_t;
+    signal sbits_probe        : sbits_t;
+    signal me0_clusters_probe : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- counters
     signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -186,14 +195,37 @@ begin
     begin
         if rising_edge(ttc_clk_i.clk_40) then
             for oh in 0 to g_NUM_OF_OHs - 1 loop
-                for vfat in 0 to NUM_VFAT_PER_OH-1 loop
+                for vfat in 0 to 23 loop
                     vfat_sbits_arr(oh)(vfat)    <= vfat3_sbits_arr_i(oh)(vfat) and not vfat_sbit_mask_arr(oh)(vfat);
-                    vfat_trigger_arr(oh)(vfat)  <= or_reduce(vfat_sbits_arr(oh)(vfat));  -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
-                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_arr(oh)(vfat));
+                    vfat_trigger_arr(oh)(vfat)  <= or_reduce(vfat_sbits_alligned(oh)(vfat));  -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
+                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_alligned(oh)(vfat));
                 end loop;
             end loop;
         end if;
     end process;
+
+    -- apply me0 sbit phase allignment & mapping
+    g_oh_allign : for OH in 0 to g_NUM_OF_OHs - 1 generate
+        i_sbit_allign : entity work.me0_sbit_allign
+            generic map(
+                g_NUM_OF_VFATs => g_NUM_VFATS_PER_OH,
+                g_NUM_ELINKs   => g_NUM_ELINKs,
+                g_MAX_SLIP_CNT => g_MAX_SLIP_CNT,
+                g_MAX_SR_DELAY => g_MAX_SR_DELAY
+                )
+            port map(
+                clk_i => ttc_clk_i.clk_40,
+                rst_i => reset_i,
+
+                vfat_mapping_arr_i => vfat_sbit_mapping_arr(OH),
+                vfat_delay_arr_i   => vfat_sbit_delay_arr(OH),
+
+                vfat_sbits_i => vfat_sbits_arr(OH),
+                vfat_sbits_o => vfat_sbits_alligned(OH)
+                );
+
+    end generate;
+
 
     --== Counters ==--
 
@@ -264,11 +296,7 @@ begin
 
     --== COUNT of summed sbits on selectable elink ==--
     -- assigned array of sbits for selected vfat (x) and elink (e)
-    vfat3_sbit0xe_test <= vfat3_sbits_arr_i
-                          (to_integer(unsigned(test_sel_oh_sbit_me0)))
-                          (to_integer(unsigned(test_sel_vfat_sbit_me0)))
-                          ((((to_integer(unsigned(test_sel_elink_sbit_me0)) + 1) * 8) - 1)
-                           downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+    vfat3_sbit0xe_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0)) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
 
     elink_i : for i in 0 to 7 generate
         me0_sbit0xe_count : entity work.counter
@@ -295,11 +323,8 @@ begin
                                                unsigned(test_sbit0xe_presum(7)));
 
     --== COUNTER for selectable sbit ==--
-    -- assigned sbit of selected vfat (x) and sbit (s) 
-    vfat3_sbit0xs_test <= vfat3_sbits_arr_i
-                          (to_integer(unsigned(test_sel_oh_sbit_me0)))
-                          (to_integer(unsigned(test_sel_vfat_sbit_me0)))
-                          (to_integer(unsigned(test_sel_sbit_me0)));
+    -- assigned sbit of selected vfat (x) and sbit (s)
+    vfat3_sbit0xs_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
 
     me0_sbit0xs_count : entity work.counter
         generic map(
@@ -315,7 +340,7 @@ begin
 
 
     ---------------------------------------------------------------------------------
-    -- Clusterizer 
+    -- Clusterizer
     ---------------------------------------------------------------------------------
     cluster_packer_me0 : if (true) generate
 
@@ -326,11 +351,10 @@ begin
             signal me0_clusters           : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
         begin
-            each_vfat : for vfat in 0 to NUM_VFAT_PER_OH-1 generate
 
+            each_vfat : for vfat in 0 to 23 generate
                 each_sbit : for sbit in 0 to 63 generate
-                    vfat_sbits_type_change(vfat)(sbit) <= vfat_sbits_arr(oh)(vfat)(sbit);  --map onto self (t_vfat3_sbits_arr to sbits_array_t)
-
+                    vfat_sbits_type_change(vfat)(sbit) <= vfat_sbits_alligned(oh)(vfat)(sbit);  --map onto self (t_vfat3_sbits_arr to sbits_array_t)
                 end generate;
             end generate;
 
@@ -424,7 +448,7 @@ begin
             generic map (
                 NUM_SEGMENTS   => g_NUM_SEGMENTS,
                 NUM_PARTITIONS => 8,
-                REG_OUTPUTS    => true -- true to register outputs on 40MHz
+                REG_OUTPUTS    => true  -- true to register outputs on 40MHz
                 )
             port map (
                 clock             => ttc_clk_i.clk_320,

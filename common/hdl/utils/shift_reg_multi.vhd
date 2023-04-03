@@ -2,19 +2,19 @@
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
--- Create Date:    2020-11-20
--- Module Name:    shift_reg
--- Description:    A single bit shift register with a dynamic tap delay. Tap value of 0 results in a delay of 1 clock (if OUTPUT_REG is set to true, then 2 clocks)
+-- Create Date:    2022-12-20
+-- Module Name:    shift_reg_multi
+-- Description:    A logic vector shift register with a dynamic tap delay. Tap value of 0 results in a delay of 1 clock (if OUTPUT_REG is set to true, then 2 clocks)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity shift_reg is
+entity shift_reg_multi is
     generic(
-        DEPTH           : integer := 256;
         TAP_DELAY_WIDTH : integer := 8;
+        DATA_WIDTH      : integer := 8;
         OUTPUT_REG      : boolean := false;
         SUPPORT_RESET   : boolean := false
     );
@@ -22,14 +22,18 @@ entity shift_reg is
         clk_i       : in  std_logic;
         reset_i     : in  std_logic := '0'; -- (optional)
         tap_delay_i : in  std_logic_vector(TAP_DELAY_WIDTH - 1 downto 0);
-        data_i      : in  std_logic;
-        data_o      : out std_logic
+        data_i      : in  std_logic_vector(DATA_WIDTH - 1 downto 0);
+        data_o      : out std_logic_vector(DATA_WIDTH - 1 downto 0)
     );
-end shift_reg;
+end shift_reg_multi;
 
-architecture shift_reg_arch of shift_reg is
+architecture shift_reg_multi_arch of shift_reg_multi is
 
-  signal sr         : std_logic_vector(DEPTH - 1 downto 0) := (others => '0');
+  constant DEPTH    : integer := 2**TAP_DELAY_WIDTH;
+  
+  type t_sr_arr is array (DEPTH -2 downto 0) of std_logic_vector(DATA_WIDTH - 1 downto 0);
+      
+  signal sr         : t_sr_arr;
   signal reset_cnt  : integer range 0 to DEPTH - 1 := 0;
   
 begin
@@ -67,7 +71,7 @@ begin
         end generate;
         
         g_reset_supported : if SUPPORT_RESET generate
-            data_o <= sr(to_integer(unsigned(tap_delay_i))) when reset_cnt >= to_integer(unsigned(tap_delay_i)) else '0';
+            data_o <= sr(to_integer(unsigned(tap_delay_i))) when reset_cnt >= to_integer(unsigned(tap_delay_i)) else (others=>'0');
         end generate;
     end generate;
 
@@ -79,11 +83,10 @@ begin
                 if (not SUPPORT_RESET) or (reset_cnt >= to_integer(unsigned(tap_delay_i))) then
                     data_o <= sr(to_integer(unsigned(tap_delay_i))); 
                 else
-                    data_o <= '0';
+                    data_o <= (others=>'0');
                 end if; 
             end if;
         end process;
     end generate;
 
-end shift_reg_arch;
-
+end shift_reg_multi_arch;
