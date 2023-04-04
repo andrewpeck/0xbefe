@@ -209,6 +209,16 @@ begin
 
     -- apply me0 sbit phase alignment & mapping
     g_oh_align : for OH in 0 to g_NUM_OF_OHs - 1 generate
+
+        -- TODO: these blocks result in unnecessarily large delays that will
+        -- cause problems (much later) when we care about minimizing latency.
+        -- 
+        -- The shift register delay block imposes a minimum 1 bx delay.. this
+        -- should be changed to 0 bx.
+        -- 
+        -- Bitslip can be replaced by the "fast" bitslip module from the OH
+        -- which reduces the latency by 1 bx.
+
         i_sbit_align : entity work.me0_sbit_align
             generic map(
                 g_NUM_OF_VFATs => g_NUM_VFATS_PER_OH,
