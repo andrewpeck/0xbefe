@@ -1,11 +1,22 @@
-------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 -- Company: UCLA
 -- Engineer: Joseph Carlson (jecarlson30@gmail.com)
 -- 
 -- Create Date:    2019-11-13
 -- Module Name:    sbit_me0
--- Description:    This module handles everything related to ME0 VFAT3 sbit data clusterization and mapping to legacy clusters
-------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- Description:
+--
+-- This module processes ME0 VFAT3 sbit data and outputs clusters and segments
+-- 
+-- S-bits are taken in (24 VFATs x 6 layers).
+-- 
+-- A software controlled bitslip and bx delay are applied to the s-bits.
+--
+-- The bitslipped/aligned S-bits are fed into the cluster finder and segment
+-- finder blocks. 
+-- 
+---------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -110,14 +121,14 @@ architecture sbit_me0_arch of sbit_me0 is
 
     -- control signals
     signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
-    signal vfat_sbit_mapping_arr : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_sbit_mapping_arr : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);  -- "mapping" means bitslip
+    signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);  -- integer bx delay for s-bit groups
 
     -- trigger signals
-    signal vfat_sbits_arr      : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after masking (before mapping & alignment)
+    signal vfat_sbits_arr     : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after masking (before mapping & alignment)
     signal vfat_sbits_aligned : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);  -- sbits after mapping & phase align
-    signal vfat_trigger_arr    : t_std24_array(g_NUM_OF_OHs - 1 downto 0);      -- trigger per vfat (or of all unmasked sbits)
-    signal vfat_sbits_or_arr   : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_trigger_arr   : t_std24_array(g_NUM_OF_OHs - 1 downto 0);      -- trigger per vfat (or of all unmasked sbits)
+    signal vfat_sbits_or_arr  : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
 
     -- probe signal for raw sbits --
     signal sbits_probe        : sbits_t;
@@ -230,8 +241,8 @@ begin
                 clk_i => ttc_clk_i.clk_40,
                 rst_i => reset_i,
 
-                vfat_mapping_arr_i => vfat_sbit_mapping_arr(OH),
-                vfat_delay_arr_i   => vfat_sbit_delay_arr(OH),
+                vfat_mapping_arr_i => vfat_sbit_mapping_arr(OH),  -- bitslip
+                vfat_delay_arr_i   => vfat_sbit_delay_arr(OH),    -- integer bx delay
 
                 vfat_sbits_i => vfat_sbits_arr(OH),
                 vfat_sbits_o => vfat_sbits_aligned(OH)
@@ -447,7 +458,7 @@ begin
                                           or vfat_sbits_chamber(ilayer)(16 + iprt)) &
                                          (walking1(192*iprt + 127 downto 192*iprt + 64)
                                           or vfat_sbits_chamber(ilayer)(8 + iprt)) &
-                                         (walking1(192*iprt + 63  downto 192*iprt + 0)
+                                         (walking1(192*iprt + 63 downto 192*iprt + 0)
                                           or vfat_sbits_chamber(ilayer)(0 + iprt));
             end generate;
         end generate;
@@ -462,8 +473,8 @@ begin
 
         chamber_sf_inst : entity work.chamber
             generic map (
-                NUM_SEGMENTS   => g_NUM_SEGMENTS,
-                REG_OUTPUTS    => true  -- true to register outputs on 40MHz
+                NUM_SEGMENTS => g_NUM_SEGMENTS,
+                REG_OUTPUTS  => true    -- true to register outputs on 40MHz
                 )
             port map (
                 clock             => ttc_clk_i.clk_320,
@@ -509,7 +520,7 @@ begin
         begin
             if (rising_edge(ttc_clk_i.clk_40)) then
                 if (reset_i = '1') then
-                    walking1(0) <= '1';
+                    walking1(0)                          <= '1';
                     walking1(walking1'length-1 downto 1) <= (others => '0');
                 else
                     walking1 <= walking1(walking1'length-2 downto 0) & walking1(walking1'length-1);
