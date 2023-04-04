@@ -1,3 +1,6 @@
+#
+gem/hdl/trigger/me0_sbit_align.vhd
+
 # Segment finder
 gem/hdl/me0sf/road/hdl/*.vhd
 gem/hdl/me0sf/road/hdl/bitonic_sort/*.vhd
