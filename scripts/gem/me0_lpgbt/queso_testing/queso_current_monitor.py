@@ -37,7 +37,7 @@ def readAdc(channel):
     if ((channel > 3) or (channel < 0)):
         print (Colors.RED + "ERROR: Invalid channel, only allowed: 0, 1, 2 and 3" + Colors.ENDC)
         terminate()
-    success, data = gbt_rpi_chc.spi_rw(buildReadCommand(channel))
+    success, data = gbt_rpi_chc.spi_rw(data=buildReadCommand(channel))
     if not success:
         print (Colors.RED + "ERROR: Invalid data read from SPI transaction" + Colors.ENDC)
         terminate()

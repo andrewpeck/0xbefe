@@ -55,54 +55,55 @@ def vfat_reset(system, oh_select, vfat_list):
                     print (Colors.RED + "ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5) + Colors.ENDC)
                     rw_terminate()
 
-        dir_enable = convert_gpio_reg(gpio)
-        dir_disable = 0x00
+        #dir_enable = convert_gpio_reg(gpio)
+        #dir_disable = 0x00
         data_enable = convert_gpio_reg(gpio)
         data_disable = 0x00
-        gpio_dir_addr = 0
-        gpio_dir_node = ""
+        #gpio_dir_addr = 0
         gpio_out_addr = 0
-        gpio_out_node = ""
 
         if oh_ver == 1:
             if gpio <= 7:
-                gpio_dir_addr = gpio_dirL_addr
+                #gpio_dir_addr = gpio_dirL_addr
                 gpio_out_addr = gpio_outL_addr
             else:
-                gpio_dir_addr = gpio_dirH_addr
+                #gpio_dir_addr = gpio_dirH_addr
                 gpio_out_addr = gpio_outH_addr
                 if boss:
-                    dir_enable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
-                    dir_disable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_enable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_disable |= 0x80  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x80  # To keep GPIO LED on ASIAGO ON
                     data_disable |= 0x80  # To keep GPIO LED on ASIAGO ON
         elif oh_ver == 2:
             if gpio <= 7:
-                gpio_dir_addr = gpio_dirL_addr
+                #gpio_dir_addr = gpio_dirL_addr
                 gpio_out_addr = gpio_outL_addr
                 if boss:
-                    dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
-                    dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x20  # To keep GPIO LED on ASIAGO ON
                     data_disable |= 0x20  # To keep GPIO LED on ASIAGO ON
                 else:
-                    dir_enable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
-                    dir_disable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_enable |= (0x01 | 0x02 | 0x08)  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_disable |= (0x01 | 0x02 | 0x08)  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x00
                     data_disable |= 0x00
             else:
-                gpio_dir_addr = gpio_dirH_addr
+                #gpio_dir_addr = gpio_dirH_addr
                 gpio_out_addr = gpio_outH_addr
-                if not boss:
-                    dir_enable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
-                    dir_disable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+                if boss:
+                    data_enable |= (0x02 | 0x20) # Keep the sub lpGBT and VTRx+ to high (no reset state)
+                    data_disable |= (0x02 | 0x20) # Keep the sub lpGBT and VTRx+ to high (no reset state)
+                else:
+                    #dir_enable |= (0x01 | 0x20)  # To keep GPIO LED on ASIAGO output enabled
+                    #dir_disable |= (0x01 | 0x20)  # To keep GPIO LED on ASIAGO output enabled
                     data_enable |= 0x00
                     data_disable |= 0x00
 
         # Enable GPIO as output
-        mpoke(gpio_dir_addr, dir_enable)
-        print("Enable GPIO %d as output"%gpio)
-        sleep(0.000001)
+        #mpoke(gpio_dir_addr, dir_enable)
+        #print("Enable GPIO %d as output"%gpio)
+        #sleep(0.000001)
 
         # Set GPIO to 1 for VFAT reset
         mpoke(gpio_out_addr, data_enable)
@@ -115,9 +116,9 @@ def vfat_reset(system, oh_select, vfat_list):
         sleep(0.1)
 
         # Disable GPIO as output
-        mpoke(gpio_dir_addr, dir_disable)
-        print("Disable GPIO %d as output"%gpio)
-        sleep(0.000001)
+        #mpoke(gpio_dir_addr, dir_disable)
+        #print("Disable GPIO %d as output"%gpio)
+        #sleep(0.000001)
         
         print ("")
         
@@ -129,7 +130,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="VFAT RESET")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc, backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc, queso, backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -138,12 +139,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for VFAT reset")
+    elif args.system == "queso":
+        print("Using QUESO for VFAT reset")
     elif args.system == "backend":
         print ("Using Backend for VFAT reset")
     elif args.system == "dryrun":
         print ("Dry Run - not actually doing vfat reset")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

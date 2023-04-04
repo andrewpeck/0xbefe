@@ -189,7 +189,7 @@ if __name__ == "__main__":
         plot_data_x = []
         plot_data_y = []
         for dac in range(0,256):
-            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode)
+            charge = DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, args.mode)
             #plot_data_y.append(charge)
             #data = []
             #data_x = []
