@@ -90,10 +90,10 @@ architecture sbit_me0_arch of sbit_me0 is
             probe14 : in std_logic;
             probe15 : in std_logic;
             probe16 : in std_logic;
-            probe17 : in std_logic_vector(22 downto 0);
-            probe18 : in std_logic_vector(22 downto 0);
-            probe19 : in std_logic_vector(22 downto 0);
-            probe20 : in std_logic_vector(22 downto 0)
+            probe17 : in std_logic_vector(24 downto 0);
+            probe18 : in std_logic_vector(24 downto 0);
+            probe19 : in std_logic_vector(24 downto 0);
+            probe20 : in std_logic_vector(24 downto 0)
             );
     end component;
 
