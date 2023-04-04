@@ -453,7 +453,8 @@ begin
             port map (
                 clock             => ttc_clk_i.clk_320,
                 clock40           => ttc_clk_i.clk_40,
-                ly_thresh         => "100",
+                ly_thresh         => std_logic_vector(to_unsigned(5, 3)),
+                hit_thresh        => std_logic_vector(to_unsigned(5, 6)),
                 dav_i             => segment_finder_dav,
                 dav_o             => open,
                 sbits_i           => sbits_i,
