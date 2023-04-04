@@ -426,7 +426,7 @@ begin
 
         sbits_zero_pad : for ivfat in 0 to vfat_sbits_arr'length-1 generate
         begin
-            vfat_sbits_chamber(ivfat) <= vfat_sbits_arr(ivfat+ichamber*24*6);
+            vfat_sbits_chamber(ivfat) <= vfat_sbits_aligned(ivfat+ichamber*24*6);
         end generate;
 
         layergen : for ilayer in 0 to 5 generate
