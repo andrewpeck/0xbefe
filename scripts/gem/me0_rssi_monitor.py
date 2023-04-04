@@ -90,10 +90,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if read_adc_iter:
             if oh_ver == 1:
-                value = read_adc(7, gain, system)
+                Vout = read_adc(7, gain, system)
             if oh_ver == 2:
-                value = read_adc(5, gain, system)
-            Vout = 1.0 * (value/1024.0) # 10-bit ADC, range 0-1 V
+                Vout = read_adc(5, gain, system)
             if len(adc_calib_results)!=0:
                 Vin = get_vin(Vout, adc_calib_results_array)
             else:
@@ -106,14 +105,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 live_plot(ax, minutes, rssi)
 
             file_out.write(str(second/60.0) + "\t" + str(rssi_current) + "\n")
-            print("time = %.2f min, \tch %X: 0x%03X = %.2fV =  %f uA RSSI" % (second/60.0, 7, value, Vin, rssi_current))
+            print("time = %.2f min, \tch %X: %.2fV =  %f uA RSSI" % (second/60.0, 7, Vin, rssi_current))
             t0 = time()
             if first_reading:
                 first_reading = 0
 
         if run_time_min == 0:
             nrun += 1
-            sleep(5)
+            sleep(0.1)
             
     file_out.close()
     figure_name = dataDir + "/ME0_OH%d_GBT%d_rssi_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
@@ -176,22 +175,26 @@ def read_adc(channel, gain, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
 
-    done = 0
-    while (done == 0):
-        if system != "dryrun":
-            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-        else:
-            done = 1
-
-    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    vals = []
+    for i in range(0,100):
+        done = 0
+        while (done==0):
+            if system!="dryrun":
+                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            else:
+                done=1
+        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
+        vals.append(val)
+    mean_val = sum(vals)/len(vals)
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
-    return val
+    return mean_val
 
 def rssi_current_conversion(Vin, gain, input_voltage, oh_ver):
 
@@ -218,7 +221,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="RSSI Monitor for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -231,12 +234,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print("Using Rpi CHeeseCake for rssi monitoring")
+    elif args.system == "queso":
+        print("Using QUESO for rssi monitoring")
     elif args.system == "backend":
         print ("Using Backend for rssi monitoring")
     elif args.system == "dryrun":
         print("Dry Run - not actually running rssi monitoring")
     else:
-        print(Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

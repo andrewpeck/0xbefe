@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Setting Elink Equalization settings of lpGBT for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-v", "--vfat", action="store", dest="vfat", help="vfat = VFAT number (0-23)")
@@ -55,13 +55,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.system == "chc":
-        print ("Using Rpi CHeeseCake for status check")
+        print ("Using Rpi CHeeseCake for setting elink equalization")
+    elif args.system == "queso":
+        print("Using QUESO for setting elink equalization")
     elif args.system == "backend":
-        print ("Using Backend for status check")
+        print ("Using Backend for setting elink equalization")
     elif args.system == "dryrun":
-        print ("Dry Run - not actually checking status of lpGBT")
+        print ("Dry Run - not actually setting elink equalization")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

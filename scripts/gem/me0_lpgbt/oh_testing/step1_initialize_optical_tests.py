@@ -56,11 +56,7 @@ if __name__ == "__main__":
     # Step 2 - check lpGBT status
     print (Colors.BLUE + "Step 2: Checking lpGBT Status\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Status\n\n")
-    
-    print ("Skipping Step 2\n" + Colors.ENDC)
-    logfile.write("Skipping Step 2\n\n")
 
-    '''
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -169,7 +165,7 @@ if __name__ == "__main__":
     print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
     time.sleep(5)
-    '''
+    
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
@@ -284,13 +280,23 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 7 - S-bit Phase Scan, Mapping, Cluster Mapping
-    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n" + Colors.ENDC)
-    logfile.write("Step 7: S-bit Phase Scan, Mapping, Cluster Mapping\n\n")
+    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
+    logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
     print (Colors.BLUE + "Running S-bit Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    logfile.close()
+    os.system("cat %s >> %s"%(latest_file, filename))
+    logfile = open(filename, "a")
+    time.sleep(5)
+
+    print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on all VFATs\n" + Colors.ENDC)
+    logfile.write("\n\nRunning S-bit Bitslipping on all VFATs\n\n")
+    os.system("python3 me0_vfat_sbit_bitslip.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l")
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -310,15 +316,15 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running S-bit Cluster Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Mapping on all VFATs\n\n")
     logfile.close()
-    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l >> %s"%filename)
+    os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -f >> %s"%filename)
     logfile = open(filename, "a")
     list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
 
     logfile = open(filename, "a")
-    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 7: S-bit Phase Scan, Mapping, Cluster Mapping Complete\n\n")
+    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
     time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")

@@ -107,7 +107,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
                     channel = int(line.split()[1])
                     trim_amp = int(line.split()[2])
                     trim_polarity = int(line.split()[3])
-                    if vfat not in vfat_channel_trimming:
+                    if vfat not in vfat_channel_trimming[oh_select]:
                         vfat_channel_trimming[oh_select][vfat] = {}
                     vfat_channel_trimming[oh_select][vfat][channel] = {}
                     vfat_channel_trimming[oh_select][vfat][channel]["trim_amp"] = trim_amp

@@ -25,53 +25,60 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     gpio_outL_addr = gpio_outL_node.address
 
     gpio = 0
+    other_gpio = 0
     if reset == "vtrx":
         print("VTRx+ RESET\n")
         gpio  = 13
+        other_gpio = 9
     elif reset == "sub":
         print("SUB RESET\n")
         gpio = 9
+        other_gpio = 13
 
-    dir_enable = convert_gpio_reg(gpio)
-    dir_disable = 0x00
+    #dir_enable = convert_gpio_reg(gpio)
+    #dir_disable = 0x00
     data_enable = convert_gpio_reg(gpio)
     data_disable = 0x00
-    gpio_dir_addr = 0
-    gpio_dir_node = ""
+    data_enable_other_gpio = convert_gpio_reg(other_gpio)
+    data_disable_other_gpio = 0x00
+    #gpio_dir_addr = 0
+    #gpio_dir_node = ""
     gpio_out_addr = 0
     gpio_out_node = ""
 
     # These 2 resets are only for OH-v2
     if gpio <= 7:
-        gpio_dir_addr = gpio_dirL_addr
-        gpio_dir_node = gpio_dirL_node
+        #gpio_dir_addr = gpio_dirL_addr
+        #gpio_dir_node = gpio_dirL_node
         gpio_out_addr = gpio_outL_addr
         gpio_out_node = gpio_outL_node
         if boss:
-            dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
-            dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+            #dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
+            #dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
             #data_enable |= 0x20  # To keep GPIO LED on ASIAGO ON
             data_disable |= 0x20  # To keep GPIO LED on ASIAGO ON
         else:
-            dir_enable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
-            dir_disable |= 0x01 | 0x02 | 0x08  # To keep GPIO LED on ASIAGO output enabled
+            #dir_enable |= (0x01 | 0x02 | 0x08)  # To keep GPIO LED on ASIAGO output enabled
+            #dir_disable |= (0x01 | 0x02 | 0x08)  # To keep GPIO LED on ASIAGO output enabled
             #data_enable |= 0x00
             data_disable |= 0x00
     else:
-        gpio_dir_addr = gpio_dirH_addr
-        gpio_dir_node = gpio_dirH_node
+        #gpio_dir_addr = gpio_dirH_addr
+        #gpio_dir_node = gpio_dirH_node
         gpio_out_addr = gpio_outH_addr
         gpio_out_node = gpio_outH_node
-        if not boss:
-            dir_enable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
-            dir_disable |= 0x01 | 0x20  # To keep GPIO LED on ASIAGO output enabled
+        if boss:
+            data_disable |= (0x00 | data_enable_other_gpio) # keep the other sub lpGBT or VTRx+ GPIO high
+        else:
+            #dir_enable |= (0x01 | 0x20)  # To keep GPIO LED on ASIAGO output enabled
+            #dir_disable |= (0x01 | 0x20)  # To keep GPIO LED on ASIAGO output enabled
             #data_enable |= 0x00
-            data_disable |= 0x00
+            data_disable = 0x00
 
     # Enable GPIO as output
-    lpgbt_writeReg(gpio_dir_node, dir_enable)
-    print("Enable GPIO %d as output"%gpio)
-    sleep(0.000001)
+    #lpgbt_writeReg(gpio_dir_node, dir_enable)
+    #print("Enable GPIO %d as output"%gpio)
+    #sleep(0.000001)
 
     # Set GPIO to 0 for reset
     lpgbt_writeReg(gpio_out_node, data_disable)
@@ -79,9 +86,9 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     sleep(0.1)
 
     # Disable GPIO as output
-    lpgbt_writeReg(gpio_dir_node, dir_disable)
-    print("Disable GPIO %d as output"%gpio)
-    sleep(0.000001)
+    #lpgbt_writeReg(gpio_dir_node, dir_disable)
+    #print("Disable GPIO %d as output"%gpio)
+    #sleep(0.000001)
 
     print("")
 
@@ -89,7 +96,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Sub lpGBT or VTRx+ RESET")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -99,12 +106,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print("Using Rpi CHeeseCake for sub lpGBT or VTRx+ reset")
+    elif args.system == "queso":
+        print("Using QUESO for sub lpGBT or VTRx+ reset")
     elif args.system == "backend":
         print ("Using Backend for sub lpGBT or VTRx+ reset")
     elif args.system == "dryrun":
         print("Dry Run - not actually doing sub lpGBT or VTRx+ reset")
     else:
-        print(Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":
