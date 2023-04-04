@@ -463,7 +463,6 @@ begin
         chamber_sf_inst : entity work.chamber
             generic map (
                 NUM_SEGMENTS   => g_NUM_SEGMENTS,
-                NUM_PARTITIONS => 8,
                 REG_OUTPUTS    => true  -- true to register outputs on 40MHz
                 )
             port map (
