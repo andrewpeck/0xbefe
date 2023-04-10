@@ -144,7 +144,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vddrx_converted = vddrx_Vin/0.42
             vdd_converted = vdd_Vin/0.42
             vdda_converted = vdda_Vin/0.42
-            vref_converted = vref_Vin/0.42
+            vref_converted = vref_Vin/0.5
             
             second = time() - start_time
             v2v5.append(v2v5_converted)
