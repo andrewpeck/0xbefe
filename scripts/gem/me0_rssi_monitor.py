@@ -32,6 +32,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     init_adc(oh_ver)
     print("ADC Readings:")
 
+    '''
     adc_calib_results = []
     adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
@@ -48,7 +49,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         adc_calib_results_float = [float(a) for a in adc_calib_results]
         adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
-
+    '''
+    
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
@@ -98,10 +100,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 Vout = read_adc(7, gain, system)
             if oh_ver == 2:
                 Vout = read_adc(5, gain, system)
-            if len(adc_calib_results)!=0:
-                Vin = get_vin(Vout, adc_calib_results_array)
-            else:
-                Vin = Vout
+            #if len(adc_calib_results)!=0:
+            #    Vin = get_vin(Vout, adc_calib_results_array)
+            #else:
+            Vin = Vout
             rssi_current = rssi_current_conversion(Vin, gain, voltage, oh_ver) * 1e6 # in uA
             second = time() - start_time
             rssi.append(rssi_current)

@@ -32,6 +32,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     init_adc(oh_ver)
     print("ADC Readings:")
 
+    '''
     adc_calib_results = []
     adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
@@ -48,6 +49,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         adc_calib_results_float = [float(a) for a in adc_calib_results]
         adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
+    '''
 
     resultDir = "results"
     try:
@@ -109,22 +111,22 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vdda_Vout = read_adc(13, gain, system)
             vref_Vout = read_adc(15, gain, system)
 
-            if len(adc_calib_results)!=0:
-                v2v5_Vin = get_vin(v2v5_Vout, adc_calib_results_array)
-                vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
-                vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
-                vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
-                vdd_Vin = get_vin(vdd_Vout, adc_calib_results_array)
-                vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
-                vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
-            else:
-                v2v5_Vin = v2v5_Vout
-                vssa_Vin = vssa_Vout
-                vddtx_Vin = vddtx_Vout
-                vddrx_Vin = vddrx_Vout
-                vdd_Vin = vdd_Vout
-                vdda_Vin = vdda_Vout
-                vref_Vin = vref_Vout
+            #if len(adc_calib_results)!=0:
+            #    v2v5_Vin = get_vin(v2v5_Vout, adc_calib_results_array)
+            #    vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
+            #    vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
+            #    vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
+            #    vdd_Vin = get_vin(vdd_Vout, adc_calib_results_array)
+            #    vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
+            #    vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
+            #else:
+            v2v5_Vin = v2v5_Vout
+            vssa_Vin = vssa_Vout
+            vddtx_Vin = vddtx_Vout
+            vddrx_Vin = vddrx_Vout
+            vdd_Vin = vdd_Vout
+            vdda_Vin = vdda_Vout
+            vref_Vin = vref_Vout
 
             if oh_ver == 1:
                 if gbt_select%2 == 0:
