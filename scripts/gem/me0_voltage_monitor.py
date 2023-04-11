@@ -9,8 +9,11 @@ import datetime
 import numpy as np
 
 def adc_conversion_lpgbt(adc):
+    gain = 2
+    offset = 512
     #voltage = adc/1024.0
-    voltage = (adc - 38.4)/(1.85 * 512)
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
     return voltage
 
 def poly5(x, a, b, c, d, e, f):
