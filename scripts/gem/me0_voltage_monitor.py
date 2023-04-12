@@ -8,6 +8,14 @@ import os, glob
 import datetime
 import numpy as np
 
+def adc_conversion_lpgbt(adc):
+    gain = 2
+    offset = 512
+    #voltage = adc/1024.0
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+    return voltage
+
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
@@ -27,6 +35,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     init_adc(oh_ver)
     print("ADC Readings:")
 
+    '''
     adc_calib_results = []
     adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
@@ -43,6 +52,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         adc_calib_results_float = [float(a) for a in adc_calib_results]
         adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
+    '''
 
     resultDir = "results"
     try:
@@ -104,22 +114,22 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vdda_Vout = read_adc(13, gain, system)
             vref_Vout = read_adc(15, gain, system)
 
-            if len(adc_calib_results)!=0:
-                v2v5_Vin = get_vin(v2v5_Vout, adc_calib_results_array)
-                vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
-                vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
-                vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
-                vdd_Vin = get_vin(vdd_Vout, adc_calib_results_array)
-                vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
-                vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
-            else:
-                v2v5_Vin = v2v5_Vout
-                vssa_Vin = vssa_Vout
-                vddtx_Vin = vddtx_Vout
-                vddrx_Vin = vddrx_Vout
-                vdd_Vin = vdd_Vout
-                vdda_Vin = vdda_Vout
-                vref_Vin = vref_Vout
+            #if len(adc_calib_results)!=0:
+            #    v2v5_Vin = get_vin(v2v5_Vout, adc_calib_results_array)
+            #    vssa_Vin = get_vin(vssa_Vout, adc_calib_results_array)
+            #    vddtx_Vin = get_vin(vddtx_Vout, adc_calib_results_array)
+            #    vddrx_Vin = get_vin(vddrx_Vout, adc_calib_results_array)
+            #    vdd_Vin = get_vin(vdd_Vout, adc_calib_results_array)
+            #    vdda_Vin = get_vin(vdda_Vout, adc_calib_results_array)
+            #    vref_Vin = get_vin(vref_Vout, adc_calib_results_array)
+            #else:
+            v2v5_Vin = v2v5_Vout
+            vssa_Vin = vssa_Vout
+            vddtx_Vin = vddtx_Vout
+            vddrx_Vin = vddrx_Vout
+            vdd_Vin = vdd_Vout
+            vdda_Vin = vdda_Vout
+            vref_Vin = vref_Vout
 
             if oh_ver == 1:
                 if gbt_select%2 == 0:
@@ -137,7 +147,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             vddrx_converted = vddrx_Vin/0.42
             vdd_converted = vdd_Vin/0.42
             vdda_converted = vdda_Vin/0.42
-            vref_converted = vref_Vin/0.42
+            vref_converted = vref_Vin/0.5
             
             second = time() - start_time
             v2v5.append(v2v5_converted)
@@ -161,7 +171,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if run_time_min == 0:
             nrun += 1
-            sleep(5)
+            sleep(0.1)
 
     file_out.close()
 
@@ -249,7 +259,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
+        val = adc_conversion_lpgbt(val)
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 
