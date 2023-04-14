@@ -51,6 +51,9 @@
     <node id="L1A_DELAY" address="0x4" mask="0x3ff00000" permission="rw"
           description="Setting this to non-zero value will delay the L1A delivery to the frontend (this is useful in calibration mode to separate the L1A from the calpulse in time)"
           fw_signal="ttc_ctrl.l1a_delay" fw_default="0b0000000000"/>
+    <node id="FAKE_MULTI_BX" address="0x4" mask="0x0000f000" permission="rw"
+          description="Setting this to a non-zero value will enable a fake multi-BX readout mode. For each L1A received, FAKE_MULTI_BX consecutive additional L1A will be sent. Such L1A are flagged in the data stream and can be used to reconstruct precise timing in software. USE ONLY IN LOCAL DAQ MODE!"
+          fw_signal="ttc_ctrl.fake_multi_bx" fw_default="0"/>
     <node id="DISABLE_PHASE_ALIGNMENT" address="0x4" mask="0x00000010" permission="rw"
           description="Setting this to 1 will disable the phase alignment to backplane ref clock.
                        This is intended to be used only in setups that don't have an AMC13 and thus no backplane TTC clock, but generate the TTC clock internally in CTP7."

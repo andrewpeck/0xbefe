@@ -211,10 +211,10 @@ architecture Behavioral of daq is
     signal format_calib_chan    : std_logic_vector(6 downto 0);
 
     -- L1A FIFO
-    signal l1afifo_din              : std_logic_vector(87 downto 0) := (others => '0');
+    signal l1afifo_din              : std_logic_vector(88 downto 0) := (others => '0');
     signal l1afifo_wr_en            : std_logic := '0';
     signal l1afifo_rd_en            : std_logic := '0';
-    signal l1afifo_dout             : std_logic_vector(87 downto 0);
+    signal l1afifo_dout             : std_logic_vector(88 downto 0);
     signal l1afifo_full             : std_logic;
     signal l1afifo_overflow         : std_logic;
     signal l1afifo_empty            : std_logic;
@@ -723,12 +723,12 @@ begin
             FIFO_MEMORY_TYPE    => "block",
             FIFO_WRITE_DEPTH    => CFG_DAQ_L1AFIFO_DEPTH,
             RELATED_CLOCKS      => 0,
-            WRITE_DATA_WIDTH    => 88,
+            WRITE_DATA_WIDTH    => 89,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "170B", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 1; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 88,
+            READ_DATA_WIDTH     => 89,
             CDC_SYNC_STAGES     => 2,
             PROG_FULL_THRESH    => CFG_DAQ_L1AFIFO_PROG_FULL_SET,
             RD_DATA_COUNT_WIDTH => CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH,
@@ -784,7 +784,7 @@ begin
             else
                 if ((ttc_cmds_i.l1a = '1') and (freeze_on_error = '0' or tts_critical_error = '0')) then
                     if (l1afifo_full = '0') then
-                        l1afifo_din <= ttc_daq_cntrs_i.l1id & ttc_daq_cntrs_i.orbit & ttc_daq_cntrs_i.bx;
+                        l1afifo_din <= ttc_cmds_i.fake_l1a & ttc_daq_cntrs_i.l1id & ttc_daq_cntrs_i.orbit & ttc_daq_cntrs_i.bx;
                         l1afifo_wr_en <= '1';
                     else
                         err_l1afifo_full <= '1';
@@ -1214,6 +1214,7 @@ begin
     process(daq_clk_i)
 
         -- event info
+        variable e_fake_l1a                    : std_logic := '0';
         variable e_l1a_id                      : std_logic_vector(43 downto 0) := (others => '0');
         variable e_bx_id                       : std_logic_vector(11 downto 0) := (others => '0');
         variable e_orbit_id                    : std_logic_vector(31 downto 0) := (others => '0');
@@ -1348,6 +1349,7 @@ begin
                         l1afifo_rd_en <= '1';
 
                         -- fetch the L1A data
+                        e_fake_l1a      := l1afifo_dout(88);
                         e_l1a_id        := l1afifo_dout(87 downto 44);
                         e_orbit_id      := l1afifo_dout(43 downto 12);
                         e_bx_id         := l1afifo_dout(11 downto 0);
@@ -1415,7 +1417,8 @@ begin
 
                         -- send the data
                         daq_event_data <= e_dav_mask &                                    -- data available mask
-                                          x"000000" &                                     -- unused
+                                          x"00000" &                                      -- unused
+                                          ttc_status_i.fake_multi_bx &
                                           std_logic_vector(to_unsigned(e_dav_count, 5)) & -- data available count
                                           GEM_PAYLOAD_VERSION &                           -- GEM payload version
                                           (3 downto 0 => format_calib_mode) &             -- VFAT paylod type (0 - lossless, 15 - calibration mode)
@@ -1601,7 +1604,7 @@ begin
                                       daq_clk_locked_i &
                                       daq_ready &
                                       ttc_status_i.bc0_status.locked &
-                                      "0" &                                 -- unused
+                                      e_fake_l1a &
                                       -- L1A FIFO status
                                       err_l1afifo_full_dclk &
                                       l1afifo_near_full_daqclk;

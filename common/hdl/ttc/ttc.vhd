@@ -85,6 +85,8 @@ architecture ttc_arch of ttc is
     signal ttc_l1a                  : std_logic;
 
     signal l1a_cmd                  : std_logic;
+    signal real_l1a_cmd             : std_logic;
+    signal fake_l1a_cmd             : std_logic;
     signal bc0_cmd                  : std_logic;
     signal ec0_cmd                  : std_logic;
     signal resync_cmd               : std_logic;
@@ -123,6 +125,9 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_cal_prescale  : std_logic_vector(11 downto 0);
     signal gen_cyclic_l1a_start     : std_logic;
     signal gen_cyclic_l1a_running   : std_logic;
+
+    -- fake multi-BX readout mode
+    signal fake_multi_bx_cnt        : unsigned(3 downto 0) := (others => '0');
 
     -- daq counters
     signal oc_reset_armed           : std_logic := '0';
@@ -168,6 +173,8 @@ begin
     
     ttc_status.clk_status <= ttc_clks_status_i;
     ttc_status_o <= ttc_status;
+
+    ttc_status.fake_multi_bx <= ttc_ctrl.fake_multi_bx; -- propagates to the DAQ EvB
 
     i_reset_sync: 
     entity work.synch
@@ -356,6 +363,27 @@ begin
         end if;
     end process;
 
+    ------------- Fake multi-BX readout mode -------------
+
+    process(ttc_clks_i.clk_40)
+    begin
+        if rising_edge(ttc_clks_i.clk_40) then
+            if reset = '1' then
+                fake_multi_bx_cnt <= x"0";
+            else
+                if (real_l1a_cmd = '1') then
+                    fake_multi_bx_cnt <= unsigned(ttc_ctrl.fake_multi_bx);
+                elsif (fake_multi_bx_cnt /= x"0") then
+                    fake_multi_bx_cnt <= fake_multi_bx_cnt - 1;
+                else
+                    fake_multi_bx_cnt <= fake_multi_bx_cnt;
+                end if;
+            end if;
+        end if;
+    end process;
+
+    fake_l1a_cmd <= not real_l1a_cmd when fake_multi_bx_cnt /= x"0" else '0';
+
     ------------- MUX between real and generated TTC commands -------------    
     
     bc0_cmd        <= bc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.bc0;
@@ -367,7 +395,8 @@ begin
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
     hard_reset_cmd <= hard_reset_cmd_real when gen_enable = '0' else gen_ttc_cmds.hard_reset;
     calpulse_cmd   <= calpulse_cmd_real when gen_enable = '0' and gen_enable_cal_only = '0' else gen_ttc_cmds.calpulse;
-    l1a_cmd        <= l1a_cmd_real or l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req;
+    real_l1a_cmd   <= l1a_cmd_real or l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req;
+    l1a_cmd        <= real_l1a_cmd or fake_l1a_cmd;
 
     ------------- TTC counters -------------
     
@@ -525,6 +554,8 @@ begin
     ttc_daq_cntrs_o.bx    <= bx_cnt;
 
     ttc_cmds_o.l1a        <= l1a_cmd;
+    ttc_cmds_o.real_l1a   <= real_l1a_cmd;
+    ttc_cmds_o.fake_l1a   <= fake_l1a_cmd;
     ttc_cmds_o.bc0        <= bc0_cmd;
     ttc_cmds_o.ec0        <= ec0_cmd;
     ttc_cmds_o.oc0        <= oc0_cmd;
