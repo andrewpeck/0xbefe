@@ -24,6 +24,9 @@
           description="Reset all the SBIT counters"
           fw_write_pulse_signal="sbit_test_reset"
           sw_ctrl_configure_set="0x1"/>
+    <node id="FIFO_RESET" address="0x3" permission="w"
+          description="Reset signal for fifo."
+          fw_write_pulse_signal="reset_fifo"/>
   </node>
 
 
@@ -33,18 +36,17 @@
 	generate_size="&NUM_OHS;"
 	generate_address_step="0x31"
 	generate_idx_var="OH_CNT_ID">
-      <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
-            mask="0xffffffff"
-            description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
-            fw_signal="vfat_trigger_rate_arr(${OH_CNT_ID})(${VFAT_CNT_ID})"
-            generate="true"
-            generate_size="&NUM_VFATS_PER_OH;"
-            generate_address_step="0x1"
-            generate_idx_var="VFAT_CNT_ID"/>
-      <node id="ME0_CLUSTER_COUNT" address="0x30" mask="0x000007ff" permission="r"
-            description="output of sbit clusterizer for me0"
-            fw_signal="me0_cluster_count(${OH_CNT_ID})"/>
-
+    <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
+          mask="0xffffffff"
+          description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
+          fw_signal="vfat_trigger_rate_arr(${OH_CNT_ID})(${VFAT_CNT_ID})"
+          generate="true"
+          generate_size="&NUM_VFATS_PER_OH;"
+          generate_address_step="0x1"
+          generate_idx_var="VFAT_CNT_ID"/>
+    <node id="ME0_CLUSTER_COUNT" address="0x30" mask="0x000007ff" permission="r"
+          description="output of sbit clusterizer for me0"
+          fw_signal="me0_cluster_count(${OH_CNT_ID})"/>
   </node>
 
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
@@ -65,59 +67,108 @@
   <node id="TEST_SEL_SBIT_ME0" address="0x25" mask="0xffffffff" permission="w"
         description="Select sbit for sbit test"
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
+  
+  <node id="INJECT" address="0x200"
+        description="S-bit injection using FIFOs to bypass VFATs">
+    <node id="DATA_H" address="0x0" mask="0xffffffff" permission="rw"
+          description="Upper bits of injected sbits into me0"
+          fw_signal="sbit_inj_fifo_din(63 downto 32)" fw_default="0x00000000"/>
+    <node id="DATA_L" address="0x1" mask="0xffffffff" permission="rw"
+          description="Lower bits of injected sbits into me0"
+          fw_signal="sbit_inj_fifo_din(31 downto 0)" fw_default="0x00000000"/>
+    <node id="READ_EN" address="0x2" permission="w"
+          description="Enable signal to read fifo and inject sbits into me0"
+          fw_write_pulse_signal="inject_sbits_en"/>      
+    <node id="WRITE_EN" address="0x3" permission="w"
+          description="Enable signal to write sbits into fifo for injecting"
+          fw_write_pulse_signal="load_sbits_en"/>
+    <node id="FIFO" address="0x4"
+          description="64-bit wide FIFO's to store sbit data">
+      <node id="SEL" address="0x0" mask="0x0000ffff" permission="rw"
+            description="Select fifo to write sbits to. Bits [15:8] OH number, bits [7:0] VFAT number."
+            fw_signal="sbit_inj_fifo_sel" fw_default="0x00000000"/>
+      <node id="EMPTY" address="0x0" mask="0x00010000" permission="r"
+            description="And reduced empty flags from fifo."
+            fw_signal="sbit_inj_fifo_empty_and"/>
+      <node id="FULL" address="0x0" mask="0x00020000" permission="r"
+            description="And reduced full flags from fifo."
+            fw_signal="sbit_inj_fifo_full_and"/>
+      <node id="SYNC_FLAG" address="0x0" mask="0x00040000" permission="r"
+            description="In-sync flag from fifo. Checks one vs all across wr_data_count signals"
+            fw_signal="sbit_inj_fifo_sync_flag"/>
+      <node id="RST_FLAG" address="0x0" mask="0x00080000" permission="r"
+            description="Reset flag from fifo indicating the fifo's read or write channels are in a reset state."
+            fw_signal="sbit_inj_fifo_rst_flag"/>
+      <node id="ERR_FLAG" address="0x0" mask="0x00f00000" permission="r"
+            description="Error flag for fifo read/write operations. 4-bit unsigned integer: 0 - normal operation, 1 - write while all full, 2 - read while all empty, 3 - write while in reset state, 4 - read while in reset state, 5 - read while out of sync."
+            fw_signal="sbit_inj_fifo_err_flag"/>
+      <node id="TOT_DATA_CNT" address="0x1" mask="0xffffffff" permission="r"
+            description="Data count summed over all fifos. 32-bit unsigned integer."
+            fw_signal="sbit_inj_fifo_data_cnt"/>
+      <node id="PR_FULL_OH${OH_CNT_ID}" address="0x2" mask="0x00ffffff" permission="r"
+            description="Array of program full flags for each fifo [OH]x[VFAT]. 24 bits from each vfat fifo go to one register."
+            generate="true"
+            generate_size="&NUM_OHS;"
+            generate_address_step="0x1"
+            generate_idx_var="OH_CNT_ID"
+            fw_signal="sbit_inj_fifo_prog_full_arr(${OH_CNT_ID})"/>
+    </node>
+  </node>
+
+
  
-<node id="OH${OH_CNT_ID}_VFAT_MAP" address="0x100" 
+  <node id="OH${OH_CNT_ID}_BITSLIP" address="0x100" 
     description="slip count for bitslip of VFATs for mapping sbits of each elink"
     generate="true"
 	generate_size="&NUM_OHS;"
 	generate_address_step="0x30"
 	generate_idx_var="OH_CNT_ID">
     <node id="VFAT${VFAT_CNT_ID}" address="0x0"
-            description="slip count for bitslip of VFAT${VFAT_CNT_ID}"
-            generate="true"
-            generate_size="&NUM_VFATS_PER_OH;"
-            generate_address_step="0x1"
-            generate_idx_var="VFAT_CNT_ID">
-            <node id="ELINK0_MAP" address="0x0" permission="rw"
-                mask="0x0000000f"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 0"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
-                fw_default="0x0"/>
-            <node id="ELINK1_MAP" address="0x0" permission="rw"
-                mask="0x000000f0"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 1"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
-                fw_default="0x0"/>
-            <node id="ELINK2_MAP" address="0x0" permission="rw"
-                mask="0x00000f00"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 2"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
-                fw_default="0x0"/>
-            <node id="ELINK3_MAP" address="0x0" permission="rw"
-                mask="0x0000f000"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 3"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
-                fw_default="0x0"/>
-            <node id="ELINK4_MAP" address="0x0" permission="rw"
-                mask="0x000f0000"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 4"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
-                fw_default="0x0"/>
-            <node id="ELINK5_MAP" address="0x0" permission="rw"
-                mask="0x00f00000"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 5"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
-                fw_default="0x0"/>
-            <node id="ELINK6_MAP" address="0x0" permission="rw"
-                mask="0x0f000000"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 6"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
-                fw_default="0x0"/>
-            <node id="ELINK7_MAP" address="0x0" permission="rw"
-                mask="0xf0000000"
-                description="slip count for VFAT${VFAT_CNT_ID} ELINK 7"
-                fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
-                fw_default="0x0"/>
+          description="slip count for bitslip of VFAT${VFAT_CNT_ID}"
+          generate="true"
+          generate_size="&NUM_VFATS_PER_OH;"
+          generate_address_step="0x1"
+          generate_idx_var="VFAT_CNT_ID">
+      <node id="ELINK0_MAP" address="0x0" permission="rw"
+            mask="0x0000000f"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 0"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
+            fw_default="0x0"/>
+      <node id="ELINK1_MAP" address="0x0" permission="rw"
+            mask="0x000000f0"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 1"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
+            fw_default="0x0"/>
+      <node id="ELINK2_MAP" address="0x0" permission="rw"
+            mask="0x00000f00"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 2"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
+            fw_default="0x0"/>
+      <node id="ELINK3_MAP" address="0x0" permission="rw"
+            mask="0x0000f000"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 3"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
+            fw_default="0x0"/>
+      <node id="ELINK4_MAP" address="0x0" permission="rw"
+            mask="0x000f0000"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 4"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
+            fw_default="0x0"/>
+      <node id="ELINK5_MAP" address="0x0" permission="rw"
+            mask="0x00f00000"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 5"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
+            fw_default="0x0"/>
+      <node id="ELINK6_MAP" address="0x0" permission="rw"
+            mask="0x0f000000"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 6"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
+            fw_default="0x0"/>
+      <node id="ELINK7_MAP" address="0x0" permission="rw"
+            mask="0xf0000000"
+            description="slip count for VFAT${VFAT_CNT_ID} ELINK 7"
+            fw_signal="vfat_sbit_mapping_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
+            fw_default="0x0"/>
     </node>
   </node>
 
@@ -128,51 +179,51 @@
     generate_address_step="0x30"
     generate_idx_var="OH_CNT_ID">
     <node id="VFAT${VFAT_CNT_ID}" address="0x0"
-            description="Bx count for delay of VFAT${VFAT_CNT_ID}"
-            generate="true"
-            generate_size="&NUM_VFATS_PER_OH;"
-            generate_address_step="0x1"
-            generate_idx_var="VFAT_CNT_ID">
-            <node id="ELINK0_DELAY" address="0x0" permission="rw"
-                mask="0x0000000f"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 0"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
-                fw_default="0x0"/>
-            <node id="ELINK1_DELAY" address="0x0" permission="rw"
-                mask="0x000000f0"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 1"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
-                fw_default="0x0"/>
-            <node id="ELINK2_DELAY" address="0x0" permission="rw"
-                mask="0x00000f00"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 2"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
-                fw_default="0x0"/>
-            <node id="ELINK3_DELAY" address="0x0" permission="rw"
-                mask="0x0000f000"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 3"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
-                fw_default="0x0"/>
-            <node id="ELINK4_DELAY" address="0x0" permission="rw"
-                mask="0x000f0000"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 4"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
-                fw_default="0x0"/>
-            <node id="ELINK5_DELAY" address="0x0" permission="rw"
-                mask="0x00f00000"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 5"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
-                fw_default="0x0"/>
-            <node id="ELINK6_DELAY" address="0x0" permission="rw"
-                mask="0x0f000000"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 6"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
-                fw_default="0x0"/>
-            <node id="ELINK7_DELAY" address="0x0" permission="rw"
-                mask="0xf0000000"
-                description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 7"
-                fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
-                fw_default="0x0"/>
+          description="Bx count for delay of VFAT${VFAT_CNT_ID}"
+          generate="true"
+          generate_size="&NUM_VFATS_PER_OH;"
+          generate_address_step="0x1"
+          generate_idx_var="VFAT_CNT_ID">
+      <node id="ELINK0_DELAY" address="0x0" permission="rw"
+            mask="0x0000000f"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 0"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(0)"
+            fw_default="0x0"/>
+      <node id="ELINK1_DELAY" address="0x0" permission="rw"
+            mask="0x000000f0"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 1"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(1)"
+            fw_default="0x0"/>
+      <node id="ELINK2_DELAY" address="0x0" permission="rw"
+            mask="0x00000f00"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 2"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(2)"
+            fw_default="0x0"/>
+      <node id="ELINK3_DELAY" address="0x0" permission="rw"
+            mask="0x0000f000"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 3"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(3)"
+            fw_default="0x0"/>
+      <node id="ELINK4_DELAY" address="0x0" permission="rw"
+            mask="0x000f0000"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 4"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(4)"
+            fw_default="0x0"/>
+      <node id="ELINK5_DELAY" address="0x0" permission="rw"
+            mask="0x00f00000"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 5"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(5)"
+            fw_default="0x0"/>
+      <node id="ELINK6_DELAY" address="0x0" permission="rw"
+            mask="0x0f000000"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 6"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(6)"
+            fw_default="0x0"/>
+      <node id="ELINK7_DELAY" address="0x0" permission="rw"
+            mask="0xf0000000"
+            description="Bx delay count for VFAT${VFAT_CNT_ID} ELINK 7"
+            fw_signal="vfat_sbit_delay_arr(${OH_CNT_ID})(${VFAT_CNT_ID})(7)"
+            fw_default="0x0"/>
 
     </node>
   </node>

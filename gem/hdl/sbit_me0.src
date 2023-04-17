@@ -1,2 +1,3 @@
 # Cluster packer
 gem/hdl/cluster_finding/cluster_finding.src
+gem/hdl/trigger/sbit_inject_me0.vhd
