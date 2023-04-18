@@ -310,10 +310,10 @@ begin
                 probe14 => ttc_cmds_i.calpulse,
                 probe15 => ttc_cmds_i.l1a,
                 probe16 => segment_pretrigger_o,
-                probe17 => std_logic_vector(me0_segments_o(0).partition) & std_logic_vector(me0_segments_o(0).strip) & std_logic_vector(me0_segments_o(0).lc) & std_logic_vector(me0_segments_o(0).hc) & std_logic_vector(me0_segments_o(0).id),
-                probe18 => std_logic_vector(me0_segments_o(1).partition) & std_logic_vector(me0_segments_o(1).strip) & std_logic_vector(me0_segments_o(1).lc) & std_logic_vector(me0_segments_o(1).hc) & std_logic_vector(me0_segments_o(1).id),
-                probe19 => std_logic_vector(me0_segments_o(2).partition) & std_logic_vector(me0_segments_o(2).strip) & std_logic_vector(me0_segments_o(2).lc) & std_logic_vector(me0_segments_o(2).hc) & std_logic_vector(me0_segments_o(2).id),
-                probe20 => std_logic_vector(me0_segments_o(3).partition) & std_logic_vector(me0_segments_o(3).strip) & std_logic_vector(me0_segments_o(3).lc) & std_logic_vector(me0_segments_o(3).hc) & std_logic_vector(me0_segments_o(3).id)
+                probe17 => std_logic_vector(me0_segments_o(0).partition) & std_logic_vector(me0_segments_o(0).strip) & std_logic_vector(me0_segments_o(0).lc) & "000000" & std_logic_vector(me0_segments_o(0).id),
+                probe18 => std_logic_vector(me0_segments_o(1).partition) & std_logic_vector(me0_segments_o(1).strip) & std_logic_vector(me0_segments_o(1).lc) & "000000" & std_logic_vector(me0_segments_o(1).id),
+                probe19 => std_logic_vector(me0_segments_o(2).partition) & std_logic_vector(me0_segments_o(2).strip) & std_logic_vector(me0_segments_o(2).lc) & "000000" & std_logic_vector(me0_segments_o(2).id),
+                probe20 => std_logic_vector(me0_segments_o(3).partition) & std_logic_vector(me0_segments_o(3).strip) & std_logic_vector(me0_segments_o(3).lc) & "000000" & std_logic_vector(me0_segments_o(3).id)
                 );
 
     end generate;
@@ -480,7 +480,6 @@ begin
                 clock             => ttc_clk_i.clk_320,
                 clock40           => ttc_clk_i.clk_40,
                 ly_thresh         => std_logic_vector(to_unsigned(5, 3)),
-                hit_thresh        => std_logic_vector(to_unsigned(5, 6)),
                 dav_i             => segment_finder_dav,
                 dav_o             => open,
                 sbits_i           => sbits_i,
