@@ -3,6 +3,11 @@ from time import sleep
 import sys
 import argparse
 
+def adc_conversion_lpgbt(adc):
+    #voltage = adc/1024.0
+    voltage = (adc - 38.4)/(1.85 * 512)
+    return voltage
+
 def main(system, oh_ver, boss):
 
     # Checking Status of Registers
@@ -267,7 +272,7 @@ def main(system, oh_ver, boss):
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
                 if (i==15):  conv=1/0.50; name="VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
         elif boss == 0:
             for i in range(16):
                 name = ""
@@ -288,7 +293,7 @@ def main(system, oh_ver, boss):
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
                 if (i==15):  conv=1/0.50; name="VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
     elif oh_ver == 2:
         if boss == 1:
             for i in range(16):
@@ -310,7 +315,7 @@ def main(system, oh_ver, boss):
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
                 if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
-                print("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read / 1024., conv * read / 1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
         elif boss == 0:
             for i in range(16):
                 name = ""
@@ -331,7 +336,7 @@ def main(system, oh_ver, boss):
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
                 if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
 
     powerdown_adc(oh_ver)
     print ("")

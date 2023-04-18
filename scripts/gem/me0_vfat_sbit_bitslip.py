@@ -15,7 +15,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             for elink_in in range(8):
                 bitslip_in = int(bitslip_all)
                 print ("Bitslip set for VFAT %d Elink %d: %d"%(vfat_in, elink_in, bitslip_in))
-                write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
+                write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
         print ("\nS-bit Bitslipping done\n")
         return
 
@@ -28,7 +28,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             elink_in = int(line.split()[1])
             bitslip_in = int(line.split()[2])
             print ("Bitslip set for VFAT %d Elink %d: %d"%(vfat_in, elink_in, bitslip_in))
-            write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
+            write_backend_reg(get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat_in,elink_in)), bitslip_in)
 
         file_in.close()
         print ("\nS-bit Bitslipping done\n")
@@ -70,7 +70,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     for vfat in vfat_list:
         sbit_bistlip_nodes[vfat] = {}
         for elink in range(8):
-            sbit_bistlip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat,elink))
+            sbit_bistlip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat,elink))
 
     # Configure all VFATs
     for vfat in vfat_list:

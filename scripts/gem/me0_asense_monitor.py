@@ -8,6 +8,14 @@ import os, glob
 import datetime
 import numpy as np
 
+def adc_conversion_lpgbt(adc):
+    gain = 2
+    offset = 512
+    #voltage = adc/1024.0
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+    return voltage
+
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
@@ -28,6 +36,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     init_adc(oh_ver)
     print("ADC Readings:")
 
+    '''
     adc_calib_results = []
     adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
@@ -44,7 +53,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         adc_calib_results_float = [float(a) for a in adc_calib_results]
         adc_calib_results_array = np.array(adc_calib_results_float)
         adc_calib_file.close()
-
+    '''
+    
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
@@ -108,16 +118,16 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 asense2_Vout = read_adc(0, gain, system)
                 asense3_Vout = read_adc(3, gain, system)
 
-            if len(adc_calib_results)!=0:
-                asense0_Vin = get_vin(asense0_Vout, adc_calib_results_array)
-                asense1_Vin = get_vin(asense1_Vout, adc_calib_results_array)
-                asense2_Vin = get_vin(asense2_Vout, adc_calib_results_array)
-                asense3_Vin = get_vin(asense3_Vout, adc_calib_results_array)
-            else:
-                asense0_Vin = asense0_Vout
-                asense1_Vin = asense1_Vout
-                asense2_Vin = asense2_Vout
-                asense3_Vin = asense3_Vout
+            #if len(adc_calib_results)!=0:
+            #    asense0_Vin = get_vin(asense0_Vout, adc_calib_results_array)
+            #    asense1_Vin = get_vin(asense1_Vout, adc_calib_results_array)
+            #    asense2_Vin = get_vin(asense2_Vout, adc_calib_results_array)
+            #    asense3_Vin = get_vin(asense3_Vout, adc_calib_results_array)
+            #else:
+            asense0_Vin = asense0_Vout
+            asense1_Vin = asense1_Vout
+            asense2_Vin = asense2_Vout
+            asense3_Vin = asense3_Vout
 
             asense0_converted = asense_current_conversion(asense0_Vin)
             asense1_converted = asense1_Vin
@@ -260,7 +270,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
+        val = adc_conversion_lpgbt(val)
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 

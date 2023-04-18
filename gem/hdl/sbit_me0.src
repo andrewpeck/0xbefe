@@ -1,5 +1,6 @@
 #
 gem/hdl/trigger/me0_sbit_align.vhd
+gem/hdl/trigger/sbit_inject_me0.vhd
 
 # Segment finder
 gem/hdl/me0sf/road/hdl/*.vhd

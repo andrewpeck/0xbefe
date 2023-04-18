@@ -8,6 +8,14 @@ import os
 import datetime
 import numpy as np
 
+def adc_conversion_lpgbt(adc):
+    gain = 2
+    offset = 512
+    #voltage = adc/1024.0
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+    return voltage
+
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
@@ -159,7 +167,7 @@ def read_adc(channel, gain, system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = 1.0 * (val/1024.0) # 10-bit ADC, range 0-1 V
+        val = adc_conversion_lpgbt(val)
         vals.append(val)
     mean_val = sum(vals)/len(vals)
 

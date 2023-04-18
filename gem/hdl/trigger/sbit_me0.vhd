@@ -1,21 +1,21 @@
 ---------------------------------------------------------------------------------
 -- Company: UCLA
 -- Engineer: Joseph Carlson (jecarlson30@gmail.com)
--- 
+--
 -- Create Date:    2019-11-13
 -- Module Name:    sbit_me0
 --
 -- Description:
 --
 -- This module processes ME0 VFAT3 sbit data and outputs clusters and segments
--- 
+--
 -- S-bits are taken in (24 VFATs x 6 layers).
--- 
+--
 -- A software controlled bitslip and bx delay are applied to the s-bits.
 --
 -- The bitslipped/aligned S-bits are fed into the cluster finder and segment
--- finder blocks. 
--- 
+-- finder blocks.
+--
 ---------------------------------------------------------------------------------
 
 library ieee;
@@ -109,10 +109,11 @@ architecture sbit_me0_arch of sbit_me0 is
     end component;
 
     -- resets
-    signal reset_global : std_logic;
-    signal reset_local  : std_logic;
-    signal reset        : std_logic;
-    signal reset_cnt    : std_logic;
+    signal reset_global         : std_logic;
+    signal reset_local          : std_logic;
+    signal reset                : std_logic;
+    signal reset_cnt            : std_logic;
+    signal reset_fifo           : std_logic;
 
     -- VFAT constants
     constant g_NUM_ELINKs   : integer := 8;
@@ -141,7 +142,7 @@ architecture sbit_me0_arch of sbit_me0 is
     constant g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
 
 
-    -- signals for raw sbit registers    
+    -- signals for raw sbit registers
     signal sbit_test_reset : std_logic := '0';
 
     signal test_sbit0xe_presum     : t_std32_array(7 downto 0);
@@ -154,6 +155,35 @@ architecture sbit_me0_arch of sbit_me0 is
     signal test_sel_elink_sbit_me0 : std_logic_vector(31 downto 0);
     signal test_sel_sbit_me0       : std_logic_vector(31 downto 0);
 
+    -- signals for sbit inject
+    type t_fifo_cnt_array is array (integer range<>) of t_std16_array(23 downto 0);
+    signal sbit_inj_fifo_din            : std_logic_vector(63 downto 0) := (others => '0');
+    signal sbit_inj_data_arr            : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal inject_sbits_en              : std_logic := '0';
+    signal sbit_inj_fifo_rd_en          : std_logic := '0'; -- inject_sbits_en + processing
+    signal load_sbits_en                : std_logic := '0';
+    signal sbit_inj_fifo_wr_en          : t_std24_array(g_NUM_OF_OHs - 1 downto 0); -- load_sbits_en + processing
+
+    signal sbit_inj_fifo_sel            : std_logic_vector (15 downto 0) := (others => '0');
+    signal sbit_inj_oh_num              : integer range 0 to 216;
+    signal sbit_inj_vfat_num            : integer range 0 to 24;
+    signal sbit_inj_fifo_rst_flag       : std_logic;
+    signal sbit_inj_fifo_err_flag       : std_logic_vector(3 downto 0);
+    signal sbit_inj_fifo_rd_busy_or     : std_logic;
+    signal sbit_inj_fifo_wr_busy_or     : std_logic;
+    signal sbit_inj_fifo_empty_and      : std_logic;
+    signal sbit_inj_fifo_full_and       : std_logic;
+    -- signal sbit_inj_fifo_valid_and   : std_logic;
+    signal sbit_inj_fifo_rd_busy_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_wr_busy_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_empty_arr      : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_full_arr       : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_prog_full_arr  : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    -- signal sbit_inj_fifo_valid_arr   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_wr_cnt_arr     : t_fifo_cnt_array(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_inj_fifo_data_cnt       : std_logic_vector(31 downto 0);
+    signal sbit_inj_fifo_sync_flag      : std_logic;
+
     -- cluster mapping from new to legacy clusters
     function get_adr (partition : in std_logic_vector; strip : in std_logic_vector)
         return std_logic_vector is
@@ -165,7 +195,6 @@ architecture sbit_me0_arch of sbit_me0 is
 
         return std_logic_vector(to_unsigned(p*192+s, 11));
     end;
-
 
     signal me0_clusters_probe_raw : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal me0_cluster_count      : t_std11_array(g_NUM_OF_OHs -1 downto 0);
@@ -223,10 +252,10 @@ begin
 
         -- TODO: these blocks result in unnecessarily large delays that will
         -- cause problems (much later) when we care about minimizing latency.
-        -- 
+        --
         -- The shift register delay block imposes a minimum 1 bx delay.. this
         -- should be changed to 0 bx.
-        -- 
+        --
         -- Bitslip can be replaced by the "fast" bitslip module from the OH
         -- which reduces the latency by 1 bx.
 
@@ -363,9 +392,84 @@ begin
             );
 
 
+    ------------------------------------------------------
+    -- sbit injection signal mapping and process
+    ------------------------------------------------------
+
+    -- reset flag logic
+    sbit_inj_fifo_rst_flag <= reset_fifo or sbit_inj_fifo_rd_busy_or or sbit_inj_fifo_wr_busy_or;
+    -- map fifo select to indexes
+    sbit_inj_oh_num <= to_integer(unsigned(sbit_inj_fifo_sel(15 downto 8)));
+    sbit_inj_vfat_num <= to_integer(unsigned(sbit_inj_fifo_sel(7 downto 0)));
+
+    process (ttc_clk_i.clk_40)
+        variable cnt : std_logic_vector(31 downto 0);
+        variable sum : unsigned(31 downto 0);
+        variable cnt_eq_arr : t_std24_array(g_NUM_OF_OHs-1 downto 0);
+        variable cnt_eq : std_logic_vector(g_NUM_OF_OHs-1 downto 0);
+    begin
+        if (rising_edge(ttc_clk_i.clk_40)) then
+            -- demux wr en bus
+            if (load_sbits_en = '1' and sbit_inj_fifo_rst_flag='0') then
+                sbit_inj_fifo_wr_en <= (others => (others => '0'));
+                sbit_inj_fifo_wr_en(sbit_inj_oh_num)(sbit_inj_vfat_num) <= '1';
+            else
+                sbit_inj_fifo_wr_en <= (others => (others => '0'));
+            end if;
+
+            -- rd en signal logic
+            if (inject_sbits_en = '1' and sbit_inj_fifo_rst_flag='0') then
+                sbit_inj_fifo_rd_en <= '1';
+            elsif (sbit_inj_fifo_empty_and = '1' or sbit_inj_fifo_rst_flag='1' or sbit_inj_fifo_sync_flag='0') then
+                sbit_inj_fifo_rd_en <= '0';
+            end if;
+
+            ---------------------
+            -- error flags
+            ---------------------
+            if reset_fifo='1' then
+                sbit_inj_fifo_err_flag<="0000";
+            -- write while all full
+            elsif (load_sbits_en='1' and sbit_inj_fifo_full_and='1') then
+                sbit_inj_fifo_err_flag<="0001";
+            -- read while all empty
+            elsif (inject_sbits_en='1' and sbit_inj_fifo_empty_and='1') then
+                sbit_inj_fifo_err_flag<="0010";
+            -- write while in reset state
+            elsif (load_sbits_en='1' and sbit_inj_fifo_rst_flag='1') then
+                sbit_inj_fifo_err_flag<="0011";
+            -- read while in reset state
+            elsif (inject_sbits_en='1' and sbit_inj_fifo_rst_flag='1') then
+                sbit_inj_fifo_err_flag<="0100";
+            -- read while out of sync
+            elsif (sbit_inj_fifo_rd_en='1' and sbit_inj_fifo_sync_flag='0') then
+                sbit_inj_fifo_err_flag<="0101";
+            end if;
+
+            -- sum all counters to get total data count
+            sum := (others => '0');
+            for oh in 0 to g_NUM_OF_OHs - 1 loop
+                for vfat in 0 to 23 loop
+                    -- Sum all count signals
+                    cnt := X"0000" & sbit_inj_fifo_wr_cnt_arr(oh)(vfat); -- cast to 32 bit unsigned
+                    sum := sum + unsigned(cnt);
+                    -- check one vs all for any cnt value out of sync
+                    cnt_eq_arr := (others => (others => '1') );
+                    if sbit_inj_fifo_wr_cnt_arr(0)(0) /= sbit_inj_fifo_wr_cnt_arr(oh)(vfat) then
+                        cnt_eq_arr(oh)(vfat) := '0';
+                    end if;
+                end loop;
+                cnt_eq(oh) := and cnt_eq_arr(oh);
+            end loop;
+            sbit_inj_fifo_data_cnt <= std_logic_vector(sum);
+            sbit_inj_fifo_sync_flag <= and cnt_eq;
+        end if;
+    end process;
+
     ---------------------------------------------------------------------------------
-    -- Clusterizer
+    -- Clusterizer/sbit injection
     ---------------------------------------------------------------------------------
+
     cluster_packer_me0 : if (true) generate
 
     begin
@@ -374,11 +478,52 @@ begin
             signal vfat_sbits_type_change : sbits_array_t(NUM_VFAT_PER_OH - 1 downto 0);
             signal me0_clusters           : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
 
-        begin
 
-            each_vfat : for vfat in 0 to 23 generate
-                each_sbit : for sbit in 0 to 63 generate
-                    vfat_sbits_type_change(vfat)(sbit) <= vfat_sbits_aligned(oh)(vfat)(sbit);  --map onto self (t_vfat3_sbits_arr to sbits_array_t)
+        begin
+            i_sbit_inj : entity work.sbit_inj_me0
+                generic map(
+                    g_NUM_OF_OHs            => g_NUM_OF_OHs,
+                    g_NUM_VFATS_PER_OH      => g_NUM_VFATS_PER_OH,
+                    g_FIFO_DATA_DEPTH       => 512,
+                    g_FIFO_DATA_CNT_WIDTH   => 10,
+                    g_IPB_CLK_PERIOD_NS     => g_IPB_CLK_PERIOD_NS,
+                    g_NUM_BXS               => 256,
+                    g_DEBUG                 => g_DEBUG
+                )
+                port map(
+                    reset_i                 => reset_fifo,
+                    ttc_clk_i               => ttc_clk_i,
+                    ttc_cmds_i              => ttc_cmds_i,
+
+                    -- sbit inject fifo inputs
+                    fifo_din_i     => sbit_inj_fifo_din,
+                    fifo_rd_en_i   => sbit_inj_fifo_rd_en,
+                    fifo_wr_en_i   => sbit_inj_fifo_wr_en(oh),
+                    -- sbit inject fifo outputs
+                    fifo_dout_o        => sbit_inj_data_arr(oh),
+                    fifo_empty_and_o   => sbit_inj_fifo_empty_arr(oh),
+                    fifo_full_and_o    => sbit_inj_fifo_full_arr(oh),
+                    fifo_prog_full_o   => sbit_inj_fifo_prog_full_arr(oh),
+                    fifo_valid_and_o   => open, -- sbit_inj_fifo_valid_arr(oh),
+                    fifo_rd_busy_or_o  => sbit_inj_fifo_rd_busy_arr(oh),
+                    fifo_wr_busy_or_o  => sbit_inj_fifo_wr_busy_arr(oh),
+                    fifo_wr_cnt_o      => sbit_inj_fifo_wr_cnt_arr(oh)
+                );
+
+            sbit_inj_fifo_empty_and  <= and sbit_inj_fifo_empty_arr;
+            sbit_inj_fifo_full_and   <= and sbit_inj_fifo_full_arr;
+            -- sbit_inj_fifo_valid_and  <= and_reduce(sbit_inj_fifo_valid_arr);
+
+            sbit_inj_fifo_rd_busy_or <= or sbit_inj_fifo_rd_busy_arr;
+            sbit_inj_fifo_wr_busy_or <= or sbit_inj_fifo_wr_busy_arr;
+
+            each_vfat: for vfat in 0 to 23 generate
+
+                each_sbit: for sbit in 0 to 63 generate
+                    -- MUX injected or real sbits and map to correct dt for cluster
+                    -- map onto self (t_vfat3_sbits_arr to sbits_array_t)
+                    vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1')
+                        else vfat_sbits_alligned(oh)(vfat)(sbit);
                 end generate;
             end generate;
 
@@ -388,27 +533,27 @@ begin
             end generate;
 
             cluster_packer_inst : entity work.cluster_packer
-                generic map (
-                    ONESHOT           => true,
-                    SPLIT_CLUSTERS    => 0,
-                    INVERT_PARTITIONS => false,
-                    NUM_VFATS         => NUM_VFAT_PER_OH,
-                    NUM_PARTITIONS    => 8,
-                    STATION           => 0
-                    )
-                port map (
-                    reset                  => reset_i,
-                    clk_40                 => ttc_clk_i.clk_40,
-                    clk_fast               => ttc_clk_i.clk_160,
-                    mask_output_i          => '0',
-                    sbits_i                => vfat_sbits_type_change,
-                    cluster_count_o        => me0_cluster_count(oh),
-                    cluster_count_masked_o => open,
-                    clusters_o             => me0_clusters,
-                    clusters_masked_o      => open,
-                    overflow_o             => me0_overflow(oh),
-                    valid_o                => open
-                    );
+              generic map (
+                ONESHOT           => false,
+                SPLIT_CLUSTERS    => 0,
+                INVERT_PARTITIONS => false,
+                NUM_VFATS         => NUM_VFAT_PER_OH,
+                NUM_PARTITIONS    => 8,
+                STATION           => 0
+                )
+              port map (
+                reset                  => reset_i,
+                clk_40                 => ttc_clk_i.clk_40,
+                clk_fast               => ttc_clk_i.clk_160,
+                mask_output_i          => '0',
+                sbits_i                => vfat_sbits_type_change,
+                cluster_count_o        => me0_cluster_count(oh),
+                cluster_count_masked_o => open,
+                clusters_o             => me0_clusters,
+                clusters_masked_o      => open,
+                overflow_o             => me0_overflow(oh),
+                valid_o                => open
+                );
 
             --------------------------------------------------------------------------------
             -- Cluster mapping to ports
@@ -431,6 +576,7 @@ begin
                 end process;
             end generate;
         end generate;
+
     end generate;
 
     --------------------------------------------------------------------------------
@@ -530,7 +676,7 @@ begin
 
 
     --===============================================================================================
-    -- this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py (do not edit) 
+    -- this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py (do not edit)
     --==== Registers begin ==========================================================================
 
 
