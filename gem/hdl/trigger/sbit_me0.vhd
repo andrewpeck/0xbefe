@@ -523,7 +523,7 @@ begin
                     -- MUX injected or real sbits and map to correct dt for cluster
                     -- map onto self (t_vfat3_sbits_arr to sbits_array_t)
                     vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1')
-                        else vfat_sbits_alligned(oh)(vfat)(sbit);
+                        else vfat_sbits_aligned(oh)(vfat)(sbit);
                 end generate;
             end generate;
 
