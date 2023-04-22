@@ -1,0 +1,7 @@
+
+boards/x2o/constraints/vup.xdc
+boards/x2o/constraints/mgt_vu13p.xdc
+boards/x2o/constraints/slink_4_chan.xdc
+boards/x2o/constraints/timing_gem.xdc
+boards/x2o/constraints/floorplan_gem_vu13p.xdc
+boards/x2o/constraints/c2c_vu13p_rev1.xdc
