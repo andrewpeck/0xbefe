@@ -27,7 +27,7 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
 
     qsfp_present_cages = qsfps.keys()
 
-    cols = ["Cage", "Type", "Vendor", "Temperature", "RX power", "Alarms", "CDR"]
+    cols = ["Cage", "Type", "Part", "Temperature", "RX power", "Alarms", "CDR"]
     if show_opts:
         cols.append("Options")
     if show_rx_squelch:
@@ -39,6 +39,8 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
         type = "----"
         tech = "----"
         vendor = "----"
+        pn = "----"
+        part = "----"
         temp = "----"
         rx_power = "----"
         alarms = "----"
@@ -50,6 +52,10 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
             qsfp.select()
             type = qsfp.identifier().replace(" or later", "")
             vendor = qsfp.vendor()
+            pn = qsfp.part_number()
+            sn = qsfp.serial_number()
+            # part = vendor + "\n" + type + "\n" + pn + "\nS/N: " + sn
+            part = vendor + "\n" + pn + "\nS/N: " + sn
             temp = qsfp.temperature()
             temp_col = Colors.GREEN
             if temp > X2O_QSFP_TEMP_CRITICAL:
@@ -96,7 +102,7 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
 
 
 
-        row = [cage, type, vendor, temp, rx_power, alarms, cdr_status]
+        row = [cage, type, part, temp, rx_power, alarms, cdr_status]
         if show_opts:
             row.append(options)
         if show_rx_squelch:

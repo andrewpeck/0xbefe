@@ -72,6 +72,27 @@
     <node id="NUM_MGTS" address="0x4" mask="0x00ff0000" permission="r"
           description="The number of MGTs that are intantiated in this firmware."
           fw_signal="std_logic_vector(to_unsigned(CFG_MGT_NUM_CHANNELS, 8))"/>
+    <node id="TTC_GBTX_LINK_USED" address="0x5" mask="0x00000001" permission="r"
+          description="If this is 1 it means that this build has a TTC GBTX link."
+          fw_signal="'1' when CFG_USE_TTC_GBTX_LINK else '0'"/>
+    <node id="TTC_GBTX_LINK_IDX" address="0x5" mask="0x0000ff00" permission="r"
+          description="TTC GBTX link index"
+          fw_signal="std_logic_vector(to_unsigned(CFG_TTC_GBTX_LINK, 8))"/>
+    <node id="TTC_TX_USED" address="0x5" mask="0x00000002" permission="r"
+          description="If this is 1 it means that this build has a TTC TX module."
+          fw_signal="'1' when CFG_USE_TTC_TX_LINK else '0'"/>
+    <node id="TTC_TX_LINK0_IDX" address="0x6" mask="0x000000ff" permission="r"
+          description="TTC TX link 0"
+          fw_signal="std_logic_vector(to_unsigned(CFG_TTC_LINKS(0), 8))"/>
+    <node id="TTC_TX_LINK1_IDX" address="0x6" mask="0x0000ff00" permission="r"
+          description="TTC TX link 1"
+          fw_signal="std_logic_vector(to_unsigned(CFG_TTC_LINKS(1), 8))"/>
+    <node id="TTC_TX_LINK2_IDX" address="0x6" mask="0x00ff0000" permission="r"
+          description="TTC TX link 2"
+          fw_signal="std_logic_vector(to_unsigned(CFG_TTC_LINKS(2), 8))"/>
+    <node id="TTC_TX_LINK3_IDX" address="0x6" mask="0xff000000" permission="r"
+          description="TTC TX link 3"
+          fw_signal="std_logic_vector(to_unsigned(CFG_TTC_LINKS(3), 8))"/>
   </node>
 
   <node id="LINK_CONFIG" address="0x1000">

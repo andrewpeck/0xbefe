@@ -163,8 +163,10 @@ architecture gem_apex_arch of gem_apex is
     signal ttc_clks             : t_ttc_clks;
     signal ttc_clk_status       : t_ttc_clk_status;
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl_arr(CFG_NUM_GEM_BLOCKS - 1 downto 0);
-    signal ttc_cmds             : t_ttc_cmds_arr(CFG_NUM_GEM_BLOCKS - 1 downto 0) := (others => (others => '0'));
+    signal ttc_cmds             : t_ttc_cmds;
     signal ttc_tx_mgt_data      : t_mgt_16b_tx_data;
+    signal ttc_gbtx_mgt_status  : t_mgt_status;
+    signal ttc_gbtx_mgt_ctrl    : t_mgt_ctrl;
 
     -- c2c
     signal c2c_channel_up       : std_logic;
@@ -452,6 +454,38 @@ begin
         );
 
     --================================--
+    -- TTC LINK module
+    --================================--
+
+    g_ttc_gbtx_link : if CFG_USE_TTC_GBTX_LINK generate
+        
+        i_ttc_link_gbtx : entity work.ttc_link_gbtx
+            generic map(
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+            )
+            port map(
+                reset_i          => '0',
+                ttc_clks_i       => ttc_clks,
+                gt_gbt_rx_data_i => mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx).rxdata(39 downto 0),
+                gt_gbt_rx_clk_i  => mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx),
+                gt_gbt_status_i  => ttc_gbtx_mgt_status,
+                gt_gbt_ctrl_o    => ttc_gbtx_mgt_ctrl,
+                ttc_cmds_o       => ttc_cmds,
+                ipb_reset_i      => ipb_reset,
+                ipb_clk_i        => ipb_clk,
+                ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.ttc_link),
+                ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.ttc_link)
+            );
+
+        ttc_gbtx_mgt_status.rx_reset_done <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx).rx_reset_done;
+        ttc_gbtx_mgt_status.rx_pll_locked <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx).rx_pll_locked;
+        
+        mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx).rxreset <= ttc_gbtx_mgt_ctrl.rxreset;
+        mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_GBTX_LINK).rx).rxslide <= ttc_gbtx_mgt_ctrl.rxslide;
+            
+    end generate;
+    
+    --================================--
     -- TTC TX module
     --================================--
 
@@ -462,7 +496,7 @@ begin
         port map(
             reset_i      => '0',
             ttc_clocks_i => ttc_clks,
-            ttc_cmds_i   => ttc_cmds(CFG_TTC_TX_SOURCE_SLR),
+            ttc_cmds_i   => ttc_cmds,
             ttc_data_o   => ttc_tx_mgt_data,
             ipb_reset_i  => ipb_reset,
             ipb_clk_i    => ipb_clk,
@@ -525,7 +559,7 @@ begin
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
                 g_IS_SLINK_ROCKET   => false,
-                g_DISABLE_TTC_DATA  => true
+                g_EXT_TTC_RECEIVER  => true
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -535,6 +569,7 @@ begin
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
+                ttc_cmds_i              => ttc_cmds,
                 ttc_data_p_i            => '1',
                 ttc_data_n_i            => '0',
                 external_trigger_i      => '0',

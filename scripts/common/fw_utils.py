@@ -91,19 +91,19 @@ class Mgt:
                 # UG578 section "Using TX Pattern Generator" (selecting TXOUTCLKSEL is done in the firmware)
                 print("MGT %d TX is using async gearbox, which due to a silicon bug needs to be disabled over DRP to enable PRBS. Disabling async gearbox..." % self.idx)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 1)
-                reg124 = read_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx)
+                reg124 = self.drp_read(124)
                 reg124 = reg124 & 0xdfff # TXGEARBOX_EN = 0
                 reg124 = reg124 | 0x0080 # TXBUF_EN = 1
-                write_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx, reg124)
+                self.drp_write(124, reg124)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_SEL" % self.idx, mode)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 0)
             else:
                 print("MGT %d TX is using async gearbox, which due to a silicon bug needs to be disabled over DRP to enable PRBS. Disabling PRBS, enabling back the async gearbox..." % self.idx)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 1)
-                reg124 = read_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx)
+                reg124 = self.drp_read(124)
                 reg124 = reg124 | 0x2000 # TXGEARBOX_EN = 1
                 reg124 = reg124 & 0xff7f # TXBUF_EN = 1
-                write_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG124" % self.idx, reg124)
+                self.drp_write(124, reg124)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PRBS_SEL" % self.idx, mode)
                 write_reg("BEFE.MGTS.MGT%d.CTRL.TX_PCS_RESET" % self.idx, 0)
         else:
@@ -125,6 +125,22 @@ class Mgt:
             return read_reg("BEFE.MGTS.MGT%d.STATUS.PRBS_ERROR_CNT" % self.idx)
         else:
             return None
+
+    def drp_read(self, addr):
+        # DRP integrated in the MGT addr table
+        write_reg("BEFE.MGTS.CHANNEL_DRP.MGT_SELECT", self.idx)
+        write_reg("BEFE.MGTS.CHANNEL_DRP.ADDRESS", addr)
+        return read_reg("BEFE.MGTS.CHANNEL_DRP.READ_VALUE")
+        # DRP with a separate address table (not used due to long loading of the address table)
+        # return read_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG%d" % (self.idx, addr))
+
+    def drp_write(self, addr, value):
+        # DRP integrated in the MGT addr table
+        write_reg("BEFE.MGTS.CHANNEL_DRP.MGT_SELECT", self.idx)
+        write_reg("BEFE.MGTS.CHANNEL_DRP.ADDRESS", addr)
+        write_reg("BEFE.MGTS.CHANNEL_DRP.WRITE_VALUE", value)
+        # DRP with a separate address table (not used due to long loading of the address table)
+        # write_reg("BEFE.MGT_CHAN_DRP.CHAN%d.REG%d" % (self.idx, addr), value)
 
     def reset(self, include_pll_reset=False):
         if include_pll_reset:

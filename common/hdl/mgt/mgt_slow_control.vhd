@@ -98,7 +98,7 @@ architecture mgt_slow_control_arch of mgt_slow_control is
     signal rxprbssel_arr_async      : t_std3_array(g_NUM_CHANNELS - 1 downto 0) := (others => (others => '0'));
     signal txinhibit_arr_async      : std_logic_vector(g_NUM_CHANNELS - 1 downto 0) := (others => '0');
     signal txpolarity_arr_async     : std_logic_vector(g_NUM_CHANNELS - 1 downto 0) := (others => '0');
-    signal txprbssel_arr_async      : t_std3_array(g_NUM_CHANNELS - 1 downto 0) := (others => (others => '0'));
+    signal txprbssel_arr_async      : t_std4_array(g_NUM_CHANNELS - 1 downto 0) := (others => (others => '0'));
     signal txprbsforceerr_arr_async : std_logic_vector(g_NUM_CHANNELS - 1 downto 0) := (others => '0');
     signal txpd_arr_async           : std_logic_vector(g_NUM_CHANNELS - 1 downto 0) := (others => '0');
     
@@ -190,6 +190,7 @@ begin
         i_sync_txprbssel0:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(0), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(0));
         i_sync_txprbssel1:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(1), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(1));
         i_sync_txprbssel2:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(2), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(2));
+        i_sync_txprbssel3:     entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbssel_arr_async(chan)(3), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbssel(3));
         i_sync_txprbsforceerr: entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txprbsforceerr_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => tx_slow_ctrl_arr(chan).txprbsforceerr);
         i_sync_txpd:           entity work.synch generic map(N_STAGES => 8, IS_RESET => false) port map(async_i => txpd_arr_async(chan), clk_i => mgt_clks_arr_i(chan).txusrclk2, sync_o  => txpd_arr(chan));
 

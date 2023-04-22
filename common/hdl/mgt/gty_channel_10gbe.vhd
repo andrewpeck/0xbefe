@@ -144,7 +144,7 @@ architecture gty_channel_10gbe_arch of gty_channel_10gbe is
 begin
 
     -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
-    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "000" else "010";
+    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "0000" else "010";
 
     -- Only QPLL mode is implemented, fail if CPLL is selected in generics
     assert g_TX_USE_QPLL and g_RX_USE_QPLL report "Only QPLL mode is implemented in gty_channel_10gbe module, but generics are set to use CPLL" severity failure;
@@ -1046,7 +1046,7 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
+            TXPRBSSEL            => tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
             TXPROGDIVRESET       => txprogdivreset,
             TXRATE               => "000",

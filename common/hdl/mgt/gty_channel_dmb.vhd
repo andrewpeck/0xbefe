@@ -1162,7 +1162,7 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
+            TXPRBSSEL            => tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
             TXPROGDIVRESET       => txprogdivreset,
             TXRATE               => "000",

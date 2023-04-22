@@ -447,7 +447,7 @@ begin
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
                 g_IS_SLINK_ROCKET   => false,
-                g_DISABLE_TTC_DATA  => true
+                g_EXT_TTC_RECEIVER  => true
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -457,6 +457,7 @@ begin
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
+                ttc_cmds_i              => TTC_CMDS_NULL,
                 ttc_data_p_i            => '1',
                 ttc_data_n_i            => '0',
                 external_trigger_i      => ext_trig,

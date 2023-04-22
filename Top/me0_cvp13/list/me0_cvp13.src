@@ -1,6 +1,7 @@
 
 # Project config
 Top/me0_cvp13/project_config.vhd
+#Top/me0_cvp13/project_config_stack_test.vhd
 
 # Common libs
 common/hdl/common.src

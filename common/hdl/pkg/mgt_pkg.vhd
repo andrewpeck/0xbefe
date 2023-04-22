@@ -162,7 +162,7 @@ package mgt_pkg is
         txinhibit      : std_logic;
         txmaincursor   : std_logic_vector(6 downto 0);
         txpolarity     : std_logic;
-        txprbssel      : std_logic_vector(2 downto 0);
+        txprbssel      : std_logic_vector(3 downto 0);
         txprbsforceerr : std_logic;
         txpd           : std_logic_vector(1 downto 0);
         txpcsreset     : std_logic;

@@ -72,11 +72,11 @@
             description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
             fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
       <node id="RX_PRBS_SEL" address="0x7" mask="0x00000007" permission="rw"
-            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
+            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS9, 011 -- PRBS15, 100 -- PRBS23, 101 -- PRBS31"
             fw_signal="rxprbssel_arr_async(${MGT})" fw_default="0b000"/>
-      <node id="TX_PRBS_SEL" address="0x7" mask="0x00000070" permission="rw"
-            description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
-            fw_signal="txprbssel_arr_async(${MGT})" fw_default="0b000"/>
+      <node id="TX_PRBS_SEL" address="0x7" mask="0x000000f0" permission="rw"
+            description="Controls the TX PRBS mode: 0000 -- normal operation (no PRBS), 0001 -- PRBS7, 0010 -- PRBS9, 0011 -- PRBS15, 0100 -- PRBS23, 0101 -- PRBS31, 1000 -- PCIe compliance patteren, 1001 -- square wave with 2 UI (alternating 0s and 1s), 1010 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
+            fw_signal="txprbssel_arr_async(${MGT})" fw_default="0x0"/>
       <node id="TX_PRBS_FORCE_ERR" address="0x8" permission="w"
             description="Writing anything here forces a PRBS error on the TX"
             fw_write_pulse_signal="tx_slow_ctrl_arr(${MGT}).txprbsforceerr"/>

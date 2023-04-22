@@ -143,7 +143,7 @@ architecture gty_channel_lpgbt_rx_10gbe_tx_arch of gty_channel_lpgbt_rx_10gbe_tx
 begin
 
     -- when using async gearbox, TXPRBSSEL doesn't work unless the gearbox is disabled through DRP, and TXOUTCLKSEL is set to PMA clock
-    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "000" else "010";
+    txoutclksel <= g_TXOUTCLKSEL when tx_slow_ctrl_i.txprbssel = "0000" else "010";
 
     assert g_TX_USE_QPLL and g_RX_USE_QPLL report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_10GBE_TX must use QPLL for both TX and RX (GTY_QPLL0_LPGBT_QPLL1_GBE implementation), using CPLL is not supported" severity failure;
     assert g_TX_QPLL_01 = 1 and g_RX_QPLL_01 = 0 report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_10GBE_TX must use QPLL1 for TX and QPLL0 for RX" severity failure;
@@ -1076,7 +1076,7 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
+            TXPRBSSEL            => tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
             TXPROGDIVRESET       => txprogdivreset,
             TXRATE               => "000",
