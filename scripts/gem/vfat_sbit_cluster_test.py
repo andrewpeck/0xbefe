@@ -235,7 +235,7 @@ def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, p
                 cluster1_sbit_cluster_size = ((cluster1_sbit_monitor_value >> 12) & 0x7) + 1
                 cluster1_l1a = cluster1_sbit_monitor_value >> 15
 
-                cluster2_sbit_monitor_value = (fifo_data >> 4) & 0x0000ffff
+                cluster2_sbit_monitor_value = (fifo_data >> 16) & 0x0000ffff
                 cluster2_sbit_cluster_address = cluster2_sbit_monitor_value & 0x7ff
                 cluster2_sbit_cluster_size = ((cluster2_sbit_monitor_value >> 12) & 0x7) + 1
                 cluster2_l1a = cluster2_sbit_monitor_value >> 15

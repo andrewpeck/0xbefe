@@ -141,13 +141,14 @@ CONFIG_GE21_VFAT_HDLC_ADDRESSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] # repla
 # NOTE: the example below is using the same config for all OHs, while in a real system you will likely need different files for each OH (e.g. containing correct phases for the GEB that they're installed on)
 # To specify config files individually for each OH just make each element of the two arrays refer to the configs of the particular OH (and remove the * 16 at the end)
 # Only modify CONFIG_ME0_OH_GBT0_CONFIGS and CONFIG_ME0_OH_GBT1_CONFIGS if needed, do not modify CONFIG_ME0_OH_GBT_CONFIGS
-CONFIG_ME0_OH_GBT0_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_boss_config_ohv*.txt"] * 16
-CONFIG_ME0_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_sub_config_ohv*.txt"] * 16
+CONFIG_ME0_OH_GBT0_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_boss_config_ohv*.txt"] * 12
+CONFIG_ME0_OH_GBT1_CONFIGS = [BEFE_SCRIPTS_DIR + "/resources/me0_sub_config_ohv*.txt"] * 12
 CONFIG_ME0_OH_GBT_CONFIGS = [CONFIG_ME0_OH_GBT0_CONFIGS, CONFIG_ME0_OH_GBT1_CONFIGS] # do not modify this line
 
 # VFAT Phases
 CONFIG_ME0_VFAT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_phase_scan.txt"
 CONFIG_ME0_VFAT_SBIT_PHASE_SCAN = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_sbit_phase_scan.txt"
+CONFIG_ME0_VFAT_SBIT_BITSLIP = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_sbit_bitslip.txt"
 
 # VFAT HDLC addresses
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12] # replace with zeros if your setup has VFAT hybrids that don't support addressing

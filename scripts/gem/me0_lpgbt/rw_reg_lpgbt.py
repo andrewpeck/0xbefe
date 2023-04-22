@@ -212,7 +212,7 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
             reg_list_dryrun[i] = 0x00
         n_rw_reg = 501
     
-    if system=="chc":
+    if system=="chc" or system=="queso":
         import gem.me0_lpgbt.rpi_chc as rpi_chc
         global gbt_rpi_chc
         gbt_rpi_chc = rpi_chc.rpi_chc()
@@ -249,7 +249,7 @@ def rw_initialize(station, system_val, oh_ver=None, boss=None, ohIdx=None, gbtId
 
 def config_initialize_chc(oh_ver, boss):
     initialize_success = 1
-    gbt_rpi_chc.set_lpgbt_address("chc", oh_ver, boss)
+    gbt_rpi_chc.set_lpgbt_address(system, oh_ver, boss)
     if oh_ver == 1:
         initialize_success *= gbt_rpi_chc.config_select()
     if initialize_success:
@@ -305,7 +305,7 @@ def get_oh_ver(ohIdx, gbtIdx):
     return oh_ver
 
 def mpeek(address):
-    if system=="chc":
+    if system=="chc" or system=="queso":
         success, data = gbt_rpi_chc.lpgbt_read_register(address)
         if success:
             return data
@@ -326,7 +326,7 @@ def mpeek(address):
 
 def mpoke(address, value, write_only=False):
     global reg_list_dryrun
-    if system=="chc":
+    if system=="chc" or system=="queso":
         success = gbt_rpi_chc.lpgbt_write_register(address, value)
         if not success:
             print(Colors.RED + "ERROR: Problem in writing register: " + str(hex(address)) + Colors.ENDC)
@@ -489,7 +489,7 @@ def lpgbt_efuse(boss, enable):
         lpgbt_type = "Boss"
     else:
         lpgbt_type = "Sub"
-    if system=="chc":
+    if system=="chc" or system=="queso":
         fuse_success = gbt_rpi_chc.fuse_arm_disarm(boss, enable)
         if not fuse_success:
             print(Colors.RED + "ERROR: Problem in fusing for: " + lpgbt_type + Colors.ENDC)
@@ -529,7 +529,7 @@ def chc_terminate():
 def rw_terminate():
     if system=="backend":
         gem_utils.terminate()
-    if system=="chc":
+    if system=="chc" or system=="queso":
         chc_terminate()
     sys.exit()
 

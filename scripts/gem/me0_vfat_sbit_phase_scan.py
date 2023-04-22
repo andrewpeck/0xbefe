@@ -425,7 +425,7 @@ def find_phase_center(err_list, min_error_limit):
                 ngood_center = ngood_center+1
         # oddwindows
         else:
-            ngood_center = ngood_edge - int(ngood_max/2) -1;
+            ngood_center = ngood_edge - int(ngood_max/2) -1
 
     if ngood_center > phase_max:
         ngood_center = ngood_center % phase_max - 1
@@ -459,11 +459,13 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     elif oh_ver == 2:
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + sbit_elink
-    value = (config[addr] & 0x0f) | (phase << 4)
-    #value = (mpeek(addr) & 0x0f) | (phase << 4)
 
     gem_utils.check_gbt_link_ready(oh_select, gbt_select)
+    value = (config[addr] & 0x0f) | (phase << 4)
+    #value = (mpeek(addr) & 0x0f) | (phase << 4)
     mpoke(addr, value)
+    #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX%dPHASESELECT"%sbit_elink), phase)
+
     sleep(0.000001) # writing too fast for CVP13
 
 if __name__ == "__main__":
@@ -488,7 +490,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.system == "backend":
-        print ("Using Backend for S-bit test")
+        print ("Using Backend for S-bit phase scan")
     elif args.system == "dryrun":
         print ("Dry Run - not actually running sbit phase scan")
     else:
@@ -529,6 +531,7 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Phase can only be 4 bits" + Colors.ENDC)
             sys.exit()
         for vfat in range(0,24):
+            bestphase_list[vfat] = {}
             for elink in range(0,8):
                 bestphase_list[vfat][elink] = int(args.bestphase,16)
     if args.bestphase_file is not None:

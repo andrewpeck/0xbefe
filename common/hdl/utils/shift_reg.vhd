@@ -86,3 +86,4 @@ begin
     end generate;
 
 end shift_reg_arch;
+

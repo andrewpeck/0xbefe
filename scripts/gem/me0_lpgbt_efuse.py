@@ -401,7 +401,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="lpGBT Fusing for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -416,10 +416,12 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for fusing")
+    elif args.system == "queso":
+        print("Using QUESO for fusing")
     elif args.system == "dryrun":
         print ("Dry Run - not actually fusing lpGBT")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

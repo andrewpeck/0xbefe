@@ -31,6 +31,7 @@ common/hdl/utils/running_mean.vhd
 common/hdl/utils/oneshot.vhd
 common/hdl/utils/gearbox.vhd
 common/hdl/utils/shift_reg.vhd
+common/hdl/utils/shift_reg_multi.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas.vhd
 common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
 common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
