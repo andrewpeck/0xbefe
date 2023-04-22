@@ -32,7 +32,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     fec_errors = 0
 
     # Check if GBT is READY
-    if path == "uplink":
+    if system != "chc":
         for gbt in gbtid:
             link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (ohid, gbt)))
             if (link_ready!=1):
@@ -45,8 +45,10 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     sleep(0.1)
 
     gbt_list = []
+    oh_ver_list = []
     for gbt in gbtid:
         gbt_list.append(int(gbt))
+        oh_ver_list.append(get_oh_ver(ohid, gbt))
 
     data_rate=0
     data_packet_size = 0
@@ -186,20 +188,34 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
     elif path == "downlink": # check FEC errors on lpGBT
         # Enable the counter
         if opr in ["start", "run"]:
-            init_lpgbt_fec_error_counter(oh_ver)
-            if oh_ver == 1:
-                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1)
-            elif oh_ver == 2:
-                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1)
+            for (i,gbt) in enumerate(gbt_list):
+                select_ic_link(ohid, gbt)
+                init_lpgbt_fec_error_counter(oh_ver_list[i])
+                if oh_ver_list[i] == 1:
+                    mpoke(0x117, 0x10)
+                    #lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x1)
+                elif oh_ver_list[i] == 2:
+                    mpoke(0x142, 0x10)
+                    #lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x1)
     
+        sleep(0.000001)
         # start error counting loop
-        start_fec_errors = lpgbt_fec_error_counter(oh_ver)
+        start_fec_errors = {}
+        end_fec_errors = {}
+        fec_errors = {}
         if opr == "run":
             print ("Start Error Counting for time = %.2f minutes" % (runtime))
             file_out.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
         if opr in ["start", "run"]:
-            print ("Starting with number of FEC Errors = %d\n" % (start_fec_errors))
-            file_out.write("Starting with number of FEC Errors = %d\n\n" % (start_fec_errors))
+            print ("Starting with: ")
+            file_out.write("Starting with: \n")
+        for (i,gbt) in enumerate(gbt_list):
+            select_ic_link(ohid, gbt)   
+            start_fec_errors[gbt] = lpgbt_fec_error_counter(oh_ver_list[i])
+            print ("  GBT %d, number of FEC Errors = %d" % (gbt, start_fec_errors[gbt]))
+            file_out.write("  GBT %d, number of FEC Errors = %d\n" % (gbt, start_fec_errors[gbt]))
+        print ("")
+        file_out.write("\n")
         
         t0 = time()
         time_prev = t0
@@ -211,69 +227,85 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 if ber_t_log<=-9 and (ber_passed_log-ber_t_log)>=1:
                     print ("\nBER: ")
                     file_out.write("\nBER: \n")
-                    curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
-                    curr_ber_str = ""
-                    curr_ber_str_write = ""
-                    if curr_fec_errors == 0:
-                       curr_ber_str += Colors.GREEN + "  GBT %d: BER "%int(gbt_list[0])
-                       curr_ber_str_write += "  GBT %d: BER "%int(gbt_list[0])
-                       curr_ber_str += "< {:.2e}".format(ber_t)
-                       curr_ber_str_write += "< {:.2e}".format(ber_t)
-                    else:
-                       curr_ber_str += Colors.RED + "  GBT %d: Number of FEC Errors = %d"%(int(gbt_list[0]), curr_fec_errors)
-                       curr_ber_str_write += "  GBT %d: Number of FEC Errors = %d"%(int(gbt_list[0]), curr_fec_errors)
-                    curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
-                    curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
-                    print (curr_ber_str)
-                    file_out.write(curr_ber_str_write)
-                    print ()
-                    file_out.write("\n")
+                    for (i,gbt) in enumerate(gbt_list):
+                        select_ic_link(ohid, gbt)   
+                        curr_fec_errors = lpgbt_fec_error_counter(oh_ver_list[i])
+                        curr_ber_str = ""
+                        curr_ber_str_write = ""
+                        if curr_fec_errors == 0:
+                            curr_ber_str += Colors.GREEN + "  GBT %d: BER "%int(gbt)
+                            curr_ber_str_write += "  GBT %d: BER "%int(gbt)
+                            curr_ber_str += "< {:.2e}".format(ber_t)
+                            curr_ber_str_write += "< {:.2e}".format(ber_t)
+                        else:
+                            curr_ber_str += Colors.RED + "  GBT %d: Number of FEC Errors = %d"%(int(gbt), curr_fec_errors)
+                            curr_ber_str_write += "  GBT %d: Number of FEC Errors = %d"%(int(gbt), curr_fec_errors)
+                        curr_ber_str += " (time = %.2f min)"%((time()-t0)/60.0) + Colors.ENDC
+                        curr_ber_str_write += " (time = %.2f min)"%((time()-t0)/60.0)
+                        print (curr_ber_str)
+                        file_out.write(curr_ber_str_write)
+                    print ("\n")
+                    file_out.write("\n\n")
                     ber_passed_log = ber_t_log
             
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
-                    curr_fec_errors = lpgbt_fec_error_counter(oh_ver)
                     if verbose:
-                        print ("Time passed: %.2f minutes, GBT %d: number of FEC errors accumulated = %d" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
-                        file_out.write("Time passed: %.2f minutes: GBT %d, number of FEC errors accumulated = %d\n" % ((time()-t0)/60.0, int(gbt_list[0]), curr_fec_errors))
+                        file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
+                        for (i,gbt) in enumerate(gbt_list):
+                            select_ic_link(ohid, gbt)   
+                            curr_fec_errors = lpgbt_fec_error_counter(oh_ver_list[i])
+                            print ("  GBT %d: number of FEC errors accumulated = %d" % (gbt, curr_fec_errors))
+                            file_out.write("  GBT %d: number of FEC errors accumulated = %d\n" % (gbt, curr_fec_errors))
+                        print ("")
+                        file_out.write("\n")
                     time_prev = time()
         
-        end_fec_errors = lpgbt_fec_error_counter(oh_ver)
-        end_fec_error_print = ""
-        end_fec_error_write = ""
-        if end_fec_errors==0:
-            end_fec_error_print += Colors.GREEN
-        else:
-            end_fec_error_print += Colors.RED
-        if opr == "read":
-            end_fec_error_print += "\nNumber of FEC Errors = %d\n" %(end_fec_errors)
-            end_fec_error_write += "\nNumber of FEC Errors = %d\n" %(end_fec_errors)
-            end_fec_error_print += Colors.ENDC
-            print (end_fec_error_print)
-            file_out.write(end_fec_error_write + "\n")
-        elif opr == "stop":
-            end_fec_error_print += "\nEnd Error Counting with number of FEC Errors = %d\n" %(end_fec_errors)
-            end_fec_error_write += "\nEnd Error Counting with number of FEC Errors = %d\n" %(end_fec_errors)
-            end_fec_error_print += Colors.ENDC
-            print (end_fec_error_print)
-            file_out.write(end_fec_error_write + "\n")
-        elif opr == "run":
-            print ("\nEnd Error Counting with number of FEC Errors = %d\n" %(end_fec_errors))
-            file_out.write("\nEnd Error Counting with number of FEC Errors = %d\n\n" %(end_fec_errors))
-        fec_errors = {}
-        #fec_errors[gbt_list[0]] = end_fec_errors - start_fec_errors
-        fec_errors[gbt_list[0]] = end_fec_errors
+        if opr in ["run", "stop"]:
+            print ("\nEnd Error Counting:")
+            file_out.write("\nEnd Error Counting: \n")
+        elif opr == "read":
+            print ("\Reading Error Count:")
+            file_out.write("\Reading Error Count: \n")
+
+        for (i,gbt) in enumerate(gbt_list):
+            select_ic_link(ohid, gbt)   
+            end_fec_errors[gbt] = lpgbt_fec_error_counter(oh_ver_list[i])
+            fec_errors[gbt] = end_fec_errors[gbt]
+            end_fec_error_print = ""
+            end_fec_error_write = ""
+            if end_fec_errors[gbt]==0:
+                end_fec_error_print += Colors.GREEN
+            else:
+                end_fec_error_print += Colors.RED
+            if opr in ["stop", "read"]:
+                end_fec_error_print += "  GBT %d, number of FEC Errors = %d" %(gbt, end_fec_errors[gbt])
+                end_fec_error_write += "  GBT %d, number of FEC Errors = %d\n" %(gbt, end_fec_errors[gbt])
+                end_fec_error_print += Colors.ENDC
+                print (end_fec_error_print)
+                file_out.write(end_fec_error_write + "\n")
+            elif opr == "run":
+                print ("  GBT %d, number of FEC Errors = %d" %(gbt, end_fec_errors[gbt]))
+                file_out.write("  GBT %d, number of FEC Errors = %d\n" %(gbt, end_fec_errors[gbt]))
+        print ("")
+        file_out.write("\n")
         
         # Disable the counter
         if opr in ["run", "stop"]:
-            if oh_ver == 1:
-                lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0)
-            elif oh_ver == 2:
-                lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0)
+            for (i,gbt) in enumerate(gbt_list):
+                select_ic_link(ohid, gbt) 
+                if oh_ver_list[i] == 1:
+                    mpoke(0x117, 0x0)
+                    #lpgbt_writeReg(getNode("LPGBT.RW.PROCESS_MONITOR.DLDPFECCOUNTERENABLE"), 0x0)
+                elif oh_ver_list[i] == 2:
+                    mpoke(0x142, 0x0)
+                    #lpgbt_writeReg(getNode("LPGBT.RW.DEBUG.DLDPFECCOUNTERENABLE"), 0x0)
 
         if opr != "run":
             return  
 
+    print ("BER Test Results: \n")
+    file_out.write("BER Test Results: \n\n")
     for gbt in gbt_list:
         fec_error_gbt = fec_errors[gbt]
         #ber = float(fec_error_gbt) / (data_rate * runtime * 60)
@@ -313,26 +345,38 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
     if oh_ver == 1:
-        error_counter_h = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
-        error_counter_l = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
+        error_counter_h = mpeek(0x1B6)
+        error_counter_l = mpeek(0x1B7)
+        #error_counter_h = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H"))
+        #error_counter_l = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L"))
         error_counter = (error_counter_h << 8) | error_counter_l
     elif oh_ver == 2:
-        error_counter_0 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
-        error_counter_1 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
-        error_counter_2 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
-        error_counter_3 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
+        error_counter_0 = mpeek(0x1C6)
+        error_counter_1 = mpeek(0x1C7)
+        error_counter_2 = mpeek(0x1C8)
+        error_counter_3 = mpeek(0x1C9)
+        #error_counter_0 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0"))
+        #error_counter_1 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1"))
+        #error_counter_2 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2"))
+        #error_counter_3 = lpgbt_readReg(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3"))
         error_counter = (error_counter_0 << 24) | (error_counter_1 << 16) | (error_counter_2 << 8) | error_counter_3
     return error_counter   
 
 def init_lpgbt_fec_error_counter(oh_ver):
     if oh_ver == 1:
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H").address, 0x0)
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L").address, 0x0)
+        mpoke(0x1B6, 0x0)
+        mpoke(0x1B7, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_H").address, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT_L").address, 0x0)
     elif oh_ver == 2:
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0").address, 0x0)
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1").address, 0x0)
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2").address, 0x0)
-        mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3").address, 0x0)
+        mpoke(0x1C6, 0x0)
+        mpoke(0x1C7, 0x0)
+        mpoke(0x1C8, 0x0)
+        mpoke(0x1C9, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT0").address, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT1").address, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT2").address, 0x0)
+        #mpoke(getNode("LPGBT.RO.FEC.DLDPFECCORRECTIONCOUNT3").address, 0x0)
 
 if __name__ == "__main__":
     # Parsing arguments
@@ -393,25 +437,23 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Need GBTID" + Colors.ENDC)
         sys.exit()
     else:
-        if args.path == "downlink" and len(args.gbtid) > 1:
-            print (Colors.YELLOW + "Only 1 GBT allowd for downlink" + Colors.ENDC)
+        if args.path == "downlink" and args.system == "chc" and len(args.gbtid) > 1:
+            print (Colors.YELLOW + "Only 1 GBT allowd for downlink for cheesecake" + Colors.ENDC)
             sys.exit()
         for gbt in args.gbtid:
             if int(gbt) > 7:
                 print(Colors.YELLOW + "Only GBTID 0-7 allowed" + Colors.ENDC)
                 sys.exit()
 
+    oh_ver = None
+    boss = None
     if args.path == "downlink":
-        oh_ver = get_oh_ver(args.ohid, args.gbtid[0])
-        boss = None
-        if int(args.gbtid[0])%2 == 0:
-            boss = 1
-        else:
-            boss = 0
-    else:
-        oh_ver = None
-        boss = None
-
+        boss = 1
+        for gbt in args.gbtid:
+            if int(gbt%2) != 0:
+                boss = 0
+                break
+        
     if args.path == "downlink":
         if not boss:
             print (Colors.YELLOW + "Downlink can be checked only for boss lpGBT" + Colors.ENDC)
@@ -452,19 +494,18 @@ if __name__ == "__main__":
             vfat_list.append(v_int)
         
     # Initialization
-    if args.path == "downlink":
+    if args.path == "downlink" and args.system == "chc":
         rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid[0])
     else:
         rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.path == "downlink":
-        for gbt in args.gbtid:
-            check_lpgbt_ready(args.ohid, gbt)
+    if args.path == "downlink" and args.system == "chc":
+        check_lpgbt_ready(args.ohid, args.gbtid[0])
 
     # Readback rom register to make sure communication is OK  
-    if args.system != "dryrun" and args.path == "downlink":
+    if args.path == "downlink" and args.system == "chc":
         check_rom_readback(args.ohid, args.gbtid[0])
         check_lpgbt_mode(boss, args.ohid, args.gbtid[0])   
         
