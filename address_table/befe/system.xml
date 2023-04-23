@@ -63,8 +63,8 @@
           sw_enum="['GEM', 'CSC_FED']"
           fw_signal="CFG_FW_FLAVOR"/>
     <node id="BOARD_TYPE" address="0x4" mask="0x000000f0" permission="r"
-          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O"
-          sw_enum="['GLIB', 'CTP7', 'CVP13', 'APEX', 'X2O']"
+          description="Type of board that this firmware is running on: 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O rev1; 5 = X2O rev2"
+          sw_enum="['GLIB', 'CTP7', 'CVP13', 'APEX', 'X2O_R1', 'X2O_R2']"
           fw_signal="CFG_BOARD_TYPE"/>
     <node id="NUM_LINKS" address="0x4" mask="0x0000ff00" permission="r"
           description="The number of logic optical links that this board has."

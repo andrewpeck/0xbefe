@@ -161,80 +161,76 @@ set_property PACKAGE_PIN M39 [get_ports {refclk1_p_i[0]}]
 create_clock -period 6.250 -name mgt_refclk1_0 [get_ports {refclk1_p_i[0]}]
 set_clock_groups -group [get_clocks mgt_refclk1_0] -asynchronous
 
-# --------- Quad 125: LMK5C33216_VU+_CLK+_2 (Si5395J out1, 160.00MHz) ---------
-set_property PACKAGE_PIN AN41 [get_ports {refclk1_p_i[1]}]
+# --------- Quad 132: LMK5C33216_VU+_CLK+_6 (Si5395J out2, 160.00MHz) ---------
+set_property PACKAGE_PIN P39 [get_ports {refclk1_p_i[1]}]
 create_clock -period 6.250 -name mgt_refclk1_1 [get_ports {refclk1_p_i[1]}]
 set_clock_groups -group [get_clocks mgt_refclk1_1] -asynchronous
 
-# --------- Quad 132: LMK5C33216_VU+_CLK+_6 (Si5395J out2, 160.00MHz) ---------
-set_property PACKAGE_PIN P39 [get_ports {refclk1_p_i[2]}]
+# --------- Quad 122: LMK5C33216_VU+_CLK+_1 (Si5395J out3, 160.00MHz) ---------
+set_property PACKAGE_PIN AW41 [get_ports {refclk1_p_i[2]}]
 create_clock -period 6.250 -name mgt_refclk1_2 [get_ports {refclk1_p_i[2]}]
 set_clock_groups -group [get_clocks mgt_refclk1_2] -asynchronous
 
-# --------- Quad 122: LMK5C33216_VU+_CLK+_1 (Si5395J out3, 160.00MHz) ---------
-set_property PACKAGE_PIN AW41 [get_ports {refclk1_p_i[3]}]
+# --------- Quad 129: LMK5C33216_VU+_CLK+_4 (Si5395J out4, 160.00MHz) ---------
+set_property PACKAGE_PIN Y39 [get_ports {refclk1_p_i[3]}]
 create_clock -period 6.250 -name mgt_refclk1_3 [get_ports {refclk1_p_i[3]}]
 set_clock_groups -group [get_clocks mgt_refclk1_3] -asynchronous
 
-# --------- Quad 129: LMK5C33216_VU+_CLK+_4 (Si5395J out4, 160.00MHz) ---------
-set_property PACKAGE_PIN Y39 [get_ports {refclk1_p_i[4]}]
+# --------- Quad 130: LMK5C33216_VU+_CLK+_5 (Si5395J out5, 160.00MHz) ---------
+set_property PACKAGE_PIN V39 [get_ports {refclk1_p_i[4]}]
 create_clock -period 6.250 -name mgt_refclk1_4 [get_ports {refclk1_p_i[4]}]
 set_clock_groups -group [get_clocks mgt_refclk1_4] -asynchronous
 
-# --------- Quad 130: LMK5C33216_VU+_CLK+_5 (Si5395J out5, 160.00MHz) ---------
-set_property PACKAGE_PIN V39 [get_ports {refclk1_p_i[5]}]
+# --------- Quad 126: LMK5C33216_VU+_CLK+_3 (Si5395J out6, 160.00MHz) ---------
+set_property PACKAGE_PIN AL41 [get_ports {refclk1_p_i[5]}]
 create_clock -period 6.250 -name mgt_refclk1_5 [get_ports {refclk1_p_i[5]}]
 set_clock_groups -group [get_clocks mgt_refclk1_5] -asynchronous
 
-# --------- Quad 126: LMK5C33216_VU+_CLK+_3 (Si5395J out6, 160.00MHz) ---------
-set_property PACKAGE_PIN AL41 [get_ports {refclk1_p_i[6]}]
+# --------- Quad 121: LMK5C33216_VU+_CLK+_0 (Si5395J out7, 160.00MHz) ---------
+set_property PACKAGE_PIN BA41 [get_ports {refclk1_p_i[6]}]
 create_clock -period 6.250 -name mgt_refclk1_6 [get_ports {refclk1_p_i[6]}]
 set_clock_groups -group [get_clocks mgt_refclk1_6] -asynchronous
 
-# --------- Quad 121: LMK5C33216_VU+_CLK+_0 (Si5395J out7, 160.00MHz) ---------
-set_property PACKAGE_PIN BA41 [get_ports {refclk1_p_i[7]}]
+# --------- Quad 221: LMK5C33216_VU+_CLK+_8 (Si5395J out8, 160.00MHz) ---------
+set_property PACKAGE_PIN BA11 [get_ports {refclk1_p_i[7]}]
 create_clock -period 6.250 -name mgt_refclk1_7 [get_ports {refclk1_p_i[7]}]
 set_clock_groups -group [get_clocks mgt_refclk1_7] -asynchronous
 
-# --------- Quad 221: LMK5C33216_VU+_CLK+_8 (Si5395J out8, 160.00MHz) ---------
-set_property PACKAGE_PIN BA11 [get_ports {refclk1_p_i[8]}]
+# --------- Quad 230: LMK5C33216_VU+_CLK+_13 (Si5395J out9, 160.00MHz) ---------
+set_property PACKAGE_PIN V13 [get_ports {refclk1_p_i[8]}]
 create_clock -period 6.250 -name mgt_refclk1_8 [get_ports {refclk1_p_i[8]}]
 set_clock_groups -group [get_clocks mgt_refclk1_8] -asynchronous
 
-# --------- Quad 230: LMK5C33216_VU+_CLK+_13 (Si5395J out9, 160.00MHz) ---------
-set_property PACKAGE_PIN V13 [get_ports {refclk1_p_i[9]}]
+# --------- Quad 232: LMK5C33216_VU+_CLK+_14 (Si5395J out10, 160.00MHz) ---------
+set_property PACKAGE_PIN P13 [get_ports {refclk1_p_i[9]}]
 create_clock -period 6.250 -name mgt_refclk1_9 [get_ports {refclk1_p_i[9]}]
 set_clock_groups -group [get_clocks mgt_refclk1_9] -asynchronous
 
-# --------- Quad 232: LMK5C33216_VU+_CLK+_14 (Si5395J out10, 160.00MHz) ---------
-set_property PACKAGE_PIN P13 [get_ports {refclk1_p_i[10]}]
+# --------- Quad 222: LMK5C33216_VU+_CLK+_9 (Si5395J out11, 160.00MHz) ---------
+set_property PACKAGE_PIN AW11 [get_ports {refclk1_p_i[10]}]
 create_clock -period 6.250 -name mgt_refclk1_10 [get_ports {refclk1_p_i[10]}]
 set_clock_groups -group [get_clocks mgt_refclk1_10] -asynchronous
 
-# --------- Quad 222: LMK5C33216_VU+_CLK+_9 (Si5395J out11, 160.00MHz) ---------
-set_property PACKAGE_PIN AW11 [get_ports {refclk1_p_i[11]}]
+# --------- Quad 233: LMK5C33216_VU+_CLK+_15 (Si5395J out12, 160.00MHz) ---------
+set_property PACKAGE_PIN M13 [get_ports {refclk1_p_i[11]}]
 create_clock -period 6.250 -name mgt_refclk1_11 [get_ports {refclk1_p_i[11]}]
 set_clock_groups -group [get_clocks mgt_refclk1_11] -asynchronous
 
-# --------- Quad 233: LMK5C33216_VU+_CLK+_15 (Si5395J out12, 160.00MHz) ---------
-set_property PACKAGE_PIN M13 [get_ports {refclk1_p_i[12]}]
+# --------- Quad 226: LMK5C33216_VU+_CLK+_11 (Si5395J out13, 160.00MHz) ---------
+set_property PACKAGE_PIN AL11 [get_ports {refclk1_p_i[12]}]
 create_clock -period 6.250 -name mgt_refclk1_12 [get_ports {refclk1_p_i[12]}]
 set_clock_groups -group [get_clocks mgt_refclk1_12] -asynchronous
 
-# --------- Quad 226: LMK5C33216_VU+_CLK+_11 (Si5395J out13, 160.00MHz) ---------
-set_property PACKAGE_PIN AL11 [get_ports {refclk1_p_i[13]}]
+# --------- Quad 225: LMK5C33216_VU+_CLK+_10 (Si5395J out14, 160.00MHz) ---------
+set_property PACKAGE_PIN AN11 [get_ports {refclk1_p_i[13]}]
 create_clock -period 6.250 -name mgt_refclk1_13 [get_ports {refclk1_p_i[13]}]
 set_clock_groups -group [get_clocks mgt_refclk1_13] -asynchronous
 
-# --------- Quad 225: LMK5C33216_VU+_CLK+_10 (Si5395J out14, 160.00MHz) ---------
-set_property PACKAGE_PIN AN11 [get_ports {refclk1_p_i[14]}]
+# --------- Quad 229: LMK5C33216_VU+_CLK+_12 (Si5395J out15, 160.00MHz) ---------
+set_property PACKAGE_PIN Y13 [get_ports {refclk1_p_i[14]}]
 create_clock -period 6.250 -name mgt_refclk1_14 [get_ports {refclk1_p_i[14]}]
 set_clock_groups -group [get_clocks mgt_refclk1_14] -asynchronous
 
-# --------- Quad 229: LMK5C33216_VU+_CLK+_12 (Si5395J out15, 160.00MHz) ---------
-set_property PACKAGE_PIN Y13 [get_ports {refclk1_p_i[15]}]
-create_clock -period 6.250 -name mgt_refclk1_15 [get_ports {refclk1_p_i[15]}]
-set_clock_groups -group [get_clocks mgt_refclk1_15] -asynchronous
 
 ###############################################################
 ########################### MGT LOC ###########################
