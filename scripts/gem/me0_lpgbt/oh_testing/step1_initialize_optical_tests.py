@@ -279,7 +279,7 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 7 - S-bit Phase Scan, Mapping, Cluster Mapping
+    # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
