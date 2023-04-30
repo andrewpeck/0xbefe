@@ -1,10 +1,11 @@
 from common.rw_reg import *
 from common.utils import *
 from time import *
+import os
 import statistics
 
 def main():
-    DATA_DIR="/root/gem/0xbefe_test_refclks/scripts/boards/x2o/data"
+    DATA_DIR=os.getenv('DATA_DIR')
     now = datetime.now()
     d_time = now.strftime("%Y-%m-%d")
     isExist = os.path.exists(DATA_DIR+"/refclk_data/"+d_time)
@@ -41,10 +42,12 @@ def main():
     f.write(header)
     n_iters=0
     max_iters=30
-    
+    data=""
+    results[0]=[]
     while n_iters<max_iters:
-        data = "%d" % read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY")
-        results[0].append(read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY"))
+        if os.getenv("BEFE_FLAVOR")=="csc":
+            data = "%d" % read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY")
+            results[0].append(read_reg("BEFE.CSC_FED.TTC.STATUS.CLK.CLK40_FREQUENCY"))
         for i in range(0, num_mgts, 4):
             results[i//2+1].append(read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK0_FREQ" % i))
             results[i//2+2].append(read_reg("BEFE.MGTS.MGT%d.STATUS.REFCLK1_FREQ" % i))

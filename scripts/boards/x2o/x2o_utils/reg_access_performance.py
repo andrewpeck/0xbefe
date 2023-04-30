@@ -3,10 +3,11 @@ from common.utils import *
 from common.fw_utils import *
 import time
 import sys
+import os
 import random
 from datetime import datetime
 
-DATA_DIR="/root/gem/0xbefe_test_refclks/scripts/boards/x2o/data"
+DATA_DIR=os.getenv('DATA_DIR')
 now = datetime.now()
 d_time = now.strftime("%Y-%m-%d")
 isExist = os.path.exists(DATA_DIR+"/reg_performance/"+d_time)
