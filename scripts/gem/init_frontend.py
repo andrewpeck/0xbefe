@@ -362,7 +362,7 @@ def init_gem_frontend():
                 if vfat in bitslip_list_sbit:
                     for elink in range(0,8):
                         set_bitslip = bitslip_list_sbit[vfat][elink]
-                        write_reg("BEFE.GEM.SBIT_ME0.OH%d_VFAT_MAP.VFAT%d.ELINK%d_MAP"%(oh,vfat,elink), set_bitslip)
+                        write_reg("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh,vfat,elink), set_bitslip)
 
 
     print("\nSetting VFAT HDLC addresses")
