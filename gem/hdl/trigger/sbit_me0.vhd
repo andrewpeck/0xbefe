@@ -482,11 +482,9 @@ begin
         begin
             i_sbit_inj : entity work.sbit_inj_me0
                 generic map(
-                    g_NUM_OF_OHs            => g_NUM_OF_OHs,
                     g_NUM_VFATS_PER_OH      => g_NUM_VFATS_PER_OH,
                     g_FIFO_DATA_DEPTH       => 512,
                     g_FIFO_DATA_CNT_WIDTH   => 10,
-                    g_IPB_CLK_PERIOD_NS     => g_IPB_CLK_PERIOD_NS,
                     g_NUM_BXS               => 256,
                     g_DEBUG                 => g_DEBUG
                 )
