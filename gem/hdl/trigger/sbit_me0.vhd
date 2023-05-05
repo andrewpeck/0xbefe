@@ -318,6 +318,34 @@ begin
     --== Debug me0 sbits ==--
 
     ila_enable : if g_DEBUG generate
+
+        signal prt_0  , prt_1  , prt_2  , prt_3   : std_logic_vector (me0_segments_o(0).partition'range);
+        signal strip_0, strip_1, strip_2, strip_3 : std_logic_vector (me0_segments_o(0).strip'range);
+        signal lc_0   , lc_1   , lc_2   , lc_3    : std_logic_vector (me0_segments_o(0).lc'range);
+        signal id_0   , id_1   , id_2   , id_3    : std_logic_vector (me0_segments_o(0).id'range);
+
+    begin
+
+        prt_0   <= std_logic_vector(me0_segments_o(0).partition);
+        strip_0 <= std_logic_vector(me0_segments_o(0).strip);
+        lc_0    <= std_logic_vector(me0_segments_o(0).lc);
+        id_0    <= std_logic_vector(me0_segments_o(0).id);
+
+        prt_1   <= std_logic_vector(me0_segments_o(1).partition);
+        strip_1 <= std_logic_vector(me0_segments_o(1).strip);
+        lc_1    <= std_logic_vector(me0_segments_o(1).lc);
+        id_1    <= std_logic_vector(me0_segments_o(1).id);
+
+        prt_2   <= std_logic_vector(me0_segments_o(2).partition);
+        strip_2 <= std_logic_vector(me0_segments_o(2).strip);
+        lc_2    <= std_logic_vector(me0_segments_o(2).lc);
+        id_2    <= std_logic_vector(me0_segments_o(2).id);
+
+        prt_3   <= std_logic_vector(me0_segments_o(3).partition);
+        strip_3 <= std_logic_vector(me0_segments_o(3).strip);
+        lc_3    <= std_logic_vector(me0_segments_o(3).lc);
+        id_3    <= std_logic_vector(me0_segments_o(3).id);
+
         me0_cluster_debug : ila_sbit_me0
             port map (
                 clk => ttc_clk_i.clk_40,
@@ -339,10 +367,10 @@ begin
                 probe14 => ttc_cmds_i.calpulse,
                 probe15 => ttc_cmds_i.l1a,
                 probe16 => segment_pretrigger_o,
-                probe17 => std_logic_vector(me0_segments_o(0).partition) & std_logic_vector(me0_segments_o(0).strip) & std_logic_vector(me0_segments_o(0).lc) & "000000" & std_logic_vector(me0_segments_o(0).id),
-                probe18 => std_logic_vector(me0_segments_o(1).partition) & std_logic_vector(me0_segments_o(1).strip) & std_logic_vector(me0_segments_o(1).lc) & "000000" & std_logic_vector(me0_segments_o(1).id),
-                probe19 => std_logic_vector(me0_segments_o(2).partition) & std_logic_vector(me0_segments_o(2).strip) & std_logic_vector(me0_segments_o(2).lc) & "000000" & std_logic_vector(me0_segments_o(2).id),
-                probe20 => std_logic_vector(me0_segments_o(3).partition) & std_logic_vector(me0_segments_o(3).strip) & std_logic_vector(me0_segments_o(3).lc) & "000000" & std_logic_vector(me0_segments_o(3).id)
+                probe17 => "000000" & prt_0 & strip_0 & lc_0 & id_0,
+                probe18 => "000000" & prt_1 & strip_1 & lc_1 & id_1,
+                probe19 => "000000" & prt_2 & strip_2 & lc_2 & id_2,
+                probe20 => "000000" & prt_3 & strip_3 & lc_3 & id_3
                 );
 
     end generate;
