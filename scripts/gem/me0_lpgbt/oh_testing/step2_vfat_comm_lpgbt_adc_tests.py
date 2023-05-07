@@ -191,20 +191,20 @@ if __name__ == "__main__":
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 1-m 5")
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 2-m 5")
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 3-m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_voltage_data/*GBT0*.pdf")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT0*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot1_boss.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_voltage_data/*GBT1*.pdf")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT1*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot1_sub.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_voltage_data/*GBT2*.pdf")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT2*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot2_boss.pdf"%(latest_file, dataDir))
     time.sleep(5)
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_voltage_data/*GBT3*.pdf")
+    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT3*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot2_sub.pdf"%(latest_file, dataDir))
