@@ -16,12 +16,18 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
+    OHDir = dataDir+"/OH_SNs_"+"_".join(oh_ser_nr_list)
+    try:
+        os.makedirs(OHDir) # create directory for OHs under test
+    except FileExistsError: # skip if directory already exists
+        pass  
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    file_out = open(dataDir+"/queso_elink_bert_OHSNs_"+"_".join(oh_ser_nr_list)+".txt", "w")
+    logfile = open(OHDir+"/queso_elink_bert_log.txt", "w")
+    resultsfile = open(OHDir+"/queso_elink_bert_results.txt")
     print ("Checking BER for elinks: \n")
-    file_out.write("Checking BER for elinks: \n\n")
+    logfile.write("Checking BER for elinks: \n\n")
     
     # Check if GBT is READY
     gbt_list = [[]]
@@ -35,17 +41,17 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
             link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select_list, gbt)))
             if (link_ready!=1):
                 print (Colors.RED + "ERROR: OH %d lpGBT %d links are not READY, check fiber connections"%(oh_select,gbt) + Colors.ENDC)
-                file_out.close()
+                logfile.close()
                 rw_terminate()
 
     print ("Checking PRBS errors for OH serial numbers:\n" + "\n".join(oh_ser_nr_list))
-    file_out.write("Checking PRBS errors for OH serial numbers:\n" + "\n".join(oh_ser_nr_list) + "\n")
+    logfile.write("Checking PRBS errors for OH serial numbers:\n" + "\n".join(oh_ser_nr_list) + "\n")
     print ("Running for all Elink (0-9) for VFATs: ")
     print (" ".join(str(vfat) for vfat in vfat_list))
     print ("\n")
-    file_out.write("Running for all Elink (0-9) for VFATs: \n")
-    file_out.write(" ".join(str(vfat) for vfat in vfat_list))
-    file_out.write("\n\n")
+    logfile.write("Running for all Elink (0-9) for VFATs: \n")
+    logfile.write(" ".join(str(vfat) for vfat in vfat_list))
+    logfile.write("\n\n")
 
     prbs_errors = {}
     for oh_select in oh_select_list:
@@ -76,9 +82,9 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
                 queso_prbs_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
 
     print ("Start Error Counting for time = %.2f minutes" % (runtime))
-    file_out.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
+    logfile.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
     print ("")
-    file_out.write("\n")
+    logfile.write("\n")
 
     # Enable QUESO BERT
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 1)
@@ -93,7 +99,7 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
     # Initial errors
     n_elink_errors = 0
     print ("Starting PRBS errors: ")
-    file_out.write("Starting PRBS errors: \n")
+    logfile.write("Starting PRBS errors: \n")
     err_str = Colors.RED + "  PRBS errors on: "
     for oh_select in oh_select_list:
         for vfat in vfat_list:
@@ -105,21 +111,21 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
     err_str += "\n" + Colors.ENDC
     if n_elink_errors == 0:
         print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
-        file_out.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
+        logfile.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
     else:
         print (err_str)
-        file_out.write(err_str + "\n")
+        logfile.write(err_str + "\n")
 
     while ((time()-t0)/60.0) < runtime:
         time_passed = (time()-time_prev)/60.0
         if time_passed >= 1:
             print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
-            file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
+            logfile.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
 
             # Checking errors
             n_elink_errors = 0
             print ("Checking PRBS errors: ")
-            file_out.write("Checking PRBS errors: \n")
+            logfile.write("Checking PRBS errors: \n")
             err_str = Colors.RED + "  PRBS errors on: "
             for oh_select in oh_select_list:
                 for vfat in vfat_list:
@@ -131,15 +137,15 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
             err_str += "\n" + Colors.ENDC
             if n_elink_errors == 0:
                 print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
-                file_out.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
+                logfile.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
             else:
                 print (err_str)
-                file_out.write(err_str + "\n")
+                logfile.write(err_str + "\n")
 
             time_prev = time()
 
     print ("\nEnd Error Counting:")
-    file_out.write("\nEnd Error Counting: \n")
+    logfile.write("\nEnd Error Counting: \n")
 
     # Disable QUESO BERT 
     sleep(0.1)
@@ -154,11 +160,11 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
     # Printing results
     ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
     print("BERT Reuslts for OH SNs: " + " ".join(oh_ser_nr_list) +":\n")
-    file_out.write("BERT Reuslts for OH SNs: " + " ".join(oh_ser_nr_list) +":\n\n")
+    logfile.write("BERT Reuslts for OH SNs: " + " ".join(oh_ser_nr_list) +":\n\n")
     for oh_select in oh_select_list:
         for vfat in vfat_list:
             print ("  OH %d VFAT %d:"%(oh_select,vfat))
-            file_out.write("  OH %d VFAT %d:\n"%(oh_select,vfat))
+            logfile.write("  OH %d VFAT %d:\n"%(oh_select,vfat))
             for elink in prbs_errors[oh_select][vfat]:
                 err_str = ""
                 if prbs_errors[oh_select][vfat][elink] == 0:
@@ -170,17 +176,17 @@ def queso_bert(system, oh_select_list, oh_ser_nr_list, vfat_list, runtime, ber_l
                     err_str += ", BER < {:.2e}".format(ber_ul) 
                 err_str += Colors.ENDC
                 print (err_str)
-                file_out.write(err_str + "\n")
+                logfile.write(err_str + "\n")
     print ("")
-    file_out.write("\n")
+    logfile.write("\n")
 
     # Reset QUESO BERT registers
     write_backend_reg(queso_reset_node, 1)
 
     print ("Finished PRBS errors for OH serial number: %d\n"%oh_ser_nr_list)
-    file_out.write("Finished PRBS errors for OH serial number: %d\n\n"%oh_ser_nr_list)
+    logfile.write("Finished PRBS errors for OH serial number: %d\n\n"%oh_ser_nr_list)
 
-    file_out.close()
+    logfile.close()
 
 if __name__ == "__main__":
 
@@ -229,11 +235,10 @@ if __name__ == "__main__":
         sys.exit()
     vfat_list = []
     for v in args.vfats:
-        v_int = int(v)
-        if v_int not in range(0,24):
+        if int(v) not in range(24):
             print (Colors.YELLOW + "Invalid VFAT number, only allowed 0-23" + Colors.ENDC)
             sys.exit()
-        vfat_list.append(v_int)
+        vfat_list.append(int(v))
 
     if args.time is None and args.ber is None:
         print (Colors.YELLOW + "BERT measurement time or BER limit required" + Colors.ENDC)
