@@ -185,7 +185,10 @@ def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
         for vfat in vfat_list:
             prbs_errors_oh_sn[oh_serial_nr][vfat] = {}
             for elink in range(0, 9):
-                prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = prbs_errors[oh_select][vfat][elink]
+                if prbs_errors[oh_select][vfat][elink] == 0:
+                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "< {:.2e}".format(ber_ul)"
+                else:
+                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
 
     with open(resultsfilename, "w") as file:
         resultsfilename.write(json.dumps(prbs_errors_oh_sn))
