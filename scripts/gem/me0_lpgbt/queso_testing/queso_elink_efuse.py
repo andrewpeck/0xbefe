@@ -190,8 +190,8 @@ def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
                 else:
                     prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
 
-    with open(resultsfilename, "w") as resultsfile:
-        resultsfile.write(json.dumps(prbs_errors_oh_sn))
+    with open(resultsfilename, "w") as file:
+        resultsfilename.write(json.dumps(prbs_errors_oh_sn))
 
     print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
