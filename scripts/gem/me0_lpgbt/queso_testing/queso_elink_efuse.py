@@ -5,221 +5,25 @@ import sys
 import argparse
 import math
 import json
-from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
-
-def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
-
-    resultDir = "me0_lpgbt/queso_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    dataDir = "me0_lpgbt/queso_testing/results/bert_results"
-    try:
-        os.makedirs(dataDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    oh_ser_nr_list = []
-    for queso in queso_list:
-        oh_ser_nr_list.append(queso_list[queso])
-    OHDir = dataDir+"/OH_SNs_"+"_".join(oh_ser_nr_list)
-    try:
-        os.makedirs(OHDir) # create directory for OHs under test
-    except FileExistsError: # skip if directory already exists
-        pass  
-    now = str(datetime.datetime.now())[:16]
-    now = now.replace(":", "_")
-    now = now.replace(" ", "_")
-    logfile = open(OHDir+"/queso_elink_bert_log.txt", "w")
-    resultsfilename = OHDir+"/queso_elink_bert_results.json"
-    print ("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
-    logfile.write("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
-    
-    # Check if GBT is READY
-    for oh_select in oh_gbt_vfat_map:
-        for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
-            link_ready = read_backend_reg(get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
-            if (link_ready!=1):
-                print (Colors.RED + "ERROR: OH %d lpGBT %d links are not READY, check fiber connections"%(oh_select,gbt) + Colors.ENDC)
-                logfile.close()
-                rw_terminate()
-
-    data_rate = 320 *1e6 # 320 Mb/s
-    if runtime is None:
-        ber_limit = float(ber_limit)
-        runtime = (-math.log(1-cl))/(data_rate * ber_limit * 60)
-    elif ber_limit is None:
-        runtime = float(runtime)
-
-    queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
-    queso_bitslip_nodes = {}
-    queso_prbs_nodes = {}
-    prbs_errors = {}
-    for oh_select in oh_gbt_vfat_map:
-        queso_bitslip_nodes[oh_select] = {}
-        queso_prbs_nodes[oh_select] = {}
-        prbs_errors[oh_select] = {}
-        vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
-        for vfat in vfat_list:
-            queso_bitslip_nodes[oh_select][vfat] = {}
-            queso_prbs_nodes[oh_select][vfat] = {}
-            prbs_errors[oh_select][vfat] = {}
-            for elink in range(0, 9):
-                queso_bitslip_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
-                queso_prbs_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
-                prbs_errors[oh_select][vfat][elink] = 0
-
-    print ("Start Error Counting for time = %.2f minutes" % (runtime))
-    logfile.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
-    print ("")
-    logfile.write("\n")
-
-    # Enable QUESO BERT
-    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 1)
-
-    # Reset QUESO BERT registers
-    write_backend_reg(queso_reset_node, 1)
-    sleep(0.1)
-
-    t0 = time()
-    time_prev = t0
-
-    # Initial errors
-    n_elink_errors = 0
-    print ("Starting PRBS errors: ")
-    logfile.write("Starting PRBS errors: \n")
-    err_str = Colors.RED + "  PRBS errors on: "
-    for oh_select in oh_gbt_vfat_map:
-        vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
-        for vfat in vfat_list:
-            for elink in range(0, 9):
-                prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
-                if prbs_errors[oh_select][vfat][elink] != 0:
-                    err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink])
-                    n_elink_errors += 1
-    err_str += "\n" + Colors.ENDC
-    if n_elink_errors == 0:
-        print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
-        logfile.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
-    else:
-        print (err_str)
-        logfile.write(err_str + "\n")
-
-    while ((time()-t0)/60.0) < runtime:
-        time_passed = (time()-time_prev)/60.0
-        if time_passed >= 1:
-            print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
-            logfile.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
-
-            # Checking errors
-            n_elink_errors = 0
-            print ("Checking PRBS errors: ")
-            logfile.write("Checking PRBS errors: \n")
-            err_str = Colors.RED + "  PRBS errors on: "
-            for oh_select in oh_gbt_vfat_map:
-                vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
-                for vfat in vfat_list:
-                    for elink in range(9):
-                        prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
-                        if prbs_errors[oh_select][vfat][elink] != 0:
-                            err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink])
-                            n_elink_errors += 1
-            err_str += "\n" + Colors.ENDC
-            if n_elink_errors == 0:
-                print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
-                logfile.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
-            else:
-                print (err_str)
-                logfile.write(err_str + "\n")
-
-            time_prev = time()
-
-    print ("\nEnd Error Counting:")
-    logfile.write("\nEnd Error Counting: \n")
-
-    # Disable QUESO BERT 
-    sleep(0.1)
-    write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 0)
-
-    # Final errors
-    for oh_select in oh_gbt_vfat_map:
-        vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
-        for vfat in vfat_list:
-            for elink in range(9):
-                prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
-   
-    # Printing results
-    ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
-    print("BERT Reuslts for OH SNs: " + " ".join(oh_ser_nr_list) +":\n")
-    logfile.write("BERT Reuslts for OH SNs: " + " ".join(oh_ser_nr_list) +":\n\n")
-    for oh_select in oh_gbt_vfat_map:
-        vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
-        for vfat in vfat_list:
-            print ("  OH %d VFAT %d:"%(oh_select,vfat))
-            logfile.write("  OH %d VFAT %d:\n"%(oh_select,vfat))
-            for elink in prbs_errors[oh_select][vfat]:
-                err_str = ""
-                if prbs_errors[oh_select][vfat][elink] == 0:
-                    err_str += Colors.GREEN
-                else:
-                    err_str += Colors.RED
-                err_str += "    ELINK %d: Nr. of PRBS errors = %d"%(elink, prbs_errors[oh_select][vfat][elink])
-                if prbs_errors[oh_select][vfat][elink] == 0:
-                    err_str += ", BER < {:.2e}".format(ber_ul) 
-                err_str += Colors.ENDC
-                print (err_str)
-                logfile.write(err_str + "\n")
-    print ("")
-    logfile.write("\n")
-
-    # Reset QUESO BERT registers
-    write_backend_reg(queso_reset_node, 1)
-
-    
-    prbs_errors_oh_sn = {}
-    for queso in queso_list:
-        oh_serial_nr = queso_list[queso]
-        oh_select = queso_oh_map[queso]["OH"]
-        vfat_list = queso_oh_map[queso]["VFAT"]
-        prbs_errors_oh_sn[oh_serial_nr] = {}
-        for vfat in vfat_list:
-            prbs_errors_oh_sn[oh_serial_nr][vfat] = {}
-            for elink in range(0, 9):
-                if prbs_errors[oh_select][vfat][elink] == 0:
-                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "< {:.2e}".format(ber_ul)"
-                else:
-                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
-
-    with open(resultsfilename, "w") as file:
-        resultsfilename.write(json.dumps(prbs_errors_oh_sn))
-
-    print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
-    logfile.write("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
-
-    logfile.close()
-    resultsfile.close()
+import paramiko
+from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map, pi_list
 
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="QUESO BERT")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
+    parser = argparse.ArgumentParser(description="QUESO EFuse")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = queso or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
-    #parser.add_argument("-o", "--ohs", action="store", nargs="+", dest="ohs", help="ohs = list of OH numbers (0-1)")
-    #parser.add_argument("-n", "--oh_ser_nrs", action="store", nargs="+", dest="oh_ser_nrs", help="oh_ser_nrs = list of OH serial numbers")
-    #parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numers for QUESOs")
-    parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
-    parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
-    parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
+    parser.add_argument("-u", "--userid_file", action="store", dest="userid_file", help="USERID_FILE = file containing list of USER_ID for OH Serial Numbers")
     args = parser.parse_args()
 
-    if args.system == "backend":
-        print ("Using Backend for queso bert")
+    if args.system == "queso":
+        print ("Using QUESO for fusing")
     elif args.system == "dryrun":
-        print ("Dry Run - not actually running queso bert")
+        print ("Dry Run - not actually fusing")
     else:
-        print (Colors.YELLOW + "Only valid options: backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: queso, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":
@@ -229,7 +33,10 @@ if __name__ == "__main__":
     if args.input_file is None:
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
-    oh_gbt_vfat_map = {}
+    if args.userid_file is None:
+        print(Colors.YELLOW + "Need User ID File" + Colors.ENDC)
+        sys.exit()
+
     queso_list = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
@@ -247,35 +54,69 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
         sys.exit() 
 
+    oh_user_id = {}
+    userid_file = open(args.userid_file)
+    for line in userid_file.readlines():
+        if "#" in line:
+            continue
+        oh_serial_nr = line.split()[0]
+        main_user_id = line.split()[1]
+        secondary_user_id = line.split()[2]
+        oh_user_id[oh_serial_nr]["main"] = main_user_id
+        oh_user_id[oh_serial_nr]["secondary"] = secondary_user_id
+    userid_file.close()
+    
+    username = "pi"
+    password = "queso"
+    ssh = paramiko.SSHClient()
+
+    # Load SSH host keys
+    ssh.load_system_host_keys()
+    # Add SSH host key automatically if needed
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 "
+
+    print ("\n#####################################################################################################################################\n")
+
     for queso in args.queso_list:
-        oh = queso_oh_map[queso]["OH"]
-        if oh not in oh_gbt_vfat_map:
-            oh_gbt_vfat_map[oh] = {}
-            oh_gbt_vfat_map[oh]["GBT"] = []
-            oh_gbt_vfat_map[oh]["VFAT"] = []
-        oh_gbt_vfat_map[oh]["GBT"] += queso_oh_map[queso]["GBT"]
-        oh_gbt_vfat_map[oh]["VFAT"] += queso_oh_map[queso]["VFAT"]
+        print(Colors.BLUE + "Starting QUESO %s\n"%queso + Colors.ENDC)
+        # Connect to each RPi using username/password authentication
+        if queso in pi_list:
+            pi_ip = pi_list[queso]
+        else:
+            print (Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+            continue
+        ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+        print ("\n######################################################\n")
 
-    if args.time is None and args.ber is None:
-        print (Colors.YELLOW + "BERT measurement time or BER limit required" + Colors.ENDC)
-        sys.exit()
-    if args.time is not None and args.ber is not None:
-        print (Colors.YELLOW + "Only either BERT measurement time or BER limit should be given" + Colors.ENDC)
-        sys.exit()
+        # Run EFuse script
+        oh_serial_nr = queso_list[queso]
+        main_user_id = oh_user_id[oh_serial_nr]["main"]
+        secondary_user_id = oh_user_id[oh_serial_nr]["secondary"]
+        oh_id = queso_oh_map[queso]["OH"]
+        gbt_main_id = queso_oh_map[queso]["GBT"][0]
+        gbt_secondary_id = queso_oh_map[queso]["GBT"][1]
 
-    # Initialization 
-    initialize(args.gem, args.system)
-    print("Initialization Done\n")
+        print(Colors.BLUE + "Fusing Main lpGBT for OH Serial Number: %s\n"%(oh_serial_nr) + Colors.ENDC)
+        cur_ssh_command = base_ssh_command + "me0_lpgbt_efuse.py -s %s -q %s -o %d -g %d -f user_id -u %s"%(args.system, args.gem, oh_id, gbt_main_id, main_user_id)
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print (line)
+        print(Colors.GREEN + "\nFusing Main lpGBT for OH Serial Number: %s Done\n"%(oh_serial_nr) + Colors.ENDC)
+        print ("\n######################################################\n")
+        sleep(5)
 
-    # Scanning/setting bitslips
-    try:
-        queso_bert(args.system, queso_list, oh_gbt_vfat_map, args.time, args.ber, float(args.cl))
-    except KeyboardInterrupt:
-        print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
-        terminate()
-    except EOFError:
-        print (Colors.RED + "\nEOF Error" + Colors.ENDC)
-        terminate()
+        print(Colors.BLUE + "Fusing Secondary lpGBT for OH Serial Number: %s\n"%(oh_serial_nr) + Colors.ENDC)
+        cur_ssh_command = base_ssh_command + "me0_lpgbt_efuse.py -s %s -q %s -o %d -g %d -f user_id -u %s"%(args.system, args.gem, oh_id, gbt_secondary_id, secondary_user_id)
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print (line)
+        print(Colors.GREEN + "\nFusing Secondary lpGBT for OH Serial Number: %s Done\n"%(oh_serial_nr) + Colors.ENDC)
+        print ("\n######################################################\n")
+        sleep(5)
 
-    # Termination
-    terminate()
+        print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
+        print ("\n#####################################################################################################################################\n")
+        ssh.close()

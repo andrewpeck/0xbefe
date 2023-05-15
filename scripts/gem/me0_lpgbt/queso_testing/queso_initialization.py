@@ -49,6 +49,17 @@ queso_oh_map["8"]["OH"] = 1
 queso_oh_map["8"]["GBT"] = [6, 7]
 queso_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 
+# List of QUESO Pi's
+pi_list = {}
+pi_list["1"] =  "169.254.119.34"
+pi_list["2"] =  "169.254.181.119"
+pi_list["3"] =  "169.254.118.3"
+pi_list["4"] =  "169.254.66.95"
+pi_list["5"] =  "169.254.122.125"
+pi_list["6"] =  "169.254.200.178"
+pi_list["7"] =  "169.254.8.226"
+pi_list["8"] =  "169.254.57.247"
+
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
@@ -68,17 +79,6 @@ if __name__ == "__main__":
             sys.exit()
         print("  QUESO: %s"%queso)
     print("")
-
-    # List of QUESO Pi's
-    pi_list = {}
-    pi_list["1"] =  "169.254.119.34"
-    pi_list["2"] =  "169.254.181.119"
-    pi_list["3"] =  "169.254.118.3"
-    pi_list["4"] =  "169.254.66.95"
-    pi_list["5"] =  "169.254.122.125"
-    pi_list["6"] =  "169.254.200.178"
-    pi_list["7"] =  "169.254.8.226"
-    pi_list["8"] =  "169.254.57.247"
 
     username = "pi"
     password = "queso"
