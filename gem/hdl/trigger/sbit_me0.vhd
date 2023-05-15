@@ -213,7 +213,16 @@ architecture sbit_me0_arch of sbit_me0 is
     signal regs_writable_arr    : std_logic_vector(REG_TRIGGER_NUM_REGS - 1 downto 0) := (others => '0');
     ------ Register signals end ----------------------------------------------
 
+    --------------------------------------------------------------------------------
+    -- Debug Signals
+    --------------------------------------------------------------------------------
+
     signal walking1 : std_logic_vector (64*3*8-1 downto 0) := (others => '0');
+
+    signal prt_0  , prt_1  , prt_2  , prt_3   : std_logic_vector (me0_segments_o(0).partition'range);
+    signal strip_0, strip_1, strip_2, strip_3 : std_logic_vector (me0_segments_o(0).strip'range);
+    signal lc_0   , lc_1   , lc_2   , lc_3    : std_logic_vector (me0_segments_o(0).lc'range);
+    signal id_0   , id_1   , id_2   , id_3    : std_logic_vector (me0_segments_o(0).id'range);
 
 begin
 
@@ -318,11 +327,6 @@ begin
     --== Debug me0 sbits ==--
 
     ila_enable : if g_DEBUG generate
-
-        signal prt_0  , prt_1  , prt_2  , prt_3   : std_logic_vector (me0_segments_o(0).partition'range);
-        signal strip_0, strip_1, strip_2, strip_3 : std_logic_vector (me0_segments_o(0).strip'range);
-        signal lc_0   , lc_1   , lc_2   , lc_3    : std_logic_vector (me0_segments_o(0).lc'range);
-        signal id_0   , id_1   , id_2   , id_3    : std_logic_vector (me0_segments_o(0).id'range);
 
     begin
 
@@ -626,12 +630,16 @@ begin
         begin
             prtgen : for iprt in 0 to 7 generate
             begin
-                sbits_i(iprt)(ilayer) <= (walking1(192*iprt + 191 downto 192*iprt + 128)
-                                          or vfat_sbits_chamber(ilayer)(16 + iprt)) &
-                                         (walking1(192*iprt + 127 downto 192*iprt + 64)
-                                          or vfat_sbits_chamber(ilayer)(8 + iprt)) &
-                                         (walking1(192*iprt + 63 downto 192*iprt + 0)
-                                          or vfat_sbits_chamber(ilayer)(0 + iprt));
+                y : if (g_EN_WALKING1) generate
+                    sbits_i(iprt)(ilayer) <= walking1(192*iprt + 191 downto 192*iprt + 128) &
+                                             walking1(192*iprt + 127 downto 192*iprt +  64) &
+                                             walking1(192*iprt + 63  downto 192*iprt +   0);
+                end generate;
+                n : if (not g_EN_WALKING1) generate
+                    sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) &
+                                             vfat_sbits_chamber(ilayer)( 8 + iprt) &
+                                             vfat_sbits_chamber(ilayer)( 0 + iprt);
+                end generate;
             end generate;
         end generate;
 
