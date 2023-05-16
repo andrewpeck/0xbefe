@@ -7,7 +7,7 @@ import math
 import json
 from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 
-def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
+def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
 
     resultDir = "me0_lpgbt/queso_testing/results"
     try:
@@ -20,8 +20,8 @@ def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
     except FileExistsError: # skip if directory already exists
         pass
     oh_ser_nr_list = []
-    for queso in queso_list:
-        oh_ser_nr_list.append(queso_list[queso])
+    for queso in queso_dict:
+        oh_ser_nr_list.append(queso_dict[queso])
     OHDir = dataDir+"/OH_SNs_"+"_".join(oh_ser_nr_list)
     try:
         os.makedirs(OHDir) # create directory for OHs under test
@@ -177,8 +177,8 @@ def queso_bert(system, queso_list, oh_gbt_vfat_map, runtime, ber_limit, cl):
 
     
     prbs_errors_oh_sn = {}
-    for queso in queso_list:
-        oh_serial_nr = queso_list[queso]
+    for queso in queso_dict:
+        oh_serial_nr = queso_dict[queso]
         oh_select = queso_oh_map[queso]["OH"]
         vfat_list = queso_oh_map[queso]["VFAT"]
         prbs_errors_oh_sn[oh_serial_nr] = {}
@@ -230,7 +230,7 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
     oh_gbt_vfat_map = {}
-    queso_list = {}
+    queso_dict = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
@@ -241,13 +241,13 @@ if __name__ == "__main__":
             if int(oh_serial_nr) not in range(1, 1019):
                 print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
                 sys.exit() 
-            queso_list[queso_nr] = oh_serial_nr
+            queso_dict[queso_nr] = oh_serial_nr
     input_file.close()
-    if len(queso_list) == 0:
+    if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
-        sys.exit() 
+        sys.exit()
 
-    for queso in args.queso_list:
+    for queso in queso_dict:
         oh = queso_oh_map[queso]["OH"]
         if oh not in oh_gbt_vfat_map:
             oh_gbt_vfat_map[oh] = {}
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        queso_bert(args.system, queso_list, oh_gbt_vfat_map, args.time, args.ber, float(args.cl))
+        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl))
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
