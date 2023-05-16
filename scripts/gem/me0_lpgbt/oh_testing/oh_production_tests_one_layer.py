@@ -415,7 +415,7 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 2 - DAQ Error Rate Test
+    # Step 10 - DAQ Error Rate Test
     print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 10: DAQ Error Rate Test\n\n")
     
@@ -436,12 +436,126 @@ if __name__ == "__main__":
     time.sleep(5)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
-
-
-
     
+    # Step 11 - S-bit Error Rate Test
+    print (Colors.BLUE + "Step 11: S-bit Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 11: S-bit Error Rate Test\n\n")
+    
+    print (Colors.BLUE + "Running S-bit Error test for VFAT17 Elink7\n" + Colors.ENDC)
+    logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o %d -v 17 -e 7 -t 1 -b 20 -l -f"%oh_select)
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    sbit_results_file1 = open(latest_file)
+    write_flag = 0
+    for line in sbit_results_file1.readlines():
+        if "Error Test Results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    sbit_results_file1.close()
+    time.sleep(5)
+    
+    print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
+    logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
+    os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o %d -v 19 -e 7 -t 1 -b 20 -l -f"%oh_select)
+    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    sbit_results_file2 = open(latest_file)
+    write_flag = 0
+    for line in sbit_results_file2.readlines():
+        if "Error Test Results" in line:
+            write_flag = 1
+        if write_flag:
+            logfile.write(line)
+    sbit_results_file2.close()
+    
+    print (Colors.GREEN + "\nStep 11: S-bit Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 11: S-bit Error Rate Test Complete\n\n")
+    time.sleep(5)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+    
+    # Step 12 - DAC Scans
+    print (Colors.BLUE + "Step 12: DAC Scans\n" + Colors.ENDC)
+    logfile.write("Step 12: DAC Scans\n\n")
+    
+    print (Colors.BLUE + "\nRunning DAC Scans for all VFATs\n" + Colors.ENDC)
+    logfile.write("\nRunning DAC Scans for all VFATs\n\n")
+    os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o %d -v "%oh_select + " ".join(map(str,range(24))) +" -f ../resources/DAC_scan_reg_list.txt")
+    list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+ 
+    print (Colors.BLUE + "\nPlotting DAC Scans for all VFATs\n" + Colors.ENDC)
+    logfile.write("\nPlotting DAC Scans for all VFATs\n\n")
+    os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
+    latest_dir = latest_file.split(".txt")[0]
+    if os.path.isdir(latest_dir):
+        if os.path.isdir(dataDir + "/dac_scan_results"):
+            os.system("rm -rf " + dataDir + "/dac_scan_results")
+        os.makedirs(dataDir + "/dac_scan_results")
+        os.system("cp %s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
+    else:
+        print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
+        logfile.write("DAC scan result directory not found\n")
+    
+    print (Colors.GREEN + "\nStep 12: DAC Scans Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 12: DAC Scans Complete\n\n")
+    time.sleep(5)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+    
+    # Step 13 - ADC Measurements
+    print (Colors.BLUE + "Step 13: ADC Measurements\n" + Colors.ENDC)
+    logfile.write("Step 13: ADC Measurements\n\n")
+    
+    print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
+    logfile.write("Configuring all VFATs\n\n")
+    logfile.close()
+    os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v "%oh_select + " ".join(map(str,range(24))) + "-c 1 >> %s"%log_fn)    
+    logfile = open(log_fn, "a")
+    time.sleep(5)
 
+    print (Colors.BLUE + "\nRunning ADC Calibration Scan\n" + Colors.ENDC)
+    logfile.write("Running ADC Calibration Scan\n\n")
+    for gbt in range(8):
+        slot = get_slot(oh_select,gbt)
+        os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt))
 
+        list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            if gbt%2==0:
+                os.system("cp %s %s/adc_calib_slot%d_boss.pdf"%(latest_file, dataDir, slot))
+            else:
+                os.system("cp %s %s/adc_calib_slot%d_sub.pdf"%(latest_file, dataDir, slot))
+    time.sleep(5)
+
+    print (Colors.BLUE + "\nRunning lpGBT Voltage Scan\n" + Colors.ENDC)
+    logfile.write("Running lpGBT Voltage Scan\n\n")
+
+    for gbt in range(8):
+        slot = get_slot(oh_select,gbt)
+        os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -m 1"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT0*.pdf")
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            if gbt%2==0:
+                os.system("cp %s %s/voltage_slot%d_boss.pdf"%(latest_file, dataDir, slot))
+            else:
+                os.system("cp %s %s/voltage_slot%d_sub.pdf"%(latest_file, dataDir, slot))
+    time.sleep(5)
+
+    print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
+    logfile.write("Running RSSI Scan\n\n")
+    for gbt in range(1,8,2):
+        slot = get_slot(oh_select,gbt)
+        os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -m 5"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/rssi_slot%d.pdf"%(latest_file, dataDir, slot))
+    time.sleep(5)
 
 
 
