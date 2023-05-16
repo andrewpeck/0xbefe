@@ -232,7 +232,7 @@ if __name__ == "__main__":
     # Set elink phases for QUESO
     print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
     for queso in args.queso_list:
-        ohid = queso_oh_map[queso]
+        ohid = queso_oh_map[queso]["OH"]
         vfat_list = queso_oh_map[queso]["VFAT"]
         vfat_list_str = ' '.join(str(v) for v in vfat_list)
         os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -u %s -v %s"%(ohid, queso, vfat_list_str))
