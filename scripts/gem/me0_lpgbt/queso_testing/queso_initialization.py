@@ -63,7 +63,8 @@ pi_list["8"] =  "169.254.57.247"
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off (1-8)")
+    #parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off (1-8)")
+    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
     args = parser.parse_args()
@@ -72,12 +73,26 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Initializting QUESOs: " + Colors.ENDC)
     else:
         print(Colors.BLUE + "Turning OFF QUESOs: " + Colors.ENDC)
-    for queso in args.queso_list:
-        queso = int(queso)
-        if queso not in range(1,9):
-            print (Colors.YELLOW + "Invalid QUESO serial number, only allowed (1-8)" + Colors.ENDC)
-            sys.exit()
-        print("  QUESO: %s"%queso)
+
+    if args.input_file is None:
+        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
+        sys.exit()
+    queso_dict = {}
+    input_file = open(args.input_file)
+    for line in input_file.readlines():
+        if "#" in line:
+            continue
+        queso_nr = line.split()[0]
+        oh_serial_nr = line.split()[1]
+        if oh_serial_nr != "-9999":
+            if int(oh_serial_nr) not in range(1, 1019):
+                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
+                sys.exit() 
+            queso_dict[queso_nr] = oh_serial_nr
+    input_file.close()
+    if len(queso_dict) == 0:
+        print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
+        sys.exit()
     print("")
 
     username = "pi"
@@ -86,7 +101,7 @@ if __name__ == "__main__":
 
     # OH, GBT, VFAT list overall
     oh_gbt_vfat_map = {}
-    for queso in args.queso_list:
+    for queso in queso_dict:
         oh = queso_oh_map[queso]["OH"]
         if oh not in oh_gbt_vfat_map:
             oh_gbt_vfat_map[oh] = {}
@@ -103,7 +118,7 @@ if __name__ == "__main__":
 
     print ("\n#####################################################################################################################################\n")
 
-    for queso in args.queso_list:
+    for queso in queso_dict:
         print(Colors.BLUE + "Starting QUESO %s\n"%queso + Colors.ENDC)
         # Connect to each RPi using username/password authentication
         if queso in pi_list:
@@ -124,7 +139,7 @@ if __name__ == "__main__":
                 print (line)
             print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
             print ("\n######################################################\n")
-            sleep(5)
+            sleep(2)
 
         # Reset all FPGA if needed
         if args.reset:
@@ -165,14 +180,14 @@ if __name__ == "__main__":
         # Read currents before OH powered on
         if not args.turn_off:
             print (Colors.BLUE + "Reading Currents before OH powered on" + Colors.ENDC)
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 1"
+            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 1"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
             for line in output:
                 print (line)
             print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print ("\n######################################################\n")
-            sleep(2)
+            sleep(1)
 
         # Enabling/Disabling regulators
         if not args.turn_off:
@@ -200,9 +215,9 @@ if __name__ == "__main__":
             output = ssh_stdout.readlines()
             for line in output:
                 print (line)
-            print(Colors.GREEN + "\RPI GPIO Terminate Done" + Colors.ENDC)
+            print(Colors.GREEN + "\nRPI GPIO Terminate Done" + Colors.ENDC)
             print ("\n######################################################\n")
-            sleep(5)
+            sleep(2)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print ("\n#####################################################################################################################################\n")
@@ -231,18 +246,15 @@ if __name__ == "__main__":
 
     # Set elink phases for QUESO
     print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
-    for queso in args.queso_list:
-        ohid = queso_oh_map[queso]["OH"]
-        vfat_list = queso_oh_map[queso]["VFAT"]
-        vfat_list_str = ' '.join(str(v) for v in vfat_list)
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -u %s -v %s"%(ohid, queso, vfat_list_str))
-    sleep(2)
+    for ohid in oh_gbt_vfat_map:
+        vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
+        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print ("\n######################################################\n")
     sleep(2)
 
     print ("")
-    for queso in args.queso_list:
+    for queso in queso_dict:
         print(Colors.BLUE + "Connecting again to QUESO %s\n"%queso + Colors.ENDC)
         # Connect to each RPi using username/password authentication
         if queso in pi_list:
@@ -256,14 +268,14 @@ if __name__ == "__main__":
         # Read currents after OH initialization
         if not args.turn_off:
             print (Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -t 1"
+            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 10"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
             for line in output:
                 print (line)
             print (Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print ("\n######################################################\n")
-            sleep(2)
+            sleep(1)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print ("\n#####################################################################################################################################\n")

@@ -103,7 +103,7 @@ def find_phase_center(err_list):
         center = 14
     return center, width
 
-def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bitslip_list):
+def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
     
     queso_reset_node = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
     queso_bitslip_nodes = {}
@@ -138,12 +138,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
             os.makedirs(resultDir) # create directory for results
         except FileExistsError: # skip if directory already exists
             pass
-        quesoDir = "me0_lpgbt/queso_testing/results/phase_bitslip_results"
-        try:
-            os.makedirs(quesoDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        dataDir = "me0_lpgbt/queso_testing/results/phase_bitslip_results/queso%d"%queso_select
+        dataDir = "me0_lpgbt/queso_testing/results/phase_bitslip_results"
         try:
             os.makedirs(dataDir) # create directory for results
         except FileExistsError: # skip if directory already exists
@@ -151,7 +146,7 @@ def scan_set_phase_bitslip(system, oh_select, queso_select, vfat_list, phase_bit
         now = str(datetime.datetime.now())[:16]
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
-        file_out = open(dataDir+"/queso%d_vfat_elink_phase_bitslip_results_"%(queso_select)+now+".txt", "w")
+        file_out = open(dataDir+"/vfat_elink_phase_bitslip_results_"+now+".txt", "w")
 
         phase_bitslip_list = {}
         prbs_min_err_list = {}
@@ -274,7 +269,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
-    parser.add_argument("-u", "--queso", action="store", dest="queso", help="queso = QUESO number")
+    #parser.add_argument("-u", "--queso", action="store", dest="queso", help="queso = QUESO number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-p", "--phase", action="store", dest="phase", help="phase = Best value of the elinkRX bitslip")
     parser.add_argument("-t", "--bitslip", action="store", dest="bitslip", help="bitslip = Best value of the elinkRX bitslip")
@@ -368,7 +363,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        scan_set_phase_bitslip(args.system, int(args.ohid), int(args.queso), vfat_list, phase_bitslip_list)
+        scan_set_phase_bitslip(args.system, int(args.ohid), vfat_list, phase_bitslip_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

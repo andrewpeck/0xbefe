@@ -186,7 +186,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
             prbs_errors_oh_sn[oh_serial_nr][vfat] = {}
             for elink in range(0, 9):
                 if prbs_errors[oh_select][vfat][elink] == 0:
-                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "< {:.2e}".format(ber_ul)"
+                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "< {:.2e}".format(ber_ul)
                 else:
                     prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
 
