@@ -30,8 +30,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    logfile = open(OHDir+"/queso_elink_bert_log.txt", "w")
-    resultsfilename = OHDir+"/queso_elink_bert_results.json"
+    log_fn = OHDir+"/queso_elink_bert_log.txt"
+    logfile = open(log_fn, "w")
+    results_fn = OHDir+"/queso_elink_bert_results.json"
     print ("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
     
@@ -177,8 +178,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
 
     
     prbs_errors_oh_sn = {}
-    for queso in queso_dict:
-        oh_serial_nr = queso_dict[queso]
+    for queso,oh_serial_nr in queso_dict.items():
         oh_select = queso_oh_map[queso]["OH"]
         vfat_list = queso_oh_map[queso]["VFAT"]
         prbs_errors_oh_sn[oh_serial_nr] = {}
@@ -190,7 +190,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
                 else:
                     prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
 
-    with open(resultsfilename, "w") as resultsfile:
+    with open(results_fn, "w") as resultsfile:
         resultsfile.write(json.dumps(prbs_errors_oh_sn))
 
     print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
@@ -255,6 +255,8 @@ if __name__ == "__main__":
             oh_gbt_vfat_map[oh]["VFAT"] = []
         oh_gbt_vfat_map[oh]["GBT"] += queso_oh_map[queso]["GBT"]
         oh_gbt_vfat_map[oh]["VFAT"] += queso_oh_map[queso]["VFAT"]
+        oh_gbt_vfat_map[oh]["GBT"].sort()
+        oh_gbt_vfat_map[oh]["VFAT"].sort()
 
     if args.time is None and args.ber is None:
         print (Colors.YELLOW + "BERT measurement time or BER limit required" + Colors.ENDC)
