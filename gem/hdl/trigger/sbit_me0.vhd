@@ -631,9 +631,14 @@ begin
             prtgen : for iprt in 0 to 7 generate
             begin
                 y : if (g_EN_WALKING1) generate
-                    sbits_i(iprt)(ilayer) <= walking1(192*iprt + 191 downto 192*iprt + 128) &
-                                             walking1(192*iprt + 127 downto 192*iprt +  64) &
-                                             walking1(192*iprt + 63  downto 192*iprt +   0);
+                    process (ttc_clk_i.clk_40) is
+                    begin
+                        if (rising_edge(ttc_clk_i.clk_40)) then
+                            sbits_i(iprt)(ilayer) <= walking1(192*iprt + 191 downto 192*iprt + 128) &
+                                                     walking1(192*iprt + 127 downto 192*iprt +  64) &
+                                                     walking1(192*iprt + 63  downto 192*iprt +   0);
+                        end if;
+                    end process;
                 end generate;
                 n : if (not g_EN_WALKING1) generate
                     sbits_i(iprt)(ilayer) <= vfat_sbits_chamber(ilayer)(16 + iprt) &
