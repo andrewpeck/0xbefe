@@ -3,6 +3,7 @@ from time import time, sleep
 import argparse
 import os, sys
 from common.rw_reg import *
+import datetime
 
 class Colors:
     WHITE   = "\033[97m"
@@ -123,8 +124,8 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Turning OFF QUESOs: " + Colors.ENDC)
         logfile.write("Turning OFF QUESOs: \n")
     for queso in queso_dict:
-        print("  QUESO: %d"%queso)
-        logfile.write("  QUESO: %d\n"%queso)
+        print("  QUESO: %s"%queso)
+        logfile.write("  QUESO: %s\n"%queso)
 
     username = "pi"
     password = "queso"
@@ -249,7 +250,7 @@ if __name__ == "__main__":
         # Enabling/Disabling regulators
         if not args.turn_off:
             print(Colors.BLUE + "Enabling regulators\n" + Colors.ENDC)
-            logfile("Enabling regulators\n\n")
+            logfile.write("Enabling regulators\n\n")
             cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
         else:
             print(Colors.BLUE + "Disabling regulators\n" + Colors.ENDC)
