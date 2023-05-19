@@ -450,7 +450,7 @@ if __name__ == "__main__":
     if args.path == "downlink":
         boss = 1
         for gbt in args.gbtid:
-            if int(gbt%2) != 0:
+            if int(gbt)%2 != 0:
                 boss = 0
                 break
         
