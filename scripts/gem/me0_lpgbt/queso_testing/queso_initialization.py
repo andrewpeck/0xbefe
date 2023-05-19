@@ -1,7 +1,8 @@
 import paramiko
 from time import time, sleep
 import argparse
-import os, sys
+import os, sys, glob, csv, json
+import numpy as np
 from common.rw_reg import *
 
 class Colors:
@@ -101,6 +102,8 @@ if __name__ == "__main__":
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
+    currMonDir = resultDir + "/current_monitor_results"
+
     oh_ser_nr_list = []
     for queso in queso_dict:
         oh_ser_nr_list.append(queso_dict[queso])
@@ -343,7 +346,7 @@ if __name__ == "__main__":
 
     print("")
     logfile.write("\n")
-    for queso in queso_dict:
+    for queso,oh_ser_nr in queso_dict.items():
         print(Colors.BLUE + "Connecting again to QUESO %s\n"%queso + Colors.ENDC)
         logfile.write("Connecting again to QUESO %s\n\n"%queso)
         # Connect to each RPi using username/password authentication
@@ -358,6 +361,7 @@ if __name__ == "__main__":
         logfile.write("\n######################################################\n\n")
 
         # Read currents after OH initialization
+        resultDir + "/current_monitor_results"
         if not args.turn_off:
             print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
             logfile.write("Reading Currents after OH Initialization\n")
@@ -372,10 +376,31 @@ if __name__ == "__main__":
             logfile.write("\nReading Currents done\n")
             logfile.write("\n######################################################\n\n")
             sleep(1)
+            # Get current monitor results
+            list_of_files = glob.glob(currMonDir+"/ME0_QUESO_current_monitor_data_*.csv")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            csvfile = csv.reader(latest_file)
+            queso_current = {}
+            for i,line in enumerate(csvfile):
+                if not i:
+                    keys = line
+                    for key in keys:
+                        queso_current[key]=[]
+                else:
+                    for key,current in zip(keys,line):
+                        queso_current[key].append(current)
+            queso_current_oh_sn = {}
+            queso_current_oh_sn[oh_ser_nr]={}
+            for key in keys[:2]:
+                queso_current_oh_sn[oh_ser_nr][key]=np.mean(queso_current[key])
+        
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print("\n#####################################################################################################################################\n")
         logfile.write("QUESO %s Done\n\n"%queso)
         logfile.write("\n#####################################################################################################################################\n\n")
         ssh.close()
+    
+    with open(results_fn, "w") as resultsfile:
+        resultsfile.write(json.dumps(queso_current_oh_sn))
     logfile.close()
