@@ -4,40 +4,94 @@ import argparse
 import numpy as np
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
+# slot to OH mapping
+geb_oh_map = {}
+geb_oh_map["1"] = {}
+geb_oh_map["1"]["OH"] = 0
+geb_oh_map["1"]["GBT"] = [0, 1]
+geb_oh_map["1"]["VFAT"] = [0, 1, 8, 9, 16, 17]
+geb_oh_map["2"] = {}
+geb_oh_map["2"]["OH"] = 0
+geb_oh_map["2"]["GBT"] = [2, 3]
+geb_oh_map["2"]["VFAT"] = [2, 3, 10, 11, 18, 19]
+geb_oh_map["3"] = {}
+geb_oh_map["3"]["OH"] = 0
+geb_oh_map["3"]["GBT"] = [4, 5]
+geb_oh_map["3"]["VFAT"] = [4, 5, 12, 13, 20, 21]
+geb_oh_map["4"] = {}
+geb_oh_map["4"]["OH"] = 0
+geb_oh_map["4"]["GBT"] = [6, 7]
+geb_oh_map["4"]["VFAT"] = [6, 7, 14, 15, 22, 23]
+geb_oh_map["5"] = {}
+geb_oh_map["5"]["OH"] = 1
+geb_oh_map["5"]["GBT"] = [0, 1]
+geb_oh_map["5"]["VFAT"] = [0, 1, 8, 9, 16, 17]
+geb_oh_map["6"] = {}
+geb_oh_map["6"]["OH"] = 1
+geb_oh_map["6"]["GBT"] = [2, 3]
+geb_oh_map["6"]["VFAT"] = [2, 3, 10, 11, 18, 19]
+geb_oh_map["7"] = {}
+geb_oh_map["7"]["OH"] = 1
+geb_oh_map["7"]["GBT"] = [4, 5]
+geb_oh_map["7"]["VFAT"] = [4, 5, 12, 13, 20, 21]
+geb_oh_map["8"] = {}
+geb_oh_map["8"]["OH"] = 1
+geb_oh_map["8"]["GBT"] = [6, 7]
+geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
-    parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = list of OH numbers (0-1)")
-    parser.add_argument("-n", "--oh_ser_nrs", action="store", nargs="+", dest="oh_ser_nrs", help="oh_ser_nrs = list of OH serial numbers")
-    parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
+    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for slots")
     parser.add_argument("-b", "--batch", action="store", dest="batch", help="batch = which batch of oh tests to perform: pre-series, production or production-long. (pre,prod,prod_long)")
     args = parser.parse_args()
 
-    if args.ohid is None:
-        print(Colors.YELLOW + "Enter OHID numbers" + Colors.ENDC)
+    if args.input_file is None:
+        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
-    oh_select = int(args.ohid)
-    # oh_select_list = []
-    # for oh in args.ohid:
-    #     if int(oh) not in range(2):
-    #         print (Colors.YELLOW + "Invalid OHID, only allowed 0-1" + Colors.ENDC)
-    #         sys.exit()
-    #     oh_select_list.append(int(oh))
 
-    if args.oh_ser_nrs is None:
-        print (Colors.YELLOW + "Enter OH serial numbers" + Colors.ENDC)
-    oh_ser_nr_list = []
-    for n in args.oh_ser_nrs:
-        oh_ser_nr_list.append(n) # Keep as identifier string
-    
-    if args.vfats is None:
-        print (Colors.YELLOW + "Enter VFAT numbers" + Colors.ENDC)
+    geb_dict = {}
+    input_file = open(args.input_file)
+    for line in input_file.readlines():
+        if "#" in line:
+            if "BATCH" in line:
+                batch = line.split()[1]
+            continue
+        slot = line.split()[0]
+        oh_sn = line.split()[1]
+        if oh_sn != "-9999":
+            if int(oh_sn) not in range(1, 1019):
+                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
+                sys.exit() 
+            elif int(slot) > 4:
+                print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
+                sys.exit()
+            geb_dict[slot] = oh_sn
+
+    input_file.close()
+    if len(geb_dict) == 0:
+        print(Colors.YELLOW + "At least 1 slot needs to have valid OH serial number" + Colors.ENDC)
         sys.exit()
-    vfat_list = []
-    for v in args.vfats:
-        if int(v) not in range(24):
-            print (Colors.YELLOW + "Invalid VFAT number, only allowed 0-23" + Colors.ENDC)
-            sys.exit()
-        vfat_list.append(int(v))
+    print("")
+
+    oh_sn_list = []
+    for slot,oh_sn in geb_dict.items():
+        oh_sn_list.append(oh_sn)
+    
+    oh_gbt_vfat_map = {}
+    for slot in geb_dict:
+        oh = geb_oh_map[slot]["OH"]
+        if oh not in oh_gbt_vfat_map:
+            oh_gbt_vfat_map[oh] = {}
+            oh_gbt_vfat_map[oh]["GBT"] = []
+            oh_gbt_vfat_map[oh]["VFAT"] = []
+        oh_gbt_vfat_map[oh]["GBT"] += geb_oh_map[slot]["GBT"]
+        oh_gbt_vfat_map[oh]["VFAT"] += geb_oh_map[slot]["VFAT"]
+        oh_gbt_vfat_map[oh]["GBT"].sort()
+        oh_gbt_vfat_map[oh]["VFAT"].sort()
+    
+    oh_ver_list = []
+    for oh in oh_gbt_vfat_map:
+        oh_ver_list += [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
     resultDir = "me0_lpgbt/oh_testing/results"
     try:
@@ -50,44 +104,38 @@ if __name__ == "__main__":
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
-    OHDir = dataDir+"/OH_SNs_"+"_".join(oh_ser_nr_list)
+    OHDir = dataDir+"/OH_SNs_"+"_".join(oh_sn_list)
     try:
         os.makedirs(OHDir) # create directory for ohid under test
     except FileExistsError: # skip if directory already exists
         pass
     log_fn = OHDir + "/oh_tests_log.txt"
     logfile = open(log_fn, "w")
-    resultsfile = open(OHDir + "/oh_tests_results.txt","w")
+    resultsfile = open(OHDir + "/oh_tests_results.json","w")
 
     results = {}
     # log results for each asiago by serial #
     # Not sure if booleans should be True/False or 1/0
-    get_slot = lambda oh,gbt: np.floor_divide(gbt,2)+2*oh+1
-
-    for oh_ser_nr in oh_ser_nr_list:
-        results[oh_ser_nr]={}
+    for slot,oh_sn in geb_dict:
+        results[oh_sn]={}
         # Which test batch
         if args.batch == "pre":
-            results[oh_ser_nr]["pre_series"]=True
-            results[oh_ser_nr]["production"]=False
-            results[oh_ser_nr]["production_long"]=False
+            results[oh_sn]["pre_series"]=True
+            results[oh_sn]["production"]=False
+            results[oh_sn]["production_long"]=False
         elif args.batch == "prod":
-            results[oh_ser_nr]["pre_series"]=False
-            results[oh_ser_nr]["production"]=True
-            results[oh_ser_nr]["production_long"]=False
+            results[oh_sn]["pre_series"]=False
+            results[oh_sn]["production"]=True
+            results[oh_sn]["production_long"]=False
         elif args.batch == "prod_long":
-            results[oh_ser_nr]["pre_series"]=False
-            results[oh_ser_nr]["production"]=False
-            results[oh_ser_nr]["production_long"]=True
+            results[oh_sn]["pre_series"]=False
+            results[oh_sn]["production"]=False
+            results[oh_sn]["production_long"]=True
         else:
-            results[oh_ser_nr]["pre_series"]=False
-            results[oh_ser_nr]["production"]=False
-            results[oh_ser_nr]["production_long"]=False
-
-
-    oh_ver_list = []
-    for gbt_idx in range(0,8,2):
-        oh_ver_list.append(get_oh_ver(oh_select,gbt_idx))
+            results[oh_sn]["pre_series"]=False
+            results[oh_sn]["production"]=False
+            results[oh_sn]["production_long"]=False
+    
 
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
@@ -99,11 +147,24 @@ if __name__ == "__main__":
 
     os.system("python3 init_frontend.py")
     os.system("python3 init_frontend.py >> %s"%log_fn)
-    logfile = open(log_fn, "a")
 
-    # default result log. Might need to manually check that all is good
-    for oh_ser_nr in oh_ser_nr_list:
-        results[oh_ser_nr]["initialization"]=True
+    gbt_list = []
+    for oh in oh_gbt_vfat_map:
+        gbt_list+=oh_gbt_vfat_map[oh]["GBT"]
+    gbt_list = list(set(gbt_list))
+
+    logfile = open(log_fn, "r")
+    for line in logfile.readlines():
+        if ("0: READY" in line) or ("0: NOT READY" in line):
+            oh_select = int(line.split()[0])
+        for gbt in gbt_list:
+            if "%d: READY" in line:
+                for slot in geb_oh_map:
+                    if (geb_oh_map[slot]["OH"]==oh_select) and (gbt in geb_oh_map[slot]["GBT"]): 
+                        results[geb_dict[slot]][""]
+        
+
+    logfile = open(log_fn, "a")
 
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Initialization Complete\n\n")
@@ -159,7 +220,7 @@ if __name__ == "__main__":
             print ("Checking Slot %d OH Boss lpGBT:"%slot) 
             logfile.write("Checking Slot %d OH Boss lpGBT:\n"%slot)
             n_error = 0
-            results[oh_ser_nr_list[slot-1]]["lpGBT0_bad_regs"]=[]
+            results[oh_sn_list[slot-1]]["lpGBT0_bad_regs"]=[]
             for line in config_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
@@ -169,15 +230,15 @@ if __name__ == "__main__":
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers["SLOT%d"%slot]["BOSS"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers["SLOT%d"%slot]["BOSS"][reg]))
                     # log bad registers in results
-                    results[oh_ser_nr_list[slot-1]]["lpGBT0_status_good"]=False
-                    results[oh_ser_nr_list[slot-1]]["lpGBT0_bad_regs"].append(reg)
+                    results[oh_sn_list[slot-1]]["lpGBT0_status_good"]=False
+                    results[oh_sn_list[slot-1]]["lpGBT0_bad_regs"].append(reg)
 
             if n_error == 0:
                 print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                 logfile.write("  No register mismatches")
 
                 # log results for boss lpGBT
-                results[oh_ser_nr_list[slot-1]]["lpGBT0_status_good"]=True
+                results[oh_sn_list[slot-1]]["lpGBT0_status_good"]=True
 
         else: # sub lpgbts
             # Get status registers
@@ -191,7 +252,7 @@ if __name__ == "__main__":
             logfile.write("Checking Slot %d OH Sub lpGBT:\n"%slot)
             n_error = 0
 
-            results[oh_ser_nr_list[slot-1]]["lpGBT1_bad_regs"]=[]
+            results[oh_sn_list[slot-1]]["lpGBT1_bad_regs"]=[]
             for line in config_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
@@ -200,13 +261,13 @@ if __name__ == "__main__":
                     n_error += 1
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers["SLOT%d"%slot]["SUB"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers["SLOT%d"%slot]["SUB"][reg]))
-                    results[oh_ser_nr_list[slot-1]]["lpGBT1_status_good"]=False
-                    results[oh_ser_nr_list[slot-1]]["lpGBT1_bad_regs"].append(reg)
+                    results[oh_sn_list[slot-1]]["lpGBT1_status_good"]=False
+                    results[oh_sn_list[slot-1]]["lpGBT1_bad_regs"].append(reg)
 
             if n_error == 0:
                 print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                 logfile.write("  No register mismatches")
-                results[oh_ser_nr_list[slot-1]]["lpGBT1_status_good"]=True
+                results[oh_sn_list[slot-1]]["lpGBT1_status_good"]=True
 
         status_file.close()
         config_file.close()
@@ -241,7 +302,7 @@ if __name__ == "__main__":
         print(result)
         logfile.write(result+"\n")
 
-    for oh_ser_nr in oh_ser_nr_list:
+    for oh_sn in oh_sn_list:
         # Save some result
         pass
 
