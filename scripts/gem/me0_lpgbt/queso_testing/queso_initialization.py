@@ -65,7 +65,6 @@ pi_list["8"] =  "169.254.57.247"
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    #parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off (1-8)")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
@@ -81,9 +80,9 @@ if __name__ == "__main__":
     for line in input_file.readlines():
         if "#" in line:
             if "BATCH" in line:
-                batch = line.split()[1]
+                batch = line.split()[2]
                 if batch not in ["pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production", or "long_production"' + Colors.ENDC)
+                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
                     sys.exit()
             continue
         queso_nr = line.split()[0]
@@ -318,7 +317,14 @@ if __name__ == "__main__":
     logfile.write("Initialization\n\n")
     logfile.close()
     os.system("python3 init_frontend.py")
-    os.system("python3 init_frontend.py >> %s"%log_fn)
+    os.system("python3 status_frontend.py >> %s"%log_fn)
+    with open("results/gbt_data/gbt_status_data/gbt_status.json","r") as statusfile:
+        status_dict = json.load(statusfile)
+        for oh,status_dict_oh in status_dict.items():
+            for gbt,status in status_dict_oh.items():
+                for queso,oh_sn in queso_dict.items():
+                    if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
+                        results_oh_sn[oh_sn]["lpgbt%s_status"%gbt]=int(status)
 
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
@@ -405,10 +411,8 @@ if __name__ == "__main__":
             logfile.write("\n######################################################\n\n")
             sleep(1)
 
-            queso_current_oh_sn[oh_sn]={}
-            for key,values in queso_current.items():
-                queso_current_oh_sn[oh_sn][key]=np.mean(values)
-        
+            for v,currents in queso_current.items():
+                results_oh_sn[oh_sn]["%s_current"%v]=np.mean(currents)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print("\n#####################################################################################################################################\n")
@@ -417,5 +421,5 @@ if __name__ == "__main__":
         ssh.close()
     
     with open(results_fn, "w") as resultsfile:
-        resultsfile.write(json.dumps(queso_current_oh_sn))
+        json.dump(results_oh_sn,resultsfile,indent=4)
     logfile.close()
