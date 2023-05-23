@@ -1,0 +1,782 @@
+Initializting QUESOs: 
+  QUESO: 1
+
+#####################################################################################################################################
+
+Starting QUESO 1
+
+
+######################################################
+
+Initialize RPI GPIOs
+
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+[92mGPIO 6 initialized to state OUT[0m
+
+[92mGPIO 5 initialized to state OUT[0m
+
+[92mGPIO 18 initialized to state OUT[0m
+
+[92mGPIO 27 initialized to state OUT[0m
+
+[92mGPIO 22 initialized to state OUT[0m
+
+[92mGPIO 20 initialized to state OUT[0m
+
+[92mGPIO 16 initialized to state OUT[0m
+
+[92mGPIO 12 initialized to state OUT[0m
+
+[92mGPIO 23 initialized to state IN[0m
+
+[92mGPIO 24 initialized to state IN[0m
+
+[92mGPIO 25 initialized to state IN[0m
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+RPI GPIO Initialization Done
+
+######################################################
+
+Checking if FPGA programming done
+
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+[92mFPGA 1 done status: 1[0m
+
+[92mFPGA 2 done status: 1[0m
+
+[92mFPGA 3 done status: 1[0m
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+Check FPGA Done
+######################################################
+
+Writing FPGA ID
+
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+
+
+Writing ID (register 0x07) to FPGA 1 = 0x00:
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 0
+
+
+
+Reading ID (register 0x06) from FPGA 1:
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 0
+
+
+
+[92mID (register 0x06) read from FPGA 1 = 0x00
+
+[0m
+
+
+
+Writing ID (register 0x03) to FPGA 2 = 0x01:
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 0
+
+
+
+Reading ID (register 0x02) from FPGA 2:
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 0
+
+
+
+[92mID (register 0x02) read from FPGA 2 = 0x01
+
+[0m
+
+
+
+Writing ID (register 0x03) to FPGA 3 = 0x02:
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 0
+
+
+
+Reading ID (register 0x02) from FPGA 3:
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 0
+
+
+
+[92mID (register 0x02) read from FPGA 3 = 0x02
+
+[0m
+
+
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+Writing FPGA ID Done
+
+######################################################
+
+Reading Currents before OH powered on
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+GPIO17 set to high, can now select channels in I2C Switch
+
+Channel for OH current monitor selected
+
+Channel for FPGA current monitor selected
+
+
+
+gbt_1v2 current: 0.2571 A, gbt_2v5 current: 0.0554 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0142 A
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+Reading Currents done
+
+######################################################
+
+Enabling regulators
+
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+[92mGPIO 6 set to high for regulator 1v2[0m
+
+    Chip Select set for FPGA for Pin : 20 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 0
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 0
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 0
+
+
+
+[92mRED LEDs turned ON for all 3 FPAGs[0m
+
+[92mRegulator 1v2 ON[0m
+
+[92mGPIO 5 set to high for regulator 2v5[0m
+
+    Chip Select set for FPGA for Pin : 20 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 20 to 0
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 16 to 0
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 1
+
+
+
+    Chip Select set for FPGA for Pin : 12 to 0
+
+
+
+[92mRED LEDs turned ON for all 3 FPAGs[0m
+
+[92mRegulator 2v5 ON[0m
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+Regulators Enabled
+
+######################################################
+
+QUESO 1 Done
+
+
+#####################################################################################################################################
+
+
+Initialization
+
+Loading shared library: librwreg.so
+Loading address table pickle file: /home/uclame0teststand/Documents/Backend/queso_backend/0xbefe/scripts/resources/me0_cvp13_address_table.pickle
+Parsing done, took 0.101794s. Total num register nodes: 26685
+Frontend status:
+╔════╤══════════════╤═════════════╤═════════════╤══════════════╤══════════════╤══════════════╤══════════════╗
+║ [1mOH[22m[39m[49m │ [1mGBTs 0-8    [22m[39m[49m │ [1mVFATs 0-3  [22m[39m[49m │ [1mVFATs 4-7  [22m[39m[49m │ [1mVFATs 8-11  [22m[39m[49m │ [1mVFATs 12-15 [22m[39m[49m │ [1mVFATs 16-19 [22m[39m[49m │ [1mVFATs 20-23 [22m[39m[49m ║
+╠════╪══════════════╪═════════════╪═════════════╪══════════════╪══════════════╪══════════════╪══════════════╣
+║ 0  │ 0: [92mREADY[39m     │ 0: [91mLINK BAD[39m │ 4: [91mLINK BAD[39m │ 8: [91mLINK BAD[39m  │ 12: [91mLINK BAD[39m │ 16: [91mLINK BAD[39m │ 20: [91mLINK BAD[39m ║
+║    │ 1: [92mREADY[39m     │ 1: [91mLINK BAD[39m │ 5: [91mLINK BAD[39m │ 9: [91mLINK BAD[39m  │ 13: [91mLINK BAD[39m │ 17: [91mLINK BAD[39m │ 21: [91mLINK BAD[39m ║
+║    │ 2: [91mNOT_READY[39m │ 2: [91mLINK BAD[39m │ 6: [91mLINK BAD[39m │ 10: [91mLINK BAD[39m │ 14: [91mLINK BAD[39m │ 18: [91mLINK BAD[39m │ 22: [91mLINK BAD[39m ║
+║    │ 3: [91mNOT_READY[39m │ 3: [91mLINK BAD[39m │ 7: [91mLINK BAD[39m │ 11: [91mLINK BAD[39m │ 15: [91mLINK BAD[39m │ 19: [91mLINK BAD[39m │ 23: [91mLINK BAD[39m ║
+║    │ 4: [91mNOT_READY[39m │             │             │              │              │              │              ║
+║    │ 5: [91mNOT_READY[39m │             │             │              │              │              │              ║
+║    │ 6: [91mNOT_READY[39m │             │             │              │              │              │              ║
+║    │ 7: [91mNOT_READY[39m │             │             │              │              │              │              ║
+╚════╧══════════════╧═════════════╧═════════════╧══════════════╧══════════════╧══════════════╧══════════════╝
+
+Auto detected CVP13 on PCI bus 0000:65:00.0
+RWREG: /sys/bus/pci/devices/0000:65:00.0/resource2 opened.
+RWREG: PCI Memory mapped to address 0x7f17f55e2000.
+
+Initialization Done
+
+######################################################
+
+Invert Elinks in OH
+
+Using Backend for configuration
+Parsing lpGBT xml file...
+Parsing me0_lpgbt/lpgbt_registers_v1.xml ...
+Parsing complete...
+Loading shared library: librwreg.so
+Parsing backend xml file...
+Loading address table pickle file: /home/uclame0teststand/Documents/Backend/queso_backend/0xbefe/scripts/resources/me0_cvp13_address_table.pickle
+Parsing done, took 0.100432s. Total num register nodes: 26685
+Parsing complete...
+Initialization Done
+
+lpGBT status is READY
+
+EPRX inversions done
+EPTX inversions done
+EPCLK inversions done
+Auto detected CVP13 on PCI bus 0000:65:00.0
+RWREG: /sys/bus/pci/devices/0000:65:00.0/resource2 opened.
+RWREG: PCI Memory mapped to address 0x7f3784b05000.
+Using Backend for configuration
+Parsing lpGBT xml file...
+Parsing me0_lpgbt/lpgbt_registers_v1.xml ...
+Parsing complete...
+Loading shared library: librwreg.so
+Parsing backend xml file...
+Loading address table pickle file: /home/uclame0teststand/Documents/Backend/queso_backend/0xbefe/scripts/resources/me0_cvp13_address_table.pickle
+Parsing done, took 0.101433s. Total num register nodes: 26685
+Parsing complete...
+Initialization Done
+
+lpGBT status is READY
+
+EPRX inversions done
+EPTX inversions done
+EPCLK inversions done
+Auto detected CVP13 on PCI bus 0000:65:00.0
+RWREG: /sys/bus/pci/devices/0000:65:00.0/resource2 opened.
+RWREG: PCI Memory mapped to address 0x7f5e9babb000.
+
+Invert Elinks Done
+
+######################################################
+
+Set Elink Phases and Bitslips
+
+Loading shared library: librwreg.so
+Using Backend for phase + bitslip scan
+Parsing backend xml file...
+Loading address table pickle file: /home/uclame0teststand/Documents/Backend/queso_backend/0xbefe/scripts/resources/me0_cvp13_address_table.pickle
+Parsing done, took 0.101761s. Total num register nodes: 26685
+Parsing complete...
+Initialization Done
+
+Scanning phase and bitslips:
+
+Scanning Phase 0:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 1:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 2:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 3:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 4:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 5:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 6:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 7:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 8:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 9:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 10:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 11:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 12:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 13:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+Scanning Phase 14:
+
+  Checking Bitslip 0
+
+  Checking Bitslip 1
+
+  Checking Bitslip 2
+
+  Checking Bitslip 3
+
+  Checking Bitslip 4
+
+  Checking Bitslip 5
+
+  Checking Bitslip 6
+
+  Checking Bitslip 7
+
+  Checking Bitslip 8
+
+
+Phase Scan Results:
+
+VFAT 00 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=7, bitslip at center=4) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=11, bitslip at center=4) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=7, bitslip at center=4) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=11, bitslip at center=4) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=11, bitslip at center=4) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=11, bitslip at center=4) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+
+VFAT 01 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=10, bitslip at center=4) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=7, bitslip at center=4) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=7, bitslip at center=4) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=10, bitslip at center=4) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=12, bitslip at center=4) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=10, bitslip at center=4) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=10, bitslip at center=4) GOOD[0m
+
+VFAT 08 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=10, bitslip at center=4) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=11, bitslip at center=4) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=6, bitslip at center=4) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=7, bitslip at center=4) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=6, width=12, bitslip at center=4) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=4) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=5, width=9, bitslip at center=4) GOOD[0m
+
+VFAT 09 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=1) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=12, bitslip at center=1) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=13, bitslip at center=1) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=13, bitslip at center=1) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=7, bitslip at center=1) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[92m (center=10, width=14, bitslip at center=8) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=7, bitslip at center=1) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=13, bitslip at center=1) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=9, width=9, bitslip at center=1) GOOD[0m
+
+VFAT 16 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=12, bitslip at center=1) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=12, bitslip at center=1) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=9, width=9, bitslip at center=1) GOOD[0m
+
+VFAT 17 :
+  ELINK 00: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 01: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=9, width=13, bitslip at center=1) GOOD[0m
+  ELINK 02: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=7, bitslip at center=1) GOOD[0m
+  ELINK 03: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[92m (center=8, width=12, bitslip at center=1) GOOD[0m
+  ELINK 04: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=1) GOOD[0m
+  ELINK 05: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[92m (center=10, width=8, bitslip at center=1) GOOD[0m
+  ELINK 06: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=7, width=15, bitslip at center=1) GOOD[0m
+  ELINK 07: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[92m (center=8, width=8, bitslip at center=1) GOOD[0m
+  ELINK 08: [93mx[0m[93mx[0m[93mx[0m[93mx[0m[91m-[0m[93mx[0m[93mx[0m[93mx[0m[92m+[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[93mx[0m[92m (center=8, width=10, bitslip at center=1) GOOD[0m
+Setting phase and bitslips:
+Bitslips set for all Elink of all VFATs
+Auto detected CVP13 on PCI bus 0000:65:00.0
+RWREG: /sys/bus/pci/devices/0000:65:00.0/resource2 opened.
+RWREG: PCI Memory mapped to address 0x7f1e08ec6000.
+
+Setting Elink Phases and Bitslips Done
+
+######################################################
+
+
+Connecting again to QUESO 1
+
+
+######################################################
+
+Reading Currents after OH Initialization
+Setting up environment for me0 on cvp13
+
+0xBEFE GEM environment setup done!
+
+GPIO17 set to high, can now select channels in I2C Switch
+
+Channel for OH current monitor selected
+
+Channel for FPGA current monitor selected
+
+
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0742 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0146 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0742 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0142 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0746 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0150 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0737 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0158 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0729 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0154 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0750 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0154 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0742 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0154 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0742 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0154 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0733 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0163 A
+
+gbt_1v2 current: 0.4263 A, gbt_2v5 current: 0.0733 A, fpga_1v35 current: 0.4263 A, fpga_2v5 current: 0.0150 A
+
+GPIO17 set to low, deselect both channels in I2C Switch
+
+
+Reading Curren	s done
+
+######################################################
+
+QUESO 1 Done
+
+
+#####################################################################################################################################
+

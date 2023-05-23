@@ -1,7 +1,7 @@
 # BATCH: pre_series
 # SLOT_NR  OH_SERIAL_NR
 1  1
-2  2
+2  -9999
 3  -9999
 4  -9999
 5  -9999

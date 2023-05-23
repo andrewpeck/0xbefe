@@ -421,5 +421,5 @@ if __name__ == "__main__":
         ssh.close()
     
     with open(results_fn, "w") as resultsfile:
-        json.dump(results_oh_sn,resultsfile,indent=4)
+        json.dump(results_oh_sn,resultsfile,indent=2)
     logfile.close()

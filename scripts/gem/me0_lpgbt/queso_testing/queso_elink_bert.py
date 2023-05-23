@@ -195,7 +195,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
                     prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
 
     with open(results_fn, "w") as resultsfile:
-        resultsfile.write(json.dumps(prbs_errors_oh_sn))
+        json.dump(prbs_errors_oh_sn,resultsfile,indent=2)
 
     print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
