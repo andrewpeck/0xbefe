@@ -107,12 +107,12 @@ if __name__ == "__main__":
         pass
 
     try:
-        dataDir = "me0_lpgbt/queso_testing/results/%s_tests"%batch # directory name if batch variable exists
+        dataDir = resultDir+"/%s_tests"%batch # directory name if batch variable exists
     except NameError:
-        dataDir = "me0_lpgbt/queso_testing/results/bert_results" # default value for non-production tests
+        dataDir = resultDir+"/initialization_results" # default value for non-production tests
     
     try:
-        os.makedirs(dataDir) # create directory for results
+        os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
 
