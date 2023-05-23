@@ -1,9 +1,0 @@
-{
-    "1": {
-        "batch": "pre_series",
-        "lpgbt0_status": 1,
-        "lpgbt1_status": 1,
-        "1v2_current": 0.4263,
-        "2v5_current": 0.07396
-    }
-}
