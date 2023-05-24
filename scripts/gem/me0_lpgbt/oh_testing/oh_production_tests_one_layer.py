@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     log_fn = OHDir + "/oh_tests_log.txt"
     logfile = open(log_fn, "w")
-    resultsfile = open(OHDir + "/oh_tests_results.json","w")
+    results_fn = OHDir + "/oh_tests_results.json"
 
     results_oh_sn = {}
     # log results for each asiago by serial #
@@ -785,6 +785,9 @@ if __name__ == "__main__":
     logfile.write("\nStep 18: S-bit Noise Rate Complete\n\n")
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    with open(results_fn,"r") as resultsfile:
+        json.dump(results_oh_sn,resultsfile,indent=2)
 
     logfile.close()
     os.system("rm -rf out.txt")
