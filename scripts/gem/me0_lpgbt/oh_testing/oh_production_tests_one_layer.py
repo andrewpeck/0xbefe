@@ -126,7 +126,7 @@ if __name__ == "__main__":
     results_oh_sn = {}
     # log results for each asiago by serial #
     # Not sure if booleans should be True/False or 1/0
-    for slot,oh_sn in geb_dict:
+    for slot,oh_sn in geb_dict.items():
         results_oh_sn[oh_sn]={}
         results_oh_sn[oh_sn]["batch"]=batch
     
