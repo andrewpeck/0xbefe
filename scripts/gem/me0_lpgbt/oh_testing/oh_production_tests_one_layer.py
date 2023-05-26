@@ -145,9 +145,14 @@ if __name__ == "__main__":
         status_dict = json.load(statusfile)
         for oh,status_dict_oh in status_dict.items():
             for gbt,status in status_dict_oh.items():
+                results_oh_sn[oh_sn][int(gbt)]={}
                 for slot,oh_sn in geb_dict.items():
                     if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
-                        results_oh_sn[oh_sn]["lpgbt%s_status"%gbt]=int(status)
+                        results_oh_sn[oh_sn][int(gbt)]["lpgbt_ready"]=int(status)
+    for slot,oh_sn in geb_dict.items():
+        results_oh_sn[oh_sn]["geb_initialization"]=1
+        for gbt in geb_oh_map[slot]["GBT"]:
+            results_oh_sn[oh_sn]["geb_initialization"] &= results_oh_sn[oh_sn][gbt]["lpgbt_ready"]
 
     logfile = open(log_fn, "a")
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
@@ -192,16 +197,15 @@ if __name__ == "__main__":
                 status_files.append(open(OHDir+"/status_sub_slot%s.txt"%slot))
     status_registers = {}
     # Read all status registers from files
-    for i,(status_file,config_file) in enumerate(zip(status_files,config_files)):
-        slot = np.floor_divide(i,2) + 1
+    for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
+        slot = np.floor_divide(gbt,2) + 1
         status_registers[slot]={}
-        if i%2 == 0: # boss lpgbts
+        if gbt%2 == 0: # boss lpgbts
             # Get status registers
             status_registers[slot]["BOSS"]={}
             for line in status_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 status_registers[slot]["BOSS"][reg] = value
-            
             # Check against config files
             print ("Checking Slot %d OH Boss lpGBT:"%slot) 
             logfile.write("Checking Slot %d OH Boss lpGBT:\n"%slot)
@@ -214,23 +218,24 @@ if __name__ == "__main__":
                     n_error += 1
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["BOSS"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["BOSS"][reg]))
-
+                    results_oh_sn[geb_dict[str(slot)]][gbt]["lpgbt_status"]=0
+                    if "bad_regs" not in results_oh_sn[geb_dict[str(slot)]][gbt].keys():
+                        results_oh_sn[geb_dict[str(slot)]][gbt]["bad_regs"]=[]
+                    results_oh_sn[geb_dict[str(slot)]][gbt]["bad_regs"]+=[reg] # save bad registers as int array
             if n_error == 0:
                 print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                 logfile.write("  No register mismatches")
-
+                results_oh_sn[geb_dict[str(slot)]][gbt]["lpgbt_status"]=1
         else: # sub lpgbts
             # Get status registers
             status_registers[slot]["SUB"]={}
             for line in status_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 status_registers[slot]["SUB"][reg] = value
-
             # Check against config files
             print ("Checking Slot %d OH Sub lpGBT:"%slot) 
             logfile.write("Checking Slot %d OH Sub lpGBT:\n"%slot)
             n_error = 0
-
             for line in config_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
@@ -239,18 +244,20 @@ if __name__ == "__main__":
                     n_error += 1
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["SUB"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["SUB"][reg]))
-
+                    results_oh_sn[geb_dict[str(slot)]][gbt]["lpgbt_status"]=0
+                    if "bad_regs" not in results_oh_sn[geb_dict[str(slot)]][gbt].keys():
+                        results_oh_sn[geb_dict[str(slot)]][gbt]["bad_regs"]=[]
+                    results_oh_sn[geb_dict[str(slot)]][gbt]["bad_regs"]+=[reg] # save bad registers as int array
             if n_error == 0:
                 print (Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                 logfile.write("  No register mismatches")
-
+                results_oh_sn[geb_dict[str(slot)]][gbt]["lpgbt_status"]=1
         status_file.close()
         config_file.close()
     
     print (Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
     time.sleep(1)
-    
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
@@ -529,7 +536,7 @@ if __name__ == "__main__":
         print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
         logfile.write("Configuring all VFATs\n\n")
         logfile.close()
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),""%log_fn))    
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
         logfile = open(log_fn, "a")
     time.sleep(1)
 
@@ -584,11 +591,11 @@ if __name__ == "__main__":
         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
         if len(list_of_files)>0:
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/pg_current_slot1.pdf"%(latest_file, dataDir))
+            os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
         if len(list_of_files)>0:
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/rt_voltage_slot1.pdf"%(latest_file, dataDir))
+            os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
     time.sleep(1)
 
     print (Colors.BLUE + "\nRunning OH Temperature Scan\n" + Colors.ENDC)
@@ -786,7 +793,7 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    with open(results_fn,"r") as resultsfile:
+    with open(results_fn,"w") as resultsfile:
         json.dump(results_oh_sn,resultsfile,indent=2)
 
     logfile.close()
