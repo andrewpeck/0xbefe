@@ -55,8 +55,8 @@ if __name__ == "__main__":
         if "#" in line:
             if "BATCH" in line:
                 batch = line.split()[2]
-                if batch not in ["pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
+                if batch not in ["pre_series", "production", "long_production", "acceptance"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production", "long_production" or "acceptance"' + Colors.ENDC)
                     sys.exit()
             continue
         slot = line.split()[0]
@@ -113,15 +113,15 @@ if __name__ == "__main__":
     except FileExistsError: # skip if directory already exists
         pass
 
-    OHDir = dataDir+"/OH_SNs_"+"_".join(oh_sn_list)
+    dataDir += "/OH_SNs_"+"_".join(oh_sn_list)
     try:
-        os.makedirs(OHDir) # create directory for ohid under test
+        os.makedirs(dataDir) # create directory for ohid under test
     except FileExistsError: # skip if directory already exists
         pass
 
-    log_fn = OHDir + "/oh_tests_log.txt"
+    log_fn = dataDir + "/oh_tests_log.txt"
     logfile = open(log_fn, "w")
-    results_fn = OHDir + "/oh_tests_results.json"
+    results_fn = dataDir + "/oh_tests_results.json"
 
     results_oh_sn = {}
     # log results for each asiago by serial #
@@ -174,12 +174,12 @@ if __name__ == "__main__":
                 # boss lpgbts
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/status_boss_slot%s.txt"%(latest_file, OHDir, slot))
+                os.system("cp %s %s/status_boss_slot%s.txt"%(latest_file, dataDir, slot))
             elif (gbt+1)%2==0:
                 # sub lpgbts
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/status_sub_slot%s.txt"%(latest_file, OHDir, slot))
+                os.system("cp %s %s/status_sub_slot%s.txt"%(latest_file, dataDir, slot))
 
     config_files = []
     for oh_ver in oh_ver_list:
@@ -191,10 +191,10 @@ if __name__ == "__main__":
         for gbt in geb_oh_map[slot]["GBT"]:
             if gbt%2==0:
                 # boss lpgbts
-                status_files.append(open(OHDir+"/status_boss_slot%s.txt"%slot))
+                status_files.append(open(dataDir+"/status_boss_slot%s.txt"%slot))
             else:
                 # sub lpgbts
-                status_files.append(open(OHDir+"/status_sub_slot%s.txt"%slot))
+                status_files.append(open(dataDir+"/status_sub_slot%s.txt"%slot))
     status_registers = {}
     # Read all status registers from files
     for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
@@ -780,10 +780,10 @@ if __name__ == "__main__":
             if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                 os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
             os.makedirs(dataDir + "/sbit_noise_rate_results")
-            os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_mean_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-            os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-            os.system("cp %s/2d*.pdf %s/sbit_2d_threshold_noise_rate_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-            os.system("cp %s/*_channels_*.pdf %s/sbit_noise_rate_results_OH%d/"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_mean_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/2d*.pdf %s/sbit_noise_rate_results/sbit_2d_threshold_noise_rate_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/*_channels_*.pdf %s/sbit_noise_rate_results/"%(latest_dir, dataDir))
         else:
             print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
             logfile.write("S-bit Noise Rate result directory not found\n")    
