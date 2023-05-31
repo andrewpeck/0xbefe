@@ -33,6 +33,7 @@ hdl-prj.json
 /scripts/befe_config.py
 /scripts/results
 /scripts/gem/me0_lpgbt/oh_testing/results
+/scripts/gem/me0_lpgbt/queso_testing/results
 
 *.so
 
