@@ -1,7 +1,8 @@
 import paramiko
 from time import time, sleep
 import argparse
-import os, sys
+import os, sys, glob, csv, json
+import numpy as np
 from common.rw_reg import *
 import datetime
 
@@ -64,8 +65,7 @@ pi_list["8"] =  "169.254.57.247"
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    #parser.add_argument("-q", "--queso_list", dest="queso_list", help="queso_list = list of QUESOs to initialize or turn off (1-8)")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numers for QUESOs")
+    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
     args = parser.parse_args()
@@ -75,17 +75,25 @@ if __name__ == "__main__":
         sys.exit()
 
     queso_dict = {}
+    results_oh_sn = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
+            if "BATCH" in line:
+                batch = line.split()[2]
+                if batch not in ["pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
+                    sys.exit()
             continue
         queso_nr = line.split()[0]
-        oh_serial_nr = line.split()[1]
-        if oh_serial_nr != "-9999":
-            if int(oh_serial_nr) not in range(1, 1019):
+        oh_sn = line.split()[1]
+        if oh_sn != "-9999":
+            if int(oh_sn) not in range(1, 1019):
                 print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
                 sys.exit() 
-            queso_dict[queso_nr] = oh_serial_nr
+            queso_dict[queso_nr] = oh_sn
+            results_oh_sn[oh_sn] = {}
+            results_oh_sn[oh_sn]["batch"]=batch
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
@@ -97,11 +105,17 @@ if __name__ == "__main__":
         os.makedirs(resultDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "me0_lpgbt/queso_testing/results/bert_results"
+
     try:
-        os.makedirs(dataDir) # create directory for results
+        dataDir = resultDir+"/%s_tests"%batch # directory name if batch variable exists
+    except NameError:
+        dataDir = resultDir+"/initialization_results" # default value for non-production tests
+    
+    try:
+        os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+
     oh_ser_nr_list = []
     for queso in queso_dict:
         oh_ser_nr_list.append(queso_dict[queso])
@@ -303,7 +317,15 @@ if __name__ == "__main__":
     logfile.write("Initialization\n\n")
     logfile.close()
     os.system("python3 init_frontend.py")
-    os.system("python3 init_frontend.py >> %s"%log_fn)
+    os.system("python3 status_frontend.py >> %s"%log_fn)
+    with open("results/gbt_data/gbt_status_data/gbt_status.json","r") as statusfile:
+        status_dict = json.load(statusfile)
+        for oh,status_dict_oh in status_dict.items():
+            for gbt,status in status_dict_oh.items():
+                for queso,oh_sn in queso_dict.items():
+                    if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
+                        results_oh_sn[oh_sn]["lpgbt%s_status"%gbt]=int(status)
+
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -344,7 +366,8 @@ if __name__ == "__main__":
 
     print("")
     logfile.write("\n")
-    for queso in queso_dict:
+    queso_current_oh_sn = {}
+    for queso,oh_sn in queso_dict.items():
         print(Colors.BLUE + "Connecting again to QUESO %s\n"%queso + Colors.ENDC)
         logfile.write("Connecting again to QUESO %s\n\n"%queso)
         # Connect to each RPi using username/password authentication
@@ -359,24 +382,44 @@ if __name__ == "__main__":
         logfile.write("\n######################################################\n\n")
 
         # Read currents after OH initialization
+        resultDir + "/current_monitor_results"
         if not args.turn_off:
             print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
             logfile.write("Reading Currents after OH Initialization\n")
             cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 10"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
             output = ssh_stdout.readlines()
-            for line in output:
+            queso_current = {}
+            for line in output:    
                 print(line)
                 logfile.write(line+"\n")
+
+                if "gbt_1v2 current" in line:
+                    values = line.split()
+                    if "1v2" not in queso_current.keys():
+                        queso_current["1v2"] = [float(values[2])]
+                    else:
+                        queso_current["1v2"] += [float(values[2])]
+                    if "2v5" not in queso_current.keys():
+                        queso_current["2v5"] = [float(values[6])]
+                    else:
+                        queso_current["2v5"] += [float(values[6])]
+
             print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
             print("\n######################################################\n")
-            logfile.write("\nReading Currents done\n")
+            logfile.write("\nReading Curren\ts done\n")
             logfile.write("\n######################################################\n\n")
             sleep(1)
+
+            for v,currents in queso_current.items():
+                results_oh_sn[oh_sn]["%s_current"%v]=np.mean(currents)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print("\n#####################################################################################################################################\n")
         logfile.write("QUESO %s Done\n\n"%queso)
         logfile.write("\n#####################################################################################################################################\n\n")
         ssh.close()
+    
+    with open(results_fn, "w") as resultsfile:
+        json.dump(results_oh_sn,resultsfile,indent=4)
     logfile.close()

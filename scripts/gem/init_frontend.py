@@ -329,7 +329,7 @@ def init_gem_frontend():
                     print ("\nSetting DAQ phases and Sbit Bitslips for OH %d VFAT# %02d"%(oh,vfat))
                 elif vfat not in bestphase_list and vfat in bestphase_list_sbit and vfat in bitslip_list_sbit:
                     print ("\nSetting Sbit Phases and Bitslips for OH %d VFAT# %02d"%(oh,vfat))
-                elif vfat in bestphase_list and vfat not in bestphase_list_sbi and vfat not in bitslip_list_sbit:
+                elif vfat in bestphase_list and vfat not in bestphase_list_sbit and vfat not in bitslip_list_sbit:
                     print ("\nSetting DAQ phases for OH %d VFAT# %02d"%(oh,vfat))
                 elif vfat not in bestphase_list and vfat in bestphase_list_sbit and vfat not in bitslip_list_sbit:
                     print ("\nSetting Sbit phases for OH %d VFAT# %02d"%(oh,vfat))

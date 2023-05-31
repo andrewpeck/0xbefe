@@ -7,14 +7,18 @@ import math
 import json
 from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 
-def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl):
+def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batch = None):
 
     resultDir = "me0_lpgbt/queso_testing/results"
     try:
         os.makedirs(resultDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "me0_lpgbt/queso_testing/results/bert_results"
+
+    if batch is None:
+        dataDir = resultDir + "/bert_results"
+    else:
+        dataDir = resultDir + "/%s_tests"%batch
     try:
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
@@ -208,7 +212,7 @@ if __name__ == "__main__":
     #parser.add_argument("-o", "--ohs", action="store", nargs="+", dest="ohs", help="ohs = list of OH numbers (0-1)")
     #parser.add_argument("-n", "--oh_ser_nrs", action="store", nargs="+", dest="oh_ser_nrs", help="oh_ser_nrs = list of OH serial numbers")
     #parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numers for QUESOs")
+    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
@@ -234,6 +238,11 @@ if __name__ == "__main__":
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
+            if "BATCH" in line:
+                batch = line.split()[2]
+                if batch not in ["pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
+                    sys.exit()
             continue
         queso_nr = line.split()[0]
         oh_serial_nr = line.split()[1]
@@ -271,7 +280,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl))
+        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl),batch=batch)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
