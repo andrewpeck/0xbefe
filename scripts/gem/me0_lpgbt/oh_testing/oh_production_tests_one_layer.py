@@ -411,12 +411,14 @@ if __name__ == "__main__":
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
-    if results_oh_sn["Uplink_BERT"]["Limit"] > 1e-12:
-        print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
-        logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
-        with open(results_fn,"w") as resultsfile:
-            json.dump(results_oh_sn,resultsfile,indent=2)
-        sys.exit()
+    for slot,oh_sn in geb_dict.items():
+        for gbt in geb_oh_map[slot]["GBT"]:
+            if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
+                print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
+                logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                sys.exit()
     print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
     time.sleep(1)
