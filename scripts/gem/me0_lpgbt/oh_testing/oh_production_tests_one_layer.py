@@ -513,7 +513,7 @@ if __name__ == "__main__":
             for elink in range(8):
                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] &= results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink]
     for oh_sn in results_oh_sn:
-        if not results_oh_sn["SBIT_Phase_Scan"]:
+        if not results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"]:
             print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
             logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
             with open(results_fn,"w") as resultsfile:
@@ -625,6 +625,7 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]={}
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]={}
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]["ELINK"]=channel
+                            break
                 elif read_rot_elinks:
                     vfat = int(line.split()[1].replace(",",""))
                     elink = int(line.split()[-1])
@@ -634,7 +635,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]["VFAT"]=elink
                             except KeyError:
                                 results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]={}
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]=elink
+                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]["VFAT"]=elink
+                            break
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
