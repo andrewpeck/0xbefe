@@ -486,7 +486,7 @@ if __name__ == "__main__":
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("python3 clean_log.py -i %s"%latest_file)
-
+        read_next = True
         with open(latest_file,"r") as ps_file:
             # parse sbit phase scan results
             for line in ps_file.readlines():
@@ -499,7 +499,11 @@ if __name__ == "__main__":
                             except KeyError:
                                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"]={}
                                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
-                elif "ELINK" in line:
+                    if "ELINK" not in line:
+                        read_next = True
+                    else:
+                        read_next = False
+                elif "ELINK" in line and read_next:
                     elink = int(line.split()[1])
                     results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink] = 1 if line.split()[-1] == "GOOD" else 0
 
