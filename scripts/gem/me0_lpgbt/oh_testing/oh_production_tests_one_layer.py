@@ -499,6 +499,8 @@ if __name__ == "__main__":
         logfile = open(log_fn, "a")
     time.sleep(1)
 
+    with open(results_fn,"w") as resultsfile:
+        json.dump(results_oh_sn,resultsfile,indent=2)
     # Stopped here for now
     sys.exit()
 
