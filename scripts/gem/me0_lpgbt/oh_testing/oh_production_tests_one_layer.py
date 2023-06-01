@@ -529,10 +529,11 @@ if __name__ == "__main__":
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
+        read_next=True
         with open(latest_file,"r") as bitslip_file:
             # parse bitslip scan results
             for line in bitslip_file.readlines():
-                if "VFAT" in line:
+                if "VFAT" in line and read_next:
                     vfat = int(line.split()[1].replace(":",""))
                     for slot,oh_sn in geb_dict.items():
                         if vfat in geb_oh_map[slot]["VFAT"]:
@@ -541,10 +542,13 @@ if __name__ == "__main__":
                             except KeyError:
                                 results_oh_sn[oh_sn]["SBIT_Bitslip"]={}
                                 results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
-                elif "ELINK" in line:
+                            break
+                elif "ELINK" in line and read_next:
                     elink = int(line.split()[1].replace(":",""))
                 elif "Bit slip" in line:
                     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] = int(line.split()[-1])
+                elif "Bad Elinks" in line:
+                    read_next = False
 
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
