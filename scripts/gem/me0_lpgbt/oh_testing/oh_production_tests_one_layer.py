@@ -477,10 +477,18 @@ if __name__ == "__main__":
         os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -l -a"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
+        os.system("python3 clean_log.py -i %s"%latest_file)
+        with open(latest_file,"r") as ps_file:
+            # parse sbit phase scan results
+            pass
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
     time.sleep(1)
+
+    # Stopped here for now
+    sys.exit()
+
 
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
