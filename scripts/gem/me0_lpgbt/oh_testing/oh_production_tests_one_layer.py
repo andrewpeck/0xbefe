@@ -498,6 +498,7 @@ if __name__ == "__main__":
                             except KeyError:
                                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"]={}
                                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
+                            break
                 elif "ELINK" in line:
                     elink = int(line.split()[1].replace(":",""))
                     results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink] = 1 if line.split()[-1] == "GOOD" else 0
