@@ -658,8 +658,9 @@ begin
 
         chamber_sf_inst : entity work.chamber
             generic map (
-                NUM_SEGMENTS => g_NUM_SEGMENTS,
-                REG_OUTPUTS  => true    -- true to register outputs on 40MHz
+                NUM_SEGMENTS => g_NUM_SEGMENTS,  -- number of output segments you want
+                PULSE_EXTEND => 3,               -- number of bx to extend the pulses by
+                REG_OUTPUTS  => true             -- true to register outputs on 40MHz
                 )
             port map (
                 clock             => ttc_clk_i.clk_320,
