@@ -627,12 +627,18 @@ if __name__ == "__main__":
                             except KeyError as ke:
                                 if 'Bad_Channels' in ke.args:
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]={}
-                                elif vfat in results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"].keys():
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
-                                else:
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat]={}
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
-                            break
+                                elif vfat in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat]={}
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
+                                elif elink in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
+                                else:
+                                    print(ke)
+                                    sys.exit()
+                            finally:
+                                break
                 elif read_rot_elinks:
                     if line == "\n":
                         read_rot_elinks=False
@@ -646,9 +652,14 @@ if __name__ == "__main__":
                             except KeyError as ke:
                                 if 'Rotated_Elinks' in ke.args:
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]={}
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
+                                elif vfat in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
                                 else:
-                                   results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
-                            break
+                                    print(ke)
+                                    sys.exit()
+                            finally:
+                                break
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
@@ -668,14 +679,56 @@ if __name__ == "__main__":
         logfile.close()
         os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
         os.system("python3 clean_log.py -i %s"%log_fn)
-        with open(log_fn,"r") as logfile:
-            pass
 
+        read_next = False
+        read_bad_channels = False
+        with open(log_fn,"r") as logfile:
+            for line in logfile.readlines():
+                if "LPGBT VFAT S-Bit Cluster Mapping" in line:
+                    read_next = True
+                    for slot,oh_sn in geb_dict.items():
+                        if geb_oh_map[slot]["OH"]==oh_select:
+                            results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]={}
+                            results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["All_Good"]=1
+                if "Bad mapping for channels:" in line and read_next:
+                    read_bad_channels = True
+                if read_bad_channels:
+                    if line == "\n":
+                        read_next = False
+                        read_bad_channels = False
+                        continue
+                    vfat = int(line.split()[1].replace(",",""))
+                    channel = int(line.split()[-1])
+                    for slot,oh_sn in geb_dict.items():
+                        if vfat in geb_oh_map[slot]["VFAT"]:
+                            try:
+                                results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]+=[channel]
+                            except KeyError as ke:
+                                if 'Bad_Channels' in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"]={}
+                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]={}
+                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]=[channel]
+                                elif vfat in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]={}
+                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]=[channel]
+                                else:
+                                    print(ke)
+                                    sys.exit()
+                            finally:
+                                break
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
         logfile = open(log_fn, "a")
 
+    for oh_sn in results_oh_sn:
+        if not results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["All_Good"]:
+            print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
+            logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            sys.exit()
+    time.sleep(1)
 
     print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
