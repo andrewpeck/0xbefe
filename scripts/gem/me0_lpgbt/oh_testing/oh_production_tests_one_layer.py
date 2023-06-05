@@ -553,10 +553,10 @@ if __name__ == "__main__":
     #                 vfat = int(line.split()[1].replace(",",""))
     #                 elink = int(line.split()[-1])
     #                 try:
-    #                     results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]=elink
+    #                     results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]+=[elink]
     #                 except KeyError:
     #                     results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"]={}
-    #                     results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]=elink
+    #                     results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]=[elink]
     #     logfile.close()
     #     os.system("cat %s >> %s"%(latest_file, log_fn))
     #     logfile = open(log_fn, "a")
@@ -591,18 +591,19 @@ if __name__ == "__main__":
         with open(latest_file,"r") as mapping_file:
             # parse bitslip scan results
             for line in mapping_file.readlines():
-                if line == "No Bad Channels in Mapping":
+                if "No Bad Channels in Mapping" in line:
                     for slot,oh_sn in geb_dict.items():
-                        if oh_select in geb_oh_map[slot]["OH"]:
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]=1
-                            break
+                        if geb_oh_map[slot]["OH"]==oh_select:
+                            results_oh_sn[oh_sn]["SBIT_Mapping"]={}
+                            results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]=1
                 elif "Bad Channels:" in line:
                     for slot,oh_sn in geb_dict.items():
-                        if oh_select in geb_oh_map[slot]["OH"]:
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]=0
-                            break
+                        if geb_oh_map[slot]["OH"]==oh_select:
+                            results_oh_sn[oh_sn]["SBIT_Mapping"]={}
+                            results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]=0
+
                     read_bad_channels = True
-                elif "Rotated Elinks" in line:
+                elif "Rotated Elinks:" in line:
                     # for slot,oh_sn in geb_dict.items():
                     #     if oh_select in geb_oh_map[slot]["OH"]:
                     #         results_oh_sn[oh_sn]["SBIT_Mapping"]=0
@@ -610,39 +611,47 @@ if __name__ == "__main__":
                     read_bad_channels = False
                     read_rot_elinks = True
                 elif read_bad_channels:
+                    if line == "\n":
+                        read_bad_channels=False
+                        continue
                     vfat = int(line.split()[1].replace(",",""))
                     elink = int(line.split()[3].replace(",",""))
                     channel = int(line.split()[-1])
                     for slot,oh_sn in geb_dict.items():
                         if vfat in geb_oh_map[slot]["VFAT"]:
                             try:
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]["ELINK"]=channel
-                            except KeyError:
-                                try:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]["ELINK"]=channel
-                                except KeyError:
+                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]+=[channel]
+                            except KeyError as ke:
+                                if 'Bad_Channels' in ke.args:
                                     results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]["VFAT"]["ELINK"]=channel
+                                elif vfat in results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"].keys():
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
+                                else:
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat]={}
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
                             break
                 elif read_rot_elinks:
+                    if line == "\n":
+                        read_rot_elinks=False
+                        continue
                     vfat = int(line.split()[1].replace(",",""))
                     elink = int(line.split()[-1])
                     for slot,oh_sn in geb_dict.items():
                         if vfat in geb_oh_map[slot]["VFAT"]:
                             try:
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]["VFAT"]=elink
-                            except KeyError:
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]={}
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]["VFAT"]=elink
+                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]+=[elink]
+                            except KeyError as ke:
+                                if 'Rotated_Elinks' in ke.args:
+                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]={}
+                                else:
+                                   results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
                             break
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
 
     for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["SBIT_Mapping"]:
+        if not results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]:
             print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed\n" + Colors.ENDC)
             logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
             with open(results_fn,"w") as resultsfile:
