@@ -736,104 +736,104 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 8 - VFAT Reset
-    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
-    logfile.write("Step 8: VFAT Reset\n\n")
-    print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
-    logfile.write("Configuring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-    logfile = open(log_fn, "a")
-    time.sleep(1)
+    # # Step 8 - VFAT Reset
+    # print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
+    # logfile.write("Step 8: VFAT Reset\n\n")
+    # print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
+    # logfile.write("Configuring all VFATs\n\n")
+    # logfile.close()
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+    # logfile = open(log_fn, "a")
+    # time.sleep(1)
     
-    print (Colors.BLUE + "Resetting all VFATs\n" + Colors.ENDC)
-    logfile.write("Resetting all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-        os.system("python3 clean_log.py -i %s"%log_fn)
-        for slot,oh_sn in geb_dict.items():
-            if geb_oh_map[slot]["OH"]==oh_select:
-                results_oh_sn[oh_sn]["VFAT_Reset"]={}
-        read_next = False
-        set_gpio = False
-        unset_gpio = False
-        with open(log_fn,"r") as logfile:
-            for line in logfile.readlines():
-                if "VFAT RESET" in line:
-                    read_next = True
-                elif read_next:
-                    if "VFAT#" in line:
-                        vfat = int(line.split()[1].replace(",",""))
-                    elif "1 for VFAT reset" in line:
-                        set_gpio = True
-                    elif "back to 0" in line:
-                        unset_gpio = True
-                    elif set_gpio and unset_gpio:
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=1
-                                break
-                        set_gpio = False
-                        unset_gpio = False
-                    elif "ERROR" in line:
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=0
-                                break
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]=1
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"] &= results_oh_sn[oh_sn]["VFAT_Reset"][vfat]
+    # print (Colors.BLUE + "Resetting all VFATs\n" + Colors.ENDC)
+    # logfile.write("Resetting all VFATs\n\n")
+    # logfile.close()
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+    #     os.system("python3 clean_log.py -i %s"%log_fn)
+    #     for slot,oh_sn in geb_dict.items():
+    #         if geb_oh_map[slot]["OH"]==oh_select:
+    #             results_oh_sn[oh_sn]["VFAT_Reset"]={}
+    #     read_next = False
+    #     set_gpio = False
+    #     unset_gpio = False
+    #     with open(log_fn,"r") as logfile:
+    #         for line in logfile.readlines():
+    #             if "VFAT RESET" in line:
+    #                 read_next = True
+    #             elif read_next:
+    #                 if "VFAT#" in line:
+    #                     vfat = int(line.split()[1].replace(",",""))
+    #                 elif "1 for VFAT reset" in line:
+    #                     set_gpio = True
+    #                 elif "back to 0" in line:
+    #                     unset_gpio = True
+    #                 elif set_gpio and unset_gpio:
+    #                     for slot,oh_sn in geb_dict.items():
+    #                         if vfat in geb_oh_map[slot]["VFAT"]:
+    #                             results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=1
+    #                             break
+    #                     set_gpio = False
+    #                     unset_gpio = False
+    #                 elif "ERROR" in line:
+    #                     for slot,oh_sn in geb_dict.items():
+    #                         if vfat in geb_oh_map[slot]["VFAT"]:
+    #                             results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=0
+    #                             break
+    # for slot,oh_sn in geb_dict.items():
+    #     results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]=1
+    #     for vfat in geb_oh_map[slot]["VFAT"]:
+    #         results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"] &= results_oh_sn[oh_sn]["VFAT_Reset"][vfat]
 
-    logfile = open(log_fn,"a")    
-    print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
-    logfile.write("Unconfiguring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-    logfile = open(log_fn, "a")
+    # logfile = open(log_fn,"a")    
+    # print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
+    # logfile.write("Unconfiguring all VFATs\n\n")
+    # logfile.close()
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+    # logfile = open(log_fn, "a")
     
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 8: VFAT Reset Failed\n\n")
-            sys.exit()
+    # for oh_sn in results_oh_sn:
+    #     if not results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]:
+    #         with open(results_fn,"w") as resultsfile:
+    #             json.dump(results_oh_sn,resultsfile,indent=2)
+    #         print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+    #         logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+    #         sys.exit()
 
-    print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 8: VFAT Reset Complete\n\n")
-    time.sleep(1)
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-
-    # # Step 9 - Slow Control Error Rate Test
-    # print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
-    # logfile.write("Step 9: Slow Control Error Rate Test\n\n")
-
-    # for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     if batch in ["pre_series","long_production"]:
-    #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     else:
-    #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
-    #     latest_file = max(list_of_files, key=os.path.getctime)
-    #     slow_control_results_file = open(latest_file)
-    #     write_flag = 0
-    #     for line in slow_control_results_file.readlines():
-    #         if "Error test results" in line:
-    #             write_flag = 1
-    #         if write_flag:
-    #             logfile.write(line)
-    #     slow_control_results_file.close()
-
-    # print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
+    # print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 8: VFAT Reset Complete\n\n")
     # time.sleep(1)
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 9 - Slow Control Error Rate Test
+    print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 9: Slow Control Error Rate Test\n\n")
+
+    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+        if batch in ["pre_series","long_production"]:
+            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        else:
+            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
+        latest_file = max(list_of_files, key=os.path.getctime)
+        slow_control_results_file = open(latest_file)
+        write_flag = 0
+        for line in slow_control_results_file.readlines():
+            if "Error test results" in line:
+                write_flag = 1
+            if write_flag:
+                logfile.write(line)
+        slow_control_results_file.close()
+
+    print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
+    time.sleep(1)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
     
     # # Step 10 - DAQ Error Rate Test
     # print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
