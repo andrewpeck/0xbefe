@@ -479,48 +479,48 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
-    # for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-    #     logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -l -a"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
-    #     latest_file = max(list_of_files, key=os.path.getctime)
-    #     os.system("python3 clean_log.py -i %s"%latest_file)
-    #     with open(latest_file,"r") as ps_file:
-    #         # parse sbit phase scan results
-    #         for line in ps_file.readlines():
-    #             if "VFAT" in line:
-    #                 vfat = int(line.split()[1])
-    #                 for slot,oh_sn in geb_dict.items():
-    #                     if vfat in geb_oh_map[slot]["VFAT"]:
-    #                         try:
-    #                             results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
-    #                         except KeyError:
-    #                             results_oh_sn[oh_sn]["SBIT_Phase_Scan"]={}
-    #                             results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
-    #                         break
-    #             elif "ELINK" in line:
-    #                 elink = int(line.split()[1].replace(":",""))
-    #                 results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink] = 1 if line.split()[-1] == "GOOD" else 0
+    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+        print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+        logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
+        os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -l -a"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+        latest_file = max(list_of_files, key=os.path.getctime)
+        os.system("python3 clean_log.py -i %s"%latest_file)
+        with open(latest_file,"r") as ps_file:
+            # parse sbit phase scan results
+            for line in ps_file.readlines():
+                if "VFAT" in line:
+                    vfat = int(line.split()[1])
+                    for slot,oh_sn in geb_dict.items():
+                        if vfat in geb_oh_map[slot]["VFAT"]:
+                            try:
+                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
+                            except KeyError:
+                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"]={}
+                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
+                            break
+                elif "ELINK" in line:
+                    elink = int(line.split()[1].replace(":",""))
+                    results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink] = 1 if line.split()[-1] == "GOOD" else 0
 
-    #     logfile.close()
-    #     os.system("cat %s >> %s"%(latest_file, log_fn))
-    #     logfile = open(log_fn, "a")
+        logfile.close()
+        os.system("cat %s >> %s"%(latest_file, log_fn))
+        logfile = open(log_fn, "a")
 
-    # for slot,oh_sn in geb_dict.items():
-    #     results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] = 1
-    #     for vfat in geb_oh_map[slot]["VFAT"]:
-    #         for elink in range(8):
-    #             results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] &= results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink]
-    # for oh_sn in results_oh_sn:
-    #     if not results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"]:
-    #         print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
-    #         logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
-    #         with open(results_fn,"w") as resultsfile:
-    #             json.dump(results_oh_sn,resultsfile,indent=2)
-    #         sys.exit()
+    for slot,oh_sn in geb_dict.items():
+        results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] = 1
+        for vfat in geb_oh_map[slot]["VFAT"]:
+            for elink in range(8):
+                results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] &= results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink]
+    for oh_sn in results_oh_sn:
+        if not results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"]:
+            print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
+            logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            sys.exit()
 
-    # time.sleep(1)
+    time.sleep(1)
 
     # for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
     #     print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
