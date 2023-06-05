@@ -784,7 +784,7 @@ if __name__ == "__main__":
                                 break
     for slot,oh_sn in geb_dict.items():
         results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]=1
-        for vfat in geb_oh_map[slot]:
+        for vfat in geb_oh_map[slot]["VFAT"]:
             results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"] &= results_oh_sn[oh_sn]["VFAT_Reset"][vfat]
 
     logfile = open(log_fn,"a")    
