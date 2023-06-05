@@ -547,11 +547,14 @@ if __name__ == "__main__":
                     elink = int(line.split()[1].replace(":",""))
                 elif "Bit slip" in line:
                     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] = int(line.split()[-1])
-                elif "Bad Elinks" in line:
+                elif "Bad Elinks:" in line:
                     read_next = True # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
                 elif read_next:
+                    if line=="\n":
+                        read_next=False
+                        continue
                     vfat = int(line.split()[1].replace(",",""))
-                    elink = int(line.split()[-1])
+                    elink = int(line.split()[-1])    
                     try:
                         results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]+=[elink]
                     except KeyError:
