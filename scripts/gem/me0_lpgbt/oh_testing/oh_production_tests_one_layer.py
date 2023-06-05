@@ -820,7 +820,7 @@ if __name__ == "__main__":
             os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
         list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file) as slow_control_results_file:
+        with open(latest_file,"r") as slow_control_results_file:
             read_next = False
             for line in slow_control_results_file.readlines():
                 if "Error test results" in line:
@@ -845,7 +845,7 @@ if __name__ == "__main__":
                         sync_errors = int(line.split()[-1])
                         results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]=sync_errors
                     elif "bus errors" in line:
-                        bus_errors = int(line.split()[5].replace(',',''))
+                        bus_errors = int(line.split()[6].replace(',',''))
                         bus_er = float(line.split()[-1])
                         results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]=bus_errors
                         results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_ER"]=bus_er
@@ -865,21 +865,21 @@ if __name__ == "__main__":
                         results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]=to_errors
                         results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Downlink_BER"]=downlink_ber
 
-for slot,oh_sn in geb_dict.items():
-    results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]=0
-    for vfat in geb_oh_map[slot]["VFAT"]:
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"]["Sync_Errors"]
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"]["Bus_Errors"]
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"]["Mismatch_Errors"]
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"]["CRC_Errors"]
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"]["Timeout_Errors"]
-for oh_sn in results_oh_sn:
-    if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
-        with open(results_fn,"w") as resultsfile:
-            json.dump(results_oh_sn,resultsfile,indent=2)
-        print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
-        logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
-        sys.exit()
+    for slot,oh_sn in geb_dict.items():
+        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]=0
+        for vfat in geb_oh_map[slot]["VFAT"]:
+            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]
+            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]
+            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]
+            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]
+            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]
+    for oh_sn in results_oh_sn:
+        if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
+            logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
+            sys.exit()
 
     print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
