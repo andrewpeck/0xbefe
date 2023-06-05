@@ -23,12 +23,15 @@ use work.ipb_addr_decode.all;
 use work.ipbus.all;
 use work.ttc_pkg.all;
 use work.lpgbtfpga_package.all;
+use work.pat_types.all;
+use work.pat_pkg.all;
 
 entity gem_amc is
     generic(
         g_SLR                : integer;
         g_GEM_STATION        : integer;
         g_NUM_OF_OHs         : integer;
+        g_NUM_SEGMENTS_ME0   : integer := 4;
         g_OH_VERSION         : integer;
         g_GBT_WIDEBUS        : integer;
         g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;
@@ -197,6 +200,8 @@ architecture gem_amc_arch of gem_amc is
 
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
+
+    signal me0_segments_arr : segment_list_t (g_NUM_SEGMENTS_ME0-1 downto 0);
 
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -486,6 +491,7 @@ begin
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                g_NUM_SEGMENTS      => g_NUM_SEGMENTS_ME0,
                 g_DEBUG             => True--CFG_DEBUG_SBIT_ME0
             )
             port map(
@@ -498,6 +504,7 @@ begin
                 ipb_mosi_i          => ipb_mosi_arr_i(C_IPB_SLV.sbit_me0),
                 me0_cluster_count_o => open,
                 me0_clusters_o      => me0_clusters_arr,
+                me0_segments_o      => me0_segments_arr,
                 ipb_miso_o          => ipb_miso_arr(C_IPB_SLV.sbit_me0)
             );
 
@@ -509,7 +516,8 @@ begin
     -- Trigger module --
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_SEGMENTS_ME0  => g_NUM_SEGMENTS_ME0,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -522,6 +530,7 @@ begin
             ttc_cmds_i         => ttc_cmd,
             sbit_clusters_i    => sbit_clusters_arr,
             sbit_link_status_i => sbit_links_status_arr,
+            me0_segments_i     => me0_segments_arr,
             trig_led_o         => led_trigger_o,
             trig_tx_data_arr_o => emtf_data_arr,
             ipb_reset_i        => ipb_reset,

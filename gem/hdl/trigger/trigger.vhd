@@ -17,9 +17,12 @@ use work.gem_pkg.all;
 use work.ttc_pkg.all;
 use work.ipbus.all;
 use work.registers.all;
+use work.pat_types.all;
+use work.pat_pkg.all;
 
 entity trigger is
     generic(
+        g_NUM_SEGMENTS_ME0  : integer;
         g_NUM_OF_OHs        : integer;
         g_NUM_TRIG_TX_LINKS : integer;
         g_USE_TRIG_TX_LINKS : boolean;
@@ -38,6 +41,9 @@ entity trigger is
         -- Sbit cluster inputs
         sbit_clusters_i     : in t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
         sbit_link_status_i  : in t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
+
+        -- Segment inputs
+        me0_segments_i : in segment_list_t (g_NUM_SEGMENTS_ME0-1 downto 0);
 
         -- Outputs
         trig_led_o          : out std_logic;

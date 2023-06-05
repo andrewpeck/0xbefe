@@ -59,8 +59,6 @@ entity sbit_me0 is
         -- segment outputs
         me0_segments_o : out segment_list_t (g_NUM_SEGMENTS-1 downto 0);
 
-        segment_pretrigger_o : out std_logic;
-
         -- IPbus
         ipb_reset_i : in  std_logic;
         ipb_clk_i   : in  std_logic;
@@ -370,7 +368,7 @@ begin
                 probe13 => vfat_sbits_arr(0)(17),
                 probe14 => ttc_cmds_i.calpulse,
                 probe15 => ttc_cmds_i.l1a,
-                probe16 => segment_pretrigger_o,
+                probe16 => '0',
                 probe17 => "000000" & prt_0 & strip_0 & lc_0 & id_0,
                 probe18 => "000000" & prt_1 & strip_1 & lc_1 & id_1,
                 probe19 => "000000" & prt_2 & strip_2 & lc_2 & id_2,
@@ -670,7 +668,6 @@ begin
                 dav_o             => open,
                 sbits_i           => sbits_i,
                 segments_o        => me0_segments_o,
-                pretrigger_o      => segment_pretrigger_o,
                 vfat_pretrigger_o => open
                 );
 
