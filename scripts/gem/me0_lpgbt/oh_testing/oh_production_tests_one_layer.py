@@ -809,109 +809,108 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 9 - Slow Control Error Rate Test
-    print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 9: Slow Control Error Rate Test\n\n")
+    # # Step 9 - Slow Control Error Rate Test
+    # print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
+    # logfile.write("Step 9: Slow Control Error Rate Test\n\n")
 
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+    # for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     if batch in ["pre_series","long_production"]:
+    #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     else:
+    #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
+    #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     with open(latest_file,"r") as slow_control_results_file:
+    #         read_next = False
+    #         for line in slow_control_results_file.readlines():
+    #             if "Error test results" in line:
+    #                 read_next = True
+    #             if read_next:
+    #                 logfile.write(line)
+    #                 if "link is" in line:
+    #                     vfat = int(line.split()[1].replace(',',''))
+    #                     status = 1 if line.split()[-1]=="GOOD" else 0
+    #                     for slot,oh_sn in geb_dict.items():
+    #                         if vfat in geb_oh_map[slot]["VFAT"]:
+    #                             try:
+    #                                 results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
+    #                                 results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
+    #                             except KeyError:
+    #                                 results_oh_sn[oh_sn]["Slow_Control_Errors"]={}
+    #                                 results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
+    #                                 results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
+    #                             finally:
+    #                                 break
+    #                 elif "sync errors" in line:
+    #                     sync_errors = int(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]=sync_errors
+    #                 elif "bus errors" in line:
+    #                     bus_errors = int(line.split()[6].replace(',',''))
+    #                     bus_er = float(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]=bus_errors
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_ER"]=bus_er
+    #                 elif "register mismatch" in line:
+    #                     mm_errors = int(line.split()[7].replace(',',''))
+    #                     mm_er = float(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]=mm_errors
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_ER"]=mm_er
+    #                 elif "CRC" in line:
+    #                     crc_errors = int(round(float(line.split()[10].replace(',',''))))
+    #                     uplink_ber = float(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]=crc_errors
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Uplink_BER"]=uplink_ber
+    #                 elif "Timeout" in line:
+    #                     to_errors = int(round(float(line.split()[10].replace(',',''))))
+    #                     downlink_ber = float(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]=to_errors
+    #                     results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Downlink_BER"]=downlink_ber
+
+    # for slot,oh_sn in geb_dict.items():
+    #     results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]=0
+    #     for vfat in geb_oh_map[slot]["VFAT"]:
+    #         results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]
+    #         results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]
+    #         results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]
+    #         results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]
+    #         results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]
+    # for oh_sn in results_oh_sn:
+    #     if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
+    #         with open(results_fn,"w") as resultsfile:
+    #             json.dump(results_oh_sn,resultsfile,indent=2)
+    #         print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
+    #         logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
+    #         sys.exit()
+
+    # print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
+    # time.sleep(1)
+    # print ("#####################################################################################################################################\n")
+    # logfile.write("#####################################################################################################################################\n\n")
+    
+    # Step 10 - DAQ Error Rate Test
+    print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 10: DAQ Error Rate Test\n\n")
+    
+    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
         if batch in ["pre_series","long_production"]:
-            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
         else:
-            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
+            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file,"r") as slow_control_results_file:
+        with open(latest_file) as daq_results_file:
             read_next = False
-            for line in slow_control_results_file.readlines():
+            for line in daq_results_file.readlines():
                 if "Error test results" in line:
                     read_next = True
                 if read_next:
                     logfile.write(line)
-                    if "link is" in line:
-                        vfat = int(line.split()[1].replace(',',''))
-                        status = 1 if line.split()[-1]=="GOOD" else 0
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                try:
-                                    results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
-                                except KeyError:
-                                    results_oh_sn[oh_sn]["Slow_Control_Errors"]={}
-                                    results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
-                                finally:
-                                    break
-                    elif "sync errors" in line:
-                        sync_errors = int(line.split()[-1])
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]=sync_errors
-                    elif "bus errors" in line:
-                        bus_errors = int(line.split()[6].replace(',',''))
-                        bus_er = float(line.split()[-1])
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]=bus_errors
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_ER"]=bus_er
-                    elif "register mismatch" in line:
-                        mm_errors = int(line.split()[7].replace(',',''))
-                        mm_er = float(line.split()[-1])
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]=mm_errors
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_ER"]=mm_er
-                    elif "CRC" in line:
-                        crc_errors = int(round(float(line.split()[10].replace(',',''))))
-                        uplink_ber = float(line.split()[-1])
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]=crc_errors
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Uplink_BER"]=uplink_ber
-                    elif "Timeout" in line:
-                        to_errors = int(round(float(line.split()[10].replace(',',''))))
-                        downlink_ber = float(line.split()[-1])
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]=to_errors
-                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Downlink_BER"]=downlink_ber
 
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]=0
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]
-    for oh_sn in results_oh_sn:
-        if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
-            sys.exit()
-
-    print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
+    print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
-    
-    # # Step 10 - DAQ Error Rate Test
-    # print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
-    # logfile.write("Step 10: DAQ Error Rate Test\n\n")
-    
-    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     if batch in ["pre_series","long_production"]:
-    #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     else:
-    #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
-    #     latest_file = max(list_of_files, key=os.path.getctime)
-    #     daq_results_file = open(latest_file)
-    #     write_flag = 0
-    #     for line in daq_results_file.readlines():
-    #         if "Error test results" in line:
-    #             write_flag = 1
-    #         if write_flag:
-    #             logfile.write(line)
-    #     daq_results_file.close()
-    
-    # print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
-    # time.sleep(1)
-    # print ("#####################################################################################################################################\n")
-    # logfile.write("#####################################################################################################################################\n\n")
     
     # # Step 11 - DAC Scans
     # print (Colors.BLUE + "Step 11: DAC Scans\n" + Colors.ENDC)
