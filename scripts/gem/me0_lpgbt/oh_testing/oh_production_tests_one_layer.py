@@ -940,7 +940,18 @@ if __name__ == "__main__":
                         ber = float(line.split()[10].replace(',',''))
                         results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]=errors
                         results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["BER"]=ber
-
+    
+    for slot,oh_sn in geb_dict.items():
+        results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]=0
+        for vfat in geb_oh_map[slot]["VFAT"]:
+            results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]
+    for oh_sn in results_oh_sn:
+        if results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]:
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
+            logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
+            sys.exit()
     print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
     time.sleep(1)
