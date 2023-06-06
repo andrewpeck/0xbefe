@@ -912,8 +912,34 @@ if __name__ == "__main__":
                 if "Error test results" in line:
                     read_next = True
                 if read_next:
-                    print([line])
                     logfile.write(line)
+                    if "link is" in line:
+                        vfat = int(line.split()[1].replace(',',''))
+                        status = 1 if line.split()[-1]=="GOOD" else 0
+                        for slot,oh_sn in geb_dict.items():
+                            if vfat in geb_oh_map[slot]["VFAT"]:
+                                try:
+                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
+                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
+                                except KeyError:
+                                    results_oh_sn[oh_sn]["DAQ_Errors"]={}
+                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
+                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
+                                finally:
+                                    break
+                    elif "sync errors" in line:
+                        sync_errors = int(line.split()[-1])
+                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Sync_Errors"]=sync_errors
+                    elif "DAQ Events" in line:
+                        events = float(line.split()[2].replace(',',''))
+                        crc_errors = int(line.split()[-1])
+                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Events"]=events
+                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["CRC_Errors"]=crc_errors
+                    elif "Bit Error Ratio" in line:
+                        errors = int(line.split()[4].replace(',',''))
+                        ber = float(line.split()[10].replace(',',''))
+                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]=errors
+                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["BER"]=ber
 
     print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
