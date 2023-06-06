@@ -895,209 +895,175 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 10 - DAQ Error Rate Test
-    print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 10: DAQ Error Rate Test\n\n")
+    # # Step 10 - DAQ Error Rate Test
+    # print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
+    # logfile.write("Step 10: DAQ Error Rate Test\n\n")
+    
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     if batch in ["pre_series","long_production"]:
+    #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     else:
+    #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
+    #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     with open(latest_file) as daq_results_file:
+    #         read_next = False
+    #         for line in daq_results_file.readlines():
+    #             if "Error test results" in line:
+    #                 read_next = True
+    #             if read_next:
+    #                 logfile.write(line)
+    #                 if "link is" in line:
+    #                     vfat = int(line.split()[1].replace(',',''))
+    #                     status = 1 if line.split()[-1]=="GOOD" else 0
+    #                     for slot,oh_sn in geb_dict.items():
+    #                         if vfat in geb_oh_map[slot]["VFAT"]:
+    #                             try:
+    #                                 results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
+    #                                 results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
+    #                             except KeyError:
+    #                                 results_oh_sn[oh_sn]["DAQ_Errors"]={}
+    #                                 results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
+    #                                 results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
+    #                             finally:
+    #                                 break
+    #                 elif "sync errors" in line:
+    #                     sync_errors = int(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Sync_Errors"]=sync_errors
+    #                 elif "DAQ Events" in line:
+    #                     events = float(line.split()[2].replace(',',''))
+    #                     crc_errors = int(line.split()[-1])
+    #                     results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Events"]=events
+    #                     results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["CRC_Errors"]=crc_errors
+    #                 elif "Bit Error Ratio" in line:
+    #                     errors = int(line.split()[4].replace(',',''))
+    #                     ber = float(line.split()[10].replace(',',''))
+    #                     results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]=errors
+    #                     results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["BER"]=ber
+    
+    # for slot,oh_sn in geb_dict.items():
+    #     results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]=0
+    #     for vfat in geb_oh_map[slot]["VFAT"]:
+    #         results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]
+    # for oh_sn in results_oh_sn:
+    #     if results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]:
+    #         with open(results_fn,"w") as resultsfile:
+    #             json.dump(results_oh_sn,resultsfile,indent=2)
+    #         print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
+    #         logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
+    #         sys.exit()
+    # print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
+    # time.sleep(1)
+    # print ("#####################################################################################################################################\n")
+    # logfile.write("#####################################################################################################################################\n\n")
+    
+    # Step 11 - ADC Measurements
+    print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
+    logfile.write("Step 11: ADC Measurements\n\n")
     
     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        if batch in ["pre_series","long_production"]:
-            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        else:
-            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file) as daq_results_file:
-            read_next = False
-            for line in daq_results_file.readlines():
-                if "Error test results" in line:
-                    read_next = True
-                if read_next:
-                    logfile.write(line)
-                    if "link is" in line:
-                        vfat = int(line.split()[1].replace(',',''))
-                        status = 1 if line.split()[-1]=="GOOD" else 0
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                try:
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
-                                except KeyError:
-                                    results_oh_sn[oh_sn]["DAQ_Errors"]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
-                                finally:
-                                    break
-                    elif "sync errors" in line:
-                        sync_errors = int(line.split()[-1])
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Sync_Errors"]=sync_errors
-                    elif "DAQ Events" in line:
-                        events = float(line.split()[2].replace(',',''))
-                        crc_errors = int(line.split()[-1])
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Events"]=events
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["CRC_Errors"]=crc_errors
-                    elif "Bit Error Ratio" in line:
-                        errors = int(line.split()[4].replace(',',''))
-                        ber = float(line.split()[10].replace(',',''))
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]=errors
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["BER"]=ber
+        print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
+        logfile.write("Configuring all VFATs\n\n")
+        logfile.close()
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+        logfile = open(log_fn, "a")
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning ADC Calibration Scan\n" + Colors.ENDC)
+    logfile.write("Running ADC Calibration Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        for gbt in geb_oh_map[slot]["GBT"]:
+            os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt))
+            list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
+            if len(list_of_files)>0:
+                latest_file = max(list_of_files, key=os.path.getctime)
+                if gbt%2==0:
+                    os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+                else:
+                    os.system("cp %s %s/adc_calib_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning lpGBT Voltage Scan\n" + Colors.ENDC)
+    logfile.write("Running lpGBT Voltage Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        for gbt in geb_oh_map[slot]["GBT"]:
+            os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
+            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
+            if len(list_of_files)>0:
+                latest_file = max(list_of_files, key=os.path.getctime)
+                if gbt%2==0:
+                    os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+                else:
+                    os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
+    logfile.write("Running RSSI Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        gbt = geb_oh_map[slot]["GBT"][-1]
+        os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
+    logfile.write("Running GEB Current and Temperature Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        gbt = geb_oh_map[slot]["GBT"][0]
+        os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning OH Temperature Scan\n" + Colors.ENDC)
+    logfile.write("Running OH Temperature Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        gbt = geb_oh_map[slot]["GBT"][-1]
+        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan\n" + Colors.ENDC)
+    logfile.write("Running VTRx+ Temperature Scan\n\n")
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        gbt = geb_oh_map[slot]["GBT"][-1]
+        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10"%(oh_select,gbt))
+        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    time.sleep(5)
     
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]=0
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]
-    for oh_sn in results_oh_sn:
-        if results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
-            sys.exit()
-    print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
+    print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
+    logfile.write("Unconfiguring all VFATs\n\n")
+    logfile.close()
+    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
+    logfile = open(log_fn, "a")
+    
+    print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 11: ADC Measurements Complete\n\n")
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
-    
-    # # Step 11 - DAC Scans
-    # print (Colors.BLUE + "Step 11: DAC Scans\n" + Colors.ENDC)
-    # logfile.write("Step 11: DAC Scans\n\n")
-    
-    # if batch=="pre_series":
-    #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #         print (Colors.BLUE + "\nRunning DAC Scans for OH %d on all VFATs\n"%oh_select + Colors.ENDC)
-    #         logfile.write("\nRunning DAC Scans for OH %d on all VFATs\n\n"%oh_select)
-    #         os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o %d -v %s -f ../resources/DAC_scan_reg_list.txt"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #         list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    
-    #         print (Colors.BLUE + "\nPlotting DAC Scans for OH %d on all VFATs\n" + Colors.ENDC)
-    #         logfile.write("\nPlotting DAC Scans for OH %d on all VFATs\n\n")
-    #         os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
-    #         latest_dir = latest_file.split(".txt")[0]
-    #         if os.path.isdir(latest_dir):
-    #             if os.path.isdir(dataDir + "/dac_scan_results"):
-    #                 os.system("rm -rf " + dataDir + "/dac_scan_results")
-    #             os.makedirs(dataDir + "/dac_scan_results")
-    #             os.system("cp %s/*.pdf %s/dac_scan_results/"%(latest_dir, dataDir))
-    #         else:
-    #             print (Colors.RED + "DAC scan result directory not found" + Colors.ENDC)
-    #             logfile.write("DAC scan result directory not found\n")
-    # else:
-    #     print(Colors.BLUE + "Skipping DAC scans for %s tests"%batch.replace("_"," ") + Colors.ENDC)
-    #     logfile.write("Skipping DAC scans for %s tests\n"%batch.replace("_"," "))
-
-    # print (Colors.GREEN + "\nStep 11: DAC Scans Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 11: DAC Scans Complete\n\n")
-    # time.sleep(1)
-    # print ("#####################################################################################################################################\n")
-    # logfile.write("#####################################################################################################################################\n\n")
-    
-    # # Step 12 - ADC Measurements
-    # print (Colors.BLUE + "Step 12: ADC Measurements\n" + Colors.ENDC)
-    # logfile.write("Step 12: ADC Measurements\n\n")
-    
-    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
-    #     logfile.write("Configuring all VFATs\n\n")
-    #     logfile.close()
-    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
-    #     logfile = open(log_fn, "a")
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning ADC Calibration Scan\n" + Colors.ENDC)
-    # logfile.write("Running ADC Calibration Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     for gbt in geb_oh_map[slot]["GBT"]:
-    #         os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt))
-    #         list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
-    #         if len(list_of_files)>0:
-    #             latest_file = max(list_of_files, key=os.path.getctime)
-    #             if gbt%2==0:
-    #                 os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-    #             else:
-    #                 os.system("cp %s %s/adc_calib_slot%s_sub.pdf"%(latest_file, dataDir, slot))
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning lpGBT Voltage Scan\n" + Colors.ENDC)
-    # logfile.write("Running lpGBT Voltage Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     for gbt in geb_oh_map[slot]["GBT"]:
-    #         os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
-    #         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
-    #         if len(list_of_files)>0:
-    #             latest_file = max(list_of_files, key=os.path.getctime)
-    #             if gbt%2==0:
-    #                 os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-    #             else:
-    #                 os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
-    # logfile.write("Running RSSI Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     gbt = geb_oh_map[slot]["GBT"][-1]
-    #     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10"%(oh_select,gbt))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
-    # logfile.write("Running GEB Current and Temperature Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     gbt = geb_oh_map[slot]["GBT"][0]
-    #     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning OH Temperature Scan\n" + Colors.ENDC)
-    # logfile.write("Running OH Temperature Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     gbt = geb_oh_map[slot]["GBT"][-1]
-    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10"%(oh_select,gbt))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-    # time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan\n" + Colors.ENDC)
-    # logfile.write("Running VTRx+ Temperature Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     gbt = geb_oh_map[slot]["GBT"][-1]
-    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10"%(oh_select,gbt))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-    # time.sleep(5)
-    
-    # print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
-    # logfile.write("Unconfiguring all VFATs\n\n")
-    # logfile.close()
-    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
-    # logfile = open(log_fn, "a")
-    
-    # print (Colors.GREEN + "\nStep 12: ADC Measurements Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 12: ADC Measurements Complete\n\n")
-    # time.sleep(1)
-    # print ("#####################################################################################################################################\n")
-    # logfile.write("#####################################################################################################################################\n\n")
 
     # # Step 13 - DAQ SCurve 
     # print (Colors.BLUE + "Step 13: DAQ SCurve\n" + Colors.ENDC)
