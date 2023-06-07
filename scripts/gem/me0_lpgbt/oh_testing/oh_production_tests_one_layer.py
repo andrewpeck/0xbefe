@@ -1002,9 +1002,18 @@ if __name__ == "__main__":
             print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
             logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
             logfile.close()
-            os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
+            os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
             os.system("python3 clean_logs.py -i %s"%log_fn)
             logfile = open(log_fn,"a")
+            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
+            latest_file = max(list_of_files,key=os.path.getctime)
+            with open(latest_file) as voltage_scan_file:
+                voltages={}
+                line = voltage_scan_file.readline()
+                print(line)
+                for line in voltage_scan_file.readlines():
+                    print(line)
+
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
