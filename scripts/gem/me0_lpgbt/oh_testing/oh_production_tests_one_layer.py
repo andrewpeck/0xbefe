@@ -970,12 +970,21 @@ if __name__ == "__main__":
         logfile = open(log_fn, "a")
     time.sleep(1)
 
-    print (Colors.BLUE + "\nRunning ADC Calibration Scan\n" + Colors.ENDC)
-    logfile.write("Running ADC Calibration Scan\n\n")
-    for slot in geb_dict:
+    for slot,oh_sn in geb_dict.items():
         oh_select = geb_oh_map[slot]["OH"]
         for gbt in geb_oh_map[slot]["GBT"]:
-            os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt))
+            print (Colors.BLUE + "\nRunning ADC Calibration Scan for gbt %d\n"%gbt + Colors.ENDC)
+            logfile.write("Running ADC Calibration Scan for gbt %d\n\n"%gbt)
+            logfile.close()
+            os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt,log_fn))
+            list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*results*.txt"%gbt)
+            latest_file = max(list_of_files,key=os.path.getctime)
+            with open(latest_file) as adc_calib_file:
+                try:
+                    results_oh_sn[oh_sn][gbt]["ADC_Calibration"] = [float(p) for p in adc_calib_file.read().split()]
+                except:
+                    print(adc_calib_file.read().split())
+                    sys.exit()
             list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
@@ -983,81 +992,97 @@ if __name__ == "__main__":
                     os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
                 else:
                     os.system("cp %s %s/adc_calib_slot%s_sub.pdf"%(latest_file, dataDir, slot))
-    time.sleep(1)
-
-    print (Colors.BLUE + "\nRunning lpGBT Voltage Scan\n" + Colors.ENDC)
-    logfile.write("Running lpGBT Voltage Scan\n\n")
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        for gbt in geb_oh_map[slot]["GBT"]:
-            os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
-            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
-            if len(list_of_files)>0:
-                latest_file = max(list_of_files, key=os.path.getctime)
-                if gbt%2==0:
-                    os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-                else:
-                    os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
-    time.sleep(1)
-
-    print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
-    logfile.write("Running RSSI Scan\n\n")
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10"%(oh_select,gbt))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
-    time.sleep(1)
-
-    print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
-    logfile.write("Running GEB Current and Temperature Scan\n\n")
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][0]
-        os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
-    time.sleep(1)
-
-    print (Colors.BLUE + "\nRunning OH Temperature Scan\n" + Colors.ENDC)
-    logfile.write("Running OH Temperature Scan\n\n")
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10"%(oh_select,gbt))
-        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-    time.sleep(1)
-
-    print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan\n" + Colors.ENDC)
-    logfile.write("Running VTRx+ Temperature Scan\n\n")
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10"%(oh_select,gbt))
-        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-    time.sleep(5)
     
-    print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
-    logfile.write("Unconfiguring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
-    logfile = open(log_fn, "a")
+
+    # time.sleep(1)
+
+    # for slot in geb_dict:
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     for gbt in geb_oh_map[slot]["GBT"]:
+    #         print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
+    #         logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
+    #         logfile.close()
+    #         os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #         os.system("python3 clean_logs.py -i %s"%log_fn)
+    #         logfile = open(log_fn,"a")
+    #         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
+    #         if len(list_of_files)>0:
+    #             latest_file = max(list_of_files, key=os.path.getctime)
+    #             if gbt%2==0:
+    #                 os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+    #             else:
+    #                 os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+    # logfile.close()
+    # with open(log_fn,"r") as logfile:
+    #     pass
+    # logfile = open(log_fn,"a")
+
+    # time.sleep(1)
+
+    # print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
+    # logfile.write("Running RSSI Scan\n\n")
+    # for slot in geb_dict:
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][-1]
+    #     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     os.system("python3 clean_logs.py -i %s"%log_fn)
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+    # time.sleep(1)
+
+    # print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
+    # logfile.write("Running GEB Current and Temperature Scan\n\n")
+    # for slot in geb_dict:
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][0]
+    #     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     os.system("python3 clean_logs.py -i %s"%log_fn)
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
+    # time.sleep(1)
+
+
+    # for slot in geb_dict:
+    #     print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
+    #     logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][-1]
+    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     os.system("python3 clean_logs.py -i %s"%log_fn)
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    # time.sleep(1)
+
+
+    # for slot in geb_dict:
+    #     print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
+    #     logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][-1]
+    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     os.system("python3 clean_logs.py -i %s"%log_fn)
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    # time.sleep(5)
+    
+    # print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
+    # logfile.write("Unconfiguring all VFATs\n\n")
+    # logfile.close()
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
+    # logfile = open(log_fn, "a")
     
     print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
     logfile.write("\nStep 11: ADC Measurements Complete\n\n")
