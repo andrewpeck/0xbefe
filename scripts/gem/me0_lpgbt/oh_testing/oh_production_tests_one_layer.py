@@ -976,9 +976,11 @@ if __name__ == "__main__":
             print (Colors.BLUE + "\nRunning ADC Calibration Scan for gbt %d\n"%gbt + Colors.ENDC)
             logfile.write("Running ADC Calibration Scan for gbt %d\n\n"%gbt)
             logfile.close()
-            os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d"%(oh_select,gbt,log_fn))
+            os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o %d -g %d >> %s"%(oh_select,gbt,log_fn))
+            logfile = open(log_fn,"a")
             list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*results*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
+            os.system("cp %s %s/adc_calib_results_slot%s_gbt%d.txt"%(latest_file,dataDir,slot,gbt))
             with open(latest_file) as adc_calib_file:
                 try:
                     results_oh_sn[oh_sn][gbt]["ADC_Calibration"] = [float(p) for p in adc_calib_file.read().split()]
@@ -988,10 +990,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                if gbt%2==0:
-                    os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-                else:
-                    os.system("cp %s %s/adc_calib_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+                os.system("cp %s %s/adc_calib_slot%s_gbt%d.pdf"%(latest_file, dataDir, slot, gbt))
     
 
     # time.sleep(1)
