@@ -15,6 +15,13 @@ def convert_gpio_reg(gpio):
 def vfat_reset(system, oh_select, vfat_list):
     print ("VFAT RESET\n")
     
+    # Check VFAT mode before reset
+    gem_utils.gem_link_reset()
+    sleep(0.1)
+    mode_before_reset = {}
+    for vfat in vfat_list:
+        mode_before_reset[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat)))
+
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
         oh_ver = get_oh_ver(oh_select, gbt_select)
@@ -122,10 +129,32 @@ def vfat_reset(system, oh_select, vfat_list):
         
         print ("")
         
-    # Link reset after VFAT reset
+    # Check VFAT mode before reset
     gem_utils.gem_link_reset()
     sleep(0.1)
-    
+    mode_after_reset = {}
+    for vfat in vfat_list:
+        mode_after_reset[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat)))
+
+    for vfat in vfat_list:
+        print_string = ""
+        if mode_after_reset[vfat] != 0:
+            print_string += (Colors.RED)
+        else:
+            print_string += Colors.GREEN
+        print_string += "VFAT# %02d: "%(vfat)
+        if mode_after_reset[vfat] != 0:
+            print_string += "ERROR - VFAT Reset did not work, VFAT still in RUN mode"
+        else:
+            if mode_before_reset[vfat] == 0:
+                print_string += "VFAT was already in SLEEP mode before RESET, in SLEEP mode after RESET"
+            else:
+                print_string += "VFAT RESET from RUN mode to SLEEP mode"
+
+        print_string += Colors.ENDC 
+        print (print_string)
+    print ("")
+
 if __name__ == "__main__":
 
     # Parsing arguments
