@@ -990,33 +990,34 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/adc_calib_slot%s_gbt%d.pdf"%(latest_file, dataDir, slot, gbt))
-    
+                if gbt%2==0:
+                    os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+                else:
+                    os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+    time.sleep(1)
 
-    # time.sleep(1)
+    for slot in geb_dict:
+        oh_select = geb_oh_map[slot]["OH"]
+        for gbt in geb_oh_map[slot]["GBT"]:
+            print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
+            logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
+            logfile.close()
+            os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10"%(oh_select,gbt))
+            os.system("python3 clean_logs.py -i %s"%log_fn)
+            logfile = open(log_fn,"a")
+            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
+            if len(list_of_files)>0:
+                latest_file = max(list_of_files, key=os.path.getctime)
+                if gbt%2==0:
+                    os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+                else:
+                    os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+    logfile.close()
+    with open(log_fn,"r") as logfile:
+        pass
+    logfile = open(log_fn,"a")
 
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     for gbt in geb_oh_map[slot]["GBT"]:
-    #         print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
-    #         logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
-    #         logfile.close()
-    #         os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
-    #         os.system("python3 clean_logs.py -i %s"%log_fn)
-    #         logfile = open(log_fn,"a")
-    #         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
-    #         if len(list_of_files)>0:
-    #             latest_file = max(list_of_files, key=os.path.getctime)
-    #             if gbt%2==0:
-    #                 os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-    #             else:
-    #                 os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
-    # logfile.close()
-    # with open(log_fn,"r") as logfile:
-    #     pass
-    # logfile = open(log_fn,"a")
-
-    # time.sleep(1)
+    time.sleep(1)
 
     # print (Colors.BLUE + "\nRunning RSSI Scan\n" + Colors.ENDC)
     # logfile.write("Running RSSI Scan\n\n")
