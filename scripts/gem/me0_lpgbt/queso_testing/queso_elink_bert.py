@@ -168,7 +168,12 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
                     err_str += Colors.GREEN
                 else:
                     err_str += Colors.RED
-                err_str += "    ELINK %d: Nr. of PRBS errors = %d"%(elink, prbs_errors[oh_select][vfat][elink])
+                lpgbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][0]
+                if elink == 0:
+                    elink_nr = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
+                else:
+                    elink_nr = ME0_VFAT_TO_SBIT_ELINK[vfat][elink-1]
+                err_str += "    ELINK %d (GBT: %s, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink])
                 if prbs_errors[oh_select][vfat][elink] == 0:
                     err_str += ", BER < {:.2e}".format(ber_ul) 
                 err_str += Colors.ENDC
@@ -180,7 +185,6 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
     # Reset QUESO BERT registers
     write_backend_reg(queso_reset_node, 1)
 
-    
     prbs_errors_oh_sn = {}
     for queso,oh_serial_nr in queso_dict.items():
         oh_select = queso_oh_map[queso]["OH"]
