@@ -137,7 +137,7 @@ if __name__ == "__main__":
         results_oh_sn[oh_sn]["Batch"]=batch
         results_oh_sn[oh_sn]["Slot"]=slot_name
         results_oh_sn[oh_sn]["VTRx"]={}
-        results_oh_sn[oh_sn]["Serial_Number"]=vtrx_dict[slot]
+        results_oh_sn[oh_sn]["VTRx"]["Serial_Number"]=vtrx_dict[slot]
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
     
@@ -1032,42 +1032,42 @@ if __name__ == "__main__":
     # time.sleep(1)
 
 
-    for slot,oh_sn in geb_dict.items():
-        print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
-        logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
+    # for slot,oh_sn in geb_dict.items():
+    #     print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
+    #     logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][-1]
+    #     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
+    #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     with open(latest_file) as rssi_file:
+    #         key = rssi_file.readline().split()[2]
+    #         rssi=[]
+    #         for line in rssi_file.readlines():
+    #             rssi += [float(line.split()[1])]
+    #         results_oh_sn[oh_sn]["VTRx"][key]=np.mean(rssi)
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+    # time.sleep(1)
+
+    print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
+    logfile.write("Running GEB Current and Temperature Scan\n\n")
+    for slot in geb_dict:
         oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
-        latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file) as rssi_file:
-            key = rssi_file.readline().split()[2]
-            rssi=[]
-            for line in rssi_file.readlines():
-                rssi += [float(line.split()[1])]
-            results_oh_sn[oh_sn]["VTRx"][key]=np.mean(rssi)
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
+        gbt = geb_oh_map[slot]["GBT"][0]
+        os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
+        os.system("python3 clean_logs.py -i %s"%log_fn)
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
         if len(list_of_files)>0:
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+            os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
+        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
     time.sleep(1)
-
-    # print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan\n" + Colors.ENDC)
-    # logfile.write("Running GEB Current and Temperature Scan\n\n")
-    # for slot in geb_dict:
-    #     oh_select = geb_oh_map[slot]["OH"]
-    #     gbt = geb_oh_map[slot]["GBT"][0]
-    #     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
-    #     os.system("python3 clean_logs.py -i %s"%log_fn)
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
-    #     if len(list_of_files)>0:
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
-    # time.sleep(1)
 
 
     # for slot in geb_dict:
