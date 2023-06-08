@@ -1114,73 +1114,74 @@ if __name__ == "__main__":
     #         results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
     # time.sleep(1)
 
-
-    for slot,oh_sn in geb_dict.items():
-        print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
-        logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
-        list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
-        latest_file = max(list_of_files,key=os.path.getctime)
-        os.system('cp %s %s/vtrx_temperature_scan_slot%s'%(latest_file,dataDir,slot))
-        results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"]={}
-        with open(latest_file) as vtrx_temp_file:
-            keys = vtrx_temp_file.readline().split()[2:7:2]
-            temperatures = {}
-            for key in keys:
-                temperatures[key]=[]
-            for line in vtrx_temp_file.readlines():
-                for key,value in zip(temperatures,line.split()[1:]):
-                    temperatures[key]+=[float(value)]
-        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-        for key,values in temperatures.items():
-            results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"][key]=np.mean(values)
-    time.sleep(5)
+    # for slot,oh_sn in geb_dict.items():
+    #     print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
+    #     logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
+    #     oh_select = geb_oh_map[slot]["OH"]
+    #     gbt = geb_oh_map[slot]["GBT"][-1]
+    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
+    #     latest_file = max(list_of_files,key=os.path.getctime)
+    #     os.system('cp %s %s/vtrx_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+    #     results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"]={}
+    #     with open(latest_file) as vtrx_temp_file:
+    #         keys = vtrx_temp_file.readline().split()[2:7:2]
+    #         temperatures = {}
+    #         for key in keys:
+    #             temperatures[key]=[]
+    #         for line in vtrx_temp_file.readlines():
+    #             for key,value in zip(temperatures,line.split()[1:]):
+    #                 temperatures[key]+=[float(value)]
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+    #     if len(list_of_files)>0:
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    #     for key,values in temperatures.items():
+    #         results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"][key]=np.mean(values)
+    # time.sleep(5)
     
-    print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
-    logfile.write("Unconfiguring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
-    logfile = open(log_fn, "a")
-    
-    print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 11: ADC Measurements Complete\n\n")
-    time.sleep(1)
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-
-    # # Step 13 - DAQ SCurve 
-    # print (Colors.BLUE + "Step 13: DAQ SCurve\n" + Colors.ENDC)
-    # logfile.write("Step 13: DAQ SCurve\n\n")
-
+    # print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
+    # logfile.write("Unconfiguring all VFATs\n\n")
+    # logfile.close()
     # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #     logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1000"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
-    #     latest_file = max(list_of_files, key=os.path.getctime)
-        
-    #     print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #     logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
-    #     latest_dir = latest_file.split(".txt")[0]
-    #     if os.path.isdir(latest_dir):
-    #         os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
-    #         os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/daq_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
-    #         os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/daq_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
-    #     else:
-    #         print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
-    #         logfile.write("DAQ SCurve result directory not found\n")
-        
-    # print (Colors.GREEN + "\nStep 13: DAQ SCurve Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 13: DAQ SCurve Complete\n\n")
+    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
+    # logfile = open(log_fn, "a")
+    
+    # print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 11: ADC Measurements Complete\n\n")
+    # time.sleep(1)
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 12 - DAQ SCurve 
+    print (Colors.BLUE + "Step 12: DAQ SCurve\n" + Colors.ENDC)
+    logfile.write("Step 12: DAQ SCurve\n\n")
+
+    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+        print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+        logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
+        os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
+        latest_file = max(list_of_files, key=os.path.getctime)
+        with open(latest_file) as daq_scurve_file:
+            print(daq_scurve_file.read())
+        
+        print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+        logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
+        os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
+        latest_dir = latest_file.split(".txt")[0]
+        if os.path.isdir(latest_dir):
+            os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
+            os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/daq_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
+            os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/daq_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
+        else:
+            print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
+            logfile.write("DAQ SCurve result directory not found\n")
+        
+    print (Colors.GREEN + "\nStep 12: DAQ SCurve Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 12: DAQ SCurve Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
     
     # # Step 14 - DAQ Crosstalk
     # print (Colors.BLUE + "Step 14: DAQ Crosstalk\n" + Colors.ENDC)
