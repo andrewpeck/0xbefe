@@ -1010,6 +1010,7 @@ if __name__ == "__main__":
     #         logfile = open(log_fn,"a")
     #         list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
     #         latest_file = max(list_of_files,key=os.path.getctime)
+    #         os.system("cp %s %s/lpgbt_voltage_scan_slot%s_gbt%d"%(latest_file,dataDir,slot,gbt))
     #         with open(latest_file) as voltage_scan_file:
     #             line = voltage_scan_file.readline()
     #             for i in [2,4,8,12,16,20,24]:
@@ -1040,16 +1041,17 @@ if __name__ == "__main__":
     #     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
     #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
     #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     os.system('cp %s %s/rssi_scan_slot%s'%(latest_file,dataDir,slot))
     #     with open(latest_file) as rssi_file:
     #         key = rssi_file.readline().split()[2]
     #         rssi=[]
     #         for line in rssi_file.readlines():
     #             rssi += [float(line.split()[1])]
-    #         results_oh_sn[oh_sn]["VTRx"][key]=np.mean(rssi)
     #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
     #     if len(list_of_files)>0:
     #         latest_file = max(list_of_files, key=os.path.getctime)
     #         os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+    #     results_oh_sn[oh_sn]["VTRx"][key]=np.mean(rssi)
     # time.sleep(1)
 
     # for slot,oh_sn in geb_dict.items():
@@ -1060,6 +1062,8 @@ if __name__ == "__main__":
     #     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
     #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
     #     latest_file = max(list_of_files,key=os.path.getctime)
+    #     os.system('cp %s %s/geb_current_slot%s'%(latest_file,dataDir,slot))
+    #     results_oh_sn[oh_sn]["Asense"]={}
     #     with open(latest_file) as asense_file:
     #         line = asense_file.readline().split()
     #         asense = {}
@@ -1070,9 +1074,8 @@ if __name__ == "__main__":
     #         for line in asense_file.readlines():
     #             for key,value in zip(asense,line.split()[1:]):
     #                 asense[key]+=[float(value)]
-    #         results_oh_sn[oh_sn]["Asense"]={}
-    #         for key,values in asense.items():
-    #             results_oh_sn[oh_sn]["Asense"][key]=np.mean(values)
+    #     for key,values in asense.items():
+    #         results_oh_sn[oh_sn]["Asense"][key]=np.mean(values)
 
     #     list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
     #     if len(list_of_files)>0:
@@ -1093,12 +1096,22 @@ if __name__ == "__main__":
         os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
         list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
         latest_file = max(list_of_files,key=os.path.getctime)
+        os.system('cp %s %s/oh_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+        results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
         with open(latest_file) as temp_file:
-            print(temp_file.read())
+            keys = temp_file.readline().split()[2,4,6]
+            temperatures = {}
+            for key in keys:
+                temperatures[key]=[]
+            for line in temp_file.readlines():
+                for key,value in temperatures,line.split()[1:]:
+                    temperatures[key]+=value
         list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
         if len(list_of_files)>0:
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+        for key,values in temperatures.items():
+            results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
     time.sleep(1)
 
 
@@ -1115,12 +1128,12 @@ if __name__ == "__main__":
     #         os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
     # time.sleep(5)
     
-    # print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
-    # logfile.write("Unconfiguring all VFATs\n\n")
-    # logfile.close()
-    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
-    # logfile = open(log_fn, "a")
+    print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
+    logfile.write("Unconfiguring all VFATs\n\n")
+    logfile.close()
+    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))    
+    logfile = open(log_fn, "a")
     
     print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
     logfile.write("\nStep 11: ADC Measurements Complete\n\n")
