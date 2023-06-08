@@ -1173,10 +1173,10 @@ if __name__ == "__main__":
                 try:
                     scurve[vfat][channel]+=[fired]
                 except KeyError as ke:
-                    if channel in ke.args:
-                        scurve[vfat][channel]=[fired]
-                    elif vfat in ke.args:
+                    if vfat in ke.args:
                         scurve[vfat]={}
+                        scurve[vfat][channel]=[fired]
+                    elif channel in ke.args:
                         scurve[vfat][channel]=[fired]
         bad_channels = {}
         for vfat in scurve:
