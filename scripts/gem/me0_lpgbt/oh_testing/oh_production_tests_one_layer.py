@@ -1161,7 +1161,8 @@ if __name__ == "__main__":
         print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
         # change back to n = 1000 for actual test
-        os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))        list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
+        os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
