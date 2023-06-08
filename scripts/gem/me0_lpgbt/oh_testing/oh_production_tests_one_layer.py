@@ -1211,7 +1211,7 @@ if __name__ == "__main__":
                             if "ENC" in line:
                                 enc = float(line.split()[2])
                                 try:
-                                    results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=enc
+                                    results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=[enc]
                                 except KeyError as ke:
                                     if "ENC" in ke.args:
                                         results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
