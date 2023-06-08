@@ -1160,15 +1160,36 @@ if __name__ == "__main__":
     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        logfile.close()
+        # change back to n = 1000 for actual test
+        os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+        logfile = open(log_fn,"a")
         list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file) as daq_scurve_file:
-            print(daq_scurve_file.read())
-        
         print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
+        logfile.close()
+        os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s >> %s"%(latest_file, log_fn))
+        os.system('python3 clean_log.py -i %s'%log_fn)
+        with open(log_fn) as logfile:
+            read_next = False
+            for line in logfile.readlines():
+                if "Plotting DAQ SCurves for OH %d"%oh_select in line:
+                    read_next=True
+                if read_next:
+                    if "Processing data" in line:
+                        vfat = int(line.split()[5])
+                        for slot,oh_sn in geb_dict.items():
+                            if vfat in geb_oh_map[slot]:
+                                if "DAQ_SCurve" not in results_oh_sn[oh_sn].keys():
+                                    results_oh_sn[oh_sn]['DAQ_SCurve']=[]
+                                break
+                    elif "Average ENC" in line:
+                        enc = float(line.split()[2])
+                    elif "Average mean" in line:
+                        threshold = float(line.split()[3])
+                        results_oh_sn[oh_sn]["DAQ_SCurve"].append({"ENC":enc,"Threshold":threshold})
+        logfile = open(log_fn,"a")
         latest_dir = latest_file.split(".txt")[0]
         if os.path.isdir(latest_dir):
             os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
@@ -1190,7 +1211,8 @@ if __name__ == "__main__":
     # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
     #     print (Colors.BLUE + "Running DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
     #     logfile.write("Running DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1000"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     # change back to n = 1000 for actual test
+    #     os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
     #     logfile.close()
     #     list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
     #     latest_file = max(list_of_files, key=os.path.getctime)
@@ -1222,7 +1244,8 @@ if __name__ == "__main__":
     #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
     #         print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
     #         logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-    #         os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1000 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #         # change back to n = 1000 for actual test
+    #         os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
     #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
     #         latest_file = max(list_of_files, key=os.path.getctime)
             
@@ -1254,7 +1277,8 @@ if __name__ == "__main__":
     #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
     #         print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
     #         logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
-    #         os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1000 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #         # change back to n = 1000 for actual test
+    #         os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
     #         logfile.close()
     #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
     #         latest_file = max(list_of_files, key=os.path.getctime)
