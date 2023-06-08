@@ -1164,9 +1164,29 @@ if __name__ == "__main__":
         os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
         list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
+        scurve = {}
+        with open(latest_file) as scurve_file:
+            for line in scurve_file.readlines()[1:]:
+                vfat = int(line.split()[0])
+                channel = int(line.split()[1])
+                fired = int(line.split()[3])
+                try:
+                    scurve[vfat][channel]+=[fired]
+                except KeyError as ke:
+                    if channel in ke.args:
+                        scurve[vfat][channel]=[fired]
+                    elif vfat in ke.args:
+                        scurve[vfat]={}
+                        scurve[vfat][channel]=[fired]
+        bad_channels = {}
+        for vfat in scurve:
+            bad_channels[vfat]=[]
+            for channel in scurve:
+                if np.all(scurve[vfat][channel]==0):
+                    bad_channels[vfat].append([channel])
         print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%(latest_file, log_fn))
+        os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
         latest_dir = latest_file.split(".txt")[0]
         if os.path.isdir(latest_dir):
             os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
@@ -1179,12 +1199,34 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for vfat in geb_oh_map[slot]["VFAT"]:
                 if vfat < 10:
-                    scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))
+                    scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))[0]
                 else:
-                    scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))
+                    scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))[0]
                 with open(scurve_fn) as scurve_file:
-                    print(scurve_file.read()[0:20])
-                    print(scurve_file.read()[-20:])
+                    read_next = False
+                    for line in scurve_file.readlines():
+                        if "Summary" in line:
+                            read_next = True
+                        elif read_next:
+                            if "ENC" in line:
+                                enc = float(line.split()[2])
+                                try:
+                                    results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=enc
+                                except KeyError as ke:
+                                    if "ENC" in ke.args:
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
+                                    elif "DAQ_SCurve" in ke.args:
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]={}
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
+                                read_next=False
+                try:
+                    results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]+=[bad_channels[vfat]]
+                except KeyError as ke:
+                    if "Bad_Channels" in ke.args:
+                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
+                    elif "DAQ_SCurve" in ke.args:
+                        results_oh_sn[oh_sn]["DAQ_SCurve"]={}
+                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
         
     print (Colors.GREEN + "\nStep 12: DAQ SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 12: DAQ SCurve Complete\n\n")
