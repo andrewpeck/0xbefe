@@ -1181,14 +1181,15 @@ if __name__ == "__main__":
                         vfat = int(line.split()[5])
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]:
-                                if "DAQ_SCurve" not in results_oh_sn[oh_sn].keys():
-                                    results_oh_sn[oh_sn]['DAQ_SCurve']=[]
                                 break
                     elif "Average ENC" in line:
                         enc = float(line.split()[2])
                     elif "Average mean" in line:
                         threshold = float(line.split()[3])
-                        results_oh_sn[oh_sn]["DAQ_SCurve"].append({"ENC":enc,"Threshold":threshold})
+                        try:
+                            results_oh_sn[oh_sn]["DAQ_SCurve"].append({"ENC":enc,"Threshold":threshold})
+                        except KeyError:
+                            results_oh_sn[oh_sn]["DAQ_SCurve"]=[{"ENC":enc,"Threshold":threshold}]
         logfile = open(log_fn,"a")
         latest_dir = latest_file.split(".txt")[0]
         if os.path.isdir(latest_dir):
