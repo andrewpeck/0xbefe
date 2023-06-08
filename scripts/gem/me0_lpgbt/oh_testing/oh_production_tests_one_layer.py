@@ -1088,45 +1088,49 @@ if __name__ == "__main__":
     # time.sleep(1)
 
 
-    for slot in geb_dict:
-        print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
-        logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
-        oh_select = geb_oh_map[slot]["OH"]
-        gbt = geb_oh_map[slot]["GBT"][-1]
-        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
-        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
-        latest_file = max(list_of_files,key=os.path.getctime)
-        os.system('cp %s %s/oh_temperature_scan_slot%s'%(latest_file,dataDir,slot))
-        results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
-        with open(latest_file) as temp_file:
-            keys = temp_file.readline().split()[2,4,6]
-            temperatures = {}
-            for key in keys:
-                temperatures[key]=[]
-            for line in temp_file.readlines():
-                for key,value in temperatures,line.split()[1:]:
-                    temperatures[key]+=value
-        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
-        if len(list_of_files)>0:
-            latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-        for key,values in temperatures.items():
-            results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
-    time.sleep(1)
-
-
     # for slot in geb_dict:
-    #     print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
-    #     logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
+    #     print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
+    #     logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
     #     oh_select = geb_oh_map[slot]["OH"]
     #     gbt = geb_oh_map[slot]["GBT"][-1]
-    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
-    #     os.system("python3 clean_logs.py -i %s"%log_fn)
-    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+    #     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
+    #     latest_file = max(list_of_files,key=os.path.getctime)
+    #     os.system('cp %s %s/oh_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+    #     results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
+    #     with open(latest_file) as temp_file:
+    #         keys = temp_file.readline().split()[2:7:2]
+    #         temperatures = {}
+    #         for key in keys:
+    #             temperatures[key]=[]
+    #         for line in temp_file.readlines():
+    #             for key,value in zip(temperatures,line.split()[1:]):
+    #                 temperatures[key]+=[float(value)]
+    #     list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
     #     if len(list_of_files)>0:
     #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
-    # time.sleep(5)
+    #         os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    #     for key,values in temperatures.items():
+    #         results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
+    # time.sleep(1)
+
+
+    for slot in geb_dict:
+        print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
+        logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
+        oh_select = geb_oh_map[slot]["OH"]
+        gbt = geb_oh_map[slot]["GBT"][-1]
+        os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
+        list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
+        latest_file = max(list_of_files,key=os.path.getctime)
+        os.system('cp %s %s/vtrx_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+        with open(latest_file) as vtrx_temp_file:
+            print(vtrx_temp_file.read())
+        list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+        if len(list_of_files)>0:
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+    time.sleep(5)
     
     print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
     logfile.write("Unconfiguring all VFATs\n\n")
