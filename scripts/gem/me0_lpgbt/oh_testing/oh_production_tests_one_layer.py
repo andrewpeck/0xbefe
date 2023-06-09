@@ -1181,7 +1181,7 @@ if __name__ == "__main__":
         bad_channels = {}
         for vfat in scurve:
             bad_channels[vfat]=[]
-            for channel in scurve:
+            for channel in scurve[vfat]:
                 if np.all(scurve[vfat][channel]==0):
                     bad_channels[vfat].append([channel])
         print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
