@@ -1233,115 +1233,122 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 14 - DAQ Crosstalk
-    print (Colors.BLUE + "Step 14: DAQ Crosstalk\n" + Colors.ENDC)
-    logfile.write("Step 14: DAQ Crosstalk\n\n")
+    # # Step 14 - DAQ Crosstalk
+    # print (Colors.BLUE + "Step 14: DAQ Crosstalk\n" + Colors.ENDC)
+    # logfile.write("Step 14: DAQ Crosstalk\n\n")
 
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "Running DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("Running DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
-        # change back to n = 1000 for actual test
-        os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        logfile.close()
-        
-        list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        for slot,oh_sn in geb_dict.items():
-            results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{}]*6
-        with open(latest_file) as crosstalk_file:
-            read_next = False
-            crosstalk = {}
-            for line in crosstalk_file.readlines():
-                if "Cross Talk Results" in line:
-                    read_next = True
-                elif read_next:
-                    if 'No Cross Talk observed' in line:
-                        for slot,oh_sn in geb_dict.items():
-                            for vfat in geb_oh_map[slot]["VFAT"]:
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"].append({"Status":1})
-                    elif 'VFAT' in line:
-                        vfat = int(line.split()[1].replace(',',''))
-                        channel_inj = int(line.split()[6])
-                        channels_obs = line.split()[9:]
-                        for i,ch in enumerate(channels_obs):
-                            channels_obs[i] = int(ch.replace(',',''))
-                        try:
-                            crosstalk[vfat][channel_inj]=channels_obs
-                        except KeyError:
-                            crosstalk[vfat]={}
-                            crosstalk[vfat][channel_inj]=channels_obs
-        if crosstalk!={}:
-            for vfat in crosstalk:
-                for slot,oh_sn in geb_dict.items():
-                    for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
-                        if vfat == map_vfat:
-                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
-                            if 'Bad_Channels' in results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]:
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
-                            else:
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
-                            break
-                    if i!=7:
-                        break
-            for slot,oh_sn in geb_dict.items():
-                for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
-                    if result == {}:
-                        results_oh_sn[oh_sn]["DAQ_Crosstalk"][i].update({"Status":1})
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     print (Colors.BLUE + "Running DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #     logfile.write("Running DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
+    #     # change back to n = 1000 for actual test
+    #     os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #     logfile.close()
 
-                        
+    #     list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
+    #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     for slot,oh_sn in geb_dict.items():
+    #         results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{}]*6
+    #     with open(latest_file) as crosstalk_file:
+    #         read_next = False
+    #         crosstalk = {}
+    #         for line in crosstalk_file.readlines():
+    #             if "Cross Talk Results" in line:
+    #                 read_next = True
+    #             elif read_next:
+    #                 if 'No Cross Talk observed' in line:
+    #                     for slot,oh_sn in geb_dict.items():
+    #                         for i in range(6):
+    #                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i].update({"Status":1})
+    #                 elif 'VFAT' in line:
+    #                     vfat = int(line.split()[1].replace(',',''))
+    #                     channel_inj = int(line.split()[6])
+    #                     channels_obs = line.split()[9:]
+    #                     for i,ch in enumerate(channels_obs):
+    #                         channels_obs[i] = int(ch.replace(',',''))
+    #                     try:
+    #                         crosstalk[vfat][channel_inj]=channels_obs
+    #                     except KeyError:
+    #                         crosstalk[vfat]={}
+    #                         crosstalk[vfat][channel_inj]=channels_obs
+    #     if crosstalk!={}:
+    #         for vfat in crosstalk:
+    #             for slot,oh_sn in geb_dict.items():
+    #                 for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
+    #                     if vfat == map_vfat:
+    #                         results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
+    #                         if 'Bad_Channels' in results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]:
+    #                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
+    #                         else:
+    #                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
+    #                         break
+    #                 if i!=7:
+    #                     break
+    #         for slot,oh_sn in geb_dict.items():
+    #             for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
+    #                 if result == {}:
+    #                     results_oh_sn[oh_sn]["DAQ_Crosstalk"][i].update({"Status":1})
 
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
-        list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
+    #     os.system("cat %s >> %s"%(latest_file, log_fn))
+    #     logfile = open(log_fn, "a")
+    #     list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
+    #     latest_file = max(list_of_files, key=os.path.getctime)
     
-        print (Colors.BLUE + "Plotting DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("Plotting DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-        latest_dir = latest_file.split(".txt")[0]
-        if os.path.isdir(latest_dir):
-            os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
-        else:
-            print (Colors.RED + "DAQ Crosstalk result directory not found" + Colors.ENDC)
-            logfile.write("DAQ Crosstalk result directory not found\n")
+    #     print (Colors.BLUE + "Plotting DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #     logfile.write("Plotting DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
+    #     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
+    #     latest_dir = latest_file.split(".txt")[0]
+    #     if os.path.isdir(latest_dir):
+    #         os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
+    #     else:
+    #         print (Colors.RED + "DAQ Crosstalk result directory not found" + Colors.ENDC)
+    #         logfile.write("DAQ Crosstalk result directory not found\n")
     
-    print (Colors.GREEN + "\nStep 14: DAQ Crosstalk Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 14: DAQ Crosstalk Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
+    # for oh_sn,results in results_oh_sn.items():
+    #     for result in results["DAQ_Crosstalk"]:
+    #         if not result["Status"]:
+    #             print (Colors.YELLOW + "\nStep 14: DAQ Crosstalk Failed\n" + Colors.ENDC)
+    #             logfile.write("\nStep 14: DAQ Crosstalk Failed\n\n")
+    #             with open(results_fn,"w") as resultsfile:
+    #                 json.dump(results_oh_sn,resultsfile,indent=2)
+    #             sys.exit()
 
-    # # Step 15 - S-bit SCurve
-    # print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
-    # logfile.write("Step 15: S-bit SCurve\n\n")
-
-    # if batch == "pre_series":
-    #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
-    #         print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #         logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-    #         # change back to n = 1000 for actual test
-    #         os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-            
-    #         print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #         logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-    #         os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    #         latest_dir = latest_file.split(".txt")[0]
-    #         if os.path.isdir(latest_dir):
-    #             os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
-    #             os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-    #             os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-    #         else:
-    #             print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
-    #             logfile.write("S-bit SCurve result directory not found\n")    
-    # else:
-    #     print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
-    #     logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
-
-    # print (Colors.GREEN + "\nStep 15: S-bit SCurve Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 15: S-bit SCurve Complete\n\n")
+    # print (Colors.GREEN + "\nStep 14: DAQ Crosstalk Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 14: DAQ Crosstalk Complete\n\n")
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 15 - S-bit SCurve
+    print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
+    logfile.write("Step 15: S-bit SCurve\n\n")
+
+    if batch == "pre_series":
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
+            print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
+            # change back to n = 1000 for actual test
+            os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            
+            print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
+            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
+            latest_dir = latest_file.split(".txt")[0]
+            if os.path.isdir(latest_dir):
+                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
+                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+            else:
+                print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
+                logfile.write("S-bit SCurve result directory not found\n")    
+    else:
+        print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
+        logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
+
+    print (Colors.GREEN + "\nStep 15: S-bit SCurve Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 15: S-bit SCurve Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
 
     # # Step 16 - S-bit Crosstalk
     # print (Colors.BLUE + "Step 16: S-bit Crosstalk\n" + Colors.ENDC)
