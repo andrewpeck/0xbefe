@@ -959,17 +959,17 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
     
-    # Step 11 - ADC Measurements
-    print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
-    logfile.write("Step 11: ADC Measurements\n\n")
+    # # Step 11 - ADC Measurements
+    # print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
+    # logfile.write("Step 11: ADC Measurements\n\n")
     
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
-        logfile.write("Configuring all VFATs\n\n")
-        logfile.close()
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-        logfile = open(log_fn, "a")
-    time.sleep(1)
+    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #     print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
+    #     logfile.write("Configuring all VFATs\n\n")
+    #     logfile.close()
+    #     os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+    #     logfile = open(log_fn, "a")
+    # time.sleep(1)
 
     # for slot,oh_sn in geb_dict.items():
     #     oh_select = geb_oh_map[slot]["OH"]
@@ -1170,14 +1170,14 @@ if __name__ == "__main__":
     #             vfat = int(line.split()[0])
     #             channel = int(line.split()[1])
     #             fired = int(line.split()[3])
-    #             try:
-    #                 scurve[vfat][channel]+=[fired]
-    #             except KeyError as ke:
-    #                 if vfat in ke.args:
-    #                     scurve[vfat]={}
+    #             if vfat in scurve:
+    #                 if channel in scurve:
+    #                     scurve[vfat][channel]+=[fired]
+    #                 else:
     #                     scurve[vfat][channel]=[fired]
-    #                 elif channel in ke.args:
-    #                     scurve[vfat][channel]=[fired]
+    #             else:
+    #                 scurve[vfat]={}
+    #                 scurve[vfat][channel]=[fired]
     #     bad_channels = {}
     #     for vfat in scurve:
     #         bad_channels[vfat]=[]
@@ -1195,7 +1195,7 @@ if __name__ == "__main__":
     #     else:
     #         print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
     #         logfile.write("DAQ SCurve result directory not found\n")
-        
+
     #     for slot,oh_sn in geb_dict.items():
     #         for vfat in geb_oh_map[slot]["VFAT"]:
     #             if vfat < 10:
@@ -1210,23 +1210,19 @@ if __name__ == "__main__":
     #                     elif read_next:
     #                         if "ENC" in line:
     #                             enc = float(line.split()[2])
-    #                             try:
-    #                                 results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=[enc]
-    #                             except KeyError as ke:
-    #                                 if "ENC" in ke.args:
+    #                             if "DAQ_SCurve" in results_oh_sn[oh_sn]:
+    #                                 if "ENC" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
+    #                                     results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=[enc]
+    #                                 else:
     #                                     results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
-    #                                 elif "DAQ_SCurve" in ke.args:
-    #                                     results_oh_sn[oh_sn]["DAQ_SCurve"]={}
-    #                                     results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
+    #                             else:
+    #                                 results_oh_sn[oh_sn]["DAQ_SCurve"]={}
+    #                                 results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
     #                             read_next=False
-    #             try:
+    #             if "Bad_Channels" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
     #                 results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]+=[bad_channels[vfat]]
-    #             except KeyError as ke:
-    #                 if "Bad_Channels" in ke.args:
-    #                     results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
-    #                 elif "DAQ_SCurve" in ke.args:
-    #                     results_oh_sn[oh_sn]["DAQ_SCurve"]={}
-    #                     results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
+    #             else:
+    #                 results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
         
     # print (Colors.GREEN + "\nStep 12: DAQ SCurve Complete\n" + Colors.ENDC)
     # logfile.write("\nStep 12: DAQ SCurve Complete\n\n")
@@ -1329,7 +1325,26 @@ if __name__ == "__main__":
             os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            
+            scurve = {}
+            with open(latest_file) as scurve_file:
+                for line in scurve_file.readlines()[1:]:
+                    vfat = int(line.split()[0])
+                    channel = int(line.split()[1])
+                    fired = int(line.split()[3])
+                    if vfat in scurve:
+                        if channel in scurve:
+                            scurve[vfat][channel]+=[fired]
+                        else:
+                            scurve[vfat][channel]=[fired]
+                    else:
+                        scurve[vfat]={}
+                        scurve[vfat][channel]=[fired]
+            bad_channels = {}
+            for vfat in scurve:
+                bad_channels[vfat]=[]
+                for channel in scurve[vfat]:
+                    if np.all(scurve[vfat][channel]==0):
+                        bad_channels[vfat].append([channel])
             print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
@@ -1340,7 +1355,35 @@ if __name__ == "__main__":
                 os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
             else:
                 print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
-                logfile.write("S-bit SCurve result directory not found\n")    
+                logfile.write("S-bit SCurve result directory not found\n")
+            
+            for slot,oh_sn in geb_dict.items():
+                for vfat in geb_oh_map[slot]["VFAT"]:
+                    if vfat < 10:
+                        scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))[0]
+                    else:
+                        scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))[0]
+                    with open(scurve_fn) as scurve_file:
+                        read_next = False
+                        for line in scurve_file.readlines():
+                            if "Summary" in line:
+                                read_next = True
+                            elif read_next:
+                                if "ENC" in line:
+                                    enc = float(line.split()[2])
+                                    if "DAQ_SCurve" in results_oh_sn[oh_sn]:
+                                        if "ENC" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
+                                            results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=[enc]
+                                        else:
+                                            results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
+                                    else:
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]={}
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
+                                    read_next=False
+                    if "Bad_Channels" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
+                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]+=[bad_channels[vfat]]
+                    else:
+                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
     else:
         print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
