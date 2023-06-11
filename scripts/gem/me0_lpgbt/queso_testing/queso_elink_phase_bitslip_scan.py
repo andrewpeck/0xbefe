@@ -146,7 +146,8 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
         now = str(datetime.datetime.now())[:16]
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
-        file_out = open(dataDir+"/vfat_elink_phase_bitslip_results_"+now+".txt", "w")
+        file_out = open(dataDir+"/vfat_elink_phase_bitslip_results_OH%d"%oh_select+now+".txt", "w")
+        logfile_out = open(dataDir+"/vfat_elink_phase_bitslip_log_OH%d"%oh_select+now+".txt", "w")
 
         phase_bitslip_list = {}
         prbs_min_err_list = {}
@@ -159,6 +160,8 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
                 phase_bitslip_list[vfat][elink] = {}
                 phase_bitslip_list[vfat][elink]["phase"] = -9999
                 phase_bitslip_list[vfat][elink]["bitslip"] = -9999
+                phase_bitslip_list[vfat][elink]["width"] = -9999
+                phase_bitslip_list[vfat][elink]["status"] = ""
                 prbs_min_err_list[vfat][elink] = {}
                 bitslip_list_perphase[vfat][elink] = {}
                 for phase in range(0, 15):
@@ -173,9 +176,11 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
         sleep(0.1)
 
         print ("")
+        logfile_out("\n")
         # Scan over phases
         for phase in range(0, 15):
             print ("Scanning Phase %d:\n"%phase)
+            logfile_out.write("Scanning Phase %d:\n\n"%phase)
             for vfat in queso_bitslip_nodes:
                 for elink in queso_bitslip_nodes[vfat]:
                     set_phase(oh_select, vfat, elink, phase)
@@ -183,6 +188,7 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
             # Scan over bitslip and check PRBS errors
             for bitslip in range(0,9):
                 print ("  Checking Bitslip %d\n"%bitslip)
+                logfile_out.write("  Checking Bitslip %d\n\n"%bitslip)
 
                 # Set the bitslip for all vfats and elinks
                 for vfat in queso_bitslip_nodes:
@@ -211,12 +217,14 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
 
         # Find best phase and bitslip
         print ("\nPhase Scan Results:")
+        logfile_out.write("\nPhase Scan Results:\n")
         for vfat in queso_bitslip_nodes:
             centers = 9*[0]
             widths  = 9*[0]
             for elink in queso_bitslip_nodes[vfat]:
                 centers[elink], widths[elink] = find_phase_center(prbs_min_err_list[vfat][elink])
             print ("\nVFAT %02d :" %(vfat))
+            logfile_out.write("\nVFAT %02d :\n" %(vfat))
             for elink in queso_bitslip_nodes[vfat]:
                 phase_print = "  ELINK %02d: " % (elink)
                 min_errors = 0
@@ -224,6 +232,7 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
                     if (widths[elink]>0 and phase==centers[elink]):
                         char=Colors.GREEN + "+" + Colors.ENDC
                         phase_bitslip_list[vfat][elink]["phase"] = phase
+                        phase_bitslip_list[vfat][elink]["width"] = widths[elink]
                         phase_bitslip_list[vfat][elink]["bitslip"] = bitslip_list_perphase[vfat][elink][phase]
                     elif (prbs_min_err_list[vfat][elink][phase] > 0):
                         char=Colors.RED + "-" + Colors.ENDC
@@ -232,35 +241,50 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
                     phase_print += "%s" %char
                 if widths[elink]<3:
                     phase_print += Colors.RED + " (center=%d, width=%d, bitslip at center=%d) BAD" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_bitslip_list[vfat][elink]["status"] = "BAD"
                 elif widths[elink]<5:
                     phase_print += Colors.YELLOW + " (center=%d, width=%d, bitslip at center=%d) WARNING" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_bitslip_list[vfat][elink]["status"] = "WARNING"
                 else:
                     phase_print += Colors.GREEN + " (center=%d, width=%d, bitslip at center=%d) GOOD" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_bitslip_list[vfat][elink]["status"] = "GOOD"
                 print(phase_print)
+                logfile_out.write(phase_print + "\n")
 
         for vfat in queso_bitslip_nodes:
             for elink in queso_bitslip_nodes[vfat]:
                 if phase_bitslip_list[vfat][elink]["phase"] == -9999:
                     print (Colors.YELLOW + "Correct phase not found for VFAT %d Elink %d"%(vfat, elink) + Colors.ENDC)
+                    logfile_out.write(Colors.YELLOW + "Correct phase not found for VFAT %d Elink %d\n"%(vfat, elink) + Colors.ENDC)
                     phase_bitslip_list[vfat][elink]["phase"] = 0
                 if phase_bitslip_list[vfat][elink]["bitslip"] == -9999:
                     print (Colors.YELLOW + "Correct bitslip not found for VFAT %d Elink %d"%(vfat, elink) + Colors.ENDC)
+                    logfile_out.write(Colors.YELLOW + "Correct bitslip not found for VFAT %d Elink %d\n"%(vfat, elink) + Colors.ENDC)
                     phase_bitslip_list[vfat][elink]["bitslip"] = 0
                 if prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]] != 0:
                     print (Colors.YELLOW + "PRBS errors not zero best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
+                    logfile_out.write(Colors.YELLOW + "PRBS errors not zero best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d\n"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
 
-        print ("Setting phase and bitslips:")
+        print ("Setting phase and bitslips")
+        logfile_out.write("Setting phase and bitslips\n")
         set_phases(oh_select, phase_bitslip_list)
         set_bitslips(queso_bitslip_nodes, phase_bitslip_list)
 
-        file_out.write("vfat  elink  phase  bitslip\n")
+        file_out.write("oh  gbt  lpgbt_elink  vfat  elink  phase  width  bitslip  status\n")
         for vfat in queso_bitslip_nodes:
             for elink in queso_bitslip_nodes[vfat]:
-                file_out.write("%d  %d  %01x  %01x\n"%(vfat, elink, phase_bitslip_list[vfat][elink]["phase"], phase_bitslip_list[vfat][elink]["bitslip"]))
+                lpgbt = gem_utils.ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]
+                if elink == 0:
+                    elink_nr = gem_utils.ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
+                else:
+                    elink_nr = gem_utils.ME0_VFAT_TO_SBIT_ELINK[vfat][elink-1]
+                file_out.write("%d  %d  %d  %d  %d  %01x  %d  %01x  %s\n"%(oh_select, lpgbt, elink_nr, vfat, elink, phase_bitslip_list[vfat][elink]["phase"], phase_bitslip_list[vfat][elink]["width"], phase_bitslip_list[vfat][elink]["bitslip"], phase_bitslip_list[vfat][elink]["status"]))
         file_out.close()
+        
 
     print ("Bitslips set for all Elink of all VFATs")
-    
+    logfile_out.write("Bitslips set for all Elink of all VFATs\n")
+    logfile_out.close()
 
 if __name__ == "__main__":
 
@@ -336,10 +360,10 @@ if __name__ == "__main__":
         for line in phase_bitslip_file.readlines():
             if "vfat" in line:
                 continue
-            vfat = int(line.split()[0])
-            elink = int(line.split()[1])
-            phase = int(line.split()[2], 16)
-            bitslip = int(line.split()[3], 16)
+            vfat = int(line.split()[3])
+            elink = int(line.split()[4])
+            phase = int(line.split()[5], 16)
+            bitslip = int(line.split()[7], 16)
             if vfat not in phase_bitslip_list_file:
                 phase_bitslip_list_file[vfat] = {}
             phase_bitslip_list_file[vfat][elink] = {}

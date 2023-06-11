@@ -72,7 +72,11 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
             for elink in range(0, 9):
                 queso_bitslip_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
                 queso_prbs_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
-                prbs_errors[oh_select][vfat][elink] = 0
+                prbs_errors[oh_select][vfat][elink] = {}
+                prbs_errors[oh_select][vfat][elink]["lpgbt"] = -9999
+                prbs_errors[oh_select][vfat][elink]["lpgbt_elink"] = -9999
+                prbs_errors[oh_select][vfat][elink]["n_errors"] = 0
+                prbs_errors[oh_select][vfat][elink]["ber_ul"] = "--"
 
     print ("Start Error Counting for time = %.2f minutes" % (runtime))
     logfile.write("Start Error Counting for time = %.2f minutes\n" % (runtime))
@@ -98,9 +102,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:
             for elink in range(0, 9):
-                prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
-                if prbs_errors[oh_select][vfat][elink] != 0:
-                    err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink])
+                prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
+                if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
+                    err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                     n_elink_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_elink_errors == 0:
@@ -125,9 +129,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
                 vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
                 for vfat in vfat_list:
                     for elink in range(9):
-                        prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
-                        if prbs_errors[oh_select][vfat][elink] != 0:
-                            err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink])
+                        prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
+                        if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
+                            err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                             n_elink_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_elink_errors == 0:
@@ -151,7 +155,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:
             for elink in range(9):
-                prbs_errors[oh_select][vfat][elink] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
+                prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
    
     # Printing results
     ber_ul = (-math.log(1-cl))/ (data_rate * runtime * 60)
@@ -164,18 +168,21 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
             logfile.write("  OH %d VFAT %d:\n"%(oh_select,vfat))
             for elink in prbs_errors[oh_select][vfat]:
                 err_str = ""
-                if prbs_errors[oh_select][vfat][elink] == 0:
+                if prbs_errors[oh_select][vfat][elink]["n_errors"] == 0:
                     err_str += Colors.GREEN
                 else:
                     err_str += Colors.RED
-                lpgbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][0]
+                lpgbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]
                 if elink == 0:
                     elink_nr = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
                 else:
                     elink_nr = ME0_VFAT_TO_SBIT_ELINK[vfat][elink-1]
-                err_str += "    ELINK %d (GBT: %s, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink])
-                if prbs_errors[oh_select][vfat][elink] == 0:
+                prbs_errors[oh_select][vfat][elink]["lpgbt"] = lpgbt
+                prbs_errors[oh_select][vfat][elink]["lpgbt_elink"] = elink_nr
+                err_str += "    ELINK %d (GBT: %d, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink]["n_errors"])
+                if prbs_errors[oh_select][vfat][elink]["n_errors"] == 0:
                     err_str += ", BER < {:.2e}".format(ber_ul) 
+                    prbs_errors[oh_select][vfat][elink]["ber_ul"] = "BER < {:.2e}".format(ber_ul) 
                 err_str += Colors.ENDC
                 print (err_str)
                 logfile.write(err_str + "\n")
@@ -188,16 +195,33 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
     prbs_errors_oh_sn = {}
     for queso,oh_serial_nr in queso_dict.items():
         oh_select = queso_oh_map[queso]["OH"]
+        gbt_list = queso_oh_map[queso]["GBT"]
         vfat_list = queso_oh_map[queso]["VFAT"]
         prbs_errors_oh_sn[oh_serial_nr] = {}
+        for gbt in gbt_list:
+            gbt_type = ""
+            if lpgbt%2 == 0:
+                gbt_type = "lpGBT_M"
+            else:
+                gbt_type = "lpGBT_S"        
+            prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"] = []
+            prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"] = []
+            for e in range(0,28):
+                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"].append(-9999)
+                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"].append("--")
         for vfat in vfat_list:
-            prbs_errors_oh_sn[oh_serial_nr][vfat] = {}
             for elink in range(0, 9):
-                if prbs_errors[oh_select][vfat][elink] == 0:
-                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "< {:.2e}".format(ber_ul)
+                lpgbt = prbs_errors[oh_select][vfat][elink]["lpgbt"]
+                elink_nr = prbs_errors[oh_select][vfat][elink]["lpgbt_elink"]
+                error_count = prbs_errors[oh_select][vfat][elink]["n_errors"]
+                ber_ul = prbs_errors[oh_select][vfat][elink]["ber_ul"]
+                gbt_type = ""
+                if lpgbt%2 == 0:
+                    gbt_type = "lpGBT_M"
                 else:
-                    prbs_errors_oh_sn[oh_serial_nr][vfat][elink] = "%s"%(prbs_errors[oh_select][vfat][elink])
-
+                    gbt_type = "lpGBT_S"
+                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"][elink_nr] = error_count
+                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"][elink_nr] = ber_ul
     with open(results_fn, "w") as resultsfile:
         resultsfile.write(json.dumps(prbs_errors_oh_sn))
 
@@ -244,8 +268,8 @@ if __name__ == "__main__":
         if "#" in line:
             if "BATCH" in line:
                 batch = line.split()[2]
-                if batch not in ["pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
+                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
                     sys.exit()
             continue
         queso_nr = line.split()[0]

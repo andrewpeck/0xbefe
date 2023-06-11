@@ -81,8 +81,8 @@ if __name__ == "__main__":
         if "#" in line:
             if "BATCH" in line:
                 batch = line.split()[2]
-                if batch not in ["pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production" or "long_production"' + Colors.ENDC)
+                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
                     sys.exit()
             continue
         queso_nr = line.split()[0]
@@ -318,13 +318,20 @@ if __name__ == "__main__":
     logfile.close()
     os.system("python3 init_frontend.py")
     os.system("python3 status_frontend.py >> %s"%log_fn)
-    with open("results/gbt_data/gbt_status_data/gbt_status.json","r") as statusfile:
+    list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    with open(latest_file,"r") as statusfile:
         status_dict = json.load(statusfile)
         for oh,status_dict_oh in status_dict.items():
             for gbt,status in status_dict_oh.items():
                 for queso,oh_sn in queso_dict.items():
                     if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
-                        results_oh_sn[oh_sn]["lpgbt%s_status"%gbt]=int(status)
+                        gbt_type = ""
+                        if int(gbt)%2 == 0:
+                            gbt_type = "M"
+                        else:
+                            gbt_type = "S"
+                        results_oh_sn[oh_sn]["lpgbt_%s_status"%gbt_type]=int(status)
 
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
@@ -356,7 +363,54 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
         os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s >> %s"%(ohid, vfat_list_str,log_fn))
+        list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
+        latest_file = max(list_of_files, key=os.path.getctime)
+        os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
+        list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_log_OH%d*.txt"%ohid)
+        latest_file = max(list_of_files, key=os.path.getctime)
+        os.system("cat latest_file >> %s"%log_fn)
+
+        bitslip_results = {}
+        bitslip_results_file = open("%s/vfat_elink_phase_bitslip_results_OH%d.txt"%(OHDir, ohid))
+        for line in  bitslip_results_file.readlines():
+            if "vfat" in line:
+                continue
+            lpgbt = int(line.split()[1])
+            lpgbt_elink = int(line.split()[2])
+            phase = line.split()[5]
+            width = line.split()[6]
+            bitslip = line.split()[7]
+            status = line.split()[8]
+            if lpgbt not in bitslip_results:
+                bitslip_results[lpgbt] = {}
+                for e in range(0,28):
+                    bitslip_results[lpgbt][e] = {}
+                    bitslip_results[lpgbt][e]["phase"] = "-9999"
+                    bitslip_results[lpgbt][e]["width"] = "-9999"
+                    bitslip_results[lpgbt][e]["bitslip"] = "-9999"
+                    bitslip_results[lpgbt][e]["status"] = "UNUSED"
+            bitslip_results[lpgbt][lpgbt_elink]["phase"] = phase
+            bitslip_results[lpgbt][lpgbt_elink]["width"] = width
+            bitslip_results[lpgbt][lpgbt_elink]["bitslip"] = bitslip
+            bitslip_results[lpgbt][lpgbt_elink]["status"] = status
+        bitslip_results_file.close()
+        for lpgbt in bitslip_results:
+            for queso,oh_sn in queso_dict.items():
+                if queso_oh_map[queso]["OH"]==ohid and lpgbt in queso_oh_map[queso]["GBT"]:
+                    gbt_type = ""
+                    if lpgbt%2 == 0:
+                        gbt_type = "lpGBT_M"
+                    else:
+                        gbt_type = "lpGBT_S"
+                    results_oh_sn[oh_sn][gbt_type]=[]
+                    for lpgbt_elink in bitslip_results[lpgbt]:
+                        results_dict = {}
+                        results_dict["status"] = bitslip_results[lpgbt][lpgbt_elink]["status"]
+                        results_dict["phase"] = bitslip_results[lpgbt][lpgbt_elink]["phase"]
+                        results_dict["width"] = bitslip_results[lpgbt][lpgbt_elink]["width"]
+                        results_dict["bitslip"] = bitslip_results[lpgbt][lpgbt_elink]["bitslip"]
+                        results_oh_sn[oh_sn][gbt_type].append(results_dict)
+                        
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print("\n######################################################\n")
