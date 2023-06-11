@@ -1315,9 +1315,9 @@ if __name__ == "__main__":
     # print ("#####################################################################################################################################\n")
     # logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 15 - S-bit SCurve
-    print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
-    logfile.write("Step 15: S-bit SCurve\n\n")
+    # # Step 15 - S-bit SCurve
+    # print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
+    # logfile.write("Step 15: S-bit SCurve\n\n")
 
     if batch in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
@@ -1359,36 +1359,36 @@ if __name__ == "__main__":
                 print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
                 logfile.write("S-bit SCurve result directory not found\n")
             
-            for slot,oh_sn in geb_dict.items():
-                for vfat in geb_oh_map[slot]["VFAT"]:
-                    if vfat < 10:
-                        scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))[0]
-                    else:
-                        scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))[0]
-                    with open(scurve_fn) as scurve_file:
-                        read_next = False
-                        for line in scurve_file.readlines():
-                            if "Summary" in line:
-                                read_next = True
-                            elif read_next:
-                                if "ENC" in line:
-                                    enc = float(line.split()[2])
-                                    if "DAQ_SCurve" in results_oh_sn[oh_sn]:
-                                        if "ENC" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
-                                            results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]+=[enc]
-                                        else:
-                                            results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
-                                    else:
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"]={}
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"]["ENC"]=[enc]
-                                    read_next=False
-                    if "Bad_Channels" in results_oh_sn[oh_sn]["DAQ_SCurve"]:
-                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]+=[bad_channels[vfat]]
-                    else:
-                        results_oh_sn[oh_sn]["DAQ_SCurve"]["Bad_Channels"]=[bad_channels[vfat]]
-    else:
-        print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
-        logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
+    #         for slot,oh_sn in geb_dict.items():
+    #             for vfat in geb_oh_map[slot]["VFAT"]:
+    #                 if vfat < 10:
+    #                     scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))[0]
+    #                 else:
+    #                     scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))[0]
+    #                 with open(scurve_fn) as scurve_file:
+    #                     read_next = False
+    #                     for line in scurve_file.readlines():
+    #                         if "Summary" in line:
+    #                             read_next = True
+    #                         elif read_next:
+    #                             if "ENC" in line:
+    #                                 enc = float(line.split()[2])
+    #                                 if "SBIT_SCurve" in results_oh_sn[oh_sn]:
+    #                                     if "ENC" in results_oh_sn[oh_sn]["SBIT_SCurve"]:
+    #                                         results_oh_sn[oh_sn]["SBIT_SCurve"]["ENC"]+=[enc]
+    #                                     else:
+    #                                         results_oh_sn[oh_sn]["SBIT_SCurve"]["ENC"]=[enc]
+    #                                 else:
+    #                                     results_oh_sn[oh_sn]["SBIT_SCurve"]={}
+    #                                     results_oh_sn[oh_sn]["SBIT_SCurve"]["ENC"]=[enc]
+    #                                 read_next=False
+    #                 if "Bad_Channels" in results_oh_sn[oh_sn]["SBIT_SCurve"]:
+    #                     results_oh_sn[oh_sn]["SBIT_SCurve"]["Bad_Channels"].update(bad_channels[vfat])
+    #                 else:
+    #                     results_oh_sn[oh_sn]["SBIT_SCurve"]["Bad_Channels"]=bad_channels[vfat]
+    # else:
+    #     print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
+    #     logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
 
     print (Colors.GREEN + "\nStep 15: S-bit SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 15: S-bit SCurve Complete\n\n")
@@ -1472,37 +1472,37 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # # Step 17 - S-bit Noise Rate
-    # print (Colors.BLUE + "Step 17: S-bit Noise Rate\n" + Colors.ENDC)
-    # logfile.write("Step 17: S-bit Noise Rate\n\n")
+    # Step 17 - S-bit Noise Rate
+    print (Colors.BLUE + "Step 17: S-bit Noise Rate\n" + Colors.ENDC)
+    logfile.write("Step 17: S-bit Noise Rate\n\n")
 
-    # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     print (Colors.BLUE + "Running S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #     logfile.write("Running S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o %d -v %s -z -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #     list_of_files = glob.glob("results/vfat_data/vfat_sbit_noise_results/*.txt")
-    #     latest_file = max(list_of_files, key=os.path.getctime)
+    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+        print (Colors.BLUE + "Running S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+        logfile.write("Running S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
+        os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o %d -v %s -z -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        list_of_files = glob.glob("results/vfat_data/vfat_sbit_noise_results/*.txt")
+        latest_file = max(list_of_files, key=os.path.getctime)
         
-    #     print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-    #     logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
-    #     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-    #     latest_dir = latest_file.split(".txt")[0]
-    #     if os.path.isdir(latest_dir):
-    #         if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
-    #             os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
-    #         os.makedirs(dataDir + "/sbit_noise_rate_results")
-    #         os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_mean_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-    #         os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-    #         os.system("cp %s/2d*.pdf %s/sbit_noise_rate_results/sbit_2d_threshold_noise_rate_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-    #         os.system("cp %s/*_channels_*.pdf %s/sbit_noise_rate_results/"%(latest_dir, dataDir))
-    #     else:
-    #         print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
-    #         logfile.write("S-bit Noise Rate result directory not found\n")    
+        print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+        logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
+        os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
+        latest_dir = latest_file.split(".txt")[0]
+        if os.path.isdir(latest_dir):
+            if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
+                os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
+            os.makedirs(dataDir + "/sbit_noise_rate_results")
+            os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_mean_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/2d*.pdf %s/sbit_noise_rate_results/sbit_2d_threshold_noise_rate_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+            os.system("cp %s/*_channels_*.pdf %s/sbit_noise_rate_results/"%(latest_dir, dataDir))
+        else:
+            print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
+            logfile.write("S-bit Noise Rate result directory not found\n")    
 
-    # print (Colors.GREEN + "\nStep 17: S-bit Noise Rate Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 17: S-bit Noise Rate Complete\n\n")
-    # print ("#####################################################################################################################################\n")
-    # logfile.write("#####################################################################################################################################\n\n")
+    print (Colors.GREEN + "\nStep 17: S-bit Noise Rate Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 17: S-bit Noise Rate Complete\n\n")
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
 
     with open(results_fn,"w") as resultsfile:
         json.dump(results_oh_sn,resultsfile,indent=2)
