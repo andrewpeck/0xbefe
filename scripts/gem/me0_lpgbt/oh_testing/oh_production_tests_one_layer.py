@@ -1319,45 +1319,45 @@ if __name__ == "__main__":
     # print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
     # logfile.write("Step 15: S-bit SCurve\n\n")
 
-    if batch in ["prototype", "pre_production", "pre_series"]:
-        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
-            print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-            # change back to n = 1000 for actual test
-            os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            scurve = {}
-            with open(latest_file) as scurve_file:
-                for line in scurve_file.readlines()[1:]:
-                    vfat = int(line.split()[0])
-                    channel = int(line.split()[1])
-                    fired = int(line.split()[3])
-                    if vfat in scurve:
-                        if channel in scurve[vfat]:
-                            scurve[vfat][channel]+=[fired]
-                        else:
-                            scurve[vfat][channel]=[fired]
-                    else:
-                        scurve[vfat]={}
-                        scurve[vfat][channel]=[fired]
-            bad_channels = {}
-            for vfat in scurve:
-                bad_channels[vfat]=[]
-                for channel in scurve[vfat]:
-                    if np.all(scurve[vfat][channel]==0):
-                        bad_channels[vfat].append([channel])
-            print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
-            if os.path.isdir(latest_dir):
-                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
-                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-            else:
-                print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
-                logfile.write("S-bit SCurve result directory not found\n")
+    # if batch in ["prototype", "pre_production", "pre_series"]:
+    #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
+    #         print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #         logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
+    #         # change back to n = 1000 for actual test
+    #         os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         scurve = {}
+    #         with open(latest_file) as scurve_file:
+    #             for line in scurve_file.readlines()[1:]:
+    #                 vfat = int(line.split()[0])
+    #                 channel = int(line.split()[1])
+    #                 fired = int(line.split()[3])
+    #                 if vfat in scurve:
+    #                     if channel in scurve[vfat]:
+    #                         scurve[vfat][channel]+=[fired]
+    #                     else:
+    #                         scurve[vfat][channel]=[fired]
+    #                 else:
+    #                     scurve[vfat]={}
+    #                     scurve[vfat][channel]=[fired]
+    #         bad_channels = {}
+    #         for vfat in scurve:
+    #             bad_channels[vfat]=[]
+    #             for channel in scurve[vfat]:
+    #                 if np.all(scurve[vfat][channel]==0):
+    #                     bad_channels[vfat].append([channel])
+    #         print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #         logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
+    #         os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
+    #         latest_dir = latest_file.split(".txt")[0]
+    #         if os.path.isdir(latest_dir):
+    #             os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
+    #             os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+    #             os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+    #         else:
+    #             print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
+    #             logfile.write("S-bit SCurve result directory not found\n")
             
     #         for slot,oh_sn in geb_dict.items():
     #             for vfat in geb_oh_map[slot]["VFAT"]:
@@ -1390,87 +1390,87 @@ if __name__ == "__main__":
     #     print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
     #     logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
 
-    print (Colors.GREEN + "\nStep 15: S-bit SCurve Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 15: S-bit SCurve Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
+    # print (Colors.GREEN + "\nStep 15: S-bit SCurve Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 15: S-bit SCurve Complete\n\n")
+    # print ("#####################################################################################################################################\n")
+    # logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 16 - S-bit Crosstalk
-    print (Colors.BLUE + "Step 16: S-bit Crosstalk\n" + Colors.ENDC)
-    logfile.write("Step 16: S-bit Crosstalk\n\n")
+    # # Step 16 - S-bit Crosstalk
+    # print (Colors.BLUE + "Step 16: S-bit Crosstalk\n" + Colors.ENDC)
+    # logfile.write("Step 16: S-bit Crosstalk\n\n")
     
-    if batch in ["prototype", "pre_production", "pre_series"]:
-        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
-            # change back to n = 1000 for actual test
-            os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-            logfile.close()
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            for slot,oh_sn in geb_dict.items():
-                results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{}]*6
-            with open(latest_file) as crosstalk_file:
-                read_next = False
-                crosstalk = {}
-                for line in crosstalk_file.readlines():
-                    if "Cross Talk Results" in line:
-                        read_next = True
-                    elif read_next:
-                        if 'No Cross Talk observed' in line:
-                            for slot,oh_sn in geb_dict.items():
-                                for i in range(6):
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i].update({"Status":1})
-                        elif 'VFAT' in line:
-                            vfat = int(line.split()[1].replace(',',''))
-                            channel_inj = int(line.split()[6])
-                            channels_obs = line.split()[9:]
-                            for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.replace(',',''))
-                            try:
-                                crosstalk[vfat][channel_inj]=channels_obs
-                            except KeyError:
-                                crosstalk[vfat]={}
-                                crosstalk[vfat][channel_inj]=channels_obs
-            if crosstalk!={}:
-                for vfat in crosstalk:
-                    for slot,oh_sn in geb_dict.items():
-                        for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
-                            if vfat == map_vfat:
-                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
-                                if 'Bad_Channels' in results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]:
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
-                                else:
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
-                                break
-                        if i!=7:
-                            break
-                for slot,oh_sn in geb_dict.items():
-                    for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
-                        if result == {}:
-                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i].update({"Status":1})
+    # if batch in ["prototype", "pre_production", "pre_series"]:
+    #     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #         print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #         logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
+    #         # change back to n = 1000 for actual test
+    #         os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #         logfile.close()
+    #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         for slot,oh_sn in geb_dict.items():
+    #             results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{}]*6
+    #         with open(latest_file) as crosstalk_file:
+    #             read_next = False
+    #             crosstalk = {}
+    #             for line in crosstalk_file.readlines():
+    #                 if "Cross Talk Results" in line:
+    #                     read_next = True
+    #                 elif read_next:
+    #                     if 'No Cross Talk observed' in line:
+    #                         for slot,oh_sn in geb_dict.items():
+    #                             for i in range(6):
+    #                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i].update({"Status":1})
+    #                     elif 'VFAT' in line:
+    #                         vfat = int(line.split()[1].replace(',',''))
+    #                         channel_inj = int(line.split()[6])
+    #                         channels_obs = line.split()[9:]
+    #                         for i,ch in enumerate(channels_obs):
+    #                             channels_obs[i] = int(ch.replace(',',''))
+    #                         try:
+    #                             crosstalk[vfat][channel_inj]=channels_obs
+    #                         except KeyError:
+    #                             crosstalk[vfat]={}
+    #                             crosstalk[vfat][channel_inj]=channels_obs
+    #         if crosstalk!={}:
+    #             for vfat in crosstalk:
+    #                 for slot,oh_sn in geb_dict.items():
+    #                     for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
+    #                         if vfat == map_vfat:
+    #                             results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
+    #                             if 'Bad_Channels' in results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]:
+    #                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
+    #                             else:
+    #                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
+    #                             break
+    #                     if i!=7:
+    #                         break
+    #             for slot,oh_sn in geb_dict.items():
+    #                 for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
+    #                     if result == {}:
+    #                         results_oh_sn[oh_sn]["SBIT_Crosstalk"][i].update({"Status":1})
 
-            os.system("cat %s >> %s"%(latest_file, log_fn))
-            logfile = open(log_fn, "a")
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
-            os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
-            if os.path.isdir(latest_dir):
-                os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-            else:
-                print (Colors.RED + "S-bit Crosstalk result directory not found" + Colors.ENDC)
-                logfile.write("S-bit Crosstalk result directory not found\n")    
-    else:
-        print(Colors.BLUE + "Skipping S-bit crosstalk for %s tests"%batch.replace("_"," ") + Colors.ENDC)
-        logfile.write("Skipping S-bit crosstalk for %s tests\n"%batch.replace("_"," "))
+    #         os.system("cat %s >> %s"%(latest_file, log_fn))
+    #         logfile = open(log_fn, "a")
+    #         list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+    #         logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
+    #         os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
+    #         latest_dir = latest_file.split(".txt")[0]
+    #         if os.path.isdir(latest_dir):
+    #             os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+    #         else:
+    #             print (Colors.RED + "S-bit Crosstalk result directory not found" + Colors.ENDC)
+    #             logfile.write("S-bit Crosstalk result directory not found\n")    
+    # else:
+    #     print(Colors.BLUE + "Skipping S-bit crosstalk for %s tests"%batch.replace("_"," ") + Colors.ENDC)
+    #     logfile.write("Skipping S-bit crosstalk for %s tests\n"%batch.replace("_"," "))
 
-    print (Colors.GREEN + "\nStep 16: S-bit Crosstalk Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 16: S-bit Crosstalk Complete\n\n")
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
+    # print (Colors.GREEN + "\nStep 16: S-bit Crosstalk Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 16: S-bit Crosstalk Complete\n\n")
+    # print ("#####################################################################################################################################\n")
+    # logfile.write("#####################################################################################################################################\n\n")
 
     # Step 17 - S-bit Noise Rate
     print (Colors.BLUE + "Step 17: S-bit Noise Rate\n" + Colors.ENDC)
