@@ -30,8 +30,8 @@ def main():
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    file_out = open(dataDir+"/gbt_status_"+now+".json", "w")
-    with open(file_out,"w") as logfile:
+    filename = dataDir+"/gbt_status_"+now+".json", "w"
+    with open(filename,"w") as logfile:
         status_dict = get_gbt_link_status()
         json.dump(status_dict,logfile,indent=2)
 
