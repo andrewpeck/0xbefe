@@ -5,6 +5,7 @@ from common.promless import *
 from gem.gbt import *
 from gem.gem_utils import *
 import json
+import datetime
 
 def main():
     print("Frontend status:")
@@ -26,7 +27,11 @@ def main():
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
-    with open(dataDir+"/gbt_status.json","w") as logfile:
+    now = str(datetime.datetime.now())[:16]
+    now = now.replace(":", "_")
+    now = now.replace(" ", "_")
+    file_out = open(dataDir+"/gbt_status_"+now+".json", "w")
+    with open(file_out,"w") as logfile:
         status_dict = get_gbt_link_status()
         json.dump(status_dict,logfile,indent=4)
 

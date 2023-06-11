@@ -153,7 +153,9 @@ if __name__ == "__main__":
     os.system("python3 init_frontend.py")
     os.system("python3 status_frontend.py >> %s"%log_fn)
     os.system("python3 clean_log.py -i %s"%log_fn)
-    with open("results/gbt_data/gbt_status_data/gbt_status.json","r") as statusfile:
+    list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    with open(latest_file,"r") as statusfile:
         status_dict = json.load(statusfile)
         for oh,status_dict_oh in status_dict.items():
             for gbt,status in status_dict_oh.items():
