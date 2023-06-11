@@ -33,7 +33,7 @@ def main():
     file_out = open(dataDir+"/gbt_status_"+now+".json", "w")
     with open(file_out,"w") as logfile:
         status_dict = get_gbt_link_status()
-        json.dump(status_dict,logfile,indent=4)
+        json.dump(status_dict,logfile,indent=2)
 
 if __name__ == '__main__':
     parse_xml()

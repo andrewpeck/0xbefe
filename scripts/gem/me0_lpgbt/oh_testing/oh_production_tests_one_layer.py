@@ -153,7 +153,7 @@ if __name__ == "__main__":
     os.system("python3 init_frontend.py")
     os.system("python3 status_frontend.py >> %s"%log_fn)
     os.system("python3 clean_log.py -i %s"%log_fn)
-    list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
+    list_of_files = glob.glob("results/gbt_data/gbt_status_data/*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
     with open(latest_file,"r") as statusfile:
         status_dict = json.load(statusfile)
@@ -162,8 +162,7 @@ if __name__ == "__main__":
                 for slot,oh_sn in geb_dict.items():
                     if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
                         results_oh_sn[oh_sn][int(gbt)]["ready"]=int(status)
-                        break
-                        
+                        break 
 
     logfile = open(log_fn, "a")
     for slot,oh_sn in geb_dict.items():
