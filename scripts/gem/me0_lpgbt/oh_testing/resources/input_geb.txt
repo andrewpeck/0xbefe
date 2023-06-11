@@ -1,4 +1,4 @@
-# BATCH: pre_series
+# BATCH: pre_production
 # SLOT_NR   OH_SERIAL_NR    SLOT_NAME   VTRX_SN
 1           1               NARROW_1    -9999
 2           2               NARROW_2    -9999           

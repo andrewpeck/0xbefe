@@ -1,4 +1,4 @@
-# BATCH: pre_series
+# BATCH: pre_production
 # SLOT_NR  OH_SERIAL_NR
 1  1
 2  2

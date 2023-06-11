@@ -58,8 +58,8 @@ if __name__ == "__main__":
         if "#" in line:
             if "BATCH" in line:
                 batch = line.split()[2]
-                if batch not in ["pre_series", "production", "long_production", "acceptance"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "pre_series", "production", "long_production" or "acceptance"' + Colors.ENDC)
+                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "acceptance"' + Colors.ENDC)
                     sys.exit()
             continue
         slot = line.split()[0]
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     # print(Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
     # logfile.write("Step 3: Downlink Eye Diagram\n\n")
 
-    # if batch=="pre_series":
+    # if batch in ["prototype", "pre_production", "pre_series"]:
     #     for slot,oh_sn in geb_dict.items():
     #         print (Colors.BLUE + "Running Eye diagram for Slot %s, Boss lpGBT"%slot + Colors.ENDC)
     #         logfile.write("Running Eye diagram for Slot %s, Boss lpGBT\n"%slot)
@@ -823,7 +823,7 @@ if __name__ == "__main__":
     # logfile.write("Step 9: Slow Control Error Rate Test\n\n")
 
     # for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     if batch in ["pre_series","long_production"]:
+    #     if batch in ["prototype", "pre_production", "pre_series"]:
     #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
     #     else:
     #         os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
@@ -901,7 +901,7 @@ if __name__ == "__main__":
     # logfile.write("Step 10: DAQ Error Rate Test\n\n")
     
     # for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #     if batch in ["pre_series","long_production"]:
+    #     if batch in ["prototype", "pre_production", "pre_series"]:
     #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
     #     else:
     #         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
@@ -1317,7 +1317,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 15: S-bit SCurve\n" + Colors.ENDC)
     logfile.write("Step 15: S-bit SCurve\n\n")
 
-    if batch == "pre_series":
+    if batch in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
             print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -1397,7 +1397,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 16: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 16: S-bit Crosstalk\n\n")
     
-    if batch == "pre_series":
+    if batch in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
