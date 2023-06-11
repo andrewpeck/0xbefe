@@ -67,7 +67,7 @@ if __name__ == "__main__":
         slot_name = line.split()[2]
         vtrx_sn = line.split()[3]
         if oh_sn != "-9999":
-            if int(oh_sn) not in range(1, 1019):
+            if int(oh_sn) not in range(1001, 2019):
                 print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
                 sys.exit() 
             elif int(slot) > 4:
