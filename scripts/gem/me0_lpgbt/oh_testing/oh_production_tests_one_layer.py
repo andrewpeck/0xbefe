@@ -711,8 +711,9 @@ if __name__ == "__main__":
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
             logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
-            for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-                os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
             time.sleep(1)
             
             print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
@@ -720,6 +721,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
             os.system("python3 clean_log.py -i %s"%log_fn)
+            
             read_next = False
             with open(log_fn,"r") as logfile:
                 for line in logfile.readlines():
@@ -748,9 +750,10 @@ if __name__ == "__main__":
         logfile = open(log_fn,"a")    
         print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
         logfile.write("Unconfiguring all VFATs\n\n")
-        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        
+        logfile.close()
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+        logfile = open(log_fn,'a')
+
         for oh_sn in results_oh_sn:
             if np.any(results_oh_sn[oh_sn]['VFAT_Reset']==0):
                 print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
