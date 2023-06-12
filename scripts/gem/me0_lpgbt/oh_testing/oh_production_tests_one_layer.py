@@ -536,16 +536,15 @@ if __name__ == "__main__":
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
-                                    if 'SBIT_Phase_Scan' in results_oh_sn[oh_sn]:
-                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
-                                    else:
-                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[]]*6
-                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
-
+                                    break
+                            if 'SBIT_Phase_Scan' in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
+                            else:
+                                results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[]]*6
+                                results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
-
         for oh_sn in results_oh_sn:
             for vfat_results in results_oh_sn[oh_sn]["SBIT_Phase_Scan"]:
                 for result in vfat_results:
@@ -557,6 +556,69 @@ if __name__ == "__main__":
                         logfile.close()
                         sys.exit()
         time.sleep(1)
+    else:
+        print(Colors.BLUE + "Skipping S-Bit Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%batch.replace("_","-"))
+
+    if debug:
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n\n"%oh_select)
+            os.system("python3 me0_vfat_sbit_bitslip.py -s backend -q ME0 -o %d -v %s -l"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
+            read_next=True
+            with open(latest_file,"r") as bitslip_file:
+                # parse bitslip scan results
+                for line in bitslip_file.readlines():
+                    if read_next:
+                        if "VFAT" in line:
+                            vfat = int(line.split()[1].replace(":",""))
+                            for slot,oh_sn in geb_dict.items():
+                                if vfat in geb_oh_map[slot]["VFAT"]:
+                                    i = geb_oh_map[slot]["VFAT"].index(vfat)
+                                    break
+                                    # try:
+                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
+                                    # except KeyError:
+                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"]={}
+                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
+                                    # break
+                        elif "ELINK" in line and not read_next:
+                            elink = int(line.split()[1].replace(":",""))
+                        elif "Bit slip" in line:
+                            bitslip = int(line.split()[-1])
+                            status = 1 if bitslip!=-9999 else 0
+                            if 'SBIT_Bitslip' in results_oh_sn[oh_sn]:
+                                if results_oh_sn[oh_sn]['SBIT_Bitslip'][i] == {}:
+                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]={'Status':status,'Bitslips':[bitslip]}
+                                else:
+                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Status']&=status
+                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Bitslips']+=[bitslip]
+                            else:
+                                results_oh_sn[oh_sn]['SBIT_Bitslip'] = [{}]*6
+                            results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] = int(line.split()[-1])
+                    elif "Bad Elinks:" in line:
+                        read_next = False # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
+                        continue
+            logfile.close()
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
+
+        for oh_sn in results_oh_sn:
+            for result in results_oh_sn[oh_sn]["SBIT_Bitslip"]:
+                if not result['Status']:
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Bitslip Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
+        time.sleep(1)
+    else:
+        print(Colors.BLUE + "Skipping S-Bit Bitslip for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping S-Bit Bitslipfor %s tests\n"%batch.replace("_","-"))
     
     if debug:
         # Exit sequence
@@ -564,67 +626,6 @@ if __name__ == "__main__":
             json.dump(results_oh_sn,resultsfile,indent=2)
         logfile.close()
         sys.exit()
-
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n\n"%oh_select)
-        os.system("python3 me0_vfat_sbit_bitslip.py -s backend -q ME0 -o %d -v %s -l"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
-        read_next=False
-        with open(latest_file,"r") as bitslip_file:
-            # parse bitslip scan results
-            for line in bitslip_file.readlines():
-                if "VFAT" in line and not read_next:
-                    vfat = int(line.split()[1].replace(":",""))
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
-                            except KeyError:
-                                results_oh_sn[oh_sn]["SBIT_Bitslip"]={}
-                                results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
-                            break
-                elif "ELINK" in line and not read_next:
-                    elink = int(line.split()[1].replace(":",""))
-                elif "Bit slip" in line:
-                    results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] = int(line.split()[-1])
-                elif "Bad Elinks:" in line:
-                    read_next = True # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
-                elif read_next:
-                    if line=="\n":
-                        read_next=False
-                        continue
-                    vfat = int(line.split()[1].replace(",",""))
-                    elink = int(line.split()[-1])    
-                    try:
-                        results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]+=[elink]
-                    except KeyError:
-                        results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"]={}
-                        results_oh_sn[oh_sn]["SBIT_Bitslip"]["Bad_Elinks"][vfat]=[elink]
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
-
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["SBIT_Bitslip"]["All_Set"] = 1
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            for elink in range(8):
-                if results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] == -9999:
-                    results_oh_sn[oh_sn]["SBIT_Bitslip"]["All_Set"] = 0
-                    break
-            if elink != 7:
-                break
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["SBIT_Bitslip"]["All_Set"]:
-            print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 7: S-Bit Bitslip Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            logfile.close()
-            sys.exit()
-    time.sleep(1)
 
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
