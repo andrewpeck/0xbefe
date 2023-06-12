@@ -186,6 +186,7 @@ if __name__ == "__main__":
             # log results and exit
             with open(results_fn,"w") as resultsfile:
                 json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
 
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
@@ -296,6 +297,7 @@ if __name__ == "__main__":
                 logfile.write("\nStep 2: Checking lpGBT Status Failed\n\n")
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
                 sys.exit()
             
     print(Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
@@ -333,6 +335,7 @@ if __name__ == "__main__":
                 logfile.write("Step 3: Downlink Eye Diagram Failed\n\n")
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
                 sys.exit()
     else:
         print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -384,6 +387,7 @@ if __name__ == "__main__":
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
                     sys.exit()
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -437,6 +441,7 @@ if __name__ == "__main__":
                     logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
                     sys.exit()
     else:
         print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -488,6 +493,7 @@ if __name__ == "__main__":
                     logfile.write("\nStep 6: DAQ Phase Scan Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
                     sys.exit()
     else:
         print(Colors.BLUE + "Skipping DAQ Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -534,7 +540,7 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
                                     else:
                                         results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[]]*6
-                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]={'Status':status,'Phase':phase,'Width':width}
+                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
 
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -548,10 +554,15 @@ if __name__ == "__main__":
                         logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
+                        logfile.close()
                         sys.exit()
         time.sleep(1)
     
     if debug:
+        # Exit sequence
+        with open(results_fn,"w") as resultsfile:
+            json.dump(results_oh_sn,resultsfile,indent=2)
+        logfile.close()
         sys.exit()
 
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -611,6 +622,7 @@ if __name__ == "__main__":
             logfile.write("\nStep 7: S-Bit Bitslip Failed\n\n")
             with open(results_fn,"w") as resultsfile:
                 json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
     time.sleep(1)
 
@@ -702,6 +714,7 @@ if __name__ == "__main__":
             logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
             with open(results_fn,"w") as resultsfile:
                 json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
     time.sleep(1)
 
@@ -759,6 +772,7 @@ if __name__ == "__main__":
             logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
             with open(results_fn,"w") as resultsfile:
                 json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
     time.sleep(1)
 
@@ -829,10 +843,11 @@ if __name__ == "__main__":
     
     for oh_sn in results_oh_sn:
         if not results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
             print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
             logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
 
     print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
@@ -907,10 +922,11 @@ if __name__ == "__main__":
             results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]
     for oh_sn in results_oh_sn:
         if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
             print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
             logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
 
     print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
@@ -971,10 +987,11 @@ if __name__ == "__main__":
             results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]
     for oh_sn in results_oh_sn:
         if results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]:
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
             print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
             logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
+            with open(results_fn,"w") as resultsfile:
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
             sys.exit()
     print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
@@ -1329,6 +1346,7 @@ if __name__ == "__main__":
                 logfile.write("\nStep 14: DAQ Crosstalk Failed\n\n")
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
                 sys.exit()
 
     print (Colors.GREEN + "\nStep 14: DAQ Crosstalk Complete\n" + Colors.ENDC)
