@@ -642,7 +642,8 @@ if __name__ == "__main__":
 
             with open(latest_file,"r") as mapping_file:
                 for line in mapping_file.readlines()[2:]:
-                    data = line.split(',')
+                    data = line.split()
+                    data = data[:3] + data[3].split(',') + data[4].split(',')
                     vfat = int(data[0])
                     channel = int(data[1])
                     sbit = int(data[2])
