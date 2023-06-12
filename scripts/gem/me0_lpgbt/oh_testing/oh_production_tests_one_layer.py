@@ -579,12 +579,6 @@ if __name__ == "__main__":
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
                                     break
-                                    # try:
-                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
-                                    # except KeyError:
-                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"]={}
-                                    #     results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat]={}
-                                    # break
                         elif "ELINK" in line and not read_next:
                             elink = int(line.split()[1].replace(":",""))
                         elif "Bit slip" in line:
@@ -598,7 +592,7 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Bitslips']+=[bitslip]
                             else:
                                 results_oh_sn[oh_sn]['SBIT_Bitslip'] = [{}]*6
-                            results_oh_sn[oh_sn]["SBIT_Bitslip"][vfat][elink] = int(line.split()[-1])
+                                results_oh_sn[oh_sn]['SBIT_Bitslip'][i]={'Status':status,'Bitslips':[bitslip]}
                     elif "Bad Elinks:" in line:
                         read_next = False # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
                         continue
