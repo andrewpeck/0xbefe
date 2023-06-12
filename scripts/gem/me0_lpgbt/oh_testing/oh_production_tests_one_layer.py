@@ -778,75 +778,44 @@ if __name__ == "__main__":
 
     if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running Slow Control Error Rate Test on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Slow Control Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
+
             if batch in ["prototype", "pre_production", "pre_series"]:
-                os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+                time = 30
             elif batch == 'debug':
-                os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+                time = 1
             else:
-                os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+                time = 10
+            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t %d"%(oh_select, " ".join(map(str,gbt_vfat_dict["VFAT"])), time))
             list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
+            read_next = False
             with open(latest_file,"r") as slow_control_results_file:
-                read_next = False
                 for line in slow_control_results_file.readlines():
                     if "Error test results" in line:
                         read_next = True
-                    if read_next:
+                    elif read_next:
                         logfile.write(line)
-                        if "link is" in line:
+                        if "register mismatch" in line:
                             vfat = int(line.split()[1].replace(',',''))
-                            status = 1 if line.split()[-1]=="GOOD" else 0
+                            errors = int(line.split()[7].replace(',',''))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
-                                    try:
-                                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
-                                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
-                                    except KeyError:
-                                        results_oh_sn[oh_sn]["Slow_Control_Errors"]={}
-                                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]={}
-                                        results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["link"]=status
-                                    finally:
-                                        break
-                        elif "sync errors" in line:
-                            sync_errors = int(line.split()[-1])
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]=sync_errors
-                        elif "bus errors" in line:
-                            bus_errors = int(line.split()[6].replace(',',''))
-                            bus_er = float(line.split()[-1])
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]=bus_errors
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_ER"]=bus_er
-                        elif "register mismatch" in line:
-                            mm_errors = int(line.split()[7].replace(',',''))
-                            mm_er = float(line.split()[-1])
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]=mm_errors
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_ER"]=mm_er
-                        elif "CRC" in line:
-                            crc_errors = int(round(float(line.split()[10].replace(',',''))))
-                            uplink_ber = float(line.split()[-1])
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]=crc_errors
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Uplink_BER"]=uplink_ber
-                        elif "Timeout" in line:
-                            to_errors = int(round(float(line.split()[10].replace(',',''))))
-                            downlink_ber = float(line.split()[-1])
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]=to_errors
-                            results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Downlink_BER"]=downlink_ber
-
-        for slot,oh_sn in geb_dict.items():
-            results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]=0
-            for vfat in geb_oh_map[slot]["VFAT"]:
-                results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Sync_Errors"]
-                results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Bus_Errors"]
-                results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Mismatch_Errors"]
-                results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["CRC_Errors"]
-                results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["Slow_Control_Errors"][vfat]["Timeout_Errors"]
+                                    break
+                            if 'Slow_Control_Errors' in line:
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':time,'Error_Count':errors}]
+                            else:
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':time,'Error_Count':errors}]
         for oh_sn in results_oh_sn:
-            if results_oh_sn[oh_sn]["Slow_Control_Errors"]["Total_Errors"]:
-                print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                logfile.close()
-                sys.exit()
+            for result in results_oh_sn[oh_sn]['Slow_Control_Errors']:
+                if result['Error_Count']>0:
+                    print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
     else:
         print(Colors.BLUE + "Skipping Slow Control Error Rate Test for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Slow Control Error Rate Test for %s tests\n"%batch.replace("_","-"))
@@ -856,78 +825,64 @@ if __name__ == "__main__":
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+
+    # Step 10 - DAQ Error Rate Test
+    print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
+    logfile.write("Step 10: DAQ Error Rate Test\n\n")
     
+    if debug:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running DAQ Error Rate Test on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running DAQ Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
+            if batch in ["prototype", "pre_production", "pre_series"]:
+                time = 30
+            elif batch == 'debug':
+                time = 1
+            else:
+                time = 10
+            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t %d"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),time))
+            list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            with open(latest_file) as daq_results_file:
+                read_next = False
+                for line in daq_results_file.readlines():
+                    if "Error test results" in line:
+                        read_next = True
+                    if read_next:
+                        logfile.write(line)
+                        if "CRC Errors" in line:
+                            vfat = int(line.split()[1].replace(',',''))
+                            crc_errors = int(line.split()[-1])
+                            if 'DAQ_Errors' in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]["DAQ_Errors"]+=[{'Time':time,'Error_Count':crc_errors}]
+                            else:
+                                results_oh_sn[oh_sn]["DAQ_Errors"]=[{'Time':time,'Error_Count':crc_errors}]
+
+        for oh_sn in results_oh_sn:
+            for result in results_oh_sn[oh_sn]["DAQ_Errors"]:
+                if result['Error_Count']>0:
+                    print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping DAQ Error Rate Test for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping DAQ Error Rate Test for %s tests\n"%batch.replace("_","-"))
+
+    print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
+    time.sleep(1)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
     if debug:
         # Exit sequence
         with open(results_fn,"w") as resultsfile:
             json.dump(results_oh_sn,resultsfile,indent=2)
         logfile.close()
         sys.exit()
-
-    # Step 10 - DAQ Error Rate Test
-    print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
-    logfile.write("Step 10: DAQ Error Rate Test\n\n")
-    
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        if batch in ["prototype", "pre_production", "pre_series"]:
-            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 30"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        else:
-            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file) as daq_results_file:
-            read_next = False
-            for line in daq_results_file.readlines():
-                if "Error test results" in line:
-                    read_next = True
-                if read_next:
-                    logfile.write(line)
-                    if "link is" in line:
-                        vfat = int(line.split()[1].replace(',',''))
-                        status = 1 if line.split()[-1]=="GOOD" else 0
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                try:
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
-                                except KeyError:
-                                    results_oh_sn[oh_sn]["DAQ_Errors"]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]={}
-                                    results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["link"]=status
-                                finally:
-                                    break
-                    elif "sync errors" in line:
-                        sync_errors = int(line.split()[-1])
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Sync_Errors"]=sync_errors
-                    elif "DAQ Events" in line:
-                        events = float(line.split()[2].replace(',',''))
-                        crc_errors = int(line.split()[-1])
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Events"]=events
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["CRC_Errors"]=crc_errors
-                    elif "Bit Error Ratio" in line:
-                        errors = int(line.split()[4].replace(',',''))
-                        ber = float(line.split()[10].replace(',',''))
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]=errors
-                        results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["BER"]=ber
-    
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]=0
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"] += results_oh_sn[oh_sn]["DAQ_Errors"][vfat]["Errors"]
-    for oh_sn in results_oh_sn:
-        if results_oh_sn[oh_sn]["DAQ_Errors"]["Total_Errors"]:
-            print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            logfile.close()
-            sys.exit()
-    print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
-    time.sleep(1)
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-    
     # Step 11 - ADC Measurements
     print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
     logfile.write("Step 11: ADC Measurements\n\n")
