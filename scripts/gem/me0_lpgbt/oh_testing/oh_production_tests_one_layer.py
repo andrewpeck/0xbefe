@@ -787,7 +787,7 @@ if __name__ == "__main__":
                 runtime = 1
             else:
                 runtime = 10
-            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t %d"%(oh_select, " ".join(map(str,gbt_vfat_dict["VFAT"])), time))
+            os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t %d"%(oh_select, " ".join(map(str,gbt_vfat_dict["VFAT"])), runtime))
             list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
@@ -804,9 +804,9 @@ if __name__ == "__main__":
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
                             if 'Slow_Control_Errors' in line:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':time,'Error_Count':errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':errors}]
                             else:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':time,'Error_Count':errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':errors}]
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]['Slow_Control_Errors']:
                 if result['Error_Count']>0:
@@ -841,7 +841,7 @@ if __name__ == "__main__":
                 runtime = 1
             else:
                 runtime = 10
-            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t %d"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),time))
+            os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t %d"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),runtime))
             list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             with open(latest_file) as daq_results_file:
@@ -855,9 +855,9 @@ if __name__ == "__main__":
                             vfat = int(line.split()[1].replace(',',''))
                             crc_errors = int(line.split()[-1])
                             if 'DAQ_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["DAQ_Errors"]+=[{'Time':time,'Error_Count':crc_errors}]
+                                results_oh_sn[oh_sn]["DAQ_Errors"]+=[{'Time':runtime,'Error_Count':crc_errors}]
                             else:
-                                results_oh_sn[oh_sn]["DAQ_Errors"]=[{'Time':time,'Error_Count':crc_errors}]
+                                results_oh_sn[oh_sn]["DAQ_Errors"]=[{'Time':runtime,'Error_Count':crc_errors}]
 
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]["DAQ_Errors"]:
