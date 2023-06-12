@@ -198,6 +198,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
                 if s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i] > 1:
                     large_cluster = 1
                 result_str += "%d,%03d  "%(s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_size"][i], s_bit_cluster_mapping[vfat][channel]["sbit_monitor_cluster_address"][i])
+            if n_clusters == 0:
+                result_str += "-9999,-9999  "
             if n_clusters > 1 or large_cluster == 1 or multiple_cluster_counts == 1:
                 bad_mapping_str += "  VFAT %02d, Channel %02d\n"%(vfat, channel)
                 bad_mapping_count += 1
