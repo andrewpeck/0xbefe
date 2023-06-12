@@ -612,170 +612,95 @@ if __name__ == "__main__":
         time.sleep(1)
     else:
         print(Colors.BLUE + "Skipping S-Bit Bitslip for %s tests"%batch.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping S-Bit Bitslipfor %s tests\n"%batch.replace("_","-"))
+        logfile.write("Skipping S-Bit Bitslip for %s tests\n"%batch.replace("_","-"))
     
+
     if debug:
-        # Exit sequence
-        with open(results_fn,"w") as resultsfile:
-            json.dump(results_oh_sn,resultsfile,indent=2)
-        logfile.close()
-        sys.exit()
-
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("\n\nRunning S-bit Mapping on OH %d, all VFATs\n\n"%oh_select)
-        os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o %d -v %s -l"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
-        read_bad_channels = False
-        read_rot_elinks = False
-        with open(latest_file,"r") as mapping_file:
-            # parse bitslip scan results
-            for line in mapping_file.readlines():
-                if "No Bad Channels in Mapping" in line:
-                    for slot,oh_sn in geb_dict.items():
-                        if geb_oh_map[slot]["OH"]==oh_select:
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]={}
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]=1
-                elif "Bad Channels:" in line:
-                    for slot,oh_sn in geb_dict.items():
-                        if geb_oh_map[slot]["OH"]==oh_select:
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]={}
-                            results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]=0
-
-                    read_bad_channels = True
-                elif "Rotated Elinks:" in line:
-                    # for slot,oh_sn in geb_dict.items():
-                    #     if oh_select in geb_oh_map[slot]["OH"]:
-                    #         results_oh_sn[oh_sn]["SBIT_Mapping"]=0
-                    #         break
-                    read_bad_channels = False
-                    read_rot_elinks = True
-                elif read_bad_channels:
-                    if line == "\n":
-                        read_bad_channels=False
-                        continue
-                    vfat = int(line.split()[1].replace(",",""))
-                    elink = int(line.split()[3].replace(",",""))
-                    channel = int(line.split()[-1])
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]+=[channel]
-                            except KeyError as ke:
-                                if 'Bad_Channels' in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
-                                elif vfat in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
-                                elif elink in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Bad_Channels"][vfat][elink]=[channel]
-                                else:
-                                    print(ke)
-                                    sys.exit()
-                            finally:
-                                break
-                elif read_rot_elinks:
-                    if line == "\n":
-                        read_rot_elinks=False
-                        continue
-                    vfat = int(line.split()[1].replace(",",""))
-                    elink = int(line.split()[-1])
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]+=[elink]
-                            except KeyError as ke:
-                                if 'Rotated_Elinks' in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
-                                elif vfat in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Mapping"]["Rotated_Elinks"][vfat]=[elink]
-                                else:
-                                    print(ke)
-                                    sys.exit()
-                            finally:
-                                break
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
-
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["SBIT_Mapping"]["All_Good"]:
-            print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("\n\nRunning S-bit Mapping on OH %d, all VFATs\n\n"%oh_select)
+            os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o %d -v %s -l"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for logging
             logfile.close()
-            sys.exit()
-    time.sleep(1)
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
+        time.sleep(1)
+    else:
+        print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping S-Bit Mapping for %s tests\n"%batch.replace("_","-"))
 
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
-        logfile.close()
-        os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-        os.system("python3 clean_log.py -i %s"%log_fn)
-
-        read_next = False
-        read_bad_channels = False
-        with open(log_fn,"r") as logfile:
-            for line in logfile.readlines():
-                if "LPGBT VFAT S-Bit Cluster Mapping" in line:
-                    read_next = True
-                    for slot,oh_sn in geb_dict.items():
-                        if geb_oh_map[slot]["OH"]==oh_select:
-                            results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]={}
-                            results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["All_Good"]=1 # Not sure if theres needs to be a fail criteria here
-                elif "Bad mapping for channels:" in line and read_next:
-                    read_bad_channels = True
-                elif read_bad_channels:
-                    if line == "\n":
-                        read_next = False
-                        read_bad_channels = False
-                        continue
-                    vfat = int(line.split()[1].replace(",",""))
-                    channel = int(line.split()[-1])
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]+=[channel]
-                            except KeyError as ke:
-                                if 'Bad_Channels' in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"]={}
-                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]={}
-                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]=[channel]
-                                elif vfat in ke.args:
-                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]={}
-                                    results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["Bad_Channels"][vfat]=[channel]
-                                else:
-                                    print(ke)
-                                    sys.exit()
-                            finally:
-                                break
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
-        logfile = open(log_fn, "a")
-
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["SBIT_Cluster_Mapping"]["All_Good"]:
-            print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
+    if debug:
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
             logfile.close()
-            sys.exit()
-    time.sleep(1)
+            os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+
+            with open(latest_file,"r") as mapping_file:
+                for line in logfile.readlines()[2:]:
+                    data = line.split(',')
+                    vfat = int(data[0])
+                    channel = int(data[1])
+                    sbit = int(data[2])
+                    cluster_counts = [int(x) for x in data[3:10]]
+                    cluster_size = int(data[10])
+                    cluster_address = int(data[11])
+
+                    sbit_status = 1 if sbit != -9999 else 0
+                    cluster_status = 1 if cluster_address != -9999 else 0
+                    
+                    for slot,oh_sn in geb_dict.items():
+                        if vfat in geb_oh_map[slot]['VFAT']:
+                            i = geb_oh_map[slot]['VFAT'].index(vfat)
+                            break
+                    if 'SBIT_Mapping' in results_oh_sn[oh_sn]:
+                        if results_oh_sn[oh_sn]['SBIT_Mapping'][i] != {}:
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] &= sbit_status
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
+                        else:
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i].update({'SBIT_Status':sbit_status,'SBIT_Address':[sbit],'Cluster_Status':cluster_status,'Cluster_Address':[cluster_address]})
+                    else:
+                        results_oh_sn[oh_sn]['SBIT_Mapping']=[{}]*6
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i].update({'SBIT_Status':sbit_status,'SBIT_Address':[sbit],'Cluster_Status':cluster_status,'Cluster_Address':[cluster_address]})
+
+            os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
+            logfile = open(log_fn, "a")
+
+        for oh_sn in results_oh_sn:
+            for result in results_oh_sn[oh_sn]["SBIT_Mapping"]:
+                if not result['SBIT_Status']:
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
+                elif not result['Cluster_Status']:
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()
+        time.sleep(1)
+    else:
+        print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%batch.replace("_","-"))
 
     print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    if debug:
+        # Exit sequence
+        with open(results_fn,"w") as resultsfile:
+            json.dump(results_oh_sn,resultsfile,indent=2)
+        logfile.close()
+        sys.exit()
 
     # Step 8 - VFAT Reset
     print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
