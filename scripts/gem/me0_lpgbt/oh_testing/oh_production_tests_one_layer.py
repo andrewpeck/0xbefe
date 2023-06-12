@@ -1492,7 +1492,7 @@ if __name__ == "__main__":
                 vfat = int(line.split()[0])
                 sbit = line.split()[1]
                 threshold = int(line.split()[2])
-                fired = int(line.split()[3])
+                fired = int(float(line.split()[3]))
                 if sbit == "all":
                     if fired == 0:
                         # save the first threshold with no hits
