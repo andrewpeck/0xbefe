@@ -1483,7 +1483,7 @@ if __name__ == "__main__":
         latest_file = max(list_of_files, key=os.path.getctime)
         for slot,oh_sn in geb_dict.items():
             if geb_oh_map[slot]["OH"]==oh_select:
-                results_oh_sn[oh_sn]["SBIT_Noise_Rate"]=[]*6
+                results_oh_sn[oh_sn]["SBIT_Noise_Rate"]=[]
         read_next = False
         sbit_noise = {}
         fired_list = []
@@ -1501,11 +1501,10 @@ if __name__ == "__main__":
                     elif threshold==255:
                         # save 255 if still hits on threshold 255
                         sbit_noise[vfat]=threshold
-        for vfat,threshold in sbit_noise:
+        for vfat,threshold in sbit_noise.items():
             for slot,oh_sn in geb_dict.items():
                 if vfat in geb_oh_map[slot]["VFAT"]:
-                    i = geb_oh_map[slot]["VFAT"].index(vfat)
-                    results_oh_sn[oh_sn]["SBIT_Noise_Rate"][i]=threshold
+                    results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[threshold]
                     break
         
         print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
