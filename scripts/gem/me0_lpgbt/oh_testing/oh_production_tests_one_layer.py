@@ -348,43 +348,47 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
 
-    for slot,oh_sn in geb_dict.items():
-        print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
-        logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
-        if debug:
-            os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 1 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
-        else:
-            os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -b 1e-12 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        read_next = False
-        with open(latest_file,"r") as bertfile:
-            # Just read the last 10 lines to save time. Know results are at the end.
-            for line in bertfile.readlines():
-                if "BER Test Results" in line:
-                    read_next = True
-                if read_next:
-                    if "GBT" in line:
-                        gbt = int(line.split()[-1])
-                        results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
-                    elif "Number of FEC errors" in line:
-                        results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = float(line.split()[-1])
-                    elif "Bit Error Ratio" in line:
-                        results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]=float(line.split()[-1])
-        read_next = False
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
+    if not debug:
+        for slot,oh_sn in geb_dict.items():
+            print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
+            logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
+            if debug:
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 0.2 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
+            else:
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -b 1e-12 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
+            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            read_next = False
+            with open(latest_file,"r") as bertfile:
+                # Just read the last 10 lines to save time. Know results are at the end.
+                for line in bertfile.readlines():
+                    if "BER Test Results" in line:
+                        read_next = True
+                    if read_next:
+                        if "GBT" in line:
+                            gbt = int(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
+                        elif "Number of FEC errors" in line:
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = float(line.split()[-1])
+                        elif "Bit Error Ratio" in line:
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]=float(line.split()[-1])
+            read_next = False
+            logfile.close()
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
 
-    for slot,oh_sn in geb_dict.items():
-        for gbt in geb_oh_map[slot]["GBT"]:
-            if not debug and results_oh_sn[oh_sn]["Downlink_BERT"]["Limit"] > 1e-12:
-                print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                sys.exit()
-            
+        for slot,oh_sn in geb_dict.items():
+            for gbt in geb_oh_map[slot]["GBT"]:
+                if not debug and results_oh_sn[oh_sn]["Downlink_BERT"]["Limit"] > 1e-12:
+                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping Downlink Optical BERT for %s tests\n"%batch.replace("_","-"))
+
     print (Colors.GREEN + "\nStep 4: Downlink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: Downlink Optical BERT Complete\n\n")
     time.sleep(1)
@@ -395,44 +399,49 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 5: Uplink Optical BERT\n\n")
 
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n"%oh_select + Colors.ENDC)
-        logfile.write("Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n\n"%oh_select)
-        if debug:
-            os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -t 1 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
-        else:
-            os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -b 1e-12 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        read_next = False
-        with open(latest_file,"r") as bertfile:
-            # Just read the last 10 lines to save time. Know results are at the end.
-            for line in bertfile.readlines():
-                if "BER Test Results" in line:
-                    read_next = True
-                if read_next:
-                    if "GBT" in line:
-                        gbt = int(line.split()[-1])
-                        for slot,oh_sn in geb_dict.items():
-                            if gbt in geb_oh_map[slot]["GBT"]:
-                                results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
-                                break
-                    elif "Number of FEC errors" in line:
-                        results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Errors"] = float(line.split()[-1])
-                    elif "Bit Error Ratio" in line:
-                        results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]=float(line.split()[-1])
-        read_next = False
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
-    for slot,oh_sn in geb_dict.items():
-        for gbt in geb_oh_map[slot]["GBT"]:
-            if not debug and results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
-                print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                sys.exit()
+    if not debug:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n\n"%oh_select)
+            if debug:
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -t 0.2 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
+            else:
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -b 1e-12 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
+            list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            read_next = False
+            with open(latest_file,"r") as bertfile:
+                # Just read the last 10 lines to save time. Know results are at the end.
+                for line in bertfile.readlines():
+                    if "BER Test Results" in line:
+                        read_next = True
+                    if read_next:
+                        if "GBT" in line:
+                            gbt = int(line.split()[-1])
+                            for slot,oh_sn in geb_dict.items():
+                                if gbt in geb_oh_map[slot]["GBT"]:
+                                    results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
+                                    break
+                        elif "Number of FEC errors" in line:
+                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Errors"] = float(line.split()[-1])
+                        elif "Bit Error Ratio" in line:
+                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]=float(line.split()[-1])
+            read_next = False
+            logfile.close()
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
+        for slot,oh_sn in geb_dict.items():
+            for gbt in geb_oh_map[slot]["GBT"]:
+                if not debug and results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
+                    print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping Uplink Optical BERT for %s tests\n"%batch.replace("_","-"))
+
     print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
     time.sleep(1)
@@ -443,48 +452,46 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 6: DAQ Phase Scan\n" + Colors.ENDC)
     logfile.write("Step 6: DAQ Phase Scan\n\n")
 
-    print (Colors.BLUE + "Running DAQ Phase Scan on all VFATs\n" + Colors.ENDC)
-    logfile.write("Running DAQ Phase Scan on all VFATs\n\n")
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -c"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
+    if not debug:
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running DAQ Phase Scan for OH %d on all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running DAQ Phase Scan for OH %d on all VFATs\n\n"%oh_select)
+            os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -c"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
 
-        read_next = False
-        with open(latest_file,"r") as ps_file:
-            for line in ps_file.readlines():
-                if "Phase Scan Results" in line:
-                    read_next = True
-                if read_next:
-                    if line=='\n':
-                        read_next=False
-                        continue
-                    vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
-                    phase = int(line.split()[2].replace('(center=','').replace(',',''))
-                    width = int(line.split()[3].replace('width=').replace(')',''))
-                    status =  1 if line.split()[4] == "GOOD" else 0
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            if "DAQ_Phase_Scan" in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"].append({'status':status,'phase':phase,'width':width})
-                            else:
-                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'status':status,'phase':phase,'width':width}]
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
+            read_next = False
+            with open(latest_file,"r") as ps_file:
+                for line in ps_file.readlines():
+                    if "Phase Scan Results" in line:
+                        read_next = True
+                    elif read_next:
+                        vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
+                        phase = int(line.split()[2].replace('(center=','').replace(',',''))
+                        width = int(line.split()[3].replace('width=','').replace(')',''))
+                        status =  1 if line.split()[4] == "GOOD" else 0
+                        for slot,oh_sn in geb_dict.items():
+                            if vfat in geb_oh_map[slot]["VFAT"]:
+                                if "DAQ_Phase_Scan" in results_oh_sn[oh_sn]:
+                                    results_oh_sn[oh_sn]["DAQ_Phase_Scan"].append({'Status':status,'Phase':phase,'Width':width})
+                                else:
+                                    results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'Status':status,'Phase':phase,'Width':width}]
+            logfile.close()
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
 
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["DAQ_Phase_Scan"]["All_Good"]=1
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["DAQ_Phase_Scan"]["All_Good"] &= results_oh_sn[oh_sn]["DAQ_Phase_Scan"][vfat]
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["DAQ_Phase_Scan"]["All_Good"]:
-            print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 6: DAQ Phase Scan Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            sys.exit()
+        for oh_sn in results_oh_sn:
+            for result in results_oh_sn[oh_sn]['DAQ_Phase_Scan']:
+                if not result['Status']:
+                    print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 6: DAQ Phase Scan Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping DAQ Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping DAQ Phase Scan for %s tests\n"%batch.replace("_","-"))
 
     print (Colors.GREEN + "\nStep 6: DAQ Phase Scan Complete\n" + Colors.ENDC)
     logfile.write("\nStep 6: DAQ Phase Scan Complete\n\n")
@@ -492,56 +499,57 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    if debug:
-        sys.exit()
-    
-
     # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
-    for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-        logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -l -a"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
-        latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("python3 clean_log.py -i %s"%latest_file)
-        with open(latest_file,"r") as ps_file:
-            # parse sbit phase scan results
-            for line in ps_file.readlines():
-                if "VFAT" in line:
-                    vfat = int(line.split()[1])
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
-                            except KeyError:
-                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"]={}
-                                results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat]={}
-                            break
-                elif "ELINK" in line:
-                    elink = int(line.split()[1].replace(":",""))
-                    results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink] = 1 if line.split()[-1] == "GOOD" else 0
+    if debug:
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
+            os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o %d -v %s -l -a"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("python3 clean_log.py -i %s"%latest_file)
 
-        logfile.close()
-        os.system("cat %s >> %s"%(latest_file, log_fn))
-        logfile = open(log_fn, "a")
+            read_next = False
+            with open(latest_file,"r") as ps_file:
+                # parse sbit phase scan results
+                for line in ps_file.readlines():
+                    if 'Phase Scan Results' in line:
+                        read_next = True
+                    elif read_next:
+                        if 'VFAT' in line:
+                            vfat = int(line.split()[1])
+                        elif 'ELINK' in line:
+                            elink = int(line.split()[1].replace(':',''))
+                            phase = int(line.split()[3].replace('(center=','').replace(',',''))
+                            width = int(line.split()[4].replace('width=','').replace(')',''))
+                            status = 1 if line.split()[5] == "GOOD" else 0
 
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] = 1
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            for elink in range(8):
-                results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"] &= results_oh_sn[oh_sn]["SBIT_Phase_Scan"][vfat][elink]
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["SBIT_Phase_Scan"]["All_Good"]:
-            print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            sys.exit()
+                            for slot,oh_sn in geb_dict.items():
+                                if vfat in geb_oh_map[slot]["VFAT"]:
+                                    i = geb_oh_map[slot]["VFAT"].index(vfat)
+                                    if 'SBIT_Phase_Scan' in results_oh_sn[oh_sn]:
+                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
+                                    else:
+                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[]]*6
+                                        results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]={'Status':status,'Phase':phase,'Width':width}
 
-    time.sleep(1)
+            logfile.close()
+            os.system("cat %s >> %s"%(latest_file, log_fn))
+            logfile = open(log_fn, "a")
+
+        for oh_sn in results_oh_sn:
+            for vfat_results in results_oh_sn[oh_sn]["SBIT_Phase_Scan"]:
+                for result in vfat_results:
+                    if not result['Status']:
+                        print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
+                        with open(results_fn,"w") as resultsfile:
+                            json.dump(results_oh_sn,resultsfile,indent=2)
+                        sys.exit()
+        time.sleep(1)
 
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
