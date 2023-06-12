@@ -509,7 +509,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
-    if debug:
+    if not debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
@@ -560,7 +560,7 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Skipping S-Bit Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%batch.replace("_","-"))
 
-    if debug:
+    if not debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n\n"%oh_select)
@@ -641,7 +641,7 @@ if __name__ == "__main__":
             latest_file = max(list_of_files, key=os.path.getctime)
 
             with open(latest_file,"r") as mapping_file:
-                for line in logfile.readlines()[2:]:
+                for line in mapping_file.readlines()[2:]:
                     data = line.split(',')
                     vfat = int(data[0])
                     channel = int(data[1])
