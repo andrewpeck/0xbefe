@@ -136,6 +136,7 @@ def vfat_reset(system, oh_select, vfat_list):
     for vfat in vfat_list:
         mode_after_reset[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%d.GEB.VFAT%d.CFG_RUN" % (oh_select, vfat)))
 
+    print("VFAT Reset Results:")
     for vfat in vfat_list:
         print_string = ""
         if mode_after_reset[vfat] != 0:
