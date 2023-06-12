@@ -550,6 +550,9 @@ if __name__ == "__main__":
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         sys.exit()
         time.sleep(1)
+    
+    if debug:
+        sys.exit()
 
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
