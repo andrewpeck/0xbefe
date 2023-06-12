@@ -1478,9 +1478,35 @@ if __name__ == "__main__":
     for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
         print (Colors.BLUE + "Running S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Running S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
-        os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o %d -v %s -z -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+        os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o %d -v %s -a -z -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
         list_of_files = glob.glob("results/vfat_data/vfat_sbit_noise_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
+        for slot,oh_sn in geb_dict.items():
+            if geb_oh_map[slot]["OH"]==oh_select:
+                results_oh_sn[oh_sn]["SBIT_Noise_Rate"]=[]*6
+        read_next = False
+        sbit_noise = {}
+        fired_list = []
+        with open(latest_file) as sbit_noise_file:
+            for line in sbit_noise_file.readlines()[1:]:
+                vfat = int(line.split()[0])
+                sbit = line.split()[1]
+                threshold = int(line.split()[2])
+                fired = int(line.split()[3])
+                if sbit == "all":
+                    if fired == 0:
+                        # save the first threshold with no hits
+                        if vfat not in sbit_noise:
+                            sbit_noise[vfat]=threshold
+                    elif threshold==255:
+                        # save 255 if still hits on threshold 255
+                        sbit_noise[vfat]=threshold
+        for vfat,threshold in sbit_noise:
+            for slot,oh_sn in geb_dict.items():
+                if vfat in geb_oh_map[slot]["VFAT"]:
+                    i = geb_oh_map[slot]["VFAT"].index(vfat)
+                    results_oh_sn[oh_sn]["SBIT_Noise_Rate"][i]=threshold
+                    break
         
         print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
         logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
