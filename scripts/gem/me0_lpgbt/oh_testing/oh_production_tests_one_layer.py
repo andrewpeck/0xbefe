@@ -782,11 +782,11 @@ if __name__ == "__main__":
             logfile.write("Running Slow Control Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
 
             if batch in ["prototype", "pre_production", "pre_series"]:
-                time = 30
+                runtime = 30
             elif batch == 'debug':
-                time = 1
+                runtime = 1
             else:
-                time = 10
+                runtime = 10
             os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o %d -v %s -r TEST_REG -t %d"%(oh_select, " ".join(map(str,gbt_vfat_dict["VFAT"])), time))
             list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
@@ -836,11 +836,11 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Running DAQ Error Rate Test on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
             if batch in ["prototype", "pre_production", "pre_series"]:
-                time = 30
+                runtime = 30
             elif batch == 'debug':
-                time = 1
+                runtime = 1
             else:
-                time = 10
+                runtime = 10
             os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t %d"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),time))
             list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
