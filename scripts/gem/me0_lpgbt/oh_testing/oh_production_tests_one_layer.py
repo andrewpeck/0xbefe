@@ -450,21 +450,26 @@ if __name__ == "__main__":
         list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
-        for slot,oh_sn in geb_dict.items():
-            if geb_oh_map[slot]["OH"]==oh_select:
-                results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[]
+
+        read_next = False
         with open(latest_file,"r") as ps_file:
             for line in ps_file.readlines():
-                if "VFAT" in line:
+                if "Phase Scan Results" in line:
+                    read_next = True
+                if read_next:
+                    if line=='\n':
+                        read_next=False
+                        continue
                     vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
+                    phase = int(line.split()[2].replace('(center=','').replace(',',''))
+                    width = int(line.split()[3].replace('width=').replace(')',''))
+                    status =  1 if line.split()[4] == "GOOD" else 0
                     for slot,oh_sn in geb_dict.items():
                         if vfat in geb_oh_map[slot]["VFAT"]:
-                            try:
-                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"][vfat] = 1 if line.split()[-1] == "GOOD" else 0
-                            except KeyError:
-                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"]={}
-                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"][vfat] = 1 if line.split()[-1] == "GOOD" else 0
-                            break
+                            if "DAQ_Phase_Scan" in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"].append({'status':status,'phase':phase,'width':width})
+                            else:
+                                results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'status':status,'phase':phase,'width':width}]
         logfile.close()
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn, "a")
@@ -490,7 +495,7 @@ if __name__ == "__main__":
     if debug:
         sys.exit()
     
-    
+
     # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
