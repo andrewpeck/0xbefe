@@ -615,7 +615,7 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%batch.replace("_","-"))
     
 
-    if debug:
+    if not debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("\n\nRunning S-bit Mapping on OH %d, all VFATs\n\n"%oh_select)
@@ -631,7 +631,7 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%batch.replace("_","-"))
 
-    if debug:
+    if not debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
@@ -644,6 +644,7 @@ if __name__ == "__main__":
                 for line in mapping_file.readlines()[2:]:
                     data = line.split()
                     data = data[:3] + data[3].split(',') + data[4].split(',')
+                    data.remove('')
                     vfat = int(data[0])
                     channel = int(data[1])
                     sbit = int(data[2])
@@ -678,13 +679,18 @@ if __name__ == "__main__":
                 if not result['SBIT_Status']:
                     print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed\n" + Colors.ENDC)
                     logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
                 elif not result['Cluster_Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                logfile.close()
-                sys.exit()
+                    pass
+                    # print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
+                    # logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
+                    # with open(results_fn,"w") as resultsfile:
+                    #     json.dump(results_oh_sn,resultsfile,indent=2)
+                    # logfile.close()
+                    # sys.exit()
         time.sleep(1)
     else:
         print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -696,80 +702,83 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
+
+    # Step 8 - VFAT Reset
+    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
+    logfile.write("Step 8: VFAT Reset\n\n")
+
+    if debug:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+                os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            time.sleep(1)
+            
+            print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
+            # logfile.close()
+            os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            break
+
+            # os.system("python3 clean_log.py -i %s"%log_fn)
+            for slot,oh_sn in geb_dict.items():
+                if geb_oh_map[slot]["OH"]==oh_select:
+                    results_oh_sn[oh_sn]["VFAT_Reset"]={}
+            read_next = False
+            set_gpio = False
+            unset_gpio = False
+            with open(log_fn,"r") as logfile:
+                for line in logfile.readlines():
+                    if "VFAT RESET" in line:
+                        read_next = True
+                    elif read_next:
+                        if "VFAT#" in line:
+                            vfat = int(line.split()[1].replace(",",""))
+                        elif "1 for VFAT reset" in line:
+                            set_gpio = True
+                        elif "back to 0" in line:
+                            unset_gpio = True
+                        elif set_gpio and unset_gpio:
+                            for slot,oh_sn in geb_dict.items():
+                                if vfat in geb_oh_map[slot]["VFAT"]:
+                                    results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=1
+                                    break
+                            set_gpio = False
+                            unset_gpio = False
+                        elif "ERROR" in line:
+                            for slot,oh_sn in geb_dict.items():
+                                if vfat in geb_oh_map[slot]["VFAT"]:
+                                    results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=0
+                                    break
+        for slot,oh_sn in geb_dict.items():
+            results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]=1
+            for vfat in geb_oh_map[slot]["VFAT"]:
+                results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"] &= results_oh_sn[oh_sn]["VFAT_Reset"][vfat]
+
+        logfile = open(log_fn,"a")    
+        print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
+        logfile.write("Unconfiguring all VFATs\n\n")
+        logfile.close()
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+        logfile = open(log_fn, "a")
+        
+        for oh_sn in results_oh_sn:
+            if not results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]:
+                print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+                logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()
+
     if debug:
         # Exit sequence
         with open(results_fn,"w") as resultsfile:
             json.dump(results_oh_sn,resultsfile,indent=2)
         logfile.close()
         sys.exit()
-
-    # Step 8 - VFAT Reset
-    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
-    logfile.write("Step 8: VFAT Reset\n\n")
-    print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
-    logfile.write("Configuring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-    logfile = open(log_fn, "a")
-    time.sleep(1)
-    
-    print (Colors.BLUE + "Resetting all VFATs\n" + Colors.ENDC)
-    logfile.write("Resetting all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-        os.system("python3 clean_log.py -i %s"%log_fn)
-        for slot,oh_sn in geb_dict.items():
-            if geb_oh_map[slot]["OH"]==oh_select:
-                results_oh_sn[oh_sn]["VFAT_Reset"]={}
-        read_next = False
-        set_gpio = False
-        unset_gpio = False
-        with open(log_fn,"r") as logfile:
-            for line in logfile.readlines():
-                if "VFAT RESET" in line:
-                    read_next = True
-                elif read_next:
-                    if "VFAT#" in line:
-                        vfat = int(line.split()[1].replace(",",""))
-                    elif "1 for VFAT reset" in line:
-                        set_gpio = True
-                    elif "back to 0" in line:
-                        unset_gpio = True
-                    elif set_gpio and unset_gpio:
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=1
-                                break
-                        set_gpio = False
-                        unset_gpio = False
-                    elif "ERROR" in line:
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                results_oh_sn[oh_sn]["VFAT_Reset"][vfat]=0
-                                break
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]=1
-        for vfat in geb_oh_map[slot]["VFAT"]:
-            results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"] &= results_oh_sn[oh_sn]["VFAT_Reset"][vfat]
-
-    logfile = open(log_fn,"a")    
-    print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
-    logfile.write("Unconfiguring all VFATs\n\n")
-    logfile.close()
-    for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-    logfile = open(log_fn, "a")
-    
-    for oh_sn in results_oh_sn:
-        if not results_oh_sn[oh_sn]["VFAT_Reset"]["All_Good"]:
-            print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
-            logfile.write("\nStep 8: VFAT Reset Failed\n\n")
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            logfile.close()
-            sys.exit()
 
     print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
     logfile.write("\nStep 8: VFAT Reset Complete\n\n")
