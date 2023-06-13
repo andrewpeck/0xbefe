@@ -804,7 +804,7 @@ if __name__ == "__main__":
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
-                            if 'Slow_Control_Errors' in line:
+                            if 'Slow_Control_Errors' in results_oh_sn[oh_sn]:
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':errors}]
                             else:
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':errors}]
