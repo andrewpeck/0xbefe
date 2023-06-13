@@ -797,8 +797,9 @@ if __name__ == "__main__":
                         read_next = True
                     elif read_next:
                         logfile.write(line)
-                        if "register mismatch" in line:
+                        if 'VFAT' in line:
                             vfat = int(line.split()[1].replace(',',''))
+                        elif "register mismatch" in line:
                             errors = int(line.split()[7].replace(',',''))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
