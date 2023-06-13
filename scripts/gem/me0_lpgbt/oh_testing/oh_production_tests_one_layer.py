@@ -794,7 +794,6 @@ if __name__ == "__main__":
             print('\nreading file\n')
             with open(latest_file,"r") as slow_control_results_file:
                 for line in slow_control_results_file.readlines():
-                    print(line)
                     if "Error test results" in line:
                         read_next = True
                     if read_next:
@@ -802,7 +801,6 @@ if __name__ == "__main__":
                         if "mismatch" in line:
                             vfat = int(line.split()[1].replace(',',''))
                             errors = int(line.split()[7].replace(',',''))
-                            print(results_oh_sn[oh_sn],vfat,errors)
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
@@ -847,14 +845,14 @@ if __name__ == "__main__":
             os.system("python3 vfat_daq_test.py -s backend -q ME0 -o %d -v %s -t %d"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),runtime))
             list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
+            read_next = False
             with open(latest_file) as daq_results_file:
-                read_next = False
                 for line in daq_results_file.readlines():
                     if "Error test results" in line:
                         read_next = True
                     if read_next:
                         logfile.write(line)
-                        if 'VFAT' in line:
+                        if 'VFAT#' in line:
                             vfat = int(line.split()[1].replace(',',''))
                         if "CRC Errors" in line:
                             crc_errors = int(line.split()[-1])
