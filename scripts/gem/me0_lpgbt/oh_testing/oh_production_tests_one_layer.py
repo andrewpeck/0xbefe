@@ -791,15 +791,16 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
+            print('\nreading file\n')
             with open(latest_file,"r") as slow_control_results_file:
                 for line in slow_control_results_file.readlines():
+                    print(line)
                     if "Error test results" in line:
                         read_next = True
-                    elif read_next:
+                    if read_next:
                         logfile.write(line)
-                        if 'VFAT' in line:
+                        if "mismatch" in line:
                             vfat = int(line.split()[1].replace(',',''))
-                        elif "mismatch" in line:
                             errors = int(line.split()[7].replace(',',''))
                             print(results_oh_sn[oh_sn],vfat,errors)
                             for slot,oh_sn in geb_dict.items():
@@ -853,9 +854,13 @@ if __name__ == "__main__":
                         read_next = True
                     if read_next:
                         logfile.write(line)
-                        if "CRC Errors" in line:
+                        if 'VFAT' in line:
                             vfat = int(line.split()[1].replace(',',''))
+                        if "CRC Errors" in line:
                             crc_errors = int(line.split()[-1])
+                            for slot,oh_sn in geb_dict.items():
+                                if vfat in geb_oh_map[slot]['VFAT']:
+                                    break
                             if 'DAQ_Errors' in results_oh_sn[oh_sn]:
                                 results_oh_sn[oh_sn]["DAQ_Errors"]+=[{'Time':runtime,'Error_Count':crc_errors}]
                             else:
