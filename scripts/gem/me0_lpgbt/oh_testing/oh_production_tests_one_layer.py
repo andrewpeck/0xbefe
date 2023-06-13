@@ -1220,7 +1220,7 @@ if __name__ == "__main__":
                     channel = int(line.split()[1])
                     fired = int(line.split()[3])
                     if vfat in scurve:
-                        if channel in scurve:
+                        if channel in scurve[vfat]:
                             scurve[vfat][channel]+=[fired]
                         else:
                             scurve[vfat][channel]=[fired]
