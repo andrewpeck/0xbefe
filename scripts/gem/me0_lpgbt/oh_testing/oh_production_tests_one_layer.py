@@ -255,9 +255,9 @@ if __name__ == "__main__":
                     n_error += 1
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["BOSS"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["BOSS"][reg]))
-                    try:
+                    if 'Bad_Registers' in results_oh_sn[geb_dict[str(slot)]][gbt]:
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
-                    except KeyError:
+                    else:
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]=[]
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg]
 
@@ -279,9 +279,9 @@ if __name__ == "__main__":
                     n_error += 1
                     print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["SUB"][reg]) + Colors.ENDC)
                     logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["SUB"][reg]))
-                    try:
+                    if 'Bad_Registers' in results_oh_sn[geb_dict[str(slot)]][gbt]:
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
-                    except KeyError:
+                    else:
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]=[]
                         results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg]
         if not n_error:
@@ -301,7 +301,8 @@ if __name__ == "__main__":
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()
-            
+    
+    time.sleep(1)
     print(Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
 
@@ -1267,7 +1268,7 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['Status']=1
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
                                     read_next=False
-                    if vfat in bad_channels:
+                    if bad_channels[vfat]:
                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Status"]=0
                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
         for oh_sn in results_oh_sn:
@@ -1456,7 +1457,7 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=1
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["ENC"]=enc
                                     read_next=False
-                    if vfat in bad_channels:
+                    if bad_channels[vfat]:
                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=0
                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
         for oh_sn in results_oh_sn:
