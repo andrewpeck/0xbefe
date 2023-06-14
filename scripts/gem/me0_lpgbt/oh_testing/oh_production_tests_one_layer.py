@@ -557,7 +557,7 @@ if __name__ == "__main__":
                             if 'SBIT_Phase_Scan' in results_oh_sn[oh_sn]:
                                 results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
                             else:
-                                results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[]]*6
+                                results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[] for _ in range(6)]
                                 results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -608,7 +608,7 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Status']&=status
                                     results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Bitslips']+=[bitslip]
                             else:
-                                results_oh_sn[oh_sn]['SBIT_Bitslip'] = [{}]*6
+                                results_oh_sn[oh_sn]['SBIT_Bitslip'] = [{} for _ in range(6)]
                                 results_oh_sn[oh_sn]['SBIT_Bitslip'][i]={'Status':status,'Bitslips':[bitslip]}
                     elif "Bad Elinks:" in line:
                         read_next = False # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
@@ -687,7 +687,7 @@ if __name__ == "__main__":
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
                     else:
-                        results_oh_sn[oh_sn]['SBIT_Mapping']=[{}]*6
+                        results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
@@ -1270,7 +1270,7 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['Status']=1
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
                                     else:
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"]=[{}]*6
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"]=[{} for _ in range(6)]
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['Status']=1
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
                                     read_next=False
@@ -1315,7 +1315,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             for slot,oh_sn in geb_dict.items():
-                results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{}]*6
+                results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
                 read_next = False
                 crosstalk = {}
@@ -1456,7 +1456,7 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=1
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["ENC"]=enc
                                     else:
-                                        results_oh_sn[oh_sn]["SBIT_SCurve"]=[{}]*6
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"]=[{} for _ in range(6)]
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=1
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["ENC"]=enc
                                     read_next=False
@@ -1500,7 +1500,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             for slot,oh_sn in geb_dict.items():
-                results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{}]*6
+                results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
                 read_next = False
                 crosstalk = {}
