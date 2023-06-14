@@ -1646,8 +1646,8 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    print('Time taken to perform %s tests: %:03f'%(batch.replace('_','-'),(time.time()-t0)/60))
-    logfile.write('Time taken to perform %s tests: %:03f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
+    print('Time taken to perform %s tests: %.3f'%(batch.replace('_','-'),(time.time()-t0)/60))
+    logfile.write('Time taken to perform %s tests: %.3f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
 
     with open(results_fn,"w") as resultsfile:
         json.dump(results_oh_sn,resultsfile,indent=2)
