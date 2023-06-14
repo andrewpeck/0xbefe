@@ -150,7 +150,8 @@ if __name__ == "__main__":
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
     
-    debug = True if batch=="debug" else False 
+    debug = True if batch=="debug" else False
+    t0 = time.time()
     
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
@@ -359,7 +360,7 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
@@ -414,7 +415,7 @@ if __name__ == "__main__":
     logfile.write("Step 5: Uplink Optical BERT\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n\n"%oh_select)
@@ -471,7 +472,7 @@ if __name__ == "__main__":
     logfile.write("Step 6: DAQ Phase Scan\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ Phase Scan for OH %d on all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Phase Scan for OH %d on all VFATs\n\n"%oh_select)
@@ -526,7 +527,7 @@ if __name__ == "__main__":
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Phase Scan on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Phase Scan on OH %d all VFATs\n\n"%oh_select)
@@ -577,7 +578,7 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("\n\nRunning S-bit Bitslipping on OH %d, all VFATs\n\n"%oh_select)
@@ -631,7 +632,7 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("\n\nRunning S-bit Mapping on OH %d, all VFATs\n\n"%oh_select)
@@ -647,7 +648,7 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
@@ -730,7 +731,7 @@ if __name__ == "__main__":
     logfile.write("Step 8: VFAT Reset\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
             logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
@@ -802,7 +803,7 @@ if __name__ == "__main__":
     logfile.write("Step 9: Slow Control Error Rate Test\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running Slow Control Error Rate Test on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Slow Control Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
@@ -859,7 +860,7 @@ if __name__ == "__main__":
     logfile.write("Step 10: DAQ Error Rate Test\n\n")
     time.sleep(1)
     
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ Error Rate Test on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Error Rate Test on OH %d, all VFATs\n\n"%oh_select)
@@ -917,7 +918,7 @@ if __name__ == "__main__":
     logfile.write("Step 11: ADC Measurements\n\n")
     time.sleep(1)
     
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
             logfile.write("Configuring all VFATs\n\n")
@@ -929,7 +930,7 @@ if __name__ == "__main__":
         logfile.write("Skipping VFAT Configuration for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
     
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -967,7 +968,7 @@ if __name__ == "__main__":
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             results_oh_sn[oh_sn]["Voltage_Scan"]={}
@@ -1019,7 +1020,7 @@ if __name__ == "__main__":
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
@@ -1056,7 +1057,7 @@ if __name__ == "__main__":
         logfile.write("Skipping RSSI Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
@@ -1106,7 +1107,7 @@ if __name__ == "__main__":
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
@@ -1149,7 +1150,7 @@ if __name__ == "__main__":
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
     
-    if not debug:
+    if debug:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
@@ -1192,7 +1193,7 @@ if __name__ == "__main__":
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if not debug:
+    if debug:
         print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
         logfile.write("Unconfiguring all VFATs\n\n")
         logfile.close()
@@ -1212,7 +1213,7 @@ if __name__ == "__main__":
     logfile.write("Step 12: DAQ SCurve\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -1303,7 +1304,7 @@ if __name__ == "__main__":
     logfile.write("Step 13: DAQ Crosstalk\n\n")
     time.sleep(1)
 
-    if not debug:
+    if debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
@@ -1554,9 +1555,7 @@ if __name__ == "__main__":
 
         for oh_sn,results in results_oh_sn.items():
             for result in results["SBIT_Crosstalk"]:
-                if not result["Status"]:
-                    if debug:
-                        break               
+                if not result["Status"]:      
                     print (Colors.YELLOW + "\nStep 15: S-bit Crosstalk Failed\n" + Colors.ENDC)
                     logfile.write("\nStep 15: S-bit Crosstalk Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
@@ -1646,6 +1645,9 @@ if __name__ == "__main__":
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    print('Time taken to perform %s tests: %:03f'%(batch.replace('_','-'),(time.time()-t0)/60))
+    logfile.write('Time taken to perform %s tests: %:03f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
 
     with open(results_fn,"w") as resultsfile:
         json.dump(results_oh_sn,resultsfile,indent=2)
