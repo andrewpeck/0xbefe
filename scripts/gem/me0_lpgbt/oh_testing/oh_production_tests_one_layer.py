@@ -389,15 +389,15 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            for gbt in geb_oh_map[slot]["GBT"]:
-                if not debug:
-                    if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
-                        print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
-                        with open(results_fn,"w") as resultsfile:
-                            json.dump(results_oh_sn,resultsfile,indent=2)
-                        logfile.close()
-                        sys.exit()
+            gbt = geb_oh_map[slot]["GBT"][0]
+            if not debug:
+                if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
+                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Downlink Optical BERT for %s tests\n"%batch.replace("_","-"))
