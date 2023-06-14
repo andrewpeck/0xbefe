@@ -360,7 +360,7 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
@@ -391,7 +391,7 @@ if __name__ == "__main__":
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
-                if not debug and results_oh_sn[oh_sn]["Downlink_BERT"]["Limit"] > 1e-12:
+                if debug and results_oh_sn[oh_sn]["Downlink_BERT"]["Limit"] > 1e-12:
                     print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
