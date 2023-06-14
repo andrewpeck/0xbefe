@@ -360,7 +360,7 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
@@ -372,7 +372,6 @@ if __name__ == "__main__":
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
             with open(latest_file,"r") as bertfile:
-                # Just read the last 10 lines to save time. Know results are at the end.
                 for line in bertfile.readlines():
                     if "BER Test Results" in line:
                         read_next = True
@@ -391,13 +390,14 @@ if __name__ == "__main__":
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
-                if debug and results_oh_sn[oh_sn]["Downlink_BERT"]["Limit"] > 1e-12:
-                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                if not debug:
+                    if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
+                        print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
+                        with open(results_fn,"w") as resultsfile:
+                            json.dump(results_oh_sn,resultsfile,indent=2)
+                        logfile.close()
+                        sys.exit()
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Downlink Optical BERT for %s tests\n"%batch.replace("_","-"))
@@ -448,13 +448,14 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
-                if not debug and results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
-                    print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                if not debug:
+                    if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
+                        print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
+                        with open(results_fn,"w") as resultsfile:
+                            json.dump(results_oh_sn,resultsfile,indent=2)
+                        logfile.close()
+                        sys.exit()
     else:
         print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Uplink Optical BERT for %s tests\n"%batch.replace("_","-"))
