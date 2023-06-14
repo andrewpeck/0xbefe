@@ -676,16 +676,22 @@ if __name__ == "__main__":
                             i = geb_oh_map[slot]['VFAT'].index(vfat)
                             break
                     if 'SBIT_Mapping' in results_oh_sn[oh_sn]:
-                        if results_oh_sn[oh_sn]['SBIT_Mapping'][i] != {}:
+                        if results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] &= sbit_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
                         else:
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i].update({'SBIT_Status':sbit_status,'SBIT_Address':[sbit],'Cluster_Status':cluster_status,'Cluster_Address':[cluster_address]})
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
+                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
                     else:
                         results_oh_sn[oh_sn]['SBIT_Mapping']=[{}]*6
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i].update({'SBIT_Status':sbit_status,'SBIT_Address':[sbit],'Cluster_Status':cluster_status,'Cluster_Address':[cluster_address]})
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
 
             os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
             logfile = open(log_fn, "a")
@@ -1206,7 +1212,7 @@ if __name__ == "__main__":
     logfile.write("Step 12: DAQ SCurve\n\n")
     time.sleep(1)
 
-    if debug:
+    if not debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -1297,7 +1303,7 @@ if __name__ == "__main__":
     logfile.write("Step 13: DAQ Crosstalk\n\n")
     time.sleep(1)
 
-    if debug:
+    if not debug:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
@@ -1332,23 +1338,20 @@ if __name__ == "__main__":
                             else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
-            if crosstalk!={}:
+            if crosstalk:
                 for vfat in crosstalk:
                     for slot,oh_sn in geb_dict.items():
-                        for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
-                            if vfat == map_vfat:
+                        for i,v in enumerate(geb_oh_map[slot]["VFAT"]):
+                            if vfat == v:
                                 results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
-                                if 'Bad_Channels' in results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]:
-                                    results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
-                                else:
-                                    results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
+                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
                                 break
                         if i!=7:
                             break
                 for slot,oh_sn in geb_dict.items():
                     for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
                         if result == {}:
-                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i].update({"Status":1})
+                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
 
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -1515,28 +1518,25 @@ if __name__ == "__main__":
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
                                 channels_obs[i] = int(ch.replace(',',''))
-                            try:
+                            if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
-                            except KeyError:
+                            else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
-            if crosstalk!={}:
+            if crosstalk:
                 for vfat in crosstalk:
                     for slot,oh_sn in geb_dict.items():
                         for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
                             if vfat == map_vfat:
                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
-                                if 'Bad_Channels' in results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]:
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"].update(crosstalk[vfat])
-                                else:
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
+                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
                                 break
-                        if i!=7:
+                        if i<7:
                             break
-                for slot,oh_sn in geb_dict.items():
-                    for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
-                        if result == {}:
-                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i].update({"Status":1})
+            for slot,oh_sn in geb_dict.items():
+                for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
+                    if result == {}:
+                        results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
 
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
