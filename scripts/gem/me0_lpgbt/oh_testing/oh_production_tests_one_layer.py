@@ -1555,6 +1555,8 @@ if __name__ == "__main__":
         for oh_sn,results in results_oh_sn.items():
             for result in results["SBIT_Crosstalk"]:
                 if not result["Status"]:
+                    if debug:
+                        break               
                     print (Colors.YELLOW + "\nStep 15: S-bit Crosstalk Failed\n" + Colors.ENDC)
                     logfile.write("\nStep 15: S-bit Crosstalk Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
