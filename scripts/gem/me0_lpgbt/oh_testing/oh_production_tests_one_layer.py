@@ -63,8 +63,8 @@ if __name__ == "__main__":
                     sys.exit()
             continue
         slot = line.split()[0]
-        oh_sn = line.split()[1]
-        slot_name = line.split()[2]
+        slot_name = line.split()[1]
+        oh_sn = line.split()[2]
         vtrx_sn = line.split()[3]
         if oh_sn != "-9999":
             if batch in ["prototype", "pre_production"]:
@@ -708,9 +708,8 @@ if __name__ == "__main__":
                     logfile.close()
                     sys.exit()
                 elif not result['Cluster_Status']:
-                    pass
-                    # print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
-                    # logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
                     # with open(results_fn,"w") as resultsfile:
                     #     json.dump(results_oh_sn,resultsfile,indent=2)
                     # logfile.close()
@@ -1329,6 +1328,8 @@ if __name__ == "__main__":
                             for slot,oh_sn in geb_dict.items():
                                 for i in range(6):
                                     results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
+                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
+                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
@@ -1346,6 +1347,7 @@ if __name__ == "__main__":
                         for i,v in enumerate(geb_oh_map[slot]["VFAT"]):
                             if vfat == v:
                                 results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
+                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
                                 results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
                                 break
                         if i!=7:
@@ -1354,6 +1356,8 @@ if __name__ == "__main__":
                     for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
                         if result == {}:
                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
+                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
+                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
 
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -1491,6 +1495,8 @@ if __name__ == "__main__":
     logfile.write("Step 15: S-bit Crosstalk\n\n")
     time.sleep(1)
     
+    # Add number of bad channels and list
+
     # Uncomment debug to run
     if batch in ["prototype", "pre_production", "pre_series"]:#, "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1514,6 +1520,8 @@ if __name__ == "__main__":
                             for slot,oh_sn in geb_dict.items():
                                 for i in range(6):
                                     results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
+                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
+                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
@@ -1531,6 +1539,7 @@ if __name__ == "__main__":
                         for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
                             if vfat == map_vfat:
                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
+                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
                                 results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
                                 break
                         if i<7:
@@ -1539,6 +1548,8 @@ if __name__ == "__main__":
                 for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
                     if result == {}:
                         results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
+                        results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
+                        results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
 
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
@@ -1609,7 +1620,11 @@ if __name__ == "__main__":
             for vfat,threshold in sbit_noise.items():
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]["VFAT"]:
-                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[threshold]
+                        if threshold >= 100 or threshold == 0:
+                            status = 0
+                        else:
+                            status = 1
+                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[{'Status':status,'Threshold':threshold}]
                         break
             
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
@@ -1628,13 +1643,14 @@ if __name__ == "__main__":
                 print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
         for oh_sn in results_oh_sn:
-            if np.any(np.logical_or(np.array(results_oh_sn[oh_sn]["SBIT_Noise_Rate"])==0,np.array(results_oh_sn[oh_sn]["SBIT_Noise_Rate"])==255)):
-                print (Colors.YELLOW + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                logfile.close()
-                sys.exit()
+            for result in results_oh_sn[oh_sn]['SBIT_Noise_Rate']:
+                if not result['Status']:
+                    print (Colors.YELLOW + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
+                    logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
     else:
         print(Colors.BLUE + "Skipping S-bit Noise Rate for %s tests"%batch.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit Noise Rate for %s tests\n"%batch.replace("_"," "))
