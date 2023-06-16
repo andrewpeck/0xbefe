@@ -193,22 +193,18 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
     write_backend_reg(queso_reset_node, 1)
 
     prbs_errors_oh_sn = {}
-    for queso,oh_serial_nr in queso_dict.items():
+    for queso,oh_sn in queso_dict.items():
         oh_select = queso_oh_map[queso]["OH"]
         gbt_list = queso_oh_map[queso]["GBT"]
         vfat_list = queso_oh_map[queso]["VFAT"]
-        prbs_errors_oh_sn[oh_serial_nr] = {}
+        prbs_errors_oh_sn[oh_sn] = {}
         for gbt in gbt_list:
-            gbt_type = ""
-            if lpgbt%2 == 0:
+            if gbt%2 == 0:
                 gbt_type = "lpGBT_M"
             else:
                 gbt_type = "lpGBT_S"        
-            prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"] = []
-            prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"] = []
-            for e in range(0,28):
-                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"].append(-9999)
-                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"].append("--")
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_error_count"] = [-9999 for _ in range(28)]
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_ber_ul"] = ['--' for _ in range(28)]
         for vfat in vfat_list:
             for elink in range(0, 9):
                 lpgbt = prbs_errors[oh_select][vfat][elink]["lpgbt"]
@@ -220,10 +216,10 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
                     gbt_type = "lpGBT_M"
                 else:
                     gbt_type = "lpGBT_S"
-                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_error_count"][elink_nr] = error_count
-                prbs_errors_oh_sn[oh_serial_nr][gbt_type + "_ber_ul"][elink_nr] = ber_ul
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_error_count"][elink_nr] = error_count
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_ber_ul"][elink_nr] = ber_ul
     with open(results_fn, "w") as resultsfile:
-        resultsfile.write(json.dumps(prbs_errors_oh_sn))
+        json.dump(prbs_errors_oh_sn,resultsfile,indent=2)
 
     print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
@@ -273,12 +269,12 @@ if __name__ == "__main__":
                     sys.exit()
             continue
         queso_nr = line.split()[0]
-        oh_serial_nr = line.split()[1]
-        if oh_serial_nr != "-9999":
-            if int(oh_serial_nr) not in range(1, 1019):
+        oh_sn = line.split()[1]
+        if oh_sn != "-9999":
+            if int(oh_sn) not in range(1, 1019):
                 print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
                 sys.exit() 
-            queso_dict[queso_nr] = oh_serial_nr
+            queso_dict[queso_nr] = oh_sn
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)

@@ -176,7 +176,7 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
         sleep(0.1)
 
         print ("")
-        logfile_out("\n")
+        logfile_out.write("\n")
         # Scan over phases
         for phase in range(0, 15):
             print ("Scanning Phase %d:\n"%phase)
