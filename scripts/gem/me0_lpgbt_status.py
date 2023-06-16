@@ -3,6 +3,14 @@ from time import sleep
 import sys
 import argparse
 
+def adc_conversion_lpgbt(adc):
+    gain = 1.87
+    offset = 531.1
+    #voltage = adc/1024.0
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+    return voltage
+
 def main(system, oh_ver, boss):
 
     # Checking Status of Registers
@@ -255,19 +263,19 @@ def main(system, oh_ver, boss):
                 if (i==2 ):  conv=1; name="ASENSE_1"
                 if (i==3 ):  conv=1; name="ASENSE_3"
                 if (i==4 ):  conv=1; name="ASENSE_0"
-                if (i==5 ):  conv=1*2.0; name="1V2_DIV2"
-                if (i==6 ):  conv=1*3.0; name="2V5_DIV3"
+                if (i==5 ):  conv=1*2.0; name="1V2"
+                if (i==6 ):  conv=1*3.0; name="2V5"
                 if (i==7 ):  conv=1; name="RSSI"
                 if (i==8 ):  conv=1; name="EOM DAC (internal signal)"
-                if (i==9 ):  conv=1/0.42; name="VDDIO * 0.42 (internal signal)"
-                if (i==10):  conv=1/0.42; name="VDDTX * 0.42 (internal signal)"
-                if (i==11):  conv=1/0.42; name="VDDRX * 0.42 (internal signal)"
-                if (i==12):  conv=1/0.42; name="VDD * 0.42 (internal signal)"
-                if (i==13):  conv=1/0.42; name="VDDA * 0.42 (internal signal)"
+                if (i==9 ):  conv=1/0.42; name="VDDIO (internal signal)"
+                if (i==10):  conv=1/0.42; name="VDDTX (internal signal)"
+                if (i==11):  conv=1/0.42; name="VDDRX (internal signal)"
+                if (i==12):  conv=1/0.42; name="VDD (internal signal)"
+                if (i==13):  conv=1/0.42; name="VDDA (internal signal)"
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
-                if (i==15):  conv=1/0.50; name="VREF/2 (internal signal)"
+                if (i==15):  conv=1/0.50; name="VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
         elif boss == 0:
             for i in range(16):
                 name = ""
@@ -276,19 +284,19 @@ def main(system, oh_ver, boss):
                 if (i==2 ):  conv=1; name="N/A"
                 if (i==3 ):  conv=1; name="N/A"
                 if (i==4 ):  conv=1; name="N/A"
-                if (i==5 ):  conv=1*2.0; name="N/A"
-                if (i==6 ):  conv=1*3.0; name="N/A"
+                if (i==5 ):  conv=1; name="N/A"
+                if (i==6 ):  conv=1; name="N/A"
                 if (i==7 ):  conv=1; name="N/A"
                 if (i==8 ):  conv=1; name="EOM DAC (internal signal)"
-                if (i==9 ):  conv=1/0.42; name="VDDIO * 0.42 (internal signal)"
-                if (i==10):  conv=1/0.42; name="VDDTX * 0.42 (internal signal)"
-                if (i==11):  conv=1/0.42; name="VDDRX * 0.42 (internal signal)"
-                if (i==12):  conv=1/0.42; name="VDD * 0.42 (internal signal)"
-                if (i==13):  conv=1/0.42; name="VDDA * 0.42 (internal signal)"
+                if (i==9 ):  conv=1/0.42; name="VDDIO (internal signal)"
+                if (i==10):  conv=1/0.42; name="VDDTX (internal signal)"
+                if (i==11):  conv=1/0.42; name="VDDRX (internal signal)"
+                if (i==12):  conv=1/0.42; name="VDD (internal signal)"
+                if (i==13):  conv=1/0.42; name="VDDA (internal signal)"
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
-                if (i==15):  conv=1/0.50; name="VREF/2 (internal signal)"
+                if (i==15):  conv=1/0.50; name="VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
     elif oh_ver == 2:
         if boss == 1:
             for i in range(16):
@@ -302,20 +310,20 @@ def main(system, oh_ver, boss):
                 if (i == 6 ):  conv = 1; name = "ASENSE_0"
                 if (i == 7 ):  conv = 1; name = "Precision calibration resistor"
                 if (i == 8 ):  conv = 1; name = "Voltage DAC output (internal signal)"
-                if (i == 9 ):  conv = 1/0.42; name = "VSSA (internal signal)"
-                if (i == 10):  conv = 1/0.42; name = "VDDTX * 0.42 (internal signal)"
-                if (i == 11):  conv = 1/0.42; name = "VDDRX * 0.42 (internal signal)"
-                if (i == 12):  conv = 1/0.42; name = "VDD * 0.42 (internal signal)"
-                if (i == 13):  conv = 1/0.42; name = "VDDA * 0.42 (internal signal)"
+                if (i == 9 ):  conv = 1; name = "VSSA (internal signal)"
+                if (i == 10):  conv = 1/0.42; name = "VDDTX (internal signal)"
+                if (i == 11):  conv = 1/0.42; name = "VDDRX (internal signal)"
+                if (i == 12):  conv = 1/0.42; name = "VDD (internal signal)"
+                if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
-                if (i == 15):  conv = 1/0.50; name = "VREF/2 (internal signal)"
+                if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
-                print("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read / 1024., conv * read / 1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
         elif boss == 0:
             for i in range(16):
                 name = ""
                 if (i == 0 ):  conv = 1; name = "VTRx+ Temperature (TH1)"
-                if (i == 1 ):  conv = 1; name = "2.5 V Voltage Divider"
+                if (i == 1 ):  conv = 1*3.0; name = "2.5 V Voltage Divider"
                 if (i == 2 ):  conv = 1; name = "Unused"
                 if (i == 3 ):  conv = 1; name = "Precision Calibration Resistor"
                 if (i == 4 ):  conv = 1; name = "Unused"
@@ -323,15 +331,15 @@ def main(system, oh_ver, boss):
                 if (i == 6 ):  conv = 1; name = "OH Temperature"
                 if (i == 7 ):  conv = 1; name = "Unused"
                 if (i == 8 ):  conv = 1; name = "Voltage DAC output (internal signal)"
-                if (i == 9 ):  conv = 1/0.42; name = "VSSA (internal signal)"
-                if (i == 10):  conv = 1/0.42; name = "VDDTX * 0.42 (internal signal)"
-                if (i == 11):  conv = 1/0.42; name = "VDDRX * 0.42 (internal signal)"
-                if (i == 12):  conv = 1/0.42; name = "VDD * 0.42 (internal signal)"
-                if (i == 13):  conv = 1/0.42; name = "VDDA * 0.42 (internal signal)"
+                if (i == 9 ):  conv = 1; name = "VSSA (internal signal)"
+                if (i == 10):  conv = 1/0.42; name = "VDDTX (internal signal)"
+                if (i == 11):  conv = 1/0.42; name = "VDDRX (internal signal)"
+                if (i == 12):  conv = 1/0.42; name = "VDD (internal signal)"
+                if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
-                if (i == 15):  conv = 1/0.50; name = "VREF/2 (internal signal)"
+                if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
                 read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, read/1024., conv*read/1024., name))
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
 
     powerdown_adc(oh_ver)
     print ("")
@@ -417,16 +425,13 @@ def powerdown_adc(oh_ver):
 def read_adc(channel, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-
     done = 0
     while (done==0):
         if system!="dryrun":
             done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
         else:
             done=1
-
     val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
     val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
 
@@ -441,7 +446,7 @@ if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Checking Status of lpGBT Configuration for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -449,12 +454,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print ("Using Rpi CHeeseCake for status check")
+    elif args.system == "queso":
+        print("Using QUESO for status check")
     elif args.system == "backend":
         print ("Using Backend for status check")
     elif args.system == "dryrun":
         print ("Dry Run - not actually checking status of lpGBT")
     else:
-        print (Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print (Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":

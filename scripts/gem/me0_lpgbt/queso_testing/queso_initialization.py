@@ -410,7 +410,6 @@ if __name__ == "__main__":
                         results_dict["width"] = bitslip_results[lpgbt][lpgbt_elink]["width"]
                         results_dict["bitslip"] = bitslip_results[lpgbt][lpgbt_elink]["bitslip"]
                         results_oh_sn[oh_sn][gbt_type].append(results_dict)
-                        
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print("\n######################################################\n")

@@ -8,6 +8,14 @@ import os
 import datetime
 import numpy as np
 
+def adc_conversion_lpgbt(adc):
+    gain = 1.87
+    offset = 531.1
+    #voltage = adc/1024.0
+    #voltage = (adc - 38.4)/(1.85 * 512)
+    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+    return voltage
+
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
 
@@ -69,7 +77,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
         if system == "dryrun":
             Vout = Vin
         else:
-            Vout = read_adc(channel, gain, system) * (1.0/1024.0)
+            Vout = read_adc(channel, gain, system)
 
         Vin_range.append(Vin)
         Vout_range.append(Vout)
@@ -149,28 +157,32 @@ def read_adc(channel, gain, system):
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
 
-    done = 0
-    while (done == 0):
-        if system != "dryrun":
-            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-        else:
-            done = 1
-
-    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+    vals = []
+    for i in range(0,100):
+        done = 0
+        while (done==0):
+            if system!="dryrun":
+                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
+            else:
+                done=1
+        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
+        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
+        val = adc_conversion_lpgbt(val)
+        vals.append(val)
+    mean_val = sum(vals)/len(vals)
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
 
-    return val
+    return mean_val
 
 if __name__ == "__main__":
 
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ADC Precision Calibration Scan for ME0 Optohybrid")
-    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or backend or dryrun")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
@@ -179,12 +191,14 @@ if __name__ == "__main__":
 
     if args.system == "chc":
         print("Using Rpi CHeeseCake for scanning ADC precision calibration resistor")
+    elif args.system == "queso":
+        print("Using QUESO for scanning ADC precision calibration resistor")
     elif args.system == "backend":
         print ("Using Backend for scanning ADC precision calibration resistor")
     elif args.system == "dryrun":
         print("Dry Run - not actually running adc scan")
     else:
-        print(Colors.YELLOW + "Only valid options: chc, backend, dryrun" + Colors.ENDC)
+        print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
 
     if args.gem != "ME0":
