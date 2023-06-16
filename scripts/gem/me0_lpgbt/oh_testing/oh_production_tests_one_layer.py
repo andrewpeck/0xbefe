@@ -380,9 +380,9 @@ if __name__ == "__main__":
                             gbt = int(line.split()[-1])
                             results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
                         elif "Number of FEC errors" in line:
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = float(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = int(line.split()[-1])
                         elif "Bit Error Ratio" in line:
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]=float(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='BER < '+line.split()[-1]
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -439,9 +439,9 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
                                     break
                         elif "Number of FEC errors" in line:
-                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Errors"] = float(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"] = int(line.split()[-1])
                         elif "Bit Error Ratio" in line:
-                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]=float(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='BER < ' +line.split()[-1]
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
