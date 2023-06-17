@@ -316,7 +316,7 @@ if __name__ == "__main__":
     logfile.write("Step 3: Downlink Eye Diagram\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "Running Eye diagram for Slot %s, Boss lpGBT"%slot + Colors.ENDC)
             logfile.write("Running Eye diagram for Slot %s, Boss lpGBT\n"%slot)
