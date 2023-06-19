@@ -43,7 +43,7 @@ geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for slots")
+    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
     args = parser.parse_args()
 
     if args.input_file is None:
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             if "BATCH" in line:
                 batch = line.split()[2]
                 if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "acceptance"' + Colors.ENDC)
+                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
                     sys.exit()
             continue
         slot = line.split()[0]
@@ -145,8 +145,8 @@ if __name__ == "__main__":
         results_oh_sn[oh_sn]={}
         results_oh_sn[oh_sn]["Batch"]=batch
         results_oh_sn[oh_sn]["Slot"]=slot_name_dict[slot]
-        results_oh_sn[oh_sn]["VTRx"]={}
-        results_oh_sn[oh_sn]["VTRx"]["Serial_Number"]=vtrx_dict[slot]
+        results_oh_sn[oh_sn]["VTRx+"]={}
+        results_oh_sn[oh_sn]["VTRx+"]["Serial_Number"]=vtrx_dict[slot]
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
     
@@ -923,7 +923,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
             logfile.write("Configuring all VFATs\n\n")
             logfile.close()
-            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
             logfile = open(log_fn, "a")
     else:
         print(Colors.BLUE + "Skipping VFAT Configuration for %s tests"%batch.replace("_","-") + Colors.ENDC)
@@ -1041,11 +1041,11 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
             if rssi != []:
-                results_oh_sn[oh_sn]["VTRx"][key]=np.mean(rssi)
+                results_oh_sn[oh_sn]["VTRx+"][key]=np.mean(rssi)
             else:
-                results_oh_sn[oh_sn]["VTRx"][key]=-9999
+                results_oh_sn[oh_sn]["VTRx+"][key]=-9999
         for oh_sn in results_oh_sn:
-            if results_oh_sn[oh_sn]["VTRx"][key] == -9999:
+            if results_oh_sn[oh_sn]["VTRx+"][key] == -9999:
                 print (Colors.YELLOW + "\nStep 11: RSSI Scan Failed\n" + Colors.ENDC)
                 logfile.write("\nStep 11: RSSI Scan Failed\n\n")
                 with open(results_fn,"w") as resultsfile:
@@ -1160,7 +1160,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/vtrx_temperature_scan_slot%s'%(latest_file,dataDir,slot))
-            results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"]={}
+            results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]={}
             with open(latest_file) as vtrx_temp_file:
                 keys = vtrx_temp_file.readline().split()[2:7:2]
                 temperatures = {}
@@ -1176,12 +1176,12 @@ if __name__ == "__main__":
                 os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
             for key,values in temperatures.items():
                 if values != []:
-                    results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"][key]=np.mean(values)
+                    results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]=np.mean(values)
                 else:
-                    results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"][key]=-9999
+                    results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]=-9999
         for oh_sn in results_oh_sn:
-            for key in results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"]:
-                if results_oh_sn[oh_sn]["VTRx"]["Temperature_Scan"][key]==-9999:
+            for key in results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]:
+                if results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]==-9999:
                     print (Colors.YELLOW + "\nStep 11: VTRx+ Temperature Scan Failed\n" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n\n")
                     with open(results_fn,"w") as resultsfile:
