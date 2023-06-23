@@ -161,39 +161,48 @@ if __name__ == "__main__":
     logfile.write("Step 1: Initializing\n\n")
     time.sleep(1)
 
-    logfile.close()
-    os.system("python3 init_frontend.py")
-    os.system("python3 status_frontend.py >> %s"%log_fn)
-    os.system("python3 clean_log.py -i %s"%log_fn)
-    list_of_files = glob.glob("results/gbt_data/gbt_status_data/*.json")
-    latest_file = max(list_of_files, key=os.path.getctime)
-    with open(latest_file,"r") as statusfile:
-        status_dict = json.load(statusfile)
-        for oh,status_dict_oh in status_dict.items():
-            for gbt,status in status_dict_oh.items():
-                for slot,oh_sn in geb_dict.items():
-                    if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
-                        results_oh_sn[oh_sn][int(gbt)]["ready"]=int(status)
-                        break 
-
-    logfile = open(log_fn, "a")
-    for slot,oh_sn in geb_dict.items():
-        results_oh_sn[oh_sn]["Initialization"]=1
-        for gbt in geb_oh_map[slot]["GBT"]:
-            results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["ready"]
-    for slot,oh_sn in geb_dict.items():
-        if not results_oh_sn[oh_sn]["Initialization"]:
-            print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
-            logfile.write("\n Step 1: Initialization Failed\n")
-            # log results and exit
-            with open(results_fn,"w") as resultsfile:
-                json.dump(results_oh_sn,resultsfile,indent=2)
-            logfile.close()
-            sys.exit()
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+        logfile.close()
+        os.system("python3 init_frontend.py")
+        os.system("python3 status_frontend.py >> %s"%log_fn)
+        os.system("python3 clean_log.py -i %s"%log_fn)
+        list_of_files = glob.glob("results/gbt_data/gbt_status_data/*.json")
+        latest_file = max(list_of_files, key=os.path.getctime)
+        with open(latest_file,"r") as statusfile:
+            status_dict = json.load(statusfile)
+            for oh,status_dict_oh in status_dict.items():
+                for gbt,status in status_dict_oh.items():
+                    for slot,oh_sn in geb_dict.items():
+                        if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
+                            results_oh_sn[oh_sn][int(gbt)]["ready"]=int(status)
+                            break 
+        os.system('cp %s %s/'%(latest_file,dataDir))
+        logfile = open(log_fn, "a")
+        for slot,oh_sn in geb_dict.items():
+            results_oh_sn[oh_sn]["Initialization"]=1
+            for gbt in geb_oh_map[slot]["GBT"]:
+                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["ready"]
+        for slot,oh_sn in geb_dict.items():
+            if not results_oh_sn[oh_sn]["Initialization"]:
+                for gbt in geb_oh_map[slot]['GBT']:
+                    gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+                    if not results_oh_sn[oh_sn][gbt]["ready"]:
+                        print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
+                        logfile.write("\n Step 1: Initialization Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
+                        # log results and exit
+                        with open(results_fn,"w") as resultsfile:
+                            json.dump(results_oh_sn,resultsfile,indent=2)
+                        logfile.close()
+                        sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping Initialization %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping Initialization %s tests\n"%batch.replace("_","-"))
+        time.sleep(1)
 
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Initialization Complete\n\n")
-
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
@@ -203,105 +212,80 @@ if __name__ == "__main__":
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
     time.sleep(1)
 
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        for gbt in geb_oh_map[slot]["GBT"]:
-            os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o %d -g %d > out.txt"%(oh_select,gbt))
-            # even gbt indexes are boss, odd are sub
-            if gbt%2==0:
-                # boss lpgbts
-                list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+        for slot,oh_sn in geb_dict.items():
+            oh_select = geb_oh_map[slot]["OH"]
+            for gbt in geb_oh_map[slot]["GBT"]:
+                os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o %d -g %d > out.txt"%(oh_select,gbt))
+                # Copy status files
+                gbt_type = 'boss' if gbt%2==0 else 'sub'
+                list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_%s*.txt"%gbt_type)
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/status_boss_slot%s.txt"%(latest_file, dataDir, slot))
-            elif (gbt+1)%2==0:
-                # sub lpgbts
-                list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
-                latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/status_sub_slot%s.txt"%(latest_file, dataDir, slot))
+                os.system("cp %s %s/status_OH%d_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
 
-    config_files = []
-    for oh_ver in oh_ver_list:
-        config_files.append(open("../resources/me0_boss_config_ohv%d.txt"%oh_ver))
-        config_files.append(open("../resources/me0_sub_config_ohv%d.txt"%oh_ver))
-    status_files = []
-    for slot in geb_dict:
-        oh_select = geb_oh_map[slot]["OH"]
-        for gbt in geb_oh_map[slot]["GBT"]:
-            if gbt%2==0:
-                # boss lpgbts
-                status_files.append(open(dataDir+"/status_boss_slot%s.txt"%slot))
-            else:
-                # sub lpgbts
-                status_files.append(open(dataDir+"/status_sub_slot%s.txt"%slot))
-    status_registers = {}
-    # Read all status registers from files
-    for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
-        slot = np.floor_divide(gbt,2) + 1
-        status_registers[slot]={}
-        if gbt%2 == 0: # boss lpgbts
+        config_files = []
+        for oh_ver in oh_ver_list:
+            config_files.append(open("../resources/me0_boss_config_ohv%d.txt"%oh_ver))
+            config_files.append(open("../resources/me0_sub_config_ohv%d.txt"%oh_ver))
+        status_files = []
+        for slot,oh_sn in geb_dict.items():
+            for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'boss' if gbt%2==0 else 'sub'
+                status_files.append(open("%s/status_OH%d_%s.txt"%(dataDir,oh_sn,gbt_type)))
+        status_registers = {}
+        # Read all status registers from files
+        for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
+            gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+            for slot,oh_sn in geb_dict.items():
+                if gbt in geb_oh_map[slot]['GBT']:
+                    break
+            status_registers[slot]={}
             # Get status registers
-            status_registers[slot]["BOSS"]={}
+            status_registers[slot][gbt_type]={}
             for line in status_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                status_registers[slot]["BOSS"][reg] = value
+                status_registers[slot][gbt_type][reg] = value
             # Check against config files
-            print ("Checking Slot %d OH Boss lpGBT:"%slot) 
-            logfile.write("Checking Slot %d OH Boss lpGBT:\n"%slot)
+            print ("Checking slot %s %s lpGBT:"%(slot,gbt_type))
+            logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type))
             n_error = 0
             for line in config_file.readlines():
                 reg,value = int(line.split()[0],16),int(line.split()[1],16)
                 if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
                     continue
-                if status_registers[slot]["BOSS"][reg] != value:
+                if status_registers[slot][gbt_type][reg] != value:
                     n_error += 1
-                    print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["BOSS"][reg]) + Colors.ENDC)
-                    logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["BOSS"][reg]))
-                    if 'Bad_Registers' in results_oh_sn[geb_dict[str(slot)]][gbt]:
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
+                    print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type][reg]) + Colors.ENDC)
+                    logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type][reg]))
+                    if 'Bad_Registers' in results_oh_sn[oh_sn][gbt]:
+                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
                     else:
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]=[]
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg]
+                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]=[]
+                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg]
+            if not n_error:
+                print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+                logfile.write("  No register mismatches\n")
+            results_oh_sn[oh_sn][gbt]["Status"] = int(not n_error)
 
-        else: # sub lpgbts
-            # Get status registers
-            status_registers[slot]["SUB"]={}
-            for line in status_file.readlines():
-                reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                status_registers[slot]["SUB"][reg] = value
-            # Check against config files
-            print("Checking Slot %d OH Sub lpGBT:"%slot) 
-            logfile.write("Checking Slot %d OH Sub lpGBT:\n"%slot)
-            n_error = 0
-            for line in config_file.readlines():
-                reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
-                    continue
-                if status_registers[slot]["SUB"][reg] != value:
-                    n_error += 1
-                    print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot]["SUB"][reg]) + Colors.ENDC)
-                    logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot]["SUB"][reg]))
-                    if 'Bad_Registers' in results_oh_sn[geb_dict[str(slot)]][gbt]:
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
-                    else:
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]=[]
-                        results_oh_sn[geb_dict[str(slot)]][gbt]["Bad_Registers"]+=[reg]
-        if not n_error:
-            print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
-            logfile.write("  No register mismatches\n")
-        results_oh_sn[geb_dict[str(slot)]][gbt]["Status"] = int(not n_error)
-
-        status_file.close()
-        config_file.close()
-    
-    for slot,oh_sn in geb_dict.items():
-        for gbt in geb_oh_map[slot]["GBT"]:
-            if not results_oh_sn[oh_sn][gbt]["Status"]:
-                print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 2: Checking lpGBT Status Failed\n\n")
-                with open(results_fn,"w") as resultsfile:
-                    json.dump(results_oh_sn,resultsfile,indent=2)
-                logfile.close()
-                sys.exit()
+            status_file.close()
+            config_file.close()
+        
+        for slot,oh_sn in geb_dict.items():
+            for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+                if not results_oh_sn[oh_sn][gbt]["Status"]:
+                    print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %d %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %d %s lpGBT\n\n"%(oh_sn,gbt_type))
+                    print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
+                    with open(results_fn,"w") as resultsfile:
+                        json.dump(results_oh_sn,resultsfile,indent=2)
+                    logfile.close()
+                    sys.exit()
+    else:
+        print(Colors.BLUE + "Skipping Checking lpGBT Status %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping Checking lpGBT Status %s tests\n"%batch.replace("_","-"))
+        time.sleep(1)
     
     time.sleep(1)
     print(Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
@@ -318,15 +302,16 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series"]:
         for slot,oh_sn in geb_dict.items():
-            print (Colors.BLUE + "Running Eye diagram for Slot %s, Boss lpGBT"%slot + Colors.ENDC)
-            logfile.write("Running Eye diagram for Slot %s, Boss lpGBT\n"%slot)
-            os.system("python3 me0_eye_scan.py -s backend -q ME0 -o %d -g %d > out.txt"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
+            gbt = geb_oh_map[slot]["GBT"][0]
+            print (Colors.BLUE + "Running Eye diagram for slot %s BOSS lpGBT"%slot + Colors.ENDC)
+            logfile.write("Running Eye diagram for slot %s BOSS lpGBT\n"%slot)
+            os.system("python3 me0_eye_scan.py -s backend -q ME0 -o %d -g %d > out.txt"%(geb_oh_map[slot]["OH"],gbt))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 plotting_scripts/me0_eye_scan_plot.py -f %s -s > out.txt"%latest_file)
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/downlink_optical_eye_boss_slot%s.pdf"%(latest_file, dataDir, slot))
+            os.system("cp %s %s/downlink_optical_eye_boss_OH%d.pdf"%(latest_file, dataDir, oh_sn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             eye_result_file=open(latest_file)
@@ -334,11 +319,15 @@ if __name__ == "__main__":
             eye_result_file.close()
             print(result)
             logfile.write(result+"\n")
-            results_oh_sn[oh_sn]["Downlink_Eye_Diagram"] = float(result.split()[5])
+            results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] = float(result.split()[5])
         for oh_sn in results_oh_sn:
-            if results_oh_sn[oh_sn]["Downlink_Eye_Diagram"] < 0.5:
-                print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed\n" + Colors.ENDC)
-                logfile.write("Step 3: Downlink Eye Diagram Failed\n\n")
+            gbt = geb_oh_map[slot]["GBT"][0]
+            gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+            if results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] < 0.5:
+                print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed" + Colors.ENDC)
+                logfile.write("Step 3: Downlink Eye Diagram Failed\n")
+                print(Colors.YELLOW + 'ERROR encountered at OH %d BOSS lpGBT\n'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %d BOSS lpGBT\n\n'%oh_sn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -360,14 +349,14 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
-        for slot,oh_sn in geb_dict.items():
-            print (Colors.BLUE + "Running Downlink Optical BERT for Slot %s Boss lpGBT\n"%slot + Colors.ENDC)
-            logfile.write("Running Downlink Optical BERT for Slot %s Boss lpGBT\n\n"%slot)
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Running Downlink Optical BERT for OH %d BOSS lpGBT\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Downlink Optical BERT for OH %d BOSS lpGBT\n\n"%oh_select)
             if debug:
-                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 0.2 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             else:
-                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -b 1e-12 -z"%(geb_oh_map[slot]["OH"],geb_oh_map[slot]["GBT"][0]))
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -b 1e-12 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
@@ -389,11 +378,12 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            gbt = geb_oh_map[slot]["GBT"][0]
             if not debug:
                 if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
-                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n\n")
+                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %d BOSS lpGBT\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %d BOSS lpGBT\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -417,8 +407,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running Uplink Optical BERT for OH %d, Boss and Sub lpGBTs\n\n"%oh_select)
+            print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Uplink Optical BERT for OH %d, BOSS and Sub lpGBTs\n\n"%oh_select)
             if debug:
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -t 0.2 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
             else:
@@ -448,10 +438,13 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not debug:
                     if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
-                        print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 5: Uplink Optical BERT Failed\n\n")
+                        print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
+                        logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         logfile.close()
@@ -505,8 +498,10 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]['DAQ_Phase_Scan']:
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 6: DAQ Phase Scan Failed\n\n")
+                    print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
+                    logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -568,8 +563,10 @@ if __name__ == "__main__":
             for vfat_results in results_oh_sn[oh_sn]["SBIT_Phase_Scan"]:
                 for result in vfat_results:
                     if not result['Status']:
-                        print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 7: S-Bit Phase Scan Failed\n\n")
+                        print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         logfile.close()
@@ -622,8 +619,10 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]["SBIT_Bitslip"]:
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Bitslip Failed\n\n")
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -633,23 +632,103 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "\n\nRunning S-bit Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("\n\nRunning S-bit Mapping on OH %d, all VFATs\n\n"%oh_select)
-            os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o %d -v %s -l"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o %d -v %s -l >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for logging
+            no_bad_channels = False
+            no_rotated_elinks = False
+            bad_channels = {}
+            rotated_elinks = {}
+            read_next = False
+            with open(latest_file,'r') as mapping_file:
+                for line in mapping_file.readlines():
+                    if 'No Bad Channels' in line:
+                        no_bad_channels = True
+                    elif 'No Rotated Elinks' in line:
+                        no_rotated_elinks = True
+                    elif 'Bad Channels:' in line:
+                        read_next = True
+                    elif 'Rotated Elinks:' in line:
+                        read_next = True
+                    elif read_next:
+                        if 'VFAT' in line and 'Channel' in line:
+                            vfat = int(line.split()[1].replace(',',''))
+                            elink = int(line.split()[3].replace(',',''))
+                            channel = int(line.split()[5])
+                            if vfat in bad_channels:
+                                if elink in bad_channels[vfat]:
+                                    bad_channels[vfat][elink]+=[channel]
+                                else:
+                                    bad_channels[vfat][elink]=[channel]
+                            else:
+                                bad_channels[vfat]={}
+                                bad_channels[vfat][elink]=[channel]
+                        elif 'VFAT' in line:
+                            if vfat in rotated_elinks:
+                                rotated_elinks[vfat]+=[elink]
+                            else:
+                                rotated_elinks[vfat]=[elink]
+                        else:
+                            read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+        for slot,oh_sn in geb_dict.items():
+            results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
+        if no_bad_channels:
+            for oh_sn in results_oh_sn:
+                for i in range(6):
+                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=int(no_bad_channels)
+        elif bad_channels:
+            for vfat in bad_channels:
+                for slot,oh_sn in geb_dict.items():
+                    if vfat in geb_oh_map[slot]['VFAT']:
+                        i = geb_oh_map[slot]['VFAT'].index(vfat)
+                        break
+                results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=int(no_bad_channels)
+        for oh_sn in results_oh_sn:
+            for i in range(6):
+                if 'SBIT_Status' not in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
+                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=1
+
+        if no_rotated_elinks:
+            for oh_sn in results_oh_sn:
+                for i in range(6):
+                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
+        elif rotated_elinks:
+            for vfat in rotated_elinks:
+                for slot,oh_sn in geb_dict.items():
+                    if vfat in geb_oh_map[slot]['VFAT']:
+                        i = geb_oh_map[slot]['VFAT'].index(vfat)
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
+                        break
+        for oh_sn in results_oh_sn:
+            for i in range(6):
+                if 'No_Rotated_Elinks' not in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
+                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=1
+        if not no_bad_channels or not no_rotated_elinks:
+            for oh_sn in results_oh_sn:
+                for result in results_oh_sn[oh_sn]['SBIT_Mapping']:
+                    if not result['SBIT_Status'] or not result['No_Rotated_Elinks']:
+                        print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
+                        logfile.write("\nStep 7: S-Bit Mapping Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                        with open(results_fn,"w") as resultsfile:
+                            json.dump(results_oh_sn,resultsfile,indent=2)
+                        logfile.close()
+                        sys.exit()
     else:
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
@@ -670,7 +749,7 @@ if __name__ == "__main__":
                     cluster_size = int(data[10])
                     cluster_address = int(data[11])
 
-                    sbit_status = 1 if sbit != -9999 else 0
+                    # sbit_status = 1 if sbit != -9999 else 0
                     cluster_status = 1 if cluster_address != -9999 else 0
                     
                     for slot,oh_sn in geb_dict.items():
@@ -679,18 +758,18 @@ if __name__ == "__main__":
                             break
                     if 'SBIT_Mapping' in results_oh_sn[oh_sn]:
                         if results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] &= sbit_status
+                            # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] &= sbit_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
                         else:
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
+                            # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
                             results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
                     else:
                         results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
+                        # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
@@ -700,16 +779,11 @@ if __name__ == "__main__":
 
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]["SBIT_Mapping"]:
-                if not result['SBIT_Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Mapping Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
-                elif not result['Cluster_Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n\n")
+                if not result['Cluster_Status']:
+                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
+                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
                     # with open(results_fn,"w") as resultsfile:
                     #     json.dump(results_oh_sn,resultsfile,indent=2)
                     # logfile.close()
