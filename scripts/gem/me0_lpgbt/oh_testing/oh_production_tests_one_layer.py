@@ -189,8 +189,8 @@ if __name__ == "__main__":
                     if not results_oh_sn[oh_sn][gbt]["ready"]:
                         print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
                         logfile.write("\n Step 1: Initialization Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
                         # log results and exit
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
@@ -274,10 +274,10 @@ if __name__ == "__main__":
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not results_oh_sn[oh_sn][gbt]["Status"]:
-                    print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %d %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %d %s lpGBT\n\n"%(oh_sn,gbt_type))
-                    print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
+                    print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n\n"%(oh_sn,gbt_type))
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -326,8 +326,8 @@ if __name__ == "__main__":
             if results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] < 0.5:
                 print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed" + Colors.ENDC)
                 logfile.write("Step 3: Downlink Eye Diagram Failed\n")
-                print(Colors.YELLOW + 'ERROR encountered at OH %d BOSS lpGBT\n'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %d BOSS lpGBT\n\n'%oh_sn)
+                print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n\n'%oh_sn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -351,8 +351,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running Downlink Optical BERT for OH %d BOSS lpGBT\n"%oh_select + Colors.ENDC)
-            logfile.write("Running Downlink Optical BERT for OH %d BOSS lpGBT\n\n"%oh_select)
+            print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBT\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBT\n\n"%oh_select)
             if debug:
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             else:
@@ -382,8 +382,8 @@ if __name__ == "__main__":
                 if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
                     print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %d BOSS lpGBT\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %d BOSS lpGBT\n\n'%oh_sn)
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -407,8 +407,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print(Colors.BLUE + "Running Uplink Optical BERT for OH %d, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running Uplink Optical BERT for OH %d, BOSS and Sub lpGBTs\n\n"%oh_select)
+            print(Colors.BLUE + "Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n\n"%oh_select)
             if debug:
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r run -t 0.2 -z"%(oh_select," ".join(map(str,gbt_vfat_dict["GBT"]))))
             else:
@@ -443,8 +443,8 @@ if __name__ == "__main__":
                     if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
                         print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
                         logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %d %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %d %s lpGBT\n\n'%(oh_sn,gbt_type))
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         logfile.close()
@@ -468,8 +468,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running DAQ Phase Scan for OH %d on all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running DAQ Phase Scan for OH %d on all VFATs\n\n"%oh_select)
+            print (Colors.BLUE + "Running DAQ Phase Scan for OH %s on all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running DAQ Phase Scan for OH %s on all VFATs\n\n"%oh_select)
             os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -c"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
@@ -500,8 +500,8 @@ if __name__ == "__main__":
                 if not result['Status']:
                     print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -565,8 +565,8 @@ if __name__ == "__main__":
                     if not result['Status']:
                         print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         logfile.close()
@@ -621,8 +621,8 @@ if __name__ == "__main__":
                 if not result['Status']:
                     print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
                     logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
                     with open(results_fn,"w") as resultsfile:
                         json.dump(results_oh_sn,resultsfile,indent=2)
                     logfile.close()
@@ -717,8 +717,8 @@ if __name__ == "__main__":
                     if not result['SBIT_Status'] or not result['No_Rotated_Elinks']:
                         print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Mapping Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
                         with open(results_fn,"w") as resultsfile:
                             json.dump(results_oh_sn,resultsfile,indent=2)
                         logfile.close()
@@ -782,8 +782,8 @@ if __name__ == "__main__":
                 if not result['Cluster_Status']:
                     print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
                     logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %d\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %d\n\n'%oh_sn)
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
                     # with open(results_fn,"w") as resultsfile:
                     #     json.dump(results_oh_sn,resultsfile,indent=2)
                     # logfile.close()
