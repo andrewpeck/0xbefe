@@ -756,22 +756,17 @@ if __name__ == "__main__":
                         if vfat in geb_oh_map[slot]['VFAT']:
                             i = geb_oh_map[slot]['VFAT'].index(vfat)
                             break
-                    if 'SBIT_Mapping' in results_oh_sn[oh_sn]:
-                        if results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                            # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] &= sbit_status
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
-                        else:
-                            # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
-                            results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
+                    if 'SBIT_Address' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
                     else:
-                        results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
-                        # results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Status"] = sbit_status
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
+                    if 'Cluster_Status' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
+                    else:
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
+                    if 'Cluster_Address' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
+                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
+                    else:
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
 
             os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
