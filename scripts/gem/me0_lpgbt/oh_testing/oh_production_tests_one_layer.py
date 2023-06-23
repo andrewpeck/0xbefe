@@ -221,7 +221,7 @@ if __name__ == "__main__":
                 gbt_type = 'boss' if gbt%2==0 else 'sub'
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_%s*.txt"%gbt_type)
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/status_OH%d_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
+                os.system("cp %s %s/status_OH%s_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
 
         config_files = []
         for oh_ver in oh_ver_list:
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'boss' if gbt%2==0 else 'sub'
-                status_files.append(open("%s/status_OH%d_%s.txt"%(dataDir,oh_sn,gbt_type)))
+                status_files.append(open("%s/status_OH%s_%s.txt"%(dataDir,oh_sn,gbt_type)))
         status_registers = {}
         # Read all status registers from files
         for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
@@ -311,7 +311,7 @@ if __name__ == "__main__":
             os.system("python3 plotting_scripts/me0_eye_scan_plot.py -f %s -s > out.txt"%latest_file)
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system("cp %s %s/downlink_optical_eye_boss_OH%d.pdf"%(latest_file, dataDir, oh_sn))
+            os.system("cp %s %s/downlink_optical_eye_boss_OH%s.pdf"%(latest_file, dataDir, oh_sn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             eye_result_file=open(latest_file)
