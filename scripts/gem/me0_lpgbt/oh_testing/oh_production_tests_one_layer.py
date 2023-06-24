@@ -151,6 +151,7 @@ if __name__ == "__main__":
             results_oh_sn[oh_sn][gbt]={}
     
     debug = True if batch=="debug" else False
+    test_failed = False
     t0 = time.time()
     
     print ("\n#####################################################################################################################################\n")
@@ -187,15 +188,25 @@ if __name__ == "__main__":
                 for gbt in geb_oh_map[slot]['GBT']:
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     if not results_oh_sn[oh_sn][gbt]["ready"]:
-                        print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
-                        logfile.write("\n Step 1: Initialization Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
-                        # log results and exit
-                        with open(results_fn,"w") as resultsfile:
-                            json.dump(results_oh_sn,resultsfile,indent=2)
-                        logfile.close()
-                        sys.exit()
+                        if not test_failed:
+                            print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
+                            logfile.write("\n Step 1: Initialization Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                        test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
+
     else:
         print(Colors.BLUE + "Skipping Initialization %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Initialization %s tests\n"%batch.replace("_","-"))
@@ -274,14 +285,24 @@ if __name__ == "__main__":
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not results_oh_sn[oh_sn][gbt]["Status"]:
-                    print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n\n"%(oh_sn,gbt_type))
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n\n"%(oh_sn,gbt_type))
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping Checking lpGBT Status %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Checking lpGBT Status %s tests\n"%batch.replace("_","-"))
@@ -324,14 +345,24 @@ if __name__ == "__main__":
             gbt = geb_oh_map[slot]["GBT"][0]
             gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
             if results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] < 0.5:
-                print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed" + Colors.ENDC)
-                logfile.write("Step 3: Downlink Eye Diagram Failed\n")
-                print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n\n'%oh_sn)
+                if not test_failed:
+                    print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed" + Colors.ENDC)
+                    logfile.write("Step 3: Downlink Eye Diagram Failed\n")
+                print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
-                sys.exit()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping downlink eye diagram for %s tests\n"%batch.replace("_","-"))
@@ -380,14 +411,24 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             if not debug:
                 if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
-                    print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
-                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n\n'%oh_sn)
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Downlink Optical BERT for %s tests\n"%batch.replace("_","-"))
@@ -441,14 +482,24 @@ if __name__ == "__main__":
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not debug:
                     if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
-                        print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
-                        logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s %s lpGBT\n\n'%(oh_sn,gbt_type))
-                        with open(results_fn,"w") as resultsfile:
-                            json.dump(results_oh_sn,resultsfile,indent=2)
-                        logfile.close()
-                        sys.exit()
+                        if not test_failed:
+                            print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
+                            logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                        test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Uplink Optical BERT for %s tests\n"%batch.replace("_","-"))
@@ -498,14 +549,24 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]['DAQ_Phase_Scan']:
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
-                    logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping DAQ Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Phase Scan for %s tests\n"%batch.replace("_","-"))
@@ -563,14 +624,24 @@ if __name__ == "__main__":
             for vfat_results in results_oh_sn[oh_sn]["SBIT_Phase_Scan"]:
                 for result in vfat_results:
                     if not result['Status']:
-                        print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
-                        logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
-                        with open(results_fn,"w") as resultsfile:
-                            json.dump(results_oh_sn,resultsfile,indent=2)
-                        logfile.close()
-                        sys.exit()
+                        if not test_failed:
+                            print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
+                            logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                        test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-Bit Phase Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%batch.replace("_","-"))
@@ -619,14 +690,24 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]["SBIT_Bitslip"]:
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
+                        logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-Bit Bitslip for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%batch.replace("_","-"))
@@ -715,14 +796,24 @@ if __name__ == "__main__":
             for oh_sn in results_oh_sn:
                 for result in results_oh_sn[oh_sn]['SBIT_Mapping']:
                     if not result['SBIT_Status'] or not result['No_Rotated_Elinks']:
-                        print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
-                        logfile.write("\nStep 7: S-Bit Mapping Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
-                        with open(results_fn,"w") as resultsfile:
-                            json.dump(results_oh_sn,resultsfile,indent=2)
-                        logfile.close()
-                        sys.exit()
+                        if not test_failed:
+                            print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
+                            logfile.write("\nStep 7: S-Bit Mapping Failed\n")
+                        print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                        test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%batch.replace("_","-"))
@@ -775,14 +866,24 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for result in results_oh_sn[oh_sn]["SBIT_Mapping"]:
                 if not result['Cluster_Status']:
-                    print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
-                    logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s\n'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n\n'%oh_sn)
-                    # with open(results_fn,"w") as resultsfile:
-                    #     json.dump(results_oh_sn,resultsfile,indent=2)
-                    # logfile.close()
-                    # sys.exit()
+                    if not test_failed:
+                        print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
+                        logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%batch.replace("_","-"))
@@ -847,14 +948,27 @@ if __name__ == "__main__":
         os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
         logfile = open(log_fn,'a')
 
-        for oh_sn in results_oh_sn:
-            if np.any(results_oh_sn[oh_sn]['VFAT_Reset']==0):
-                print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_Reset']):
+                if not result:
+                    if not test_failed:
+                        print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+                    print(Colors.YELLOW + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('Would you like to terminate testing?')
+            if end_tests.lower() in ['y','yes']:
+                # log results and exit
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
-                sys.exit()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Reset for %s tests\n"%batch.replace("_","-"))
