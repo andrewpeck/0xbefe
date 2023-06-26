@@ -403,7 +403,7 @@ if __name__ == "__main__":
                             gbt = int(line.split()[-1])
                             for slot,oh_sn in geb_dict.items():
                                 if gbt in geb_oh_map[slot]["GBT"]:
-                                    results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
+                                    results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
                                     break
                         elif "Number of FEC errors" in line:
                             errors = int(line.split()[-1])
