@@ -1442,7 +1442,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                     logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
-                elif reading > temperature_ranges[key]:
+                elif reading > temperature_range[key]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: OH Temperature Scan Failed\n")
