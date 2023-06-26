@@ -1360,7 +1360,7 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["Asense"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["Asense"][key]=-9999
-
+            time.
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
