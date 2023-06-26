@@ -407,7 +407,7 @@ if __name__ == "__main__":
                                     break
                         elif "Number of FEC errors" in line:
                             errors = int(line.split()[-1])
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = errors
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Error_Count"] = errors
                         elif "Bit Error Ratio" in line:
                             if errors:
                                 results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='--'
@@ -419,15 +419,15 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"]:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
-                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
-                    test_failed = True
+            gbt = geb_oh_map[slot]['GBT'][0]
+            gbt_type = 'BOSS'
+            if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Error_Count"]:
+                if not test_failed:
+                    print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -497,7 +497,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Errors"]:
+                if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
                         logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
