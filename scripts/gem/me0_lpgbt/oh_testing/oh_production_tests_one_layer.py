@@ -419,13 +419,15 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"]:
-                if not test_failed:
-                    print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
-                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
-                test_failed = True
+            for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+                if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                    test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
