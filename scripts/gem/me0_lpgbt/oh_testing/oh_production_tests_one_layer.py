@@ -388,9 +388,9 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBT\n"%oh_select + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBT\n\n"%oh_select)
             if debug:
-                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             else:
-                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %d -p downlink -r run -b 1e-12 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
+                os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r run -b 1e-12 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
