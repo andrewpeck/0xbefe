@@ -1241,14 +1241,22 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["Voltage_Scan"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["Voltage_Scan"][key] = -9999
+        voltage_ranges = {'V2V5':[2.35,2.65],'VSSA':[1.05,1.35],'VDDTX':[1.05,1.35],'VDDRX':[1.05,1.35],'VDD':[1.05,1.35],'VDDA':[1.05,1.35],'VREF':[0.85,1.15]}
         for oh_sn in results_oh_sn:
-            for voltage in results_oh_sn[oh_sn]["Voltage_Scan"]:
-                if results_oh_sn[oh_sn]["Voltage_Scan"][voltage] == -9999:
+            for voltage,reading in results_oh_sn[oh_sn]["Voltage_Scan"].items():
+                if reading == -9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,voltage))
+                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
+                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,voltage))
+                    test_failed = True
+                elif reading < voltage_ranges[voltage][0] or reading > voltage_ranges[voltage][1]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
+                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
+                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,voltage))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
@@ -1268,7 +1276,7 @@ if __name__ == "__main__":
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
@@ -1297,8 +1305,15 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
-                print(Colors.RED + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
+                test_failed = True
+            elif results_oh_sn[oh_sn]["VTRx+"][key] < 250:
+                if not test_failed:
+                    print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
+                    logfile.write("\nStep 11: RSSI Scan Failed\n")
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
                 test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
@@ -1318,7 +1333,7 @@ if __name__ == "__main__":
         logfile.write("Skipping RSSI Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
@@ -1381,7 +1396,7 @@ if __name__ == "__main__":
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
@@ -1437,7 +1452,7 @@ if __name__ == "__main__":
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
     
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
