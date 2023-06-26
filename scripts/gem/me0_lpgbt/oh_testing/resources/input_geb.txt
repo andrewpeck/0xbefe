@@ -1,5 +1,5 @@
-# BATCH: debug
-# SLOT_NR   SLOT_NAME   OH_SERIAL_NR    VTRX_SN
+# BATCH: pre_production
+# SLOT_NR   SLOT_NAME   OH_SERIAL_NR    VTRX+_SN
 1           NARROW_1    1               -9999
 2           NARROW_2    2               -9999           
 3           WIDE_1      -9999           -9999
