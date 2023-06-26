@@ -195,7 +195,7 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                         test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -293,7 +293,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -354,7 +354,7 @@ if __name__ == "__main__":
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT\n'%oh_sn)
                 test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -421,7 +421,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -494,7 +494,7 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                         test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -563,7 +563,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -639,7 +639,7 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e))
                         test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -706,7 +706,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -815,7 +815,7 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                         test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -886,7 +886,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -972,7 +972,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1042,7 +1042,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1113,7 +1113,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1188,7 +1188,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1259,7 +1259,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,voltage))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1316,7 +1316,7 @@ if __name__ == "__main__":
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
                 test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1386,7 +1386,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1450,7 +1450,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1514,7 +1514,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1626,7 +1626,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1736,7 +1736,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1843,7 +1843,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -1949,7 +1949,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
@@ -2039,7 +2039,7 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('\nWould you like to exit testing?')
+            end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
