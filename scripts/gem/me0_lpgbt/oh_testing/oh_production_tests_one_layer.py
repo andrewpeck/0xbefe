@@ -383,7 +383,7 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBT\n"%oh_select + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBT\n\n"%oh_select)
@@ -403,23 +403,26 @@ if __name__ == "__main__":
                             gbt = int(line.split()[-1])
                             results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
                         elif "Number of FEC errors" in line:
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = int(line.split()[-1])
+                            errors = int(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"] = errors
                         elif "Bit Error Ratio" in line:
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='BER < '+line.split()[-1]
+                            if errors:
+                                results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='--'
+                            else:
+                                results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='BER < '+line.split()[-1]
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            if not debug:
-                if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
-                        logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
-                    test_failed = True
+            if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Errors"]:
+                if not test_failed:
+                    print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                    logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -450,7 +453,7 @@ if __name__ == "__main__":
     logfile.write("Step 5: Uplink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print(Colors.BLUE + "Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n\n"%oh_select)
@@ -474,9 +477,13 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
                                     break
                         elif "Number of FEC errors" in line:
-                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"] = int(line.split()[-1])
+                            errors = int(line.split()[-1])
+                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"] = errors
                         elif "Bit Error Ratio" in line:
-                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='BER < ' +line.split()[-1]
+                            if errors:
+                                results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='--'
+                            else:
+                                results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='BER < ' +line.split()[-1]
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -485,14 +492,13 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                if not debug:
-                    if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
-                        if not test_failed:
-                            print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
-                            logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
-                        print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                        test_failed = True
+                if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Errors"]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
+                        logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                    test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1142,7 +1148,7 @@ if __name__ == "__main__":
     logfile.write("Step 11: ADC Measurements\n\n")
     time.sleep(1)
     
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
             logfile.write("Configuring all VFATs\n\n")
@@ -1205,7 +1211,7 @@ if __name__ == "__main__":
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             results_oh_sn[oh_sn]["Voltage_Scan"]={}
@@ -1276,7 +1282,7 @@ if __name__ == "__main__":
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
@@ -1333,7 +1339,7 @@ if __name__ == "__main__":
         logfile.write("Skipping RSSI Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
@@ -1403,7 +1409,7 @@ if __name__ == "__main__":
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning OH Temperature Scan on slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
@@ -1467,7 +1473,7 @@ if __name__ == "__main__":
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
     
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
@@ -1531,7 +1537,7 @@ if __name__ == "__main__":
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
         logfile.write("Unconfiguring all VFATs\n\n")
         logfile.close()
