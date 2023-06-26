@@ -1352,7 +1352,7 @@ if __name__ == "__main__":
                 asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
                 # asense["_".join(line[15:16]).replace('(','').replace(')','')]=[]
                 for line in asense_file.readlines():
-                    for key,value in zip(asense,line.split()[1:]):
+                    for key,value in zip(asense,line.split()[1::2]):
                         if float(value) != -9999:
                             asense[key]+=[float(value)]
             for key,values in asense.items():
@@ -1368,7 +1368,7 @@ if __name__ == "__main__":
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
-        asense_ranges = {'1V2D_current':3,'1V2A_current':3,'2V5_current':0.5}
+        asense_ranges = {'1V2_current':3,'2V5_current':0.5}
         for oh_sn in results_oh_sn:
             for key,reading in results_oh_sn[oh_sn]['Asense'].items():
                 if reading == -9999:
