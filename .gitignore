@@ -36,7 +36,6 @@ hdl-prj.json
 /scripts/gem/me0_lpgbt/oh_testing/results
 /scripts/gem/me0_lpgbt/queso_testing/results
 
-/scripts/gem/me0_asense_monitor_test.py
 /scripts/gem/run.sh
 
 
@@ -63,5 +62,4 @@ sigasi*
 scratch
 
 .idea
-scripts/gem/me0_lpgbt/oh_testing/results*
 .vscode/*

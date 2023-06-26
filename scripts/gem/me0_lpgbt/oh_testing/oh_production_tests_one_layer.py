@@ -1142,7 +1142,7 @@ if __name__ == "__main__":
     logfile.write("Step 11: ADC Measurements\n\n")
     time.sleep(1)
     
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Configuring all VFATs\n" + Colors.ENDC)
             logfile.write("Configuring all VFATs\n\n")
@@ -1205,7 +1205,7 @@ if __name__ == "__main__":
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             results_oh_sn[oh_sn]["Voltage_Scan"]={}
@@ -1493,7 +1493,7 @@ if __name__ == "__main__":
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
         logfile.write("Unconfiguring all VFATs\n\n")
         logfile.close()
