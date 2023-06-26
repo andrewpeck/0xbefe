@@ -350,8 +350,8 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 3: Downlink Eye Diagram Failed" + Colors.ENDC)
                     logfile.RED("\nStep 3: Downlink Eye Diagram Failed\n")
-                print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT\n'%oh_sn)
                 test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
@@ -1347,10 +1347,10 @@ if __name__ == "__main__":
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
                 asense = {}
-                asense["_".join(line[3:5]).replace('(','').replace(')','').replace('.','_')]=[]
-                asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
-                asense["_".join(line[11:13]).replace('(','').replace(')','').replace('.','_')]=[]
-                asense["_".join(line[15:16]).replace('(','').replace(')','')]=[]
+                asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')]=[]
+                # asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
+                asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')]=[]
+                # asense["_".join(line[15:16]).replace('(','').replace(')','')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1:]):
                         if float(value) != -9999:
@@ -1369,14 +1369,22 @@ if __name__ == "__main__":
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+        asense_ranges = {'1V2D_current':3,'1V2A_current':3,'2V5_current':0.5}
         for oh_sn in results_oh_sn:
-            for key in results_oh_sn[oh_sn]['Asense']:
-                if results_oh_sn[oh_sn]['Asense'][key] == -9999:
+            for key,reading in results_oh_sn[oh_sn]['Asense'].items():
+                if reading == -9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+                elif reading > asense_ranges[key]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
@@ -1425,14 +1433,22 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=-9999
+        temperature_range = {'Temperature':35}
         for oh_sn in results_oh_sn:
-            for key in results_oh_sn[oh_sn]["OH_Temperature_Scan"]:
-                if results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]==-9999:
+            for key,reading in results_oh_sn[oh_sn]["OH_Temperature_Scan"].items():
+                if reading == -9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: OH Temperature Scan Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+                elif reading > temperature_ranges[key]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: OH Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
@@ -1481,14 +1497,22 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]=-9999
+        temperature_range = {'Temperature':45}
         for oh_sn in results_oh_sn:
-            for key in results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]:
-                if results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]==-9999:
+            for key,reading in results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"].items():
+                if reading==-9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+                elif reading > temperature_range[key]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing?')
