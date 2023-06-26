@@ -747,7 +747,7 @@ if __name__ == "__main__":
                     elif 'Rotated Elinks:' in line:
                         read_next = True
                     elif read_next:
-                        if 'VFAT' in line and 'Channel' in line:
+                        if 'Channel' in line:
                             vfat = int(line.split()[1].replace(',',''))
                             elink = int(line.split()[3].replace(',',''))
                             channel = int(line.split()[5])
@@ -760,6 +760,8 @@ if __name__ == "__main__":
                                 bad_channels[vfat]={}
                                 bad_channels[vfat][elink]=[channel]
                         elif 'VFAT' in line:
+                            vfat = int(line.split()[1].replace(',',''))
+                            elink = int(line.split()[3])
                             if vfat in rotated_elinks:
                                 rotated_elinks[vfat]+=[elink]
                             else:
