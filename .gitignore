@@ -64,3 +64,4 @@ scratch
 
 .idea
 scripts/gem/me0_lpgbt/oh_testing/results*
+.vscode/*

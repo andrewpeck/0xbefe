@@ -189,15 +189,16 @@ if __name__ == "__main__":
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     if not results_oh_sn[oh_sn][gbt]["ready"]:
                         if not test_failed:
-                            print(Colors.YELLOW + "\n Step 1: Initialization Failed" + Colors.ENDC)
-                            logfile.write("\n Step 1: Initialization Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                            print(Colors.RED + "\nStep 1: Initialization Failed" + Colors.ENDC)
+                            logfile.write("\nStep 1: Initialization Failed\n")
+                        print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                         test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -286,15 +287,16 @@ if __name__ == "__main__":
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not results_oh_sn[oh_sn][gbt]["Status"]:
                     if not test_failed:
-                        print(Colors.YELLOW + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
+                        print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n\n"%(oh_sn,gbt_type))
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                    print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -341,20 +343,21 @@ if __name__ == "__main__":
             print(result)
             logfile.write(result+"\n")
             results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] = float(result.split()[5])
-        for oh_sn in results_oh_sn:
+        for slot,oh_sn in geb_dict.items():
             gbt = geb_oh_map[slot]["GBT"][0]
             gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
             if results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] < 0.5:
                 if not test_failed:
-                    print (Colors.YELLOW + "Step 3: Downlink Eye Diagram Failed" + Colors.ENDC)
-                    logfile.write("Step 3: Downlink Eye Diagram Failed\n")
-                print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                    print (Colors.RED + "\nStep 3: Downlink Eye Diagram Failed" + Colors.ENDC)
+                    logfile.RED("\nStep 3: Downlink Eye Diagram Failed\n")
+                print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
                 test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -412,15 +415,16 @@ if __name__ == "__main__":
             if not debug:
                 if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"] > 1e-12:
                     if not test_failed:
-                        print (Colors.YELLOW + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
+                        print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
                         logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                    print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -477,21 +481,23 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not debug:
                     if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"] > 1e-12:
                         if not test_failed:
-                            print (Colors.YELLOW + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
+                            print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
                             logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                         test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -542,23 +548,25 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]["DAQ_Phase_Scan"].append({'Status':status,'Phase':phase,'Width':width})
                                 else:
                                     results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'Status':status,'Phase':phase,'Width':width}]
+                                break
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
 
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]['DAQ_Phase_Scan']:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]['DAQ_Phase_Scan']):
                 if not result['Status']:
                     if not test_failed:
-                        print (Colors.YELLOW + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
+                        print (Colors.RED + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -620,20 +628,21 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
-        for oh_sn in results_oh_sn:
-            for vfat_results in results_oh_sn[oh_sn]["SBIT_Phase_Scan"]:
-                for result in vfat_results:
+        for slot,oh_sn in geb_dict.items():
+            for v,vfat_results in enumerate(results_oh_sn[oh_sn]["SBIT_Phase_Scan"]):
+                for e,result in enumerate(vfat_results):
                     if not result['Status']:
                         if not test_failed:
-                            print (Colors.YELLOW + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
+                            print (Colors.RED + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e))
                         test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -687,19 +696,20 @@ if __name__ == "__main__":
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
 
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]["SBIT_Bitslip"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Bitslip"]):
                 if not result['Status']:
                     if not test_failed:
-                        print (Colors.YELLOW + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
+                        print (Colors.RED + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -793,19 +803,20 @@ if __name__ == "__main__":
                 if 'No_Rotated_Elinks' not in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
                     results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=1
         if not no_bad_channels or not no_rotated_elinks:
-            for oh_sn in results_oh_sn:
-                for result in results_oh_sn[oh_sn]['SBIT_Mapping']:
+            for slot,oh_sn in geb_dict.items():
+                for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Mapping']):
                     if not result['SBIT_Status'] or not result['No_Rotated_Elinks']:
                         if not test_failed:
-                            print (Colors.YELLOW + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
+                            print (Colors.RED + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Mapping Failed\n")
-                        print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                         test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -863,19 +874,20 @@ if __name__ == "__main__":
             os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
             logfile = open(log_fn, "a")
 
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]["SBIT_Mapping"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Mapping"]):
                 if not result['Cluster_Status']:
                     if not test_failed:
-                        print (Colors.YELLOW + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
+                        print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -952,15 +964,16 @@ if __name__ == "__main__":
             for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_Reset']):
                 if not result:
                     if not test_failed:
-                        print (Colors.YELLOW + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+                        print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 8: VFAT Reset Failed\n\n")
-                    print(Colors.YELLOW + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
-            end_tests = input('Would you like to terminate testing?')
+            end_tests = input('\nWould you like to exit testing?')
             if end_tests.lower() in ['y','yes']:
-                # log results and exit
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
@@ -1017,15 +1030,28 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':errors}]
                             else:
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':errors}]
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]['Slow_Control_Errors']:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]['Slow_Control_Errors']):
                 if result['Error_Count']>0:
-                    print (Colors.YELLOW + "\nStep 9: Slow Control Error Rate Test Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 9: Slow Control Error Rate Test Failed" + Colors.ENDC)
+                        logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping Slow Control Error Rate Test for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Slow Control Error Rate Test for %s tests\n"%batch.replace("_","-"))
@@ -1075,15 +1101,28 @@ if __name__ == "__main__":
                             else:
                                 results_oh_sn[oh_sn]["DAQ_Errors"]=[{'Time':runtime,'Error_Count':crc_errors}]
 
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]["DAQ_Errors"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Errors"]):
                 if result['Error_Count']>0:
-                    print (Colors.YELLOW + "\nStep 10: DAQ Error Rate Test Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 10: DAQ Error Rate Test Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 10: DAQ Error Rate Test Failed" + Colors.ENDC)
+                        logfile.write("\nStep 10: DAQ Error Rate Test Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping DAQ Error Rate Test for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Error Rate Test for %s tests\n"%batch.replace("_","-"))
@@ -1117,6 +1156,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 print (Colors.BLUE + "\nRunning ADC Calibration Scan for gbt %d\n"%gbt + Colors.ENDC)
                 logfile.write("Running ADC Calibration Scan for gbt %d\n\n"%gbt)
                 logfile.close()
@@ -1124,7 +1164,7 @@ if __name__ == "__main__":
                 logfile = open(log_fn,"a")
                 list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*results*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system("cp %s %s/adc_calib_results_slot%s_gbt%d.txt"%(latest_file,dataDir,slot,gbt))
+                os.system("cp %s %s/adc_calib_results_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type))
                 with open(latest_file) as adc_calib_file:
                     try:
                         results_oh_sn[oh_sn][gbt]["ADC_Calibration"] = [float(p) for p in adc_calib_file.read().split()]
@@ -1133,19 +1173,31 @@ if __name__ == "__main__":
                 list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
                     latest_file = max(list_of_files, key=os.path.getctime)
-                    if gbt%2==0:
-                        os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-                    else:
-                        os.system("cp %s %s/adc_calib_slot%s_boss.pdf"%(latest_file, dataDir, slot))
+                    os.system("cp %s %s/adc_calib_OH%s_%s.pdf"%(latest_file, dataDir, oh_sn, gbt_type))
+
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]['GBT']:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if results_oh_sn[oh_sn][gbt]['ADC_Calibration']==-9999:
-                    print (Colors.YELLOW + "\nStep 11: ADC Calibration Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 11: ADC Calibration Scan Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: ADC Calibration Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: ADC Calibration Scan Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping ADC Calibration Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
@@ -1157,6 +1209,7 @@ if __name__ == "__main__":
             results_oh_sn[oh_sn]["Voltage_Scan"]={}
             voltages={}
             for gbt in geb_oh_map[slot]["GBT"]:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
                 logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
                 logfile.close()
@@ -1165,7 +1218,7 @@ if __name__ == "__main__":
                 logfile = open(log_fn,"a")
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system("cp %s %s/lpgbt_voltage_scan_slot%s_gbt%d"%(latest_file,dataDir,slot,gbt))
+                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s"%(latest_file,dataDir,oh_sn,gbt_type))
                 bad_values = {}
                 with open(latest_file) as voltage_scan_file:
                     line = voltage_scan_file.readline()
@@ -1180,10 +1233,7 @@ if __name__ == "__main__":
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
                     latest_file = max(list_of_files, key=os.path.getctime)
-                    if gbt%2==0:
-                        os.system("cp %s %s/voltage_slot%s_boss.pdf"%(latest_file, dataDir, slot))
-                    else:
-                        os.system("cp %s %s/voltage_slot%s_sub.pdf"%(latest_file, dataDir, slot))
+                    os.system("cp %s %s/voltage_OH%s_%s.pdf"%(latest_file, dataDir, oh_sn, gbt_type))
             for key,values in voltages.items():
                 if values != []:
                     results_oh_sn[oh_sn]["Voltage_Scan"][key]=np.mean(values)
@@ -1192,12 +1242,25 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for voltage in results_oh_sn[oh_sn]["Voltage_Scan"]:
                 if results_oh_sn[oh_sn]["Voltage_Scan"][voltage] == -9999:
-                    print (Colors.YELLOW + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,voltage))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping lpGBT Voltage Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%batch.replace("_","-"))
@@ -1212,7 +1275,7 @@ if __name__ == "__main__":
             os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/rssi_scan_slot%s'%(latest_file,dataDir,slot))
+            os.system('cp %s %s/rssi_scan_OH%s'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as rssi_file:
                 key = rssi_file.readline().split()[2]
                 rssi=[]
@@ -1222,19 +1285,32 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/rssi_slot%s.pdf"%(latest_file, dataDir, slot))
+                os.system("cp %s %s/rssi_OH%s.pdf"%(latest_file, dataDir, oh_sn))
             if rssi != []:
                 results_oh_sn[oh_sn]["VTRx+"][key]=np.mean(rssi)
             else:
                 results_oh_sn[oh_sn]["VTRx+"][key]=-9999
         for oh_sn in results_oh_sn:
             if results_oh_sn[oh_sn]["VTRx+"][key] == -9999:
-                print (Colors.YELLOW + "\nStep 11: RSSI Scan Failed\n" + Colors.ENDC)
-                logfile.write("\nStep 11: RSSI Scan Failed\n\n")
+                if not test_failed:
+                    print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
+                    logfile.write("\nStep 11: RSSI Scan Failed\n")
+                print(Colors.RED + 'ERROR encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s\n'%oh_sn)
+                test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
-                sys.exit()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping RSSI Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping RSSI Scan for %s tests\n"%batch.replace("_","-"))
@@ -1249,7 +1325,7 @@ if __name__ == "__main__":
             os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/geb_current_slot%s'%(latest_file,dataDir,slot))
+            os.system('cp %s %s/geb_current_OH%s'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["Asense"]={}
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
@@ -1271,20 +1347,33 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/pg_current_slot%s.pdf"%(latest_file, dataDir,slot))
+                os.system("cp %s %s/pg_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/rt_voltage_slot%s.pdf"%(latest_file, dataDir,slot))
+                os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
         for oh_sn in results_oh_sn:
             for key in results_oh_sn[oh_sn]['Asense']:
                 if results_oh_sn[oh_sn]['Asense'][key] == -9999:
-                    print (Colors.YELLOW + "\nStep 11: GEB Current and Temperature Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping GEB Current and Temperature Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%batch.replace("_","-"))
@@ -1299,7 +1388,7 @@ if __name__ == "__main__":
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/oh_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+            os.system('cp %s %s/oh_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
             with open(latest_file) as temp_file:
                 keys = temp_file.readline().split()[2:7:2]
@@ -1313,7 +1402,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/oh_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+                os.system("cp %s %s/oh_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             for key,values in temperatures.items():
                 if values != []:
                     results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
@@ -1322,12 +1411,25 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for key in results_oh_sn[oh_sn]["OH_Temperature_Scan"]:
                 if results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]==-9999:
-                    print (Colors.YELLOW + "\nStep 11: OH Temperature Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 11: OH Temperature Scan Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: OH Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping OH Temperature Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%batch.replace("_","-"))
@@ -1342,7 +1444,7 @@ if __name__ == "__main__":
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/vtrx_temperature_scan_slot%s'%(latest_file,dataDir,slot))
+            os.system('cp %s %s/vtrx_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]={}
             with open(latest_file) as vtrx_temp_file:
                 keys = vtrx_temp_file.readline().split()[2:7:2]
@@ -1356,7 +1458,7 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/vtrx+_temp_slot%s.pdf"%(latest_file, dataDir,slot))
+                os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             for key,values in temperatures.items():
                 if values != []:
                     results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]=np.mean(values)
@@ -1365,12 +1467,25 @@ if __name__ == "__main__":
         for oh_sn in results_oh_sn:
             for key in results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]:
                 if results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"][key]==-9999:
-                    print (Colors.YELLOW + "\nStep 11: VTRx+ Temperature Scan Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
+                        logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s\n'%(oh_sn,key))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping VTRx+ Temperature Scan for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%batch.replace("_","-"))
@@ -1461,15 +1576,28 @@ if __name__ == "__main__":
                     if bad_channels[vfat]:
                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Status"]=0
                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]["DAQ_SCurve"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_SCurve"]):
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 12: DAQ SCurve Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 12: DAQ SCurve Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 12: DAQ SCurve Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 12: DAQ SCurve Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping DAQ SCurve for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ SCurve for %s tests\n"%batch.replace("_","-"))
@@ -1558,15 +1686,28 @@ if __name__ == "__main__":
                 print (Colors.RED + "DAQ Crosstalk result directory not found" + Colors.ENDC)
                 logfile.write("DAQ Crosstalk result directory not found\n")
         
-        for oh_sn,results in results_oh_sn.items():
-            for result in results["DAQ_Crosstalk"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
                 if not result["Status"]:
-                    print (Colors.YELLOW + "\nStep 13: DAQ Crosstalk Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 13: DAQ Crosstalk Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 13: DAQ Crosstalk Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 13: DAQ Crosstalk Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping DAQ Crosstalk for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Crosstalk for %s tests\n"%batch.replace("_","-"))
@@ -1652,15 +1793,28 @@ if __name__ == "__main__":
                     if bad_channels[vfat]:
                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=0
                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]["SBIT_SCurve"]:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_SCurve"]):
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 14: S-bit SCurves Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 14: S-bit SCurves Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 14: S-bit SCurves Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 14: S-bit SCurves Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%batch.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit SCurves for %s tests\n"%batch.replace("_"," "))
@@ -1677,11 +1831,8 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Step 15: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 15: S-bit Crosstalk\n\n")
     time.sleep(1)
-    
-    # Add number of bad channels and list
 
-    # Uncomment debug to run
-    if batch in ["prototype", "pre_production", "pre_series"]:#, "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
@@ -1748,15 +1899,28 @@ if __name__ == "__main__":
                 print (Colors.RED + "S-bit Crosstalk result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Crosstalk result directory not found\n")
 
-        for oh_sn,results in results_oh_sn.items():
-            for result in results["SBIT_Crosstalk"]:
-                if not result["Status"]:      
-                    print (Colors.YELLOW + "\nStep 15: S-bit Crosstalk Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 15: S-bit Crosstalk Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Crosstalk']):
+                if not result["Status"]:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 15: S-bit Crosstalk Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 15: S-bit Crosstalk Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-bit crosstalk for %s tests"%batch.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit crosstalk for %s tests\n"%batch.replace("_"," "))
@@ -1825,15 +1989,28 @@ if __name__ == "__main__":
             else:
                 print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
-        for oh_sn in results_oh_sn:
-            for result in results_oh_sn[oh_sn]['SBIT_Noise_Rate']:
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Noise_Rate']):
                 if not result['Status']:
-                    print (Colors.YELLOW + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
-                    logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
-                    with open(results_fn,"w") as resultsfile:
-                        json.dump(results_oh_sn,resultsfile,indent=2)
-                    logfile.close()
-                    sys.exit()
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing?')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     else:
         print(Colors.BLUE + "Skipping S-bit Noise Rate for %s tests"%batch.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit Noise Rate for %s tests\n"%batch.replace("_"," "))
