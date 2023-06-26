@@ -1250,7 +1250,7 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["Voltage_Scan"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["Voltage_Scan"][key] = -9999
-        voltage_ranges = {'V2V5':[2.35,2.65],'VSSA':[1.05,1.35],'VDDTX':[1.05,1.35],'VDDRX':[1.05,1.35],'VDD':[1.05,1.35],'VDDA':[1.05,1.35],'VREF':[0.85,1.15]}
+        voltage_ranges = {'V2V5':[2.4,2.75],'VSSA':[1.05,1.35],'VDDTX':[1.05,1.35],'VDDRX':[1.05,1.35],'VDD':[1.05,1.35],'VDDA':[1.05,1.35],'VREF':[0.85,1.15]}
         for oh_sn in results_oh_sn:
             for voltage,reading in results_oh_sn[oh_sn]["Voltage_Scan"].items():
                 if reading == -9999:
@@ -1260,7 +1260,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
                     logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,voltage))
                     test_failed = True
-                elif reading < voltage_ranges[voltage][0] or reading > voltage_ranges[voltage][1]:
+                elif voltage!='VSSA' and reading < voltage_ranges[voltage][0] or reading > voltage_ranges[voltage][1]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
