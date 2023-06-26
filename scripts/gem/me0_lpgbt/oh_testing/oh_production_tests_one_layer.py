@@ -1347,9 +1347,9 @@ if __name__ == "__main__":
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
                 asense = {}
-                asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')]=[]
+                asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
                 # asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
-                asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')]=[]
+                asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
                 # asense["_".join(line[15:16]).replace('(','').replace(')','')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1:]):
