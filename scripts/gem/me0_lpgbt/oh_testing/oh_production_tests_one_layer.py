@@ -538,7 +538,7 @@ if __name__ == "__main__":
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ Phase Scan for OH %s on all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ Phase Scan for OH %s on all VFATs\n\n"%oh_select)
-            os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -c"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            os.system("python3 me0_phase_scan.py -s backend -q ME0 -o %d -v %s -c -x"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
@@ -1443,7 +1443,7 @@ if __name__ == "__main__":
                     results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=np.mean(values)
                 else:
                     results_oh_sn[oh_sn]["OH_Temperature_Scan"][key]=-9999
-        temperature_range = {'Temperature':35}
+        temperature_range = {'Temperature':45}
         for oh_sn in results_oh_sn:
             for key,reading in results_oh_sn[oh_sn]["OH_Temperature_Scan"].items():
                 if reading == -9999:
