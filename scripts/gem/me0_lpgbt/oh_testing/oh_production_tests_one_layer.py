@@ -1690,8 +1690,8 @@ if __name__ == "__main__":
                             for slot,oh_sn in geb_dict.items():
                                 for i in range(6):
                                     results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
-                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
-                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
+                                    results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
+                                    results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']={}
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
@@ -1718,8 +1718,8 @@ if __name__ == "__main__":
                     for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
                         if result == {}:
                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
-                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
-                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
+                            results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
+                            results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']={}
 
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
