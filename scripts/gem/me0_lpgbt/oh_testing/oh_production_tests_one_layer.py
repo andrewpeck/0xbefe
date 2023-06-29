@@ -887,6 +887,7 @@ if __name__ == "__main__":
             os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
             logfile = open(log_fn, "a")
 
+        test_failed_override = False
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Mapping"]):
                 if not result['Cluster_Status']:
@@ -896,6 +897,10 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
+                    test_failed_override = True
+        if test_failed_override:
+            test_failed = False
+            test_failed_override = False
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
