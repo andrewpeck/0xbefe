@@ -158,11 +158,11 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
-    print (Colors.BLUE + "Optohybrid Serial Numbers: %s\n"%(print(' '.join(oh_sn_list))) + Colors.ENDC)
+    print (Colors.BLUE + "Optohybrid Serial Numbers: %s\n"%(' '.join(oh_sn_list)) + Colors.ENDC)
     print ("")
 
     logfile.write("\nTests started for Batch: %s\n\n"%batch)
-    logfile.write("Optohybrid Serial Numbers: %s\n\n"%(print(' '.join(oh_sn_list))))
+    logfile.write("Optohybrid Serial Numbers: %s\n\n"%(' '.join(oh_sn_list)))
 
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
