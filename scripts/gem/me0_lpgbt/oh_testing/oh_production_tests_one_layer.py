@@ -157,6 +157,16 @@ if __name__ == "__main__":
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
+    print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
+    print (Colors.BLUE + "Optohybrid Serial Numbers: %s\n"%(print(' '.join(map(str, oh_sn_list)))) + Colors.ENDC)
+    print ("")
+
+    logfile.write(Colors.BLUE + "\nTests started for Batch: %s\n\n"%batch + Colors.ENDC)
+    logfile.write(Colors.BLUE + "Optohybrid Serial Numbers: %s\n\n"%(print(' '.join(map(str, oh_sn_list)))) + Colors.ENDC)
+
+    print ("\n#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
     # Step 1 - run init_frontend
     print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
