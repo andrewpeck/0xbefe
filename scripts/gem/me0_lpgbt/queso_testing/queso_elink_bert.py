@@ -37,6 +37,11 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, batc
     log_fn = OHDir+"/queso_elink_bert_log.txt"
     logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_elink_bert_results.json"
+
+    print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
+    print ("")
+    logfile.write("\nTests started for Batch: %s\n\n"%batch)
+
     print ("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
     
