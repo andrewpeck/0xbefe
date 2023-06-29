@@ -16,9 +16,6 @@
     <node id="MODULE_RESET" address="0x0" permission="w"
           description="Trigger module reset"
           fw_write_pulse_signal="reset_local"/>
-    <node id="CNT_RESET" address="0x1" permission="w"
-          description="Trigger counter reset"
-          fw_write_pulse_signal="reset_cnt"
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
     <node id="SBIT_TEST_RESET" address="0x2" permission="w"
           description="Reset all the SBIT counters"
@@ -30,23 +27,44 @@
   </node>
 
 
-  <node id="ME0_OH${OH_CNT_ID}" address="0x30" permission="r"
+  <node id="OH${OH_CNT_ID}" address="0x30"
 	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID} of OH ${OH_CNT_ID}"
 	generate="true"
 	generate_size="&NUM_OHS;"
 	generate_address_step="0x31"
 	generate_idx_var="OH_CNT_ID">
-    <node id="ME0_VFAT${VFAT_CNT_ID}_SBIT_RATE" address="0x0" permission="r"
-          mask="0xffffffff"
-          description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
-          fw_signal="vfat_trigger_rate_arr(${OH_CNT_ID})(${VFAT_CNT_ID})"
-          generate="true"
-          generate_size="&NUM_VFATS_PER_OH;"
-          generate_address_step="0x1"
-          generate_idx_var="VFAT_CNT_ID"/>
-    <node id="ME0_CLUSTER_COUNT" address="0x30" mask="0x000007ff" permission="r"
-          description="output of sbit clusterizer for me0"
-          fw_signal="me0_cluster_count(${OH_CNT_ID})"/>
+      <node id="CNT" address="0x20" description = "S-BIT Counters \\  Set CNT_PERSIST to 1 to accumulate. Otherwise the counters will automatically reset after a programmable time (default is 1 second). By default this time is 1 second, making these counters a rate counter in Hertz">
+            <node id="VFAT${VFAT_CNT_ID}_SBITS" address="0x00" permission="r"
+                  mask="0xffffffff"
+                  description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID}"
+                  fw_signal="vfat_trigger_rate_arr(${OH_CNT_ID})(${VFAT_CNT_ID})"
+                  generate="true"
+                  generate_size="&NUM_VFATS_PER_OH;"
+                  generate_address_step="0x1"
+                  generate_idx_var="VFAT_CNT_ID"/>
+
+            <node id="RESET" address="0x25" permission="w"
+                        mask="0x1"
+                        description="Reset S-bit counters"
+                        fw_write_pulse_signal="reset_counters(${OH_CNT_ID})"/>
+
+            <node id="SBIT_CNT_PERSIST" address="0x26" permission="rw"
+                  mask="0x1"
+                  description="1=counters will persist until manually reset; \n
+                                    0=counters will automatically reset at CNT_TIME"
+                  fw_signal="sbit_cnt_persist(${OH_CNT_ID})"
+                  fw_default="0"/>
+
+            <node id="SBIT_CNT_TIME_MAX" address="0x27" permission="rw"
+                        mask="0xffffffff"
+                        description="Number of BX that the VFAT S-bit counters will count to before automatically resetting to zero"
+                        fw_signal="sbit_cnt_time_max(${OH_CNT_ID})"
+                        fw_default="0x2638e98"/>
+
+            <node id="CLUSTER_COUNT" address="0x28" mask="0x000007ff" permission="r"
+                  description="OR of cluster count for entire me0 layer"
+                  fw_signal="me0_cluster_count(${OH_CNT_ID})"/>
+      </node>
   </node>
 
   <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
@@ -68,7 +86,7 @@
         description="Select sbit for sbit test"
         fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
   
-  <node id="INJECT" address="0x200"
+  <node id="INJECT" address="0x100"
         description="S-bit injection using FIFOs to bypass VFATs">
     <node id="DATA_H" address="0x0" mask="0xffffffff" permission="rw"
           description="Upper bits of injected sbits into me0"
@@ -117,7 +135,7 @@
 
 
  
-  <node id="OH${OH_CNT_ID}_BITSLIP" address="0x100" 
+  <node id="OH${OH_CNT_ID}_BITSLIP" address="0x200" 
     description="slip count for bitslip of VFATs for mapping sbits of each elink"
     generate="true"
 	generate_size="&NUM_OHS;"

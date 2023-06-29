@@ -1,3 +1,8 @@
 # Cluster packer
+gem/hdl/oh_fe/utils/counter_snap.vhd
+gem/hdl/oh_fe/pkg/types_pkg.vhd
+gem/hdl/oh_fe/pkg/hardware_pkg_ge21.vhd
+gem/hdl/oh_fe/pkg/hardware_pkg_ge11.vhd
+gem/hdl/oh_fe/pkg/tmr_en_pkg.vhd
 gem/hdl/cluster_finding/cluster_finding.src
 gem/hdl/trigger/sbit_inject_me0.vhd

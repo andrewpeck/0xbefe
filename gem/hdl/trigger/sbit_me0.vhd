@@ -86,7 +86,8 @@ architecture sbit_me0_arch of sbit_me0 is
     signal reset_global         : std_logic;
     signal reset_local          : std_logic;
     signal reset                : std_logic;
-    signal reset_cnt            : std_logic;
+    signal reset_counters       : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal cnt_reset_strobed    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
     signal reset_fifo           : std_logic;
 
     -- VFAT constants
@@ -95,6 +96,14 @@ architecture sbit_me0_arch of sbit_me0 is
     constant g_MAX_SR_DELAY   : integer:= 4;
 
     -- control signals
+    signal sbit_cnt_time_max    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_time_counter    : t_std32_array(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_cnt_persist     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_timer_reset     : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_cnt_snap        : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal sbit_timer_snap      : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    --signal clk_40_sbit          : std_logic;
+
     signal vfat_sbit_mask_arr    : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0) := (others => (others => (others => '0')));
     signal vfat_sbit_mapping_arr : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -110,9 +119,9 @@ architecture sbit_me0_arch of sbit_me0 is
     signal me0_clusters_probe  : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- counters
-    signal vfat_trigger_cnt_arr  : t_vfat_trigger_cnt_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat_trigger_rate_arr : t_vfat_trigger_rate_arr(g_NUM_OF_OHs - 1 downto 0);
 
+    -- clk freq
     constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
 
 
@@ -204,6 +213,34 @@ begin
     reset <= reset_global or reset_local;
 
     --== Control ==--
+    g_sbit_control : for OH in 0 to g_NUM_OF_OHs - 1 generate
+        process (ttc_clk_i.clk_40)
+        begin
+        if (rising_edge(ttc_clk_i.clk_40)) then
+
+            cnt_reset_strobed(OH) <= reset_i or reset_counters(OH) or (sbit_timer_reset(OH) and not sbit_cnt_persist(OH));
+    
+            sbit_cnt_snap(OH) <= (sbit_timer_snap(OH) or sbit_cnt_persist(OH));
+    
+            if (reset_i = '1' or reset_counters(OH) = '1') then
+            sbit_time_counter(OH) <= (others => '0');
+            sbit_timer_reset(OH)  <= '1';
+            sbit_timer_snap(OH)   <= '1';
+            else
+            if (sbit_time_counter(OH) = sbit_cnt_time_max(OH)) then
+                sbit_time_counter(OH) <= (others => '0');
+                sbit_timer_reset(OH)  <= '1';
+                sbit_timer_snap(OH)   <= '1';
+            else
+                sbit_time_counter(OH) <= std_logic_vector(unsigned(sbit_time_counter(OH)) + 1);
+                sbit_timer_reset(OH)  <= '0';
+                sbit_timer_snap(OH)   <= '0';
+            end if;
+            end if;
+    
+        end if;
+        end process;
+    end generate;
 
     -- apply the sbit masks, and set per-vfat trigger bits
     process (ttc_clk_i.clk_40)
@@ -247,32 +284,25 @@ begin
     g_oh_counters: for oh in 0 to g_NUM_OF_OHs - 1 generate
 
         --- rate counter for each vfat OR of sbits ---
-        i_vfat_rate_count: entity work.rate_counter32_multi
-            generic map(
-                g_CLK_FREQUENCY => g_CLK_FREQUENCY,
-                g_NUM_COUNTERS  => 24
-            )
-            port map(
-                clk_i   => ttc_clk_i.clk_40,
-                reset_i => reset,
-                en_i    => vfat_sbits_or_arr(oh),
-                rate_o  => vfat_trigger_rate_arr(oh)
-            );
-
-
         g_vfat_counters: for vfat in 0 to 23 generate
 
-            i_vfat_trigger_cnt : entity work.counter
-                generic map(
-                    g_COUNTER_WIDTH  => 16,
-                    g_ALLOW_ROLLOVER => FALSE
-                )
-                port map(
+            i_counter_snap : entity work.counter_snap
+
+                generic map (
+                    g_TMR_INST       => 0,
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false,
+                    g_INCREMENT_STEP => 1
+                    )
+                port map (
                     ref_clk_i => ttc_clk_i.clk_40,
-                    reset_i   => reset or reset_cnt,
-                    en_i      => vfat_trigger_arr(oh)(vfat),
-                    count_o   => vfat_trigger_cnt_arr(oh)(vfat)
-                );
+                    reset_i   => cnt_reset_strobed(oh),
+                    en_i      => vfat_sbits_or_arr(oh)(vfat),
+                    snap_i    => sbit_cnt_snap(oh),
+                    count_o   => vfat_trigger_rate_arr(oh)(vfat)
+                    );
+
+
         end generate;
 
     end generate;
