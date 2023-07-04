@@ -185,19 +185,19 @@ if __name__ == "__main__":
                 for gbt,status in status_dict_oh.items():
                     for slot,oh_sn in geb_dict.items():
                         if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
-                            results_oh_sn[oh_sn][int(gbt)]["ready"]=int(status)
+                            results_oh_sn[oh_sn][int(gbt)]["Ready"]=int(status)
                             break 
         os.system('cp %s %s/'%(latest_file,dataDir))
         logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
             results_oh_sn[oh_sn]["Initialization"]=1
             for gbt in geb_oh_map[slot]["GBT"]:
-                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["ready"]
+                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["Ready"]
         for slot,oh_sn in geb_dict.items():
             if not results_oh_sn[oh_sn]["Initialization"]:
                 for gbt in geb_oh_map[slot]['GBT']:
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                    if not results_oh_sn[oh_sn][gbt]["ready"]:
+                    if not results_oh_sn[oh_sn][gbt]["Ready"]:
                         if not test_failed:
                             print(Colors.RED + "\nStep 1: Initialization Failed" + Colors.ENDC)
                             logfile.write("\nStep 1: Initialization Failed\n")
@@ -395,8 +395,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBT\n"%oh_select + Colors.ENDC)
-            logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBT\n\n"%oh_select)
+            print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBTs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBTs\n\n"%oh_select)
             if debug:
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             else:
@@ -1179,7 +1179,7 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Skipping VFAT Configuration for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Configuration for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
-    
+
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
@@ -1246,7 +1246,7 @@ if __name__ == "__main__":
                 logfile = open(log_fn,"a")
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s"%(latest_file,dataDir,oh_sn,gbt_type))
+                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type))
                 bad_values = {}
                 with open(latest_file) as voltage_scan_file:
                     line = voltage_scan_file.readline()
@@ -1311,7 +1311,7 @@ if __name__ == "__main__":
             os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/rssi_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/rssi_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as rssi_file:
                 key = rssi_file.readline().split()[2]
                 rssi=[]
@@ -1368,7 +1368,7 @@ if __name__ == "__main__":
             os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/geb_current_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["Asense"]={}
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
@@ -1438,7 +1438,7 @@ if __name__ == "__main__":
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/oh_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/oh_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
             with open(latest_file) as temp_file:
                 keys = temp_file.readline().split()[2:7:2]
@@ -1502,7 +1502,7 @@ if __name__ == "__main__":
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
             list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/vtrx_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]={}
             with open(latest_file) as vtrx_temp_file:
                 keys = vtrx_temp_file.readline().split()[2:7:2]
