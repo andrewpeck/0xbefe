@@ -35,6 +35,9 @@
       <node id="TX_PCS_RESET" address="0x5" mask="0x80000000" permission="rw"
             description="Latching TX PCS reset"
             fw_signal="tx_slow_ctrl_arr_o(${MGT}).txpcsreset" fw_default="0b0"/>
+      <node id="EYESCAN_RESET" address="0x5" mask="0x40000000" permission="rw"
+            description="Latching eyescan reset"
+            fw_signal="es_reset_arr(${MGT})" fw_default="0b0"/>
       <node id="QPLL_POWERDOWN" address="0x5" mask="0x30000000" permission="rw"
             description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
             fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
@@ -83,6 +86,9 @@
       <node id="RX_PRBS_CNT_RESET" address="0x9" permission="w"
             description="Writing 1 here resets the PRBS error counters"
             fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
+      <node id="EYESCAN_ERR_CNT_RESET" address="0xa" permission="w"
+            description="Writing 1 here resets the eyescan error counter"
+            fw_write_pulse_signal="es_err_reset_async_arr(${MGT})"/>
     </node>
 
     <node id="STATUS" address="0x20">
@@ -166,6 +172,9 @@
             description="Frequency of the refclk1 used by this MGT"
             fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"
             sw_units="MHz"/>
+      <node id="EYESCAN_ERROR_CNT" address="0x1" permission="r"
+            description="Eyescan error counter"
+            fw_signal="es_err_cnt_arr(${MGT})"/>
     </node>
 
     <node id="CONFIG" address="0x30">
@@ -176,7 +185,7 @@
       <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
             fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"
-            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE']"/>
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>

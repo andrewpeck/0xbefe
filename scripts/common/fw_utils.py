@@ -149,6 +149,8 @@ class Mgt:
         if self.txrx.name.lower() == "rx":
             write_reg("BEFE.MGTS.MGT%d.CTRL.RX_PRBS_CNT_RESET" % (self.idx), 1)
 
+    def set_eyescan_reset(self, value):
+        write_reg("BEFE.MGTS.MGT%d.CTRL.EYESCAN_RESET" % (self.idx), value)
 
 class Link:
     idx = None

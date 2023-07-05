@@ -38,6 +38,9 @@ gem/ip/gem_common_ip.src
 
 # APEX IP & BD
 boards/apex/ip/apex_ip.src
-boards/apex/ip/apex_ip_rev1.src
+#botttom fpga is rev1
+#boards/apex/ip/apex_ip_rev1.src
+#top fpga is rev2
+boards/apex/ip/apex_ip_rev2.src
 boards/apex/bd/apex_bd.src
 

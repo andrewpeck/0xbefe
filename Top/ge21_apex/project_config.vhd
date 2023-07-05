@@ -15,7 +15,7 @@ package project_config is
     
     constant CFG_GEM_STATION            : t_int_per_gem := (0 => 2);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
     constant CFG_OH_VERSION             : t_int_per_gem := (0 => 2);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs             : t_int_per_gem := (0 => 4);  -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+    constant CFG_NUM_OF_OHs             : t_int_per_gem := (0 => 12);  -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
     constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (0 => 2);  -- number of GBTs per OH
     constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (0 => 12); -- number of VFATs per OH
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (0 => 1);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)
@@ -62,7 +62,7 @@ package project_config is
     constant CFG_TTC_LINKS : t_int_array(0 to 3) := (24, 25, 26, 27);   
 
     constant CFG_USE_TTC_GBTX_LINK  : boolean := true;
-    constant CFG_TTC_GBTX_LINK      : integer := 20;   
+    constant CFG_TTC_GBTX_LINK      : integer := 29;   
     
 
     --================================--
@@ -106,10 +106,10 @@ package project_config is
         (mgt_type => CFG_MGT_TTC,   qpll_inst_type => QPLL_NULL,      qpll_idx => 24, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_TTC,   qpll_inst_type => QPLL_NULL,      qpll_idx => 24, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),
         -------------------- quad 134 --------------------                                                                                                              
-        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_10GBE_156, qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
-        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
-        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
-        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false)
+        (mgt_type => CFG_MGT_10GBE_QPLL0, qpll_inst_type => QPLL0_10GBE_QPLL1_GBTX, qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_10GBE_QPLL0, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL,      qpll_idx => 28, refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false)
     );
 
 end package project_config;

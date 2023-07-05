@@ -45,6 +45,7 @@ common/hdl/mgt/gty_qpll_25gbe_156p25.vhd
 common/hdl/mgt/gty_qpll0_lpgbt_qpll1_gbe.vhd
 common/hdl/mgt/gty_qpll0_lpgbt_qpll1_10gbe.vhd
 common/hdl/mgt/gty_qpll0_trig_3p2_qpll1_10gbe.vhd
+common/hdl/mgt/gty_qpll0_10gbe_qpll1_gbtx.vhd
 
 # IP
 common/ip/common_xilinx_ultrascale_ip.src

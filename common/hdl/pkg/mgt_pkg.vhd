@@ -45,7 +45,8 @@ package mgt_pkg is
                              QPLL_10GBE_156,
                              QPLL0_DMB_QPLL1_10GBE_156,
                              QPLL_25GBE_156,
-                             QPLL0_TRIG_3P2_QPLL1_10GBE); -- note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
+                             QPLL0_TRIG_3P2_QPLL1_10GBE,
+                             QPLL0_10GBE_QPLL1_GBTX); -- !!!!!!! NEED MORE BITS WHEN EXTENDING !!!!!!!! note: update address table ENUM when updating this, also note that the register showing this enum is 4 bits wide (may need to extend in the future)
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate

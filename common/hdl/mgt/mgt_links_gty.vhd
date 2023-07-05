@@ -1783,6 +1783,33 @@ begin
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "TRIG_3P2_RX_10GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
+
+        --========================================--
+        -- 10GbE QPLL0 with 156.25MHz refclk
+        -- GBTX QPLL1 with 160MHz LHC refclk
+        --========================================--
+
+        g_qpll0_10gbe_qpll1_gbtx : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_10GBE_QPLL1_GBTX generate
+            
+            i_qpll0_10gbe_qpll1_gbtx : entity work.gty_qpll0_10gbe_qpll1_gbtx
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+
+            assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "QPLL0_10GBE_QPLL1_GBTX has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
         
         --================================--
         -- QPLL channel mapping 
