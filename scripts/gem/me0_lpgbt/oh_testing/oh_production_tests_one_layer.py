@@ -211,6 +211,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -309,6 +310,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -370,6 +372,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -445,6 +448,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -521,6 +525,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -593,6 +598,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -673,6 +679,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -744,6 +751,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -858,6 +866,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -874,8 +883,7 @@ if __name__ == "__main__":
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
-            logfile.close()
-            os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f "%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
 
@@ -932,6 +940,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1018,6 +1027,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1099,6 +1109,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1170,6 +1181,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1245,6 +1257,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1315,6 +1328,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1374,6 +1388,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1446,6 +1461,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1512,6 +1528,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1578,6 +1595,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1618,9 +1636,26 @@ if __name__ == "__main__":
                 os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             else:
                 os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1000"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+
             list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
+            latest_dir = latest_file.split(".txt")[0]
+
+            print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
+            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
+            if os.path.isdir(latest_dir):
+                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
+                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/daq_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
+                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/daq_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
+            else:
+                print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
+                logfile.write("DAQ SCurve result directory not found\n")
+            
             scurve = {}
+            bad_channels = {}
+            for slot,oh_sn in geb_dict.items():
+                results_oh_sn[oh_sn]["DAQ_SCurve"]=[{} for _ in range(6)]
             with open(latest_file) as scurve_file:
                 for line in scurve_file.readlines()[1:]:
                     vfat = int(line.split()[0])
@@ -1634,23 +1669,11 @@ if __name__ == "__main__":
                     else:
                         scurve[vfat]={}
                         scurve[vfat][channel]=[fired]
-            bad_channels = {}
             for vfat in scurve:
                 bad_channels[vfat]=[]
                 for channel in scurve[vfat]:
-                    if np.all(scurve[vfat][channel]==0):
+                    if np.all(np.equal(scurve[vfat][channel],0)):
                         bad_channels[vfat].append([channel])
-            print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
-            if os.path.isdir(latest_dir):
-                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/daq_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir,oh_select))
-                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/daq_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
-                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/daq_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir,oh_select))
-            else:
-                print (Colors.RED + "DAQ Scurve result directory not found" + Colors.ENDC)
-                logfile.write("DAQ SCurve result directory not found\n")
 
             for slot,oh_sn in geb_dict.items():
                 for i,vfat in enumerate(geb_oh_map[slot]["VFAT"]):
@@ -1666,17 +1689,16 @@ if __name__ == "__main__":
                             elif read_next:
                                 if "ENC" in line:
                                     enc = float(line.split()[2])
-                                    if "DAQ_SCurve" in results_oh_sn[oh_sn]:
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]['Status']=1
+                                    if bad_channels[vfat]:
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Status"]=0
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Num_Bad_Channels"]=len(bad_channels[vfat])
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
                                     else:
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"]=[{} for _ in range(6)]
-                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]['Status']=1
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Status"]=1
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
-                                    read_next=False
-                    if bad_channels[vfat]:
-                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Status"]=0
-                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Num_Bad_Channels"]=0
+                                        results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=[]
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_SCurve"]):
                 if not result['Status']:
@@ -1692,6 +1714,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1726,22 +1749,19 @@ if __name__ == "__main__":
                 os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1000"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
 
             list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
+            latest_file = max(list_of_files, key=os.path.getctime)            
+            read_next = False
+            no_crosstalk = False
+            crosstalk = {}
             for slot,oh_sn in geb_dict.items():
                 results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
-                read_next = False
-                crosstalk = {}
                 for line in crosstalk_file.readlines():
                     if "Cross Talk Results" in line:
                         read_next = True
                     elif read_next:
                         if 'No Cross Talk observed' in line:
-                            for slot,oh_sn in geb_dict.items():
-                                for i in range(6):
-                                    results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
-                                    results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
-                                    results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']={}
+                            no_crosstalk = True
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             channel_inj = int(line.split()[6])
@@ -1753,34 +1773,33 @@ if __name__ == "__main__":
                             else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
-            if crosstalk:
-                for vfat in crosstalk:
-                    for slot,oh_sn in geb_dict.items():
-                        for i,v in enumerate(geb_oh_map[slot]["VFAT"]):
-                            if vfat == v:
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
-                                results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
-                                break
-                        if i!=7:
-                            break
-                for slot,oh_sn in geb_dict.items():
-                    for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Crosstalk"]):
-                        if result == {}:
+            
+            for slot,oh_sn in geb_dict.items():
+                if no_crosstalk:
+                    for i in range(6):
+                        results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
+                        results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
+                        results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']=[]
+                elif crosstalk:
+                    for i,vfat in enumerate(geb_oh_map[slot]['VFAT']):
+                        if vfat in crosstalk:
+                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=0
+                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
+                            results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Bad_Channels"]=[{'Channel_inj':channel_inj,'Channels_obs':channels_obs} for channel_inj,channels_obs in crosstalk[vfat].items()]
+                        else:
                             results_oh_sn[oh_sn]["DAQ_Crosstalk"][i]["Status"]=1
                             results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
-                            results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']={}
-
+                            results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']=[]
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
-            list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
-        
             print (Colors.BLUE + "Plotting DAQ Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting DAQ Crosstalk for OH %d all VFATs\n\n"%oh_select)
-            os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
+
+            list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
             latest_dir = latest_file.split(".txt")[0]
+            os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
             else:
@@ -1802,6 +1821,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1826,18 +1846,34 @@ if __name__ == "__main__":
     logfile.write("Step 14: S-bit SCurve\n\n")
     time.sleep(1)
 
-    # Uncomment debug to run
-    if batch in ["prototype", "pre_production", "pre_series"]:#, "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
             print (Colors.BLUE + "Running S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
             if debug:
-                os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+                os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 10 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             else:
                 os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o %d -v %s -n 1000 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
+            latest_dir = latest_file.split(".txt")[0]
+
+            print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
+            logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
+            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
+            if os.path.isdir(latest_dir):
+                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
+                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
+            else:
+                print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
+                logfile.write("S-bit SCurve result directory not found\n")
+
             scurve = {}
+            bad_channels = {}
+            for slot,oh_sn in geb_dict.items():
+                results_oh_sn[oh_sn]["SBIT_SCurve"]=[{} for _ in range(6)]
             with open(latest_file) as scurve_file:
                 for line in scurve_file.readlines()[1:]:
                     vfat = int(line.split()[0])
@@ -1851,49 +1887,36 @@ if __name__ == "__main__":
                     else:
                         scurve[vfat]={}
                         scurve[vfat][channel]=[fired]
-            bad_channels = {}
             for vfat in scurve:
                 bad_channels[vfat]=[]
                 for channel in scurve[vfat]:
-                    if np.all(scurve[vfat][channel]==0):
+                    if np.all(np.equal(scurve[vfat][channel],0)):
                         bad_channels[vfat].append([channel])
-            print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
-            os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
-            if os.path.isdir(latest_dir):
-                os.system("cp %s/scurve2Dhist_ME0_OH%d.png %s/sbit_scurve_2D_hist_OH%d.png"%(latest_dir, oh_select, dataDir, oh_select))
-                os.system("cp %s/scurveENCdistribution_ME0_OH%d.pdf %s/sbit_scurve_ENC_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-                os.system("cp %s/scurveThreshdistribution_ME0_OH%d.pdf %s/sbit_scurve_Threshold_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
-            else:
-                print (Colors.RED + "S-bit Scurve result directory not found" + Colors.ENDC)
-                logfile.write("S-bit SCurve result directory not found\n")
-            
+
             for slot,oh_sn in geb_dict.items():
                 for i,vfat in enumerate(geb_oh_map[slot]["VFAT"]):
                     if vfat < 10:
                         scurve_fn = glob.glob('%s/fitResults_*VFAT0%d.txt'%(latest_dir,vfat))[0]
                     else:
                         scurve_fn = glob.glob('%s/fitResults_*VFAT%d.txt'%(latest_dir,vfat))[0]
+                    read_next = False
                     with open(scurve_fn) as scurve_file:
-                        read_next = False
                         for line in scurve_file.readlines():
                             if "Summary" in line:
                                 read_next = True
                             elif read_next:
                                 if "ENC" in line:
                                     enc = float(line.split()[2])
-                                    if "SBIT_SCurve" in results_oh_sn[oh_sn]:
-                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=1
-                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["ENC"]=enc
+                                    if bad_channels[vfat]:
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=0
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]['ENC']=enc
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Num_Bad_Channels"]=len(bad_channels[vfat])
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
                                     else:
-                                        results_oh_sn[oh_sn]["SBIT_SCurve"]=[{} for _ in range(6)]
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=1
-                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["ENC"]=enc
-                                    read_next=False
-                    if bad_channels[vfat]:
-                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Status"]=0
-                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=bad_channels[vfat]
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]['ENC']=enc
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Num_Bad_Channels"]=0
+                                        results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=[]
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_SCurve"]):
                 if not result['Status']:
@@ -1909,6 +1932,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1937,26 +1961,25 @@ if __name__ == "__main__":
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
-            # change back to n = 1000 for actual test
-            os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-            logfile.close()
+            if debug:
+                os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 10 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            else:
+                os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o %d -v %s -n 1000 -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
+            read_next = False
+            no_crosstalk = False
+            crosstalk = {}
             for slot,oh_sn in geb_dict.items():
                 results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
-                read_next = False
-                crosstalk = {}
                 for line in crosstalk_file.readlines():
                     if "Cross Talk Results" in line:
                         read_next = True
                     elif read_next:
                         if 'No Cross Talk observed' in line:
-                            for slot,oh_sn in geb_dict.items():
-                                for i in range(6):
-                                    results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
-                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
-                                    results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
+                            no_crosstalk = True
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             channel_inj = int(line.split()[6])
@@ -1968,24 +1991,25 @@ if __name__ == "__main__":
                             else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
-            if crosstalk:
-                for vfat in crosstalk:
-                    for slot,oh_sn in geb_dict.items():
-                        for i,map_vfat in enumerate(geb_oh_map[slot]["VFAT"]):
-                            if vfat == map_vfat:
-                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
-                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
-                                results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=crosstalk[vfat]
-                                break
-                        if i<7:
-                            break
+            
             for slot,oh_sn in geb_dict.items():
-                for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Crosstalk"]):
-                    if result == {}:
+                if no_crosstalk:
+                    for i in range(6):
                         results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
                         results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
-                        results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
+                        results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']=[]
+                elif crosstalk:
+                    for i,vfat in enumerate(geb_oh_map[slot]['VFAT']):
+                        if vfat in crosstalk:
+                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=0
+                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Num_Bad_Channels"]=len(crosstalk[vfat])
+                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Bad_Channels"]=[{'Channel_inj':channel_inj,'Channels_obs':channels_obs} for channel_inj,channels_obs in crosstalk[vfat].items()]
+                        else:
+                            results_oh_sn[oh_sn]["SBIT_Crosstalk"][i]["Status"]=1
+                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
+                            results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']=[]
 
+            logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
@@ -2015,6 +2039,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -2083,10 +2108,7 @@ if __name__ == "__main__":
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
                 os.makedirs(dataDir + "/sbit_noise_rate_results")
-                os.system("cp %s/*_mean_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_mean_OH%d.pdf"%(latest_dir, dataDir, oh_select))
                 os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-                os.system("cp %s/2d*.pdf %s/sbit_noise_rate_results/sbit_2d_threshold_noise_rate_OH%d.pdf"%(latest_dir, dataDir, oh_select))
-                os.system("cp %s/*_channels_*.pdf %s/sbit_noise_rate_results/"%(latest_dir, dataDir))
             else:
                 print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
@@ -2105,6 +2127,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -2128,7 +2151,7 @@ if __name__ == "__main__":
     logfile.write('Time taken to perform %s tests: %.3f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
 
     with open(results_fn,"w") as resultsfile:
+        results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
         json.dump(results_oh_sn,resultsfile,indent=2)
-
     logfile.close()
     os.system("rm -rf out.txt")
