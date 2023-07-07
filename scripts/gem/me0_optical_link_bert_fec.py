@@ -251,6 +251,7 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
                 time_passed = (time()-time_prev)/60.0
                 if time_passed >= 1:
                     if verbose:
+                        print ("Time passed: %.2f minutes: " % ((time()-t0)/60.0))
                         file_out.write("Time passed: %.2f minutes\n" % ((time()-t0)/60.0))
                         for (i,gbt) in enumerate(gbt_list):
                             select_ic_link(ohid, gbt)   

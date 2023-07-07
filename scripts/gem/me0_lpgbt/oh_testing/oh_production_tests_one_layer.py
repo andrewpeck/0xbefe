@@ -158,6 +158,16 @@ if __name__ == "__main__":
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
+    print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
+    print (Colors.BLUE + "Optohybrid Serial Numbers: %s\n"%(' '.join(oh_sn_list)) + Colors.ENDC)
+    print ("")
+
+    logfile.write("\nTests started for Batch: %s\n\n"%batch)
+    logfile.write("Optohybrid Serial Numbers: %s\n\n"%(' '.join(oh_sn_list)))
+
+    print ("\n#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
     # Step 1 - run init_frontend
     print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
@@ -176,19 +186,19 @@ if __name__ == "__main__":
                 for gbt,status in status_dict_oh.items():
                     for slot,oh_sn in geb_dict.items():
                         if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
-                            results_oh_sn[oh_sn][int(gbt)]["ready"]=int(status)
+                            results_oh_sn[oh_sn][int(gbt)]["Ready"]=int(status)
                             break 
         os.system('cp %s %s/'%(latest_file,dataDir))
         logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
             results_oh_sn[oh_sn]["Initialization"]=1
             for gbt in geb_oh_map[slot]["GBT"]:
-                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["ready"]
+                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["Ready"]
         for slot,oh_sn in geb_dict.items():
             if not results_oh_sn[oh_sn]["Initialization"]:
                 for gbt in geb_oh_map[slot]['GBT']:
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                    if not results_oh_sn[oh_sn][gbt]["ready"]:
+                    if not results_oh_sn[oh_sn][gbt]["Ready"]:
                         if not test_failed:
                             print(Colors.RED + "\nStep 1: Initialization Failed" + Colors.ENDC)
                             logfile.write("\nStep 1: Initialization Failed\n")
@@ -386,8 +396,8 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBT\n"%oh_select + Colors.ENDC)
-            logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBT\n\n"%oh_select)
+            print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBTs\n"%oh_select + Colors.ENDC)
+            logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBTs\n\n"%oh_select)
             if debug:
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r run -t 0.2 -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
             else:
@@ -902,6 +912,7 @@ if __name__ == "__main__":
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
             os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,resultDir,oh_select))
 
+        test_failed_override = False
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Mapping"]):
                 if not result['Cluster_Status']:
@@ -911,6 +922,10 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
+                    test_failed_override = True
+        if test_failed_override:
+            test_failed = False
+            test_failed_override = False
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1190,7 +1205,7 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Skipping VFAT Configuration for %s tests"%batch.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Configuration for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
-    
+
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
@@ -1257,7 +1272,7 @@ if __name__ == "__main__":
                 logfile = open(log_fn,"a")
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s"%(latest_file,dataDir,oh_sn,gbt_type))
+                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type))
                 with open(latest_file) as voltage_scan_file:
                     line = voltage_scan_file.readline()
                     for i in [2,4,8,12,16,20,24]:
@@ -1323,7 +1338,7 @@ if __name__ == "__main__":
             logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/rssi_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/rssi_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as rssi_file:
                 key = rssi_file.readline().split()[2]
                 rssi=[]
@@ -1382,7 +1397,7 @@ if __name__ == "__main__":
             logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/geb_current_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["Asense"]={}
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
@@ -1454,7 +1469,7 @@ if __name__ == "__main__":
             logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/oh_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/oh_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["OH_Temperature_Scan"]={}
             with open(latest_file) as temp_file:
                 keys = temp_file.readline().split()[2:7:2]
@@ -1520,7 +1535,7 @@ if __name__ == "__main__":
             logfile = open(log_fn,'a')
             list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/vtrx_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
+            os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             results_oh_sn[oh_sn]["VTRx+"]["Temperature_Scan"]={}
             with open(latest_file) as vtrx_temp_file:
                 keys = vtrx_temp_file.readline().split()[2:7:2]
