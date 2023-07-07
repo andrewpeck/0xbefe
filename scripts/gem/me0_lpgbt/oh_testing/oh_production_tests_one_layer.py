@@ -149,6 +149,7 @@ if __name__ == "__main__":
         results_oh_sn[oh_sn]["VTRx+"]["Serial_Number"]=vtrx_dict[slot]
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
+        results_oh_sn[oh_sn]['VFAT_List']=geb_oh_map[slot]['VFAT']
     
     debug = True if batch=="debug" else False
     test_failed = False
@@ -542,7 +543,6 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 clean_log.py -i %s"%latest_file) # Clean output file for parsing
-
             read_next = False
             with open(latest_file,"r") as ps_file:
                 for line in ps_file.readlines():
@@ -550,8 +550,8 @@ if __name__ == "__main__":
                         read_next = True
                     elif read_next:
                         vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
-                        phase = int(line.split()[2].replace('(center=','').replace(',',''))
-                        width = int(line.split()[3].replace('width=','').replace(')',''))
+                        phase = int(line.split()[2].replace('(center=','').removesuffix(','))
+                        width = int(line.split()[3].replace('width=','').removesuffix(')'))
                         status =  1 if line.split()[4] == "GOOD" else 0
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]["VFAT"]:
@@ -563,6 +563,10 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
+            list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_results_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system('cp %s %s/me0_oh%d_vfat_phase_scan.txt'%(latest_file,resultDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['DAQ_Phase_Scan']):
@@ -611,7 +615,6 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 clean_log.py -i %s"%latest_file)
-
             read_next = False
             with open(latest_file,"r") as ps_file:
                 # parse sbit phase scan results
@@ -622,9 +625,9 @@ if __name__ == "__main__":
                         if 'VFAT' in line:
                             vfat = int(line.split()[1])
                         elif 'ELINK' in line:
-                            elink = int(line.split()[1].replace(':',''))
-                            phase = int(line.split()[3].replace('(center=','').replace(',',''))
-                            width = int(line.split()[4].replace('width=','').replace(')',''))
+                            elink = int(line.split()[1].removesuffix(':'))
+                            phase = int(line.split()[3].replace('(center=','').removesuffix(','))
+                            width = int(line.split()[4].replace('width=','').removesuffix(')'))
                             status = 1 if line.split()[5] == "GOOD" else 0
 
                             for slot,oh_sn in geb_dict.items():
@@ -639,6 +642,11 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_results_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_phase_scan.txt'%(latest_file,resultDir,oh_select))
+
         for slot,oh_sn in geb_dict.items():
             for v,vfat_results in enumerate(results_oh_sn[oh_sn]["SBIT_Phase_Scan"]):
                 for e,result in enumerate(vfat_results):
@@ -707,6 +715,10 @@ if __name__ == "__main__":
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
 
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_results_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_bitslip.txt'%(latest_file,resultDir,oh_select))
+
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Bitslip"]):
                 if not result['Status']:
@@ -759,8 +771,8 @@ if __name__ == "__main__":
                         read_next = True
                     elif read_next:
                         if 'Channel' in line:
-                            vfat = int(line.split()[1].replace(',',''))
-                            elink = int(line.split()[3].replace(',',''))
+                            vfat = int(line.split()[1].removesuffix(','))
+                            elink = int(line.split()[3].removesuffix(','))
                             channel = int(line.split()[5])
                             if vfat in bad_channels:
                                 if elink in bad_channels[vfat]:
@@ -771,7 +783,7 @@ if __name__ == "__main__":
                                 bad_channels[vfat]={}
                                 bad_channels[vfat][elink]=[channel]
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].replace(',',''))
+                            vfat = int(line.split()[1].removesuffix(','))
                             elink = int(line.split()[3])
                             if vfat in rotated_elinks:
                                 rotated_elinks[vfat]+=[elink]
@@ -782,6 +794,11 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_results_*.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.txt'%(latest_file,resultDir,oh_select))
+
         for slot,oh_sn in geb_dict.items():
             results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
         if no_bad_channels:
@@ -849,7 +866,7 @@ if __name__ == "__main__":
             logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
             logfile.close()
             os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
 
             with open(latest_file,"r") as mapping_file:
@@ -883,9 +900,7 @@ if __name__ == "__main__":
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
                     else:
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
-
-            os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
-            logfile = open(log_fn, "a")
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,resultDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Mapping"]):
@@ -950,7 +965,7 @@ if __name__ == "__main__":
                         if line=='\n':
                             read_next = False
                             continue
-                        vfat = int(line.split()[1].replace(':',''))
+                        vfat = int(line.split()[1].removesuffix(':'))
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]['VFAT']:
                                 break
@@ -1027,25 +1042,36 @@ if __name__ == "__main__":
             list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             read_next = False
-            with open(latest_file,"r") as slow_control_results_file:
-                for line in slow_control_results_file.readlines():
+            with open(latest_file,"r") as sc_errors_file:
+                for line in sc_errors_file.readlines():
                     if "Error test results" in line:
                         read_next = True
                     if read_next:
                         logfile.write(line)
-                        if "mismatch" in line:
-                            vfat = int(line.split()[1].replace(',',''))
-                            errors = int(line.split()[7].replace(',',''))
+                        if 'sync errors' in line:
+                            vfat = int(line.split()[1].removesuffix(','))
+                            sync_errors = int(line.split()[-1])
+                        elif 'bus errors' in line:
+                            bus_errors = int(line.split()[6].removesuffix(','))
+                        elif "mismatch" in line:
+                            mismatch_errors = int(line.split()[7].removesuffix(','))
+                        elif 'CRC errors' in line:
+                            crc_errors = float(line.split()[10].removesuffix(','))
+                            crc_errors = int(np.ceil(crc_errors)) if (crc_errors > 0 and crc_errors < 1) else int(crc_errors)
+                        elif 'Timeout errors' in line:
+                            timeout_errors = float(line.split()[10].removesuffix(','))
+                            timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
+                        else:
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
                             if 'Slow_Control_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
                             else:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['Slow_Control_Errors']):
-                if result['Error_Count']>0:
+                if result['Total_Error_Count']>0:
                     if not test_failed:
                         print (Colors.RED + "\nStep 9: Slow Control Error Rate Test Failed" + Colors.ENDC)
                         logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n")
@@ -1103,7 +1129,7 @@ if __name__ == "__main__":
                     if read_next:
                         logfile.write(line)
                         if 'VFAT#' in line:
-                            vfat = int(line.split()[1].replace(',',''))
+                            vfat = int(line.split()[1].removesuffix(','))
                         if "CRC Errors" in line:
                             crc_errors = int(line.split()[-1])
                             for slot,oh_sn in geb_dict.items():
@@ -1217,10 +1243,10 @@ if __name__ == "__main__":
         time.sleep(1)
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+        voltages={}
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             results_oh_sn[oh_sn]["Voltage_Scan"]={}
-            voltages={}
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
@@ -1232,7 +1258,6 @@ if __name__ == "__main__":
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
                 os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s"%(latest_file,dataDir,oh_sn,gbt_type))
-                bad_values = {}
                 with open(latest_file) as voltage_scan_file:
                     line = voltage_scan_file.readline()
                     for i in [2,4,8,12,16,20,24]:
@@ -1293,7 +1318,9 @@ if __name__ == "__main__":
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
             gbt = geb_oh_map[slot]["GBT"][-1]
+            logfile.close()
             os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o %d -g %d -v 2.56 -n 10 >> %s"%(oh_select,gbt,log_fn))
+            logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system('cp %s %s/rssi_scan_OH%s'%(latest_file,dataDir,oh_sn))
@@ -1350,7 +1377,9 @@ if __name__ == "__main__":
             logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
             gbt = geb_oh_map[slot]["GBT"][0]
+            logfile.close()
             os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
+            logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/geb_current_OH%s'%(latest_file,dataDir,oh_sn))
@@ -1359,9 +1388,9 @@ if __name__ == "__main__":
                 line = asense_file.readline().split()
                 asense = {}
                 asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                # asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
+                # asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
                 asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                # asense["_".join(line[15:16]).replace('(','').replace(')','')]=[]
+                # asense["_".join(line[15:16]).removeprefix('(').removesuffix(')')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1::2]):
                         if float(value) != -9999:
@@ -1420,7 +1449,9 @@ if __name__ == "__main__":
             logfile.write("Running OH Temperature Scan on slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
             gbt = geb_oh_map[slot]["GBT"][-1]
+            logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
+            logfile = open(log_fn,'a')
             list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/oh_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
@@ -1484,7 +1515,9 @@ if __name__ == "__main__":
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
             gbt = geb_oh_map[slot]["GBT"][-1]
+            logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
+            logfile = open(log_fn,'a')
             list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/vtrx_temperature_scan_OH%s'%(latest_file,dataDir,oh_sn))
@@ -1566,8 +1599,10 @@ if __name__ == "__main__":
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
-            # change back to n = 1000 for actual test
-            os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            if debug:
+                os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 10"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+            else:
+                os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o %d -v %s -n 1000"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             scurve = {}
@@ -1693,11 +1728,11 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Num_Bad_Channels']=0
                                     results_oh_sn[oh_sn]['DAQ_Crosstalk'][i]['Bad_Channels']={}
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].replace(',',''))
+                            vfat = int(line.split()[1].removesuffix(','))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.replace(',',''))
+                                channels_obs[i] = int(ch.removesuffix(','))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
@@ -1908,11 +1943,11 @@ if __name__ == "__main__":
                                     results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Num_Bad_Channels']=0
                                     results_oh_sn[oh_sn]['SBIT_Crosstalk'][i]['Bad_Channels']={}
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].replace(',',''))
+                            vfat = int(line.split()[1].removesuffix(','))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.replace(',',''))
+                                channels_obs[i] = int(ch.removesuffix(','))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
