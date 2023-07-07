@@ -581,7 +581,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/me0_oh%d_vfat_phase_scan.txt'%(latest_file,resultDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_phase_scan.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['DAQ_Phase_Scan']):
@@ -661,7 +661,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_phase_scan.txt'%(latest_file,resultDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_phase_scan.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for v,vfat_results in enumerate(results_oh_sn[oh_sn]["SBIT_Phase_Scan"]):
@@ -734,7 +734,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_bitslip.txt'%(latest_file,resultDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_bitslip.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Bitslip"]):
@@ -815,7 +815,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.txt'%(latest_file,resultDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
@@ -918,7 +918,7 @@ if __name__ == "__main__":
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
                     else:
                         results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,resultDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
 
         test_failed_override = False
         for slot,oh_sn in geb_dict.items():
