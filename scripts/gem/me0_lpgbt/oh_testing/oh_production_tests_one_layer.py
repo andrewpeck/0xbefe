@@ -813,9 +813,9 @@ if __name__ == "__main__":
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
 
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_results_*.txt")
+            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_results_*.py")
             latest_file = max(list_of_files, key=os.path.getctime)
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.txt'%(latest_file,dataDir,oh_select))
+            os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.py'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
