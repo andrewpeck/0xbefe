@@ -144,12 +144,12 @@ if __name__ == "__main__":
     for slot,oh_sn in geb_dict.items():
         results_oh_sn[oh_sn]={}
         results_oh_sn[oh_sn]["Batch"]=batch
-        results_oh_sn[oh_sn]["Slot"]=slot_name_dict[slot]
+        results_oh_sn[oh_sn]["GEB_Slot"]=slot_name_dict[slot]
         results_oh_sn[oh_sn]["VTRx+"]={}
         results_oh_sn[oh_sn]["VTRx+"]["Serial_Number"]=vtrx_dict[slot]
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
-        results_oh_sn[oh_sn]['VFAT_List']=geb_oh_map[slot]['VFAT']
+        results_oh_sn[oh_sn]['VFAT_Slots']=geb_oh_map[slot]['VFAT']
     
     debug = True if batch=="debug" else False
     test_failed = False
@@ -299,8 +299,8 @@ if __name__ == "__main__":
                 gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                 if not results_oh_sn[oh_sn][gbt]["Status"]:
                     if not test_failed:
-                        print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n"%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write("\nStep 2: Checking lpGBT Status Failed: OH %s %s lpGBT\n\n"%(oh_sn,gbt_type))
+                        print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
+                        logfile.write("\nStep 2: Checking lpGBT Status Failed\n"%(oh_sn,gbt_type))
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
@@ -1073,8 +1073,10 @@ if __name__ == "__main__":
                         read_next = True
                     if read_next:
                         logfile.write(line)
-                        if 'sync errors' in line:
+                        if 'link' in line:
                             vfat = int(line.split()[1].removesuffix(','))
+                            link_good = 1 if line.split()[-1] == 'GOOD' else 0
+                        if 'sync errors' in line:
                             sync_errors = int(line.split()[-1])
                         elif 'bus errors' in line:
                             bus_errors = int(line.split()[6].removesuffix(','))
@@ -1086,22 +1088,31 @@ if __name__ == "__main__":
                         elif 'Timeout errors' in line:
                             timeout_errors = float(line.split()[10].removesuffix(','))
                             timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
-                        else:
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
                             if 'Slow_Control_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
                             else:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
+                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['Slow_Control_Errors']):
-                if result['Total_Error_Count']>0:
+                if not result['Link_Good'] or result['Total_Error_Count']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 9: Slow Control Error Rate Test Failed" + Colors.ENDC)
                         logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if not result['Link_Good']:
+                        print(Colors.RED + 'ERROR:LINK_BAD encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:LINK_BAD encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if result['Register_Mismatch_Error_Count']:
+                        print(Colors.RED + 'ERROR:REGISTER_MISMATCH_ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:REGISTER_MISMATCH_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if result['Sync_Error_Count']:
+                        print(Colors.RED + 'ERROR:SYNC_ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:SYNC_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if result['Total_Error_Count'] and not (result['Register_Mismatch_Error_Count'] or result['Sync_Error_Count']):
+                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
@@ -1154,26 +1165,42 @@ if __name__ == "__main__":
                         read_next = True
                     if read_next:
                         logfile.write(line)
-                        if 'VFAT#' in line:
+                        if 'link' in line:
                             vfat = int(line.split()[1].removesuffix(','))
-                        if "CRC Errors" in line:
+                            link_good = 1 if line.split()[-1]=='GOOD' else 0
+                            l1a_daq_counter_mismatch = 0 # reset mismatch flag
+                        elif 'sync errors' in line:
+                            sync_errors = int(line.split()[-1])
+                        elif 'Mismatch between DAQ_EVENT_CNT and L1A counter' in line:
+                            daq_l1a_counter_mismatch = int(line.split()[-1])
+                        elif "CRC Errors" in line:
                             crc_errors = int(line.split()[-1])
                             for slot,oh_sn in geb_dict.items():
-                                if vfat in geb_oh_map[slot]['VFAT']:
+                                if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
                             if 'DAQ_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["DAQ_Errors"]+=[{'Time':runtime,'Error_Count':crc_errors}]
+                                results_oh_sn[oh_sn]["DAQ_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
                             else:
-                                results_oh_sn[oh_sn]["DAQ_Errors"]=[{'Time':runtime,'Error_Count':crc_errors}]
+                                results_oh_sn[oh_sn]["DAQ_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Errors"]):
-                if result['Error_Count']>0:
+                if not result['Link_Good'] or result['Sync_Error_Count'] or result['CRC_Error_Count'] or result['DAQ_L1A_Counter_Mismatch']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 10: DAQ Error Rate Test Failed" + Colors.ENDC)
                         logfile.write("\nStep 10: DAQ Error Rate Test Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if not result['Link_Good']:
+                        print(Colors.RED + 'ERROR:LINK_BAD encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:LINK_BAD encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if result['Sync_Error_Count']:
+                        print(Colors.RED + 'ERROR:SYNC_ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:SYNC_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))      
+                    if result['DAQ_L1A_Counter_Mismatch']:
+                        print(Colors.RED + 'ERROR:DAQ_L1A_COUNTER_MISMATCH encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:DAQ_L1A_COUNTER_MISMATCH encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    if result['CRC_Error_Count']:
+                        print(Colors.RED + 'ERROR:DAQ_CRC_ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                        logfile.write('ERROR:DAQ_CRC_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')

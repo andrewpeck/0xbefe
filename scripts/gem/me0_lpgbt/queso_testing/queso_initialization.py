@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 sys.exit() 
             queso_dict[queso_nr] = oh_sn
             results_oh_sn[oh_sn] = {}
-            results_oh_sn[oh_sn]["batch"]=batch
+            results_oh_sn[oh_sn]["Batch"]=batch
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
@@ -327,12 +327,33 @@ if __name__ == "__main__":
                 for queso,oh_sn in queso_dict.items():
                     if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
                         gbt_type = ""
-                        if int(gbt)%2 == 0:
-                            gbt_type = "M"
-                        else:
-                            gbt_type = "S"
-                        results_oh_sn[oh_sn]["lpgbt_%s_status"%gbt_type]=int(status)
-
+                        gbt_type = 'M' if gbt%2==0 else 'S'
+                        results_oh_sn[oh_sn]["lpGBT_%s_Status"%gbt_type]=int(status)
+    for queso,oh_sn in queso_dict.items():
+        for gbt in queso_oh_map[queso]["GBT"]:
+            gbt_type = 'M' if gbt%2==0 else 'S'
+            if not results_oh_sn[oh_sn]["lpGBT_%s_Status"%gbt_type]:
+                gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                if not test_failed:
+                    print(Colors.RED + "\nInitialization Failed" + Colors.ENDC)
+                    logfile.write("\nInitialization Failed\n")
+                print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                test_failed = True
+    while test_failed:
+        end_tests = input('\nWould you like to exit testing? >> ')
+        if end_tests.lower() in ['y','yes']:
+            print('\nTerminating and logging results at directory:\n%s'%results_fn)
+            logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+            with open(results_fn,"w") as resultsfile:
+                results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                json.dump(results_oh_sn,resultsfile,indent=2)
+            logfile.close()
+            sys.exit()  
+        elif end_tests.lower() in ['n','no']:
+            test_failed = False
+        else:
+            print('Valid entries: y, yes, n, no')
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInitialization Done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -377,40 +398,46 @@ if __name__ == "__main__":
                 continue
             lpgbt = int(line.split()[1])
             lpgbt_elink = int(line.split()[2])
-            phase = line.split()[5]
-            width = line.split()[6]
-            bitslip = line.split()[7]
-            status = line.split()[8]
+            phase = int(line.split()[5])
+            width = int(line.split()[6])
+            bitslip = int(line.split()[7])
+            status = 1 if line.split()[8]=='GOOD' else 0
             if lpgbt not in bitslip_results:
                 bitslip_results[lpgbt] = {}
-                for e in range(0,28):
-                    bitslip_results[lpgbt][e] = {}
-                    bitslip_results[lpgbt][e]["phase"] = "-9999"
-                    bitslip_results[lpgbt][e]["width"] = "-9999"
-                    bitslip_results[lpgbt][e]["bitslip"] = "-9999"
-                    bitslip_results[lpgbt][e]["status"] = "UNUSED"
-            bitslip_results[lpgbt][lpgbt_elink]["phase"] = phase
-            bitslip_results[lpgbt][lpgbt_elink]["width"] = width
-            bitslip_results[lpgbt][lpgbt_elink]["bitslip"] = bitslip
-            bitslip_results[lpgbt][lpgbt_elink]["status"] = status
+            bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip':bitslip}
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
                 if queso_oh_map[queso]["OH"]==ohid and lpgbt in queso_oh_map[queso]["GBT"]:
-                    gbt_type = ""
-                    if lpgbt%2 == 0:
-                        gbt_type = "lpGBT_M"
-                    else:
-                        gbt_type = "lpGBT_S"
-                    results_oh_sn[oh_sn][gbt_type]=[]
-                    for lpgbt_elink in bitslip_results[lpgbt]:
-                        results_dict = {}
-                        results_dict["status"] = bitslip_results[lpgbt][lpgbt_elink]["status"]
-                        results_dict["phase"] = bitslip_results[lpgbt][lpgbt_elink]["phase"]
-                        results_dict["width"] = bitslip_results[lpgbt][lpgbt_elink]["width"]
-                        results_dict["bitslip"] = bitslip_results[lpgbt][lpgbt_elink]["bitslip"]
-                        results_oh_sn[oh_sn][gbt_type].append(results_dict)
-                        
+                    gbt_type = "M" if lpgbt%2 == 0 else "S"
+                    results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]=[result for _,result in bitslip_results[lpgbt].items()]
+                    break
+        for queso,oh_sn in queso_dict.items():
+            for gbt in queso_oh_map[queso]["GBT"]:
+                gbt_type = 'M' if gbt%2==0 else 'S'
+                for result in results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]
+                if not result['Status']:
+                    gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                    if not test_failed:
+                        print(Colors.RED + "\nSetting Elink Phases and Bitslips Failed" + Colors.ENDC)
+                        logfile.write("\nSetting Elink Phases and Bitslips Failed\n")
+                    print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing? >> ')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -437,36 +464,63 @@ if __name__ == "__main__":
 
         # Read currents after OH initialization
         resultDir + "/current_monitor_results"
-        if not args.turn_off:
-            print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
-            logfile.write("Reading Currents after OH Initialization\n")
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 10"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            queso_current = {}
-            for line in output:    
-                print(line)
-                logfile.write(line+"\n")
+        print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
+        logfile.write("Reading Currents after OH Initialization\n")
+        cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 10"
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        queso_current = {}
+        for line in output:    
+            print(line)
+            logfile.write(line+"\n")
 
-                if "gbt_1v2 current" in line:
-                    values = line.split()
-                    if "1v2" not in queso_current.keys():
-                        queso_current["1v2"] = [float(values[2])]
-                    else:
-                        queso_current["1v2"] += [float(values[2])]
-                    if "2v5" not in queso_current.keys():
-                        queso_current["2v5"] = [float(values[6])]
-                    else:
-                        queso_current["2v5"] += [float(values[6])]
+            if "gbt_1v2 current" in line:
+                values = line.split()
+                if "1V2" not in queso_current.keys():
+                    queso_current["1V2"] = [float(values[2])]
+                else:
+                    queso_current["1V2"] += [float(values[2])]
+                if "2V5" not in queso_current.keys():
+                    queso_current["2V5"] = [float(values[6])]
+                else:
+                    queso_current["2V5"] += [float(values[6])]
+        for v,currents in queso_current.items():
+            results_oh_sn[oh_sn]["QUESO_Current_%s"%v]=np.mean(currents)
+        current_ranges = {'2V5':0.3,'1V2':0.7}
+        for queso,oh_sn in queso_dict.items():
+            for v,i_max in current_ranges.items():
+                if results_oh_sn[oh_sn]['QUESO_Current_%s'%v] > i_max or results_oh_sn[oh_sn]['QUESO_Current_%s'%v] == -9999:
+                    if not test_failed:
+                        print(Colors.RED + "\nReading Currents Failed" + Colors.ENDC)
+                        logfile.write("\nReading Currents Failed\n")
+                    if results_oh_sn[oh_sn]['QUESO_Current_%s'%v] > i_max:
+                        print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
+                        logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current\n'%(oh_sn,v))
+                    elif results_oh_sn[oh_sn]['QUESO_Current_%s'%v] == -9999:
+                        print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
+                        logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s current\n'%(oh_sn,v))
+                    test_failed = True
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing? >> ')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging results at directory:\n%s'%results_fn)
+                logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                with open(results_fn,"w") as resultsfile:
+                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    json.dump(results_oh_sn,resultsfile,indent=2)
+                logfile.close()
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
 
-            print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nReading Curren\ts done\n")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
+        print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
+        print("\n######################################################\n")
+        logfile.write("\nReading Currents done\n")
+        logfile.write("\n######################################################\n\n")
+        sleep(1)
 
-            for v,currents in queso_current.items():
-                results_oh_sn[oh_sn]["%s_current"%v]=np.mean(currents)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print("\n#####################################################################################################################################\n")
@@ -475,5 +529,6 @@ if __name__ == "__main__":
         ssh.close()
     
     with open(results_fn, "w") as resultsfile:
-        json.dump(results_oh_sn,resultsfile,indent=4)
+        results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+        json.dump(results_oh_sn,resultsfile,indent=2)
     logfile.close()
