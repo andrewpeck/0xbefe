@@ -1086,7 +1086,6 @@ if __name__ == "__main__":
                         elif 'Timeout errors' in line:
                             timeout_errors = float(line.split()[10].removesuffix(','))
                             timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
-                        else:
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     break
