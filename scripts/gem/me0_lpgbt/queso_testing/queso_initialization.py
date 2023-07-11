@@ -415,15 +415,15 @@ if __name__ == "__main__":
         for queso,oh_sn in queso_dict.items():
             for gbt in queso_oh_map[queso]["GBT"]:
                 gbt_type = 'M' if gbt%2==0 else 'S'
-                for result in results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]
-                if not result['Status']:
-                    gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
-                    if not test_failed:
-                        print(Colors.RED + "\nSetting Elink Phases and Bitslips Failed" + Colors.ENDC)
-                        logfile.write("\nSetting Elink Phases and Bitslips Failed\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                    test_failed = True
+                for result in results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]:
+                    if not result['Status']:
+                        gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                        if not test_failed:
+                            print(Colors.RED + "\nSetting Elink Phases and Bitslips Failed" + Colors.ENDC)
+                            logfile.write("\nSetting Elink Phases and Bitslips Failed\n")
+                        print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                        test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -470,10 +470,9 @@ if __name__ == "__main__":
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
         output = ssh_stdout.readlines()
         queso_current = {}
-        for line in output:    
+        for line in output:
             print(line)
             logfile.write(line+"\n")
-
             if "gbt_1v2 current" in line:
                 values = line.split()
                 if "1V2" not in queso_current.keys():
