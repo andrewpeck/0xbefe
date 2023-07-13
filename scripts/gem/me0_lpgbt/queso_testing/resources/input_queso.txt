@@ -1,5 +1,5 @@
 # BATCH: pre_production
-# SLOT_NR   OH_SERIAL_NR
+# SLOT_NUM   OH_SERIAL_NUM
 1           1
 2           2
 3           -9999

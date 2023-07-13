@@ -67,38 +67,127 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
+    parser.add_argument("-p", "--power_only",action="store_true",dest="power_only",help = "power_only = only power on/off regulators without running test scripts")
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
     args = parser.parse_args()
 
     if args.input_file is None:
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
-
+    # set power only flag for either arg true
+    power_only = args.power_only or args.turn_off
+    power = not args.turn_off
     queso_dict = {}
-    results_oh_sn = {}
+    if not power_only:
+        results_oh_sn = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
             if "BATCH" in line:
                 batch = line.split()[2]
-                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
-                    sys.exit()
+                if not power_only:
+                    if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
+                        print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "debug"' + Colors.ENDC)
+                        sys.exit()
             continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
-            if int(oh_sn) not in range(1, 1019):
-                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
-                sys.exit() 
+            if not power_only:
+                if batch in ["prototype", "pre_production"]:
+                    if int(oh_sn) not in range(1, 1001):
+                        print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
+                        sys.exit() 
+                elif batch in ["pre_series", "production", "long_production"]:
+                    if int(oh_sn) not in range(1001, 2019):
+                        print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
+                        sys.exit()
             queso_dict[queso_nr] = oh_sn
-            results_oh_sn[oh_sn] = {}
-            results_oh_sn[oh_sn]["Batch"]=batch
+            if not power_only:
+                results_oh_sn[oh_sn] = {}
+                results_oh_sn[oh_sn]["Batch"]=batch
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
         sys.exit()
     print("")
+    
+    username = "pi"
+    password = "queso"
+    ssh = paramiko.SSHClient()
+    # Load SSH host keys
+    ssh.load_system_host_keys()
+    # Add SSH host key automatically if needed
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/queso_testing/"
+
+    if power_only:
+        if power:
+            print(Colors.BLUE + "Turning ON QUESOs: " + Colors.ENDC)
+        else:
+            print(Colors.BLUE + "Turning OFF QUESOs: " + Colors.ENDC)
+        for queso in queso_dict:
+            print("  QUESO: %s"%queso)
+
+        for queso in queso_dict:
+            print(Colors.BLUE + "Starting QUESO %s\n"%queso + Colors.ENDC)
+            # Connect to each RPi using username/password authentication
+            if queso in pi_list:
+                pi_ip = pi_list[queso]
+            else:
+                print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+                continue
+            ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+            print("\n######################################################\n")
+
+            # Initialize RPI GPIOs
+            if power:
+                print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
+                cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+                output = ssh_stdout.readlines()
+                for line in output:
+                    print(line)
+                print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
+                print("\n######################################################\n")
+                sleep(1)
+
+            # Enabling/Disabling regulators
+            if power:
+                print(Colors.BLUE + "Enabling regulators\n" + Colors.ENDC)
+                cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
+            else:
+                print(Colors.BLUE + "Disabling regulators\n" + Colors.ENDC)
+                cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5 -o"
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            output = ssh_stdout.readlines()
+            for line in output:
+                print(line)
+            if power:
+                print(Colors.GREEN + "\nRegulators Enabled" + Colors.ENDC)
+            else:
+                print(Colors.GREEN + "\nRegulators Disabled" + Colors.ENDC)
+            print("\n######################################################\n")
+            sleep(1)
+
+            # Terminate RPI GPIOs
+            if not power:
+                print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
+                cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+                output = ssh_stdout.readlines()
+                for line in output:
+                    print(line)
+                print(Colors.GREEN + "\nRPI GPIO Terminate Done" + Colors.ENDC)
+                print("\n######################################################\n")
+                sleep(1)
+
+            print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
+            print("\n#####################################################################################################################################\n")
+            ssh.close()
+        
+        print("")
+        sys.exit()
 
     resultDir = "me0_lpgbt/queso_testing/results"
     try:
@@ -131,19 +220,12 @@ if __name__ == "__main__":
     logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_initialization_results.json"
 
-    if not args.turn_off:
-        print(Colors.BLUE + "Initializting QUESOs: " + Colors.ENDC)
-        logfile.write("Initializting QUESOs: \n")
-    else:
-        print(Colors.BLUE + "Turning OFF QUESOs: " + Colors.ENDC)
-        logfile.write("Turning OFF QUESOs: \n")
+
+    print(Colors.BLUE + "Initializting QUESOs: " + Colors.ENDC)
+    logfile.write("Initializting QUESOs: \n")
     for queso in queso_dict:
         print("  QUESO: %s"%queso)
         logfile.write("  QUESO: %s\n"%queso)
-
-    username = "pi"
-    password = "queso"
-    ssh = paramiko.SSHClient()
 
     # OH, GBT, VFAT list overall
     oh_gbt_vfat_map = {}
@@ -182,20 +264,19 @@ if __name__ == "__main__":
         logfile.write("\n######################################################\n\n")
 
         # Initialize RPI GPIOs
-        if not args.turn_off:
-            print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
-            logfile.write("Initialize RPI GPIOs\n\n")
-            cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            for line in output:
-                print(line)
-                logfile.write(line+"\n")
-            print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nRPI GPIO Initialization Done\n")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
+        print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
+        logfile.write("Initialize RPI GPIOs\n\n")
+        cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print(line)
+            logfile.write(line+"\n")
+        print(Colors.GREEN + "\nRPI GPIO Initialization Done" + Colors.ENDC)
+        print("\n######################################################\n")
+        logfile.write("\nRPI GPIO Initialization Done\n")
+        logfile.write("\n######################################################\n\n")
+        sleep(1)
 
         # Reset all FPGA if needed
         if args.reset:
@@ -214,7 +295,7 @@ if __name__ == "__main__":
             sleep(1)
 
         # Check FPGA done
-        if not args.turn_off:
+        if not args.power_only:
             print(Colors.BLUE + "Checking if FPGA programming done\n" + Colors.ENDC)
             logfile.write("Checking if FPGA programming done\n\n")
             cur_ssh_command = base_ssh_command + "queso_check_fpga_done.py -f 1 2 3"
@@ -230,87 +311,56 @@ if __name__ == "__main__":
             sleep(1)
 
         # Write FPGA ID
-        if not args.turn_off:
-            print(Colors.BLUE + "Writing FPGA ID\n" + Colors.ENDC)
-            logfile.write("Writing FPGA ID\n\n")
-            cur_ssh_command = base_ssh_command + "queso_write_fpga_id.py -f 1 2 3 -i 0x00 0x01 0x02"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            for line in output:
-                print(line)
-                logfile.write(line+"\n")
-            print(Colors.GREEN + "\nWriting FPGA ID Done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nWriting FPGA ID Done\n")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
-
-        # Read currents before OH powered on
-        if not args.turn_off:
-            print (Colors.BLUE + "Reading Currents before OH powered on" + Colors.ENDC)
-            logfile.write("Reading Currents before OH powered on\n")
-            cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 1"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            for line in output:
-                print(line)
-                logfile.write(line+"\n")
-            print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nReading Currents done\n")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
-
-        # Enabling/Disabling regulators
-        if not args.turn_off:
-            print(Colors.BLUE + "Enabling regulators\n" + Colors.ENDC)
-            logfile.write("Enabling regulators\n\n")
-            cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
-        else:
-            print(Colors.BLUE + "Disabling regulators\n" + Colors.ENDC)
-            logfile.write("Disabling regulators\n\n")
-            cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5 -o"
+        print(Colors.BLUE + "Writing FPGA ID\n" + Colors.ENDC)
+        logfile.write("Writing FPGA ID\n\n")
+        cur_ssh_command = base_ssh_command + "queso_write_fpga_id.py -f 1 2 3 -i 0x00 0x01 0x02"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
             logfile.write(line+"\n")
-        if not args.turn_off:
-            print(Colors.GREEN + "\nRegulators Enabled" + Colors.ENDC)
-            logfile.write("\nRegulators Enabled\n")
-        else:
-            print(Colors.GREEN + "\nRegulators Disabled" + Colors.ENDC)
-            logfile.write("\nRegulators Disabled\n")
+        print(Colors.GREEN + "\nWriting FPGA ID Done" + Colors.ENDC)
         print("\n######################################################\n")
+        logfile.write("\nWriting FPGA ID Done\n")
         logfile.write("\n######################################################\n\n")
         sleep(1)
 
-        # Terminate RPI GPIOs
-        if args.turn_off:
-            print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
-            logfile.write("Terminate RPI GPIOs\n\n")
-            cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            for line in output:
-                print(line)
-                logfile.write(line+"\n")
-            print(Colors.GREEN + "\nRPI GPIO Terminate Done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nRPI GPIO Terminate Done\n")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
+        # Read currents before OH powered on
+        print (Colors.BLUE + "Reading Currents before OH powered on" + Colors.ENDC)
+        logfile.write("Reading Currents before OH powered on\n")
+        cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 1"
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print(line)
+            logfile.write(line+"\n")
+        print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
+        print("\n######################################################\n")
+        logfile.write("\nReading Currents done\n")
+        logfile.write("\n######################################################\n\n")
+        sleep(1)
+
+        # Enabling/Disabling regulators
+        print(Colors.BLUE + "Enabling regulators\n" + Colors.ENDC)
+        logfile.write("Enabling regulators\n\n")
+        cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
+
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print(line)
+            logfile.write(line+"\n")
+        print(Colors.GREEN + "\nRegulators Enabled" + Colors.ENDC)
+        logfile.write("\nRegulators Enabled\n")
+        print("\n######################################################\n")
+        logfile.write("\n######################################################\n\n")
+        sleep(1)
 
         print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
         print("\n#####################################################################################################################################\n")
         logfile.write("QUESO %s Done\n\n"%queso)
         logfile.write("\n#####################################################################################################################################\n\n")
         ssh.close()
-    
-    print("")
-    logfile.write("\n")
-    if args.turn_off:
-        sys.exit()
 
     # Initialize frontend
     print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
