@@ -67,16 +67,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
-    parser.add_argument("-p", "--power_only",action="store_true",dest="power_only",help = "power_only = only power on/off regulators without running test scripts")
-    parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help="turn_off = turn regulator off")
+    parser.add_argument("-p", "--power",action="store",dest="power",help = 'power = only power on/off regulators without running test scripts, valid entries: "on", "off"')
     args = parser.parse_args()
 
     if args.input_file is None:
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
-    # set power only flag for either arg true
-    power_only = args.power_only or args.turn_off
-    power = not args.turn_off
+    # set power only and power on/off flags
+    if args.power:
+        power_only = True
+        if args.power.lower() == 'on':
+            power = True
+        elif args.power.lower() == 'off':
+            power = False
+        else:
+            print(Colors.YELLOW + 'Valid entries are "on" or "off"' + Colors.ENDC)
+            sys.exit()
+    else:
+        power_only = False
+        power = True
     queso_dict = {}
     if not power_only:
         results_oh_sn = {}
@@ -295,20 +304,19 @@ if __name__ == "__main__":
             sleep(1)
 
         # Check FPGA done
-        if not args.power_only:
-            print(Colors.BLUE + "Checking if FPGA programming done\n" + Colors.ENDC)
-            logfile.write("Checking if FPGA programming done\n\n")
-            cur_ssh_command = base_ssh_command + "queso_check_fpga_done.py -f 1 2 3"
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
-            output = ssh_stdout.readlines()
-            for line in output:
-                print(line)
-                logfile.write(line+"\n")
-            print(Colors.GREEN + "\nCheck FPGA Done" + Colors.ENDC)
-            print("\n######################################################\n")
-            logfile.write("\nCheck FPGA Done")
-            logfile.write("\n######################################################\n\n")
-            sleep(1)
+        print(Colors.BLUE + "Checking if FPGA programming done\n" + Colors.ENDC)
+        logfile.write("Checking if FPGA programming done\n\n")
+        cur_ssh_command = base_ssh_command + "queso_check_fpga_done.py -f 1 2 3"
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        output = ssh_stdout.readlines()
+        for line in output:
+            print(line)
+            logfile.write(line+"\n")
+        print(Colors.GREEN + "\nCheck FPGA Done" + Colors.ENDC)
+        print("\n######################################################\n")
+        logfile.write("\nCheck FPGA Done")
+        logfile.write("\n######################################################\n\n")
+        sleep(1)
 
         # Write FPGA ID
         print(Colors.BLUE + "Writing FPGA ID\n" + Colors.ENDC)
