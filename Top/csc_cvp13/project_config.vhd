@@ -53,7 +53,10 @@ package project_config is
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;
     constant CFG_USE_TTC_TX_LINK : boolean := true;
     constant CFG_TTC_LINKS : t_int_array(0 to 3) := (8, 9, 10, 11) ;   
-    
+
+    constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
+    constant CFG_TTC_GBTX_LINK      : integer := CFG_BOARD_MAX_LINKS;
+        
     constant CFG_ODMB57_BIDIR_TEST : boolean := true;
     constant CFG_ODMB7_BIDIR_TX_LINK : t_int_array(0 to 3) := (4, 5, 6, 7);
     constant CFG_ODMB7_BIDIR_RX_LINK : t_int_array(0 to 3) := (4, 5, 6, 7);

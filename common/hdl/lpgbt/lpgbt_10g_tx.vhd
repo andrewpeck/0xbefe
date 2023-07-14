@@ -53,12 +53,9 @@ architecture lpgbt_10g_tx_arch of lpgbt_10g_tx is
     port (
         clk               : in  std_logic;
         dataEnable        : in  std_logic;  
-        txDataHigh        : in  std_logic_vector(111 downto 0);
-        txDataLow         : in  std_logic_vector(111 downto 0);
+        txDataFrame       : in  std_logic_vector(229 downto 0);
         txIC              : in  std_logic_vector(  1 downto 0);
         txEC              : in  std_logic_vector(  1 downto 0);
-        txDummyFec5       : in  std_logic_vector(  5 downto 0);
-        txDummyFec12      : in  std_logic_vector(  9 downto 0);
         scramblerBypass   : in  std_logic;
         interleaverBypass : in  std_logic;
         fecMode           : in  std_logic;
@@ -136,12 +133,9 @@ begin
         port map (
             clk                   => clk40_i,
             dataEnable            => '1',
-            txDataHigh            => tx_data(223 downto 112),
-            txDataLow             => tx_data(111 downto 0),
+            txDataFrame           => tx_data(229 downto 0),
             txIC                  => tx_data(233 downto 232),
             txEC                  => tx_data(231 downto 230),
-            txDummyFec5           => tx_data(229 downto 224),
-            txDummyFec12          => "1001110011",
             scramblerBypass       => '0',
             interleaverBypass     => '0',
             fecMode               => '0',

@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.common_pkg.all;
 use work.board_config_package.all;
 use work.gem_pkg.all;
 use work.mgt_pkg.all;
@@ -39,6 +40,12 @@ package project_config is
     constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => true);
     constant CFG_SPY_LINK : t_spy_link_config := (36, 37, 38, 39);
 
+    constant CFG_USE_TTC_TX_LINK : boolean := false;
+    constant CFG_TTC_LINKS : t_int_array(0 to 3) := (others => CFG_BOARD_MAX_LINKS);
+
+    constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
+    constant CFG_TTC_GBTX_LINK      : integer := CFG_BOARD_MAX_LINKS; 
+    
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (others => (others => TXRX_NULL));
 
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (

@@ -816,6 +816,7 @@ begin
                         I       => chan_clks_out_arr(chan).txoutclk -- 312.5MHz
                     );                  
                 master_rxusrclk.odmb57 <= chan_clks_in_arr(chan).rxusrclk2;
+                master_txusrclk.odmb57 <= chan_clks_in_arr(chan).txusrclk2;
             end generate;
 
             -- TX user clocks

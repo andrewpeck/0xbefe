@@ -7,6 +7,7 @@ set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_
 
 ### GBT TX / LHC CLKS ### 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan*gbt*TXOUTCLK}]]  
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_tcds2/i_ttc_clks*CLKIN1}]]
 
 ### GBT RX CLKS ### 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan*gbt*RXOUTCLK}]]  
@@ -21,5 +22,6 @@ set_clock_groups -asynchronous -group [get_clocks clk_100_framework_bd_clocks_0]
 set_clock_groups -asynchronous -group [get_clocks {dbg_hub/*}]
 
 ### IPB CLKS ### 
+set_clock_groups -asynchronous -group [get_clocks clk_125_framework_bd_clocks_0]
 set_clock_groups -asynchronous -group [get_clocks clk_100_framework_bd_clocks_0]
 set_clock_groups -asynchronous -group [get_clocks clk_50_framework_bd_clocks_0]  

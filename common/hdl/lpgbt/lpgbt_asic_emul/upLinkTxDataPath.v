@@ -33,6 +33,7 @@
  *  2016/10/25 José Foseca     : Modified
  *  2016/12/08 Szymon Kulis    : BERT generator added
  *  2017/03/28 Eduardo Mendes  : LPGBT-FPGA prototype
+ *  2020/01/27 Eduardo Mendes  : Added txDataFrame instead of high/low/dummy to be consistent with lPGBT-FPGA
  **/
 
 
@@ -42,19 +43,16 @@ module upLinkTxDataPath (
 
     // input data:
 	input          dataEnable,	
-    input  [111:0] txDataHigh,
-    input  [111:0] txDataLow,
+    input  [229:0] txDataFrame,
     input  [1:0]   txIC,
     input  [1:0]   txEC,
-    input  [5:0]   txDummyFec5,
-    input  [9:0]   txDummyFec12,
+
 
     // controll signals
     input          scramblerBypass,
     input          interleaverBypass,
     input          fecMode,
     input          txDataRate,
-    input          fecDisable,
     input          scramblerReset,
     // output data
     output  [255:0] upLinkFrame
@@ -70,15 +68,13 @@ module upLinkTxDataPath (
   wire [233:0] dataFec5;
   wire [205:0] dataFec12;
 
+  // combinatorial only
   upLinkDataSelect ULDS(
     .dataFec12(dataFec12),
     .dataFec5(dataFec5),
     .dataRate(txDataRate),
     .fecMode(fecMode),
-    .txDataHigh(txDataHigh),
-    .txDataLow(txDataLow),
-    .txDummyFec5(txDummyFec5),
-    .txDummyFec12(txDummyFec12),
+    .txDataFrame(txDataFrame),
     .txEC(txEC),
     .txIC(txIC)
   );
@@ -86,6 +82,7 @@ module upLinkTxDataPath (
   wire [233:0] scrambledDataFec5;
   wire [205:0] scrambledDataFec12;
 
+  // +1 clock cycle
   upLinkScrambler UPS (
     .bypass(scramblerBypass),
     .clk(clk),
@@ -99,9 +96,10 @@ module upLinkTxDataPath (
     .txDataRate(txDataRate)
   );
 
-  wire [19:0] fec5;
-  wire [47:0] fec12;
+ (* KEEP = "TRUE" *)  wire [19:0] fec5 ;
+ (* KEEP = "TRUE" *)  wire [47:0] fec12;
 
+  // combinatorial only
   upLinkFECEncoder ULFE (
     .dataFec12(scrambledDataFec12),
     .dataFec5(scrambledDataFec5),
@@ -110,6 +108,7 @@ module upLinkTxDataPath (
     .drMode(txDataRate)
   );
 
+  // combinatorial only  
   upLinkInterleaver ULI (
     .bypass(interleaverBypass),
     .dataFec12(scrambledDataFec12),

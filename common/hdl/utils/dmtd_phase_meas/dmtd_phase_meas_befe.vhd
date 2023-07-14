@@ -73,7 +73,7 @@ use ieee.NUMERIC_STD.all;
 --
 -- There's also a clock loss monitoring on clk_a_i and clk_b_i using the clk_sys_i. If either clk_a_i or clk_b_i are found to be lost (not present), the phase is reported as (others => '1'), and lock is reported as 0
 --
-entity dmtd_phase_meas is
+entity dmtd_phase_meas_befe is
     generic(
         G_DEGLITCHER_THRESHOLD  : integer := 2000;
         G_COUNTER_BITS          : integer := 14;
@@ -111,9 +111,9 @@ entity dmtd_phase_meas is
         lockmon_update_o        : out std_logic -- pulsed high for 1 clk_sys_i cycle
     );
 
-end dmtd_phase_meas;
+end dmtd_phase_meas_befe;
 
-architecture syn of dmtd_phase_meas is
+architecture syn of dmtd_phase_meas_befe is
     
     constant RANGE_OUTSIDE_VALID_PHASE  : integer := (2 ** G_COUNTER_BITS) - G_MAX_VALID_PHASE;
     
@@ -198,7 +198,7 @@ begin                                   -- syn
 
     --================ collect the phase tags ================--
 
-    i_dmtd_a : entity work.dmtd_with_deglitcher
+    i_dmtd_a : entity work.dmtd_with_deglitcher_befe
         generic map(
             g_counter_bits => G_COUNTER_BITS
         --            g_log2_replication => 2
@@ -215,7 +215,7 @@ begin                                   -- syn
             deglitch_threshold_i => std_logic_vector(to_unsigned(G_DEGLITCHER_THRESHOLD, 16))
         );
 
-    i_dmtd_b : entity work.dmtd_with_deglitcher
+    i_dmtd_b : entity work.dmtd_with_deglitcher_befe
         generic map(
             g_counter_bits => G_COUNTER_BITS
         --            g_log2_replication => 2

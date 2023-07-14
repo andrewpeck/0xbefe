@@ -3,6 +3,7 @@ common/hdl/common.src
 common/hdl/common_xilinx_ultrascale.src
 common/hdl/gbt.src
 common/hdl/slink_rocket.src
+common/hdl/tcds2.src
 
 # =============== CSC ===============
 csc/hdl/csc.src

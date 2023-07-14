@@ -49,7 +49,7 @@ use ieee.NUMERIC_STD.all;
 -- [PV 2015.08.17] library work;
 -- [PV 2015.08.17] use work.gencores_pkg.all;
 
-entity dmtd_with_deglitcher is
+entity dmtd_with_deglitcher_befe is
     generic(
         -- Size of the phase tag counter. Must be big enough to cover at least one
         -- full period of the DDMTD detector output. Given the frequencies of clk_in_i
@@ -96,9 +96,9 @@ entity dmtd_with_deglitcher is
         tag_stb_p1_o         : out std_logic
     );
 
-end dmtd_with_deglitcher;
+end dmtd_with_deglitcher_befe;
 
-architecture rtl of dmtd_with_deglitcher is
+architecture rtl of dmtd_with_deglitcher_befe is
     type t_state is (WAIT_STABLE_0, WAIT_EDGE, GOT_EDGE);
 
     signal state            : t_state;

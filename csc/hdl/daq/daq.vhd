@@ -26,6 +26,7 @@ use work.board_config_package.all;
 entity daq is
 generic(
     g_NUM_OF_DMBs        : integer;
+    g_DMB_CONFIG_ARR     : t_dmb_config_arr;
     g_DAQ_CLK_FREQ       : integer;
     g_IPB_CLK_PERIOD_NS  : integer;
     g_IS_SLINK_ROCKET    : boolean
@@ -53,7 +54,8 @@ port(
 
     -- Data
     dmb_clk_i                   : in std_logic;
-    dmb_link_arr_i              : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+    odmb_clk_i                  : in std_logic;
+    dmb_link_arr2d_i            : in t_mgt_64b_rx_data_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
     
     -- Spy
     spy_clk_i                   : in  std_logic;
@@ -958,11 +960,49 @@ begin
     --================================--
 
     g_chamber_evt_builders : for i in 0 to (g_NUM_OF_DMBs - 1) generate
+
+        function get_input_clk_rate(dmb_type : t_dmb_type) return integer is
+        begin
+            if dmb_type = DMB then
+                return 80_000_000;
+            else
+                return 312_500_000;  
+            end if;
+        end function get_input_clk_rate;         
+        
+        constant DMB_CLOCK_RATE : integer := get_input_clk_rate(g_DMB_CONFIG_ARR(i).dmb_type);
+        
+        signal cccc : std_logic; 
+        signal dddd : t_mgt_16b_rx_data; 
     begin
+
+        -- TEMPORARY: to ignore ODMB7 links
+        g_dmb : if g_DMB_CONFIG_ARR(i).dmb_type = DMB generate
+            dddd.rxdata <= dmb_link_arr2d_i(i)(0).rxdata(15 downto 0);
+            dddd.rxcharisk <= dmb_link_arr2d_i(i)(0).rxcharisk(1 downto 0);
+            cccc <= dmb_clk_i;
+        else generate
+            
+            cccc <= odmb_clk_i;
+            
+            process(odmb_clk_i)
+            begin
+                if rising_edge(odmb_clk_i) then
+                    if dmb_link_arr2d_i(i)(0).rxcharisk(0) = '1' and (dmb_link_arr2d_i(i)(0).rxdata(31 downto 0) = x"505050BC" or dmb_link_arr2d_i(i)(0).rxdata(31 downto 0) = x"606060BC") then
+                        dddd.rxdata <= x"50bc";
+                        dddd.rxcharisk <= "01";
+                    else
+                        dddd.rxdata <= dmb_link_arr2d_i(i)(0).rxdata(31 downto 16);
+                        dddd.rxcharisk <= (others => '0');
+                    end if;
+                end if;
+            end process;
+            
+        end generate;
 
         i_input_processor : entity work.input_processor
         generic map (
-            g_input_clk_freq => 80_000_000
+            g_input_clk_freq => DMB_CLOCK_RATE
         )
         port map
         (
@@ -988,8 +1028,8 @@ begin
             evtfifo_data_cnt_o          => chamber_evtfifos(i).data_cnt,
 
             -- Track data
-            input_clk_i                 => dmb_clk_i,
-            input_data_link_i           => dmb_link_arr_i(i),
+            input_clk_i                 => cccc,
+            input_data_link_i           => dddd,
             
             -- Status and control
             status_o                    => input_status_arr(i),

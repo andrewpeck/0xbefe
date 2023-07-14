@@ -20,7 +20,7 @@ package board_config_package is
 
     ------------ Firmware flavor and board type  ------------
     constant CFG_FW_FLAVOR          : std_logic_vector(3 downto 0) := x"0"; -- 0 = GEM_AMC; 1 = CSC_FED
-    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"4"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O
+    constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"4"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O rev1; 5 = X2O rev2
     
     ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 116;
@@ -79,6 +79,8 @@ package board_config_package is
     constant CFG_NUM_REFCLK0      : integer := 30;
     constant CFG_NUM_REFCLK1      : integer := 8; 
     constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+    
+    constant CFG_TCDS2_MGT_REFCLK1: integer := CFG_NUM_REFCLK1; -- not used in X2O rev1
     
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         

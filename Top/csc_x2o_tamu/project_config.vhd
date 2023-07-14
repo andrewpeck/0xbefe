@@ -25,7 +25,9 @@ package project_config is
     constant CFG_USE_SPY_LINK      : t_bool_array(0 to CFG_NUM_SLRS - 1) := (others => true);
     constant CFG_USE_TTC_TX_LINK   : boolean := true;
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;
-
+    constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
+    constant CFG_TTC_GBTX_LINK      : integer := CFG_BOARD_MAX_LINKS;
+    
     --================================--
     -- Link configuration               
     --================================--
