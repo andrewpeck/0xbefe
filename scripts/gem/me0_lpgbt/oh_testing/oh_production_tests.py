@@ -53,6 +53,7 @@ if __name__ == "__main__":
     geb_dict = {}
     slot_name_dict = {}
     vtrx_dict = {}
+    pigtail_dict = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
@@ -66,6 +67,7 @@ if __name__ == "__main__":
         slot_name = line.split()[1]
         oh_sn = line.split()[2]
         vtrx_sn = line.split()[3]
+        pigtail_dict = float(line.split()[4])
         if oh_sn != "-9999":
             if batch in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
@@ -85,6 +87,7 @@ if __name__ == "__main__":
             geb_dict[slot] = oh_sn
             slot_name_dict[slot] = slot_name
             vtrx_dict[slot] = vtrx_sn
+            pigtail_dict[slot] = pigtail
     input_file.close()
 
     if len(geb_dict) == 0:
@@ -147,10 +150,10 @@ if __name__ == "__main__":
         results_oh_sn[oh_sn]["GEB_Slot"]=slot_name_dict[slot]
         results_oh_sn[oh_sn]["VTRx+"]={}
         results_oh_sn[oh_sn]["VTRx+"]["Serial_Number"]=vtrx_dict[slot]
+        results_oh_sn[oh_sn]["VTRx+"]["Pigtail_Length"]=pigtail_dict[slot]
         for gbt in geb_oh_map[slot]["GBT"]:
             results_oh_sn[oh_sn][gbt]={}
-        results_oh_sn[oh_sn]['VFAT_Slots']=geb_oh_map[slot]['VFAT']
-    
+        results_oh_sn[oh_sn]['VFAT_Slots']=geb_oh_map[slot]['VFAT']    
     debug = True if batch=="debug" else False
     test_failed = False
     t0 = time.time()

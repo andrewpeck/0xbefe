@@ -1,10 +1,10 @@
 # BATCH: pre_production
-# SLOT_NUM  SLOT_NAME   OH_SER_NUM   VTRX+_SER_NUM
-1           NARROW_1    1               -9999
-2           NARROW_2    2               -9999           
-3           WIDE_1      -9999           -9999
-4           WIDE_2      -9999           -9999
-5           NARROW_1    -9999           -9999
-6           NARROW_2    -9999           -9999
-7           WIDE_1      -9999           -9999
-8           WIDE_2      -9999           -9999
+# SLOT_NUM  SLOT_NAME   OH_SER_NUM   VTRX+_SER_NUM  PIGTAIL_LEN
+1           NARROW_1    1               -9999       84
+2           NARROW_2    2               -9999       65    
+3           WIDE_1      -9999           -9999       49
+4           WIDE_2      -9999           -9999       32.5
+5           NARROW_1    -9999           -9999       84
+6           NARROW_2    -9999           -9999       65
+7           WIDE_1      -9999           -9999       49
+8           WIDE_2      -9999           -9999       32.5
