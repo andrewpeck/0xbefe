@@ -67,25 +67,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
-    parser.add_argument("-p", "--power",action="store",dest="power",help = 'power = only power on/off regulators without running test scripts, valid entries: "on", "off"')
+    parser.add_argument("-p", "--power_on", action="store_true", dest="power_on", help = 'power_on = only power on regulators without running test scripts')
+    parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help = 'turn_off = only power off regulators without running test scripts')
     args = parser.parse_args()
 
     if args.input_file is None:
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
-    # set power only and power on/off flags
-    if args.power:
-        power_only = True
-        if args.power.lower() == 'on':
-            power = True
-        elif args.power.lower() == 'off':
-            power = False
-        else:
-            print(Colors.YELLOW + 'Valid entries are "on" or "off"' + Colors.ENDC)
-            sys.exit()
-    else:
-        power_only = False
-        power = True
+    # set power only flag
+    if args.power_on and args.turn_off:
+        print(Colors.YELLOW + '"power_on" and "turn_off" both true, only use one power argument' + Colors.ENDC)
+        sys.exit()
+    power_only = args.power_on or args.turn_off
     queso_dict = {}
     if not power_only:
         results_oh_sn = {}
@@ -133,7 +126,7 @@ if __name__ == "__main__":
     base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/queso_testing/"
 
     if power_only:
-        if power:
+        if args.power_on:
             print(Colors.BLUE + "Turning ON QUESOs: " + Colors.ENDC)
         else:
             print(Colors.BLUE + "Turning OFF QUESOs: " + Colors.ENDC)
@@ -152,7 +145,7 @@ if __name__ == "__main__":
             print("\n######################################################\n")
 
             # Initialize RPI GPIOs
-            if power:
+            if args.power_on:
                 print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
                 ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
@@ -164,7 +157,7 @@ if __name__ == "__main__":
                 sleep(1)
 
             # Enabling/Disabling regulators
-            if power:
+            if args.power_on:
                 print(Colors.BLUE + "Enabling regulators\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
             else:
@@ -174,7 +167,7 @@ if __name__ == "__main__":
             output = ssh_stdout.readlines()
             for line in output:
                 print(line)
-            if power:
+            if args.power_on:
                 print(Colors.GREEN + "\nRegulators Enabled" + Colors.ENDC)
             else:
                 print(Colors.GREEN + "\nRegulators Disabled" + Colors.ENDC)
@@ -182,7 +175,7 @@ if __name__ == "__main__":
             sleep(1)
 
             # Terminate RPI GPIOs
-            if not power:
+            if args.turn_off:
                 print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
                 ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
