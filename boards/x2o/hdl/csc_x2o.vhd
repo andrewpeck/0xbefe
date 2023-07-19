@@ -392,6 +392,46 @@ begin
         );
 
     --================================--
+    -- Ethernet switch module
+    --================================--
+    
+    g_eth_switch : if CFG_USE_ETH_SWITCH generate
+        signal eth_gbe_clk      : std_logic;
+        signal eth_rx_data      : t_mgt_64b_rx_data_arr(CFG_ETH_SWITCH_NUM_PORTS - 1 downto 0);
+        signal eth_tx_data      : t_mgt_64b_tx_data_arr(CFG_ETH_SWITCH_NUM_PORTS - 1 downto 0);
+        signal eth_mgt_status   : t_mgt_status_arr(CFG_ETH_SWITCH_NUM_PORTS - 1 downto 0);
+    begin
+        i_eth_switch : entity work.eth_switch
+            generic map(
+                g_NUM_PORTS         => CFG_ETH_SWITCH_NUM_PORTS,
+                g_PORT_LINKS        => CFG_ETH_SWITCH_LINKS,
+                g_ETH_PORT_ROUTES   => CFG_ETH_SWITCH_PORT_ROUTES,
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+            )
+            port map(
+                reset_i       => '0',
+                gbe_clk_i     => eth_gbe_clk,
+                mgt_rx_data_i => eth_rx_data,
+                mgt_tx_data_o => eth_tx_data,
+                mgt_status_i  => eth_mgt_status,
+                ipb_reset_i   => ipb_reset,
+                ipb_clk_i     => ipb_clk,
+                ipb_miso_o    => ipb_sys_miso_arr(C_IPB_SYS_SLV.eth_switch),
+                ipb_mosi_i    => ipb_sys_mosi_arr(C_IPB_SYS_SLV.eth_switch)
+            );
+    
+        -- link mapping
+        eth_gbe_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_ETH_SWITCH_LINKS(0)).tx);
+        
+        g_eth_switch_links : for i in 0 to CFG_ETH_SWITCH_NUM_PORTS - 1 generate
+            eth_rx_data(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).rx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).tx) <= eth_tx_data(i);
+            eth_mgt_status(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).rx);
+        end generate;
+    
+    end generate;
+
+    --================================--
     -- CSC Logic
     --================================--
 

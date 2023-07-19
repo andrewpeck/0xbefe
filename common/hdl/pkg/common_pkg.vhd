@@ -290,6 +290,8 @@ package common_pkg is
     type t_std16_array_2d is array (integer range <>) of t_std16_array;
     type t_std32_array_2d is array (integer range <>) of t_std32_array;
 
+    type t_int_array_2d is array (integer range <>) of t_int_array;
+
     --============--
     --==   GBT  ==--
     --============--   
@@ -463,6 +465,16 @@ package common_pkg is
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
     type t_mgt_status_arr_arr is array(integer range <>) of t_mgt_status_arr;
 
+    -- convertsion functions
+    function mgt_rx_64b_to_16b(mgt_rx_64b: t_mgt_64b_rx_data) return t_mgt_16b_rx_data;
+    function mgt_rx_64b_to_16b_arr(mgt_rx_64b_arr: t_mgt_64b_rx_data_arr) return t_mgt_16b_rx_data_arr;
+    function mgt_rx_16b_to_64b(mgt_rx_16b: t_mgt_16b_rx_data) return t_mgt_64b_rx_data;
+    function mgt_rx_16b_to_64b_arr(mgt_rx_16b_arr: t_mgt_16b_rx_data_arr) return t_mgt_64b_rx_data_arr;
+    function mgt_tx_64b_to_16b(mgt_tx_64b: t_mgt_64b_tx_data) return t_mgt_16b_tx_data;
+    function mgt_tx_64b_to_16b_arr(mgt_tx_64b_arr: t_mgt_64b_tx_data_arr) return t_mgt_16b_tx_data_arr;
+    function mgt_tx_16b_to_64b(mgt_tx_16b: t_mgt_16b_tx_data) return t_mgt_64b_tx_data;
+    function mgt_tx_16b_to_64b_arr(mgt_tx_16b_arr: t_mgt_16b_tx_data_arr) return t_mgt_64b_tx_data_arr;
+    
     --====================--
     --==     DAQLink    ==--
     --====================--
@@ -579,6 +591,13 @@ package common_pkg is
     type t_promless_cfg is record
         firmware_size       : std_logic_vector(31 downto 0);
     end record;
+
+    --===============================--
+    --==      Ethernet switch      ==--
+    --===============================--
+
+    type t_eth_port_type is (ETH_PORT_GBE, ETH_PORT_10_GBE);
+    type t_eth_port_type_arr is array(integer range <>) of t_eth_port_type;
 
 end common_pkg;
    
@@ -701,6 +720,98 @@ package body common_pkg is
     begin
         for i in 0 to data_in'length - 1 loop
             ret(ret'high - i) := data_in(data_in'low + i);
+        end loop;
+        return ret;
+    end function;
+
+    ---------------------------------------------------------------------------
+    -- MGT record conversion functions
+    ---------------------------------------------------------------------------
+
+    function mgt_rx_64b_to_16b(mgt_rx_64b: t_mgt_64b_rx_data) return t_mgt_16b_rx_data is
+        variable ret : t_mgt_16b_rx_data;
+    begin
+        ret.rxbyteisaligned := mgt_rx_64b.rxbyteisaligned;
+        ret.rxbyterealign := mgt_rx_64b.rxbyterealign;
+        ret.rxchariscomma := mgt_rx_64b.rxchariscomma(1 downto 0);
+        ret.rxcharisk := mgt_rx_64b.rxcharisk(1 downto 0);
+        ret.rxcommadet := mgt_rx_64b.rxcommadet;
+        ret.rxdata := mgt_rx_64b.rxdata(15 downto 0);
+        ret.rxdisperr := mgt_rx_64b.rxdisperr(1 downto 0);
+        ret.rxnotintable := mgt_rx_64b.rxnotintable(1 downto 0);
+        return ret;
+    end function;
+        
+    function mgt_rx_64b_to_16b_arr(mgt_rx_64b_arr: t_mgt_64b_rx_data_arr) return t_mgt_16b_rx_data_arr is
+        variable ret : t_mgt_16b_rx_data_arr(mgt_rx_64b_arr'range);
+    begin
+        for i in mgt_rx_64b_arr'range loop
+            ret(i) := mgt_rx_64b_to_16b(mgt_rx_64b_arr(i));
+        end loop;
+        return ret;
+    end function;
+    
+    function mgt_rx_16b_to_64b(mgt_rx_16b: t_mgt_16b_rx_data) return t_mgt_64b_rx_data is
+        variable ret : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
+    begin
+        ret.rxbyteisaligned := mgt_rx_16b.rxbyteisaligned;
+        ret.rxbyterealign := mgt_rx_16b.rxbyterealign;
+        ret.rxchariscomma(1 downto 0) := mgt_rx_16b.rxchariscomma;
+        ret.rxcharisk(1 downto 0) := mgt_rx_16b.rxcharisk;
+        ret.rxcommadet := mgt_rx_16b.rxcommadet;
+        ret.rxdata(15 downto 0) := mgt_rx_16b.rxdata;
+        ret.rxdisperr(1 downto 0) := mgt_rx_16b.rxdisperr;
+        ret.rxnotintable(1 downto 0) := mgt_rx_16b.rxnotintable;
+        return ret;
+    end function;
+        
+    function mgt_rx_16b_to_64b_arr(mgt_rx_16b_arr: t_mgt_16b_rx_data_arr) return t_mgt_64b_rx_data_arr is
+        variable ret : t_mgt_64b_rx_data_arr(mgt_rx_16b_arr'range);
+    begin
+        for i in mgt_rx_16b_arr'range loop
+            ret(i) := mgt_rx_16b_to_64b(mgt_rx_16b_arr(i));
+        end loop;
+        return ret;
+    end function;        
+        
+    function mgt_tx_64b_to_16b(mgt_tx_64b: t_mgt_64b_tx_data) return t_mgt_16b_tx_data is
+        variable ret : t_mgt_16b_tx_data;
+    begin
+        ret.txchardispmode := mgt_tx_64b.txchardispmode(1 downto 0);
+        ret.txchardispval := mgt_tx_64b.txchardispval(1 downto 0);
+        ret.txcharisk := mgt_tx_64b.txcharisk(1 downto 0);
+        ret.txdata := mgt_tx_64b.txdata(15 downto 0);
+        ret.txheader := mgt_tx_64b.txheader;
+        ret.txsequence := mgt_tx_64b.txsequence;
+        return ret;
+    end function;
+        
+    function mgt_tx_64b_to_16b_arr(mgt_tx_64b_arr: t_mgt_64b_tx_data_arr) return t_mgt_16b_tx_data_arr is
+        variable ret : t_mgt_16b_tx_data_arr(mgt_tx_64b_arr'range);
+    begin
+        for i in mgt_tx_64b_arr'range loop
+            ret(i) := mgt_tx_64b_to_16b(mgt_tx_64b_arr(i));
+        end loop;
+        return ret;
+    end function;
+        
+    function mgt_tx_16b_to_64b(mgt_tx_16b: t_mgt_16b_tx_data) return t_mgt_64b_tx_data is
+        variable ret : t_mgt_64b_tx_data := MGT_64B_TX_DATA_NULL;
+    begin
+        ret.txchardispmode(1 downto 0) := mgt_tx_16b.txchardispmode;
+        ret.txchardispval(1 downto 0) := mgt_tx_16b.txchardispval;
+        ret.txcharisk(1 downto 0) := mgt_tx_16b.txcharisk;
+        ret.txdata(15 downto 0) := mgt_tx_16b.txdata;
+        ret.txheader := mgt_tx_16b.txheader;
+        ret.txsequence := mgt_tx_16b.txsequence;
+        return ret;
+    end function;
+        
+    function mgt_tx_16b_to_64b_arr(mgt_tx_16b_arr: t_mgt_16b_tx_data_arr) return t_mgt_64b_tx_data_arr is
+        variable ret : t_mgt_64b_tx_data_arr(mgt_tx_16b_arr'range);
+    begin
+        for i in mgt_tx_16b_arr'range loop
+            ret(i) := mgt_tx_16b_to_64b(mgt_tx_16b_arr(i));
         end loop;
         return ret;
     end function;
