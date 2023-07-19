@@ -101,12 +101,12 @@
             description="Board link number associated with this switch port"
             fw_signal="std_logic_vector(to_unsigned(g_PORT_LINKS(${PORT}), 8))"/>
 
-      <node id="ROUTE${PORT}" address="0x8" mask="0x000000ff"
+      <node id="ROUTE${ROUTE}" address="0x8" mask="0x000000ff" permission="r"
             description="Port #${PORT} route #${ROUTE}: the value of this register shows which port this route goes to. If the value is >= NUM_PORTS, it is an invalid route."
             generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000001" generate_idx_var="ROUTE"
-            fw_signal="std_logic_vector(to_unsigned(g_ETH_PORT_ROUTES(${PORT})(${ROUTE}), 8))"
-            sw_val_good="self < read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"
-            sw_val_neutral="self >= read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"/>
+            fw_signal="std_logic_vector(to_unsigned(g_ETH_PORT_ROUTES(${PORT})(${ROUTE}), 8))"/>
+            <!-- sw_val_good="self < read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"
+            sw_val_neutral="self >= read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"/> -->
     </node>
   </node>
 
