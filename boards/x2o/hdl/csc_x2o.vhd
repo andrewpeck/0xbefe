@@ -424,9 +424,9 @@ begin
         eth_gbe_clk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_ETH_SWITCH_LINKS(0)).tx);
         
         g_eth_switch_links : for i in 0 to CFG_ETH_SWITCH_NUM_PORTS - 1 generate
-            eth_rx_data(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).rx);
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).tx) <= eth_tx_data(i);
-            eth_mgt_status(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(i)).rx);
+            eth_rx_data(i) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ETH_SWITCH_LINKS(i)).rx);
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_ETH_SWITCH_LINKS(i)).tx) <= eth_tx_data(i);
+            eth_mgt_status(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_ETH_SWITCH_LINKS(i)).rx);
         end generate;
     
     end generate;
