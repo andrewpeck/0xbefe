@@ -1,0 +1,113 @@
+<!-- TTC TX module -->
+<node id="ETH_SWITCH"  address="0x00080000"
+      description="This module controls the ethernet switch"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/misc/eth_switch.vhd"
+      fw_user_clock_signal="gbe_clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module"
+          fw_write_pulse_signal="reset_local_gbe"/>
+    <node id="DEFAULT_ROUTE" address="0x1" mask="0x000000ff" permission="rw"
+          description="If a frame is received with destination MAC that does not match any MAC address of any valid route, the frame will be routed to the port defined in this register.
+                       If the value in this register is higher than the max port number, these unmatched frames will be discarded. By default this reg is set to 0xff, which means that this feature is turned off."
+          fw_signal="no_match_route" fw_default="0xff"/>
+    <node id="PORT${PORT}" address="0x10"
+          description="Control of port #${PORT}"
+          generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000010" generate_idx_var="PORT">
+      <node id="MAC_ADDR_BOT" address="0x0" permission="rw"
+            description="Bottom 4 bytes of the MAC address of the device connected to this port: frames having this MAC address as their destination MAC will be routed to this port"
+            fw_signal="port_mac_arr(${PORT})(31 downto 0)" fw_default="0x00000000"/>
+      <node id="MAC_ADDR_TOP" address="0x1" mask="0x0000ffff" permission="rw"
+            description="Top 2 bytes of the MAC address of the device connected to this port: frames having this MAC address as their destination MAC will be routed to this port"
+            fw_signal="port_mac_arr(${PORT})(47 downto 32)" fw_default="0x0000"/>
+    </node>
+  </node>
+
+  <node id="STATUS" address="0x1000">
+    <node id="PORT${PORT}" address="0x10"
+          description="Status of port #${PORT}"
+          generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000010" generate_idx_var="PORT">
+      <node id="RX_FRAME_CNT" address="0x0" permission="r"
+            description="Number of receied ethernet frames into this port"
+            fw_signal="rx_packet_cnt_arr(${PORT})"/>
+      <node id="TX_FRAME_CNT" address="0x1" permission="r"
+            description="Number of transmitted ethernet frames out of this port"
+            fw_signal="tx_packet_cnt_arr(${PORT})"/>
+      <node id="LEARNED_MAC_BOT" address="0x2" permission="r"
+            description="Bottom 4 bytes of the learned MAC address of this port: this is the source MAC of the last ethernet frame received on this port.
+                         This is just informational and does not affect routing, but one can read this and set the MAC_ADDR_BOT register with this value
+                         in order to set this MAC as the routing address for this port."
+            fw_signal="learned_rx_mac_arr(${PORT})(31 downto 0)"/>
+      <node id="LEARNED_MAC_TOP" address="0x3" mask="0x0000ffff" permission="r"
+            description="Top 2 bytes of the learned MAC address of this port: this is the source MAC of the last ethernet frame received on this port.
+                         This is just informational and does not affect routing, but one can read this and set the MAC_ADDR_TOP register with this value
+                         in order to set this MAC as the routing address for this port."
+            fw_signal="learned_rx_mac_arr(${PORT})(47 downto 32)"/>
+
+      <node id="RX_HAD_SOF_ERR" address="0x3" mask="0x00010000" permission="r"
+            description="This port had received a frame with an incorrect preamble sequence or the start of frame (SOF) marker was not in the correct place after the preamble.
+                         If this happens, the frame is lost. This flag is latched and can be reset with a module reset register."
+            fw_signal="rx_sof_error_arr(${PORT})"
+            sw_val_bad="self == 1" sw_val_good="self == 0"/>
+      <node id="RX_HAD_ERROR_MARKER" address="0x3" mask="0x00020000" permission="r"
+            description="This port had received a special control symbol K30.7 while receiving a frame. This symbol is called error marker and can be used by the
+                         transmitting device to indicate some type of error (unclear what exactly). This flag is latched and can be reset with a module reset register."
+            fw_signal="rx_error_marker_arr(${PORT})"
+            sw_val_bad="self == 1" sw_val_good="self == 0"/>
+      <node id="TX_HAD_EOF_ERR" address="0x3" mask="0x00040000" permission="r"
+            description="The transmitter of this port had its FIFO drain before it saw an end of frame (EOF) marker. Most likely this frame would not have been received by the device connected to this port.
+                         This flag is latched and can be reset with a module reset register."
+            fw_signal="tx_eof_err_arr(${PORT})"
+            sw_val_bad="self == 1" sw_val_good="self == 0"/>
+      <node id="FIFO_HAD_OVERFLOW" address="0x3" mask="0x00080000" permission="r"
+            description="One of the FIFOs associated to this receiver port had an overflow. The data on this port was likely corrupted and bad frames would have probably been routed out.
+                         This flag is latched and can be reset with a module reset register."
+            fw_signal="fifo_ovf_arr(${PORT})"
+            sw_val_bad="self == 1" sw_val_good="self == 0"/>
+      <node id="FIFO_HAD_UNDERFLOW" address="0x3" mask="0x00100000" permission="r"
+            description="One of the FIFOs associated to this transmitter port had an underflow. This should not happen and indicates a firmware bug.
+                         This flag is latched and can be reset with a module reset register."
+            fw_signal="fifo_unf_arr(${PORT})"
+            sw_val_bad="self == 1" sw_val_good="self == 0"/>
+      <node id="NOT_IN_TABLE_ERR_CNT" address="0x4" mask="0x0000ffff" permission="r"
+            description="Count of 8b10b not in table symbols received by the link. On a good link this should be 0 or incrementing increadibly slowly."
+            fw_signal="rx_not_in_tbl_cnt_arr(${PORT})"
+            sw_val_good="self == 0"/>
+      <node id="DISP_ERR_CNT" address="0x4" mask="0xffff0000" permission="r"
+              description="Count of 8b10b disparity errors on the link. On a good link this should be 0 or incrementing increadibly slowly."
+              fw_signal="rx_disperr_cnt_arr(${PORT})"
+              sw_val_good="self == 0"/>
+    </node>
+  </node>
+
+  <node id="CONFIG" address="0x2000" description="Firmware configuration of this switch">
+    <node id="NUM_PORTS" address="0x0" mask="0x000000ff" permission="r"
+          description="Number of ports in this switch"
+          fw_signal="std_logic_vector(to_unsigned(g_NUM_PORTS, 8))"/>
+
+    <node id="PORT${PORT}" address="0x10"
+          description="Firmware configuration of port #${PORT}"
+          generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000080" generate_idx_var="PORT">
+
+      <node id="LINK_IDX" address="0x0" mask="0x000000ff" permission="r"
+            description="Board link number associated with this switch port"
+            fw_signal="std_logic_vector(to_unsigned(g_PORT_LINKS(${PORT}), 8))"/>
+
+      <node id="ROUTE${PORT}" address="0x8" mask="0x000000ff"
+            description="Port #${PORT} route #${ROUTE}: the value of this register shows which port this route goes to. If the value is >= NUM_PORTS, it is an invalid route."
+            generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000001" generate_idx_var="ROUTE"
+            fw_signal="std_logic_vector(to_unsigned(g_ETH_PORT_ROUTES(${PORT})(${ROUTE}), 8))"
+            sw_val_good="self < read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"
+            sw_val_neutral="self >= read_reg_cache('BEFE.ETH_SWITCH.CONFIG.NUM_PORTS')"/>
+    </node>
+  </node>
+
+</node> <!-- End of TTC TX module -->
