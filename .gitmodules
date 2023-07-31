@@ -9,7 +9,7 @@
 	url = https://github.com/prompt-toolkit/python-prompt-toolkit.git
 [submodule "tcds2"]
 	path = tcds2
-	url = ssh://git@gitlab.cern.ch:7999/cms-tcds/cms-tcds2-firmware.git
+	url = ../../cms-tcds/cms-tcds2-firmware.git
 [submodule "tclink"]
 	path = tclink
 	url = https://gitlab.cern.ch/HPTD/tclink.git
