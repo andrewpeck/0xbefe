@@ -421,14 +421,14 @@ begin
         signal gem_gt_trig_tx_clk       : std_logic;
         signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX - 1 downto 0);
         signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX - 1 downto 0);
-    
+
         -------------------- Spy / LDAQ readout link ---------------------------------
-        signal spy_rx_data              : t_mgt_64b_rx_data;
-        signal spy_tx_data              : t_mgt_64b_tx_data;
-        signal spy_rx_usrclk            : std_logic;
-        signal spy_tx_usrclk            : std_logic;
-        signal spy_status               : t_mgt_status;
-                
+        signal spy_rx_data              : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
+        signal spy_tx_data              : t_mgt_64b_tx_data := MGT_64B_TX_DATA_NULL;
+        signal spy_rx_usrclk            : std_logic := '0';
+        signal spy_tx_usrclk            : std_logic := '0';
+        signal spy_status               : t_mgt_status := MGT_STATUS_NULL;
+
     begin
 
         i_gem : entity work.gem_amc
@@ -446,8 +446,7 @@ begin
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
-                g_IS_SLINK_ROCKET   => false,
-                g_EXT_TTC_RECEIVER  => true
+                g_IS_SLINK_ROCKET   => false
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -457,9 +456,6 @@ begin
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
-                ttc_cmds_i              => TTC_CMDS_NULL,
-                ttc_data_p_i            => '1',
-                ttc_data_n_i            => '0',
                 external_trigger_i      => ext_trig,
     
                 gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
@@ -552,25 +548,17 @@ begin
         g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             spy_tx_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= spy_tx_data;
-        else generate
-            spy_tx_usrclk <= '0';
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= MGT_64B_TX_DATA_NULL;
         end generate;
 
         -- spy link RX mapping
         g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             spy_rx_usrclk <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
             spy_rx_data <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-        else generate
-            spy_rx_usrclk <= '0';
-            spy_rx_data <= MGT_64B_RX_DATA_NULL;
         end generate;
 
         -- spy link status mapping
         g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
             spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-        else generate
-            spy_status <= MGT_STATUS_NULL;
         end generate;
 
         -- MGT mapping to EMTF links
@@ -595,7 +583,7 @@ begin
     i_sas1_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas1_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas1_trig_sync);
     i_sas2_trig_sync   : entity work.ext_trig port map(clocks_i => ttc_clks, async_trigger_i => sas2_gprx_0_i, phase_mask_i => ext_trig_phase_mask, ext_trigger_o => sas2_trig_sync);
 
-    ext_trig_in_sync <= sas1_trig_sync when ext_trig_source = "00" else sas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync; 
+    ext_trig_in_sync <= sas1_trig_sync when ext_trig_source = "00" else sas2_trig_sync when ext_trig_source = "01" else dimm2_trig_sync when ext_trig_source = "10" else usbc_trig_sync when rising_edge(ttc_clks.clk_40);
 
     ------------ SlimSAS outputs ------------
 

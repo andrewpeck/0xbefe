@@ -189,11 +189,11 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs(0) * CFG_NUM_GBTS_PER_OH(0) - 1 downto 0);
 
     -------------------- Spy / LDAQ readout link ---------------------------------
-    signal spy_rx_data              : t_mgt_64b_rx_data;
-    signal spy_tx_data              : t_mgt_64b_tx_data;
-    signal spy_tx_usrclk            : std_logic;
-    signal spy_rx_usrclk            : std_logic;
-    signal spy_status               : t_mgt_status;
+    signal spy_rx_data              : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
+    signal spy_tx_data              : t_mgt_64b_tx_data := MGT_64B_TX_DATA_NULL;
+    signal spy_rx_usrclk            : std_logic := '0';
+    signal spy_tx_usrclk            : std_logic := '0';
+    signal spy_status               : t_mgt_status := MGT_STATUS_NULL;
 
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink       : t_daq_to_daqlink;
@@ -348,7 +348,6 @@ begin
         i_gem : entity work.gem_amc
             generic map(
                 g_SLR                => 0,
-                g_DISABLE_TTC_DATA   => false,
                 g_GEM_STATION        => CFG_GEM_STATION(0),
                 g_NUM_OF_OHs         => CFG_NUM_OF_OHs(0),
                 g_OH_VERSION         => CFG_OH_VERSION(0),
@@ -361,7 +360,8 @@ begin
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS  => 20,
                 g_DAQ_CLK_FREQ       => 62_500_000, --50_000_000
-                g_IS_SLINK_ROCKET    => false
+                g_IS_SLINK_ROCKET    => false,
+                g_EXT_TTC_RECEIVER   => false
             )
             port map(
                 reset_i                 => '0',
@@ -373,7 +373,6 @@ begin
                 ttc_clocks_i            => ttc_clocks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl,
-                external_trigger_i      => '0',
 
                 gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
                 gt_trig0_rx_data_arr_i  => gem_gt_trig0_rx_data_arr,
@@ -474,25 +473,17 @@ begin
     g_spy_link_tx : if CFG_USE_SPY_LINK_TX(0) generate
         spy_tx_usrclk <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx);
         gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= spy_tx_data;
-    else generate
-        spy_tx_usrclk <= '0';
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= MGT_64B_TX_DATA_NULL;
     end generate;
 
     -- spy link RX mapping
     g_spy_link_rx : if CFG_USE_SPY_LINK_RX(0) generate
         spy_rx_usrclk <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
         spy_rx_data <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
-    else generate
-        spy_rx_usrclk <= '0';
-        spy_rx_data <= MGT_64B_RX_DATA_NULL;
     end generate;
 
     -- spy link statuses mapping
     g_spy_link : if CFG_USE_SPY_LINK_TX(0) or CFG_USE_SPY_LINK_RX(0) generate
         spy_status <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
-    else generate
-        spy_status <= MGT_STATUS_NULL;
     end generate;
 
     -------------------------- LpGBT loopback test without GEM logic ---------------------------------
