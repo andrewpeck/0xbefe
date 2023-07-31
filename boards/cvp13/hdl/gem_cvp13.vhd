@@ -304,6 +304,7 @@ begin
             g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
+            g_DATA_REG_STAGES   => 4, -- TODO: this should be made a per-channel parameter in the link config
             g_STABLE_CLK_PERIOD => 10,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
@@ -337,6 +338,10 @@ begin
             ipb_clk_i            => ipb_clk,
             ipb_mosi_i           => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt),
             ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
+--            ipb_mosi_chan_drp_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt_chan_drp),
+--            ipb_miso_chan_drp_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt_chan_drp),
+--            ipb_mosi_qpll_drp_i  => ipb_sys_mosi_arr(C_IPB_SYS_SLV.mgt_qpll_drp),
+--            ipb_miso_qpll_drp_o  => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt_qpll_drp)
         );
 
     --================================--
@@ -442,7 +447,7 @@ begin
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
                 g_IS_SLINK_ROCKET   => false,
-                g_DISABLE_TTC_DATA  => true
+                g_EXT_TTC_RECEIVER  => true
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -452,6 +457,7 @@ begin
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
+                ttc_cmds_i              => TTC_CMDS_NULL,
                 ttc_data_p_i            => '1',
                 ttc_data_n_i            => '0',
                 external_trigger_i      => ext_trig,
@@ -560,7 +566,7 @@ begin
             spy_rx_data <= MGT_64B_RX_DATA_NULL;
         end generate;
 
-        -- spy link statuses mapping
+        -- spy link status mapping
         g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
             spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
         else generate

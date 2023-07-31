@@ -30,6 +30,7 @@ use work.common_pkg.all;
 entity ttc_clocks is
     generic (
         g_GEM_STATION               : integer range 0 to 2;
+        g_INPUT_IS_40MHZ            : boolean := false; -- set this to true if the input clock is actually 40MHz
         g_TXPROGDIVCLK_USED         : boolean := false; -- set this to true if TXOUTCLKSEL is set to TXPROGDIVCLK ("101"), which results in the same frequency as the user clock (e.g. for GBTX TXOUTCLK in this case is 120MHz instead of the 160MHz refclk)
         g_INST_BUFG_GT              : boolean := true; -- if set to true then BUFG_GT will be instantiated inside this module, otherwise the clk_gbt_mgt_txout_i should be put on a BUFG_GT outside
         g_LPGBT_2P56G_LOOPBACK_TEST : boolean := false;
@@ -80,9 +81,11 @@ architecture ttc_clocks_arch of ttc_clocks is
     signal ttc_clocks_bufg      : t_ttc_clks;
     
     -- this function determines the feedback clock multiplication factor based on whether the station is using LpGBT or GBTX
-    function get_clkfbout_mult(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback : boolean) return real is
+    function get_clkfbout_mult(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback, input_is_40mhz : boolean) return real is
     begin
-        if is_lpgbt_loopback then
+        if input_is_40mhz then
+            return 24.0;
+        elsif is_lpgbt_loopback then
             return 3.0;
         elsif not is_txprogdivclk then
             return 6.0;
@@ -95,9 +98,11 @@ architecture ttc_clocks_arch of ttc_clocks is
         end if;
     end function get_clkfbout_mult;    
 
-    function get_clkin_period(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback : boolean) return real is
+    function get_clkin_period(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback, input_is_40mhz : boolean) return real is
     begin
-        if is_lpgbt_loopback then
+        if input_is_40mhz then
+            return 25.00;
+        elsif is_lpgbt_loopback then
             return 3.125;
         elsif not is_txprogdivclk then
             return 6.25;
@@ -110,9 +115,11 @@ architecture ttc_clocks_arch of ttc_clocks is
         end if;
     end function get_clkin_period;    
 
-    function get_clkin_frequency_slv32(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback : boolean) return std_logic_vector is
+    function get_clkin_frequency_slv32(gem_station : integer; is_txprogdivclk, is_lpgbt_loopback, input_is_40mhz : boolean) return std_logic_vector is
     begin
-        if is_lpgbt_loopback then
+        if input_is_40mhz then
+            return x"02638e98"; -- 40.079
+        elsif is_lpgbt_loopback then
             return x"131c74c0"; -- 320.632
         elsif not is_txprogdivclk then
             return x"098e3a60"; -- 160.316MHz
@@ -126,9 +133,9 @@ architecture ttc_clocks_arch of ttc_clocks is
     end function get_clkin_frequency_slv32;    
 
 
-    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST);
-    constant CFG_CLKIN1_FREQ_SLV32 : std_logic_vector := get_clkin_frequency_slv32(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST);
+    constant CFG_CLKFBOUT_MULT : real := get_clkfbout_mult(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST, g_INPUT_IS_40MHZ);
+    constant CFG_CLKIN1_PERIOD : real := get_clkin_period(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST, g_INPUT_IS_40MHZ);
+    constant CFG_CLKIN1_FREQ_SLV32 : std_logic_vector := get_clkin_frequency_slv32(g_GEM_STATION, g_TXPROGDIVCLK_USED, g_LPGBT_2P56G_LOOPBACK_TEST, g_INPUT_IS_40MHZ);
     
     signal mmcm_ps_clk              : std_logic;
     signal mmcm_locked              : std_logic;

@@ -5,7 +5,10 @@ set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_odmb57*RXOUTCLK}]]
 
 ### ETH CLKS ### 
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_gbe*XOUTCLK}]] 
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_gbe.*XOUTCLK}]]  
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_10gbe.*XOUTCLK}]]  
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_gbe_tx_*TXOUTCLK}]]  
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_10gbe_tx_*TXOUTCLK}]]  
 
 ### GBT TX CLKS ### 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_objects [get_pins -hier -filter {name=~*i_mgts/*g_chan_odmb57*TXOUTCLK}]]

@@ -1,8 +1,13 @@
 # -*- mode: TCL;-*-
 
+# for prod tests comment mgt_vu13p.xdc and uncomment mgt_vu13p_120_mgts.xdc
+# for prod tests also uncomment timing_prod_test.xdc (leave timing_gem.xdc uncommented)
+
 boards/x2o/constraints/vup.xdc
-boards/x2o/constraints/mgt_vu13p.xdc
+#boards/x2o/constraints/mgt_vu13p_rev1.xdc
+boards/x2o/constraints/mgt_vu13p_rev1_120_mgts.xdc
 boards/x2o/constraints/slink_4_chan.xdc
 boards/x2o/constraints/timing_gem.xdc
+boards/x2o/constraints/timing_prod_test.xdc
 boards/x2o/constraints/floorplan_gem_vu13p.xdc
 boards/x2o/constraints/c2c_vu13p_rev1.xdc

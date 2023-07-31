@@ -18,6 +18,8 @@ package lpgbtfpga_package is
 	constant FEC12						  : integer := 2;
 	constant DATARATE_5G12				  : integer := 1;
 	constant DATARATE_10G24				  : integer := 2;
+    CONSTANT PCS                          : integer := 0;
+    CONSTANT PMA                          : integer := 1;
    --=====================================================================================--   
    
 end lpgbtfpga_package;

@@ -29,7 +29,7 @@ use work.registers.all;
 
 entity ttc is
     generic(
-        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_EXT_TTC_RECEIVER   : boolean := true; -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
         g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
@@ -41,7 +41,10 @@ entity ttc is
         ttc_clks_status_i   : in  t_ttc_clk_status;
         ttc_clks_ctrl_o     : out t_ttc_clk_ctrl;
 
-        -- TTC backplane data signals
+        -- TTC commands (external receiver, used when g_EXT_TTC_RECEIVER = true)
+        ttc_cmds_i          : in  t_ttc_cmds;
+        
+        -- TTC backplane data signals (internal receiver, used when g_EXT_TTC_RECEIVER = false)
         ttc_data_p_i        : in  std_logic;
         ttc_data_n_i        : in  std_logic;
 
@@ -211,7 +214,7 @@ begin
 
     ------------- TTC commands -------------
     
-    g_ttc_cmd : if not g_DISABLE_TTC_DATA generate
+    g_ttc_cmd : if not g_EXT_TTC_RECEIVER generate
         i_ttc_cmd: entity work.ttc_cmd
             port map(
                 clk_40_i             => ttc_clks_i.clk_40,
@@ -223,14 +226,6 @@ begin
                 ttc_err_single_cnt_o => ttc_status.single_err,
                 ttc_err_double_cnt_o => ttc_status.double_err
             );
-    end generate;
-
-    g_no_ttc_cmd : if g_DISABLE_TTC_DATA generate
-        ttc_cmd <= (others => '0');
-        ttc_l1a <= '0';
-        ttc_status.single_err <= (others => '0');
-        ttc_status.double_err <= (others => '0');
-    end generate;
     
     p_cmd:
     process(ttc_clks_i.clk_40) is
@@ -302,10 +297,50 @@ begin
                     end if;                    
                         end if;
                         
-                    end if;
-                    
+                    end if;          
                 end if;
     end process p_cmd;
+
+    end generate;
+
+    g_no_ttc_cmd : if g_EXT_TTC_RECEIVER generate
+        ttc_status.single_err <= (others => '0');
+        ttc_status.double_err <= (others => '0');
+
+        ttc_l1a <= ttc_cmds_i.l1a;
+        
+        process(ttc_clks_i.clk_40) is
+        begin
+            if (rising_edge(ttc_clks_i.clk_40)) then
+                if (reset = '1') or (ttc_ctrl.cmd_enable = '0') then
+                    bc0_cmd_real        <= '0';
+                    ec0_cmd_real        <= '0';
+                    resync_cmd_real     <= '0';
+                    oc0_cmd_real        <= '0';
+                    start_cmd_real      <= '0';
+                    stop_cmd_real       <= '0';
+                    test_sync_cmd_real  <= '0';
+                    hard_reset_cmd_real <= '0';
+                    calpulse_cmd_real   <= '0';
+                else
+                    bc0_cmd_real        <= ttc_cmds_i.bc0;
+                    ec0_cmd_real        <= ttc_cmds_i.ec0;
+                    resync_cmd_real     <= ttc_cmds_i.resync;
+                    oc0_cmd_real        <= ttc_cmds_i.oc0;
+                    start_cmd_real      <= ttc_cmds_i.start;
+                    stop_cmd_real       <= ttc_cmds_i.stop;
+                    test_sync_cmd_real  <= ttc_cmds_i.test_sync;
+                    hard_reset_cmd_real <= ttc_cmds_i.hard_reset;
+                    if (ttc_ctrl.calib_mode = '0') then
+                        calpulse_cmd_real <= ttc_cmds_i.calpulse;
+                    else
+                        calpulse_cmd_real <= ttc_l1a and ttc_ctrl.l1a_enable;
+                    end if;                    
+                end if;
+            end if;
+        end process;
+        
+    end generate;
 
     i_l1a_delay : entity work.shift_reg
         generic map(

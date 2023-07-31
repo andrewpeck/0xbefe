@@ -1,0 +1,36 @@
+# =============== Common ===============
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/slink_rocket.src
+common/hdl/tcds2.src
+
+# =============== CSC ===============
+csc/hdl/csc.src
+csc/ip/csc_common_ip.src
+
+# =============== X2O ===============
+boards/x2o/hdl/x2o_common.src
+boards/x2o/hdl/x2o_vu13p.src
+boards/x2o/ip/x2o_ip.src
+boards/x2o/bd/x2o_bd.src
+
+# =============== Project ===============
+Top/csc_x2o_r1/project_config.vhd
+boards/x2o/hdl/pkg/csc_vu13p_rev1_board_config_pkg.vhd
+boards/x2o/hdl/csc_x2o.vhd top=csc_x2o
+
+
+# =========== Generated source ===========
+# sources with generated registers
+csc/hdl/pkg/generated/csc_x2o_r1/registers.vhd
+common/hdl/mgt/generated/csc_x2o_r1/mgt_slow_control.vhd
+common/hdl/ttc/generated/csc_x2o_r1/ttc.vhd
+common/hdl/misc/generated/csc_x2o_r1/board_system.vhd
+common/hdl/slink_rocket/generated/csc_x2o_r1/slink_rocket.vhd
+common/hdl/misc/generated/csc_x2o_r1/ttc_tx.vhd
+csc/hdl/system/generated/csc_x2o_r1/system_regs.vhd
+csc/hdl/system/generated/csc_x2o_r1/link_monitor.vhd
+csc/hdl/tests/generated/csc_x2o_r1/csc_tests.vhd
+csc/hdl/daq/generated/csc_x2o_r1/daq.vhd
+common/hdl/misc/generated/csc_x2o_r1/promless_bram.vhd

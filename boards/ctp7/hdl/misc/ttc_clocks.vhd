@@ -738,7 +738,7 @@ begin
             locked_o     => dmtd_mmcm_locked
         );
        
-    i_dmtd_phasemon : entity work.dmtd_phase_meas
+    i_dmtd_phasemon : entity work.dmtd_phase_meas_befe
         generic map(
             G_DEGLITCHER_THRESHOLD => 2000,
             G_COUNTER_BITS         => 14,

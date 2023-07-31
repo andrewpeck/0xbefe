@@ -58,6 +58,7 @@ package board_config_package is
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
     constant CFG_SPY_10GBE                     : boolean := true; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := false; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
 

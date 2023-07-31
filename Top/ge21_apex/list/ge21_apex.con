@@ -3,4 +3,7 @@ boards/apex/constraints/ku15p.xdc
 boards/apex/constraints/mgt_ge21.xdc
 boards/apex/constraints/slink.xdc
 boards/apex/constraints/timing_gem.xdc
-boards/apex/constraints/c2c_gth_rev1_uec3.xdc
+# bottom FPGA
+#boards/apex/constraints/c2c_gth_rev1_uec3.xdc
+# top FPGA
+boards/apex/constraints/c2c_gth_rev2_utc8.xdc

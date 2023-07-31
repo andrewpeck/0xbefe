@@ -40,6 +40,7 @@ entity trigger is
         sbit_link_status_i  : in t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- Outputs
+        self_trigger_o      : out std_logic;
         trig_led_o          : out std_logic;
         trig_tx_data_arr_o  : out t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
 
@@ -66,6 +67,7 @@ architecture trigger_arch of trigger is
     signal reset                : std_logic;
     signal reset_cnt            : std_logic;
     
+    signal self_trig_en         : std_logic;
     signal oh_mask              : std_logic_vector(23 downto 0) := (others => '0');
     signal oh_triggers          : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
     signal oh_num_valid_arr     : t_std4_array(g_NUM_OF_OHs - 1 downto 0);
@@ -165,6 +167,18 @@ begin
             pulse_i        => or_trigger,
             pulse_o        => trig_led_o
         );
+    
+    -- self trigger
+    process (ttc_clk_i.clk_40)
+    begin
+        if rising_edge(ttc_clk_i.clk_40) then
+            if reset = '1' or self_trig_en = '0' then
+                self_trigger_o <= '0';
+            else
+                self_trigger_o <= or_trigger;
+            end if;
+        end if;
+    end process;
     
     --== Links ==--
         

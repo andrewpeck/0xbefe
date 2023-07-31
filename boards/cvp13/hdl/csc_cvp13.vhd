@@ -641,8 +641,9 @@ begin
                 probe4 : in std_logic_vector(15 downto 0);
                 probe5 : in std_logic;
                 probe6 : in std_logic;
-                probe7 : in std_logic_vector(2 downto 0);
-                probe8 : in std_logic_vector(1 downto 0)
+                probe7 : in std_logic;
+                probe8 : in std_logic_vector(2 downto 0);
+                probe9 : in std_logic_vector(1 downto 0)
             );
         end component;        
         
@@ -995,8 +996,9 @@ begin
                 probe4 => rx_disperr,
                 probe5 => and_reduce(rx_byteisaligned),
                 probe6 => or_reduce(rx_byterealign),
-                probe7 => "000", -- bufstatus
-                probe8 => "00" -- rxclkcorr
+                probe7 => or_reduce(rx_commadet),
+                probe8 => "000", -- bufstatus
+                probe9 => "00" -- rxclkcorr
             );
 
         -- PRBS checker ILA

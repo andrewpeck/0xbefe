@@ -40,8 +40,9 @@ entity gty_channel_lpgbt_rx_gbe_tx is
         cpllreset_i     : in  std_logic;
         cpll_status_o   : out t_mgt_cpll_status;
         
-        drp_i           : in  t_drp_in;
-        drp_o           : out t_drp_out;
+        drp_clk_i       : in  std_logic;
+        drp_i           : in  t_drp_mosi;
+        drp_o           : out t_drp_miso;
         
         tx_slow_ctrl_i  : in  t_mgt_tx_slow_ctrl;
         tx_init_i       : in  t_mgt_tx_init;
@@ -100,42 +101,49 @@ architecture gty_channel_lpgbt_rx_gbe_tx_arch of gty_channel_lpgbt_rx_gbe_tx is
         end if;
     end function get_txrx_clk25_div;  
     
-    constant TX_CLK25_DIV               : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
-    constant RX_CLK25_DIV               : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
+    constant TX_CLK25_DIV       : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
+    constant RX_CLK25_DIV       : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
 
     -- clocking
-    signal refclks          : std_logic_vector(1 downto 0);
-    signal qpllclks         : std_logic_vector(1 downto 0);
-    signal qpllrefclks      : std_logic_vector(1 downto 0);
-    signal rxsysclksel      : std_logic_vector(1 downto 0);
-    signal txsysclksel      : std_logic_vector(1 downto 0);
-    signal txpllclksel      : std_logic_vector(1 downto 0);
-    signal rxpllclksel      : std_logic_vector(1 downto 0);
-    signal cpllpd           : std_logic;
-    signal cpllreset        : std_logic;
-    signal cplllocken       : std_logic;
+    signal refclks              : std_logic_vector(1 downto 0);
+    signal qpllclks             : std_logic_vector(1 downto 0);
+    signal qpllrefclks          : std_logic_vector(1 downto 0);
+    signal rxsysclksel          : std_logic_vector(1 downto 0);
+    signal txsysclksel          : std_logic_vector(1 downto 0);
+    signal txpllclksel          : std_logic_vector(1 downto 0);
+    signal rxpllclksel          : std_logic_vector(1 downto 0);
+    signal cpllpd               : std_logic;
+    signal cpllreset            : std_logic;
+    signal cplllocken           : std_logic;
+    signal txprogdivreset       : std_logic;
+    signal txprogdivresetdone   : std_logic;
+    signal rxprogdivreset       : std_logic;
+    signal rxprogdivresetdone   : std_logic;
 
     -- fake floating clock
-    signal float_clk        : std_logic;
-    
-    -- tx data
-    signal txdata           : std_logic_vector(127 downto 0);
-    signal txctrl0          : std_logic_vector(15 downto 0);
-    signal txctrl1          : std_logic_vector(15 downto 0);
-    signal txctrl2          : std_logic_vector(7 downto 0);
-
-    -- rx data
-    signal rxdata           : std_logic_vector(127 downto 0);
-    signal rxctrl0          : std_logic_vector(15 downto 0);
-    signal rxctrl1          : std_logic_vector(15 downto 0);
-    signal rxctrl2          : std_logic_vector(7 downto 0);
-    signal rxctrl3          : std_logic_vector(7 downto 0);
+    signal float_clk            : std_logic;
+                                
+    -- tx data                  
+    signal txdata               : std_logic_vector(127 downto 0);
+    signal txctrl0              : std_logic_vector(15 downto 0);
+    signal txctrl1              : std_logic_vector(15 downto 0);
+    signal txctrl2              : std_logic_vector(7 downto 0);
+                                
+    -- rx data                  
+    signal rxdata               : std_logic_vector(127 downto 0);
+    signal rxctrl0              : std_logic_vector(15 downto 0);
+    signal rxctrl1              : std_logic_vector(15 downto 0);
+    signal rxctrl2              : std_logic_vector(7 downto 0);
+    signal rxctrl3              : std_logic_vector(7 downto 0);
     
 begin
 
     assert g_TX_USE_QPLL and g_RX_USE_QPLL report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX must use QPLL for both TX and RX (GTY_QPLL0_LPGBT_QPLL1_GBE implementation), using CPLL is not supported" severity failure;
     assert g_TX_QPLL_01 = 1 and g_RX_QPLL_01 = 0 report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX must use QPLL1 for TX and QPLL0 for RX" severity failure;
     assert not g_USE_TX_SYNC report "BEFE ERROR: GTY_CHANNEL_LPGBT_RX_GBE_TX does not support TX sync, but g_USE_TX_SYNC is set to true" severity failure;
+
+    -- Do not support RXPROGDIV, this is because it's sourced from CDR, so generally we don't want to use it, and also this requires updating the reset FSM to reset the RXPROGDIV after CDRLOCK goes high (this of course can be implemented later if needed)
+    assert g_RXOUTCLKSEL /= "101" report "Using RXPROGDIV is not supported, because it's sourced from CDR, so normally we don't want to use it" severity failure;
 
     -- CPLL clock selection
     g_cpll_ref_clk0 : if g_CPLL_REFCLK_01 = 0 generate
@@ -202,6 +210,30 @@ begin
     g_rx_qpll1 : if g_RX_USE_QPLL and g_RX_QPLL_01 = 1 generate
         rxsysclksel <= "11";
         rxpllclksel <= "10";
+    end generate;
+
+    -- TXPROGDIV is used
+    g_txprogdiv_used : if g_TXOUTCLKSEL = "101" generate
+        txprogdivreset <= tx_init_i.txprogdivreset;
+        tx_status_o.txprogdivresetdone <= txprogdivresetdone;
+    end generate;
+
+    -- TXPROGDIV is not used
+    g_txprogdiv_not_used : if g_TXOUTCLKSEL /= "101" generate
+        txprogdivreset <= '0';
+        tx_status_o.txprogdivresetdone <= '1';
+    end generate;
+
+    -- RXPROGDIV is used
+    g_rxprogdiv_used : if g_RXOUTCLKSEL = "101" generate
+        rxprogdivreset <= rx_init_i.rxprogdivreset;
+        rx_status_o.rxprogdivresetdone <= rxprogdivresetdone;
+    end generate;
+
+    -- RXPROGDIV is not used
+    g_rxprogdiv_not_used : if g_RXOUTCLKSEL /= "101" generate
+        rxprogdivreset <= '0';
+        rx_status_o.rxprogdivresetdone <= '1';
     end generate;
 
     -- TX: 8b10b encoding 16bit wide data bus
@@ -790,7 +822,7 @@ begin
             RXPMARESETDONE       => rx_status_o.rxpmaresetdone,
             RXPRBSERR            => rx_status_o.rxprbserr,
             RXPRBSLOCKED         => open,
-            RXPRGDIVRESETDONE    => open,
+            RXPRGDIVRESETDONE    => rxprogdivresetdone,
             RXRATEDONE           => open,
             RXRECCLKOUT          => open,
             RXRESETDONE          => rx_status_o.rxresetdone,
@@ -813,7 +845,7 @@ begin
             TXPHALIGNDONE        => tx_status_o.txphaligndone,
             TXPHINITDONE         => tx_status_o.txphinitdone,
             TXPMARESETDONE       => tx_status_o.txpmaresetdone,
-            TXPRGDIVRESETDONE    => open,
+            TXPRGDIVRESETDONE    => txprogdivresetdone,
             TXRATEDONE           => open,
             TXRESETDONE          => tx_status_o.txresetdone,
             TXSYNCDONE           => tx_status_o.txsyncdone,
@@ -833,7 +865,7 @@ begin
             DMONFIFORESET        => '0',
             DMONITORCLK          => '0',
             DRPADDR              => drp_i.addr(9 downto 0),
-            DRPCLK               => drp_i.clk,
+            DRPCLK               => drp_clk_i,
             DRPDI                => drp_i.di,
             DRPEN                => drp_i.en,
             DRPRST               => drp_i.rst,
@@ -965,7 +997,7 @@ begin
             RXPOLARITY           => rx_slow_ctrl_i.rxpolarity,
             RXPRBSCNTRESET       => '0',
             RXPRBSSEL            => '0' & rx_slow_ctrl_i.rxprbssel,
-            RXPROGDIVRESET       => '0',
+            RXPROGDIVRESET       => rxprogdivreset,
             RXRATE               => rx_slow_ctrl_i.rxrate,
             RXRATEMODE           => '0',
             RXSLIDE              => rx_fast_ctrl_i.rxslide,
@@ -1036,9 +1068,9 @@ begin
             TXPOLARITY           => tx_slow_ctrl_i.txpolarity,
             TXPOSTCURSOR         => tx_slow_ctrl_i.txpostcursor,
             TXPRBSFORCEERR       => tx_slow_ctrl_i.txprbsforceerr,
-            TXPRBSSEL            => '0' & tx_slow_ctrl_i.txprbssel,
+            TXPRBSSEL            => tx_slow_ctrl_i.txprbssel,
             TXPRECURSOR          => tx_slow_ctrl_i.txprecursor,
-            TXPROGDIVRESET       => '0',
+            TXPROGDIVRESET       => txprogdivreset,
             TXRATE               => "000",
             TXRATEMODE           => '0',
             TXSEQUENCE           => "0000000",

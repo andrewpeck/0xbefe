@@ -59,6 +59,7 @@ architecture ttc_tx_arch of ttc_tx is
     -- inputs
     signal req_l1a              : std_logic;
     signal req_l1a_manual       : std_logic;
+    signal req_l1a_prbs         : std_logic;
     signal req_bcmd_enc         : std_logic_vector(15 downto 0); -- raw B channel data to send for a broadcast command (includes everything, including START, FMT, and STOP bits). It is transmitted high to low
     signal req_lcmd_enc         : std_logic_vector(41 downto 0); -- raw B channel data to send for a long command (includes everything, including START, FMT, and STOP bits). It is transmitted high to low
     signal req_bcmd_stb         : std_logic;
@@ -73,6 +74,8 @@ architecture ttc_tx_arch of ttc_tx is
     signal req_man_bcmd_stb     : std_logic; -- manual broadcast command from registers
     signal req_man_lcmd_stb     : std_logic; -- manual long commnad from registers
     signal req_ttc_bcmd_stb     : std_logic; -- auto broadcast command from ttc input
+    signal l1a_prbs_en          : std_logic; -- if this is set to 1, a PRBS-11 stream is sent on the L1A channel
+    signal l1a_prbs_inj_err     : std_logic; -- inject an error to the L1A PRBS stream
     
     -- output encoding signals
     signal bcmd_data            : std_logic_vector(7 downto 0);
@@ -90,8 +93,25 @@ architecture ttc_tx_arch of ttc_tx is
         
 begin
 
-    req_l1a <= ttc_cmds_i.l1a when ttc_rx_l1a_en = '1' else req_l1a_manual;
+    req_l1a <= ttc_cmds_i.l1a when ttc_rx_l1a_en = '1' else req_l1a_prbs when l1a_prbs_en = '1' else req_l1a_manual;
     reset <= reset_local or reset_i;
+
+    -- l1a PRBS
+    i_l1a_prbs : entity work.PRBS_ANY
+        generic map(
+            CHK_MODE    => false,
+            INV_PATTERN => false,
+            POLY_LENGHT => 11,
+            POLY_TAP    => 9,
+            NBITS       => 1
+        )
+        port map(
+            RST         => not l1a_prbs_en,
+            CLK         => ttc_clocks_i.clk_40,
+            DATA_IN     => (0 => l1a_prbs_inj_err),
+            EN          => l1a_prbs_en,
+            DATA_OUT(0) => req_l1a_prbs
+        );
 
     -- broadcast command encoding
     i_broadcast_cmd_enc : entity work.hamming_8_13

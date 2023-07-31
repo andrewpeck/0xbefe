@@ -11,9 +11,6 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
-# Trigger Source
-gem/hdl/sbit_me0.src
-
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src
 

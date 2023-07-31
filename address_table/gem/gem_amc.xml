@@ -29,6 +29,10 @@
           description="Sector ID that gets embedded in the TX links to EMTF"
           fw_signal="sector_id"
           fw_default="0x0"/>
+    <node id="SELF_TRIGGER_EN" address="0x2" mask="0x10000000" permission="rw"
+        description="Writing 1 enables self triggerring, meaning that valid clusters from unmasked OHs will result in TTC L1A being fired, which goes to the VFATs and DAQ"
+        fw_signal="self_trig_en"
+        fw_default="0x0"/>
   </node>
 
   <node id="STATUS" address="0x10"
@@ -1197,6 +1201,18 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_tx_ready"
           sw_monitor_error_value="0"
           sw_val_bad="self == 0"/>
+
+    <node id="GBT${GBT}_RX_PHASE" address="0x8" mask="0x3f000000" permission="rw"
+          description="When RX_PHASE_AUTO is set to 0, this register sets the number of bitslips to use on the GBT RX MGT word, which effectively shifts the RXUSRCLK where the word is aligned,
+                       and can be used to control the CDC to the fabric clock. Valid values: 0-39."
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_rx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})" fw_default="0b000000"/>
+
+    <node id="GBT${GBT}_RX_PHASE_AUTO" address="0x8" mask="0x40000000" permission="rw"
+          description="When this is set to 1, the firmware will try to automatically find a good RX phase for the CDC, however for best performance and deterministic phase,
+                       it is recommended that the phase is scanned by the software, and best setting loaded to the RX_PHASE register, and the auto feature is turned off."
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_rx_bitslip_auto_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})" fw_default="0b1"/>
 
     <node id="VFAT_MASK" address="0x8" mask="0x00ffffff" permission="rw"
           description="Mask the DAQ RX of the selected VFATs (the periodic synchronization checks, slow controls, and VFAT DAQ counters, remain functional)."

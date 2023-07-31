@@ -23,6 +23,8 @@ package ttc_pkg is
     constant C_TTC_CLK_FREQUENCY        : integer := 40_079_000;
     constant C_TTC_CLK_FREQUENCY_SLV    : std_logic_vector(31 downto 0) := std_logic_vector(to_unsigned(C_TTC_CLK_FREQUENCY, 32));
     constant C_TTC_NUM_BXs              : std_logic_vector(11 downto 0) := x"dec";
+    
+    type t_ttc_receiver_type is (TTC_RECEIVER_AMC13, TTC_RECEIVER_DTH, TTC_RECEIVER_GBTX, TTC_RECEIVER_NONE);
 
     type t_ttc_clks is record
         clk_40              : std_logic;
@@ -46,6 +48,8 @@ package ttc_pkg is
         calpulse   : std_logic;
         test_sync  : std_logic;
     end record;
+
+    constant TTC_CMDS_NULL : t_ttc_cmds := (l1a => '0', real_l1a => '0', fake_l1a => '0', bc0 => '0', ec0 => '0', oc0 => '0', resync => '0', hard_reset => '0', start => '0', stop => '0', calpulse => '0', test_sync => '0');
 
     type t_ttc_cmds_arr is array(integer range <>) of t_ttc_cmds;
 

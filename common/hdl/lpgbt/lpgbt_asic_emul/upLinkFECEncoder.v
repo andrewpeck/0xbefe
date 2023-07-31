@@ -29,7 +29,6 @@
  *  History:
  *  2016/05/30 Szymon Kulis    : Created
  *  2016/10/19 José Fonseca    : Updated
- * 
  **/
 
 module upLinkFECEncoder(

@@ -1,3 +1,7 @@
 
 common/ip/ibert_insys_gty/ibert_insys_gty.xci
+# temporary for TCDS2 debugging
+common/ip/vio_tcds2/vio_tcds2.xci
+common/ip/vio_tcds2_tmp/vio_tcds2_tmp.xci
+common/ip/ila_tcds2_tmp/ila_tcds2_tmp.xci
 

@@ -287,6 +287,9 @@ package common_pkg is
     type t_std255_array is array(integer range <>) of std_logic_vector(254 downto 0);
     type t_std256_array is array(integer range <>) of std_logic_vector(255 downto 0);
 
+    type t_std16_array_2d is array (integer range <>) of t_std16_array;
+    type t_std32_array_2d is array (integer range <>) of t_std32_array;
+
     --============--
     --==   GBT  ==--
     --============--   
@@ -365,6 +368,23 @@ package common_pkg is
 
     type t_mgt_64b_tx_data_arr is array(integer range <>) of t_mgt_64b_tx_data;
     type t_mgt_64b_rx_data_arr is array(integer range <>) of t_mgt_64b_rx_data;
+    type t_mgt_64b_rx_data_arr_arr is array(integer range <>) of t_mgt_64b_rx_data_arr;
+
+    type t_mgt_128b_rx_data is record
+        rxdata          : std_logic_vector(127 downto 0);
+        rxbyteisaligned : std_logic;
+        rxbyterealign   : std_logic;
+        rxcommadet      : std_logic;
+        rxdisperr       : std_logic_vector(15 downto 0);
+        rxnotintable    : std_logic_vector(15 downto 0);
+        rxchariscomma   : std_logic_vector(15 downto 0);
+        rxcharisk       : std_logic_vector(15 downto 0);
+    end record;
+
+    constant MGT_128B_RX_DATA_NULL : t_mgt_128b_rx_data := (rxdata => (others => '0'), rxbyteisaligned => '0', rxbyterealign => '0', rxcommadet => '0', rxdisperr => (others => '0'), rxnotintable => (others => '0'), rxchariscomma => (others => '0'), rxcharisk => (others => '0'));
+
+    type t_mgt_128b_rx_data_arr is array(integer range <>) of t_mgt_128b_rx_data;
+
 
     type t_mgt_32b_tx_data is record
         txdata         : std_logic_vector(31 downto 0);
@@ -441,6 +461,7 @@ package common_pkg is
     constant MGT_STATUS_NULL : t_mgt_status := (tx_reset_done => '0', rx_reset_done => '0', tx_pll_locked => '0', rx_pll_locked => '0', rxbufstatus => "000", rxclkcorcnt => "00", rxchanisaligned => '0');
 
     type t_mgt_status_arr is array(integer range <>) of t_mgt_status;
+    type t_mgt_status_arr_arr is array(integer range <>) of t_mgt_status_arr;
 
     --====================--
     --==     DAQLink    ==--

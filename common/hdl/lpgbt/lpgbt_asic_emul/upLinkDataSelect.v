@@ -28,18 +28,16 @@
  *  History:
  *  2016/05/30 Szymon Kulis    : Created
  *  2016/10/19 José Fonseca    : Modified
- *
+ *  2020/01/27 Eduardo Mendes  : LPGBT-FPGA prototype
  **/
 
 module upLinkDataSelect(
 
     // input data:
-    input  [111:0] txDataHigh,
-    input  [111:0] txDataLow,
+    input  [229:0] txDataFrame,
     input  [1:0]   txIC,
     input  [1:0]   txEC,
-    input  [5:0]   txDummyFec5,
-    input  [9:0]   txDummyFec12,
+
 
     // controll signals:
     input          fecMode,
@@ -61,19 +59,19 @@ module upLinkDataSelect(
       if (fecMode == FEC5) begin
         dataFec12 = 0;
         if (dataRate == DR10G) begin
-          dataFec5 = {txIC, txEC, txDummyFec5[5:0], txDataHigh[111:0], txDataLow[111:0]};
+          dataFec5 = {txIC, txEC, txDataFrame[229:0]};
         end
         else begin
-          dataFec5 = {118'd0, txIC, txEC, txDataLow[111:0]};
+          dataFec5 = {118'd0, txIC, txEC, txDataFrame[111:0]};
         end
       end
       else begin
         dataFec5=0;
        	if (dataRate == DR10G) begin
-          dataFec12 = {txIC, txEC, txDummyFec12[9:0], txDataHigh[95:0], txDataLow[95:0]};
+          dataFec12 = {txIC, txEC, txDataFrame[201:0]};
         end
         else begin
-          dataFec12 = {104'd0, txIC, txEC, txDummyFec12[1:0], txDataLow[95:0]};
+          dataFec12 = {104'd0, txIC, txEC, txDataFrame[97:0]};
         end
       end
     end

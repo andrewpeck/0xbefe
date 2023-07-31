@@ -4,11 +4,11 @@ common/hdl/common_xilinx_ultrascale.src
 common/hdl/gbt.src
 common/hdl/sca.src
 common/hdl/slink_rocket.src
+common/hdl/tcds2.src
 
 # =============== GEM ===============
 gem/hdl/gem.src
 gem/ip/gem_common_ip.src
-gem/hdl/sbit_me0.src
 
 # =============== X2O ===============
 boards/x2o/hdl/x2o_common.src
@@ -18,7 +18,7 @@ boards/x2o/bd/x2o_bd.src
 
 # =============== Project ===============
 Top/me0_x2o/project_config.vhd
-boards/x2o/hdl/pkg/gem_vu13p_board_config_pkg.vhd
+boards/x2o/hdl/pkg/gem_vu13p_rev2_board_config_pkg.vhd
 boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
 
 

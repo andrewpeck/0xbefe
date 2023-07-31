@@ -26,6 +26,7 @@ use work.board_config_package.all;
 entity daq is
 generic(
     g_NUM_OF_DMBs        : integer;
+    g_DMB_CONFIG_ARR     : t_dmb_config_arr;
     g_DAQ_CLK_FREQ       : integer;
     g_IPB_CLK_PERIOD_NS  : integer;
     g_IS_SLINK_ROCKET    : boolean
@@ -53,7 +54,8 @@ port(
 
     -- Data
     dmb_clk_i                   : in std_logic;
-    dmb_link_arr_i              : in t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
+    odmb_clk_i                  : in std_logic;
+    dmb_link_arr2d_i            : in t_mgt_64b_rx_data_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
     
     -- Spy
     spy_clk_i                   : in  std_logic;
@@ -212,7 +214,7 @@ architecture Behavioral of daq is
     signal cnt_sent_events      : unsigned(31 downto 0) := (others => '0');
 
     -- DAQ event sending state machine
-    type t_daq_state is (IDLE, DAQLINK_HEADER_1, DAQLINK_HEADER_2, FED_HEADER_1, FED_HEADER_2, FED_HEADER_3, PAYLOAD, FED_TRAILER_1, FED_TRAILER_2, FED_TRAILER_3, SR_PADDING, SR_TRAILER_1, SR_TRAILER_2, AMC13_TRAILER);
+    type t_daq_state is (IDLE, DAQLINK_HEADER_1, DAQLINK_HEADER_2, FED_HEADER_1, FED_HEADER_2, FED_HEADER_3, FED_HEADER_4, PAYLOAD, FED_TRAILER_1, FED_TRAILER_2, FED_TRAILER_3, SR_PADDING, SR_TRAILER_1, SR_TRAILER_2, AMC13_TRAILER);
     signal daq_state            : t_daq_state := IDLE;
     signal daq_curr_infifo_word : unsigned(11 downto 0) := (others => '0');
         
@@ -958,11 +960,49 @@ begin
     --================================--
 
     g_chamber_evt_builders : for i in 0 to (g_NUM_OF_DMBs - 1) generate
+
+        function get_input_clk_rate(dmb_type : t_dmb_type) return integer is
+        begin
+            if dmb_type = DMB then
+                return 80_000_000;
+            else
+                return 312_500_000;  
+            end if;
+        end function get_input_clk_rate;         
+        
+        constant DMB_CLOCK_RATE : integer := get_input_clk_rate(g_DMB_CONFIG_ARR(i).dmb_type);
+        
+        signal cccc : std_logic; 
+        signal dddd : t_mgt_16b_rx_data; 
     begin
+
+        -- TEMPORARY: to ignore ODMB7 links
+        g_dmb : if g_DMB_CONFIG_ARR(i).dmb_type = DMB generate
+            dddd.rxdata <= dmb_link_arr2d_i(i)(0).rxdata(15 downto 0);
+            dddd.rxcharisk <= dmb_link_arr2d_i(i)(0).rxcharisk(1 downto 0);
+            cccc <= dmb_clk_i;
+        else generate
+            
+            cccc <= odmb_clk_i;
+            
+            process(odmb_clk_i)
+            begin
+                if rising_edge(odmb_clk_i) then
+                    if dmb_link_arr2d_i(i)(0).rxcharisk(0) = '1' and (dmb_link_arr2d_i(i)(0).rxdata(31 downto 0) = x"505050BC" or dmb_link_arr2d_i(i)(0).rxdata(31 downto 0) = x"606060BC") then
+                        dddd.rxdata <= x"50bc";
+                        dddd.rxcharisk <= "01";
+                    else
+                        dddd.rxdata <= dmb_link_arr2d_i(i)(0).rxdata(31 downto 16);
+                        dddd.rxcharisk <= (others => '0');
+                    end if;
+                end if;
+            end process;
+            
+        end generate;
 
         i_input_processor : entity work.input_processor
         generic map (
-            g_input_clk_freq => 80_000_000
+            g_input_clk_freq => DMB_CLOCK_RATE
         )
         port map
         (
@@ -988,8 +1028,8 @@ begin
             evtfifo_data_cnt_o          => chamber_evtfifos(i).data_cnt,
 
             -- Track data
-            input_clk_i                 => dmb_clk_i,
-            input_data_link_i           => dmb_link_arr_i(i),
+            input_clk_i                 => cccc,
+            input_data_link_i           => dddd,
             
             -- Status and control
             status_o                    => input_status_arr(i),
@@ -1295,7 +1335,7 @@ begin
                         daq_event_header <= '1';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;
                         
                         -- move to the next state
                         e_word_count <= e_word_count + 1;
@@ -1329,7 +1369,7 @@ begin
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;
                         
                         -- move to the next state
                         e_word_count <= e_word_count + 1;
@@ -1386,7 +1426,7 @@ begin
                         e_word_count <= e_word_count + 1;
                         daq_state <= FED_HEADER_3;
 
-                    ----==== send the FED header #2 ====----
+                    ----==== send the FED header #3 ====----
                     elsif (daq_state = FED_HEADER_3) then
 
                         -- send the data
@@ -1418,6 +1458,35 @@ begin
                                           or_reduce(dav_timeout_flags) & -- DDU Timeout Error *data from a CSC never arrived *an unknowable amount of data has been irrevocably lost
                                           tts_state & -- TODO: should be synced to the DAQ clock
                                           std_logic_vector(to_unsigned(e_dav_count, 4));
+                        daq_event_header <= '0';
+                        daq_event_trailer <= '0';
+                        daq_event_write_en <= '1';
+                        spy_fifo_wr_en <= '1';                        
+                        e_word_count <= e_word_count + 1;
+                        
+                        if C_DAQ_INCLUDE_HEADER_4 then
+                            daq_state <= FED_HEADER_4;
+                        else
+                            -- if this is an empty event, just pop those lone words and go straight to trailer, otherwise go to payload
+                            if (daq_not_empty_event = '1') then
+                                daq_state <= PAYLOAD;
+                                e_payload_first_cycle <= '1';
+                            else
+                                daq_state <= FED_TRAILER_1;
+                                e_payload_first_cycle <= '1';
+                                for i in 0 to g_NUM_OF_DMBs - 1 loop
+                                    chmb_evtfifos_rd_en(i) <= e_dav_mask(i);
+                                    chmb_infifos_rd_en(i) <= e_dav_mask(i);
+                                end loop;
+                            end if;
+                        end if;
+
+                    ----==== send the FED header #4 (special for ATCA tests) ====----
+                    elsif (daq_state = FED_HEADER_4) then
+
+                        -- send the data
+                        daq_event_data <= e_orbit_id & -- [63:32]
+                                          x"00000000"; -- [31:0]
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
@@ -1639,7 +1708,7 @@ begin
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;
                         
                         -- move to the next state
                         e_word_count <= e_word_count + 1;
@@ -1656,7 +1725,7 @@ begin
                         daq_event_header <= '0';
                         daq_event_trailer <= '1';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';                        
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;                        
 
                         -- move to the next state
                         e_word_count <= e_word_count + 1;
@@ -1676,7 +1745,7 @@ begin
                         daq_event_header <= '0';
                         daq_event_trailer <= '1';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';                        
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;                        
                         
                         -- go back to DAQ idle state
                         daq_state <= IDLE;
@@ -1695,7 +1764,7 @@ begin
                         daq_event_header <= '0';
                         daq_event_trailer <= '1';
                         daq_event_write_en <= '1';
-                        spy_fifo_wr_en <= '0';                        
+                        spy_fifo_wr_en <= C_DAQ_LDAQ_INCLUDE_DAQLINK_DATA;                        
                         
                         -- go back to DAQ idle state
                         daq_state <= IDLE;

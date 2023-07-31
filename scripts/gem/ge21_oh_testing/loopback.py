@@ -27,6 +27,12 @@ def prbs_loop(MEGA_WRD_CNT_LIMIT, verbose=False):
                     print("GBT%d ELINK%d MWRDCNT = %d" % (gbtSelect, elink, prbs_counters[gbtSelect][elink-6][0]))
                 endFlag = endFlag and (prbs_counters[gbtSelect][elink-6][0] >= MEGA_WRD_CNT_LIMIT)
         stop = endFlag
+
+    print("PRBS test finished, results are:")
+    for gbtSelect in range(0,2):
+        for elink in PRBS_ELINKS[gbtSelect]:
+            print("GBT%d ELINK%d MWRDCNT = %d, ERROR COUNT = %d" % (gbtSelect, elink, prbs_counters[gbtSelect][elink-6][0], prbs_counters[gbtSelect][elink-6][1]))
+
     return prbs_counters
 
 def read_loopback_counters():
