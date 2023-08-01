@@ -1,4 +1,4 @@
-generate_project:csc_x2o_r1:
+GEN:csc_x2o_r1:
     extends: .generate_project
     variables:
       extends: .vars

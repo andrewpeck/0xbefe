@@ -1,4 +1,4 @@
-generate_project:me0_x2o:
+GEN:me0_x2o:
     extends: .generate_project
     variables:
       extends: .vars
