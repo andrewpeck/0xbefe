@@ -222,16 +222,16 @@ if __name__ == "__main__":
 
     # First Reading
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print ("First Reading: \n")
-        print ("OH %d: \n"%oh_select)
-        print ("Downlink: \n")
+        print (Colors.BLUE + "First Reading: \n" + Colors.ENDC)
+        print (Colors.BLUE + "OH %d: \n"%oh_select + Colors.ENDC)
+        print (Colors.BLUE + "Downlink: \n" + Colors.ENDC)
         logfile.write("First Reading: \n")
         logfile.write("OH %d: \n"%oh_select)
         logfile.write("Downlink: \n")
         logfile.close()
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r read -z >> %s"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2])), log_fn))
-        print ("\nUplink: \n")
+        print (Colors.BLUE + "\nUplink: \n" + Colors.ENDC)
         logfile = open(log_fn, "a")
         logfile.write("\nUplink: \n")
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT']))))
@@ -243,28 +243,29 @@ if __name__ == "__main__":
     # Running and Reading
     while (time.time()-t0)/60.0 < runtime:
         if (time.time() - time_prev)/60.0 >= 1.0:
-            print ("Time passed: %.2f minutes, %.2f % Done\n"%((time.time()-t0)/60.0, (((time.time()-t0)/60.0)/runtime)*100))
+            time_passed = (time.time() - time_prev)/60.0
+            print (Colors.BLUE + "Time passed: %.2f minutes, %.2f % Done\n"%(time_passed, (time_passed/runtime)*100) + Colors.ENDC)
             for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-                print ("OH %d: \n"%oh_select)
-                print ("Downlink: \n")
+                print (Colors.BLUE + "OH %d: \n"%oh_select + Colors.ENDC)
+                print (Colors.BLUE + "Downlink: \n" + Colors.ENDC)
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
-                print ("\nUplink: \n")
+                print (Colors.BLUE + "\nUplink: \n" + Colors.ENDC)
                 os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT']))))
                 print ("\n")
             time_prev = time.time()
 
     # Last Reading
     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-        print ("Last Reading: \n")
-        print ("OH %d: \n"%oh_select)
-        print ("Downlink: \n")
+        print (Colors.BLUE + "Last Reading: \n" + Colors.ENDC)
+        print (Colors.BLUE + "OH %d: \n"%oh_select + Colors.ENDC)
+        print (Colors.BLUE + "Downlink: \n" + Colors.ENDC)
         logfile.write("Last Reading: \n")
         logfile.write("OH %d: \n"%oh_select)
         logfile.write("Downlink: \n")
         logfile.close()
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2]))))
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p downlink -r read -z >> %s"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT'][0::2])), log_fn))
-        print ("\nUplink: \n")
+        print (Colors.BLUE + "\nUplink: \n" + Colors.ENDC)
         logfile = open(log_fn, "a")
         logfile.write("\nUplink: \n")
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %d -g %s -p uplink -r read -z"%(oh_select,' '.join(map(str,gbt_vfat_dict['GBT']))))
