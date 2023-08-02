@@ -67,7 +67,7 @@ if __name__ == "__main__":
         slot_name = line.split()[1]
         oh_sn = line.split()[2]
         vtrx_sn = line.split()[3]
-        pigtail_dict = float(line.split()[4])
+        pigtail = float(line.split()[4])
         if oh_sn != "-9999":
             if batch in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 1 - run init_frontend
+    # Step 1 - Run init_frontend
     print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
     time.sleep(1)
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 2 - check lpGBT status
+    # Step 2 - Check lpGBT status
     print (Colors.BLUE + "Step 2: Checking lpGBT Registers\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
     time.sleep(1)
