@@ -244,7 +244,7 @@ if __name__ == "__main__":
     while (time.time()-t0)/60.0 < runtime:
         if (time.time() - time_prev)/60.0 >= 1.0:
             time_passed = (time.time() - time_prev)/60.0
-            print (Colors.BLUE + "Time passed: %.2f minutes, %.2f % Done\n"%(time_passed, (time_passed/runtime)*100) + Colors.ENDC)
+            print (Colors.BLUE + "Time passed: %.2f minutes, %.2f "%(time_passed, (time_passed/runtime)*100) + "% Done\n" + Colors.ENDC)
             for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
                 print (Colors.BLUE + "OH %d: \n"%oh_select + Colors.ENDC)
                 print (Colors.BLUE + "Downlink: \n" + Colors.ENDC)
