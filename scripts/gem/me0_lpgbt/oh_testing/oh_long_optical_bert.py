@@ -177,6 +177,9 @@ if __name__ == "__main__":
     logfile.write("\nTests started for Batch: %s\n\n"%batch)
     logfile.write("Optohybrid Serial Numbers: %s\n\n"%(' '.join(oh_sn_list)))
 
+    print ("Total runtime: %.2f minutes"%runtime)
+    logfile.write("Total runtime: %.2f minutes"%runtime)
+
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
