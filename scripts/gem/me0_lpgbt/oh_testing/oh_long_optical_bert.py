@@ -243,7 +243,7 @@ if __name__ == "__main__":
     # Running and Reading
     while (time.time()-t0)/60.0 < runtime:
         if (time.time() - time_prev)/60.0 >= 1.0:
-            print ("Time passed: %.2f minutes, %.2f % Done\n"%((time.time()-t0)/60.0), (((time.time()-t0)/60.0)/runtime)*100)
+            print ("Time passed: %.2f minutes, %.2f % Done\n"%((time.time()-t0)/60.0, (((time.time()-t0)/60.0)/runtime)*100))
             for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
                 print ("OH %d: \n"%oh_select)
                 print ("Downlink: \n")

@@ -266,8 +266,8 @@ def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime,
             print ("\nEnd Error Counting:")
             file_out.write("\nEnd Error Counting: \n")
         elif opr == "read":
-            print ("\Reading Error Count:")
-            file_out.write("\Reading Error Count: \n")
+            print ("\nReading Error Count:")
+            file_out.write("\nReading Error Count: \n")
 
         for (i,gbt) in enumerate(gbt_list):
             select_ic_link(ohid, gbt)   
