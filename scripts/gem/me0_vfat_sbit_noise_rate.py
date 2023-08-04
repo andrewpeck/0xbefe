@@ -196,11 +196,12 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
                 # Unmask all channels for this elink for this vfat
                 for channel in range(elink*16, (elink+1)*16):
                     enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
-                write_backend_reg(reset_sbit_vfat_node, 1)
-                sleep(1.1)
-                for vfat in vfat_list:
-                    sbit_data[vfat]["all_elink%d"%elink][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
-                    sbit_data[vfat]["all_elink%d"%elink][thr]["time"] = runtime
+            write_backend_reg(reset_sbit_vfat_node, 1)
+            sleep(1.1)
+            for vfat in vfat_list:
+                sbit_data[vfat]["all_elink%d"%elink][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
+                sbit_data[vfat]["all_elink%d"%elink][thr]["time"] = runtime
+            for vfat in vfat_list:
                 # Mask all channels for this elink for this vfat
                 for channel in range(elink*16, (elink+1)*16):
                     enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
