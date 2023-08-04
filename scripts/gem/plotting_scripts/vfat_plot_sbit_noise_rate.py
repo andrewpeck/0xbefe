@@ -328,7 +328,7 @@ if __name__ == "__main__":
 
         fig2, ax2 = plt.subplots(8, 8, figsize=(80,80))
         for sbit in noise_result[vfat]:
-            if "all_elink" not in str(sbit):
+            if "all" in str(sbit):
                 continue
             noise_rate_sbit = []
             for i in range(0,len(threshold)):
