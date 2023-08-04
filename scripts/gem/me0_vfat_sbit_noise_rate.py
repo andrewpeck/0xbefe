@@ -171,20 +171,39 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
     # Rate counters for entire VFATs
     print ("All VFATs, Sbit: All")
-    for vfat in vfat_list:
-        # Unmask channels for this vfat
-        for channel in range(0,128):
-            enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
     for thr in range(0,256,step):
         print ("  Threshold: %d"%thr)
         for vfat in vfat_list:
             write_backend_reg(dac_node[vfat], thr)
             sleep(1e-3)
+
+        for vfat in vfat_list:
+            # Unmask all channels for this vfat
+            for channel in range(0,128):
+                enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
         write_backend_reg(reset_sbit_vfat_node, 1)
         sleep(1.1)
         for vfat in vfat_list:
             sbit_data[vfat]["all"][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
             sbit_data[vfat]["all"][thr]["time"] = runtime
+        for vfat in vfat_list:
+            # Mask all channels for this vfat
+            for channel in range(0,128):
+                enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
+
+        for elink in range(0,8):
+            for vfat in vfat_list:
+                # Unmask all channels for this elink for this vfat
+                for channel in range(elink*16, (elink+1)*16):
+                    enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask channels
+                write_backend_reg(reset_sbit_vfat_node, 1)
+                sleep(1.1)
+                for vfat in vfat_list:
+                    sbit_data[vfat]["all_elink%d"%elink][thr]["fired"] = read_backend_reg(vfat_counter_node[vfat]) * runtime
+                    sbit_data[vfat]["all_elink%d"%elink][thr]["time"] = runtime
+                # Mask all channels for this elink for this vfat
+                for channel in range(elink*16, (elink+1)*16):
+                    enableVfatchannel(vfat, oh_select, channel, 1, 0) # mask channels
 
     # Disable channels on VFATs
     for vfat in vfat_list:
@@ -201,10 +220,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
             for thr in range(0,256,1):
                 if thr not in sbit_data[vfat][sbit]:
                     continue
-                if sbit != "all":
+                if "all" not in str(sbit):
                     file_out.write("%d    %d    %d    %f    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
                 else:
-                    file_out.write("%d    all    %d    %f    %f\n"%(vfat, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
+                    file_out.write("%d    %s    %d    %f    %f\n"%(vfat, sbit, thr, sbit_data[vfat][sbit][thr]["fired"], sbit_data[vfat][sbit][thr]["time"]))
 
     print ("")
     file_out.close()
@@ -270,6 +289,7 @@ if __name__ == "__main__":
 
     sbit_list = [i for i in range(0,64)]
     sbit_list.append("all")
+    sbit_list += ["all_elink0", "all_elink1", "all_elink2", "all_elink3", "all_elink4", "all_elink5", "all_elink6", "all_elink7"]
 
     s_bit_channel_mapping = {}
     print ("")
