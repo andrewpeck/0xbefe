@@ -361,8 +361,8 @@ if __name__ == "__main__":
             ax6[int(elink/4), elink%4].plot(threshold, noise_rate_vfat_elink[elink], "o", markersize=12)
             #leg = ax.legend(loc="center right", ncol=2)
             ax6[int(elink/4), elink%4].set_title("VFAT%02d, Elink %02d"%(vfat, elink))
-            ax6[int(elink/4), elink%4].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[int(sbit/8), sbit%8].transAxes)
-            ax6[int(elink/4), elink%4].text(-0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[int(sbit/8), sbit%8].transAxes)
+            ax6[int(elink/4), elink%4].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[int(elink/4), elink%4].transAxes)
+            ax6[int(elink/4), elink%4].text(-0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[int(elink/4), elink%4].transAxes)
     
         #ax2.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2.transAxes)
         #ax2.text(0.03, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2.transAxes)
