@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
+--
 -- Create Date:    12:00 2017-08-09
 -- Module Name:    VFAT3_SLOW_CONTROL
--- Description:    This module manages the VFAT3 slow control requests and responses for all VFATs within an optohybrid 
+-- Description:    This module manages the VFAT3 slow control requests and responses for all VFATs within an optohybrid
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -23,56 +23,45 @@ use work.ipbus.all;
 entity vfat3_slow_control is
     generic(
         g_NUM_OF_OHs        : integer;
-        g_IPB_CLK_PERIOD_NS : integer         
+        g_IPB_CLK_PERIOD_NS : integer
     );
     port(
         -- reset
         reset_i                 : in  std_logic;
-        
+
         -- clocks
         ttc_clk_i               : in  t_ttc_clks;
         ipb_clk_i               : in  std_logic;
-        
+
         -- ipbus
         ipb_mosi_i              : in  ipb_wbus;
         ipb_miso_o              : out ipb_rbus;
-        
+
         -- fifo I/O
         tx_data_o               : out std_logic;
         tx_rd_en_i              : in  std_logic;
         tx_empty_o              : out std_logic;
         tx_oh_idx_o             : out std_logic_vector(3 downto 0);
         tx_vfat_idx_o           : out std_logic_vector(4 downto 0);
-        
+
         rx_data_en_i            : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
         rx_data_i               : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-        
+
         -- monitoring
         status_o                : out t_vfat_slow_control_status;
-        
+
         -- config
         vfat_hdlc_address_arr_i : in  t_std4_array(23 downto 0)
-        
+
     );
 end vfat3_slow_control;
 
 architecture vfat3_slow_control_arch of vfat3_slow_control is
 
-    component bram_vfat3_sc_adc
-        port(
-            clka  : in  std_logic;
-            ena   : in  std_logic;
-            wea   : in  std_logic;
-            addra : in  std_logic_vector(9 downto 0);
-            dina  : in  std_logic_vector(9 downto 0);
-            douta : out std_logic_vector(9 downto 0)
-        );
-    end component;
-	
-	constant TRANSACTION_TIMEOUT	: unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
-	
+    constant TRANSACTION_TIMEOUT    : unsigned(15 downto 0) := to_unsigned(40_000 / g_IPB_CLK_PERIOD_NS, 16); -- 40us
+
     type state_t is (IDLE, RSPD, RSPD_CACHE, RST, WAIT_CACHE_UPDATE);
-        
+
     signal state                : state_t;
 
     signal reset_clkipb         : std_logic;
@@ -83,13 +72,13 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_reset_clk40       : std_logic;
 
     signal transaction_id       : unsigned(15 downto 0) := (others => '0');
-	signal transaction_timer	: unsigned(15 downto 0) := (others => '0');
-	signal timeout_err_cnt      : unsigned(15 downto 0) := (others => '0');
-	signal axi_strobe_err_cnt   : unsigned(15 downto 0) := (others => '0');
-	
+    signal transaction_timer    : unsigned(15 downto 0) := (others => '0');
+    signal timeout_err_cnt      : unsigned(15 downto 0) := (others => '0');
+    signal axi_strobe_err_cnt   : unsigned(15 downto 0) := (others => '0');
+
     signal tx_din               : std_logic := '0';
     signal tx_en                : std_logic := '0';
-    signal tx_busy				: std_logic := '0';
+    signal tx_busy              : std_logic := '0';
     signal tx_is_write          : std_logic := '0';
     signal tx_reg_addr          : std_logic_vector(31 downto 0) := (others => '0');
     signal tx_reg_value         : std_logic_vector(31 downto 0) := (others => '0');
@@ -106,20 +95,20 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_reg_value         : std_logic_vector(31 downto 0) := (others => '0');
     signal rx_data              : std_logic;
     signal rx_data_en           : std_logic;
-    
+
     signal rx_packet_err_cnt    : std_logic_vector(15 downto 0) := (others => '0');
     signal rx_bitstuff_err_cnt  : std_logic_vector(15 downto 0) := (others => '0');
     signal rx_crc_err_cnt       : std_logic_vector(15 downto 0) := (others => '0');
-    
+
     signal ipb_miso             : ipb_rbus;
-    
+
     -- ADC cache
     signal adc_cache_en         : std_logic;
     signal adc_cache_we         : std_logic;
     signal adc_cache_addr       : std_logic_vector(9 downto 0);
-    signal adc_cache_din        : std_logic_vector(9 downto 0);
-    signal adc_cache_dout       : std_logic_vector(9 downto 0);
-    
+    signal adc_cache_din        : std_logic_vector(10 downto 0); -- bit #10 means AOK
+    signal adc_cache_dout       : std_logic_vector(10 downto 0);
+
     -- DEBUG
     signal tx_calc_crc          : std_logic_vector(15 downto 0);
     signal rx_calc_crc          : std_logic_vector(15 downto 0);
@@ -151,10 +140,10 @@ begin
 
     --== IPbus process ==--
 
-    process(ipb_clk_i)       
-    begin    
-        if (rising_edge(ipb_clk_i)) then      
-            if (reset_clkipb = '1') then    
+    process(ipb_clk_i)
+    begin
+        if (rising_edge(ipb_clk_i)) then
+            if (reset_clkipb = '1') then
                 ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                 tx_is_write <= '0';
                 tx_reg_addr <= (others => '0');
@@ -171,25 +160,25 @@ begin
                 adc_cache_we <= '0';
                 adc_cache_addr <= (others => '0');
                 adc_cache_din <= (others => '0');
-            else         
+            else
                 case state is
-                    when IDLE =>    
-                    
-                    	ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
-                    	transaction_timer <= (others => '0');
-                    	adc_cache_we <= '0';
-                    	adc_cache_din <= (others => '0');
-                    	
-                        -- waiting for a request from IPbus
-                        if (ipb_mosi_i.ipb_strobe = '1') then
-                            
+                    when IDLE =>
+
+                        ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
+                        transaction_timer <= (others => '0');
+                        adc_cache_we <= '0';
+                        adc_cache_din <= (others => '0');
+
+                        -- accept requests from IPbus only when the module is ready to process them
+                        if (ipb_mosi_i.ipb_strobe = '1') and (rx_valid_sync = '0') and (rx_error_sync = '0') then
+
                             -- check if this is a normal read address or one that goes to ADC cache
-                            if (ipb_mosi_i.ipb_addr(9 downto 7) /= "101") then                            
+                            if (ipb_mosi_i.ipb_addr(9 downto 7) /= "101") then
                                 tx_command_en <= '1';
                                 -- since VFAT3 is using 16 bits for register addressing, but only a few registers need more than 8 bits, we are using this remapping:
-                                -- ipbus addr = 0x0xx is translated to VFAT3 addresses 0x000000xx  
-                                -- ipbus addr = 0x1xx is translated to VFAT3 addresses 0x000100xx  
-                                -- ipbus addr = 0x2xx is translated to VFAT3 addresses 0x000200xx  
+                                -- ipbus addr = 0x0xx is translated to VFAT3 addresses 0x000000xx
+                                -- ipbus addr = 0x1xx is translated to VFAT3 addresses 0x000100xx
+                                -- ipbus addr = 0x2xx is translated to VFAT3 addresses 0x000200xx
                                 -- ipbus addr = 0x300 is translated to VFAT3 address   0x0000ffff
                                 tx_reg_addr(31 downto 20) <= (others => '0');
                                 if (ipb_mosi_i.ipb_addr(9 downto 8) = "00") then
@@ -204,22 +193,22 @@ begin
                                 elsif (ipb_mosi_i.ipb_addr(9 downto 8) = "11") then
                                     tx_reg_addr(19 downto 0) <= x"0ffff";
                                 end if;
-                                
+
                                 tx_is_write  <= ipb_mosi_i.ipb_write;
                                 tx_reg_value <= ipb_mosi_i.ipb_wdata;
                                 transaction_id <= transaction_id + 1;
-                                
+
                                 tx_oh_idx   <= ipb_mosi_i.ipb_addr(19 downto 16);
                                 tx_vfat_idx <= ipb_mosi_i.ipb_addr(15 downto 11);
-                                
+
                                 hdlc_address <= x"0" & vfat_hdlc_address_arr_i(to_integer(unsigned(ipb_mosi_i.ipb_addr(15 downto 11))));
-                                                            
+
                                 tx_reset <= '0';
                                 rx_reset <= '1';
 
                                 adc_cache_en <= '0';
                                 adc_cache_addr <= (others => '0');
-                                
+
                                 state <= RSPD;
                             else
                                 tx_command_en <= '0';
@@ -227,29 +216,29 @@ begin
                                 rx_reset <= '1';
                                 adc_cache_en <= '1';
                                 adc_cache_addr <= ipb_mosi_i.ipb_addr(19 downto 11) & ipb_mosi_i.ipb_addr(0);
-                                
-                                state <= RSPD_CACHE;                                
+
+                                state <= RSPD_CACHE;
                             end if;
-                            
+
                         else
-                        	
-                        	tx_command_en <= '0';
-                        	state <= IDLE;
+
+                            tx_command_en <= '0';
+                            state <= IDLE;
                             tx_reset <= '0';
                             rx_reset <= '1';
                             adc_cache_en <= '0';
                             adc_cache_addr <= (others => '0');
                         end if;
-                        
+
                     -- waiting for a VFAT3 response and replying to IPbus
                     when RSPD =>
-                    	
-                    	if (tx_busy = '1') then
-                    		tx_command_en <= '0';
-                    	end if;
-                    	
+
+                        if (tx_busy = '1') then
+                            tx_command_en <= '0';
+                        end if;
+
                         if (ipb_mosi_i.ipb_strobe = '0') then
-                            state <= IDLE;     
+                            state <= IDLE;
                             tx_reset <= '1';
                             rx_reset <= '1';
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
@@ -268,11 +257,11 @@ begin
                             state <= RST;
                         end if;
 
-						transaction_timer <= transaction_timer + 1;
+                        transaction_timer <= transaction_timer + 1;
 
                         tx_reset <= '0';
                         rx_reset <= '0';
-                        
+
                         adc_cache_en <= '0';
                         adc_cache_we <= '0';
                         adc_cache_addr <= (others => '0');
@@ -280,97 +269,97 @@ begin
 
                     -- respond with cached data (only used for ADCs, which are slow)
                     when RSPD_CACHE =>
-                        
+
                         ipb_miso <= ipb_miso;
-                        
+
                         if (ipb_mosi_i.ipb_strobe = '0') then
                             state <= IDLE;
+                            tx_reset <= '1';
+                            rx_reset <= '1';
                             axi_strobe_err_cnt <= axi_strobe_err_cnt + 1;
-                            transaction_timer <= (others => '0');
                         elsif (transaction_timer = x"0002") then
-                            ipb_miso <= (ipb_ack => '1', ipb_err => '0', ipb_rdata => x"00000" & "00" & adc_cache_dout);
+                            ipb_miso <= (ipb_ack => '1', ipb_err => not adc_cache_dout(10), ipb_rdata => x"00000" & "00" & adc_cache_dout(9 downto 0));
                             state <= RST;
-                            transaction_timer <= (others => '0');
                         else
                             transaction_timer <= transaction_timer + 1;
                             state <= RSPD_CACHE;
                         end if;
-                        
+
                         tx_reset <= '0';
-                        rx_reset <= '0'; 
+                        rx_reset <= '0';
                         tx_command_en <= '0';
-                                            
+
                     -- closing the transaction and returning to idle
                     when RST =>
-                    	
-                    	if (ipb_mosi_i.ipb_strobe = '0') then 
-	                        ipb_miso.ipb_ack <= '0';
-	                        ipb_miso.ipb_err <= '0';
-	                        state <= IDLE;
-	                        tx_reset <= '1';
-	                        rx_reset <= '1';
-	                        tx_command_en <= '0';
-	                        
-	                        -- debug: grab the last crc and packet data before reset
-	                        tx_calc_crc_last <= tx_calc_crc;
-	                        rx_calc_crc_last <= rx_calc_crc;
-	                        tx_raw_last_packet_last <= tx_raw_last_packet;
-	                        rx_raw_last_reply_last <= rx_raw_last_reply;
-	                    else
-                            ipb_miso <= ipb_miso;	                        
-                    	end if;
+
+                        if (ipb_mosi_i.ipb_strobe = '0') then
+                            ipb_miso.ipb_ack <= '0';
+                            ipb_miso.ipb_err <= '0';
+                            state <= IDLE;
+                            tx_reset <= '1';
+                            rx_reset <= '1';
+                            tx_command_en <= '0';
+
+                            -- debug: grab the last crc and packet data before reset
+                            tx_calc_crc_last <= tx_calc_crc;
+                            rx_calc_crc_last <= rx_calc_crc;
+                            tx_raw_last_packet_last <= tx_raw_last_packet;
+                            rx_raw_last_reply_last <= rx_raw_last_reply;
+                        else
+                            ipb_miso <= ipb_miso;
+                        end if;
 
                         adc_cache_en <= '0';
                         adc_cache_we <= '0';
                         adc_cache_addr <= (others => '0');
                         adc_cache_din <= (others => '0');
-                    
+
                     -- wait for cache update to come from a vfat
                     when WAIT_CACHE_UPDATE =>
-                    
+
                         if (ipb_mosi_i.ipb_strobe = '0') then
                             ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                         else
-                            ipb_miso <= ipb_miso;                            
+                            ipb_miso <= ipb_miso;
                         end if;
-                        
+
                         if (tx_busy = '1') then
                             tx_command_en <= '0';
                         end if;
-                        
+
                         if (rx_valid_sync = '1') then
                             adc_cache_en <= '1';
                             adc_cache_we <= '1';
                             adc_cache_addr <= tx_oh_idx & tx_vfat_idx & tx_reg_addr(0);
-                            adc_cache_din <= rx_reg_value(9 downto 0);
+                            adc_cache_din <= '1' & rx_reg_value(9 downto 0);
                             tx_reset <= '1';
-                            rx_reset <= '1';                            
+                            rx_reset <= '1';
                             state <= IDLE;
                         elsif (rx_error_sync = '1') then
                             adc_cache_en <= '1';
                             adc_cache_we <= '1';
                             adc_cache_addr <= tx_oh_idx & tx_vfat_idx & tx_reg_addr(0);
-                            adc_cache_din <= (others => '0');                        
+                            adc_cache_din <= (others => '0');
                             tx_reset <= '1';
-                            rx_reset <= '1';                            
+                            rx_reset <= '1';
                             state <= IDLE;
                         elsif (transaction_timer = TRANSACTION_TIMEOUT) then
                             timeout_err_cnt <= timeout_err_cnt + 1;
                             adc_cache_en <= '1';
                             adc_cache_we <= '1';
                             adc_cache_addr <= tx_oh_idx & tx_vfat_idx & tx_reg_addr(0);
-                            adc_cache_din <= (others => '0');                        
+                            adc_cache_din <= (others => '0');
                             tx_reset <= '1';
-                            rx_reset <= '1';                            
+                            rx_reset <= '1';
                             state <= IDLE;
                         end if;
-                        
+
                         transaction_timer <= transaction_timer + 1;
-                                        
+
                     -- who knows what might happen :)
                     when others =>
-                        
-                        ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0')); 
+
+                        ipb_miso <= (ipb_err => '0', ipb_ack => '0', ipb_rdata => (others => '0'));
                         state <= IDLE;
                         tx_is_write <= '0';
                         tx_reg_addr <= (others => '0');
@@ -382,42 +371,42 @@ begin
                         adc_cache_we <= '0';
                         adc_cache_addr <= (others => '0');
                         adc_cache_din <= (others => '0');
-                        
-                end case;                      
-            end if;        
-        end if;        
+
+                end case;
+            end if;
+        end if;
     end process;
 
-	i_vfat3_sc_tx_cmd_en_sync : entity work.synch
-		generic map(
-			N_STAGES => 4
-		)
-		port map(
-			async_i => tx_command_en,
-			clk_i   => ttc_clk_i.clk_40,
-			sync_o  => tx_command_en_sync
-		);
+    i_vfat3_sc_tx_cmd_en_sync : entity work.synch
+        generic map(
+            N_STAGES => 4
+        )
+        port map(
+            async_i => tx_command_en,
+            clk_i   => ttc_clk_i.clk_40,
+            sync_o  => tx_command_en_sync
+        );
 
-	i_vfat3_sc_rx_valid_sync : entity work.synch
-		generic map(
-			N_STAGES => 4
-		)
-		port map(
-			async_i => rx_valid,
-			clk_i   => ipb_clk_i,
-			sync_o  => rx_valid_sync
-		);
+    i_vfat3_sc_rx_valid_sync : entity work.synch
+        generic map(
+            N_STAGES => 4
+        )
+        port map(
+            async_i => rx_valid,
+            clk_i   => ipb_clk_i,
+            sync_o  => rx_valid_sync
+        );
 
-	i_vfat3_sc_rx_error_sync : entity work.synch
-		generic map(
-			N_STAGES => 4
-		)
-		port map(
-			async_i => rx_error,
-			clk_i   => ipb_clk_i,
-			sync_o  => rx_error_sync
-		);
-		
+    i_vfat3_sc_rx_error_sync : entity work.synch
+        generic map(
+            N_STAGES => 4
+        )
+        port map(
+            async_i => rx_error,
+            clk_i   => ipb_clk_i,
+            sync_o  => rx_error_sync
+        );
+
     i_vfat3_sc_tx : entity work.vfat3_sc_tx
         port map(
             reset_i           => reset_clk40 or tx_reset_clk40,
@@ -484,14 +473,27 @@ begin
     rx_data_en <= rx_data_en_i(to_integer(unsigned(tx_oh_idx)))(to_integer(unsigned(tx_vfat_idx)));
     rx_data <= rx_data_i(to_integer(unsigned(tx_oh_idx)))(to_integer(unsigned(tx_vfat_idx)));
 
-    i_vfat3_adc_cache : bram_vfat3_sc_adc
-        port map(
-            clka  => ipb_clk_i,
-            ena   => adc_cache_en,
-            wea   => adc_cache_we,
-            addra => adc_cache_addr,
-            dina  => adc_cache_din,
-            douta => adc_cache_dout
+    i_vfat3_adc_cache : xpm_memory_spram
+        generic map (
+            ADDR_WIDTH_A       => 10,
+            MEMORY_SIZE        => 11264,
+            WRITE_DATA_WIDTH_A => 11,
+            BYTE_WRITE_WIDTH_A => 11,
+            READ_DATA_WIDTH_A  => 11,
+            READ_LATENCY_A     => 1
+        )
+        port map (
+            sleep          => '0',
+            clka           => ipb_clk_i,
+            rsta           => '0',
+            ena            => adc_cache_en,
+            regcea         => '1',
+            wea(0)         => adc_cache_we,
+            addra          => adc_cache_addr,
+            dina           => adc_cache_din,
+            douta          => adc_cache_dout,
+            injectsbiterra => '0',
+            injectdbiterra => '0'
         );
 
 end vfat3_slow_control_arch;
