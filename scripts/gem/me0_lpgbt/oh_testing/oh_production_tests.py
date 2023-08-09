@@ -413,8 +413,6 @@ if __name__ == "__main__":
             read_next = False
             with open(latest_file,"r") as bertfile:
                 for line in bertfile.readlines():
-                    if "BER Test Results" in line:
-                        read_next = True
                     if read_next:
                         if "GBT" in line:
                             gbt = int(line.split()[-1])
@@ -430,6 +428,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='--'
                             else:
                                 results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='BER < '+line.split()[-1]
+                    elif "BER Test Results" in line:
+                        read_next = True
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -490,8 +490,6 @@ if __name__ == "__main__":
             with open(latest_file,"r") as bertfile:
                 # Just read the last 10 lines to save time. Know results are at the end.
                 for line in bertfile.readlines():
-                    if "BER Test Results" in line:
-                        read_next = True
                     if read_next:
                         if "GBT" in line:
                             gbt = int(line.split()[-1])
@@ -507,6 +505,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='--'
                             else:
                                 results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='BER < ' +line.split()[-1]
+                    elif "BER Test Results" in line:
+                        read_next = True
             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
@@ -564,9 +564,7 @@ if __name__ == "__main__":
             read_next = False
             with open(latest_file,"r") as ps_file:
                 for line in ps_file.readlines():
-                    if "Phase Scan Results" in line:
-                        read_next = True
-                    elif read_next:
+                    if read_next:
                         vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
                         phase = int(line.split()[2].replace('(center=','').removesuffix(','))
                         width = int(line.split()[3].replace('width=','').removesuffix(')'))
@@ -578,6 +576,8 @@ if __name__ == "__main__":
                                 else:
                                     results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'Status':status,'Phase':phase,'Width':width}]
                                 break
+                    elif "Phase Scan Results" in line:
+                        read_next = True
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
@@ -638,9 +638,7 @@ if __name__ == "__main__":
             with open(latest_file,"r") as ps_file:
                 # parse sbit phase scan results
                 for line in ps_file.readlines():
-                    if 'Phase Scan Results' in line:
-                        read_next = True
-                    elif read_next:
+                    if read_next:
                         if 'VFAT' in line:
                             vfat = int(line.split()[1])
                         elif 'ELINK' in line:
@@ -658,6 +656,8 @@ if __name__ == "__main__":
                             else:
                                 results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[] for _ in range(6)]
                                 results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
+                    elif 'Phase Scan Results' in line:
+                        read_next = True
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
@@ -986,9 +986,7 @@ if __name__ == "__main__":
             read_next = False
             with open(log_fn,"r") as logfile:
                 for line in logfile.readlines():
-                    if 'VFAT Reset Results' in line:
-                        read_next = True
-                    elif read_next:
+                    if read_next:
                         if line=='\n':
                             read_next = False
                             continue
@@ -1007,6 +1005,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn]['VFAT_Reset'] += [0]
                             else:
                                 results_oh_sn[oh_sn]['VFAT_Reset'] = [0]
+                    elif 'VFAT Reset Results' in line:
+                        read_next = True
 
         logfile = open(log_fn,"a")    
         print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
@@ -1072,11 +1072,9 @@ if __name__ == "__main__":
             read_next = False
             with open(latest_file,"r") as sc_errors_file:
                 for line in sc_errors_file.readlines():
-                    if "Error test results" in line:
-                        read_next = True
                     if read_next:
                         logfile.write(line)
-                        if 'link' in line:
+                        if 'link is' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             link_good = 1 if line.split()[-1] == 'GOOD' else 0
                         if 'sync errors' in line:
@@ -1098,6 +1096,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
                             else:
                                 results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
+                    elif "Error test results" in line:
+                        read_next = True
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['Slow_Control_Errors']):
                 if not result['Link_Good'] or result['Total_Error_Count']:
@@ -1164,11 +1164,9 @@ if __name__ == "__main__":
             read_next = False
             with open(latest_file) as daq_results_file:
                 for line in daq_results_file.readlines():
-                    if "Error test results" in line:
-                        read_next = True
                     if read_next:
                         logfile.write(line)
-                        if 'link' in line:
+                        if 'link is' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             link_good = 1 if line.split()[-1]=='GOOD' else 0
                             l1a_daq_counter_mismatch = 0 # reset mismatch flag
@@ -1185,6 +1183,8 @@ if __name__ == "__main__":
                                 results_oh_sn[oh_sn]["DAQ_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
                             else:
                                 results_oh_sn[oh_sn]["DAQ_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
+                    elif "Error test results" in line:
+                        read_next = True
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Errors"]):
@@ -1714,9 +1714,7 @@ if __name__ == "__main__":
                     read_next = False
                     with open(scurve_fn) as scurve_file:
                         for line in scurve_file.readlines():
-                            if "Summary" in line:
-                                read_next = True
-                            elif read_next:
+                            if read_next:
                                 if "ENC" in line:
                                     enc = float(line.split()[2])
                                     if bad_channels[vfat]:
@@ -1729,6 +1727,8 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]['ENC']=enc
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Num_Bad_Channels"]=0
                                         results_oh_sn[oh_sn]["DAQ_SCurve"][i]["Bad_Channels"]=[]
+                            elif "Summary" in line:
+                                read_next = True
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_SCurve"]):
                 if not result['Status']:
@@ -1787,9 +1787,7 @@ if __name__ == "__main__":
                 results_oh_sn[oh_sn]["DAQ_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
                 for line in crosstalk_file.readlines():
-                    if "Cross Talk Results" in line:
-                        read_next = True
-                    elif read_next:
+                    if read_next:
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
@@ -1803,6 +1801,8 @@ if __name__ == "__main__":
                             else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
+                    elif "Cross Talk Results" in line:
+                        read_next = True
             
             for slot,oh_sn in geb_dict.items():
                 if no_crosstalk:
@@ -1932,9 +1932,7 @@ if __name__ == "__main__":
                     read_next = False
                     with open(scurve_fn) as scurve_file:
                         for line in scurve_file.readlines():
-                            if "Summary" in line:
-                                read_next = True
-                            elif read_next:
+                            if read_next:
                                 if "ENC" in line:
                                     enc = float(line.split()[2])
                                     if bad_channels[vfat]:
@@ -1947,6 +1945,8 @@ if __name__ == "__main__":
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]['ENC']=enc
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Num_Bad_Channels"]=0
                                         results_oh_sn[oh_sn]["SBIT_SCurve"][i]["Bad_Channels"]=[]
+                            elif "Summary" in line:
+                                read_next = True
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_SCurve"]):
                 if not result['Status']:
@@ -2005,9 +2005,7 @@ if __name__ == "__main__":
                 results_oh_sn[oh_sn]["SBIT_Crosstalk"]=[{} for _ in range(6)]
             with open(latest_file) as crosstalk_file:
                 for line in crosstalk_file.readlines():
-                    if "Cross Talk Results" in line:
-                        read_next = True
-                    elif read_next:
+                    if read_next:
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
@@ -2021,6 +2019,8 @@ if __name__ == "__main__":
                             else:
                                 crosstalk[vfat]={}
                                 crosstalk[vfat][channel_inj]=channels_obs
+                    elif "Cross Talk Results" in line:
+                        read_next = True
             
             for slot,oh_sn in geb_dict.items():
                 if no_crosstalk:
