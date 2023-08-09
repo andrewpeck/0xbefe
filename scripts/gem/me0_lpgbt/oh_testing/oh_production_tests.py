@@ -100,6 +100,7 @@ if __name__ == "__main__":
         oh_sn_list.append(oh_sn)
     
     oh_gbt_vfat_map = {}
+    oh_ver_dict = {}
     for slot in geb_dict:
         oh = geb_oh_map[slot]["OH"]
         if oh not in oh_gbt_vfat_map:
@@ -110,10 +111,8 @@ if __name__ == "__main__":
         oh_gbt_vfat_map[oh]["VFAT"] += geb_oh_map[slot]["VFAT"]
         oh_gbt_vfat_map[oh]["GBT"].sort()
         oh_gbt_vfat_map[oh]["VFAT"].sort()
-    
-    oh_ver_list = []
-    for oh in oh_gbt_vfat_map:
-        oh_ver_list += [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
+
+        oh_ver_dict[slot] = [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
     resultDir = "me0_lpgbt/oh_testing/results"
     try:
@@ -250,52 +249,56 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/status_OH%s_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
 
-        config_files = []
-        for oh_ver in oh_ver_list:
-            config_files.append(open("../resources/me0_boss_config_ohv%d.txt"%oh_ver))
-            config_files.append(open("../resources/me0_sub_config_ohv%d.txt"%oh_ver))
-        status_files = []
+        config_files = {}
+        for slot,oh_ver_list in oh_ver_dict.items():
+            config_files[slot] = []
+            for oh_ver in oh_ver_list:
+                config_files[slot].append(open("../resources/me0_boss_config_ohv%d.txt"%oh_ver))
+                config_files[slot].append(open("../resources/me0_sub_config_ohv%d.txt"%oh_ver))
+
+        status_files = {}
         for slot,oh_sn in geb_dict.items():
+            status_files[slot] = []
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'boss' if gbt%2==0 else 'sub'
-                status_files.append(open("%s/status_OH%s_%s.txt"%(dataDir,oh_sn,gbt_type)))
+                status_files[slot].append(open("%s/status_OH%s_%s.txt"%(dataDir,oh_sn,gbt_type)))
+
         status_registers = {}
         # Read all status registers from files
-        for gbt,(status_file,config_file) in enumerate(zip(status_files,config_files)):
-            gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-            for slot,oh_sn in geb_dict.items():
-                if gbt in geb_oh_map[slot]['GBT']:
-                    break
+        for slot,oh_sn in geb_dict.items():
             status_registers[slot]={}
-            # Get status registers
-            status_registers[slot][gbt_type]={}
-            for line in status_file.readlines():
-                reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                status_registers[slot][gbt_type][reg] = value
-            # Check against config files
-            print ("Checking slot %s %s lpGBT:"%(slot,gbt_type))
-            logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type))
-            n_error = 0
-            for line in config_file.readlines():
-                reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
-                    continue
-                if status_registers[slot][gbt_type][reg] != value:
-                    n_error += 1
-                    print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type][reg]) + Colors.ENDC)
-                    logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type][reg]))
-                    if 'Bad_Registers' in results_oh_sn[oh_sn][gbt]:
-                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
-                    else:
-                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]=[]
-                        results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg]
-            if not n_error:
-                print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
-                logfile.write("  No register mismatches\n")
-            results_oh_sn[oh_sn][gbt]["Status"] = int(not n_error)
+            for gbt in geb_oh_map[slot]['GBT']:
+                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+                status_registers[slot][gbt_type]={}
+                # Get status registers
+                for status_file,config_file in zip(status_files[slot],config_files[slot]):
+                    for line in status_file.readlines():
+                        reg,value = int(line.split()[0],16),int(line.split()[1],16)
+                        status_registers[slot][gbt_type][reg] = value
+                    # Check against config files
+                    print ("Checking slot %s %s lpGBT:"%(slot,gbt_type))
+                    logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type))
+                    n_error = 0
+                    for line in config_file.readlines():
+                        reg,value = int(line.split()[0],16),int(line.split()[1],16)
+                        if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
+                            continue
+                        if status_registers[slot][gbt_type][reg] != value:
+                            n_error += 1
+                            print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type][reg]) + Colors.ENDC)
+                            logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type][reg]))
+                            if 'Bad_Registers' in results_oh_sn[oh_sn][gbt]:
+                                results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
+                            else:
+                                results_oh_sn[oh_sn][gbt]["Bad_Registers"]=[]
+                                results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg]
+                    if not n_error:
+                        print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
+                        logfile.write("  No register mismatches\n")
+                    results_oh_sn[oh_sn][gbt]["Status"] = int(not n_error)
 
-            status_file.close()
-            config_file.close()
+                    status_file.close()
+                    config_file.close()
         
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
