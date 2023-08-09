@@ -2112,22 +2112,27 @@ if __name__ == "__main__":
                     sbit = line.split()[1]
                     threshold = int(line.split()[2])
                     fired = int(float(line.split()[3]))
-                    if sbit == "all":
-                        if fired == 0:
-                            # save the first threshold with no hits
+                    if "all_elink" in sbit:
+                        elink = int(sbit.removeprefix("all_elink"))
+                        if fired == 0 or threshold==255:
+                            # save the first threshold with no hits or max threshold if failed
                             if vfat not in sbit_noise:
-                                sbit_noise[vfat]=threshold
-                        elif threshold==255:
-                            # save 255 if still hits on threshold 255
-                            sbit_noise[vfat]=threshold
-            for vfat,threshold in sbit_noise.items():
+                                sbit_noise[vfat]=[threshold]
+                            else:
+                                sbit_noise[vfat]+=[threshold]
+            for vfat,threshold_list in sbit_noise.items():
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]["VFAT"]:
-                        if threshold >= 100 or threshold == 0:
-                            status = 0
-                        else:
-                            status = 1
-                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[{'Status':status,'Threshold':threshold}]
+                        status_list = []
+                        bad_elinks = []
+                        for e,threshold in enumerate(threshold_list):
+                            if threshold >= 100 or threshold == 0:
+                                status = 0
+                                bad_elinks += [e]
+                            else:
+                                status = 1
+                            status_list+=[status]
+                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[{'ELINK_Status':status_list,'ELINK_Threshold':threshold_list, 'Bad_ELINKs': bad_elinks}]
                         break
             
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
