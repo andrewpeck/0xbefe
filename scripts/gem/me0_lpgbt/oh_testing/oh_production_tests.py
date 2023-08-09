@@ -2132,7 +2132,7 @@ if __name__ == "__main__":
                             else:
                                 status = 1
                             status_list+=[status]
-                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[{'ELINK_Status':status_list,'ELINK_Threshold':threshold_list, 'Bad_ELINKs': bad_elinks}]
+                        results_oh_sn[oh_sn]["SBIT_Noise_Rate"]+=[{'ELINK_Status':status_list,'ELINK_Threshold':threshold_list, 'Bad_ELINKS': bad_elinks}]
                         break
             
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
@@ -2143,18 +2143,18 @@ if __name__ == "__main__":
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
                 os.makedirs(dataDir + "/sbit_noise_rate_results")
-                os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/sbit_noise_rate_or_OH%d.pdf"%(latest_dir, dataDir, oh_select))
+                os.system("cp %s/*_or_*.pdf %s/sbit_noise_rate_results/"%(latest_dir, dataDir))
             else:
-                print (Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
+                print(Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Noise_Rate']):
-                if not result['Status']:
+                if not np.all(result['Status']):
                     if not test_failed:
-                        print (Colors.RED + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
+                        print(Colors.RED + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINKS %s'%(oh_sn,geb_oh_map[slot]['VFAT'][i],', '.join(map(str,result['Bad_ELINKS']))) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d ELINKS %s\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]),', '.join(map(str,result['Bad_ELINKS'])))
                     test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
@@ -2175,7 +2175,7 @@ if __name__ == "__main__":
         logfile.write("Skipping S-bit Noise Rate for %s tests\n"%batch.replace("_"," "))
         time.sleep(1)
 
-    print (Colors.GREEN + "\nStep 16: S-bit Noise Rate Complete\n" + Colors.ENDC)
+    print(Colors.GREEN + "\nStep 16: S-bit Noise Rate Complete\n" + Colors.ENDC)
     logfile.write("\nStep 16: S-bit Noise Rate Complete\n\n")
 
     time.sleep(1)
