@@ -44,6 +44,7 @@ geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='VERBOSE = save verbose results file')
     args = parser.parse_args()
 
     if args.input_file is None:
@@ -142,17 +143,17 @@ if __name__ == "__main__":
     results_fn = dataDir + "/oh_tests_results.json"
 
     results_oh_sn = {}
+    addl_results = {}
     # log results for each asiago by serial #
     for slot,oh_sn in geb_dict.items():
         results_oh_sn[oh_sn]={}
-        results_oh_sn[oh_sn]["Batch"]=batch
-        results_oh_sn[oh_sn]["GEB_Slot"]=slot_name_dict[slot]
+        addl_results[oh_sn] = {}
+        results_oh_sn[oh_sn]["BATCH"]=batch
+        results_oh_sn[oh_sn]["GEB_SLOT"]=slot_name_dict[slot]
         results_oh_sn[oh_sn]["VTRx+"]={}
-        results_oh_sn[oh_sn]["VTRx+"]["Serial_Number"]=vtrx_dict[slot]
-        results_oh_sn[oh_sn]["VTRx+"]["Pigtail_Length"]=pigtail_dict[slot]
-        for gbt in geb_oh_map[slot]["GBT"]:
-            results_oh_sn[oh_sn][gbt]={}
-        results_oh_sn[oh_sn]['VFAT_Slots']=geb_oh_map[slot]['VFAT']    
+        results_oh_sn[oh_sn]["VTRXP_SERIAL_NUMBER"]=vtrx_dict[slot]
+        results_oh_sn[oh_sn]["VTRXP_PIGTAIL_LENGTH"]=pigtail_dict[slot]
+        results_oh_sn[oh_sn]['VFAT_SLOTS']=geb_oh_map[slot]['VFAT']    
     debug = True if batch=="debug" else False
     test_failed = False
     t0 = time.time()
@@ -182,25 +183,30 @@ if __name__ == "__main__":
         os.system("python3 clean_log.py -i %s"%log_fn)
         list_of_files = glob.glob("results/gbt_data/gbt_status_data/*.json")
         latest_file = max(list_of_files, key=os.path.getctime)
+        init_dict = {}
         with open(latest_file,"r") as statusfile:
             status_dict = json.load(statusfile)
             for oh,status_dict_oh in status_dict.items():
                 for gbt,status in status_dict_oh.items():
                     for slot,oh_sn in geb_dict.items():
                         if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
-                            results_oh_sn[oh_sn][int(gbt)]["Ready"]=int(status)
+                            if oh_sn not in init_dict:
+                                init_dict[oh_sn] = {}
+                                init_dict[oh_sn][int(gbt)] = {'status':int(status)}
+                            else:
+                                init_dict[oh_sn][int(gbt)] = {'status':int(status)}
                             break 
         os.system('cp %s %s/'%(latest_file,dataDir))
         logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
-            results_oh_sn[oh_sn]["Initialization"]=1
+            results_oh_sn[oh_sn]["INITIALIZATION"]=1
             for gbt in geb_oh_map[slot]["GBT"]:
-                results_oh_sn[oh_sn]["Initialization"] &= results_oh_sn[oh_sn][gbt]["Ready"]
+                results_oh_sn[oh_sn]["INITIALIZATION"] &= init_dict[oh_sn][gbt]["status"]
         for slot,oh_sn in geb_dict.items():
-            if not results_oh_sn[oh_sn]["Initialization"]:
+            if not results_oh_sn[oh_sn]["INITIALIZATION"]:
                 for gbt in geb_oh_map[slot]['GBT']:
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                    if not results_oh_sn[oh_sn][gbt]["Ready"]:
+                    if not init_dict[oh_sn][gbt]["status"]:
                         if not test_failed:
                             print(Colors.RED + "\nStep 1: Initialization Failed" + Colors.ENDC)
                             logfile.write("\nStep 1: Initialization Failed\n")
@@ -213,7 +219,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -278,6 +284,7 @@ if __name__ == "__main__":
                 print ("Checking slot %s %s lpGBT:"%(slot,gbt_type))
                 logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type))
                 n_error = 0
+                gbt_type = 'M' if gbt%2==0 else 'S'
                 for line in config_file.readlines():
                     reg,value = int(line.split()[0],16),int(line.split()[1],16)
                     if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
@@ -286,26 +293,28 @@ if __name__ == "__main__":
                         n_error += 1
                         print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type][reg]) + Colors.ENDC)
                         logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type][reg]))
-                        if 'Bad_Registers' in results_oh_sn[oh_sn][gbt]:
-                            results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg] # save bad registers as int array
+
+                        if 'lpGBT_%s_Bad_Registers' in addl_results[oh_sn][gbt]:
+                            addl_results[oh_sn]['lpGBT_%s_Bad_Registers']+=[reg] # save bad registers as int array
                         else:
-                            results_oh_sn[oh_sn][gbt]["Bad_Registers"]=[]
-                            results_oh_sn[oh_sn][gbt]["Bad_Registers"]+=[reg]
+                            addl_results[oh_sn]["lpGBT_%s_Bad_Registers"]=[]
+                            addl_results[oh_sn]["lpGBT_%s_Bad_Registers"]+=[reg]
                 if not n_error:
                     print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                     logfile.write("  No register mismatches\n")
-                results_oh_sn[oh_sn][gbt]["Status"] = int(not n_error)
+                results_oh_sn[oh_sn]['LPGBT_%s_REG_STATUS'%gbt_type] = int(not n_error)
 
                 status_file.close()
                 config_file.close()
         
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                if not results_oh_sn[oh_sn][gbt]["Status"]:
+                gbt_type = 'M' if gbt%2==0 else 'S'
+                if not results_oh_sn[oh_sn]['LPGBT_%s_REG_STATUS'%gbt_type]:
                     if not test_failed:
                         print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
                         logfile.write("\nStep 2: Checking lpGBT Status Failed\n"%(oh_sn,gbt_type))
+                    gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
@@ -315,7 +324,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -360,11 +369,9 @@ if __name__ == "__main__":
             eye_result_file.close()
             print(result)
             logfile.write(result+"\n")
-            results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] = float(result.split()[5])
+            results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = float(result.split()[5])
         for slot,oh_sn in geb_dict.items():
-            gbt = geb_oh_map[slot]["GBT"][0]
-            gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-            if results_oh_sn[oh_sn][gbt]["Downlink_Eye_Diagram"] < 0.5:
+            if results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] < 0.5:
                 if not test_failed:
                     print (Colors.RED + "\nStep 3: Downlink Eye Diagram Failed" + Colors.ENDC)
                     logfile.RED("\nStep 3: Downlink Eye Diagram Failed\n")
@@ -377,7 +384,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -420,16 +427,15 @@ if __name__ == "__main__":
                             gbt = int(line.split()[-1])
                             for slot,oh_sn in geb_dict.items():
                                 if gbt in geb_oh_map[slot]["GBT"]:
-                                    results_oh_sn[oh_sn][gbt]["Downlink_BERT"] = {}
                                     break
                         elif "Number of FEC errors" in line:
                             errors = int(line.split()[-1])
-                            results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Error_Count"] = errors
+                            results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT'] = errors
                         elif "Bit Error Ratio" in line:
                             if errors:
-                                results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='--'
+                                results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT']=-9999
                             else:
-                                results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Limit"]='BER < '+line.split()[-1]
+                                results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT']=float(line.split()[-1])
                     elif "BER Test Results" in line:
                         read_next = True
             read_next = False
@@ -438,9 +444,7 @@ if __name__ == "__main__":
             logfile = open(log_fn, "a")
 
         for slot,oh_sn in geb_dict.items():
-            gbt = geb_oh_map[slot]['GBT'][0]
-            gbt_type = 'BOSS'
-            if results_oh_sn[oh_sn][gbt]["Downlink_BERT"]["Error_Count"]:
+            if results_oh_sn[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT']:
                 if not test_failed:
                     print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
@@ -453,7 +457,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -495,18 +499,18 @@ if __name__ == "__main__":
                     if read_next:
                         if "GBT" in line:
                             gbt = int(line.split()[-1])
+                            gbt_type = 'M' if gbt%2==0 else 'S'
                             for slot,oh_sn in geb_dict.items():
                                 if gbt in geb_oh_map[slot]["GBT"]:
-                                    results_oh_sn[oh_sn][gbt]["Uplink_BERT"] = {}
                                     break
                         elif "Number of FEC errors" in line:
                             errors = int(line.split()[-1])
-                            results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"] = errors
+                            results_oh_sn[oh_sn]['LPGBT_%s_UPLINK_ERROR_COUNT'%gbt_type] = errors
                         elif "Bit Error Ratio" in line:
                             if errors:
-                                results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='--'
+                                results_oh_sn[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type]=-9999
                             else:
-                                results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Limit"]='BER < ' +line.split()[-1]
+                                results_oh_sn[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type]=float(line.split()[-1])
                     elif "BER Test Results" in line:
                         read_next = True
             read_next = False
@@ -516,11 +520,12 @@ if __name__ == "__main__":
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                if results_oh_sn[oh_sn][gbt]["Uplink_BERT"]["Error_Count"]:
+                gbt_type = 'M' if gbt%2==0 else 'S'
+                if results_oh_sn[oh_sn]['LPGBT_%s_UPLINK_ERROR_COUNT'%gbt_type]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
                         logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
+                    gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
@@ -530,7 +535,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -573,10 +578,10 @@ if __name__ == "__main__":
                         status =  1 if line.split()[4] == "GOOD" else 0
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]["VFAT"]:
-                                if "DAQ_Phase_Scan" in results_oh_sn[oh_sn]:
-                                    results_oh_sn[oh_sn]["DAQ_Phase_Scan"].append({'Status':status,'Phase':phase,'Width':width})
+                                if "VFAT_DAQ_PHASE_SCAN" in results_oh_sn[oh_sn]:
+                                    results_oh_sn[oh_sn]["VFAT_DAQ_PHASE_SCAN"].append({'Status':status,'Phase':phase,'Width':width})
                                 else:
-                                    results_oh_sn[oh_sn]["DAQ_Phase_Scan"]=[{'Status':status,'Phase':phase,'Width':width}]
+                                    results_oh_sn[oh_sn]["VFAT_DAQ_PHASE_SCAN"]=[{'Status':status,'Phase':phase,'Width':width}]
                                 break
                     elif "Phase Scan Results" in line:
                         read_next = True
@@ -589,7 +594,7 @@ if __name__ == "__main__":
             os.system('cp %s %s/me0_oh%d_vfat_phase_scan.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]['DAQ_Phase_Scan']):
+            for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_DAQ_PHASE_SCAN']):
                 if not result['Status']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
@@ -603,7 +608,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -653,11 +658,11 @@ if __name__ == "__main__":
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
                                     break
-                            if 'SBIT_Phase_Scan' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
+                            if 'VFAT_SBIT_PHASE_SCAN' in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]['VFAT_SBIT_PHASE_SCAN'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
                             else:
-                                results_oh_sn[oh_sn]['SBIT_Phase_Scan']=[[] for _ in range(6)]
-                                results_oh_sn[oh_sn]['SBIT_Phase_Scan'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
+                                results_oh_sn[oh_sn]['VFAT_SBIT_PHASE_SCAN']=[[] for _ in range(6)]
+                                results_oh_sn[oh_sn]['VFAT_SBIT_PHASE_SCAN'][i]+=[{'Status':status,'Phase':phase,'Width':width}]
                     elif 'Phase Scan Results' in line:
                         read_next = True
             logfile.close()
@@ -669,7 +674,7 @@ if __name__ == "__main__":
             os.system('cp %s %s/me0_oh%d_vfat_sbit_phase_scan.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            for v,vfat_results in enumerate(results_oh_sn[oh_sn]["SBIT_Phase_Scan"]):
+            for v,vfat_results in enumerate(results_oh_sn[oh_sn]["VFAT_SBIT_PHASE_SCAN"]):
                 for e,result in enumerate(vfat_results):
                     if not result['Status']:
                         if not test_failed:
@@ -684,7 +689,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -721,15 +726,15 @@ if __name__ == "__main__":
                         elif "Bit slip" in line:
                             bitslip = int(line.split()[-1])
                             status = 1 if bitslip!=-9999 else 0
-                            if 'SBIT_Bitslip' in results_oh_sn[oh_sn]:
-                                if results_oh_sn[oh_sn]['SBIT_Bitslip'][i] == {}:
-                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]={'Status':status,'Bitslips':[bitslip]}
+                            if 'VFAT_SBIT_BITSLIP' in results_oh_sn[oh_sn]:
+                                if results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'][i] == {}:
+                                    results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'][i]={'Status':status,'Bitslips':[bitslip]}
                                 else:
-                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Status']&=status
-                                    results_oh_sn[oh_sn]['SBIT_Bitslip'][i]['Bitslips']+=[bitslip]
+                                    results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'][i]['Status']&=status
+                                    results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'][i]['Bitslips']+=[bitslip]
                             else:
-                                results_oh_sn[oh_sn]['SBIT_Bitslip'] = [{} for _ in range(6)]
-                                results_oh_sn[oh_sn]['SBIT_Bitslip'][i]={'Status':status,'Bitslips':[bitslip]}
+                                results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'] = [{} for _ in range(6)]
+                                results_oh_sn[oh_sn]['VFAT_SBIT_BITSLIP'][i]={'Status':status,'Bitslips':[bitslip]}
                     elif "Bad Elinks:" in line:
                         read_next = False # rule out "VFAT" and "ELINK" appearing at the end in bad elinks
                         continue
@@ -742,7 +747,7 @@ if __name__ == "__main__":
             os.system('cp %s %s/me0_oh%d_vfat_sbit_bitslip.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Bitslip"]):
+            for i,result in enumerate(results_oh_sn[oh_sn]["VFAT_SBIT_BITSLIP"]):
                 if not result['Status']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
@@ -756,7 +761,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -823,41 +828,41 @@ if __name__ == "__main__":
             os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.py'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            results_oh_sn[oh_sn]['SBIT_Mapping']=[{} for _ in range(6)]
+            results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING']=[{} for _ in range(6)]
         if no_bad_channels:
             for oh_sn in results_oh_sn:
                 for i in range(6):
-                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=int(no_bad_channels)
+                    results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['SBIT_Status']=int(no_bad_channels)
         elif bad_channels:
             for vfat in bad_channels:
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]['VFAT']:
                         i = geb_oh_map[slot]['VFAT'].index(vfat)
                         break
-                results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=int(no_bad_channels)
+                results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['SBIT_Status']=int(no_bad_channels)
         for oh_sn in results_oh_sn:
             for i in range(6):
-                if 'SBIT_Status' not in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['SBIT_Status']=1
+                if 'SBIT_Status' not in results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]:
+                    results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['SBIT_Status']=1
 
         if no_rotated_elinks:
             for oh_sn in results_oh_sn:
                 for i in range(6):
-                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
+                    results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
         elif rotated_elinks:
             for vfat in rotated_elinks:
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]['VFAT']:
                         i = geb_oh_map[slot]['VFAT'].index(vfat)
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['No_Rotated_Elinks']=int(no_rotated_elinks)
                         break
         for oh_sn in results_oh_sn:
             for i in range(6):
-                if 'No_Rotated_Elinks' not in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                    results_oh_sn[oh_sn]['SBIT_Mapping'][i]['No_Rotated_Elinks']=1
+                if 'No_Rotated_Elinks' not in results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]:
+                    results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]['No_Rotated_Elinks']=1
         if not no_bad_channels or not no_rotated_elinks:
             for slot,oh_sn in geb_dict.items():
-                for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Mapping']):
+                for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING']):
                     if not result['SBIT_Status'] or not result['No_Rotated_Elinks']:
                         if not test_failed:
                             print (Colors.RED + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
@@ -871,7 +876,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -911,23 +916,23 @@ if __name__ == "__main__":
                         if vfat in geb_oh_map[slot]['VFAT']:
                             i = geb_oh_map[slot]['VFAT'].index(vfat)
                             break
-                    if 'SBIT_Address' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] += [sbit]
+                    if 'SBIT_Address' in results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]:
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["SBIT_Address"] += [sbit]
                     else:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["SBIT_Address"] = [sbit]
-                    if 'Cluster_Status' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] &= cluster_status
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["SBIT_Address"] = [sbit]
+                    if 'Cluster_Status' in results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]:
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["Cluster_Status"] &= cluster_status
                     else:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Status"] = cluster_status
-                    if 'Cluster_Address' in results_oh_sn[oh_sn]['SBIT_Mapping'][i]:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] += [cluster_address]
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["Cluster_Status"] = cluster_status
+                    if 'Cluster_Address' in results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]:
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["Cluster_Address"] += [cluster_address]
                     else:
-                        results_oh_sn[oh_sn]['SBIT_Mapping'][i]["Cluster_Address"] = [cluster_address]
+                        results_oh_sn[oh_sn]['VFAT_SBIT_MAPPING'][i]["Cluster_Address"] = [cluster_address]
             os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
 
         test_failed_override = False
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]["SBIT_Mapping"]):
+            for i,result in enumerate(results_oh_sn[oh_sn]["VFAT_SBIT_MAPPING"]):
                 if not result['Cluster_Status']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
@@ -945,7 +950,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -998,15 +1003,15 @@ if __name__ == "__main__":
                                 break
                         status_str = line.split(':')[1]
                         if "VFAT RESET from RUN mode to SLEEP mode" in status_str:
-                            if 'VFAT_Reset' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]['VFAT_Reset'] += [1]
+                            if 'VFAT_RESETS' in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]['VFAT_RESETS'] += [1]
                             else:
-                                results_oh_sn[oh_sn]['VFAT_Reset'] = [1]
+                                results_oh_sn[oh_sn]['VFAT_RESETS'] = [1]
                         else:
-                            if 'VFAT_Reset' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]['VFAT_Reset'] += [0]
+                            if 'VFAT_RESETS' in results_oh_sn[oh_sn]:
+                                results_oh_sn[oh_sn]['VFAT_RESETS'] += [0]
                             else:
-                                results_oh_sn[oh_sn]['VFAT_Reset'] = [0]
+                                results_oh_sn[oh_sn]['VFAT_RESETS'] = [0]
                     elif 'VFAT Reset Results' in line:
                         read_next = True
 
@@ -1018,7 +1023,7 @@ if __name__ == "__main__":
         logfile = open(log_fn,'a')
 
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_Reset']):
+            for i,result in enumerate(results_oh_sn[oh_sn]['VFAT_RESETS']):
                 if not result:
                     if not test_failed:
                         print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
@@ -1032,7 +1037,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1093,15 +1098,20 @@ if __name__ == "__main__":
                             timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
+                                    if 'VFAT_SLOW_CONTROL_ERROR_COUNT' in results_oh_sn[oh_sn]:
+                                        results_oh_sn[oh_sn]["VFAT_SLOW_CONTROL_ERROR_COUNT"] += [sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors]
+                                    else:
+                                        results_oh_sn[oh_sn]["VFAT_SLOW_CONTROL_ERROR_COUNT"] = [sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors]
+
+                                    if 'Slow_Control_Errors' in addl_results[oh_sn]:
+                                        addl_results[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
+                                    else:
+                                        addl_results[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
                                     break
-                            if 'Slow_Control_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
-                            else:
-                                results_oh_sn[oh_sn]["Slow_Control_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'Register_Mismatch_Error_Count':mismatch_errors,'Total_Error_Count':sync_errors+bus_errors+mismatch_errors+crc_errors+timeout_errors}]
                     elif "Error test results" in line:
                         read_next = True
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]['Slow_Control_Errors']):
+            for i,result in enumerate(addl_results[oh_sn]['Slow_Control_Errors']):
                 if not result['Link_Good'] or result['Total_Error_Count']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 9: Slow Control Error Rate Test Failed" + Colors.ENDC)
@@ -1125,7 +1135,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1171,7 +1181,7 @@ if __name__ == "__main__":
                         if 'link is' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             link_good = 1 if line.split()[-1]=='GOOD' else 0
-                            l1a_daq_counter_mismatch = 0 # reset mismatch flag
+                            daq_l1a_counter_mismatch = 0 # reset mismatch flag
                         elif 'sync errors' in line:
                             sync_errors = int(line.split()[-1])
                         elif 'Mismatch between DAQ_EVENT_CNT and L1A counter' in line:
@@ -1180,16 +1190,20 @@ if __name__ == "__main__":
                             crc_errors = int(line.split()[-1])
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
+                                    if 'VFAT_DAQ_CRC_ERROR_COUNT' in results_oh_sn[oh_sn]:
+                                        results_oh_sn[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"] += [crc_errors]
+                                    else:
+                                        results_oh_sn[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"] = [crc_errors]
+                                    if 'DAQ_Errors' in addl_results[oh_sn]:
+                                        addl_results[oh_sn]["DAQ_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
+                                    else:
+                                        addl_results[oh_sn]["DAQ_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
                                     break
-                            if 'DAQ_Errors' in results_oh_sn[oh_sn]:
-                                results_oh_sn[oh_sn]["DAQ_Errors"] += [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
-                            else:
-                                results_oh_sn[oh_sn]["DAQ_Errors"] = [{'Time':runtime,'Link_Good':link_good,'Sync_Error_Count':sync_errors,'CRC_Error_Count':crc_errors,'DAQ_L1A_Counter_Mismatch':daq_l1a_counter_mismatch}]
                     elif "Error test results" in line:
                         read_next = True
 
         for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(results_oh_sn[oh_sn]["DAQ_Errors"]):
+            for i,result in enumerate(addl_results[oh_sn]["DAQ_Errors"]):
                 if not result['Link_Good'] or result['Sync_Error_Count'] or result['CRC_Error_Count'] or result['DAQ_L1A_Counter_Mismatch']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 10: DAQ Error Rate Test Failed" + Colors.ENDC)
@@ -1213,7 +1227,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1254,7 +1268,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
+                gbt_type = 'M' if gbt%2==0 else 'S'
                 print (Colors.BLUE + "\nRunning ADC Calibration Scan for gbt %d\n"%gbt + Colors.ENDC)
                 logfile.write("Running ADC Calibration Scan for gbt %d\n\n"%gbt)
                 logfile.close()
@@ -1265,11 +1279,12 @@ if __name__ == "__main__":
                 os.system("cp %s %s/adc_calib_results_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type))
                 with open(latest_file) as adc_calib_file:
                     try:
-                        results_oh_sn[oh_sn][gbt]["ADC_Calibration"] = [float(p) for p in adc_calib_file.read().split()]
+                        results_oh_sn[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type] = [float(p) for p in adc_calib_file.read().split()]
                     except:
-                        results_oh_sn[oh_sn][gbt]["ADC_Calibration"] = -9999
+                        results_oh_sn[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type] = -9999
                 list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
+                    gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     latest_file = max(list_of_files, key=os.path.getctime)
                     os.system("cp %s %s/adc_calib_OH%s_%s.pdf"%(latest_file, dataDir, oh_sn, gbt_type))
 
@@ -1289,7 +1304,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1360,7 +1375,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1420,7 +1435,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1493,7 +1508,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1560,7 +1575,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1627,7 +1642,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1746,7 +1761,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1853,7 +1868,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -1964,7 +1979,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -2071,7 +2086,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -2151,7 +2166,7 @@ if __name__ == "__main__":
                 logfile.write("S-bit Noise Rate result directory not found\n")
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(results_oh_sn[oh_sn]['SBIT_Noise_Rate']):
-                if not np.all(result['Status']):
+                if not np.all(result['ELINK_Status']):
                     if not test_failed:
                         print(Colors.RED + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
@@ -2164,7 +2179,7 @@ if __name__ == "__main__":
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
                 with open(results_fn,"w") as resultsfile:
-                    results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+                    results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
                     json.dump(results_oh_sn,resultsfile,indent=2)
                 logfile.close()
                 sys.exit()  
@@ -2188,7 +2203,7 @@ if __name__ == "__main__":
     logfile.write('Time taken to perform %s tests: %.3f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
 
     with open(results_fn,"w") as resultsfile:
-        results_oh_sn = [{oh_sn:results} for oh_sn,results in results_oh_sn.items()]
+        results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()] + [addl_results]
         json.dump(results_oh_sn,resultsfile,indent=2)
     logfile.close()
     os.system("rm -rf out.txt")
