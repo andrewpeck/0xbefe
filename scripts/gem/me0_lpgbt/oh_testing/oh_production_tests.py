@@ -404,6 +404,14 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+            # Configure all VFATs at low threshold
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
+
             print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBTs\n\n"%oh_select)
             if debug:
@@ -436,6 +444,14 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
+            # Unconfigure all VFATs at low threshold
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
 
         for slot,oh_sn in geb_dict.items():
             gbt = geb_oh_map[slot]['GBT'][0]
@@ -480,6 +496,14 @@ if __name__ == "__main__":
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            # Configure all VFATs at low threshold
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
+
             print(Colors.BLUE + "Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n\n"%oh_select)
             if debug:
@@ -513,6 +537,14 @@ if __name__ == "__main__":
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn))
             logfile = open(log_fn, "a")
+
+            # Unconfigure all VFATs at low threshold
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:

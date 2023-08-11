@@ -45,6 +45,7 @@ geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests - Long Optical BERT")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
+    parser.add_argument("-v", "--vfat", action="store", dest="vfat", default="0", help="VFAT = Whether to configure the VFATs (only do this when testing on the GEB)")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
@@ -200,6 +201,19 @@ if __name__ == "__main__":
     
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    # Configure all VFATs at low threshold
+    if int(args.vfat) == 1:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
+
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
     
     # Start the Downlink BER counters
     print (Colors.BLUE + "Starting Downlink BER counters\n" + Colors.ENDC)
@@ -295,6 +309,19 @@ if __name__ == "__main__":
 
     print (Colors.GREEN + "\nDownlink BERT Counters Stopped\n" + Colors.ENDC)
     logfile.write("\nDownlink BERT Counters Stopped\n\n")
+
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
+    # Unconfigure all VFATs at low threshold
+    if int(args.vfat) == 1:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
 
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
