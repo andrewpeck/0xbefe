@@ -74,6 +74,8 @@ def main(system, oh_select, gbt_list, niter):
         # Link Resets 
         befe_reset_all_plls() # Resetting all MGT PLLs
         sleep(0.3)
+        links = befe_config_links() # Configuring and resetting all links
+        sleep(0.1) 
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1) # Resetting user logic
         sleep(0.3)
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET"), 1) # Resetting user logic
