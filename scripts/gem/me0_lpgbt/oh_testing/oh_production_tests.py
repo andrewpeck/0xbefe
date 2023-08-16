@@ -1507,7 +1507,7 @@ if __name__ == "__main__":
                         full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = -9999
         voltage_ranges = {'V2V5':[2.4,2.75],'VSSA':[1.05,1.35],'VDDTX':[1.05,1.35],'VDDRX':[1.05,1.35],'VDD':[1.05,1.35],'VDDA':[1.05,1.35],'VREF':[0.85,1.15]}
         for oh_sn in xml_results:
-            for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']])
+            for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']]):
                 if reading == -9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
@@ -1684,6 +1684,7 @@ if __name__ == "__main__":
             try:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT']  = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
             except KeyError:
+                pass
             try:
                 xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
                 xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
