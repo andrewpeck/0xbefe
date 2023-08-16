@@ -1634,9 +1634,9 @@ if __name__ == "__main__":
                 line = asense_file.readline().split()
                 asense = {}
                 asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                # asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
+                asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
                 asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                # asense["_".join(line[15:16]).removeprefix('(').removesuffix(')')]=[]
+                asense["_".join(line[15:16]).removeprefix('(').removesuffix(')')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1::2]):
                         if float(value) != -9999:
@@ -1646,9 +1646,12 @@ if __name__ == "__main__":
                     full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
                 else:
                     full_results[oh_sn]["ASENSE_SCAN"][key]=-9999
+            V_to_T = lambda v: 115*v - 22
             xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
             xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
             xml_results[oh_sn]['DCDC_2V5_CURRENT']  = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
+
+            
 
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
             if len(list_of_files)>0:
@@ -1658,8 +1661,8 @@ if __name__ == "__main__":
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
-        
-        asense_ranges = {'1V2_current':3,'1V2D_current':3,'1V2A_current':3,'2V5_current':0.5}
+
+        asense_ranges = {'1V2_current':3,'1V2D_current':3,'1V2A_current':3,'2V5_current':0.5,'Rt1_voltage':5.8,'Rt2_voltage':5.8,'Rt3_voltage':5.8,'Rt4_voltage':5.8}
         for oh_sn in full_results:
             for key,reading in full_results[oh_sn]["ASENSE_SCAN"].items():
                 if reading == -9999:
@@ -1669,7 +1672,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                     logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
                     test_failed = True
-                elif reading > asense_ranges[key]:
+                elif 'current' in key and reading > asense_ranges[key]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
