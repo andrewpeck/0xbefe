@@ -1646,12 +1646,24 @@ if __name__ == "__main__":
                     full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
                 else:
                     full_results[oh_sn]["ASENSE_SCAN"][key]=-9999
-            V_to_T = lambda v: 115*v - 22
-            xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
-            xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
-            xml_results[oh_sn]['DCDC_2V5_CURRENT']  = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
-
             
+            if int(slot)%2==0:
+                prev_slot = int(slot) - 1
+                if str(prev_slot) in geb_dict:
+                    oh_sn_prev = geb_dict[str(prev_slot)]
+                    full_results[oh_sn]['ASENSE_SCAN'] = full_results[oh_sn_prev]['ASENSE_SCAN'] = {**full_results[oh_sn]['ASENSE_SCAN'],**full_results[oh_sn_prev]['ASENSE_SCAN']}
+                else:
+                    geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
+                    layer = geb_oh_map[slot]['OH']
+                    print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
+                    logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
+            else:
+                next_slot = int(slot) + 1
+                if str(next_slot) not in geb_dict:
+                    geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
+                    layer = geb_oh_map[slot]['OH']
+                    print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
+                    logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
 
             list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
             if len(list_of_files)>0:
@@ -1661,24 +1673,48 @@ if __name__ == "__main__":
             if len(list_of_files)>0:
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
-
-        asense_ranges = {'1V2_current':3,'1V2D_current':3,'1V2A_current':3,'2V5_current':0.5,'Rt1_voltage':5.8,'Rt2_voltage':5.8,'Rt3_voltage':5.8,'Rt4_voltage':5.8}
         for oh_sn in full_results:
-            for key,reading in full_results[oh_sn]["ASENSE_SCAN"].items():
-                if reading == -9999:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
-                        logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
-                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                    test_failed = True
-                elif 'current' in key and reading > asense_ranges[key]:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
-                        logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
-                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
-                    test_failed = True
+            # Convert to temperature but pass missing value keys
+            V_to_T = lambda v: 115*v - 22 if v!=-9999 else v
+            try:
+                xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
+                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
+            except KeyError:
+                pass
+            try:
+                xml_results[oh_sn]['DCDC_2V5_CURRENT']  = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
+            except KeyError:
+            try:
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+            except KeyError:
+                pass
+            try:
+                xml_results[oh_sn]['DCDC_2V5_TEMP']  = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+            except KeyError:
+                pass
+
+        asense_ranges = {'DCDC_1V2D_CURRENT':3,'DCDC_1V2A_CURRENT':3,'DCDC_2V5_CURRENT':0.5,'DCDC_2V5_TEMP':35,'DCDC_1V2D_TEMP':35,'DCDC_1V2A_TEMP':35}
+        for oh_sn in xml_results:
+            for key,limit in asense_ranges.items():
+                try:
+                    if xml_results[oh_sn][key] == -9999:
+                        if not test_failed:
+                            print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                            logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                        print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                        logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                        test_failed = True
+                    elif xml_results[oh_sn][key] > limit:
+                        if not test_failed:
+                            print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                            logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                        print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                        logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
+                        test_failed = True
+                except KeyError:
+                    print(Colors.YELLOW + 'WARNING: Missing result for %s for OH %s'%(key,oh_sn) + Colors.ENDC)
+                    logfile.write('WARNING: Missing result for %s for OH %s'%(key,oh_sn))
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
