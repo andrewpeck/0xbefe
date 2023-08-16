@@ -285,25 +285,25 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             status_registers[slot]={}
             for gbt,status_file,config_file in zip(geb_oh_map[slot]['GBT'],status_files[slot],config_files[slot]):
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                status_registers[slot][gbt_type]={}
+                gbt_type = 'M' if gbt%2==0 else 'S'
+                gbt_type_long = 'BOSS' if gbt%2==0 else 'SUB'
+                status_registers[slot][gbt_type_long]={}
                 # Get status registers
                 for line in status_file.readlines():
                     reg,value = int(line.split()[0],16),int(line.split()[1],16)
-                    status_registers[slot][gbt_type][reg] = value
+                    status_registers[slot][gbt_type_long][reg] = value
                 # Check against config files
-                print ("Checking slot %s %s lpGBT:"%(slot,gbt_type))
-                logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type))
+                print ("Checking slot %s %s lpGBT:"%(slot,gbt_type_long))
+                logfile.write("Checking slot %s %s lpGBT:\n"%(slot,gbt_type_long))
                 n_error = 0
-                gbt_type = 'M' if gbt%2==0 else 'S'
                 for line in config_file.readlines():
                     reg,value = int(line.split()[0],16),int(line.split()[1],16)
                     if reg in [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xFC, 0xFD, 0xFE, 0xFF]:
                         continue
-                    if status_registers[slot][gbt_type][reg] != value:
+                    if status_registers[slot][gbt_type_long][reg] != value:
                         n_error += 1
-                        print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type][reg]) + Colors.ENDC)
-                        logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type][reg]))
+                        print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type_long][reg]) + Colors.ENDC)
+                        logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type_long][reg]))
 
                         if 'LPGBT_%s_BAD_REGISTERS'%gbt_type in full_results[oh_sn][gbt]:
                             full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=[reg] # save bad registers as int array
@@ -1425,7 +1425,7 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: ADC Calibration Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: ADC Calibration Scan Failed\n")
-                    gbt_type = 'BOSS' if gbt%2==0 else 'SUB
+                    gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                     test_failed = True
@@ -1477,7 +1477,7 @@ if __name__ == "__main__":
                     for i in [2,4,8,12,16,20,24]:
                         key = line.split()[i]
                         if key not in voltages:
-                            voltages[gbt_type][][key]=[]
+                            voltages[gbt_type][key]=[]
                     for line in voltage_scan_file.readlines():
                         for key,val in zip(voltages,line.split()[1:]):
                             if float(val)!=-9999:
