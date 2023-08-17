@@ -80,7 +80,7 @@ if __name__ == "__main__":
                     sys.exit()
             elif batch=="debug":
                 if int(oh_sn) not in range(1, 2019):
-                    print(Colors.YELLOW + "Valid %s OH serial number between 1001 and 2018"%batch.replace('_','-') + Colors.ENDC)
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%batch.replace('_','-') + Colors.ENDC)
                     sys.exit()
             if int(slot) > 4:
                 print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
@@ -436,7 +436,7 @@ if __name__ == "__main__":
     logfile.write("Step 4: Downlink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
             # Configure all VFATs at low threshold
             print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
@@ -533,7 +533,7 @@ if __name__ == "__main__":
     logfile.write("Step 5: Uplink Optical BERT\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             # Configure all VFATs at low threshold
             print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
@@ -1456,37 +1456,45 @@ if __name__ == "__main__":
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        voltages={}
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
         for slot,oh_sn in geb_dict.items():
+            voltages={}
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
-                voltages[gbt_type] = {}
-                print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for gbt %d\n"%gbt + Colors.ENDC)
-                logfile.write("Running lpGBT Voltage Scan for gbt %d\n\n"%gbt)
+                gbt_type = 'M' if gbt%2==0 else 'S'
+                gbt_type_long = 'BOSS' if gbt%2==0 else 'SUB'
+                voltages[gbt_type_long] = {}
+                print (Colors.BLUE + "\nRunning lpGBT Voltage Scan for OH %s %s lpGBT\n"%(oh_sn,gbt_type_long) + Colors.ENDC)
+                logfile.write("Running lpGBT Voltage Scan for OH %s %s lpGBT\n\n"%(oh_sn,gbt_type_long))
                 logfile.close()
                 os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
                 os.system("python3 clean_log.py -i %s"%log_fn)
                 logfile = open(log_fn,"a")
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.txt"%gbt)
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type))
+                os.system("cp %s %s/lpgbt_voltage_scan_OH%s_%s.txt"%(latest_file,dataDir,oh_sn,gbt_type_long))
                 with open(latest_file) as voltage_scan_file:
                     line = voltage_scan_file.readline()
                     for i in [2,4,8,12,16,20,24]:
                         key = line.split()[i]
-                        if key not in voltages:
-                            voltages[gbt_type][key]=[]
+                        if key not in voltages[gbt_type_long]:
+                            voltages[gbt_type_long][key]=[]
                     for line in voltage_scan_file.readlines():
                         for key,val in zip(voltages,line.split()[1:]):
                             if float(val)!=-9999:
-                                voltages[gbt_type][key]+=[float(val)]
+                                voltages[gbt_type_long][key]+=[float(val)]
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
                     latest_file = max(list_of_files, key=os.path.getctime)
-                    os.system("cp %s %s/voltage_OH%s_%s.pdf"%(latest_file, dataDir, oh_sn, gbt_type))
-            
+                    os.system("cp %s %s/voltage_OH%s_%s.pdf"%(latest_file, dataDir, oh_sn, gbt_type_long))
+
+                full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type] = {}
+                for key,values in voltages[gbt_type_long].items():
+                    if values != []:
+                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = np.mean(values)
+                    else:
+                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = -9999
+
             if voltages['SUB']['V2V5']!=[]:
                 xml_results[oh_sn]['OH_2V5_VOLTAGE'] = np.mean(voltages['SUB']['V2V5'])
             else:
@@ -1496,15 +1504,6 @@ if __name__ == "__main__":
             else:
                 xml_results[oh_sn]['OH_1V2_VOLTAGE'] = -9999
 
-            for gbt in geb_oh_map[slot]["GBT"]:
-                gbt_type = 'M' if gbt%2==0 else 'S'
-                gbt_type_long = 'BOSS' if gbt%2==0 else 'SUB'
-                full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type] = {}
-                for key,values in voltages[gbt_type_long].items():
-                    if values != []:
-                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = np.mean(values)
-                    else:
-                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = -9999
         voltage_ranges = {'V2V5':[2.4,2.75],'VSSA':[1.05,1.35],'VDDTX':[1.05,1.35],'VDDRX':[1.05,1.35],'VDD':[1.05,1.35],'VDDA':[1.05,1.35],'VREF':[0.85,1.15]}
         for oh_sn in xml_results:
             for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']]):
