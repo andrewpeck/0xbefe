@@ -305,7 +305,7 @@ if __name__ == "__main__":
                         print(Colors.RED + "  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X"%(reg, value, status_registers[slot][gbt_type_long][reg]) + Colors.ENDC)
                         logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type_long][reg]))
 
-                        if 'LPGBT_%s_BAD_REGISTERS'%gbt_type in full_results[oh_sn][gbt]:
+                        if 'LPGBT_%s_BAD_REGISTERS'%gbt_type in full_results[oh_sn]:
                             full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=[reg] # save bad registers as int array
                         else:
                             full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]=[]
@@ -1421,7 +1421,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]['GBT']:
                 gbt_type = 'M' if gbt%2==0 else 'S'
-                if xml_results[oh_sn][gbt]['LPGBT_%s_OH_CALIB'%gbt_type]==-9999:
+                if xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type]==-9999:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: ADC Calibration Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: ADC Calibration Scan Failed\n")
