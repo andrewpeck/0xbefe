@@ -1456,7 +1456,7 @@ if __name__ == "__main__":
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             voltages={}
             oh_select = geb_oh_map[slot]["OH"]
@@ -1480,7 +1480,7 @@ if __name__ == "__main__":
                         if key not in voltages[gbt_type_long]:
                             voltages[gbt_type_long][key]=[]
                     for line in voltage_scan_file.readlines():
-                        for key,val in zip(voltages,line.split()[1:]):
+                        for key,val in zip(voltages[gbt_type_long],line.split()[1:]):
                             if float(val)!=-9999:
                                 voltages[gbt_type_long][key]+=[float(val)]
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
