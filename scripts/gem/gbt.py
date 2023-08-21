@@ -134,12 +134,17 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
         if not os.path.isfile(filename):
             print_red("Can't find the file %s" % filename)
             return
-
-        timeStart = clock()
-
+        try:
+            timeStart = clock()
+        except:
+            timeStart = process_time()
         regs = downloadConfig(ohSelect, gbtSelect, filename)
 
-        totalTime = clock() - timeStart
+        try:
+            totalTime = clock() - timeStart
+        except:
+            totalTime = process_time() - timeStart
+        
         print('time took = ' + str(totalTime) + 's')
 
         if (command == 'v3b-phase-scan'):

@@ -255,7 +255,7 @@ begin
 
     i_ic_controller : entity work.gbt_ic_controller
         generic map(
-            g_DEBUG            => g_DEBUG_IC
+            g_DEBUG            => true
         )
         port map(
             reset_i             => reset_i,

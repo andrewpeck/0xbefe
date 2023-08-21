@@ -68,6 +68,9 @@ entity gbt_link_mux_me0_queso is
         -- clock
         gbt_frame_clk_i             : in  std_logic;
         
+        -- control
+        gbt_ic_rx_use_ec_i          : in  std_logic;
+
         -- links
         gbt_rx_data_arr_i           : in  t_lpgbt_rx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gbt_tx_data_arr_o           : out t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -92,7 +95,7 @@ entity gbt_link_mux_me0_queso is
     );
 end gbt_link_mux_me0_queso;
 
-architecture gbt_link_mux_me0_queso_arch of gbt_link_mux_me0 is
+architecture gbt_link_mux_me0_queso_arch of gbt_link_mux_me0_queso is
 
     signal gbt_rx_ready_arr             : std_logic_vector((g_NUM_OF_OHs * g_NUM_GBTS_PER_OH) - 1 downto 0);
     signal gbt_tx_data_arr              : t_lpgbt_tx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -112,13 +115,17 @@ begin
 
         -- IC
         gbt_ic_rx_data_arr_o(i * 8 + 0) <= gbt_rx_data_arr_i(i * 8 + 0).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 0).rx_ic_data(1); -- GBT0; bits reversed
-        gbt_ic_rx_data_arr_o(i * 8 + 1) <= gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(1); -- GBT1; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 1) <= gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 1).rx_ic_data(1) when gbt_ic_rx_use_ec_i = '0' else
+                                           gbt_rx_data_arr_i(i * 8 + 0).rx_ec_data(0) & gbt_rx_data_arr_i(i * 8 + 0).rx_ec_data(1); -- GBT1; bits reversed
         gbt_ic_rx_data_arr_o(i * 8 + 2) <= gbt_rx_data_arr_i(i * 8 + 2).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 2).rx_ic_data(1); -- GBT2; bits reversed
-        gbt_ic_rx_data_arr_o(i * 8 + 3) <= gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(1); -- GBT3; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 3) <= gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 3).rx_ic_data(1) when gbt_ic_rx_use_ec_i = '0' else
+                                           gbt_rx_data_arr_i(i * 8 + 2).rx_ec_data(0) & gbt_rx_data_arr_i(i * 8 + 2).rx_ec_data(1); -- GBT3; bits reversed
         gbt_ic_rx_data_arr_o(i * 8 + 4) <= gbt_rx_data_arr_i(i * 8 + 4).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 4).rx_ic_data(1); -- GBT4; bits reversed
-        gbt_ic_rx_data_arr_o(i * 8 + 5) <= gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(1); -- GBT5; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 5) <= gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 5).rx_ic_data(1) when gbt_ic_rx_use_ec_i = '0' else
+                                           gbt_rx_data_arr_i(i * 8 + 4).rx_ec_data(0) & gbt_rx_data_arr_i(i * 8 + 4).rx_ec_data(1); -- GBT5; bits reversed
         gbt_ic_rx_data_arr_o(i * 8 + 6) <= gbt_rx_data_arr_i(i * 8 + 6).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 6).rx_ic_data(1); -- GBT6; bits reversed
-        gbt_ic_rx_data_arr_o(i * 8 + 7) <= gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(1); -- GBT7; bits reversed
+        gbt_ic_rx_data_arr_o(i * 8 + 7) <= gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(0) & gbt_rx_data_arr_i(i * 8 + 7).rx_ic_data(1) when gbt_ic_rx_use_ec_i = '0' else
+                                           gbt_rx_data_arr_i(i * 8 + 6).rx_ec_data(0) & gbt_rx_data_arr_i(i * 8 + 6).rx_ec_data(1); -- GBT7; bits reversed
 
         -- GBT ready
         gbt_rx_ready_arr(i * 8 + 0) <= gbt_link_status_arr_i(i * 8 + 0).gbt_rx_ready; -- GBT0
@@ -344,7 +351,7 @@ begin
         test_vfat3_rx_data_arr_o(i)(177) <= gbt_rx_data_arr_i(i * 8 + 3).rx_data(023 downto 016) xor x"20"; -- VFAT19 pair 5 (GBT3 elink 02)
         test_vfat3_rx_data_arr_o(i)(178) <= gbt_rx_data_arr_i(i * 8 + 3).rx_data(103 downto 096) xor x"40"; -- VFAT19 pair 6 (GBT3 elink 12)
         test_vfat3_rx_data_arr_o(i)(179) <= gbt_rx_data_arr_i(i * 8 + 3).rx_data(039 downto 032) xor x"80"; -- VFAT19 pair 7 (GBT3 elink 04)
-        test_vfat3_rx_data_arr_o(i)(180) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(151 downto 144) xor x"01"; -- VFAT20 pair 0 (GBT5 elink 18)
+        test_vfat3_rx_data_arr_o(i)(181) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(151 downto 144) xor x"01"; -- VFAT20 pair 0 (GBT5 elink 18)
         test_vfat3_rx_data_arr_o(i)(182) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(175 downto 168) xor x"02"; -- VFAT20 pair 1 (GBT5 elink 21)
         test_vfat3_rx_data_arr_o(i)(183) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(167 downto 160) xor x"04"; -- VFAT20 pair 2 (GBT5 elink 20)
         test_vfat3_rx_data_arr_o(i)(184) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(191 downto 184) xor x"08"; -- VFAT20 pair 3 (GBT5 elink 23)

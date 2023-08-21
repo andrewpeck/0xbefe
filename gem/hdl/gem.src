@@ -52,6 +52,7 @@ gem/hdl/misc/gbt_link_mux_ge11.vhd
 gem/hdl/misc/gbt_link_mux_ge21.vhd
 gem/hdl/misc/config_blaster.vhd
 gem/hdl/misc/gbt_link_mux_me0.vhd
+gem/hdl/misc/gbt_link_mux_me0_queso.vhd
 
 # Tests
 #gem/hdl/tests/gem_tests.vhd                <-- use the generated version specific to the project

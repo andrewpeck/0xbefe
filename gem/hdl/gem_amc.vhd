@@ -900,14 +900,18 @@ begin
                 vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr
             );
 
+        end generate;
+
         g_queso_test : if g_QUESO_TEST_EN generate
-            i_gbt_link_mux_me0 : entity work.gbt_link_mux_me0_queso
+            i_gbt_link_mux_me0_queso : entity work.gbt_link_mux_me0_queso
                 generic map(
                     g_NUM_OF_OHs      => g_NUM_OF_OHs,
                     g_NUM_GBTS_PER_OH => g_NUM_GBTS_PER_OH
                 )
                 port map(
                     gbt_frame_clk_i       => ttc_clocks_i.clk_40,
+
+                    gbt_ic_rx_use_ec_i    => gbt_ic_rx_use_ec,
 
                     gbt_rx_data_arr_i     => lpgbt_rx_data_arr,
                     gbt_tx_data_arr_o     => lpgbt_tx_data_arr,
@@ -1045,5 +1049,4 @@ begin
             );
 
     end generate; 
-
 end gem_amc_arch;

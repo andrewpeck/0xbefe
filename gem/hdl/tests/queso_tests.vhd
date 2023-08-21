@@ -164,7 +164,7 @@ begin
                 process(gbt_frame_clk_i) is
                 begin
                     if (rising_edge(gbt_frame_clk_i)) then
-                        rx_prbs_err_arr(OH*216 + ELINK) <= rx_prbs_err_arr_o(OH*216 + ELINK) while (queso_test_en_i = '1') else (others => '0');
+                        rx_prbs_err_arr(OH*216 + ELINK) <= rx_prbs_err_arr_o(OH*216 + ELINK) when (queso_test_en_i = '1') else (others => '0');
                     end if;
                 end process;
 
@@ -187,27 +187,27 @@ begin
         end generate;
     end generate;
 
-	ila_queso_debug : ila_queso
-	PORT MAP (
-		clk                    => gbt_frame_clk_i,
-
-		probe0                 => tx_prbs_data, 
-		probe1(63 downto 56)   => elink_unmasked(0)(0),
-		probe1(55 downto 48)   => elink_unmasked(0)(1),
-		probe1(47 downto 40)   => elink_unmasked(0)(2),
-		probe1(39 downto 32)   => elink_unmasked(0)(3),
-		probe1(31 downto 24)   => elink_mapped(0)(0),
-		probe1(23 downto 16)   => elink_mapped(0)(1),
-		probe1(15 downto 8)    => elink_mapped(0)(2),
-		probe1(7 downto 0)     => elink_mapped(0)(3), 
-		probe2(15 downto 8)    => rx_prbs_err_arr(0),
-		probe2(7 downto 0)     => rx_prbs_err_arr(1),
-		probe3(31 downto 24)   => rx_err_cnt_arr(0)(0),
-		probe3(23 downto 16)   => rx_err_cnt_arr(0)(1),
-		probe3(15)             => queso_test_en_i,
-		probe3(14 downto 8)    => open,
-		probe3(7 downto 0)     => tx_crawl_data
-	);
+--	ila_queso_debug : ila_queso
+--	PORT MAP (
+--		clk                    => gbt_frame_clk_i,
+--
+--		probe0                 => tx_prbs_data, 
+--		probe1(63 downto 56)   => elink_unmasked(0)(0),
+--		probe1(55 downto 48)   => elink_unmasked(0)(1),
+--		probe1(47 downto 40)   => elink_unmasked(0)(2),
+--		probe1(39 downto 32)   => elink_unmasked(0)(3),
+--		probe1(31 downto 24)   => elink_mapped(0)(0),
+--		probe1(23 downto 16)   => elink_mapped(0)(1),
+--		probe1(15 downto 8)    => elink_mapped(0)(2),
+--		probe1(7 downto 0)     => elink_mapped(0)(3), 
+--		probe2(15 downto 8)    => rx_prbs_err_arr(0),
+--		probe2(7 downto 0)     => rx_prbs_err_arr(1),
+--		probe3(31 downto 24)   => rx_err_cnt_arr(0)(0),
+--		probe3(23 downto 16)   => rx_err_cnt_arr(0)(1),
+--		probe3(15)             => queso_test_en_i,
+--		probe3(14 downto 8)    => (others => '0'),
+--		probe3(7 downto 0)     => tx_crawl_data
+--	);
 
 end Behavioral;
 

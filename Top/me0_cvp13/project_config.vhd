@@ -23,35 +23,40 @@ package project_config is
     constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
 
-    constant CFG_QUESO_TEST             : boolean := false; -- if true, me0 mux file will be changed to allow for PRBS loopback test through QUESO board
+    constant CFG_QUESO_TEST             : boolean := true; -- if true, me0 mux file will be changed to allow for PRBS loopback test through QUESO board
     --========================--
     --== Link configuration ==--
     --========================--
 
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (
         ( ------------------------------------------------ SLR0 ------------------------------------------------
-            (((0, 0), (TXRX_NULL, 1), (1, 2),  (TXRX_NULL, 3),  (2, 4),   (TXRX_NULL, 5),  (3, 6),   (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),
+            (((0, 0),  (TXRX_NULL, 1),  (1, 2),   (TXRX_NULL, 3),  (2, 4),   (TXRX_NULL, 5),  (3, 6),   (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),
+            (((8, 8),  (TXRX_NULL, 9),  (9, 10),  (TXRX_NULL, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL),  (LINK_NULL, LINK_NULL)),
+            (((10, 12), (TXRX_NULL, 13), (11, 14),  (TXRX_NULL, 15), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL),  (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
+            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
         ),
         ( ------------------------------------------------ SLR1 ------------------------------------------------
-            (((8, 8), (TXRX_NULL, 9), (9, 10), (TXRX_NULL, 11), (10, 12), (TXRX_NULL, 13), (11, 14), (TXRX_NULL, 15)), (LINK_NULL, LINK_NULL)),
+--            (((8, 8), (TXRX_NULL, 9), (9, 10), (TXRX_NULL, 11), (10, 12), (TXRX_NULL, 13), (11, 14), (TXRX_NULL, 15)), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
+            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
         ),
         ( ------------------------------------------------ SLR2 ------------------------------------------------
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
+            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
         ),
         ( ------------------------------------------------ SLR3 ------------------------------------------------
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
-            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
+            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
+            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
         )
     );
 
@@ -71,8 +76,8 @@ package project_config is
     --================================--    
 
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
-        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT,   qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
-        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => TRUE),        
+        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT,   qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 0,  refclk0_idx => 0, refclk1_idx => 0, is_master => false, chbond_master => 0, ibert_inst => false),        
                                                                                                                         
@@ -86,7 +91,7 @@ package project_config is
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL,    qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => false),        
                                                                                                                         
-        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => TRUE,  chbond_master => 0, ibert_inst => TRUE),
+        (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_GBE_156, qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false,  chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,   qpll_inst_type => QPLL_NULL,    qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
