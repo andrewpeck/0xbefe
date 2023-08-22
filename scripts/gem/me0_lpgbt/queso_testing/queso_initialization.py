@@ -378,15 +378,15 @@ if __name__ == "__main__":
         for oh,status_dict_oh in status_dict.items():
             for gbt,status in status_dict_oh.items():
                 for queso,oh_sn in queso_dict.items():
-                    if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
+                    if queso_oh_map[queso]["OH"]==int(oh) and gbt in queso_oh_map[queso]["GBT"]:
                         gbt_type = ""
-                        gbt_type = 'M' if gbt%2==0 else 'S'
+                        gbt_type = 'M' if int(gbt)%2==0 else 'S'
                         results_oh_sn[oh_sn]["lpGBT_%s_Status"%gbt_type]=int(status)
     for queso,oh_sn in queso_dict.items():
         for gbt in queso_oh_map[queso]["GBT"]:
-            gbt_type = 'M' if gbt%2==0 else 'S'
+            gbt_type = 'M' if int(gbt)%2==0 else 'S'
             if not results_oh_sn[oh_sn]["lpGBT_%s_Status"%gbt_type]:
-                gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                gbt_type = 'MAIN' if int(gbt)%2==0 else 'SECONDARY'
                 if not test_failed:
                     print(Colors.RED + "\nInitialization Failed" + Colors.ENDC)
                     logfile.write("\nInitialization Failed\n")
@@ -462,15 +462,15 @@ if __name__ == "__main__":
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
                 if queso_oh_map[queso]["OH"]==ohid and lpgbt in queso_oh_map[queso]["GBT"]:
-                    gbt_type = "M" if lpgbt%2 == 0 else "S"
+                    gbt_type = "M" if int(lpgbt)%2 == 0 else "S"
                     results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]=[result for _,result in bitslip_results[lpgbt].items()]
                     break
         for queso,oh_sn in queso_dict.items():
             for gbt in queso_oh_map[queso]["GBT"]:
-                gbt_type = 'M' if gbt%2==0 else 'S'
+                gbt_type = 'M' if int(gbt)%2==0 else 'S'
                 for result in results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]:
                     if not result['Status']:
-                        gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                        gbt_type = 'MAIN' if int(gbt)%2==0 else 'SECONDARY'
                         if not test_failed:
                             print(Colors.RED + "\nSetting Elink Phases and Bitslips Failed" + Colors.ENDC)
                             logfile.write("\nSetting Elink Phases and Bitslips Failed\n")
