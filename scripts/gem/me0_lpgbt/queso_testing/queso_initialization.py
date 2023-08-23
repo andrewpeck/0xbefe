@@ -373,12 +373,13 @@ if __name__ == "__main__":
     os.system("python3 status_frontend.py >> %s"%log_fn)
     list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
+    test_failed = False
     with open(latest_file,"r") as statusfile:
         status_dict = json.load(statusfile)
         for oh,status_dict_oh in status_dict.items():
             for gbt,status in status_dict_oh.items():
                 for queso,oh_sn in queso_dict.items():
-                    if queso_oh_map[queso]["OH"]==int(oh) and gbt in queso_oh_map[queso]["GBT"]:
+                    if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
                         gbt_type = ""
                         gbt_type = 'M' if int(gbt)%2==0 else 'S'
                         results_oh_sn[oh_sn]["lpGBT_%s_Status"%gbt_type]=int(status)
@@ -442,7 +443,8 @@ if __name__ == "__main__":
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
         list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_log_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("cat latest_file >> %s"%log_fn)
+        os.system("cat %s >> %s"%(latest_file, log_fn))
+        logfile = open(log_fn,"a")
 
         bitslip_results = {}
         bitslip_results_file = open("%s/vfat_elink_phase_bitslip_results_OH%d.txt"%(OHDir, ohid))
@@ -451,7 +453,7 @@ if __name__ == "__main__":
                 continue
             lpgbt = int(line.split()[1])
             lpgbt_elink = int(line.split()[2])
-            phase = int(line.split()[5])
+            phase = int(line.split()[5], 16)
             width = int(line.split()[6])
             bitslip = int(line.split()[7])
             status = 1 if line.split()[8]=='GOOD' else 0
@@ -461,7 +463,7 @@ if __name__ == "__main__":
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
-                if queso_oh_map[queso]["OH"]==ohid and lpgbt in queso_oh_map[queso]["GBT"]:
+                if queso_oh_map[queso]["OH"]==ohid and int(lpgbt) in queso_oh_map[queso]["GBT"]:
                     gbt_type = "M" if int(lpgbt)%2 == 0 else "S"
                     results_oh_sn[oh_sn]['lpGBT_%s_QUESO_Elink_Phases_Bitslips'%gbt_type]=[result for _,result in bitslip_results[lpgbt].items()]
                     break
