@@ -563,7 +563,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # Initialization 
-    initialize(args.gem, args.system)
+    rw_reg_lpgbt.rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     # Scanning/setting bitslips
