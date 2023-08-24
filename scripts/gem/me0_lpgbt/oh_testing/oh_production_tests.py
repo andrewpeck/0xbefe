@@ -2463,8 +2463,9 @@ if __name__ == "__main__":
                 print(Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
         for oh_sn in full_results:
+            xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = []
             for result in full_results[oh_sn]['VFAT_SBIT_NOISE_SCAN']:
-                xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = result['NUM_BAD_ELINKS']
+                xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] += [result['NUM_BAD_ELINKS']]
         for oh_sn in xml_results:
             for i,result in enumerate(xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS']):
                 if result:

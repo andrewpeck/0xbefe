@@ -108,7 +108,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 prbs_errors[oh_select][vfat][elink]["lpgbt"] = -9999
                 prbs_errors[oh_select][vfat][elink]["lpgbt_elink"] = -9999
                 prbs_errors[oh_select][vfat][elink]["n_errors"] = 0
-                prbs_errors[oh_select][vfat][elink]["ber_ul"] = "--"
+                prbs_errors[oh_select][vfat][elink]["ber_ul"] = -9999
     fec_uplink_error_nodes = {}
     fec_uplink_errors = {}
     fec_downlink_errors = {}
@@ -345,7 +345,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 err_str += "    ELINK %d (GBT: %d, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink]["n_errors"])
                 if prbs_errors[oh_select][vfat][elink]["n_errors"] == 0:
                     err_str += ", BER < {:.2e}".format(ber_ul) 
-                    prbs_errors[oh_select][vfat][elink]["ber_ul"] = "BER < {:.2e}".format(ber_ul) 
+                    prbs_errors[oh_select][vfat][elink]["ber_ul"] = ber_ul
                 err_str += Colors.ENDC
                 print (err_str)
                 logfile.write(err_str + "\n")
@@ -392,20 +392,20 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         prbs_errors_oh_sn[oh_sn] = {}
         for gbt in gbt_list:
             if gbt%2 == 0:
-                gbt_type = "lpGBT_M"
+                gbt_type = "LPGBT_m"
             else:
-                gbt_type = "lpGBT_S"        
-            prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_up_prbs_error_count"] = [-9999 for _ in range(28)]
-            prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_up_prbs_ber_ul"] = ['--' for _ in range(28)]
-            prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_up_fec_error_count"] = fec_uplink_errors[oh_select][gbt]
-            prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_up_prbs_error_count"] = -9999
-            prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_up_prbs_ber_ul"] = '--'
+                gbt_type = "LPGBT_S"        
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_UP_PRBS_ERROR_COUNT"] = [-9999 for _ in range(28)]
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_UP_PRBS_BER_UPPER_LIMIT"] = [-9999 for _ in range(28)]
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] = fec_uplink_errors[oh_select][gbt]
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_UP_PRBS_ERROR_COUNT"] = -9999
+            prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] = -9999
             if gbt%2 == 0:   
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_down_prbs_error_count"] = [-9999 for _ in range(6)]
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_down_prbs_ber_ul"] = ['--' for _ in range(6)]
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_down_fec_error_count"] = fec_downlink_errors[oh_select][gbt]
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_down_prbs_error_count"] = -9999
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_optical_link_down_prbs_ber_ul"] = '--'
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_DOWN_PRBS_ERROR_COUNT"] = [-9999 for _ in range(6)]
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_DOWN_PRBS_BER_UPPER_LIMIT"] = [-9999 for _ in range(6)]
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"] = fec_downlink_errors[oh_select][gbt]
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_DOWN_PRBS_ERROR_COUNT"] = -9999
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_OPTICAL_LINK_DOWN_PRBS_BER_UPPER_LIMIT"] = -9999
         n_boss_total_elink_errors = 0
         n_sub_total_elink_errors = 0
         for v_n, vfat in enumerate(vfat_list):
@@ -417,65 +417,65 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 ber_ul = prbs_errors[oh_select][vfat][elink]["ber_ul"]
                 gbt_type = ""
                 if lpgbt%2 == 0:
-                    gbt_type = "lpGBT_M"
+                    gbt_type = "LPGBT_M"
                     n_boss_total_elink_errors += error_count
                 else:
-                    gbt_type = "lpGBT_S"
+                    gbt_type = "LPGBT_S"
                     n_sub_total_elink_errors += error_count
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_up_prbs_error_count"][elink_nr] = error_count
-                prbs_errors_oh_sn[oh_sn][gbt_type + "_elink_up_prbs_ber_ul"][elink_nr] = ber_ul
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_UP_PRBS_ERROR_COUNT"][elink_nr] = error_count
+                prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_UP_PRBS_BER_UPPER_LIMIT"][elink_nr] = ber_ul
                 n_total_elink_errors += error_count
-            prbs_errors_oh_sn[oh_sn]["lpGBT_M_elink_down_prbs_error_count"][v_n] = n_total_elink_errors
+            prbs_errors_oh_sn[oh_sn]["LPGBT_M_ELINK_DOWN_PRBS_ERROR_COUNT"][v_n] = n_total_elink_errors
             if n_total_elink_errors == 0:
-                prbs_errors_oh_sn[oh_sn]["lpGBT_M_elink_down_prbs_ber_ul"][v_n] = "BER < {:.2e}".format(ber_ul) 
-        prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_prbs_error_count"] = n_boss_total_elink_errors
-        prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_prbs_error_count"] = n_sub_total_elink_errors
-        prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_prbs_error_count"] = n_boss_total_elink_errors + n_sub_total_elink_errors
-        if n_boss_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_fec_error_count"] == 0:
-            prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_prbs_ber_ul"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
+                prbs_errors_oh_sn[oh_sn]["LPGBT_M_ELINK_DOWN_PRBS_BER_UPPER_LIMIT"][v_n] = ber_ul
+        prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_PRBS_ERROR_COUNT"] = n_boss_total_elink_errors
+        prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_PRBS_ERROR_COUNT"] = n_sub_total_elink_errors
+        prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_PRBS_ERROR_COUNT"] = n_boss_total_elink_errors + n_sub_total_elink_errors
+        if n_boss_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] == 0:
+            prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on boss lpGBT = %d"%n_boss_total_elink_errors + Colors.ENDC)
-            print (Colors.GREEN + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_fec_error_count"] + Colors.ENDC)
+            print (Colors.GREEN + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] + Colors.ENDC)
             print (Colors.GREEN + "  For each uplink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_prbs_ber_ul"] + Colors.ENDC)
+            print (Colors.GREEN + "  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss lpGBT = %d\n"%n_boss_total_elink_errors)
-            logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_fec_error_count"])
+            logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_FEC_ERROR_COUNT"])
             logfile.write("  For each uplink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + "\n")
-            logfile.write("  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_prbs_ber_ul"] + "\n")
+            logfile.write("  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] + "\n")
         else:
             print (Colors.RED + "  Total number of PRBS errors on boss lpGBT = %d"%n_boss_total_elink_errors + Colors.ENDC)
-            print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_fec_error_count"] + Colors.ENDC)
+            print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss lpGBT = %d\n"%n_boss_total_elink_errors)
-            logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_up_fec_error_count"])
-        if n_sub_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_fec_error_count"] == 0:
-            prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_prbs_ber_ul"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
+            logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_UP_FEC_ERROR_COUNT"])
+        if n_sub_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] == 0:
+            prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on sub lpGBT = %d"%n_sub_total_elink_errors + Colors.ENDC)
-            print (Colors.GREEN + "  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_fec_error_count"] + Colors.ENDC)
+            print (Colors.GREEN + "  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] + Colors.ENDC)
             print (Colors.GREEN + "  For each uplink elink on sub lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_prbs_ber_ul"] + Colors.ENDC)
+            print (Colors.GREEN + "  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on sub lpGBT = %d\n"%n_sub_total_elink_errors)
-            logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_fec_error_count"])
+            logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_FEC_ERROR_COUNT"])
             logfile.write("  For each uplink elink on sub lpGBT: " + "BER < {:.2e}".format(ber_ul) + "\n")
-            logfile.write("  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_prbs_ber_ul"] + "\n")
+            logfile.write("  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_PRBS_BER_UPPER_LIMIT"] + "\n")
         else:
             print (Colors.RED + "  Total number of PRBS errors on sub lpGBT = %d"%n_sub_total_elink_errors + Colors.ENDC)
-            print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_fec_error_count"])
+            print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_FEC_ERROR_COUNT"])
             logfile.write("  Total number of PRBS errors on sub lpGBT = %d\n"%n_sub_total_elink_errors)
-            logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_S_optical_link_up_fec_error_count"] + Colors.ENDC)
-        if (n_boss_total_elink_errors + n_sub_total_elink_errors) == 0 and prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_fec_error_count"] == 0:
-            prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_prbs_ber_ul"] = "BER < {:.2e}".format(optical_downlink_ber_ul) 
+            logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_OPTICAL_LINK_UP_FEC_ERROR_COUNT"] + Colors.ENDC)
+        if (n_boss_total_elink_errors + n_sub_total_elink_errors) == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"] == 0:
+            prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_downlink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on boss and sub lpGBT = %d"%(n_boss_total_elink_errors + n_sub_total_elink_errors) + Colors.ENDC)
-            print (Colors.GREEN + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_fec_error_count"] + Colors.ENDC)
+            print (Colors.GREEN + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"] + Colors.ENDC)
             print (Colors.GREEN + "  For each downlink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_prbs_ber_ul"] + Colors.ENDC)
+            print (Colors.GREEN + "  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss and sub lpGBT = %d\n"%(n_boss_total_elink_errors + n_sub_total_elink_errors))
-            logfile.write("  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_fec_error_count"])
+            logfile.write("  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"])
             logfile.write("  For each downlink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul))
-            logfile.write("  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_prbs_ber_ul"])
+            logfile.write("  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_PRBS_BER_UPPER_LIMIT"])
         else:
             print (Colors.RED + "  Total number of PRBS errors on boss and sub lpGBT = %d"%(n_boss_total_elink_errors + n_sub_total_elink_errors) + Colors.ENDC)
-            print (Colors.RED + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_fec_error_count"] + Colors.ENDC)
+            print (Colors.RED + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss ans sub lpGBT = %d\n"%(n_boss_total_elink_errors + n_sub_total_elink_errors))
-            logfile.write("  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["lpGBT_M_optical_link_down_fec_error_count"])
+            logfile.write("  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_OPTICAL_LINK_DOWN_FEC_ERROR_COUNT"])
         print ("")
         logfile.write("\n")
     print ("")
