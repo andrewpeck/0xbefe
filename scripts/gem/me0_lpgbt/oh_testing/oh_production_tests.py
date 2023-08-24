@@ -159,7 +159,7 @@ if __name__ == "__main__":
         xml_results[oh_sn]["BATCH"] = batch
         xml_results[oh_sn]["GEB_SLOT"] = slot_name_dict[slot]
         xml_results[oh_sn]['VFAT_SLOTS'] = geb_oh_map[slot]['VFAT']
-    full_results = xml_results.copy()
+        full_results[oh_sn] = xml_results[oh_sn].copy()
 
     debug = True if batch=="debug" else False
     test_failed = False
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -1635,13 +1635,13 @@ if __name__ == "__main__":
                 asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
                 asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
                 asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                asense["_".join(line[15:16]).removeprefix('(').removesuffix(')')]=[]
+                asense["_".join(line[15:17]).removeprefix('(').removesuffix(')')]=[]
                 for line in asense_file.readlines():
-                    for key,value in zip(asense,line.split()[1::2]):
+                    for key,value in zip(asense,line.split()[1:]):
                         if float(value) != -9999:
                             asense[key]+=[float(value)]
             for key,values in asense.items():
-                if values != []:
+                if values:
                     full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
                 else:
                     full_results[oh_sn]["ASENSE_SCAN"][key]=-9999
@@ -1679,20 +1679,22 @@ if __name__ == "__main__":
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
                 xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
             except KeyError:
-                pass
+                xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = -9999
+                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = -9999
             try:
-                xml_results[oh_sn]['DCDC_2V5_CURRENT']  = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
+                xml_results[oh_sn]['DCDC_2V5_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
             except KeyError:
-                pass
+                xml_results[oh_sn]['DCDC_2V5_CURRENT'] = -9999
             try:
                 xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
                 xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
             except KeyError:
-                pass
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = -9999
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = -9999
             try:
-                xml_results[oh_sn]['DCDC_2V5_TEMP']  = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
             except KeyError:
-                pass
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = -9999
 
         asense_ranges = {'DCDC_1V2D_CURRENT':3,'DCDC_1V2A_CURRENT':3,'DCDC_2V5_CURRENT':0.5,'DCDC_2V5_TEMP':35,'DCDC_1V2D_TEMP':35,'DCDC_1V2A_TEMP':35}
         for oh_sn in xml_results:
@@ -1771,7 +1773,7 @@ if __name__ == "__main__":
                 xml_results[oh_sn]["OH_TEMP"] = np.mean(temperatures['Temperature'])
             else:
                 xml_results[oh_sn]["OH_TEMP"] = -9999
-            full_results[oh_sn]['OH_TEMP'] = xml_results[oh_sn]['OH_SN']
+            full_results[oh_sn]['OH_TEMP'] = xml_results[oh_sn]['OH_TEMP']
         temperature_range = 45
         for oh_sn in xml_results:
             if xml_results[oh_sn]['OH_TEMP'] == -9999:
@@ -2405,7 +2407,7 @@ if __name__ == "__main__":
     logfile.write("Step 16: S-bit Noise Rate\n\n")
     time.sleep(1)
 
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance",'debug']:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
@@ -2438,17 +2440,17 @@ if __name__ == "__main__":
                 for e,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
                     for slot,oh_sn in geb_dict.items():
-                        if geb_oh_map[slot]["OH"]==oh_select:
-                            full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]=[]
-                            if vfat in geb_oh_map[slot]["VFAT"]:
-                                if threshold >= 100 or threshold == 0:
-                                    status_list += [0]
-                                    bad_elinks += [e]
-                                else:
-                                    status_list += [1]
-                                status_list+=[status]
-                                full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
-                                break
+                        if geb_oh_map[slot]["OH"]==oh_select and vfat in geb_oh_map[slot]["VFAT"]:
+                            if 'VFAT_SBIT_NOISE_SCAN' not in full_results[oh_sn]:
+                                full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]=[]
+                            if threshold >= 100 or threshold == 0:
+                                status_list += [0]
+                                bad_elinks += [e]
+                            else:
+                                status_list += [1]
+                            status_list+=[status]
+                            full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
+                            break
 
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
@@ -2462,6 +2464,7 @@ if __name__ == "__main__":
             else:
                 print(Colors.RED + "S-bit Noise Rate result directory not found" + Colors.ENDC)
                 logfile.write("S-bit Noise Rate result directory not found\n")
+
         for oh_sn in full_results:
             xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = []
             for result in full_results[oh_sn]['VFAT_SBIT_NOISE_SCAN']:

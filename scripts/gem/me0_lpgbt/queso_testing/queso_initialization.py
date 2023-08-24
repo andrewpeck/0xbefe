@@ -54,7 +54,7 @@ queso_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 # List of QUESO Pi's
 pi_list = {}
 pi_list["1"] =  "169.254.119.34"
-pi_list["2"] =  "169.254.181.119"
+pi_list["2"] =  "169.254.52.40"
 pi_list["3"] =  "169.254.118.3"
 pi_list["4"] =  "169.254.66.95"
 pi_list["5"] =  "169.254.122.125"
@@ -375,6 +375,7 @@ if __name__ == "__main__":
     os.system("python3 status_frontend.py >> %s"%log_fn)
     list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
+    test_failed = False
     with open(latest_file,"r") as statusfile:
         status_dict = json.load(statusfile)
         for oh,status_dict_oh in status_dict.items():
@@ -388,9 +389,9 @@ if __name__ == "__main__":
         xml_results[oh_sn]['QUESO_INITIALIZATION'] = full_results[oh_sn]['LPGBT_M_STATUS'] & full_results[oh_sn]['LPGBT_S_STATUS']
     for queso,oh_sn in queso_dict.items():
         for gbt in queso_oh_map[queso]["GBT"]:
-            gbt_type = 'M' if gbt%2==0 else 'S'
+            gbt_type = 'M' if int(gbt)%2==0 else 'S'
             if not full_results[oh_sn]["LPGBT_%s_STATUS"%gbt_type]:
-                gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                gbt_type = 'MAIN' if int(gbt)%2==0 else 'SECONDARY'
                 if not test_failed:
                     print(Colors.RED + "\nInitialization Failed" + Colors.ENDC)
                     logfile.write("\nInitialization Failed\n")
@@ -451,7 +452,8 @@ if __name__ == "__main__":
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
         list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_log_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
-        os.system("cat latest_file >> %s"%log_fn)
+        os.system("cat %s >> %s"%(latest_file, log_fn))
+        logfile = open(log_fn,"a")
 
         bitslip_results = {}
         bitslip_results_file = open("%s/vfat_elink_phase_bitslip_results_OH%d.txt"%(OHDir, ohid))
@@ -460,7 +462,7 @@ if __name__ == "__main__":
                 continue
             lpgbt = int(line.split()[1])
             lpgbt_elink = int(line.split()[2])
-            phase = int(line.split()[5])
+            phase = int(line.split()[5], 16)
             width = int(line.split()[6])
             bitslip = int(line.split()[7])
             status = 1 if line.split()[8]=='GOOD' else 0
@@ -470,16 +472,16 @@ if __name__ == "__main__":
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
-                if queso_oh_map[queso]["OH"]==ohid and lpgbt in queso_oh_map[queso]["GBT"]:
-                    gbt_type = "M" if lpgbt%2 == 0 else "S"
+                if queso_oh_map[queso]["OH"]==ohid and int(lpgbt) in queso_oh_map[queso]["GBT"]:
+                    gbt_type = "M" if int(lpgbt)%2 == 0 else "S"
                     xml_results[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type] = full_results[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type]=[result for _,result in bitslip_results[lpgbt].items()]
                     break
         for queso,oh_sn in queso_dict.items():
             for gbt in queso_oh_map[queso]["GBT"]:
-                gbt_type = 'M' if gbt%2==0 else 'S'
+                gbt_type = 'M' if int(gbt)%2==0 else 'S'
                 for result in full_results[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type]:
                     if not result['Status']:
-                        gbt_type = 'MAIN' if gbt%2==0 else 'SECONDARY'
+                        gbt_type = 'MAIN' if int(gbt)%2==0 else 'SECONDARY'
                         if not test_failed:
                             print(Colors.RED + "\nSetting Elink Phases and Bitslips Failed" + Colors.ENDC)
                             logfile.write("\nSetting Elink Phases and Bitslips Failed\n")
