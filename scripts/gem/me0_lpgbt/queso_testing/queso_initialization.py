@@ -108,7 +108,8 @@ if __name__ == "__main__":
                         sys.exit()
             queso_dict[queso_nr] = oh_sn
             if not power_only:
-                full_results[oh_sn] = xml_results[oh_sn] = {}
+                xml_results[oh_sn] = {}
+                full_results[oh_sn] = {}
                 full_results[oh_sn]["BATCH"] = xml_results[oh_sn]["BATCH"] = batch
                 full_results[oh_sn]["PIGTAIL_LENGTH"] = xml_results[oh_sn]["PIGTAIL_LENGTH"] = pigtail
     input_file.close()
