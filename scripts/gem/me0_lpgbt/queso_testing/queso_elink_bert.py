@@ -480,7 +480,8 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         logfile.write("\n")
     print ("")
     logfile.write("\n")
-
+    
+    prbs_errors_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in prbs_errors_oh_sn.items()]
     with open(results_fn, "w") as resultsfile:
         json.dump(prbs_errors_oh_sn,resultsfile,indent=2)
 
