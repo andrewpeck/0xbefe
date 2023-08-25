@@ -181,7 +181,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
             for elink in range(0, 9):
                 prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
                 if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
-                    err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
+                    err_str += "OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                     n_elink_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_elink_errors == 0:
@@ -197,13 +197,13 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
             fec_uplink_errors[oh_select][gbt] = read_backend_reg(fec_uplink_error_nodes[oh_select][gbt])
             if fec_uplink_errors[oh_select][gbt] != 0:
-                err_str += "OH %d VFAT %d GBT %d: %d uplink errors, "%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                err_str += "OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                 n_link_fec_errors += 1
             if gbt%2==0:
                 rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                 fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                 if fec_downlink_errors[oh_select][gbt] != 0:
-                    err_str += "OH %d VFAT %d GBT %d: %d downlink errors, "%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                    err_str += "OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                     n_link_fec_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_link_fec_errors == 0:
@@ -231,7 +231,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                     for elink in range(9):
                         prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
                         if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
-                            err_str += "OH %d VFAT %d ELINK %d: %d errors, "%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
+                            err_str += "OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                             n_elink_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_elink_errors == 0:
@@ -247,13 +247,13 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
                     fec_uplink_errors[oh_select][gbt] = read_backend_reg(fec_uplink_error_nodes[oh_select][gbt])
                     if fec_uplink_errors[oh_select][gbt] != 0:
-                        err_str += "OH %d VFAT %d GBT %d: %d uplink errors, "%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                        err_str += "OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                         n_link_fec_errors += 1
                     if gbt%2==0:
                         rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                         fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                         if fec_downlink_errors[oh_select][gbt] != 0:
-                            err_str += "OH %d VFAT %d GBT %d: %d downlink errors, "%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                            err_str += "OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                             n_link_fec_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_link_fec_errors == 0:
@@ -384,15 +384,15 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     logfile.write("\n")
     prbs_errors_oh_sn = {}
     for queso,oh_sn in queso_dict.items():
-        print ("OH SN: %d"%oh_sn)
-        logfile.write("OH SN: %d\n"%oh_sn)
+        print ("OH SN: %s"%oh_sn)
+        logfile.write("OH SN: %s\n"%oh_sn)
         oh_select = queso_oh_map[queso]["OH"]
         gbt_list = queso_oh_map[queso]["GBT"]
         vfat_list = queso_oh_map[queso]["VFAT"]
         prbs_errors_oh_sn[oh_sn] = {}
         for gbt in gbt_list:
             if gbt%2 == 0:
-                gbt_type = "LPGBT_m"
+                gbt_type = "LPGBT_M"
             else:
                 gbt_type = "LPGBT_S"        
             prbs_errors_oh_sn[oh_sn][gbt_type + "_ELINK_UP_PRBS_ERROR_COUNT"] = [-9999 for _ in range(28)]

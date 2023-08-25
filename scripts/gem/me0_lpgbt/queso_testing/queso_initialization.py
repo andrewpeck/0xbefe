@@ -150,6 +150,12 @@ if __name__ == "__main__":
                 print(Colors.BLUE + "Initialize RPI GPIOs\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
                 ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+                stderr_output = ssh_stderr.readlines()
+                if stderr_output:
+                    for line in stderr_output:
+                        print(Colors.RED + line + Colors.ENDC)
+                    ssh.close()
+                    sys.exit()
                 output = ssh_stdout.readlines()
                 for line in output:
                     print(line)
@@ -165,6 +171,12 @@ if __name__ == "__main__":
                 print(Colors.BLUE + "Disabling regulators\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5 -o"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            stderr_output = ssh_stderr.readlines()
+            if stderr_output:
+                for line in stderr_output:
+                    print(Colors.RED + line + Colors.ENDC)
+                ssh.close()
+                sys.exit()
             output = ssh_stdout.readlines()
             for line in output:
                 print(line)
@@ -180,6 +192,12 @@ if __name__ == "__main__":
                 print(Colors.BLUE + "Terminate RPI GPIOs\n" + Colors.ENDC)
                 cur_ssh_command = base_ssh_command + "queso_init_gpio.py -o"
                 ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+                stderr_output = ssh_stderr.readlines()
+                if stderr_output:
+                    for line in stderr_output:
+                        print(Colors.RED + line + Colors.ENDC)
+                    ssh.close()
+                    sys.exit()
                 output = ssh_stdout.readlines()
                 for line in output:
                     print(line)
@@ -226,6 +244,8 @@ if __name__ == "__main__":
     xml_results_fn = OHDir+"/queso_initialization_database_results.json"
     full_results_fn = OHDir+"/queso_initialization_results.json"
 
+    test_failed = False
+    override_test_failed = True
 
     print(Colors.BLUE + "Initializting QUESOs: " + Colors.ENDC)
     logfile.write("Initializting QUESOs: \n")
@@ -274,6 +294,14 @@ if __name__ == "__main__":
         logfile.write("Initialize RPI GPIOs\n\n")
         cur_ssh_command = base_ssh_command + "queso_init_gpio.py"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line+"\n")
+            ssh.close()
+            logfile.close()
+            sys.exit()
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
@@ -290,6 +318,14 @@ if __name__ == "__main__":
             logfile.write("Reset FPGAs\n\n")
             cur_ssh_command = base_ssh_command + "queso_reset_fpga.py -f 1 2 3"
             ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+            stderr_output = ssh_stderr.readlines()
+            if stderr_output:
+                for line in stderr_output:
+                    print(Colors.RED + line + Colors.ENDC)
+                    logfile.write(line+"\n")
+                ssh.close()
+                logfile.close()
+                sys.exit()
             output = ssh_stdout.readlines()
             for line in output:
                 print(line)
@@ -305,6 +341,14 @@ if __name__ == "__main__":
         logfile.write("Checking if FPGA programming done\n\n")
         cur_ssh_command = base_ssh_command + "queso_check_fpga_done.py -f 1 2 3"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line+"\n")
+            ssh.close()
+            logfile.close()
+            sys.exit()
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
@@ -320,6 +364,14 @@ if __name__ == "__main__":
         logfile.write("Writing FPGA ID\n\n")
         cur_ssh_command = base_ssh_command + "queso_write_fpga_id.py -f 1 2 3 -i 0x00 0x01 0x02"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line+"\n")
+            ssh.close()
+            logfile.close()
+            sys.exit()
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
@@ -331,10 +383,18 @@ if __name__ == "__main__":
         sleep(1)
 
         # Read currents before OH powered on
-        print (Colors.BLUE + "Reading Currents before OH powered on" + Colors.ENDC)
-        logfile.write("Reading Currents before OH powered on\n")
-        cur_ssh_command = base_ssh_command + "QUESO_CURRENT_monitor.py -n 1"
+        print (Colors.BLUE + "Reading Currents before OH powered on\n" + Colors.ENDC)
+        logfile.write("Reading Currents before OH powered on\n\n")
+        cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 1"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line)
+            ssh.close()
+            logfile.close()
+            sys.exit()
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
@@ -351,6 +411,14 @@ if __name__ == "__main__":
         cur_ssh_command = base_ssh_command + "queso_enable_regulator.py -r 1v2 2v5"
 
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line+"\n")
+            ssh.close()
+            logfile.close()
+            sys.exit()
         output = ssh_stdout.readlines()
         for line in output:
             print(line)
@@ -383,7 +451,7 @@ if __name__ == "__main__":
                 for queso,oh_sn in queso_dict.items():
                     if queso_oh_map[queso]["OH"]==int(oh) and int(gbt) in queso_oh_map[queso]["GBT"]:
                         gbt_type = ""
-                        gbt_type = 'M' if gbt%2==0 else 'S'
+                        gbt_type = 'M' if int(gbt)%2==0 else 'S'
                         full_results[oh_sn]["LPGBT_%s_STATUS"%gbt_type]=int(status)
     for oh_sn in full_results:
         xml_results[oh_sn]['QUESO_INITIALIZATION'] = full_results[oh_sn]['LPGBT_M_STATUS'] & full_results[oh_sn]['LPGBT_S_STATUS']
@@ -398,6 +466,8 @@ if __name__ == "__main__":
                 print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                 logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                 test_failed = True
+    if override_test_failed:
+        test_failed = False
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
         if end_tests.lower() in ['y','yes']:
@@ -431,7 +501,6 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         gbtid_list = oh_gbt_vfat_map[ohid]["GBT"]
         for gbtid in gbtid_list:
-            os.system("python3 me0_lpgbt/queso_testing/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d"%(ohid, gbtid))
             os.system("python3 me0_lpgbt/queso_testing/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d >> %s"%(ohid, gbtid,log_fn))
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
@@ -488,6 +557,8 @@ if __name__ == "__main__":
                         print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                         test_failed = True
+        if override_test_failed:
+            test_failed = False
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -513,10 +584,13 @@ if __name__ == "__main__":
     logfile.write("\nSetting Elink Phases and Bitslips Done\n")
     logfile.write("\n######################################################\n\n")
     sleep(2)
+        
+    print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
+    logfile.write("Reading Currents after OH Initialization\n")
 
     print("")
     logfile.write("\n")
-    QUESO_CURRENT_oh_sn = {}
+    queso_current_oh_sn = {}
     for queso,oh_sn in queso_dict.items():
         print(Colors.BLUE + "Connecting again to QUESO %s\n"%queso + Colors.ENDC)
         logfile.write("Connecting again to QUESO %s\n\n"%queso)
@@ -528,15 +602,17 @@ if __name__ == "__main__":
             logfile.write("Pi IP not present for QUESO %s\n"%queso)
             continue
         ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
-        print("\n######################################################\n")
-        logfile.write("\n######################################################\n\n")
 
         # Read currents after OH initialization
         resultDir + "/current_monitor_results"
-        print(Colors.BLUE + "Reading Currents after OH Initialization" + Colors.ENDC)
-        logfile.write("Reading Currents after OH Initialization\n")
-        cur_ssh_command = base_ssh_command + "QUESO_CURRENT_monitor.py -n 10"
+        cur_ssh_command = base_ssh_command + "queso_current_monitor.py -n 10"
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
+        stderr_output = ssh_stderr.readlines()
+        if stderr_output:
+            for line in stderr_output:
+                print(Colors.RED + line + Colors.ENDC)
+                logfile.write(line+"\n")
+            sys.exit()
         output = ssh_stdout.readlines()
         queso_current = {'1V2':[],'2V5':[]}
         for line in output:
@@ -552,6 +628,13 @@ if __name__ == "__main__":
         for v,currents in queso_current.items():
             xml_results[oh_sn]["QUESO_CURRENT_%s"%v] = full_results[oh_sn]["QUESO_CURRENT_%s"%v] = np.mean(currents) if currents else -9999
 
+        print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
+        logfile.write("QUESO %s Done\n\n"%queso)
+        print("\n######################################################\n")
+        logfile.write("\n######################################################\n\n")
+
+        ssh.close()
+
     current_ranges = {'2V5':0.3,'1V2':0.7}
     for queso,oh_sn in queso_dict.items():
         for v,i_max in current_ranges.items():
@@ -565,43 +648,39 @@ if __name__ == "__main__":
                 elif full_results[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
                     print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
                     logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s current\n'%(oh_sn,v))
-                test_failed = True
-        while test_failed:
-            end_tests = input('\nWould you like to exit testing? >> ')
-            if end_tests.lower() in ['y','yes']:
-                print('\nTerminating and logging database results at directory:\n%s'%xml_results_fn)
-                logfile.write('\nTerminating and logging database results at directory:\n%s\n'%xml_results_fn)
-                print('\nTerminating and logging full results at directory:\n%s'%full_results_fn)
-                logfile.write('\nTerminating and logging full results at directory:\n%s\n'%full_results_fn)
-                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
-                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
-                with open(xml_results_fn,"w") as xml_results_file:
-                    json.dump(xml_results,xml_results_file,indent=2)
-                with open(full_results_fn,"w") as full_results_file:
-                    json.dump(full_results,full_results_file,indent=2)
-                logfile.close()
-                sys.exit()  
-            elif end_tests.lower() in ['n','no']:
-                test_failed = False
-            else:
-                print('Valid entries: y, yes, n, no')
+                test_failed = True    
+    if override_test_failed:
+        test_failed = False
+    while test_failed:
+        end_tests = input('\nWould you like to exit testing? >> ')
+        if end_tests.lower() in ['y','yes']:
+            print('\nTerminating and logging database results at directory:\n%s'%xml_results_fn)
+            logfile.write('\nTerminating and logging database results at directory:\n%s\n'%xml_results_fn)
+            print('\nTerminating and logging full results at directory:\n%s'%full_results_fn)
+            logfile.write('\nTerminating and logging full results at directory:\n%s\n'%full_results_fn)
+            xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
+            full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
+            with open(xml_results_fn,"w") as xml_results_file:
+                json.dump(xml_results,xml_results_file,indent=2)
+            with open(full_results_fn,"w") as full_results_file:
+                json.dump(full_results,full_results_file,indent=2)
+            logfile.close()
+            sys.exit()  
+        elif end_tests.lower() in ['n','no']:
+            test_failed = False
+        else:
+            print('Valid entries: y, yes, n, no')
 
-        print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
-        print("\n######################################################\n")
-        logfile.write("\nReading Currents done\n")
-        logfile.write("\n######################################################\n\n")
-        sleep(1)
+    print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
+    print("\n######################################################\n")
+    logfile.write("\nReading Currents done\n")
+    logfile.write("\n######################################################\n\n")
+    sleep(1)
 
-        print(Colors.BLUE + "QUESO %s Done\n"%queso + Colors.ENDC)
-        print("\n#####################################################################################################################################\n")
-        logfile.write("QUESO %s Done\n\n"%queso)
-        logfile.write("\n#####################################################################################################################################\n\n")
-        ssh.close()
-    
     print('\nTerminating and logging database results at directory:\n%s'%xml_results_fn)
     logfile.write('\nTerminating and logging database results at directory:\n%s\n'%xml_results_fn)
-    print('\nTerminating and logging full results at directory:\n%s'%full_results_fn)
-    logfile.write('\nTerminating and logging full results at directory:\n%s\n'%full_results_fn)
+    print('\nTerminating and logging full results at directory:\n%s\n'%full_results_fn)
+    logfile.write('\nTerminating and logging full results at directory:\n%s\n\n'%full_results_fn)
     xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
     full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
     with open(xml_results_fn,"w") as xml_results_file:
