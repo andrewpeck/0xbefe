@@ -481,6 +481,14 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     print ("")
     logfile.write("\n")
     
+    for oh_sn in prbs_errors_oh_sn:
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_UP_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_UP_PRBS_ERROR_COUNT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_UP_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_UP_PRBS_BER_UPPER_LIMIT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_DOWN_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_DOWN_PRBS_ERROR_COUNT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_DOWN_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_ELINK_DOWN_PRBS_BER_UPPER_LIMIT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_S_ELINK_UP_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_S_ELINK_UP_PRBS_ERROR_COUNT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_S_ELINK_UP_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_S_ELINK_UP_PRBS_BER_UPPER_LIMIT'])
+    
     prbs_errors_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in prbs_errors_oh_sn.items()]
     with open(results_fn, "w") as resultsfile:
         json.dump(prbs_errors_oh_sn,resultsfile,indent=2)

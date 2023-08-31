@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
         xml_results[oh_sn]["BATCH"] = batch
         xml_results[oh_sn]["GEB_SLOT"] = slot_name_dict[slot]
-        xml_results[oh_sn]['VFAT_SLOTS'] = geb_oh_map[slot]['VFAT']
+        xml_results[oh_sn]['VFAT_SLOTS'] = str(geb_oh_map[slot]['VFAT'])
         full_results[oh_sn] = xml_results[oh_sn].copy()
 
     debug = True if batch=="debug" else False
@@ -210,12 +210,12 @@ if __name__ == "__main__":
                 if not test_failed:
                     print(Colors.RED + "\nStep 1: Initialization Failed" + Colors.ENDC)
                     logfile.write("\nStep 1: Initialization Failed\n")
+                    test_failed = True
                 for gbt,status in enumerate([full_results[oh_sn]['LPGBT_M_INITIALIZATION_STATUS'],full_results[oh_sn]['LPGBT_S_INITIALIZATION_STATUS']]):
                     gbt_type = 'BOSS' if not gbt else 'SUB'
                     if not status:
                         print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                        test_failed = True
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                        
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -325,10 +325,10 @@ if __name__ == "__main__":
                     if not test_failed:
                         print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
                         logfile.write("\nStep 2: Checking lpGBT Status Failed\n"%(oh_sn,gbt_type))
+                        test_failed = True
                     gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                    test_failed = True
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                    
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -393,10 +393,10 @@ if __name__ == "__main__":
             if xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] < 0.5:
                 if not test_failed:
                     print (Colors.RED + "\nStep 3: Downlink Eye Diagram Failed" + Colors.ENDC)
-                    logfile.RED("\nStep 3: Downlink Eye Diagram Failed\n")
+                    logfile.write("\nStep 3: Downlink Eye Diagram Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT\n'%oh_sn)
-                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -491,9 +491,9 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 4: Downlink Optical BERT Failed" + Colors.ENDC)
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)
-                test_failed = True
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)                
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -592,10 +592,10 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 5: Uplink Optical BERT Failed" + Colors.ENDC)
                         logfile.write("\nStep 5: Uplink Optical BERT Failed\n")
+                        test_failed = True
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                    test_failed = True
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))            
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -674,9 +674,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 6: DAQ Phase Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 6: DAQ Phase Scan Failed\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))                   
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_DAQ_PHASE_SCAN'] = str(xml_results[oh_sn]['VFAT_DAQ_PHASE_SCAN'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -763,9 +765,11 @@ if __name__ == "__main__":
                         if not test_failed:
                             print (Colors.RED + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
+                            test_failed = True
                         print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e))
-                        test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"] = str(xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -843,9 +847,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 7: S-Bit Bitslip Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Bitslip Failed\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_SBIT_BITSLIP"] = str(xml_results[oh_sn]["VFAT_SBIT_BITSLIP"])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -958,9 +964,9 @@ if __name__ == "__main__":
                         if not test_failed:
                             print (Colors.RED + "\nStep 7: S-Bit Mapping Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Mapping Failed\n")
+                            test_failed = True
                         print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                        test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1035,10 +1041,12 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
+                        test_failed = True
+                        test_failed_override = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
-                    test_failed_override = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
         if test_failed_override:
             test_failed = False
             test_failed_override = False
@@ -1134,9 +1142,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1230,6 +1240,7 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 9: Slow Control Error Rate Test Failed" + Colors.ENDC)
                         logfile.write("\nStep 9: Slow Control Error Rate Test Failed\n")
+                        test_failed = True
                     if not result['LINK_GOOD']:
                         print(Colors.RED + 'ERROR:LINK_BAD encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR:LINK_BAD encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
@@ -1242,7 +1253,8 @@ if __name__ == "__main__":
                     if result['TOTAL_ERROR_COUNT'] and not (result['REGISTER_MISMATCH_ERROR_COUNT'] or result['SYNC_ERROR_COUNT']):
                         print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_SLOW_CONTROL_ERROR_COUNT'] = str(xml_results[oh_sn]['VFAT_SLOW_CONTROL_ERROR_COUNT'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1330,6 +1342,7 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 10: DAQ Error Rate Test Failed" + Colors.ENDC)
                         logfile.write("\nStep 10: DAQ Error Rate Test Failed\n")
+                        test_failed = True
                     if not result['LINK_GOOD']:
                         print(Colors.RED + 'ERROR:LINK_BAD encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR:LINK_BAD encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
@@ -1342,7 +1355,8 @@ if __name__ == "__main__":
                     if result['CRC_ERROR_COUNT']:
                         print(Colors.RED + 'ERROR:DAQ_CRC_ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR:DAQ_CRC_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"] = str(xml_results[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1425,10 +1439,13 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: ADC Calibration Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: ADC Calibration Scan Failed\n")
+                        test_failed = True
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['LPGBT_M_OH_CALIB'] = str(xml_results[oh_sn]['LPGBT_M_OH_CALIB'])
+            xml_results[oh_sn]['LPGBT_S_OH_CALIB'] = str(xml_results[oh_sn]['LPGBT_S_OH_CALIB'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1511,16 +1528,16 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
                     logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,voltage))
-                    test_failed = True
                 elif reading < voltage_ranges[voltage][0] or reading > voltage_ranges[voltage][1]:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,voltage))
-                    test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1579,16 +1596,16 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
-                test_failed = True
             elif vtrxp_results[vtrxp_dict[slot]]['RSSI'] < 250:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
-                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1704,16 +1721,16 @@ if __name__ == "__main__":
                         if not test_failed:
                             print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                            test_failed = True
                         print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                         logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                        test_failed = True
                     elif xml_results[oh_sn][key] > limit:
                         if not test_failed:
                             print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                            test_failed = True
                         print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                         logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
-                        test_failed = True
                 except KeyError:
                     print(Colors.YELLOW + 'WARNING: Missing result for %s for OH %s'%(key,oh_sn) + Colors.ENDC)
                     logfile.write('WARNING: Missing result for %s for OH %s'%(key,oh_sn))
@@ -1780,16 +1797,16 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: OH Temperature Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                test_failed = True
             elif xml_results[oh_sn]['OH_TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: OH Temperature Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
-                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1852,16 +1869,16 @@ if __name__ == "__main__":
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                test_failed = True
             elif vtrxp_results[vtrxp_dict[slot]]['TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
+                    test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
-                test_failed = True
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1994,9 +2011,12 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 12: DAQ SCurve Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 12: DAQ SCurve Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_DAQ_S_CURVE_ENC'] = str(xml_results[oh_sn]['VFAT_DAQ_S_CURVE_ENC'])
+            xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2116,9 +2136,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 13: DAQ Crosstalk Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 13: DAQ Crosstalk Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_DAQ_CROSSTALK_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_DAQ_CROSSTALK_BAD_CHANNELS'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2244,9 +2266,12 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 14: S-bit SCurves Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 14: S-bit SCurves Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_SBIT_S_CURVE_ENC'] = str(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_ENC'])
+            xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2365,9 +2390,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print (Colors.RED + "\nStep 15: S-bit Crosstalk Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 15: S-bit Crosstalk Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_SBIT_CROSSTALK_BAD_CHANNELS"] = str(xml_results[oh_sn]["VFAT_SBIT_CROSSTALK_BAD_CHANNELS"])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2475,9 +2502,11 @@ if __name__ == "__main__":
                     if not test_failed:
                         print(Colors.RED + "\nStep 16: S-bit Noise Rate Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 16: S-bit Noise Rate Failed\n\n")
+                        test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-                    test_failed = True
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = str(xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2515,8 +2544,16 @@ if __name__ == "__main__":
     print('Time taken to perform %s tests: %.3f'%(batch.replace('_','-'),(time.time()-t0)/60))
     logfile.write('Time taken to perform %s tests: %.3f\n'%(batch.replace('_','-'),(time.time()-t0)/60))
 
+    xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
+    full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
+    vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
+
     with open(xml_results_fn,"w") as xml_results_file:
-        xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()] + [full_results]
         json.dump(xml_results,xml_results_file,indent=2)
+    with open(full_results_fn,'w') as full_results_file:
+        json.dump(full_results,full_results_file,indent=2)
+    with open(vtrxp_results_fn,'w') as vtrxp_results_file:
+        json.dump(vtrxp_results,vtrxp_results_file,indent=2)
+
     logfile.close()
     os.system("rm -rf out.txt")
