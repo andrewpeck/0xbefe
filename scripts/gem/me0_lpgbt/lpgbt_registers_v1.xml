@@ -19,28 +19,28 @@
             <!-- 15.1.1 CHIPID -->
             <node id="CHIPID" address="0x0" description="LpGBT Chip ID">
                 <node id="CHIPID0" address="0x0" permission="rw"
-                    description="Stores bits 31:24 of the CHIPID"
-                    mask="0xff" />
-                <node id="CHIPID1" address="0x1" permission="rw"
-                    description="Stores bits 23:16 of the CHIPID"
-                    mask="0xff" />
-                <node id="CHIPID2" address="0x2" permission="rw"
-                    description="Stores bits 15:8 of the CHIPID"
-                    mask="0xff" />
-                <node id="CHIPID3" address="0x3" permission="rw"
                     description="Stores bits 7:0 of the CHIPID"
                     mask="0xff" />
+                <node id="CHIPID1" address="0x1" permission="rw"
+                    description="Stores bits 15:8 of the CHIPID"
+                    mask="0xff" />
+                <node id="CHIPID2" address="0x2" permission="rw"
+                    description="Stores bits 23:16 of the CHIPID"
+                    mask="0xff" />
+                <node id="CHIPID3" address="0x3" permission="rw"
+                    description="Stores bits 31:24 of the CHIPID"
+                    mask="0xff" />
                 <node id="USERID0" address="0x4" permission="rw"
-                    description="Stores bits 31:24 of the USERID"
+                    description="Stores bits 7:0 of the USERID"
                     mask="0xff" />
                 <node id="USERID1" address="0x5" permission="rw"
-                    description="Stores bits 23:16 of the USERID"
-                    mask="0xff" />
-                <node id="USERID2" address="0x6" permission="rw"
                     description="Stores bits 15:8 of the USERID"
                     mask="0xff" />
+                <node id="USERID2" address="0x6" permission="rw"
+                    description="Stores bits 23:16 of the USERID"
+                    mask="0xff" />
                 <node id="USERID3" address="0x7" permission="rw"
-                    description="Stores bits 7:0 of the USERID"
+                    description="Stores bits 31:24 of the USERID"
                     mask="0xff" />
             </node> <!--CHIPID-->
 

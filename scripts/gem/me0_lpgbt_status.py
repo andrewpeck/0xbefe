@@ -15,17 +15,30 @@ def main(system, oh_ver, boss):
 
     # Checking Status of Registers
 
-    print ("CHIP ID:")
-    print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
+    if oh_ver == 1:
+        print ("CHIP ID:")
+        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
 
-    print ("USER ID:")
-    print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 8  | \
-                        lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
+        print ("USER ID:")
+        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 8  | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
+    elif oh_ver == 2:
+        print ("CHIP ID:")
+        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 24 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 16 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 8  | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 0))
+
+        print ("USER ID:")
+        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 24 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 16 | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 8  | \
+                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 0))
 
     print ("Lock mode:")
     if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LOCKMODE"))):

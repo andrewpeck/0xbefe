@@ -32,7 +32,7 @@ def main(system, oh_ver, boss, fusing, input_config_file, input_vtrx, input_regi
     elif fusing == "register":
         fuse_register(system, boss, input_register, input_data)
     elif fusing == "user_id":
-        fuse_user_id(system, boss, user_id)
+        fuse_user_id(system, boss, oh_ver, user_id)
     print ("")
     
     if complete==1:
@@ -350,7 +350,7 @@ def fuse_register(system, boss, input_register, input_data):
     write_blow_and_check_fuse(system, input_register, input_data, False)
     write_fuse_magic(0)
 
-def fuse_user_id(system, boss, user_id):
+def fuse_user_id(system, boss, oh_ver, user_id):
     user_id = int(user_id, 16)
     if boss:
         print (Colors.YELLOW + "Fusing Boss lpGBT with USER ID: " + str(hex(user_id)) + Colors.ENDC)
@@ -367,10 +367,16 @@ def fuse_user_id(system, boss, user_id):
     write_fuse_magic(1)
 
     data_userid = {}
-    data_userid[0x004] = (user_id >> 24)&0xff
-    data_userid[0x005] = (user_id >> 16)&0xff
-    data_userid[0x006] = (user_id >> 8)&0xff
-    data_userid[0x007] = (user_id >> 0)&0xff
+    if oh_ver == 1:
+        data_userid[0x004] = (user_id >> 24)&0xff
+        data_userid[0x005] = (user_id >> 16)&0xff
+        data_userid[0x006] = (user_id >> 8)&0xff
+        data_userid[0x007] = (user_id >> 0)&0xff
+    elif oh_ver == 2:
+        data_userid[0x007] = (user_id >> 24)&0xff
+        data_userid[0x006] = (user_id >> 16)&0xff
+        data_userid[0x005] = (user_id >> 8)&0xff
+        data_userid[0x004] = (user_id >> 0)&0xff
     data = 0
     for r in data_userid:
         data |= data_userid[r] << (8 * (r % 4))
