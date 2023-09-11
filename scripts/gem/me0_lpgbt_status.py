@@ -2,6 +2,7 @@ from gem.me0_lpgbt.rw_reg_lpgbt import *
 from time import sleep
 import sys
 import argparse
+import statistics
 
 def adc_conversion_lpgbt(adc):
     gain = 1.87
@@ -10,6 +11,28 @@ def adc_conversion_lpgbt(adc):
     #voltage = (adc - 38.4)/(1.85 * 512)
     voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
     return voltage
+
+def read_efuse(reg_adr):
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEREAD"), 0x1)
+    valid = 0
+    while (valid==0):
+        if system!="dryrun":
+            valid = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEDATAVALID"))
+        else:
+            valid = 1
+        
+    fuse_block_adr = reg_adr & 0xfffc
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH"), 0xff&(fuse_block_adr>>8))
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL"), 0xff&(fuse_block_adr>>0)) 
+    read=4*[0]
+    read[0] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESA")) 
+    read[1] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESB")) 
+    read[2] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESC")) 
+    read[3] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESD")) 
+
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEREAD"), 0x0)
+    read_word = (read[0]) | (read[1]<<8) | (read[2] << 16) | (read[3] << 24)
+    return read_word
 
 def main(system, oh_ver, boss):
 
@@ -21,7 +44,6 @@ def main(system, oh_ver, boss):
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
-
         print ("USER ID:")
         print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
@@ -29,10 +51,19 @@ def main(system, oh_ver, boss):
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
     elif oh_ver == 2:
         print ("CHIP ID:")
-        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 24 | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 16 | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 8  | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 0))
+        #print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 24 | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 16 | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 8  | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 0))
+
+        # Reading from EFuses
+        CHIPID_A = read_efuse(0x00)
+        CHIPID_B = read_efuse(0x08) >> 6
+        CHIPID_C = read_efuse(0x0c) >> 12
+        CHIPID_D = read_efuse(0x10) >> 18
+        CHIPID_E = read_efuse(0x14) >> 24
+        chip_id = statistics.mode([CHIPID_A, CHIPID_B, CHIPID_C, CHIPID_D, CHIPID_E])
+        print ("\t0x%08x" % chip_id)
 
         print ("USER ID:")
         print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 24 | \

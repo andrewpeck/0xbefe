@@ -184,11 +184,11 @@ def write_fuse_block_data(system, adr, data, fullblock=False):
 
 def blow_fuse(system, boss):
     global TOTAL_EFUSE_ON_TIME_MS
-    adr = 0;
+    adr = 0
     adr |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH")) << 8
     adr |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL")) << 0
 
-    rd = 0;
+    rd = 0
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAA")) << 0
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAB")) << 8
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAC")) << 16
@@ -204,7 +204,7 @@ def blow_fuse(system, boss):
     lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOW"), 0x1) # fuse blow
 
     # Wait for Fuseblowdone
-    done = 0;
+    done = 0
     t0 = time()
     while (done==0):
         if system!="dryrun":
