@@ -31,6 +31,8 @@ def read_efuse(reg_adr):
     read[3] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESD")) 
 
     lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEREAD"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH"), 0x0)
+    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL"), 0x0)
     read_word = (read[0]) | (read[1]<<8) | (read[2] << 16) | (read[3] << 24)
     return read_word
 

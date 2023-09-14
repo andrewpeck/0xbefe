@@ -324,7 +324,7 @@ if __name__ == "__main__":
                 if not xml_results[oh_sn]['LPGBT_%s_REG_STATUS'%gbt_type]:
                     if not test_failed:
                         print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
-                        logfile.write("\nStep 2: Checking lpGBT Status Failed\n"%(oh_sn,gbt_type))
+                        logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
                         test_failed = True
                     gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
@@ -905,17 +905,12 @@ if __name__ == "__main__":
                     elif read_next:
                         if 'Channel' in line:
                             vfat = int(line.split()[1].removesuffix(','))
-                            elink = int(line.split()[3].removesuffix(','))
                             channel = int(line.split()[5])
                             if vfat in bad_channels:
-                                if elink in bad_channels[vfat]:
-                                    bad_channels[vfat][elink]+=[channel]
-                                else:
-                                    bad_channels[vfat][elink]=[channel]
+                                bad_channels[vfat]+=[channel]
                             else:
                                 bad_channels[vfat]={}
-                                bad_channels[vfat][elink]=[channel]
-                            no_bad_channels = False
+                                bad_channels[vfat]=[channel]
                         elif 'VFAT' in line:
                             vfat = int(line.split()[1].removesuffix(','))
                             elink = int(line.split()[3])
@@ -923,38 +918,34 @@ if __name__ == "__main__":
                                 rotated_elinks[vfat]+=[elink]
                             else:
                                 rotated_elinks[vfat]=[elink]
-                            no_rotated_elinks = False
                         else:
                             read_next = False
             logfile.close()
             os.system("cat %s >> %s"%(latest_file, log_fn)) 
             logfile = open(log_fn, "a")
 
-
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_results_*.py")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.py'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            xml_results[oh_sn]['VFAT_SBIT_MAPPING'] = [{'STATUS':1,'NO_BAD_CHANNELS':no_bad_channels,'NO_ROTATED_ELINKS':no_rotated_elinks} for _ in range(6)]
-            full_results[oh_sn]['VFAT_SBIT_MAPPING'] = [{'STATUS':1,'NO_BAD_CHANNELS':no_bad_channels,'NO_ROTATED_ELINKS':no_rotated_elinks,'BAD_CHANNELS':[],'ROTATED_ELINKS':[]} for _ in range(6)]
+            xml_results[oh_sn]['VFAT_SBIT_MAPPING'] = full_results[oh_sn]['VFAT_SBIT_MAPPING'] = [{'STATUS':1,'BAD_CHANNELS':[],'ROTATED_ELINKS':[],'BAD_CHANNELS_CLUSTER':[]} for _ in range(6)]
 
         if bad_channels:
             for vfat in bad_channels:
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]['VFAT']:
                         i = geb_oh_map[slot]['VFAT'].index(vfat)
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = int(no_bad_channels)
-                        for elink,channels in bad_channels[vfat]:
-                            full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['BAD_CHANNELS'].append({'ELINK':elink,'CHANNELS':channels})
+                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = int(no_bad_channels)
+                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['BAD_CHANNELS'] += bad_channels[vfat]
                         break
         if rotated_elinks:
             for vfat in rotated_elinks:
                 for slot,oh_sn in geb_dict.items():
                     if vfat in geb_oh_map[slot]['VFAT']:
                         i = geb_oh_map[slot]['VFAT'].index(vfat)
-                        full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['ROTATED_ELINKS'] += rotated_elinks[vfat]
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = int(no_rotated_elinks)
+                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['STATUS'] = int(no_rotated_elinks)
+                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]['ROTATED_ELINKS'] += rotated_elinks[vfat]
                         break
 
         if not no_bad_channels or not no_rotated_elinks:
@@ -1001,7 +992,6 @@ if __name__ == "__main__":
             os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f "%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
             list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-
             with open(latest_file,"r") as mapping_file:
                 for line in mapping_file.readlines()[2:]:
                     data = line.split()
@@ -1009,10 +999,8 @@ if __name__ == "__main__":
                     data.remove('')
                     vfat = int(data[0])
                     channel = int(data[1])
-                    sbit = int(data[2])
-                    cluster_counts = [int(x) for x in data[3:10]]
-                    cluster_size = int(data[10])
                     cluster_address = int(data[11])
+
 
                     # sbit_status = 1 if sbit != -9999 else 0
                     cluster_status = 1 if cluster_address != -9999 else 0
@@ -1020,24 +1008,18 @@ if __name__ == "__main__":
                     for slot,oh_sn in geb_dict.items():
                         if vfat in geb_oh_map[slot]['VFAT']:
                             i = geb_oh_map[slot]['VFAT'].index(vfat)
+                            if cluster_status:
+                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
+                            else:
+                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
+                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["BAD_CHANNELS_CLUSTER"]+=[channel]
                             break
-                    if 'SBIT_ADDRESS' in xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["SBIT_ADDRESS"] += [sbit]
-                    else:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["SBIT_ADDRESS"] = full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["SBIT_ADDRESS"] = [sbit]
-                    if 'CLUSTER_STATUS' in xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_STATUS"] &= cluster_status
-                    else:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_STATUS"] = full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_STATUS"] = cluster_status
-                    if 'CLUSTER_ADDRESS' in xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_ADDRESS"] += [cluster_address]
-                    else:
-                        xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_ADDRESS"] = full_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["CLUSTER_ADDRESS"] = [cluster_address]
+
             os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(xml_results[oh_sn]["VFAT_SBIT_MAPPING"]):
-                if not result['CLUSTER_STATUS']:
+                if not result['STATUS']:
                     if not test_failed:
                         print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
                         logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
