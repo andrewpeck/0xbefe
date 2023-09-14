@@ -395,7 +395,7 @@ begin
             -- rd en signal logic
             if (inject_sbits_en = '1' and sbit_inj_fifo_rst_flag='0') then
                 sbit_inj_fifo_rd_en <= '1';
-            elsif (sbit_inj_fifo_empty_and = '1' or sbit_inj_fifo_rst_flag='1' or sbit_inj_fifo_sync_flag='0') then
+            elsif (sbit_inj_fifo_empty_and = '1' or sbit_inj_fifo_rst_flag='1') then
                 sbit_inj_fifo_rd_en <= '0';
             end if;
 
@@ -509,7 +509,7 @@ begin
 
             cluster_packer_inst : entity work.cluster_packer
               generic map (
-                ONESHOT           => false,
+                ONESHOT           => true,
                 SPLIT_CLUSTERS    => 0,
                 INVERT_PARTITIONS => false,
                 NUM_VFATS         => 24,
