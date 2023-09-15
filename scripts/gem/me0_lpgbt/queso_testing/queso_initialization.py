@@ -94,7 +94,6 @@ if __name__ == "__main__":
             continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
-        pigtail = float(line.split()[2])
         if oh_sn != "-9999":
             if not power_only:
                 if batch in ["prototype", "pre_production"]:
@@ -109,7 +108,6 @@ if __name__ == "__main__":
             if not power_only:
                 results_oh_sn[oh_sn] = {}
                 results_oh_sn[oh_sn]["BATCH"] = batch
-                results_oh_sn[oh_sn]["PIGTAIL_LENGTH"] = pigtail
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
