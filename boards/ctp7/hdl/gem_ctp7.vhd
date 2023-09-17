@@ -53,6 +53,11 @@ entity gem_ctp7 is
         ttc_data_p_i                   : in  std_logic;
         ttc_data_n_i                   : in  std_logic;
 
+        clk_125_p_i                    : in  std_logic; -- 125MHz clock oscillator
+        clk_125_n_i                    : in  std_logic;
+        clk_synthb_in_p_o              : out std_logic; -- synthesizer B clock input 2
+        clk_synthb_in_n_o              : out std_logic;
+
         LEDs                           : out std_logic_vector(1 downto 0);
 
         axi_c2c_v7_to_zynq_data        : out std_logic_vector(16 downto 0);
@@ -698,6 +703,37 @@ begin
                 probe8 => emtf_tx_data(CFG_LPGBT_EMTF_LOOP_TX_LINK)
             );
 
+    end generate;
+
+    -------------------------- 125MHz PASSTHROUGH ---------------------------------
+    g_clk_125_passthrough : if (true) generate
+        signal clk_125       : std_logic;
+        signal clk_synthb_in : std_logic;
+    begin
+        i_clk_125_ibufgds : IBUFGDS
+        port map(
+            I  => clk_125_p_i,
+            IB => clk_125_n_i,
+            O  => clk_125
+        );
+
+        i_clk_synthb_oddr : ODDR
+        port map (
+            Q  => clk_synthb_in,
+            C  => clk_125,
+            CE => '1',
+            D1 => '0', -- pins polarity is reversed
+            D2 => '1',
+            R  => '0',
+            S  => '0'
+        );
+
+        i_clk_synthb_obufds : OBUFDS
+        port map (
+            I  => clk_synthb_in,
+            O  => clk_synthb_in_p_o,
+            OB => clk_synthb_in_n_o
+        );
     end generate;
 
     -------------------------- DEBUG ---------------------------------
