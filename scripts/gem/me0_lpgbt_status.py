@@ -42,12 +42,12 @@ def main(system, oh_ver, boss):
 
     if oh_ver == 1:
         print ("CHIP ID:")
-        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
+        print ("\t0x%08X" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 24 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID1")) << 16 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID2")) << 8  | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID3")) << 0))
         print ("USER ID:")
-        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
+        print ("\t0x%08X" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 24 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 16 | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 8  | \
                             lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 0))
@@ -65,13 +65,17 @@ def main(system, oh_ver, boss):
         CHIPID_D = read_efuse(0x10) >> 18
         CHIPID_E = read_efuse(0x14) >> 24
         chip_id = statistics.mode([CHIPID_A, CHIPID_B, CHIPID_C, CHIPID_D, CHIPID_E])
-        print ("\t0x%08x" % chip_id)
+        if (CHIPID_B == 0 and CHIPID_C == 0 and CHIPID_D == 0 and CHIPID_E == 0):
+            chip_id = CHIPID_A
+        print ("\t0x%08X" % chip_id)
 
         print ("USER ID:")
-        print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 24 | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 16 | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 8  | \
-                            lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 0))
+        #print ("\t0x%08x" % (lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID3")) << 24 | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 16 | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 8  | \
+        #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 0))
+        user_id = read_efuse(0x04)
+        print ("\t0x%08X"%user_id)
 
     print ("Lock mode:")
     if (lpgbt_readReg(getNode("LPGBT.RO.LPGBTSETTINGS.LOCKMODE"))):
