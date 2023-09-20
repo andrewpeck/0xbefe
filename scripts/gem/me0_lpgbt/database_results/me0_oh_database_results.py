@@ -100,6 +100,7 @@ def main():
     parser.add_argument("-gf2", "--geb_file2", action="store", dest="geb_file2", help="GEB_FILE2 = input file path 2 for GEB test results")
     parser.add_argument("-vf1", "--vtrxp_file1", action="store", dest="vtrxp_file1", help="VTRXP_FILE1 = input file path 1 for VTRx+ test results")
     parser.add_argument("-vf2", "--vtrxp_file2", action="store", dest="vtrxp_file2", help="VTRXP_FILE2 = input file path 2 for VTRx+ test results")
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="VERBOSE = print combined results output when saving to xml")
     args = parser.parse_args()
 
     # Check valid serial numbers
@@ -229,9 +230,10 @@ def main():
         for oh_sn in oh_sn_list:
             print(Colors.BLUE + "Merging results data for OH %s"%oh_sn)
             oh_data = combine_data(oh_sn,*oh_dataset,hardware='OH')
-            print('\ncombined data for OH %s:\n----------------------'%oh_sn)
-            for key,value in oh_data.items():
-                print('%s: '%key, value)
+            if args.verbose:
+                print('\ncombined data for OH %s:\n----------------------'%oh_sn)
+                for key,value in oh_data.items():
+                    print('%s: '%key, value)
             print()
             # save to xml file
             results_fn = 'me0_lpgbt/database_results/results/ME0_OH_%s.xml'%oh_sn
@@ -272,9 +274,10 @@ def main():
                 sys.exit()
         for vtrxp_sn in vtrxp_sn_list:
             vtrxp_data = combine_data(vtrxp_sn,vtrxp_dataset,hardware='VTRXP')
-            print('\ncombined data for VTRx+ %s:\n----------------------'%vtrxp_sn)
-            for key,value in vtrxp_data.items():
-                print('%s: '%key, value)
+            if args.verbose:
+                print('\ncombined data for VTRx+ %s:\n----------------------'%vtrxp_sn)
+                for key,value in vtrxp_data.items():
+                    print('%s: '%key, value)
             print()
             # save to xml file
             results_fn = 'me0_lpgbt/database_results/results/VTRXP_%s.xml'%vtrxp_sn

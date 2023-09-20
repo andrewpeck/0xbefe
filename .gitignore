@@ -35,6 +35,7 @@ hdl-prj.json
 /scripts/gem/results
 /scripts/gem/me0_lpgbt/oh_testing/results
 /scripts/gem/me0_lpgbt/queso_testing/results
+scripts/gem/me0_lpgbt/database_results/input/*
 
 /scripts/gem/run.sh
 

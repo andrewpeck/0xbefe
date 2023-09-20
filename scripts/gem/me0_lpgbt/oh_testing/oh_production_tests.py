@@ -44,7 +44,6 @@ geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
     parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='VERBOSE = save verbose results file')
     args = parser.parse_args()
 
     if args.input_file is None:
