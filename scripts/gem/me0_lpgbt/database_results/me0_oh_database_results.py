@@ -58,9 +58,6 @@ def combine_data(sn,*dataset,hardware='OH'):
     data_sn["ROOT"]['DATA_SET']['DATA']={}
     if hardware=='OH':
         data_sn["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][0])
-    print(len(dataset))
-    for data in dataset:
-        print(data)
     for data in dataset:
         # Search for matching serial number
         for results_dict in data:
@@ -148,6 +145,11 @@ def main():
         print(Colors.YELLOW + "No VTRx+ SERIAL NUMBERS provided. Skipping results for VTRx+" + Colors.ENDC)
         skip_vtrxp = True
 
+    try:
+        os.makedirs('me0_lpgbt/database_results/results') # create directory for VFAT data
+    except FileExistsError: # skip if directory already exists
+        pass
+
     # Check for all necessary files
     if not skip_oh:
         oh_dataset = []
@@ -228,7 +230,7 @@ def main():
             oh_dataset+=[geb_data]
         
         for oh_sn in oh_sn_list:
-            print(Colors.BLUE + "Merging results data for OH %s"%oh_sn)
+            print(Colors.BLUE + "Merging results data for OH %s"%oh_sn + Colors.ENDC)
             oh_data = combine_data(oh_sn,*oh_dataset,hardware='OH')
             if args.verbose:
                 print('\ncombined data for OH %s:\n----------------------'%oh_sn)
