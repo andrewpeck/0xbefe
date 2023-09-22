@@ -629,9 +629,106 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 6 - DAQ Phase Scan
-    print (Colors.BLUE + "Step 6: DAQ Phase Scan\n" + Colors.ENDC)
-    logfile.write("Step 6: DAQ Phase Scan\n\n")
+    # Step 6 - VFAT Reset
+    print (Colors.BLUE + "Step 6: VFAT Reset\n" + Colors.ENDC)
+    logfile.write("Step 6: VFAT Reset\n\n")
+    time.sleep(1)
+
+    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(1)
+            
+            print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+            os.system("python3 clean_log.py -i %s"%log_fn)
+
+            read_next = False
+            with open(log_fn,"r") as logfile:
+                for line in logfile.readlines():
+                    if read_next:
+                        if line=='\n':
+                            read_next = False
+                            continue
+                        vfat = int(line.split()[1].removesuffix(':'))
+                        for slot,oh_sn in geb_dict.items():
+                            if vfat in geb_oh_map[slot]['VFAT']:
+                                break
+                        status_str = line.split(':')[1]
+                        if "VFAT RESET from RUN mode to SLEEP mode" in status_str:
+                            if 'VFAT_RESETS' in xml_results[oh_sn]:
+                                xml_results[oh_sn]['VFAT_RESETS'] += [1]
+                            else:
+                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [1]
+                        else:
+                            if 'VFAT_RESETS' in xml_results[oh_sn]:
+                                xml_results[oh_sn]['VFAT_RESETS'] += [0]
+                            else:
+                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [0]
+                    elif 'VFAT Reset Results' in line:
+                        read_next = True
+
+        logfile = open(log_fn,"a")    
+        print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
+        logfile.write("Unconfiguring all VFATs\n\n")
+        logfile.close()
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+        logfile = open(log_fn,'a')
+
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(xml_results[oh_sn]['VFAT_RESETS']):
+                if not result:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+                        test_failed = True
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing? >> ')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
+                logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
+                print('\nLogging full results at directory: %s\n'%full_results_fn)
+                logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
+                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
+                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
+                vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
+                with open(xml_results_fn,"w") as xml_results_file:
+                    json.dump(xml_results,xml_results_file,indent=2)
+                with open(full_results_fn,'w') as full_results_file:
+                    json.dump(full_results,full_results_file,indent=2)
+                with open(vtrxp_results_fn,'w') as vtrxp_results_file:
+                    json.dump(vtrxp_results,vtrxp_results_file,indent=2)
+                logfile.close()
+                sys.exit()
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
+    else:
+        print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%batch.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping VFAT Reset for %s tests\n"%batch.replace("_","-"))
+        time.sleep(1)
+
+    print (Colors.GREEN + "\nStep 6: VFAT Reset Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 6: VFAT Reset Complete\n\n")
+
+    time.sleep(1)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 7 - DAQ Phase Scan
+    print (Colors.BLUE + "Step 7: DAQ Phase Scan\n" + Colors.ENDC)
+    logfile.write("Step 7: DAQ Phase Scan\n\n")
     time.sleep(1)
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
@@ -705,16 +802,16 @@ if __name__ == "__main__":
         logfile.write("Skipping DAQ Phase Scan for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    print (Colors.GREEN + "\nStep 6: DAQ Phase Scan Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 6: DAQ Phase Scan Complete\n\n")
+    print (Colors.GREEN + "\nStep 7: DAQ Phase Scan Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 7: DAQ Phase Scan Complete\n\n")
 
     time.sleep(1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
-    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
-    logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
+    # Step 8 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
+    print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
+    logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
     time.sleep(1)
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
@@ -1058,105 +1155,8 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%batch.replace("_","-"))
         time.sleep(1)
 
-    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
-
-    time.sleep(1)
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-
-    # Step 8 - VFAT Reset
-    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
-    logfile.write("Step 8: VFAT Reset\n\n")
-    time.sleep(1)
-
-    if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
-            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
-            logfile.close()
-            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
-            logfile = open(log_fn,"a")
-            time.sleep(1)
-            
-            print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
-            logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
-            logfile.close()
-            os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-            os.system("python3 clean_log.py -i %s"%log_fn)
-
-            read_next = False
-            with open(log_fn,"r") as logfile:
-                for line in logfile.readlines():
-                    if read_next:
-                        if line=='\n':
-                            read_next = False
-                            continue
-                        vfat = int(line.split()[1].removesuffix(':'))
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]['VFAT']:
-                                break
-                        status_str = line.split(':')[1]
-                        if "VFAT RESET from RUN mode to SLEEP mode" in status_str:
-                            if 'VFAT_RESETS' in xml_results[oh_sn]:
-                                xml_results[oh_sn]['VFAT_RESETS'] += [1]
-                            else:
-                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [1]
-                        else:
-                            if 'VFAT_RESETS' in xml_results[oh_sn]:
-                                xml_results[oh_sn]['VFAT_RESETS'] += [0]
-                            else:
-                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [0]
-                    elif 'VFAT Reset Results' in line:
-                        read_next = True
-
-        logfile = open(log_fn,"a")    
-        print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
-        logfile.write("Unconfiguring all VFATs\n\n")
-        logfile.close()
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
-        logfile = open(log_fn,'a')
-
-        for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(xml_results[oh_sn]['VFAT_RESETS']):
-                if not result:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 8: VFAT Reset Failed\n\n")
-                        test_failed = True
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-        for oh_sn in xml_results:
-            xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
-        while test_failed:
-            end_tests = input('\nWould you like to exit testing? >> ')
-            if end_tests.lower() in ['y','yes']:
-                print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
-                logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
-                print('\nLogging full results at directory: %s\n'%full_results_fn)
-                logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
-                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
-                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
-                vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
-                with open(xml_results_fn,"w") as xml_results_file:
-                    json.dump(xml_results,xml_results_file,indent=2)
-                with open(full_results_fn,'w') as full_results_file:
-                    json.dump(full_results,full_results_file,indent=2)
-                with open(vtrxp_results_fn,'w') as vtrxp_results_file:
-                    json.dump(vtrxp_results,vtrxp_results_file,indent=2)
-                logfile.close()
-                sys.exit()
-            elif end_tests.lower() in ['n','no']:
-                test_failed = False
-            else:
-                print('Valid entries: y, yes, n, no')
-    else:
-        print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%batch.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping VFAT Reset for %s tests\n"%batch.replace("_","-"))
-        time.sleep(1)
-
-    print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 8: VFAT Reset Complete\n\n")
+    print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
 
     time.sleep(1)
     print ("#####################################################################################################################################\n")
