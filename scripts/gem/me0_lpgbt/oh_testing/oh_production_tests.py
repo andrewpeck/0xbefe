@@ -2462,12 +2462,11 @@ if __name__ == "__main__":
                         break
                 for elink,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
-                        if threshold >= 100 or threshold == 0:
-                            status_list += [0]
-                            bad_elinks += [elink]
-                        else:
-                            status_list += [1]
-                        status_list+=[status]
+                    if threshold >= 100 or threshold == 0:
+                        status_list += [0]
+                        bad_elinks += [elink]
+                    else:
+                        status_list += [1]
                 full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
 
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
