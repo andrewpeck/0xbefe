@@ -7,7 +7,11 @@ import numpy as np
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 input_dir = 'me0_lpgbt/database_results/input/'
+if not os.path.exists(input_dir):
+    print(Colors.RED + 'Input file directory does not exist. Run generate_inputs.py first to create input files.' + Colors.ENDC)
 results_dir = 'me0_lpgbt/database_results/results/'
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
 
 def get_json_data(fn):
     with open(fn,'r') as fp:

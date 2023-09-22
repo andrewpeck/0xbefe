@@ -17,6 +17,11 @@ def main():
     if args.filename:
         print('Parsing results from file not implemented. Choose -u/--user for user prompted input.')
         sys.exit()
+    
+    try:
+        os.makedirs(output_path)
+    except FileExistsError:
+        pass
 
     if args.user:
         oh_sn = input('Enter OH SERIAL NUMBER(s): ')
