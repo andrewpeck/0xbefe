@@ -255,6 +255,7 @@ if __name__ == "__main__":
     time.sleep(1)
 
     if batch in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+        read_next = False
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -264,6 +265,15 @@ if __name__ == "__main__":
                 list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_%s*.txt"%gbt_type)
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/status_OH%s_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
+                with open('out.txt','r') as out_file:
+                    for line in out_file.readlines():
+                        if 'CHIP ID:' in line:
+                            read_next = True
+                        elif read_next:
+                            gbt_type = 'M' if gbt%2==0 else 'S'
+                            chip_id = line.split()[0]
+                            xml_results[oh_sn]['LPGBT_%s_CHIP_ID'] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'] = chip_id
+                            read_next = False
 
         config_files = {}
         for slot,oh_ver_list in oh_ver_dict.items():
