@@ -26,7 +26,7 @@ def print_json_data(fn):
         print()
 
 def get_input_data(oh_sn,vtrxp_sn):
-    input_fn = input_dir + 'input_OH_%s_%s.json'%(oh_sn,vtrxp_sn)
+    input_fn = input_dir + 'input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
     try:
         with open(input_fn,'r') as input_file:
             data = json.load(input_file)
@@ -35,29 +35,29 @@ def get_input_data(oh_sn,vtrxp_sn):
     return data['OH'],data['VTRXP']
 
 def combine_data(sn,input_data,*dataset,hardware='OH'):
-    data = {}
-    data["ROOT"]={}
-    data["ROOT"]["HEADER"]={}
-    data["ROOT"]["HEADER"]['TYPE']={}
+    data_out = {}
+    data_out["ROOT"]={}
+    data_out["ROOT"]["HEADER"]={}
+    data_out["ROOT"]["HEADER"]['TYPE']={}
     if hardware=='OH':
-        data["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_OH_QC'
-        data["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 OH QC Hardware'
+        data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_OH_QC'
+        data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 OH QC Hardware'
     elif hardware=='VTRXP':
-        data["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_VTRXP_QC'
-        data["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 VTRxp QC Hardware'
+        data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_VTRXP_QC'
+        data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 VTRxp QC Hardware'
     else:
         raise Exception("Valid entries for keyword:'hardware' are ['OH','VTRXP'].")
     
-    data["ROOT"]["HEADER"]['RUN']=input_data['RUN']
+    data_out["ROOT"]["HEADER"]['RUN']=input_data['RUN']
 
-    data["ROOT"]['DATA_SET']={}
+    data_out["ROOT"]['DATA_SET']={}
     if hardware=='OH':
-        data['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 Opto Hybrid','SERIAL_NUMBER':sn}
+        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 Opto Hybrid','SERIAL_NUMBER':sn}
     elif hardware=='VTRXP':
-        data['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 VTRxp','SERIAL_NUMBER':sn}
-    data["ROOT"]['DATA_SET']['DATA']={}
+        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 VTRxp','SERIAL_NUMBER':sn}
+    data_out["ROOT"]['DATA_SET']['DATA']={}
     if hardware=='OH':
-        data["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][0])
+        data_out["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][0])
     for data in dataset:
         # Search for matching serial number
         for results_dict in data:
@@ -79,12 +79,12 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
                             else:
                                 print('Valid entries: 1, 2')
                 # append results
-                data["ROOT"]['DATA_SET']['DATA'].update(**results_dict)
+                data_out["ROOT"]['DATA_SET']['DATA'].update(**results_dict)
                 break
     if hardware=='OH':
-        data["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][1])
-    del data["ROOT"]['DATA_SET']['DATA']['SERIAL_NUMBER']
-    return data
+        data_out["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][1])
+    del data_out["ROOT"]['DATA_SET']['DATA']['SERIAL_NUMBER']
+    return data_out
 
 def main():
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
@@ -174,7 +174,7 @@ def main():
         vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
         vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
     else:
-        geb_data_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str2)
+        geb_data_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str)
         if not os.path.exists(geb_data_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
             sys.exit()
@@ -286,7 +286,7 @@ def main():
 
     for oh_sn,vtrxp_sn in zip(oh_sn_list,vtrxp_sn_list):
         input_oh,input_vtrxp = get_input_data(oh_sn,vtrxp_sn)
-        print(Colors.BLUE + "Merging results data for OH %s"%oh_sn)
+        print(Colors.BLUE + "Merging results data for OH %s"%oh_sn + Colors.ENDC)
         oh_data = combine_data(oh_sn,input_oh,*oh_dataset,hardware='OH')
         if args.verbose:
             print('\ncombined data for OH %s:\n----------------------'%oh_sn)

@@ -2445,20 +2445,20 @@ if __name__ == "__main__":
                 status_list = []
                 threshold_list = []
                 bad_elinks = []
-                for e,threshold in sbit_noise_elink.items():
+                for slot,oh_sn in geb_dict.items():
+                    if geb_oh_map[slot]["OH"]==oh_select and vfat in geb_oh_map[slot]["VFAT"]:
+                        if 'VFAT_SBIT_NOISE_SCAN' not in full_results[oh_sn]:
+                            full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]=[]
+                        break
+                for elink,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
-                    for slot,oh_sn in geb_dict.items():
-                        if geb_oh_map[slot]["OH"]==oh_select and vfat in geb_oh_map[slot]["VFAT"]:
-                            if 'VFAT_SBIT_NOISE_SCAN' not in full_results[oh_sn]:
-                                full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]=[]
-                            if threshold >= 100 or threshold == 0:
-                                status_list += [0]
-                                bad_elinks += [e]
-                            else:
-                                status_list += [1]
-                            status_list+=[status]
-                            full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
-                            break
+                        if threshold >= 100 or threshold == 0:
+                            status_list += [0]
+                            bad_elinks += [elink]
+                        else:
+                            status_list += [1]
+                        status_list+=[status]
+                full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
 
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
