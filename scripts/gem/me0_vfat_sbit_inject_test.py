@@ -248,38 +248,33 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
     n_clusters = 0
     n_cluster_size_error = 0
     n_cluster_pos_error = 0
-    max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    # max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    # for oh in range(max_ohs):
     for i in range(np.ceil(n_bxs/512).astype(int)):
         while fifo_rst_flag==1:
             sleep(0.1)
-        # Loop over OHs
-        for oh in range(max_ohs):
-            # Loop through vfats
-            for vfat in range(24):
-                # Loop through bxs
-                for bx in range(i*512,min((i+1)*512,n_bxs)):
-                    if oh==oh_select:
-                        dinl = bits_to_int(sbit_inj_data[bx,vfat,:32])
-                        dinh = bits_to_int(sbit_inj_data[bx,vfat,32:64])
-                    else:
-                        dinl = 0
-                        dinh = 0
-                    # Set data bus
-                    write_backend_reg(dinl_sbit_inj_node,dinl)
-                    write_backend_reg(dinh_sbit_inj_node,dinh)
-                    # Set FIFO sel - Bits [15:8] OH number, bits [7:0] VFAT number
-                    fifo_sel_addr = oh<<8 | vfat
-                    write_backend_reg(fifo_sel_sbit_inj_node,fifo_sel_addr)
-                    # Pulse load sbits enable
-                    write_backend_reg(write_en_sbit_inj_node,1)
-                    # read_flags()
-                    check_err_flag()
-                    sbit_inj_cnt += 1
-                    if verbose:
-                        print("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#016x"%(oh,vfat,bx,np.uint64(dinh<<32|dinl)))
-                        print("s-bits written: %d"%sbit_inj_cnt)
-                    file_out.write("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#032x\n"%(oh,vfat,bx,np.uint64(dinh<<32|dinl)))
-                    file_out.write("s-bits written: %d\n"%sbit_inj_cnt)
+        # Loop through vfats
+        for vfat in range(24):
+            # Loop through bxs
+            for bx in range(i*512,min((i+1)*512,n_bxs)):
+                dinl = bits_to_int(sbit_inj_data[bx,vfat,:32])
+                dinh = bits_to_int(sbit_inj_data[bx,vfat,32:64])
+                # Set data bus
+                write_backend_reg(dinl_sbit_inj_node,dinl)
+                write_backend_reg(dinh_sbit_inj_node,dinh)
+                # Set FIFO sel - Bits [15:8] OH number, bits [7:0] VFAT number
+                fifo_sel_addr = oh_select<<8 | vfat
+                write_backend_reg(fifo_sel_sbit_inj_node,fifo_sel_addr)
+                # Pulse load sbits enable
+                write_backend_reg(write_en_sbit_inj_node,1)
+                # read_flags()
+                check_err_flag()
+                sbit_inj_cnt += 1
+                if verbose:
+                    print("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#016x"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
+                    print("s-bits written: %d"%sbit_inj_cnt)
+                file_out.write("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#032x\n"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
+                file_out.write("s-bits written: %d\n"%sbit_inj_cnt)
         sleep(1)
         # Read flag registers
         sbit_inj_fifo_data_cnt = read_backend_reg(fifo_data_cnt_sbit_inj_node)
@@ -296,15 +291,15 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
             file_out.write("%d x 64 s-bits sent, but only %d x 64 s-bits written in FIFOs\n"%(sbit_inj_cnt,sbit_inj_fifo_data_cnt))
             check_err_flag()
             # terminate()
-        if not sbit_inj_fifo_sync:
-            print(Colors.RED + "FIFOs are out of sync. Resetting FIFOs." + Colors.ENDC)
-            check_err_flag()
-            # reset injection FIFOs
-            write_backend_reg(reset_fifo_sbit_inj_node,1)
-            write_backend_reg(dinl_sbit_inj_node,0)
-            write_backend_reg(dinh_sbit_inj_node,0)
-            write_backend_reg(fifo_sel_sbit_inj_node,0)
-            continue
+        # if not sbit_inj_fifo_sync:
+        #     print(Colors.RED + "FIFOs are out of sync. Resetting FIFOs." + Colors.ENDC)
+        #     check_err_flag()
+        #     # reset injection FIFOs
+        #     write_backend_reg(reset_fifo_sbit_inj_node,1)
+        #     write_backend_reg(dinl_sbit_inj_node,0)
+        #     write_backend_reg(dinh_sbit_inj_node,0)
+        #     write_backend_reg(fifo_sel_sbit_inj_node,0)
+        #     continue
         
         print("\nInjecting s-bits into data stream...")
         file_out.write("\nInjecting s-bits into data stream...\n")
