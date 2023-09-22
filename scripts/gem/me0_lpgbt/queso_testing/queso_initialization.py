@@ -437,6 +437,7 @@ if __name__ == "__main__":
     logfile.close()
     os.system("python3 init_frontend.py")
     os.system("python3 status_frontend.py >> %s"%log_fn)
+    logfile = open(log_fn,"a")
     list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
     test_failed = False
@@ -611,9 +612,9 @@ if __name__ == "__main__":
             logfile.write(line+"\n")
             if "gbt_1v2 current" in line:
                 values = line.split()
-                if int(values[2])!=-9999:
+                if values[2]!='-9999':
                     queso_current["1V2"] += [float(values[2])]
-                if int(values[6])!=-9999:
+                if values[6]!='-9999':
                     queso_current["2V5"] += [float(values[6])]
 
         for v,currents in queso_current.items():
