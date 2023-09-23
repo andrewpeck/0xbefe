@@ -97,7 +97,7 @@ def main():
             
             print('\nSection: OH.DATA(1/2):\n-------------')
             
-            batch_dict = {'0': 'pre_production', '1': 'pre_series', '2': 'production', '3': 'acceptance'}
+            batch_dict = {'0': 'pre_production', '1': 'pre_series', '2': 'production'}
             batch_dict_str = ', '.join(['%s = %s'%(value,key) for key,value in batch_dict.items()])
             if multiple_ohs:
                 if i==0 or multiple_params:

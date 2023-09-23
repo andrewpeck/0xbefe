@@ -85,7 +85,7 @@ if __name__ == "__main__":
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
-            if "BATCH" in line:
+            if "TEST_TYPE" in line:
                 batch = line.split()[2]
                 if not power_only:
                     if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
             queso_dict[queso_nr] = oh_sn
             if not power_only:
                 results_oh_sn[oh_sn] = {}
-                results_oh_sn[oh_sn]["BATCH"] = batch
+                results_oh_sn[oh_sn]["TEST_TYPE"] = batch
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)

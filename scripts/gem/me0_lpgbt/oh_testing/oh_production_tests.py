@@ -57,7 +57,7 @@ if __name__ == "__main__":
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
-            if "BATCH" in line:
+            if "TEST_TYPE" in line:
                 batch = line.split()[2]
                 if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
                     print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     try:
         dataDir = resultDir + "/%s_tests"%batch
     except NameError:
-        print(Colors.YELLOW + 'Must include test batch in input file as "# BATCH: <test_batch>"' + Colors.ENDC)
+        print(Colors.YELLOW + 'Must include test batch in input file as "# TEST_TYPE: <test_batch>"' + Colors.ENDC)
         sys.exit()
 
     try:
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         vtrxp_results[vtrxp_dict[slot]]['OH_SERIAL_NUMBER'] = oh_sn
         vtrxp_results[vtrxp_dict[slot]]["PIGTAIL_LENGTH"] = pigtail_dict[slot]
 
-        xml_results[oh_sn]["BATCH"] = batch
+        xml_results[oh_sn]["TEST_TYPE"] = batch
         xml_results[oh_sn]["GEB_SLOT"] = slot_name_dict[slot]
         xml_results[oh_sn]['VFAT_SLOTS'] = str(geb_oh_map[slot]['VFAT'])
         full_results[oh_sn] = xml_results[oh_sn].copy()

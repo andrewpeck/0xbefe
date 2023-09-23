@@ -90,7 +90,7 @@ def main():
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
     parser.add_argument("-o", "--oh_sns", action="store", nargs="+", dest="oh_sns", help="OH_SNS = list of OH SERIAL NUMBERS matching a test batch of up to 8 OHs.")
     parser.add_argument("-vxp", "--vtrxp_sns", action="store", nargs="+", dest="vtrxp_sns", help="VTRXP_SNS = list of VTRx+ SERIAL NUMBERS for indexing.")
-    parser.add_argument("-b", "--batch", action="store", dest="batch", help="BATCH = name of test batch; valid entries: [pre_production, pre_series, production, acceptance]")
+    parser.add_argument("-t", "--test_type", action="store", dest="test_type", help="TEST_TYPE = name of test batch; valid entries: [pre_production, pre_series, production, acceptance]")
     # parser.add_argument("-qf1", "--queso_file1", action="store", dest="queso_file1", help="QUESO_FILE1 = input file path for QUESO INITIALIZATION test results")
     # parser.add_argument("-qf2", "--queso_file2", action="store", dest="queso_file2", help="QUESO_FILE2 = input file path for QUESO ELINK BER test results")
     # parser.add_argument("-gf1", "--geb_file1", action="store", dest="geb_file1", help="GEB_FILE1 = input file path 1 for GEB test results")
@@ -116,17 +116,17 @@ def main():
 
     for oh_sn in args.oh_sns:
         try:
-            if args.batch=='pre_production':
+            if args.test_type=='pre_production':
                 if int(oh_sn) not in range(1,1000):
                     print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1-1000 for pre-production."%oh_sn + Colors.ENDC)
                     sys.exit()
-            elif args.batch=='pre_series':
+            elif args.test_type=='pre_series':
                 if int(oh_sn) not in range(1001,1021):
                     print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1020 for pre-series."%oh_sn + Colors.ENDC)
                     sys.exit()
-            elif args.batch in ['production','acceptance']:
+            elif args.test_type in ['production','acceptance']:
                 if int(oh_sn) not in range(1021,2019):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1021-2018 for %s."%(oh_sn,args.batch) + Colors.ENDC)
+                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1021-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
                     sys.exit()
         except ValueError:
             print(Colors.RED + "OH SERIAL NUMBERS must be an integer. '%s' is an invalid entry."%oh_sn + Colors.ENDC)
@@ -152,8 +152,8 @@ def main():
         oh_sn_str = '_'.join(oh_sn_list)
     
     # Check if data directories exist
-    if args.batch!='acceptance':
-        queso_data_dir = 'me0_lpgbt/queso_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str)
+    if args.test_type!='acceptance':
+        queso_data_dir = 'me0_lpgbt/queso_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
         if not os.path.exists(queso_data_dir):
             print(Colors.RED + 'QUESO results data directory: %s not found. Please ensure correct list of OH SERIAL NUMBERS and order.'%queso_data_dir + Colors.ENDC)
             sys.exit()
@@ -161,8 +161,8 @@ def main():
         queso_init_fn = queso_data_dir + 'queso_initialization_results.json'
         queso_bert_fn = queso_data_dir + 'queso_elink_bert_results.json'
     if len(oh_sn_list) > 4:
-        geb_data1_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str1)
-        geb_data2_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str2)
+        geb_data1_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str1)
+        geb_data2_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str2)
         if not os.path.exists(geb_data1_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data1_dir + Colors.ENDC)
             sys.exit()
@@ -174,7 +174,7 @@ def main():
         vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
         vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
     else:
-        geb_data_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.batch,oh_sn_str)
+        geb_data_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
         if not os.path.exists(geb_data_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
             sys.exit()
@@ -182,7 +182,7 @@ def main():
         vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
 
     oh_dataset = []
-    if args.batch!='acceptance':
+    if args.test_type!='acceptance':
         # Load and check queso data
         queso_data_found = [False for _ in range(len(oh_sn_list))]
         try:

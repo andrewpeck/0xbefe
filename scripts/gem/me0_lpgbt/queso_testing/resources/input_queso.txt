@@ -1,4 +1,4 @@
-# BATCH: pre_production
+# TEST_TYPE: pre_production
 # QUESO_NUM OH_SER_NUM
 1           1
 2           2
