@@ -170,6 +170,56 @@ def main():
             
             if multiple_ohs:
                 if i==0 or not one_for_all:
+                    uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
+                    if uplink_eye_diagram.lower() in 'yes':
+                        while True:
+                            try:
+                                open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
+                                break
+                            except TypeError:
+                                print('Must enter a float for open eye fraction.')
+                        while True:
+                            try:
+                                open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
+                                break
+                            except TypeError:
+                                print('Must enter a float for open eye fraction.')
+                    else:
+                        open_eye_fraction_M = open_eye_fraction_S = -9999
+                elif uplink_eye_diagram.lower() in 'yes':
+                    if uplink_eye_diagram.lower() in 'yes':
+                        while True:
+                            try:
+                                open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
+                                break
+                            except TypeError:
+                                print('Must enter a float for open eye fraction.')
+                        while True:
+                            try:
+                                open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
+                                break
+                            except TypeError:
+                                print('Must enter a float for open eye fraction.')            
+            else:
+                uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
+                if uplink_eye_diagram.lower() in 'yes':
+                    while True:
+                        try:
+                            open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
+                            break
+                        except TypeError:
+                            print('Must enter a float for open eye fraction.')
+                    while True:
+                        try:
+                            open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
+                            break
+                        except TypeError:
+                            print('Must enter a float for open eye fraction.')
+                else:
+                    open_eye_fraction_M = open_eye_fraction_S = -9999
+        
+            if multiple_ohs:
+                if i==0 or not one_for_all:
                     vis_inspection = input('Did this board (OH %s) pass visual inspection with no shorts? (y/n) '%oh_sn)
                     vis_inspection = 1 if vis_inspection.lower() in 'yes' else 0
             else:
@@ -255,6 +305,8 @@ def main():
             data['OH']['DATA'][0]['LINK_RESET_TESTING_PASS'] = link_rst_testing_pass
             data['OH']['DATA'][0]['VISUAL_INSPECTION_NO_SHORTS'] = vis_inspection
             data['OH']['DATA'][0]['PASSED_ALL_TESTS'] = passed_all_tests
+            data['OH']['DATA'][0]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_M
+            data['OH']['DATA'][0]['LPGBT_S_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_S
             data['OH']['DATA'][1]['SHIPPING_BOX'] = shipping_box
             data['OH']['DATA'][1]['BOARD_LOCATION'] = board_location
             data['OH']['DATA'][1]['BOARD_STATE'] = board_state
