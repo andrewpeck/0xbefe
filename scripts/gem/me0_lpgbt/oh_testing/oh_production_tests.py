@@ -272,7 +272,7 @@ if __name__ == "__main__":
                         elif read_next:
                             gbt_type = 'M' if gbt%2==0 else 'S'
                             chip_id = line.split()[0]
-                            xml_results[oh_sn]['LPGBT_%s_CHIP_ID'] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'] = chip_id
+                            xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
                             read_next = False
 
         config_files = {}
@@ -315,10 +315,10 @@ if __name__ == "__main__":
                         logfile.write("  Register mismatch for register 0x%03X, value in config: 0x%02X, value in lpGBT: 0x%02X\n"%(reg, value, status_registers[slot][gbt_type_long][reg]))
 
                         if 'LPGBT_%s_BAD_REGISTERS'%gbt_type in full_results[oh_sn]:
-                            full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=[reg] # save bad registers as int array
+                            full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=["0x%03X"%reg] # save bad registers as hex string array
                         else:
                             full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]=[]
-                            full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=[reg]
+                            full_results[oh_sn]['LPGBT_%s_BAD_REGISTERS'%gbt_type]+=["0x%03X"%reg]
                 if not n_error:
                     print(Colors.GREEN + "  No register mismatches" + Colors.ENDC)
                     logfile.write("  No register mismatches\n")
@@ -2462,12 +2462,11 @@ if __name__ == "__main__":
                         break
                 for elink,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
-                        if threshold >= 100 or threshold == 0:
-                            status_list += [0]
-                            bad_elinks += [elink]
-                        else:
-                            status_list += [1]
-                        status_list+=[status]
+                    if threshold >= 100 or threshold == 0:
+                        status_list += [0]
+                        bad_elinks += [elink]
+                    else:
+                        status_list += [1]
                 full_results[oh_sn]["VFAT_SBIT_NOISE_SCAN"]+=[{'ELINK_STATUS':status_list,'ELINK_THRESHOLDS':threshold_list, 'BAD_ELINKS': bad_elinks, 'NUM_BAD_ELINKS': len(bad_elinks)}]
 
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)

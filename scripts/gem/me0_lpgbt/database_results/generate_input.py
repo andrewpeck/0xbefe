@@ -217,16 +217,16 @@ def main():
             board_purpose_dict_str = ', '.join(['%s = %s'%(value,key) for key,value in board_purpose_dict.items()])
             if multiple_ohs:
                 if i==0 or not one_for_all:
-                    options = input('Enter BOARD PURPASE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
+                    options = input('Enter BOARD PURPOSE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
                     while options not in board_purpose_dict:
                         print('\nInvalid input! Valid entries are [%s]\n'%', '.join(board_purpose_dict))
-                        options = input('Enter BOARD PURPASE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
+                        options = input('Enter BOARD PURPOSE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
                     board_purpose = board_purpose_dict[options]
             else:
-                options = input('Enter BOARD PURPASE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
+                options = input('Enter BOARD PURPOSE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
                 while options not in board_purpose_dict:
                     print('\nInvalid input! Valid entries are [%s]\n'%', '.join(board_purpose_dict))
-                    options = input('Enter BOARD PURPASE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
+                    options = input('Enter BOARD PURPOSE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
                 board_purpose = board_purpose_dict[options]
 
             print('\nSection VTRXP.RUN is automatically generated from OH %s info.\n'%oh_sn)
