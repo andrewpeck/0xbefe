@@ -176,30 +176,29 @@ def main():
                             try:
                                 open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
                                 break
-                            except TypeError:
+                            except ValueError:
                                 print('Must enter a float for open eye fraction.')
                         while True:
                             try:
                                 open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
                                 break
-                            except TypeError:
+                            except ValueError:
                                 print('Must enter a float for open eye fraction.')
                     else:
                         open_eye_fraction_M = open_eye_fraction_S = -9999
                 elif uplink_eye_diagram.lower() in 'yes':
-                    if uplink_eye_diagram.lower() in 'yes':
-                        while True:
-                            try:
-                                open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
-                                break
-                            except TypeError:
-                                print('Must enter a float for open eye fraction.')
-                        while True:
-                            try:
-                                open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
-                                break
-                            except TypeError:
-                                print('Must enter a float for open eye fraction.')            
+                    while True:
+                        try:
+                            open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
+                            break
+                        except ValueError:
+                            print('Must enter a float for open eye fraction.')
+                    while True:
+                        try:
+                            open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
+                            break
+                        except ValueError:
+                            print('Must enter a float for open eye fraction.')            
             else:
                 uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
                 if uplink_eye_diagram.lower() in 'yes':
@@ -207,13 +206,13 @@ def main():
                         try:
                             open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
                             break
-                        except TypeError:
+                        except ValueError:
                             print('Must enter a float for open eye fraction.')
                     while True:
                         try:
                             open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
                             break
-                        except TypeError:
+                        except ValueError:
                             print('Must enter a float for open eye fraction.')
                 else:
                     open_eye_fraction_M = open_eye_fraction_S = -9999
