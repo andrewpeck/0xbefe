@@ -5,7 +5,7 @@ from time import sleep
 import sys
 import argparse
 
-def main(system, oh_select, gbt_list, relay_number, niter):
+def main(system, oh_select, gbt_list, relay_number_list, niter):
 
     if sys.version_info[0] < 3:
         raise Exception("Python version 3.x required")
@@ -18,14 +18,16 @@ def main(system, oh_select, gbt_list, relay_number, niter):
 
     # Get first list of registers to compare
     print ("Turning on power and getting initial list of registers and turning off power")
-    set_status = relay_object.relay_set(relay_number, 1)
-    if not set_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    read_status = relay_object.relay_read(relay_number)
-    if not read_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
+    for relay_number in relay_number_list:
+        set_status = relay_object.relay_set(relay_number, 1)
+        if not set_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        read_status = relay_object.relay_read(relay_number)
+        if not read_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        sleep (0.5)
     sleep(10)
 
     reg_list_boss = {}
@@ -54,14 +56,16 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         for reg in range(n_rw_reg):
             reg_list_sub[gbt][reg] = mpeek(reg)
 
-    set_status = relay_object.relay_set(relay_number, 0)
-    if not set_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    read_status = relay_object.relay_read(relay_number)
-    if not read_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
+    for relay_number in relay_number_list:
+        set_status = relay_object.relay_set(relay_number, 0)
+        if not set_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        read_status = relay_object.relay_read(relay_number)
+        if not read_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        sleep(0.5)
     sleep(10)
    
     n_error_backend_ready_boss = {}
@@ -94,14 +98,16 @@ def main(system, oh_select, gbt_list, relay_number, niter):
         print ("Iteration: %d\n"%(n+1))
 
         # Turn on relay
-        set_status = relay_object.relay_set(relay_number, 1)
-        if not set_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
-        read_status = relay_object.relay_read(relay_number)
-        if not read_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
+        for relay_number in relay_number_list:
+            set_status = relay_object.relay_set(relay_number, 1)
+            if not set_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            read_status = relay_object.relay_read(relay_number)
+            if not read_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            sleep(0.5)
         sleep(10)
 
         # Link reset
@@ -227,15 +233,16 @@ def main(system, oh_select, gbt_list, relay_number, niter):
 
         print ("")
         # Turn off relay
-        set_status = relay_object.relay_set(relay_number, 0)
-        if not set_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
-        read_status = relay_object.relay_read(relay_number)
-        if not read_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
-
+        for relay_number in relay_number_list:
+            set_status = relay_object.relay_set(relay_number, 0)
+            if not set_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            read_status = relay_object.relay_read(relay_number)
+            if not read_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            sleep(0.5)
         sleep (10) # To allow power supply to ramp down
 
     print ("\nEnd of powercycle iteration")
@@ -340,7 +347,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", nargs="+", dest="gbtid", help="gbtid = List of GBT IDs")
-    parser.add_argument("-r", "--relay_number", action="store", dest="relay_number", help="relay_number = Relay Number used")
+    parser.add_argument("-r", "--relay_number", action="store", dest="relay_number", nargs="+", help="relay_number = Relay Number used")
     parser.add_argument("-n", "--niter", action="store", dest="niter", default="1000", help="niter = Number of iterations (default=1000)")
     args = parser.parse_args()
 
@@ -373,21 +380,23 @@ if __name__ == "__main__":
         else:
             gbt_list["sub"].append(int(gbt))
 
-    relay_number = -9999
+    relay_number_list = []
     if args.relay_number is None:
-        print (Colors.YELLOW + "Enter Relay Number" + Colors.ENDC)
+        print (Colors.YELLOW + "Enter Relay Numbers" + Colors.ENDC)
         sys.exit()
-    relay_number = int(args.relay_number)
-    if relay_number not in range(0,8):
-        print (Colors.YELLOW + "Valid Relay Number: 0-7" + Colors.ENDC)
-        sys.exit()
+    for r in args.relay_number:
+        relay_number = int(r)
+        if relay_number not in range(0,8):
+            print (Colors.YELLOW + "Valid Relay Number: 0-7" + Colors.ENDC)
+            sys.exit()
+        relay_number_list.append(relay_number)
 
     # Initialization
     rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     try:
-        main(args.system, oh_select, gbt_list, relay_number, int(args.niter))
+        main(args.system, oh_select, gbt_list, relay_number_list, int(args.niter))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
