@@ -13,8 +13,8 @@ backend and frontend electronics.
 ├── Hog           ; HOG build system (submodule)
 ├── Top           ; directory for HOG projects
 ├── address_table ; xml address tables
-│   ├── boards    ;; board specific address tables
-│   ├── common    ;; common address tables (ttc etc.)
+│   ├── befe      ;; common address tables (ttc etc.)
+│   ├── csc       ;; CSC specific address tables
 │   └── gem       ;; GEM specific address tables
 ├── boards        ;; Board specific VHDL/BD/Constraints/IP
 │   ├── apex
@@ -22,11 +22,15 @@ backend and frontend electronics.
 │   ├── cvp13
 │   ├── ge11_oh
 │   ├── ge21_oh
-│   ├── glib
+│   ├── glib      ; GLIB support dropped
+│   └── x2o
 ├── common        ; Common sources (GEM + CSC + OH)
 │   ├── hdl
 │   └── ip
 ├── gem           ; GEM specific sources
+│   ├── hdl
+│   └── ip
+├── csc           ; CSC specific sources
 │   ├── hdl
 │   └── ip
 ├── IP_repository ; Folder for packaged Xilinx IP
@@ -48,6 +52,12 @@ In general, the process to build firmware from a fresh checkout consists of:
 ``` sh
 # shortcut to initialize git submodules
 make init 
+# creates a Vivado / ISE project 
+make create_<project_name>
+# Launch synthesis + implementation + bitstream generation
+make impl_<project_name>
+
+# Alternatively the above can be achieved by:
 # creates a Vivado / ISE project 
 Hog/CreateProject.sh <project name> 
 # Launches synthesis + implementation 
