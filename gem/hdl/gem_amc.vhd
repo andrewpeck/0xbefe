@@ -221,6 +221,8 @@ architecture gem_amc_arch of gem_amc is
     signal lpgbt_reset_tx               : std_logic;
     signal lpgbt_reset_rx               : std_logic;
 
+    signal gbt_prbs_tx_en               : std_logic;
+
     --== GBT elinks ==--
     signal sca_tx_data_arr              : t_std2_array(g_NUM_OF_OHs - 1 downto 0);
     signal sca_rx_data_arr              : t_std2_array(g_NUM_OF_OHs - 1 downto 0);
@@ -631,6 +633,7 @@ begin
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
             vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
             gbt_ic_rx_use_ec_o          => gbt_ic_rx_use_ec,
+            gbt_prbs_tx_en_o            => gbt_prbs_tx_en,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
@@ -759,8 +762,8 @@ begin
                 tx_data_arr_i               => gbt_tx_data_arr,
                 tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
 
---                rx_bitslip_cnt_i            => gbt_rx_bitslip_arr,
---                rx_bitslip_auto_i           => gbt_rx_bitslip_auto_arr,
+                rx_bitslip_cnt_i            => gbt_rx_bitslip_arr,
+                rx_bitslip_auto_i           => gbt_rx_bitslip_auto_arr,
                 rx_data_valid_arr_o         => gbt_rx_valid_arr,
                 rx_data_arr_o               => gbt_rx_data_arr,
                 rx_data_widebus_arr_o       => gbt_rx_data_widebus_arr,
@@ -770,6 +773,7 @@ begin
                 mgt_tx_data_arr_o           => gt_gbt_tx_data_arr_o,
                 mgt_rx_data_arr_i           => gt_gbt_rx_data_arr_i,
 
+                prbs_mode_en_i              => gbt_prbs_tx_en,
                 link_status_arr_o           => gbt_link_status_arr
             );
     end generate;
@@ -801,6 +805,7 @@ begin
                 mgt_rx_data_arr_i    => gt_gbt_rx_data_arr_i,
                 tx_data_arr_i        => lpgbt_tx_data_arr,
                 rx_data_arr_o        => lpgbt_rx_data_arr,
+                prbs_mode_en_i       => gbt_prbs_tx_en,
                 link_status_arr_o    => gbt_link_status_arr
             );
     end generate;

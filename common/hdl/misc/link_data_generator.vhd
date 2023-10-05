@@ -6,7 +6,6 @@
 -- Module Name:    LINK_DATA_GENERATOR
 -- Description:    This module accepts AXI stream, and produces frontend DAQ optical link data, multiple links of various widths are supported (supported protocols are: VFAT and DMB).
 --                 It is intended to be used to feed the DAQ module with raw CSC or GEM data either directly through the fabric or through the optical links
---                 TODO: define the protocol on the AXI stream interface  
 --                 Note: all user registers are on AXI clk domain, so it's expected that the ipb_user_clk will be set to axi_clk_i
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -48,19 +47,18 @@ entity link_data_generator is
         axis_tdata_i            : in  std_logic_vector(g_AXIS_WIDTH - 1 downto 0);
         axis_tlast_i            : in  std_logic;
         axis_tvalid_i           : in  std_logic;
-        axis_tkeep_i            : in  std_logic_vector((g_AXIS_WIDTH / 8) - 1 downto 0);
-        axis_ready_o            : out std_logic;
+        axis_mty_i              : in  std_logic_vector(5 downto 0);
+        axis_zero_byte_i        : in  std_logic;
+        axis_qid_i              : in  std_logic_vector(10 downto 0);
+        axis_tready_o            : out std_logic;
         
         -- link interface
         link_clk_arr_i          : in  std_logic_vector(g_NUM_LINKS-1 downto 0);
         link_data_arr_o         : out t_mgt_64b_tx_data_arr(g_NUM_LINKS-1 downto 0);
 
         -- TTC
-        ttc_clks_i              : in t_ttc_clks;
-        ttc_cmds_i              : in t_ttc_cmds;
-        ttc_daq_cntrs_i         : in t_ttc_daq_cntrs;
-        ttc_l1a_req_o           : out std_logic;
-        ttc_resync_req_o        : out std_logic;
+        ttc_clks_i              : in  t_ttc_clks;
+        ttc_cmds_o              : out t_ttc_cmds;
 
         -- IPbus
         ipb_reset_i             : in  std_logic;
@@ -75,6 +73,7 @@ architecture link_data_generator_arch of link_data_generator is
     constant FIFO_READ_WIDTH        : integer := 64;
     constant TTC_FIFO_WIDTH         : integer := 42;
     constant TTC_FIFO_DEPTH         : integer := 512;
+    constant TTC_FIFO_DATA_CNT_WIDTH: integer := log2ceil(TTC_FIFO_DEPTH);
     constant CONTROL_WORD_MARKER    : std_logic_vector(63 downto 0) := x"befebefebefebefe";
     constant LINK_WORD_MARKER       : std_logic_vector(7 downto 0) := x"bc";
 
@@ -89,9 +88,6 @@ architecture link_data_generator_arch of link_data_generator is
     
     --==== axi related signals ====--
     signal axis_ready           : std_logic;
-    signal axi_fifo_wr_en       : std_logic;
-    signal axi_fifo_din         : std_logic_vector(g_AXIS_WIDTH - 1 downto 0);
-    signal axi_fifo_sel         : integer range 0 to g_NUM_LINKS - 1;
     signal axi_link_num_err     : std_logic;
 
     --==== general controls ====--
@@ -103,7 +99,7 @@ architecture link_data_generator_arch of link_data_generator is
     signal ttc_fifo_wr_en           : std_logic;
     signal ttc_fifo_din             : std_logic_vector(TTC_FIFO_WIDTH - 1 downto 0);
     signal ttc_fifo_full            : std_logic;
-    signal ttc_fifo_wr_data_cnt     : std_logic_vector(15 downto 0);
+    signal ttc_fifo_wr_data_cnt     : std_logic_vector(15 downto 0) := (others => '0');
     signal ttc_fifo_ovf             : std_logic;
     signal ttc_fifo_ovf_latch       : std_logic;
 
@@ -116,17 +112,21 @@ architecture link_data_generator_arch of link_data_generator is
     
     --==== TTC control logic ====--
     signal ttc_first_resync_done    : std_logic;
+    signal ttc_reset_bc0            : std_logic;
+    signal ttc_first_resync_done_axi: std_logic;
     signal ttc_dout_resync          : std_logic;
     signal ttc_dout_l1a             : std_logic;
     signal ttc_dout_orbit           : std_logic_vector(27 downto 0);
     signal ttc_dout_bx              : std_logic_vector(11 downto 0);
+
+    signal ttc_daq_cntrs            : t_ttc_daq_cntrs := TTC_DAQ_CNTRS_NULL;
+    signal ttc_cmds                 : t_ttc_cmds := TTC_CMDS_NULL;
     
     --==== link fifo controls ====--    
-    type t_axi_fifo_din_arr is array(integer range <>) of std_logic_vector(g_AXIS_WIDTH - 1 downto 0);
     signal fifo_wr_en           : std_logic_vector(g_NUM_LINKS - 1 downto 0);
-    signal fifo_din             : t_axi_fifo_din_arr(g_NUM_LINKS - 1 downto 0);
+    signal fifo_din             : std_logic_vector(g_AXIS_WIDTH - 1 downto 0);
     signal fifo_full            : std_logic_vector(g_NUM_LINKS - 1 downto 0);
-    signal fifo_wr_data_cnt     : t_std16_array(g_NUM_LINKS - 1 downto 0);
+    signal fifo_wr_data_cnt     : t_std16_array(g_NUM_LINKS - 1 downto 0) := (others => (others => '0'));
     signal fifo_ovf             : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal fifo_ovf_latch       : std_logic_vector(g_NUM_LINKS - 1 downto 0);
 
@@ -139,7 +139,8 @@ architecture link_data_generator_arch of link_data_generator is
     signal fifo_unf_latch_axi   : std_logic_vector(g_NUM_LINKS - 1 downto 0);
 
     --==== link status and controls ====--    
-    signal link_word_err_axi    : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+    signal link_word_err_axi    : std_logic_vector(g_NUM_LINKS - 1 downto 0) := (others => '0');
+    signal link_evt_cnt_arr_axi : t_std32_array(g_NUM_LINKS - 1 downto 0) := (others => (others => '0'));
 
     ------ Register signals begin (this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py -- do not edit)
     ------ Register signals end ----------------------------------------------
@@ -159,7 +160,7 @@ begin
         )
         port map(
             clk_i          => axi_clk_i,
-            rst_i          => reset_axi_tmp,
+            rst_i          => '0',
             pulse_length_i => x"f",
             pulse_i        => reset_axi_tmp,
             pulse_o        => reset_axi
@@ -167,7 +168,8 @@ begin
 
     g_synch_reset_ttc: entity work.synch generic map(N_STAGES => 4, IS_RESET => true) port map(async_i => reset_axi, clk_i => ttc_clks_i.clk_40, sync_o => reset_ttc);
     
-    axis_ready_o <= axis_ready;
+    axis_tready_o <= axis_ready;
+    ttc_cmds_o <= ttc_cmds;
 
     ---------------------- axi stream section ---------------------- 
 
@@ -186,6 +188,11 @@ begin
     --     * it could be nice to use some of the upper bits (which are filled with befe now) to have a link bitmask instructing to which links an empty event should be inserted for the given Orbit/BX
     --       this would save on transactions to insert empty events, which can be quite costly
     --       TODO: implement "insert empty" feature in the link_data_generator
+    -- NEW NEW NEW
+    -- The "control" word idea was dropped and qid is used instead to select the FIFO to write to:
+    -- qid = 0 refers to the TTC fifo, where the data format remains the same as described above
+    -- qid > 0 select a corresponding link fifo where link id = qid - 1 
+    --
     -- DAQ words are just directly written to the pre-selected link FIFO
     -- before the actual DAQ data for every event there must always be a 64bit special "link" word (at the top of the AXI word), which also gets written in the FIFO
     -- the "link" word follows this format:
@@ -201,58 +208,37 @@ begin
         if rising_edge(axi_clk_i) then
             if reset_axi = '1' then
                 axis_ready <= '0';
-                axi_fifo_sel <= 0;
-                axi_fifo_wr_en <= '0';
-                axi_fifo_din <= (others => '0');
                 ttc_fifo_wr_en <= '0';
-                ttc_fifo_din <= (others => '0');
+                ttc_fifo_din <= axis_tdata_i(49 downto 8);
+                fifo_wr_en <= (others => '0');
+                fifo_din <= axis_tdata_i;
                 axi_link_num_err <= '0';
             else
                 axis_ready <= '1';
+                ttc_fifo_din <= axis_tdata_i(49 downto 8);
+                fifo_din <= axis_tdata_i;
 
-                axi_fifo_wr_en <= '0';
-                axi_fifo_din <= (others => '0');
-                ttc_fifo_wr_en <= '0';
-                ttc_fifo_din <= (others => '0');
-
-                if axis_tvalid_i = '1' then
-                    -- control word
-                    if axis_tdata_i(g_AXIS_WIDTH - 1 downto g_AXIS_WIDTH - 64) = CONTROL_WORD_MARKER then
-
-                        if to_integer(unsigned(axis_tdata_i(7 downto 0))) < g_NUM_LINKS then
-                            axi_fifo_sel <= to_integer(unsigned(axis_tdata_i(7 downto 0)));
-                        else
-                            axi_fifo_sel <= 0;
-                            axi_link_num_err <= '1';
-                        end if;
-
-                        if (axis_tdata_i(48) or axis_tdata_i(49)) = '1' then
-                            ttc_fifo_wr_en <= '1';
-                            ttc_fifo_din <= axis_tdata_i(49 downto 8); 
-                        end if;
-                        
-                    -- daq data
-                    else
-                        axi_fifo_wr_en <= '1';
-                        axi_fifo_din <= axis_tdata_i;
-                    end if;
+                if to_integer(unsigned(axis_qid_i)) = 0 then
+                    ttc_fifo_wr_en <= axis_tvalid_i and axis_ready;
+                else
+                    ttc_fifo_wr_en <= '0';
                 end if;
-            end if;
-        end if;
-    end process;
 
-    -- register and mux the data and wr_en to the fifos
-    process(axi_clk_i)
-    begin
-        if rising_edge(axi_clk_i) then
-            fifo_wr_en(axi_fifo_sel) <= axi_fifo_wr_en;
-            fifo_din(axi_fifo_sel) <= axi_fifo_din;
+                for link in 0 to g_NUM_LINKS - 1 loop
+                    if to_integer(unsigned(axis_qid_i)) = link + 1 then
+                        fifo_wr_en(link) <= axis_tvalid_i and axis_ready;
+                    else
+                        fifo_wr_en(link) <= '0';
+                    end if;
+                end loop;
+                
+            end if;
         end if;
     end process;
 
     ---------------------- DAQ counters delay for latency emulation ---------------------- 
 
-    daq_cnt <= ttc_daq_cntrs_i.orbit & ttc_daq_cntrs_i.bx;
+    daq_cnt <= ttc_daq_cntrs.orbit(27 downto 0) & ttc_daq_cntrs.bx when ttc_first_resync_done = '1' else (others => '0');
     
     g_daq_cnt_dly_bits : for i in 0 to 39 generate
         i_daq_cnt_shift_reg : entity work.shift_reg
@@ -278,6 +264,8 @@ begin
         constant LINK_WIDTH             : integer := g_LINK_WIDTHS(link);
         constant NUM_SUBWORDS           : integer := FIFO_READ_WIDTH / LINK_WIDTH;
     
+        constant FIFO_DATA_CNT_WIDTH    : integer := log2ceil(g_LINK_FIFO_DEPTHS(link));
+    
         -- daq cnt sync fifo
         signal daq_cnt_dout             : std_logic_vector(39 downto 0);
         signal daq_cnt_orbit            : std_logic_vector(27 downto 0);
@@ -300,6 +288,10 @@ begin
         signal link_data_valid          : std_logic := '0';
         signal link_empty_evt           : std_logic := '0';
         signal link_word_err            : std_logic := '0';
+        signal link_evt_cnt             : unsigned(31 downto 0) := (others => '0');
+        
+        signal odd_cycle                : std_logic := '0';
+        
     begin
     
         assert LINK_WIDTH <= FIFO_READ_WIDTH report "link data generator: link widths must be less than or equal to FIFO_READ_WIDTH" severity failure;
@@ -317,7 +309,7 @@ begin
                 READ_MODE           => "fwft",
                 FIFO_READ_LATENCY   => 0,
                 FULL_RESET_VALUE    => 0,
-                USE_ADV_FEATURES    => x"0000",
+                USE_ADV_FEATURES    => "0000",
                 READ_DATA_WIDTH     => 40,
                 CDC_SYNC_STAGES     => 4,
                 WR_DATA_COUNT_WIDTH => 1, -- not used
@@ -368,10 +360,10 @@ begin
                 READ_MODE           => "fwft",
                 FIFO_READ_LATENCY   => 0,
                 FULL_RESET_VALUE    => 0,
-                USE_ADV_FEATURES    => x"0905", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 0; OVERFLOW(0) = 1,
+                USE_ADV_FEATURES    => "0905", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 0; OVERFLOW(0) = 1,
                 READ_DATA_WIDTH     => FIFO_READ_WIDTH,
                 CDC_SYNC_STAGES     => 4,
-                WR_DATA_COUNT_WIDTH => 16,
+                WR_DATA_COUNT_WIDTH => FIFO_DATA_CNT_WIDTH,
                 PROG_FULL_THRESH    => 10, -- not used
                 RD_DATA_COUNT_WIDTH => 1, -- not used
                 PROG_EMPTY_THRESH   => 10, -- not used
@@ -383,10 +375,10 @@ begin
                 rst           => reset_axi,
                 wr_clk        => axi_clk_i,
                 wr_en         => fifo_wr_en(link),
-                din           => fifo_din(link),
+                din           => fifo_din,
                 full          => fifo_full(link),
                 prog_full     => open,
-                wr_data_count => fifo_wr_data_cnt(link),
+                wr_data_count => fifo_wr_data_cnt(link)(FIFO_DATA_CNT_WIDTH - 1 downto 0),
                 overflow      => fifo_ovf(link),
                 wr_rst_busy   => open,
                 almost_full   => open,
@@ -449,12 +441,13 @@ begin
                     link_data <= (others => '0');
                     link_word_err <= '0';
                     fifo_rd_en(link) <= '0';
+                    odd_cycle <= '0';
+                    link_evt_cnt <= (others => '0');
                 else
                     
                     fifo_rd_en(link) <= '0';
-                    link_data_valid <= '0';
-                    link_data <= (others => '0');
                     link_empty_evt <= '0';
+                    odd_cycle <= not odd_cycle;
                     
                     -- IDLE
                     if word_cntdown = x"000" and subword_cntdown = "000" then
@@ -466,11 +459,12 @@ begin
                             end if;
                             
                             -- start sending the new event
-                            if (unsigned(dout_orbit) >= unsigned(daq_cnt_orbit)) and (unsigned(dout_bx) >= unsigned(daq_cnt_bx)) then
+                            if (unsigned(daq_cnt_orbit) >= unsigned(dout_orbit)) and (unsigned(daq_cnt_bx) >= unsigned(dout_bx)) then
                                 fifo_rd_en(link) <= '1';
                                 link_empty_evt <= dout_empty_evt;
                                 word_cntdown <= unsigned(dout_num_words);
                                 words_extra <= unsigned(dout_num_extra);
+                                link_evt_cnt <= link_evt_cnt + 1;
                                 if unsigned(dout_num_words) > unsigned(dout_num_extra) then
                                     subword_cntdown <= to_unsigned(NUM_SUBWORDS - 1, 3);
                                 else
@@ -479,6 +473,9 @@ begin
                             end if; 
                             
                         end if;
+                        
+                        link_data_valid <= '0';
+                        link_data <= (others => '0');
                         
                     -- SENDING DATA
                     else
@@ -498,6 +495,8 @@ begin
                         
                         if word_cntdown > words_extra then
                             link_data_valid <= '1';
+                        else
+                            link_data_valid <= '0';
                         end if;
                         
                         
@@ -507,8 +506,22 @@ begin
         end process;
     
         g_synch_link_word_err: entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => link_word_err, clk_i => axi_clk_i, sync_o => link_word_err_axi(link));
+            
+        g_synch_evt_cnt : xpm_cdc_gray
+            generic map(
+                DEST_SYNC_FF          => 4,
+                WIDTH                 => 32
+            )
+            port map(
+                src_clk      => link_clk_arr_i(link),
+                src_in_bin   => std_logic_vector(link_evt_cnt),
+                dest_clk     => axi_clk_i,
+                dest_out_bin => link_evt_cnt_arr_axi(link)
+            );
     
         ---------------------- link sender ----------------------
+
+        assert g_FW_FLAVOR /= x"1" or LINK_WIDTH = 16 or LINK_WIDTH = 32 report "Link data generator error: In CSC flavor supported link widths are 16 (DMB) or 32 (ODMB7/5), but got LINK_WIDTH = " & integer'image(LINK_WIDTH) & " for link #" & integer'image(link) severity failure;
     
         process(link_clk_arr_i(link))
         begin
@@ -528,20 +541,36 @@ begin
                     link_data_arr_o(link).txcharisk <= (others => '0');
                 
                 -- send an empty event
-                elsif link_empty_evt = '1' then
+--                elsif link_empty_evt = '1' then
                 -- send IDLEs
                 else
                     -- CSC
                     if g_FW_FLAVOR = x"1" then
-                        link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= x"50bc"; zzzz
-                        link_data_arr_o(link).txcharisk(0) <= '1';
+                        -- TODO: implement ODMB7/5 IDLE patterns here
+                        if LINK_WIDTH = 16 then
+                            -- DMB
+                            link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= x"50bc";
+                            link_data_arr_o(link).txcharisk(1 downto 0) <= "01";
+                        elsif LINK_WIDTH = 32 then
+                            -- ODMB7/5
+                            if odd_cycle = '0' then
+                                link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= x"505050bc";
+                            else
+                                link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= x"606060bc";
+                            end if;
+                            link_data_arr_o(link).txcharisk(3 downto 0) <= "0001";
+                        else
+                        end if;
+                        
                     -- GEM
                     elsif g_FW_FLAVOR = x"0" then
-                         do VFAT idle patterns here
+--                      TODO: implement VFAT idle patterns here
+                        link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= (others => '0');
+                        link_data_arr_o(link).txcharisk <= (others => '0');
                     -- ?
                     else
-                        link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= x"50bc"; zzzz
-                        link_data_arr_o(link).txcharisk(0) <= '1';
+                        link_data_arr_o(link).txdata(LINK_WIDTH - 1 downto 0) <= (others => '0');
+                        link_data_arr_o(link).txcharisk <= (others => '0');
                     end if;                    
                 end if;
                 
@@ -561,10 +590,10 @@ begin
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
-            USE_ADV_FEATURES    => x"0105", -- VALID(12) = 0 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 0; OVERFLOW(0) = 1,
+            USE_ADV_FEATURES    => "0105", -- VALID(12) = 0 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 1; PROG_FULL(1) = 0; OVERFLOW(0) = 1,
             READ_DATA_WIDTH     => TTC_FIFO_WIDTH,
             CDC_SYNC_STAGES     => 4,
-            WR_DATA_COUNT_WIDTH => 16,
+            WR_DATA_COUNT_WIDTH => TTC_FIFO_DATA_CNT_WIDTH,
             PROG_FULL_THRESH    => 10, -- not used
             RD_DATA_COUNT_WIDTH => 1, -- not used
             PROG_EMPTY_THRESH   => 10, -- not used
@@ -579,7 +608,7 @@ begin
             din           => ttc_fifo_din,
             full          => ttc_fifo_full,
             prog_full     => open,
-            wr_data_count => ttc_fifo_wr_data_cnt,
+            wr_data_count => ttc_fifo_wr_data_cnt(TTC_FIFO_DATA_CNT_WIDTH - 1 downto 0),
             overflow      => ttc_fifo_ovf,
             wr_rst_busy   => open,
             almost_full   => open,
@@ -619,7 +648,8 @@ begin
             latch_o => ttc_fifo_unf_latch
         );
 
-    g_synch_unf_axi: entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => ttc_fifo_unf_latch, clk_i => ttc_clks_i.clk_40, sync_o => ttc_fifo_unf_latch_axi);
+    g_synch_unf_axi: entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => ttc_fifo_unf_latch, clk_i => axi_clk_i, sync_o => ttc_fifo_unf_latch_axi);
+    g_synch_first_resync_axi: entity work.synch generic map(N_STAGES => 4, IS_RESET => false) port map(async_i => ttc_first_resync_done, clk_i => axi_clk_i, sync_o => ttc_first_resync_done_axi);
 
     -- TTC control logic
     process(ttc_clks_i.clk_40)
@@ -628,15 +658,29 @@ begin
         if rising_edge(ttc_clks_i.clk_40) then
             if reset_ttc = '1' then
                 ttc_first_resync_done <= '0';
-                ttc_l1a_req_o <= '0';
-                ttc_resync_req_o <= '0';
+                ttc_daq_cntrs <= TTC_DAQ_CNTRS_NULL;
+                ttc_cmds <= TTC_CMDS_NULL;
                 ttc_fifo_rd_en <= '0';
+                ttc_reset_bc0 <= '0';
             else
-                ttc_l1a_req_o <= '0';
-                ttc_resync_req_o <= '0';
+                ttc_cmds <= TTC_CMDS_NULL;
                 ttc_fifo_rd_en <= '0';
 
-                if (ttc_dout_orbit = ttc_daq_cntrs_i.orbit(27 downto 0)) and (ttc_dout_bx = ttc_daq_cntrs_i.bx) then
+                if ttc_reset_bc0 = '1' then
+                    ttc_reset_bc0 <= '0';
+                    ttc_daq_cntrs <= TTC_DAQ_CNTRS_NULL;
+                    ttc_cmds.bc0 <= '1';
+                elsif ttc_daq_cntrs.bx = std_logic_vector(unsigned(C_TTC_NUM_BXs) - 1) then
+                    ttc_cmds.bc0 <= '1';
+                    ttc_daq_cntrs.bx <= (others => '0');
+                    ttc_daq_cntrs.orbit <= std_logic_vector(unsigned(ttc_daq_cntrs.orbit) + 1);
+                else
+                    ttc_daq_cntrs.bx <= std_logic_vector(unsigned(ttc_daq_cntrs.bx) + 1);
+                end if;
+
+                -- TODO: rework the reading of the TTC fifo, because this cannot handle consecutive L1As
+                -- whenever the is a time match, it sets the rd_en, but the dout will only change one clock after that, at which point it's already too late -- the counters have moved on
+                if (ttc_dout_orbit = ttc_daq_cntrs.orbit(27 downto 0)) and (ttc_dout_bx = ttc_daq_cntrs.bx) then
                     time_match := '1';
                 else
                     time_match := '0';
@@ -646,12 +690,17 @@ begin
                     -- for the first ever resync after reset we do not require a time match
                     if  ttc_dout_resync = '1' and (time_match = '1' or ttc_first_resync_done = '0') then
                         ttc_first_resync_done <= '1';
-                        ttc_resync_req_o <= '1';
+                        if ttc_first_resync_done = '0' then
+                            ttc_reset_bc0 <= '1'; 
+                            ttc_cmds.oc0 <= '1';
+                            ttc_daq_cntrs <= TTC_DAQ_CNTRS_NULL;
+                        end if;
+                        ttc_cmds.resync <= '1';
                         ttc_fifo_rd_en <= '1';
                     end if;
                     
                     if ttc_dout_l1a = '1' and time_match = '1' then
-                        ttc_l1a_req_o <= '1';
+                        ttc_cmds.l1a <= '1';
                         ttc_fifo_rd_en <= '1'; 
                     end if;
                 end if;

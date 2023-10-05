@@ -11,6 +11,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_misc.all;
 
 -- Xilinx devices library:
 library unisim;
@@ -64,6 +65,8 @@ entity gbt is
         -- GBT RX --              
         --========-- 
 
+        rx_bitslip_cnt_i            : in  t_std6_array(NUM_LINKS - 1 downto 0);
+        rx_bitslip_auto_i           : in  std_logic_vector(NUM_LINKS - 1 downto 0);
         rx_data_valid_arr_o         : out std_logic_vector(NUM_LINKS - 1 downto 0);
         rx_data_arr_o               : out t_gbt_frame_array(NUM_LINKS - 1 downto 0);
         rx_data_widebus_arr_o       : out t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
@@ -81,6 +84,7 @@ entity gbt is
         --   Status  --              
         --===========-- 
         
+        prbs_mode_en_i              : in  std_logic;
         link_status_arr_o           : out t_gbt_link_status_arr(NUM_LINKS - 1 downto 0)
         
     );
@@ -108,6 +112,7 @@ architecture gbt_arch of gbt is
     signal tx_phaligned                 : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal tx_phalign_done              : std_logic_vector(NUM_LINKS - 1 downto 0);
 
+    signal tx_prbs_data                 : std_logic_vector(79 downto 0);
     signal tx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
     signal tx_data_encoded_arr          : t_std120_array(NUM_LINKS - 1 downto 0);
     signal tx_data_encoded_slipped_arr  : t_std120_array(NUM_LINKS - 1 downto 0);
@@ -136,6 +141,9 @@ architecture gbt_arch of gbt is
    
     signal rx_data_arr                  : t_gbt_frame_array(NUM_LINKS - 1 downto 0);
     signal rx_data_widebus_arr          : t_std32_array(NUM_LINKS - 1 downto 0); -- extra 32 bits of data if RX_ENCODING is set to WIDEBUS
+    signal rx_prbs_err_data_arr         : t_std80_array(NUM_LINKS - 1 downto 0);
+    signal rx_prbs_err_arr              : std_logic_vector(NUM_LINKS - 1 downto 0);
+    signal rx_prbs_err_cnt_arr          : t_std16_array(NUM_LINKS - 1 downto 0);    
     
     signal rx_link_good_arr             : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_ready_arr                 : std_logic_vector(NUM_LINKS - 1 downto 0);
@@ -144,7 +152,7 @@ architecture gbt_arch of gbt is
     signal rx_unf_arr                   : std_logic_vector(NUM_LINKS - 1 downto 0);
 
     signal rx_error_detect_flag         : std_logic_vector(NUM_LINKS - 1 downto 0);
-    signal rx_error_cnt                 : t_std8_array(NUM_LINKS - 1 downto 0);
+    signal rx_error_cnt                 : t_std16_array(NUM_LINKS - 1 downto 0);
 
     signal rx_framealign_reset          : std_logic_vector(NUM_LINKS - 1 downto 0);
     signal rx_header_flag               : std_logic_vector(NUM_LINKS - 1 downto 0);
@@ -215,12 +223,45 @@ begin                                   --========####   Architecture Body   ###
         end generate;
 
         gen_no_rx_sync_fifos : if not g_USE_RX_SYNC_FIFOS generate
-            
-            mgt_rx_data_arr(i) <= mgt_rx_data_arr_i(i);
-            rx_word_clk_arr(i) <= rx_word_clk_arr_i(i);
+            signal mgt_rx_data_arr_i_reg    : t_std40_array(NUM_LINKS - 1 downto 0);
+        begin
+    
             link_status_arr_o(i).gbt_rx_sync_status.had_ovf <= '0';
             link_status_arr_o(i).gbt_rx_sync_status.had_unf <= '0';
             mgt_rx_sync_valid_arr(i) <= '1';
+                        
+            -- we use a bitslipper here to delay the data from the MGT, the pattern finder will then use rxslide to shift the user clock to align the frame
+            -- so different bitslip settings will result in different RXUSRCLK phase where the frame header is aligned
+            -- so we can use the different bitslip values to effectively position the usrclk in the center of the eye of the sampling clock in the gearbox 
+            i_rx_bitslip: entity work.bitslip
+                generic map(
+                    g_DATA_WIDTH           => 40,
+                    g_SLIP_CNT_WIDTH       => 6,
+                    g_TRANSMIT_LOW_TO_HIGH => false
+                )
+                port map(
+                    clk_i      => rx_word_clk_arr(i),
+                    slip_cnt_i => rx_bitslip_cnt_i(i),
+                    data_i     => mgt_rx_data_arr_i_reg(i),
+                    data_o     => mgt_rx_data_arr(i)
+                );            
+
+            -- if rx is standard, there's a fifo cdc downstream, so keep the mgt clock here
+            g_rx_no_opt : if RX_OPTIMIZATION = STANDARD generate
+                mgt_rx_data_arr_i_reg(i) <= mgt_rx_data_arr_i(i); 
+                rx_word_clk_arr(i) <= rx_word_clk_arr_i(i);
+            end generate;
+
+            -- if rx is lat optimized, already use the common clock in the bitslipper, and let the rxslide adjust the timing based on the slip count
+            g_rx_opt : if RX_OPTIMIZATION = LATENCY_OPTIMIZED generate
+                rx_word_clk_arr(i) <= rx_word_common_clk_i;
+                process(rx_word_common_clk_i)
+                begin
+                    if rising_edge(rx_word_common_clk_i) then
+                        mgt_rx_data_arr_i_reg(i) <= mgt_rx_data_arr_i(i);
+                    end if;
+                end process;
+            end generate;
             
         end generate;
             
@@ -299,7 +340,7 @@ begin                                   --========####   Architecture Body   ###
 		    );
 		
 		mgt_tx_data_arr_o(i) <= tx_word_data_arr(i);
-		tx_data_arr(i)       <= tx_data_arr_i(i);
+        tx_data_arr(i) <= tx_data_arr_i(i) when prbs_mode_en_i = '0' else tx_data_arr_i(i)(83 downto 80) & tx_prbs_data;
 		
 		link_status_arr_o(i).gbt_tx_gearbox_ready <= tx_gearbox_aligned(i) and tx_gearbox_align_done(i);
 		link_status_arr_o(i).gbt_tx_ready <= tx_gearbox_aligned(i) and tx_gearbox_align_done(i);
@@ -390,7 +431,7 @@ begin                                   --========####   Architecture Body   ###
             
         i_err_cnt: entity work.counter
             generic map(
-                g_COUNTER_WIDTH  => 8,
+                g_COUNTER_WIDTH  => 16,
                 g_ALLOW_ROLLOVER => false
             )
             port map(
@@ -502,7 +543,62 @@ begin                                   --========####   Architecture Body   ###
                 latch_o => link_status_arr_o(i).gbt_rx_header_had_unlock
             );
         
+        --------- PRBS31 checker ---------
+
+        i_rx_prbs_check : entity work.PRBS_ANY
+            generic map(
+                CHK_MODE    => true,
+                INV_PATTERN => true,
+                POLY_LENGHT => 31,
+                POLY_TAP    => 28,
+                NBITS       => 80
+            )
+            port map(
+                RST      => reset_i,
+                CLK      => rx_frame_clk_i,
+                DATA_IN  => rx_data_arr(i)(79 downto 0),
+                EN       => '1',
+                DATA_OUT => rx_prbs_err_data_arr(i)
+            );
+
+        rx_prbs_err_arr(i) <= or_reduce(rx_prbs_err_data_arr(i));
+        
+        i_prbs_cnt : entity work.counter
+            generic map(
+                g_COUNTER_WIDTH    => 16,
+                g_ALLOW_ROLLOVER   => false
+            )
+            port map(
+                ref_clk_i => rx_frame_clk_i,
+                reset_i   => reset_i or cnt_reset_i,
+                en_i      => rx_prbs_err_arr(i),
+                count_o   => rx_prbs_err_cnt_arr(i)
+            );
+        
+        link_status_arr_o(i).gbt_prbs_err_cnt <= rx_prbs_err_cnt_arr(i); 
+
+        
 	end generate;
+
+    --============================================================--
+    --                       TX PRBS31 generator                  --
+    --============================================================--
+
+    i_tx_prbs : entity work.PRBS_ANY
+        generic map(
+            CHK_MODE    => false,
+            INV_PATTERN => true,
+            POLY_LENGHT => 31,
+            POLY_TAP    => 28,
+            NBITS       => 80
+        )
+        port map(
+            RST      => reset_i,
+            CLK      => tx_frame_clk_i,
+            DATA_IN  => x"00000000000000000000",
+            EN       => '1',
+            DATA_OUT => tx_prbs_data
+        );
 
    --=====================================================================================--
 end gbt_arch;

@@ -73,6 +73,7 @@ common/hdl/misc/gbe_tx_driver.vhd
 #common/hdl/misc/board_system.vhd             <-- use the generated version specific to the project
 common/hdl/misc/ten_gbe_tx_mac_pcs.vhd
 common/hdl/misc/ten_gbe_tx_data_formatter.vhd
+#common/hdl/misc/link_data_generator.vhd             <-- use the generated version specific to the project
 
 # Tests
 common/hdl/tests/eth_test.vhd

@@ -23,7 +23,7 @@ package project_config is
 
     constant CFG_GEM_STATION            : t_int_per_gem := (others => 2);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
     constant CFG_OH_VERSION             : t_int_per_gem := (others => 2);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => 1); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => 2); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
     constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (others => 2);  -- number of GBTs per OH
     constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (others => 12); -- number of VFATs per OH
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => 1);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)
@@ -40,8 +40,8 @@ package project_config is
     constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => false);
     constant CFG_SPY_LINK : t_spy_link_config := (0 => 8, others => TXRX_NULL);
 
-    constant CFG_USE_TTC_TX_LINK : boolean := false;
-    constant CFG_TTC_LINKS : t_int_array(0 to 3) := (12, 13, 14, 15);   
+    constant CFG_USE_TTC_TX_LINK : boolean := true;
+    constant CFG_TTC_LINKS : t_int_array(0 to 3) := (4, 5, 6, 7);   
 
     constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
     constant CFG_TTC_GBTX_LINK      : integer := 4;   
@@ -76,10 +76,10 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 78
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 79
         ----------------------------- quad 226 (SLR 1) -----------------------------
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 80
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 81
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 82
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 83
+        (mgt_type => CFG_MGT_TTC, qpll_inst_type => QPLL_LPGBT      , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 80
+        (mgt_type => CFG_MGT_TTC, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 81
+        (mgt_type => CFG_MGT_TTC, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 82
+        (mgt_type => CFG_MGT_TTC, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 83
         ----------------------------- quad 227 (SLR 1) -----------------------------
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_GBTX       , qpll_idx => 12, refclk0_idx => 21, refclk1_idx => 11, is_master => true, chbond_master => 0, ibert_inst => false), -- MGT 84
         (mgt_type => CFG_MGT_GBTX, qpll_inst_type => QPLL_NULL       , qpll_idx => 12, refclk0_idx => 21, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 85

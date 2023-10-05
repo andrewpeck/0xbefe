@@ -314,9 +314,10 @@ package common_pkg is
         gbt_rx_header_locked        : std_logic;
         gbt_rx_header_had_unlock    : std_logic;
         gbt_rx_gearbox_ready        : std_logic;
-        gbt_rx_correction_cnt       : std_logic_vector(7 downto 0);
+        gbt_rx_correction_cnt       : std_logic_vector(15 downto 0);
         gbt_rx_correction_flag      : std_logic;
         gbt_rx_num_bitslips         : std_logic_vector(7 downto 0);
+        gbt_prbs_err_cnt            : std_logic_vector(15 downto 0);
     end record;
 
     type t_gbt_link_status_arr is array(integer range <>) of t_gbt_link_status;    

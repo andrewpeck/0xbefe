@@ -19,6 +19,9 @@
           description="If a frame is received with destination MAC that does not match any MAC address of any valid route, the frame will be routed to the port defined in this register.
                        If the value in this register is higher than the max port number, these unmatched frames will be discarded. By default this reg is set to 0xff, which means that this feature is turned off."
           fw_signal="no_match_route" fw_default="0xff"/>
+    <node id="RESET_FIFO_ON_8B10B_ERR" address="0x1" mask="0x00000100" permission="rw"
+          description="If this is set to 1, then the FIFOs will be reset if a not_in_table error is detected on the RX link."
+          fw_signal="reset_fifo_on_8b10b_err" fw_default="0b0"/>
     <node id="PORT${PORT}" address="0x10"
           description="Control of port #${PORT}"
           generate="true" generate_size="&NUM_ETH_SWITCH_PORTS;" generate_address_step="0x00000010" generate_idx_var="PORT">

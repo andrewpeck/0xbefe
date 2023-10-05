@@ -43,6 +43,7 @@ entity system_regs is
         manual_link_reset_o         : out std_logic;
         
         loopback_gbt_test_en_o      : out std_logic;
+        gbt_prbs_tx_en_o            : out std_logic;
 
         xdcfeb_switches_o           : out t_xdcfeb_switches;
         xdcfeb_rx_data_i            : in  std_logic_vector(31 downto 0);
@@ -56,7 +57,8 @@ architecture system_regs_arch of system_regs is
 
     signal reset_cnt                : std_logic := '0';
 
-    signal loopback_gbt_test_en     : std_logic;
+    signal loopback_gbt_test_en     : std_logic := '0';
+    signal gbt_prbs_tx_en           : std_logic := '0';
     
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
@@ -84,7 +86,8 @@ architecture system_regs_arch of system_regs is
 begin
 
     --=== Tests === --
-    loopback_gbt_test_en_o <= loopback_gbt_test_en; 
+    loopback_gbt_test_en_o <= loopback_gbt_test_en;
+    gbt_prbs_tx_en_o <= gbt_prbs_tx_en;
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;
