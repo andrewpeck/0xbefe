@@ -232,19 +232,22 @@ begin                                   --========####   Architecture Body   ###
                         
             -- we use a bitslipper here to delay the data from the MGT, the pattern finder will then use rxslide to shift the user clock to align the frame
             -- so different bitslip settings will result in different RXUSRCLK phase where the frame header is aligned
-            -- so we can use the different bitslip values to effectively position the usrclk in the center of the eye of the sampling clock in the gearbox 
-            i_rx_bitslip: entity work.bitslip
-                generic map(
-                    g_DATA_WIDTH           => 40,
-                    g_SLIP_CNT_WIDTH       => 6,
-                    g_TRANSMIT_LOW_TO_HIGH => false
-                )
-                port map(
-                    clk_i      => rx_word_clk_arr(i),
-                    slip_cnt_i => rx_bitslip_cnt_i(i),
-                    data_i     => mgt_rx_data_arr_i_reg(i),
-                    data_o     => mgt_rx_data_arr(i)
-                );            
+            -- so we can use the different bitslip values to effectively position the usrclk in the center of the eye of the sampling clock in the gearbox
+            -- 
+            -- DISABLE THIS FOR NOW SINCE IT NEEDS MORE TESTING, AND ADDS ONE CLOCK OF LATENCY
+--            i_rx_bitslip: entity work.bitslip
+--                generic map(
+--                    g_DATA_WIDTH           => 40,
+--                    g_SLIP_CNT_WIDTH       => 6,
+--                    g_TRANSMIT_LOW_TO_HIGH => false
+--                )
+--                port map(
+--                    clk_i      => rx_word_clk_arr(i),
+--                    slip_cnt_i => rx_bitslip_cnt_i(i),
+--                    data_i     => mgt_rx_data_arr_i_reg(i),
+--                    data_o     => mgt_rx_data_arr(i)
+--                );       
+            mgt_rx_data_arr <= mgt_rx_data_arr_i_reg;
 
             -- if rx is standard, there's a fifo cdc downstream, so keep the mgt clock here
             g_rx_no_opt : if RX_OPTIMIZATION = STANDARD generate
