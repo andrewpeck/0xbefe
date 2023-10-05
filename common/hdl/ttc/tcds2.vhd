@@ -47,8 +47,8 @@ entity tcds2 is
         
         -- LHC clock inputs
         clk40_cleaned_i     : in  std_logic; -- fabric clk coming from an MGT refclk buffer
-        clk40_backplane_p_i : in  std_logic; -- expects this to be an MGT refclk
-        clk40_backplane_n_i : in  std_logic; -- expects this to be an MGT refclk
+        clk_backplane_p_i   : in  std_logic; -- expects this to be an MGT refclk
+        clk_backplane_n_i   : in  std_logic; -- expects this to be an MGT refclk
 
         -- LHC clock primary and secondary outputs to be exported out of FPGA and into the synthesizer
         clk40_out_pri_p_o   : out std_logic;
@@ -92,7 +92,8 @@ architecture Behavioral of tcds2 is
             probe_out2 : out std_logic;
             probe_out3 : out std_logic;
             probe_out4 : out std_logic;
-            probe_out5 : out std_logic
+            probe_out5 : out std_logic;
+            probe_out6 : out std_logic
         );
     end component;
 
@@ -110,6 +111,9 @@ architecture Behavioral of tcds2 is
 
     constant CLK_STABLE_FREQ    : integer := 125_000_000;
 
+    signal reset_local          : std_logic;
+    signal reset_local_sync40   : std_logic;
+
     signal ctrl                 : tcds2_interface_ctrl_t;
     signal stat                 : tcds2_interface_stat_t;
                                 
@@ -122,8 +126,9 @@ architecture Behavioral of tcds2 is
     signal clk40_fabric         : std_logic;
     signal ttc_clks             : t_ttc_clks;
                                 
-    signal clk40_backplane      : std_logic;
-    signal clk40_bp_tmp         : std_logic;
+    signal clk_backplane        : std_logic;
+    signal clk_bp_tmp           : std_logic;
+    signal clk_bp_gt            : std_logic;
                                 
     signal clk40_out_pri        : std_logic;
     signal clk40_out_sec        : std_logic;
@@ -135,8 +140,21 @@ architecture Behavioral of tcds2 is
     signal freq_clk40_backplane : std_logic_vector(31 downto 0);
     signal freq_clk40_fabric    : std_logic_vector(31 downto 0);
     signal freq_clk40_cleaned   : std_logic_vector(31 downto 0);
-    
+    signal freq_oddr_c          : std_logic_vector(31 downto 0);
+    signal freq_oddr_d          : std_logic_vector(31 downto 0);
+        
 begin
+
+    i_sync_reset40 : entity work.synch
+        generic map(
+            N_STAGES => 8,
+            IS_RESET => true
+        )
+        port map(
+            async_i => reset_local,
+            clk_i   => clk40_fabric,
+            sync_o  => reset_local_sync40
+        );
 
     --=================================================
     -- TCDS2 IP
@@ -156,7 +174,7 @@ begin
             mgt_tx_n_o        => mgt_tx_n_o,
             mgt_rx_p_i        => mgt_rx_p_i,
             mgt_rx_n_i        => mgt_rx_n_i,
-            clk_320_mgt_ref_i => mgt_refclk_320_i,
+            clk_320_mgt_ref_i => clk_bp_gt, --mgt_refclk_320_i,
             clk_40_o          => clk40_fabric,
             clk_40_oddr_c_o   => clk_40_oddr_c,
             clk_40_oddr_d1_o  => clk_40_oddr_d1,
@@ -176,22 +194,22 @@ begin
 
     i_clk40_backplane_ibufds_gte : IBUFDS_GTE4
         port map(
-            O     => open,
-            ODIV2 => clk40_bp_tmp,
+            O     => clk_bp_gt,
+            ODIV2 => clk_bp_tmp,
             CEB   => '0',
-            I     => clk40_backplane_p_i,
-            IB    => clk40_backplane_n_i
+            I     => clk_backplane_p_i,
+            IB    => clk_backplane_n_i
         );
 
     i_refclk1_div2_bufg : BUFG_GT
         port map(
-            O       => clk40_backplane,
+            O       => clk_backplane,
             CE      => '1',
             CEMASK  => '0',
             CLR     => '0',
             CLRMASK => '0',
             DIV     => "000",
-            I       => clk40_bp_tmp
+            I       => clk_bp_tmp
         );        
 
     -- primary clk out
@@ -217,10 +235,17 @@ begin
             o  => clk40_out_pri_p_o,
             ob => clk40_out_pri_n_o
         );
+
+--    i_clk40_out_pri_obufds : obufds
+--        port map(
+--            i  => clk40_fabric,
+--            o  => clk40_out_pri_p_o,
+--            ob => clk40_out_pri_n_o
+--        );    
     
     -- secondary clk out
     
-    clk40_out_sec <= clk40_backplane;
+    clk40_out_sec <= clk_backplane;
     
     i_clk40_out_sec_obufds : obufds
         port map(
@@ -228,6 +253,49 @@ begin
             o  => clk40_out_sec_p_o,
             ob => clk40_out_sec_n_o
         );
+
+-- DEBUG: test different outputs
+--    
+--    i_clk40_out_pri_obufds : obufds
+--        port map(
+--            i  => clk40_fabric,
+--            o  => clk40_out_sec_p_o,
+--            ob => clk40_out_sec_n_o
+--        );    
+--
+----    i_clk40_sec_oserdes : OSERDESE3
+----        generic map(
+----            SIM_DEVICE => "ULTRASCALE_PLUS",
+----            DATA_WIDTH         => 8,
+----            INIT               => '0',
+----            IS_CLKDIV_INVERTED => '0',
+----            IS_CLK_INVERTED    => '0',
+----            IS_RST_INVERTED    => '0',
+----            ODDR_MODE          => "TRUE" -- Xilinx says do not modify this hmm
+----        )
+----        port map(
+----            OQ     => clk40_out_sec,
+----            T_OUT  => open,
+----            CLK    => clk_40_oddr_c, -- clk320
+----            CLKDIV => clk40_fabric, -- clk40 sourced from 320 with bufgce_div
+----            D      => x"f0",
+----            RST    => reset_local_sync40,
+----            T      => '0'
+----        );
+----
+----    i_clk40_out_sec_obufds : obufds
+----        port map(
+----            i  => clk40_out_sec,
+----            o  => clk40_out_pri_p_o,
+----            ob => clk40_out_pri_n_o
+----        );
+--
+--    i_clk40_out_sec_obufds : obufds
+--        port map(
+--            i  => clk40_fabric,
+--            o  => clk40_out_pri_p_o,
+--            ob => clk40_out_pri_n_o
+--        );
 
     --================================--
     -- Freq counters
@@ -244,7 +312,7 @@ begin
         )
         port map(
             ref_clk => clk_125_i,
-            f       => (0 => clk40_backplane),
+            f       => (0 => clk_backplane),
             freq(0) => freq_clk40_backplane 
         );
 
@@ -334,7 +402,8 @@ begin
             probe_out2 => ctrl.mgt_reset_rx,  
             probe_out3 => ctrl.link_test_mode,
             probe_out4 => ctrl.prbsgen_reset, 
-            probe_out5 => ctrl.prbschk_reset
+            probe_out5 => ctrl.prbschk_reset,
+            probe_out6 => reset_local
         );
 
 end Behavioral;

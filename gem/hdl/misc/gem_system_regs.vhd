@@ -47,6 +47,7 @@ port(
     vfat_hdlc_address_arr_o     : out t_std4_array(23 downto 0);
 
     gbt_ic_rx_use_ec_o          : out std_logic;
+    gbt_prbs_tx_en_o            : out std_logic;
 
     manual_link_reset_o         : out std_logic;
     global_reset_o              : out std_logic;
@@ -71,6 +72,7 @@ architecture gem_system_regs_arch of gem_system_regs is
     signal vfat_hdlc_address_arr    : t_std4_array(23 downto 0);
 
     signal gbt_ic_rx_use_ec         : std_logic := '1';
+    signal gbt_prbs_tx_en           : std_logic := '0';
 
     signal global_reset_timer       : integer range 0 to 100 := 0;
     signal global_reset_trig        : std_logic;
@@ -109,6 +111,7 @@ begin
 
     --=== GBT conf === --
     gbt_ic_rx_use_ec_o <= gbt_ic_rx_use_ec;
+    gbt_prbs_tx_en_o <= gbt_prbs_tx_en;
 
     --=== PROMless === --
     promless_cfg_o.firmware_size <= promless_fw_size;

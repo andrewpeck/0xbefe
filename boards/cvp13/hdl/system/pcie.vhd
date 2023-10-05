@@ -29,7 +29,8 @@ entity pcie is
         g_USE_QDMA              : boolean; -- QDMA will be used if set to true (does not support DAQ), if set to false XDMA with DAQ support will be used
         g_NUM_USR_BLOCKS        : integer; -- number of user blocks (more than one can be used e.g. where we have multiple GEM or CSC modules instantiated, used on devices with multiple SLRs)
         g_USR_BLOCK_SEL_BIT_TOP : integer; -- top address bit used for user block selection
-        g_USR_BLOCK_SEL_BIT_BOT : integer  -- bottom address bit used for user block selection
+        g_USR_BLOCK_SEL_BIT_BOT : integer; -- bottom address bit used for user block selection
+        g_IS_SLINK_ROCKET       : boolean  -- set to true if daqlink is in SLink Rocket format (128bits), and false if it't in the AMC13 format (64bits)
     );
     port (
         reset_i                 : in  std_logic;
@@ -52,8 +53,15 @@ entity pcie is
         
         -- PCIe DAQ control and status
         axi_clk_o               : out std_logic;
+        axi_reset_b_o           : out std_logic;
         pcie_daq_control_i      : in  t_pcie_daq_control;
         pcie_daq_status_o       : out t_pcie_daq_status;
+        
+        -- H2C stream
+        h2c_stream_o            : out t_axi_h2c_stream;
+        h2c_stream_ready_i      : in  std_logic := '0';
+        h2c_tst_link_clk_i      : in  std_logic := '0';
+        h2c_tst_link_data_o     : out t_mgt_64b_tx_data;        
         
         -- IPbus
         ipb_reset_o             : out std_logic;
@@ -126,162 +134,122 @@ architecture pcie_arch of pcie is
         );
     end component;
     
-    -- QDMA: 4x pcie gen2
+    -- QDMA: 4x pcie gen2 with AXI stream
     component pcie_qdma
         port(
-            sys_clk                : in  std_logic;
-            sys_clk_gt             : in  std_logic;
-            sys_rst_n              : in  std_logic;
-            user_lnk_up            : out std_logic;
-            pci_exp_txp            : out std_logic_vector(3 downto 0);
-            pci_exp_txn            : out std_logic_vector(3 downto 0);
-            pci_exp_rxp            : in  std_logic_vector(3 downto 0);
-            pci_exp_rxn            : in  std_logic_vector(3 downto 0);
-            axi_aclk               : out std_logic;
-            axi_aresetn            : out std_logic;
-            usr_irq_in_vld         : in  std_logic;
-            usr_irq_in_vec         : in  std_logic_vector(10 downto 0);
-            usr_irq_in_fnc         : in  std_logic_vector(7 downto 0);
-            usr_irq_out_ack        : out std_logic;
-            usr_irq_out_fail       : out std_logic;
-            tm_dsc_sts_vld         : out std_logic;
-            tm_dsc_sts_port_id     : out std_logic_vector(2 downto 0);
-            tm_dsc_sts_qen         : out std_logic;
-            tm_dsc_sts_byp         : out std_logic;
-            tm_dsc_sts_dir         : out std_logic;
-            tm_dsc_sts_mm          : out std_logic;
-            tm_dsc_sts_error       : out std_logic;
-            tm_dsc_sts_qid         : out std_logic_vector(10 downto 0);
-            tm_dsc_sts_avl         : out std_logic_vector(15 downto 0);
-            tm_dsc_sts_qinv        : out std_logic;
-            tm_dsc_sts_irq_arm     : out std_logic;
-            tm_dsc_sts_rdy         : in  std_logic;
-            tm_dsc_sts_pidx        : out std_logic_vector(15 downto 0);
-            dsc_crdt_in_crdt       : in  std_logic_vector(15 downto 0);
-            dsc_crdt_in_qid        : in  std_logic_vector(10 downto 0);
-            dsc_crdt_in_dir        : in  std_logic;
-            dsc_crdt_in_fence      : in  std_logic;
-            dsc_crdt_in_vld        : in  std_logic;
-            dsc_crdt_in_rdy        : out std_logic;
-            m_axi_awready          : in  std_logic;
-            m_axi_wready           : in  std_logic;
-            m_axi_bid              : in  std_logic_vector(3 downto 0);
-            m_axi_bresp            : in  std_logic_vector(1 downto 0);
-            m_axi_bvalid           : in  std_logic;
-            m_axi_arready          : in  std_logic;
-            m_axi_rid              : in  std_logic_vector(3 downto 0);
-            m_axi_rdata            : in  std_logic_vector(63 downto 0);
-            m_axi_rresp            : in  std_logic_vector(1 downto 0);
-            m_axi_rlast            : in  std_logic;
-            m_axi_rvalid           : in  std_logic;
-            m_axi_awid             : out std_logic_vector(3 downto 0);
-            m_axi_awaddr           : out std_logic_vector(63 downto 0);
-            m_axi_awuser           : out std_logic_vector(31 downto 0);
-            m_axi_awlen            : out std_logic_vector(7 downto 0);
-            m_axi_awsize           : out std_logic_vector(2 downto 0);
-            m_axi_awburst          : out std_logic_vector(1 downto 0);
-            m_axi_awprot           : out std_logic_vector(2 downto 0);
-            m_axi_awvalid          : out std_logic;
-            m_axi_awlock           : out std_logic;
-            m_axi_awcache          : out std_logic_vector(3 downto 0);
-            m_axi_wdata            : out std_logic_vector(63 downto 0);
-            m_axi_wuser            : out std_logic_vector(7 downto 0);
-            m_axi_wstrb            : out std_logic_vector(7 downto 0);
-            m_axi_wlast            : out std_logic;
-            m_axi_wvalid           : out std_logic;
-            m_axi_bready           : out std_logic;
-            m_axi_arid             : out std_logic_vector(3 downto 0);
-            m_axi_araddr           : out std_logic_vector(63 downto 0);
-            m_axi_aruser           : out std_logic_vector(31 downto 0);
-            m_axi_arlen            : out std_logic_vector(7 downto 0);
-            m_axi_arsize           : out std_logic_vector(2 downto 0);
-            m_axi_arburst          : out std_logic_vector(1 downto 0);
-            m_axi_arprot           : out std_logic_vector(2 downto 0);
-            m_axi_arvalid          : out std_logic;
-            m_axi_arlock           : out std_logic;
-            m_axi_arcache          : out std_logic_vector(3 downto 0);
-            m_axi_rready           : out std_logic;
-            m_axil_awaddr          : out std_logic_vector(31 downto 0);
-            m_axil_awuser          : out std_logic_vector(54 downto 0);
-            m_axil_awprot          : out std_logic_vector(2 downto 0);
-            m_axil_awvalid         : out std_logic;
-            m_axil_awready         : in  std_logic;
-            m_axil_wdata           : out std_logic_vector(31 downto 0);
-            m_axil_wstrb           : out std_logic_vector(3 downto 0);
-            m_axil_wvalid          : out std_logic;
-            m_axil_wready          : in  std_logic;
-            m_axil_bvalid          : in  std_logic;
-            m_axil_bresp           : in  std_logic_vector(1 downto 0);
-            m_axil_bready          : out std_logic;
-            m_axil_araddr          : out std_logic_vector(31 downto 0);
-            m_axil_aruser          : out std_logic_vector(54 downto 0);
-            m_axil_arprot          : out std_logic_vector(2 downto 0);
-            m_axil_arvalid         : out std_logic;
-            m_axil_arready         : in  std_logic;
-            m_axil_rdata           : in  std_logic_vector(31 downto 0);
-            m_axil_rresp           : in  std_logic_vector(1 downto 0);
-            m_axil_rvalid          : in  std_logic;
-            m_axil_rready          : out std_logic;
-            cfg_negotiated_width_o : out std_logic_vector(3 downto 0);
-            cfg_current_speed_o    : out std_logic_vector(2 downto 0);
-            cfg_ltssm_state_o      : out std_logic_vector(5 downto 0);
-            soft_reset_n           : in  std_logic;
-            phy_ready              : out std_logic;
-            qsts_out_op            : out std_logic_vector(7 downto 0);
-            qsts_out_data          : out std_logic_vector(63 downto 0);
-            qsts_out_port_id       : out std_logic_vector(2 downto 0);
-            qsts_out_qid           : out std_logic_vector(12 downto 0);
-            qsts_out_vld           : out std_logic;
-            qsts_out_rdy           : in  std_logic
+            sys_clk                              : in  std_logic;
+            sys_clk_gt                           : in  std_logic;
+            sys_rst_n                            : in  std_logic;
+            user_lnk_up                          : out std_logic;
+            pci_exp_txp                          : out std_logic_vector(3 downto 0);
+            pci_exp_txn                          : out std_logic_vector(3 downto 0);
+            pci_exp_rxp                          : in  std_logic_vector(3 downto 0);
+            pci_exp_rxn                          : in  std_logic_vector(3 downto 0);
+            axi_aclk                             : out std_logic;
+            axi_aresetn                          : out std_logic;
+            usr_irq_in_vld                       : in  std_logic;
+            usr_irq_in_vec                       : in  std_logic_vector(10 downto 0);
+            usr_irq_in_fnc                       : in  std_logic_vector(7 downto 0);
+            usr_irq_out_ack                      : out std_logic;
+            usr_irq_out_fail                     : out std_logic;
+            tm_dsc_sts_vld                       : out std_logic;
+            tm_dsc_sts_port_id                   : out std_logic_vector(2 downto 0);
+            tm_dsc_sts_qen                       : out std_logic;
+            tm_dsc_sts_byp                       : out std_logic;
+            tm_dsc_sts_dir                       : out std_logic;
+            tm_dsc_sts_mm                        : out std_logic;
+            tm_dsc_sts_error                     : out std_logic;
+            tm_dsc_sts_qid                       : out std_logic_vector(10 downto 0);
+            tm_dsc_sts_avl                       : out std_logic_vector(15 downto 0);
+            tm_dsc_sts_qinv                      : out std_logic;
+            tm_dsc_sts_irq_arm                   : out std_logic;
+            tm_dsc_sts_rdy                       : in  std_logic;
+            tm_dsc_sts_pidx                      : out std_logic_vector(15 downto 0);
+            dsc_crdt_in_crdt                     : in  std_logic_vector(15 downto 0);
+            dsc_crdt_in_qid                      : in  std_logic_vector(10 downto 0);
+            dsc_crdt_in_dir                      : in  std_logic;
+            dsc_crdt_in_fence                    : in  std_logic;
+            dsc_crdt_in_vld                      : in  std_logic;
+            dsc_crdt_in_rdy                      : out std_logic;
+            m_axil_awaddr                        : out std_logic_vector(31 downto 0);
+            m_axil_awuser                        : out std_logic_vector(54 downto 0);
+            m_axil_awprot                        : out std_logic_vector(2 downto 0);
+            m_axil_awvalid                       : out std_logic;
+            m_axil_awready                       : in  std_logic;
+            m_axil_wdata                         : out std_logic_vector(31 downto 0);
+            m_axil_wstrb                         : out std_logic_vector(3 downto 0);
+            m_axil_wvalid                        : out std_logic;
+            m_axil_wready                        : in  std_logic;
+            m_axil_bvalid                        : in  std_logic;
+            m_axil_bresp                         : in  std_logic_vector(1 downto 0);
+            m_axil_bready                        : out std_logic;
+            m_axil_araddr                        : out std_logic_vector(31 downto 0);
+            m_axil_aruser                        : out std_logic_vector(54 downto 0);
+            m_axil_arprot                        : out std_logic_vector(2 downto 0);
+            m_axil_arvalid                       : out std_logic;
+            m_axil_arready                       : in  std_logic;
+            m_axil_rdata                         : in  std_logic_vector(31 downto 0);
+            m_axil_rresp                         : in  std_logic_vector(1 downto 0);
+            m_axil_rvalid                        : in  std_logic;
+            m_axil_rready                        : out std_logic;
+            m_axis_h2c_tdata                     : out std_logic_vector(63 downto 0);
+            m_axis_h2c_tcrc                      : out std_logic_vector(31 downto 0);
+            m_axis_h2c_tuser_qid                 : out std_logic_vector(10 downto 0);
+            m_axis_h2c_tuser_port_id             : out std_logic_vector(2 downto 0);
+            m_axis_h2c_tuser_err                 : out std_logic;
+            m_axis_h2c_tuser_mdata               : out std_logic_vector(31 downto 0);
+            m_axis_h2c_tuser_mty                 : out std_logic_vector(5 downto 0);
+            m_axis_h2c_tuser_zero_byte           : out std_logic;
+            m_axis_h2c_tvalid                    : out std_logic;
+            m_axis_h2c_tlast                     : out std_logic;
+            m_axis_h2c_tready                    : in  std_logic;
+            s_axis_c2h_tdata                     : in  std_logic_vector(63 downto 0);
+            s_axis_c2h_tcrc                      : in  std_logic_vector(31 downto 0);
+            s_axis_c2h_ctrl_marker               : in  std_logic;
+            s_axis_c2h_ctrl_port_id              : in  std_logic_vector(2 downto 0);
+            s_axis_c2h_ctrl_ecc                  : in  std_logic_vector(6 downto 0);
+            s_axis_c2h_ctrl_len                  : in  std_logic_vector(15 downto 0);
+            s_axis_c2h_ctrl_qid                  : in  std_logic_vector(10 downto 0);
+            s_axis_c2h_ctrl_has_cmpt             : in  std_logic;
+            s_axis_c2h_mty                       : in  std_logic_vector(5 downto 0);
+            s_axis_c2h_tvalid                    : in  std_logic;
+            s_axis_c2h_tlast                     : in  std_logic;
+            s_axis_c2h_tready                    : out std_logic;
+            s_axis_c2h_cmpt_tdata                : in  std_logic_vector(511 downto 0);
+            s_axis_c2h_cmpt_size                 : in  std_logic_vector(1 downto 0);
+            s_axis_c2h_cmpt_dpar                 : in  std_logic_vector(15 downto 0);
+            s_axis_c2h_cmpt_tvalid               : in  std_logic;
+            s_axis_c2h_cmpt_ctrl_qid             : in  std_logic_vector(10 downto 0);
+            s_axis_c2h_cmpt_ctrl_cmpt_type       : in  std_logic_vector(1 downto 0);
+            s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id : in  std_logic_vector(15 downto 0);
+            s_axis_c2h_cmpt_ctrl_port_id         : in  std_logic_vector(2 downto 0);
+            s_axis_c2h_cmpt_ctrl_marker          : in  std_logic;
+            s_axis_c2h_cmpt_ctrl_user_trig       : in  std_logic;
+            s_axis_c2h_cmpt_ctrl_col_idx         : in  std_logic_vector(2 downto 0);
+            s_axis_c2h_cmpt_ctrl_err_idx         : in  std_logic_vector(2 downto 0);
+            s_axis_c2h_cmpt_tready               : out std_logic;
+            s_axis_c2h_cmpt_ctrl_no_wrb_marker   : in  std_logic;
+            axis_c2h_status_drop                 : out std_logic;
+            axis_c2h_status_valid                : out std_logic;
+            axis_c2h_status_cmp                  : out std_logic;
+            axis_c2h_status_error                : out std_logic;
+            axis_c2h_status_last                 : out std_logic;
+            axis_c2h_status_qid                  : out std_logic_vector(10 downto 0);
+            axis_c2h_dmawr_cmp                   : out std_logic;
+            cfg_negotiated_width_o               : out std_logic_vector(3 downto 0);
+            cfg_current_speed_o                  : out std_logic_vector(2 downto 0);
+            cfg_ltssm_state_o                    : out std_logic_vector(5 downto 0);
+            soft_reset_n                         : in  std_logic;
+            phy_ready                            : out std_logic;
+            qsts_out_op                          : out std_logic_vector(7 downto 0);
+            qsts_out_data                        : out std_logic_vector(63 downto 0);
+            qsts_out_port_id                     : out std_logic_vector(2 downto 0);
+            qsts_out_qid                         : out std_logic_vector(12 downto 0);
+            qsts_out_vld                         : out std_logic;
+            qsts_out_rdy                         : in  std_logic
         );
     end component;    
     
-    -- 64 wide AXI-full test BRAM
-    component axi_bram_ctrl_test
-        port(
-            s_axi_aclk    : in  std_logic;
-            s_axi_aresetn : in  std_logic;
-            s_axi_awaddr  : in  std_logic_vector(18 downto 0);
-            s_axi_awlen   : in  std_logic_vector(7 downto 0);
-            s_axi_awsize  : in  std_logic_vector(2 downto 0);
-            s_axi_awburst : in  std_logic_vector(1 downto 0);
-            s_axi_awlock  : in  std_logic;
-            s_axi_awcache : in  std_logic_vector(3 downto 0);
-            s_axi_awprot  : in  std_logic_vector(2 downto 0);
-            s_axi_awvalid : in  std_logic;
-            s_axi_awready : out std_logic;
-            s_axi_wdata   : in  std_logic_vector(63 downto 0);
-            s_axi_wstrb   : in  std_logic_vector(7 downto 0);
-            s_axi_wlast   : in  std_logic;
-            s_axi_wvalid  : in  std_logic;
-            s_axi_wready  : out std_logic;
-            s_axi_bresp   : out std_logic_vector(1 downto 0);
-            s_axi_bvalid  : out std_logic;
-            s_axi_bready  : in  std_logic;
-            s_axi_araddr  : in  std_logic_vector(18 downto 0);
-            s_axi_arlen   : in  std_logic_vector(7 downto 0);
-            s_axi_arsize  : in  std_logic_vector(2 downto 0);
-            s_axi_arburst : in  std_logic_vector(1 downto 0);
-            s_axi_arlock  : in  std_logic;
-            s_axi_arcache : in  std_logic_vector(3 downto 0);
-            s_axi_arprot  : in  std_logic_vector(2 downto 0);
-            s_axi_arvalid : in  std_logic;
-            s_axi_arready : out std_logic;
-            s_axi_rdata   : out std_logic_vector(63 downto 0);
-            s_axi_rresp   : out std_logic_vector(1 downto 0);
-            s_axi_rlast   : out std_logic;
-            s_axi_rvalid  : out std_logic;
-            s_axi_rready  : in  std_logic;
-            bram_rst_a    : out std_logic;
-            bram_clk_a    : out std_logic;
-            bram_en_a     : out std_logic;
-            bram_we_a     : out std_logic_vector(7 downto 0);
-            bram_addr_a   : out std_logic_vector(18 downto 0);
-            bram_wrdata_a : out std_logic_vector(63 downto 0);
-            bram_rddata_a : in  std_logic_vector(63 downto 0)
-        );
-    end component;
-        
     component vio_pcie
         port(
             clk       : in std_logic;
@@ -350,6 +318,68 @@ architecture pcie_arch of pcie is
     signal axi_reset_b          : std_logic;
 
     -- axi stream / DAQ
+
+    function get_daqlink_width(is_slink_rocket : boolean) return integer is
+    begin
+        if is_slink_rocket then
+            return 128;
+        else
+            return 64;
+        end if;
+    end function get_daqlink_width; 
+
+    constant AXIS_WIDTH         : integer := 64;
+    constant DAQLINK_WIDTH      : integer := get_daqlink_width(g_IS_SLINK_ROCKET);
+    
+    signal axis_h2c_tdata                       : std_logic_vector(63 downto 0);
+    signal axis_h2c_tcrc                        : std_logic_vector(31 downto 0);
+    signal axis_h2c_tuser_qid                   : std_logic_vector(10 downto 0);
+    signal axis_h2c_tuser_port_id               : std_logic_vector(2 downto 0);
+    signal axis_h2c_tuser_err                   : std_logic;
+    signal axis_h2c_tuser_mdata                 : std_logic_vector(31 downto 0);
+    signal axis_h2c_tuser_mty                   : std_logic_vector(5 downto 0);
+    signal axis_h2c_tuser_zero_byte             : std_logic;
+    signal axis_h2c_tvalid                      : std_logic;
+    signal axis_h2c_tlast                       : std_logic;
+    signal axis_h2c_tready                      : std_logic;
+                                                
+    signal axis_c2h_tdata                       : std_logic_vector(63 downto 0);
+    signal axis_c2h_tcrc                        : std_logic_vector(31 downto 0);
+    signal axis_c2h_ctrl_marker                 : std_logic;
+    signal axis_c2h_ctrl_port_id                : std_logic_vector(2 downto 0);
+    signal axis_c2h_ctrl_ecc                    : std_logic_vector(6 downto 0);
+    signal axis_c2h_ctrl_len                    : std_logic_vector(15 downto 0);
+    signal axis_c2h_ctrl_qid                    : std_logic_vector(10 downto 0);
+    signal axis_c2h_ctrl_has_cmpt               : std_logic;
+    signal axis_c2h_mty                         : std_logic_vector(5 downto 0);
+    signal axis_c2h_tvalid                      : std_logic;
+    signal axis_c2h_tlast                       : std_logic;
+    signal axis_c2h_tready                      : std_logic;
+    signal axis_c2h_cmpt_tdata                  : std_logic_vector(511 downto 0);
+    signal axis_c2h_cmpt_size                   : std_logic_vector(1 downto 0);
+    signal axis_c2h_cmpt_dpar                   : std_logic_vector(15 downto 0);
+    signal axis_c2h_cmpt_tvalid                 : std_logic;
+    signal axis_c2h_cmpt_ctrl_qid               : std_logic_vector(10 downto 0);
+    signal axis_c2h_cmpt_ctrl_cmpt_type         : std_logic_vector(1 downto 0);
+    signal axis_c2h_cmpt_ctrl_wait_pld_pkt_id   : std_logic_vector(15 downto 0);
+    signal axis_c2h_cmpt_ctrl_port_id           : std_logic_vector(2 downto 0);
+    signal axis_c2h_cmpt_ctrl_marker            : std_logic;
+    signal axis_c2h_cmpt_ctrl_user_trig         : std_logic;
+    signal axis_c2h_cmpt_ctrl_col_idx           : std_logic_vector(2 downto 0);
+    signal axis_c2h_cmpt_ctrl_err_idx           : std_logic_vector(2 downto 0);
+    signal axis_c2h_cmpt_tready                 : std_logic;
+    signal axis_c2h_cmpt_ctrl_no_wrb_marker     : std_logic;
+    signal axis_c2h_status_drop                 : std_logic;
+    signal axis_c2h_status_valid                : std_logic;
+    signal axis_c2h_status_cmp                  : std_logic;
+    signal axis_c2h_status_error                : std_logic;
+    signal axis_c2h_status_last                 : std_logic;
+    signal axis_c2h_status_qid                  : std_logic_vector(10 downto 0);
+    signal axis_c2h_dmawr_cmp                   : std_logic;
+    
+    
+    -- axi stream / DAQ (old with XDMA)
+
     signal axis_c2h             : t_axi_stream_128;
     signal axis_c2h_ready       : std_logic;
     signal axis_h2c             : t_axi_stream_128;
@@ -416,6 +446,7 @@ begin
     pcie_link_up_o <= pcie_link_up;
     pcie_phy_ready_o <= pcie_phy_ready;
     axi_clk_o <= axi_clk;
+    axi_reset_b_o <= axi_reset_b;
     
     --================================--
     -- PCIe XDMA module
@@ -688,44 +719,6 @@ begin
                 dsc_crdt_in_fence                    => '0',
                 dsc_crdt_in_vld                      => '0',
                 dsc_crdt_in_rdy                      => open,
-                m_axi_awready                        => axi_s2m.awready,
-                m_axi_wready                         => axi_s2m.wready,
-                m_axi_bid                            => axi_s2m.bid,
-                m_axi_bresp                          => axi_s2m.bresp,
-                m_axi_bvalid                         => axi_s2m.bvalid,
-                m_axi_arready                        => axi_s2m.arready,
-                m_axi_rid                            => axi_s2m.rid,
-                m_axi_rdata                          => axi_s2m.rdata,
-                m_axi_rresp                          => axi_s2m.rresp,
-                m_axi_rlast                          => axi_s2m.rlast,
-                m_axi_rvalid                         => axi_s2m.rvalid,
-                m_axi_awid                           => axi_m2s.awid,
-                m_axi_awaddr                         => axi_m2s.awaddr,
-                m_axi_awuser                         => open,
-                m_axi_awlen                          => axi_m2s.awlen,
-                m_axi_awsize                         => axi_m2s.awsize,
-                m_axi_awburst                        => axi_m2s.awburst,
-                m_axi_awprot                         => axi_m2s.awprot,
-                m_axi_awvalid                        => axi_m2s.awvalid,
-                m_axi_awlock                         => axi_m2s.awlock,
-                m_axi_awcache                        => axi_m2s.awcache,
-                m_axi_wdata                          => axi_m2s.wdata,
-                m_axi_wuser                          => open,
-                m_axi_wstrb                          => axi_m2s.wstrb,
-                m_axi_wlast                          => axi_m2s.wlast,
-                m_axi_wvalid                         => axi_m2s.wvalid,
-                m_axi_bready                         => axi_m2s.bready,
-                m_axi_arid                           => axi_m2s.arid,
-                m_axi_araddr                         => axi_m2s.araddr,
-                m_axi_aruser                         => open,
-                m_axi_arlen                          => axi_m2s.arlen,
-                m_axi_arsize                         => axi_m2s.arsize,
-                m_axi_arburst                        => axi_m2s.arburst,
-                m_axi_arprot                         => axi_m2s.arprot,
-                m_axi_arvalid                        => axi_m2s.arvalid,
-                m_axi_arlock                         => axi_m2s.arlock,
-                m_axi_arcache                        => axi_m2s.arcache,
-                m_axi_rready                         => axi_m2s.rready,
                 m_axil_awaddr                        => axil_m2s.awaddr,
                 m_axil_awuser                        => open,
                 m_axil_awprot                        => axil_m2s.awprot,
@@ -747,6 +740,50 @@ begin
                 m_axil_rresp                         => axil_s2m.rresp,
                 m_axil_rvalid                        => axil_s2m.rvalid,
                 m_axil_rready                        => axil_m2s.rready,
+                m_axis_h2c_tdata                     => axis_h2c_tdata,
+                m_axis_h2c_tcrc                      => axis_h2c_tcrc,
+                m_axis_h2c_tuser_qid                 => axis_h2c_tuser_qid,
+                m_axis_h2c_tuser_port_id             => axis_h2c_tuser_port_id,
+                m_axis_h2c_tuser_err                 => axis_h2c_tuser_err,
+                m_axis_h2c_tuser_mdata               => axis_h2c_tuser_mdata,
+                m_axis_h2c_tuser_mty                 => axis_h2c_tuser_mty,
+                m_axis_h2c_tuser_zero_byte           => axis_h2c_tuser_zero_byte,
+                m_axis_h2c_tvalid                    => axis_h2c_tvalid,
+                m_axis_h2c_tlast                     => axis_h2c_tlast,
+                m_axis_h2c_tready                    => axis_h2c_tready,
+                s_axis_c2h_tdata                     => axis_c2h_tdata,
+                s_axis_c2h_tcrc                      => axis_c2h_tcrc,
+                s_axis_c2h_ctrl_marker               => axis_c2h_ctrl_marker,
+                s_axis_c2h_ctrl_port_id              => axis_c2h_ctrl_port_id,
+                s_axis_c2h_ctrl_ecc                  => axis_c2h_ctrl_ecc,
+                s_axis_c2h_ctrl_len                  => axis_c2h_ctrl_len,
+                s_axis_c2h_ctrl_qid                  => axis_c2h_ctrl_qid,
+                s_axis_c2h_ctrl_has_cmpt             => axis_c2h_ctrl_has_cmpt,
+                s_axis_c2h_mty                       => axis_c2h_mty,
+                s_axis_c2h_tvalid                    => axis_c2h_tvalid,
+                s_axis_c2h_tlast                     => axis_c2h_tlast,
+                s_axis_c2h_tready                    => axis_c2h_tready,
+                s_axis_c2h_cmpt_tdata                => axis_c2h_cmpt_tdata,
+                s_axis_c2h_cmpt_size                 => axis_c2h_cmpt_size,
+                s_axis_c2h_cmpt_dpar                 => axis_c2h_cmpt_dpar,
+                s_axis_c2h_cmpt_tvalid               => axis_c2h_cmpt_tvalid,
+                s_axis_c2h_cmpt_ctrl_qid             => axis_c2h_cmpt_ctrl_qid,
+                s_axis_c2h_cmpt_ctrl_cmpt_type       => axis_c2h_cmpt_ctrl_cmpt_type,
+                s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id => axis_c2h_cmpt_ctrl_wait_pld_pkt_id,
+                s_axis_c2h_cmpt_ctrl_port_id         => axis_c2h_cmpt_ctrl_port_id,
+                s_axis_c2h_cmpt_ctrl_marker          => axis_c2h_cmpt_ctrl_marker,
+                s_axis_c2h_cmpt_ctrl_user_trig       => axis_c2h_cmpt_ctrl_user_trig,
+                s_axis_c2h_cmpt_ctrl_col_idx         => axis_c2h_cmpt_ctrl_col_idx,
+                s_axis_c2h_cmpt_ctrl_err_idx         => axis_c2h_cmpt_ctrl_err_idx,
+                s_axis_c2h_cmpt_tready               => axis_c2h_cmpt_tready,
+                s_axis_c2h_cmpt_ctrl_no_wrb_marker   => axis_c2h_cmpt_ctrl_no_wrb_marker,
+                axis_c2h_status_drop                 => axis_c2h_status_drop,
+                axis_c2h_status_valid                => axis_c2h_status_valid,
+                axis_c2h_status_cmp                  => axis_c2h_status_cmp,
+                axis_c2h_status_error                => axis_c2h_status_error,
+                axis_c2h_status_last                 => axis_c2h_status_last,
+                axis_c2h_status_qid                  => axis_c2h_status_qid,
+                axis_c2h_dmawr_cmp                   => axis_c2h_dmawr_cmp,
                 cfg_negotiated_width_o               => pcie_width,
                 cfg_current_speed_o                  => pcie_speed,
                 cfg_ltssm_state_o                    => pcie_train_state,
@@ -759,53 +796,174 @@ begin
                 qsts_out_vld                         => open,
                 qsts_out_rdy                         => '1'
             );
-    
-        i_axi_full_load : axi_bram_ctrl_test
-            port map(
-                s_axi_aclk    => axi_clk,
-                s_axi_aresetn => axi_reset_b,
-                s_axi_awaddr  => axi_m2s.awaddr(18 downto 0),
-                s_axi_awlen   => axi_m2s.awlen,
-                s_axi_awsize  => axi_m2s.awsize,
-                s_axi_awburst => axi_m2s.awburst,
-                s_axi_awlock  => axi_m2s.awlock,
-                s_axi_awcache => axi_m2s.awcache,
-                s_axi_awprot  => axi_m2s.awprot,
-                s_axi_awvalid => axi_m2s.awvalid,
-                s_axi_awready => axi_s2m.awready,
-                s_axi_wdata   => axi_m2s.wdata,
-                s_axi_wstrb   => axi_m2s.wstrb,
-                s_axi_wlast   => axi_m2s.wlast,
-                s_axi_wvalid  => axi_m2s.wvalid,
-                s_axi_wready  => axi_s2m.wready,
-                s_axi_bresp   => axi_s2m.bresp,
-                s_axi_bvalid  => axi_s2m.bvalid,
-                s_axi_bready  => axi_m2s.bready,
-                s_axi_araddr  => axi_m2s.araddr(18 downto 0),
-                s_axi_arlen   => axi_m2s.arlen,
-                s_axi_arsize  => axi_m2s.arsize,
-                s_axi_arburst => axi_m2s.arburst,
-                s_axi_arlock  => axi_m2s.arlock,
-                s_axi_arcache => axi_m2s.arcache,
-                s_axi_arprot  => axi_m2s.arprot,
-                s_axi_arvalid => axi_m2s.arvalid,
-                s_axi_arready => axi_s2m.arready,
-                s_axi_rdata   => axi_s2m.rdata,
-                s_axi_rresp   => axi_s2m.rresp,
-                s_axi_rlast   => axi_s2m.rlast,
-                s_axi_rvalid  => axi_s2m.rvalid,
-                s_axi_rready  => axi_m2s.rready,
-                bram_rst_a    => open,
-                bram_clk_a    => open,
-                bram_en_a     => open,
-                bram_we_a     => open,
-                bram_addr_a   => open,
-                bram_wrdata_a => open,
-                bram_rddata_a => x"cafecafecafecafe" --x"cafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafecafe"
-            );
         
         daqlink_to_daq_o    <= DAQLINK_TO_DAQ_NULL;
         pcie_daq_status_o   <= PCIE_DAQ_STATUS_NULL;
+        
+        -- terminate C2H signals
+        axis_c2h_tdata                     <= (others => '0');
+        axis_c2h_tcrc                      <= (others => '0');
+        axis_c2h_ctrl_marker               <= '0';
+        axis_c2h_ctrl_port_id              <= (others => '0');
+        axis_c2h_ctrl_ecc                  <= (others => '0');
+        axis_c2h_ctrl_len                  <= (others => '0');
+        axis_c2h_ctrl_qid                  <= (others => '0');
+        axis_c2h_ctrl_has_cmpt             <= '0';
+        axis_c2h_mty                       <= (others => '0');
+        axis_c2h_tvalid                    <= '0';
+        axis_c2h_tlast                     <= '0';
+        axis_c2h_cmpt_tdata                <= (others => '0');
+        axis_c2h_cmpt_size                 <= (others => '0');
+        axis_c2h_cmpt_dpar                 <= (others => '0');
+        axis_c2h_cmpt_tvalid               <= '0';
+        axis_c2h_cmpt_ctrl_qid             <= (others => '0');
+        axis_c2h_cmpt_ctrl_cmpt_type       <= (others => '0');
+        axis_c2h_cmpt_ctrl_wait_pld_pkt_id <= (others => '0');
+        axis_c2h_cmpt_ctrl_port_id         <= (others => '0');
+        axis_c2h_cmpt_ctrl_marker          <= '0';
+        axis_c2h_cmpt_ctrl_user_trig       <= '0';
+        axis_c2h_cmpt_ctrl_col_idx         <= (others => '0');
+        axis_c2h_cmpt_ctrl_err_idx         <= (others => '0');
+        axis_c2h_cmpt_ctrl_no_wrb_marker   <= '0';
+        
+    end generate;
+        
+    --================================--
+    -- H2C test
+    --================================--
+    
+    g_h2c_test : if true generate
+        component ila_qdma_h2c
+            port(
+                clk     : in std_logic;
+                probe0  : in std_logic_vector(63 downto 0);
+                probe1  : in std_logic_vector(31 downto 0);
+                probe2  : in std_logic_vector(10 downto 0);
+                probe3  : in std_logic_vector(2 downto 0);
+                probe4  : in std_logic;
+                probe5  : in std_logic_vector(31 downto 0);
+                probe6  : in std_logic_vector(5 downto 0);
+                probe7  : in std_logic;
+                probe8  : in std_logic;
+                probe9  : in std_logic;
+                probe10 : in std_logic
+            );
+        end component;
+        
+        signal spy_fifo_dout    : std_logic_vector(16 downto 0);
+        signal spy_fifo_rd_en   : std_logic;
+        signal spy_fifo_empty   : std_logic;
+        signal spy_fifo_aempty  : std_logic;
+        signal spy_fifo_full    : std_logic;
+        
+        signal spy_link         : t_mgt_16b_tx_data;
+        
+    begin
+        
+            i_spy_fifo : xpm_fifo_async
+                generic map(
+                    FIFO_MEMORY_TYPE    => "block",
+                    FIFO_WRITE_DEPTH    => 4096,
+                    RELATED_CLOCKS      => 0,
+                    WRITE_DATA_WIDTH    => 68,
+                    READ_MODE           => "fwft",
+                    FIFO_READ_LATENCY   => 0,
+                    FULL_RESET_VALUE    => 1,
+                    USE_ADV_FEATURES    => "0A03", -- VALID(12) = 0 ; AEMPTY(11) = 1; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 1; OVERFLOW(0) = 1
+                    READ_DATA_WIDTH     => 17,
+                    CDC_SYNC_STAGES     => 2,
+                    PROG_FULL_THRESH    => 3072,
+                    PROG_EMPTY_THRESH   => 2048,
+                    DOUT_RESET_VALUE    => "0",
+                    ECC_MODE            => "no_ecc"
+                )
+                port map(
+                    sleep         => '0',
+                    rst           => not axi_reset_b,
+                    wr_clk        => axi_clk,
+                    wr_en         => axis_h2c_tready and axis_h2c_tvalid,
+                    din           => axis_h2c_tlast & axis_h2c_tdata(63 downto 48) & "0" & axis_h2c_tdata(47 downto 32) & "0" & axis_h2c_tdata(31 downto 16) & "0" & axis_h2c_tdata(15 downto 0),
+                    full          => spy_fifo_full,
+                    prog_full     => open,
+                    wr_data_count => open,
+                    overflow      => open,
+                    wr_rst_busy   => open,
+                    almost_full   => open,
+                    wr_ack        => open,
+                    rd_clk        => h2c_tst_link_clk_i,
+                    rd_en         => spy_fifo_rd_en,
+                    dout          => spy_fifo_dout,
+                    empty         => spy_fifo_empty,
+                    prog_empty    => open,
+                    rd_data_count => open,
+                    underflow     => open,
+                    rd_rst_busy   => open,
+                    almost_empty  => spy_fifo_aempty,
+                    data_valid    => open,
+                    injectsbiterr => '0',
+                    injectdbiterr => '0',
+                    sbiterr       => open,
+                    dbiterr       => open
+                );
+    
+            i_spy_gbe_tx_driver : entity work.gbe_tx_driver
+                generic map(
+                    g_MAX_EVT_WORDS        => 50000,
+                    g_NUM_IDLES_SMALL_EVT  => 2,
+                    g_NUM_IDLES_BIG_EVT    => 7,
+                    g_SMALL_EVT_MAX_WORDS  => 24,
+                    g_USE_TRAILER_FLAG_EOE => true,
+                    g_USE_GEM_FORMAT       => true
+                )
+                port map(
+                    reset_i             => not axi_reset_b,
+                    gbe_clk_i           => h2c_tst_link_clk_i,
+                    gbe_tx_data_o       => spy_link,
+                    skip_eth_header_i   => '0',
+                    dest_mac_i          => x"d52ad312e8eb",
+                    source_mac_i        => x"0123456789ab",
+                    ether_type_i        => x"7088",
+                    min_payload_words_i => "00" & x"015",
+                    max_payload_words_i => "00" & x"fff",
+                    data_empty_i        => spy_fifo_empty,
+                    data_i              => spy_fifo_dout(15 downto 0),
+                    data_trailer_i      => spy_fifo_dout(16),
+                    data_rd_en          => spy_fifo_rd_en,
+                    last_valid_word_i   => spy_fifo_aempty,
+                    err_event_too_big_o => open,
+                    err_eoe_not_found_o => open,
+                    word_rate_o         => open,
+                    evt_cnt_o           => open
+                );
+    
+                h2c_tst_link_data_o.txdata(15 downto 0) <= spy_link.txdata;
+                h2c_tst_link_data_o.txcharisk(1 downto 0) <= spy_link.txcharisk;
+                h2c_tst_link_data_o.txchardispval(1 downto 0) <= spy_link.txchardispval;
+                h2c_tst_link_data_o.txchardispmode(1 downto 0) <= spy_link.txchardispmode;
+        
+        axis_h2c_tready <= h2c_stream_ready_i;
+        h2c_stream_o.tdata <= axis_h2c_tdata;
+        h2c_stream_o.tvalid <= axis_h2c_tvalid;
+        h2c_stream_o.tlast <= axis_h2c_tlast;
+        h2c_stream_o.qid <= axis_h2c_tuser_qid;
+        h2c_stream_o.mty <= axis_h2c_tuser_mty;
+        h2c_stream_o.zero_byte <= axis_h2c_tuser_zero_byte;
+        
+        i_ila_h2c : ila_qdma_h2c
+            port map(
+                clk     => axi_clk,
+                probe0  => axis_h2c_tdata,          
+                probe1  => axis_h2c_tcrc,           
+                probe2  => axis_h2c_tuser_qid,      
+                probe3  => axis_h2c_tuser_port_id,  
+                probe4  => axis_h2c_tuser_err,      
+                probe5  => axis_h2c_tuser_mdata,    
+                probe6  => axis_h2c_tuser_mty,      
+                probe7  => axis_h2c_tuser_zero_byte,
+                probe8  => axis_h2c_tvalid,         
+                probe9  => axis_h2c_tlast,          
+                probe10 => axis_h2c_tready
+            );
         
     end generate;
 

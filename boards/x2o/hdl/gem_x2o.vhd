@@ -126,6 +126,7 @@ architecture gem_x2o_arch of gem_x2o is
     signal ttc_clk_status       : t_ttc_clk_status;
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl_arr(CFG_NUM_GEM_BLOCKS - 1 downto 0);
     signal ttc_cmds             : t_ttc_cmds := TTC_CMDS_NULL;
+    signal ttc_tx_mgt_data      : t_mgt_16b_tx_data;
     
     -- c2c
     signal c2c_channel_up       : std_logic;
@@ -273,8 +274,8 @@ begin
                 mgt_rx_n_i          => tcds2_mgt_rx_n,
                 mgt_refclk_320_i    => refclk1(CFG_TCDS2_MGT_REFCLK1),
                 clk40_cleaned_i     => refclk1_fabric(7),
-                clk40_backplane_p_i => tcds2_backplane_clk_p,
-                clk40_backplane_n_i => tcds2_backplane_clk_n,
+                clk_backplane_p_i   => tcds2_backplane_clk_p,
+                clk_backplane_n_i   => tcds2_backplane_clk_n,
                 clk40_out_pri_p_o   => lmk_refclk_0_p,
                 clk40_out_pri_n_o   => lmk_refclk_0_n,
                 clk40_out_sec_p_o   => lmk_refclk_1_p,
@@ -383,7 +384,28 @@ begin
                 ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
             );
     end generate;
-    
+
+    --================================--
+    -- TTC TX module
+    --================================--
+
+    g_ttc_txL: if CFG_USE_TTC_TX_LINK generate 
+        i_ttc_tx : entity work.ttc_tx
+            generic map(
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+            )
+            port map(
+                reset_i      => '0',
+                ttc_clocks_i => ttc_clks,
+                ttc_cmds_i   => ttc_cmds,
+                ttc_data_o   => ttc_tx_mgt_data,
+                ipb_reset_i  => ipb_reset,
+                ipb_clk_i    => ipb_clk,
+                ipb_miso_o   => ipb_sys_miso_arr(C_IPB_SYS_SLV.ttc_tx),
+                ipb_mosi_i   => ipb_sys_mosi_arr(C_IPB_SYS_SLV.ttc_tx)
+            );
+    end generate;
+                
     --================================--
     -- Board System registers
     --================================--
@@ -598,6 +620,40 @@ begin
     
     end generate;
 
+    -- TTC TX links
+    g_use_ttc_links : if CFG_USE_TTC_TX_LINK generate
+        g_ttc_links : for i in CFG_TTC_LINKS'range generate
+            signal rx_link_data     : t_mgt_16b_rx_data;
+            signal rx_link_status   : t_mgt_status; 
+        begin
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txdata(15 downto 0) <= ttc_tx_mgt_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispmode <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txchardispval <= (others => '0');
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txcharisk <= (others => '0');
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).tx).txreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxreset <= '0';
+            mgt_ctrl_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxslide <= '0';
+            
+            rx_link_data.rxdata <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxdata(15 downto 0);
+            rx_link_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxbyteisaligned;
+            rx_link_data.rxbyterealign <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxbyterealign;
+            rx_link_data.rxcommadet <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxcommadet;
+            rx_link_data.rxdisperr <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxdisperr(1 downto 0);  
+            rx_link_data.rxnotintable <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxnotintable(1 downto 0);  
+            rx_link_data.rxchariscomma <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxchariscomma(1 downto 0);  
+            rx_link_data.rxcharisk <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx).rxcharisk(1 downto 0);     
+            
+            rx_link_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx);     
+                        
+            i_ila_ttc_rx_link : entity work.ila_mgt_rx_16b_wrapper
+                port map(
+                    clk_i        => mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_TTC_LINKS(i)).rx),
+                    rx_data_i    => rx_link_data,
+                    mgt_status_i => rx_link_status
+                );            
+        end generate;
+    end generate;
+    
     reset_powerup <= gem_reset_powerup(0);
 
 end gem_x2o_arch;

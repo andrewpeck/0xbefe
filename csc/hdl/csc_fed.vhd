@@ -45,6 +45,7 @@ entity csc_fed is
         ttc_data_n_i            : in  std_logic;
         external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
         ttc_cmds_o              : out t_ttc_cmds;
+        ttc_cmds_i              : in  t_ttc_cmds := TTC_CMDS_NULL;
         
         -- DMB links
         dmb_rx_usrclk_i         : in  std_logic;
@@ -153,9 +154,9 @@ architecture csc_fed_arch of csc_fed is
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_rx_data_arr              : t_gbt_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_rx_valid_arr             : std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
-    signal gbt_tx_bitslip_arr           : t_std7_array(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_link_status_arr          : t_gbt_link_status_arr(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_ready_arr                : std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
+    signal gbt_prbs_tx_en               : std_logic;
 
     --== GBT elinks ==--
     signal promless_tx_data             : std_logic_vector(15 downto 0);
@@ -239,7 +240,7 @@ begin
             ttc_clks_i          => ttc_clocks_i,
             ttc_clks_status_i   => ttc_clk_status_i,
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
-            ttc_cmds_i          => TTC_CMDS_NULL,
+            ttc_cmds_i          => ttc_cmds_i,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
             local_l1a_req_i     => daq_l1a_request or external_trigger_i,
@@ -318,6 +319,7 @@ begin
             manual_ipbus_reset_o   => manual_ipbus_reset,
             manual_link_reset_o    => manual_link_reset,
             loopback_gbt_test_en_o => loopback_gbt_test_en,
+            gbt_prbs_tx_en_o       => gbt_prbs_tx_en,
             xdcfeb_switches_o      => xdcfeb_switches_regs,
             xdcfeb_rx_data_i       => xdcfeb_rx_data,
             promless_stats_i       => promless_stats,
@@ -442,7 +444,7 @@ begin
 
             tx_we_arr_i                 => (others => '1'),
             tx_data_arr_i               => gbt_tx_data_arr,
-            tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
+            tx_bitslip_cnt_i            => (others => (others => '0')),
 
             rx_bitslip_cnt_i            => (others => (others => '0')),
             rx_bitslip_auto_i           => (others => '1'),
@@ -455,6 +457,7 @@ begin
             mgt_tx_data_arr_o           => gbt_tx_data_arr_o,
             mgt_rx_data_arr_i           => gbt_rx_data_arr_i,
 
+            prbs_mode_en_i              => gbt_prbs_tx_en,
             link_status_arr_o           => gbt_link_status_arr
         );
 

@@ -1,0 +1,100 @@
+<!-- TTC TX module -->
+<node id="LINK_DATA_GEN"  address="0x00090000"
+      description="This module controls the link data generator"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/misc/link_data_generator.vhd"
+      fw_user_clock_signal="axi_clk_i"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="DAQ_LATENCY" address="0x1" mask="0x000000ff" permission="rw"
+          description="Controls how many BX the TTC DAQ counters are delayed for DAQ FIFO readout: this effectively emulates the DAQ data delay w.r.t. L1A"
+          fw_signal="daq_latency" fw_default="0x14"/>
+  </node>
+
+  <node id="STATUS" address="0x1000">
+    <node id="TTC_FIFO_FULL" address="0x0" mask="0x00000001" permission="r"
+          description="This flag indicates if the TTC FIFO is currently full"
+          fw_signal="ttc_fifo_full"
+          sw_val_warn="self == 1"/>
+    <node id="TTC_FIFO_DATA_CNT" address="0x0" mask="0xffff0000" permission="r"
+          description="Number of data words in the TTC FIFO currently"
+          fw_signal="ttc_fifo_wr_data_cnt"
+          sw_val_warn="self > 200"/>
+    <node id="TTC_FIFO_HAD_OVERFLOW" address="0x0" mask="0x00000002" permission="r"
+          description="TTC FIFO had an overflow. This flag is latched and can be reset with a module reset register."
+          fw_signal="ttc_fifo_ovf_latch"
+          sw_val_bad="self == 1"/>
+    <node id="TTC_FIFO_HAD_UNDERFLOW" address="0x0" mask="0x00000004" permission="r"
+          description="TTC FIFO had an underflow. This flag is latched and can be reset with a module reset register."
+          fw_signal="ttc_fifo_unf_latch_axi"
+          sw_val_bad="self == 1"/>
+    <node id="TTC_FIRST_RESYNC_DONE" address="0x0" mask="0x00000008" permission="r"
+          description="This flag is set to 1 once the first resync has been issued, which starts the readout of the DAQ FIFOs"
+          fw_signal="ttc_first_resync_done_axi"
+          sw_val_warn="self == 0"/>
+
+    <node id="LINK${LINK}" address="0x10"
+          description="Status of link #${LINK}"
+          generate="true" generate_size="&NUM_LINK_GEN_LINKS;" generate_address_step="0x00000010" generate_idx_var="LINK">
+      <node id="EVENT_CNT" address="0x0" permission="r"
+            description="Number of events sent by this link"
+            fw_signal="link_evt_cnt_arr_axi(${LINK})"/>
+      <node id="LINK_WORD_ERR" address="0x1" mask="0x00000001" permission="r"
+            description="This flag is latched if the at the beginning of the event the first word does not contain the link word marker.
+                         The link word must always be the first word of the event, which indicates the orbit and bx at which to send the event.
+                         If this flag is set, most likely things are going to be screwed up on this link."
+            fw_signal="link_word_err_axi(${LINK})"
+            sw_val_bad="self == 1"/>
+      <node id="FIFO_FULL" address="0x1" mask="0x00000010" permission="r"
+            description="This flag indicates if the FIFO is currently full"
+            fw_signal="fifo_full(${LINK})"
+            sw_val_warn="self == 1"/>
+      <node id="FIFO_DATA_CNT" address="0x1" mask="0xffff0000" permission="r"
+            description="Number of data words in the FIFO currently"
+            fw_signal="fifo_wr_data_cnt(${LINK})"/>
+      <node id="FIFO_HAD_OVERFLOW" address="0x1" mask="0x00000020" permission="r"
+            description="FIFO had an overflow. This flag is latched and can be reset with a module reset register."
+            fw_signal="fifo_ovf_latch(${LINK})"
+            sw_val_bad="self == 1"/>
+      <node id="FIFO_HAD_UNDERFLOW" address="0x1" mask="0x00000040" permission="r"
+            description="FIFO had an underflow. This flag is latched and can be reset with a module reset register."
+            fw_signal="fifo_unf_latch_axi(${LINK})"
+            sw_val_bad="self == 1"/>
+    </node>
+  </node>
+
+  <node id="CONFIG" address="0x2000" description="Firmware configuration of this module">
+    <node id="NUM_LINKS" address="0x0" mask="0x000000ff" permission="r"
+          description="Number of links supported"
+          fw_signal="std_logic_vector(to_unsigned(g_NUM_LINKS, 8))"/>
+    <node id="AXI_WIDTH" address="0x0" mask="0x0003ff00" permission="r"
+          description="Width of the AXI stream bus"
+          fw_signal="std_logic_vector(to_unsigned(g_AXIS_WIDTH, 10))"/>
+    <node id="TTC_FIFO_DEPTH" address="0x1" mask="0x0000ffff" permission="r"
+          description="Depth of the TTC FIFO"
+          fw_signal="std_logic_vector(to_unsigned(TTC_FIFO_DEPTH, 16))"/>
+
+    <node id="LINK${LINK}" address="0x10"
+          description="Firmware configuration of link #${LINK}"
+          generate="true" generate_size="&NUM_LINK_GEN_LINKS;" generate_address_step="0x00000010" generate_idx_var="LINK">
+
+      <node id="WIDTH" address="0x0" mask="0x000000ff" permission="r"
+            description="The width of the user data bus on this link"
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_WIDTHS(${LINK}), 8))"/>
+      <node id="FIFO_DEPTH" address="0x0" mask="0xffffff00" permission="r"
+            description="The depth of the FIFO associated with this link"
+            fw_signal="std_logic_vector(to_unsigned(g_LINK_FIFO_DEPTHS(${LINK}), 24))"/>
+
+    </node>
+  </node>
+
+</node> <!-- End of TTC TX module -->

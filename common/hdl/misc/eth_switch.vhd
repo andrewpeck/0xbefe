@@ -36,7 +36,8 @@ entity eth_switch is
         g_NUM_PORTS             : integer;
         g_PORT_LINKS            : t_int_array;
         g_ETH_PORT_ROUTES       : t_int_array_2d;
-        g_IPB_CLK_PERIOD_NS     : integer
+        g_IPB_CLK_PERIOD_NS     : integer;
+        g_DEBUG                 : boolean := false
     );
     port (
         reset_i                 : in  std_logic;
@@ -115,6 +116,33 @@ architecture eth_switch_arch of eth_switch is
     
     type t_slv_per_port_array is array(integer range <>) of std_logic_vector(g_NUM_PORTS - 1 downto 0);
     type t_slv18_per_port_array is array(integer range <>) of t_std18_array(g_NUM_PORTS - 1 downto 0);
+
+    ------------- Components ---------------------
+
+    component ila_eth_switch
+        port(
+            clk     : in std_logic;
+            probe0  : in std_logic_vector(1 downto 0);
+            probe1  : in std_logic_vector(15 downto 0);
+            probe2  : in std_logic;
+            probe3  : in std_logic;
+            probe4  : in std_logic;
+            probe5  : in std_logic_vector(1 downto 0);
+            probe6  : in std_logic_vector(1 downto 0);
+            probe7  : in std_logic_vector(1 downto 0);
+            probe8  : in std_logic_vector(1 downto 0);
+            probe9  : in std_logic;
+            probe10 : in std_logic;
+            probe11 : in std_logic
+        );
+    end component;
+
+    component vio_eth_switch
+        port(
+            clk        : in  std_logic;
+            probe_out0 : out std_logic_vector(7 downto 0)
+        );
+    end component;
     
     -------------------------------------------------------
     
@@ -129,38 +157,43 @@ architecture eth_switch_arch of eth_switch is
     constant RX_DELAY_PIPE_DEPTH        : integer := 10;
     
     ------------- Resets ---------------------
-    signal reset_local_gbe      : std_logic := '0';
-    signal reset_i_sync_gbe     : std_logic := '0';
-    signal reset_gbe            : std_logic := '0';
+    signal reset_local_gbe          : std_logic := '0';
+    signal reset_i_sync_gbe         : std_logic := '0';
+    signal reset_gbe                : std_logic := '0';
         
     ------------- Resized MGT signals ---------------------
-    signal mgt_tx_data_gbe      : t_mgt_16b_tx_data_arr(g_NUM_PORTS - 1 downto 0) := (others => MGT_16B_TX_DATA_NULL);
+    signal mgt_tx_data_gbe          : t_mgt_16b_tx_data_arr(g_NUM_PORTS - 1 downto 0) := (others => MGT_16B_TX_DATA_NULL);
         
     -------------- Registers ------------------
-    signal port_mac_arr         : t_std48_array(g_NUM_PORTS - 1 downto 0) := (0 => x"000000123456", 1 => x"000000123457", 2 => x"000000123458", 3 => x"000000123459");--(others => (others => '0'));
-    signal no_match_route       : std_logic_vector(7 downto 0) := (others => '0');
-    signal learned_rx_mac_arr   : t_std48_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal rx_packet_cnt_arr    : t_std32_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal tx_packet_cnt_arr    : t_std32_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal rx_sof_error_arr     : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
-    signal rx_error_marker_arr  : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
-    signal tx_eof_err_arr       : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
-    signal fifo_ovf_arr         : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
-    signal fifo_unf_arr         : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
-    signal rx_not_in_tbl_cnt_arr: t_std16_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal rx_disperr_cnt_arr   : t_std16_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal port_mac_arr             : t_std48_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0')); --(0 => x"000000123456", 1 => x"000000123457", 2 => x"000000123458", 3 => x"000000123459");--(others => (others => '0'));
+    signal no_match_route           : std_logic_vector(7 downto 0) := (others => '0');
+    signal learned_rx_mac_arr       : t_std48_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal rx_packet_cnt_arr        : t_std32_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal tx_packet_cnt_arr        : t_std32_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal rx_sof_error_arr         : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
+    signal rx_error_marker_arr      : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
+    signal tx_eof_err_arr           : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
+    signal fifo_ovf_arr             : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
+    signal fifo_unf_arr             : std_logic_vector(g_NUM_PORTS - 1 downto 0) := (others => '0');
+    signal rx_not_in_tbl_cnt_arr    : t_std16_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal rx_disperr_cnt_arr       : t_std16_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal reset_fifo_on_8b10b_err  : std_logic := '0';
         
     -------------- FIFO signals ---------------
     -- NOTE: the fifo signal arrays are indexed [rx][tx] for the write signals and [tx][rx] for the read signals in order to avoid X in simulation
-    signal fifo_wr_en_arr2d     : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_full_arr2d      : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_ovf_arr2d       : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_unf_arr2d       : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_rd_en_arr2d     : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_empty_arr2d     : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '1'));
-    signal fifo_valid_arr2d     : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
-    signal fifo_dout_arr2d      : t_slv18_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => (others => '0')));
+    signal fifo_wr_en_arr2d         : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_full_arr2d          : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_ovf_arr2d           : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_unf_arr2d           : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_rd_en_arr2d         : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_empty_arr2d         : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '1'));
+    signal fifo_valid_arr2d         : t_slv_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => '0'));
+    signal fifo_dout_arr2d          : t_slv18_per_port_array(g_NUM_PORTS - 1 downto 0) := (others => (others => (others => '0')));
         
+    -------------- Debug signals ---------------
+    type t_rx_state_arr is array(integer range <>) of t_rx_state;
+    signal dbg_rx_states            : t_rx_state_arr(g_NUM_PORTS - 1 downto 0) := (others => IDLE);
+    
     ------ Register signals begin (this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py -- do not edit)
     ------ Register signals end ----------------------------------------------
 
@@ -200,11 +233,13 @@ begin
         signal rx_state             : t_rx_state := IDLE;
         signal dest_mac             : std_logic_vector(47 downto 0);
         signal eof                  : std_logic := '0';
+        signal fifo_reset           : std_logic := '0';
     begin
     
         -- wiring
         rx_data <= mgt_rx_data_i(rx).rxdata(15 downto 0);
         rx_charisk <= mgt_rx_data_i(rx).rxcharisk(1 downto 0);
+        dbg_rx_states(rx) <= rx_state;
         
         -- overflow or_reduce and latch
         i_fifo_ovf_latch : entity work.latch
@@ -268,84 +303,103 @@ begin
                     eof <= '0';
                     learned_rx_mac_arr(rx) <= (others => '0');
                     mac_match := (others => '0');
+                    fifo_reset <= '0';
                 else
                     
                     eof <= '0';
+                    fifo_reset <= '0';
                     
-                    case rx_state is
-                        
-                        -- look for the preamble and start of frame
-                        when IDLE =>
-                        
-                            if rx_data = ETH_PREAMBLE_SOF(word_cnt) and rx_charisk = ETH_PREAMBLE_SOF_CHARISK(word_cnt) then
-                                if word_cnt = 3 then
-                                    rx_state <= REG_MAC;
-                                    word_cnt <= 0;
-                                    rx_packet_cnt_arr(rx) <= std_logic_vector(unsigned(rx_packet_cnt_arr(rx)) + 1);
+                    if or_reduce(mgt_rx_data_i(rx).rxnotintable(1 downto 0)) = '1' then
+                        rx_state <= IDLE;
+                        word_cnt <= 0;
+                        fifo_wr_en_arr2d(rx) <= (others => '0');
+                        eof <= '0';
+                        mac_match := (others => '0');
+                        if reset_fifo_on_8b10b_err = '1' then
+                            fifo_reset <= '1';
+                        end if;
+                    else
+                    
+                        case rx_state is
+                            
+                            -- look for the preamble and start of frame
+                            when IDLE =>
+                            
+                                if rx_data = ETH_PREAMBLE_SOF(word_cnt) and rx_charisk = ETH_PREAMBLE_SOF_CHARISK(word_cnt) then
+                                    if word_cnt = 3 then
+                                        rx_state <= REG_MAC;
+                                        word_cnt <= 2;
+                                        rx_packet_cnt_arr(rx) <= std_logic_vector(unsigned(rx_packet_cnt_arr(rx)) + 1);
+                                    else
+                                        word_cnt <= word_cnt + 1;
+                                    end if;
                                 else
-                                    word_cnt <= word_cnt + 1;
+                                    if word_cnt /= 0 then
+                                        rx_sof_error_arr(rx) <= '1';
+                                    end if;
+                                    word_cnt <= 0;
                                 end if;
-                            else
-                                if word_cnt /= 0 then
+                                
+                                if rx_data = x"D555" and rx_charisk = "00" and word_cnt /= 3 then
                                     rx_sof_error_arr(rx) <= '1';
                                 end if;
-                                word_cnt <= 0;
-                            end if;
-                            
-                            if rx_data = x"D555" and rx_charisk = "00" and word_cnt /= 3 then
-                                rx_sof_error_arr(rx) <= '1';
-                            end if;
-                            
-                            mac_match := (others => '0');
-                            
-                        -- register the destination mac address
-                        when REG_MAC =>
-                            word_cnt <= word_cnt + 1;
-                            dest_mac(16  * word_cnt + 7 downto 16  * word_cnt) <= rx_data(15 downto 8);
-                            dest_mac(16  * word_cnt + 15 downto 16  * word_cnt + 8) <= rx_data(7 downto 0);
-                            
-                            if word_cnt = 2 then
-                                rx_state <= SENDING;
-                                word_cnt <= 0;
-                            end if;
-                            
-                            mac_match := (others => '0');
-                            
-                        when SENDING =>
-                            for i in 0 to NUM_VALID_ROUTES - 1 loop
-                                if dest_mac = port_mac_arr(g_ETH_PORT_ROUTES(rx)(i)) or dest_mac = BROADCAST_MAC then
-                                    fifo_wr_en_arr2d(rx)(g_ETH_PORT_ROUTES(rx)(i)) <= '1';
-                                    mac_match(i) := '1';
-                                else
-                                    fifo_wr_en_arr2d(rx)(g_ETH_PORT_ROUTES(rx)(i)) <= '0';
+                                
+                                mac_match := (others => '0');
+                                
+                            -- register the destination mac address
+                            when REG_MAC =>
+                                word_cnt <= word_cnt - 1;
+                                dest_mac(16  * word_cnt + 7 downto 16  * word_cnt) <= rx_data(15 downto 8);
+                                dest_mac(16  * word_cnt + 15 downto 16  * word_cnt + 8) <= rx_data(7 downto 0);
+                                
+                                if word_cnt = 0 then
+                                    rx_state <= SENDING;
+                                    word_cnt <= 2;
                                 end if;
-                            end loop;
-                            
-                            if or_reduce(mac_match) = '0' and unsigned(no_match_route) < g_NUM_PORTS then
-                                -- when no mac is matched, route it to a user defined default port (can be useful for inspection)
-                                fifo_wr_en_arr2d(rx)(to_integer(unsigned(no_match_route))) <= '1';
-                            end if;
-                            
-                            if word_cnt /= 3 then
-                                word_cnt <= word_cnt + 1;
-                                learned_rx_mac_arr(rx)(16  * word_cnt + 7 downto 16  * word_cnt) <= rx_data(15 downto 8);
-                                learned_rx_mac_arr(rx)(16  * word_cnt + 15 downto 16  * word_cnt + 8) <= rx_data(7 downto 0);                                
-                            end if;
-                            
-                            if rx_data(7 downto 0) = x"FD" and rx_charisk(0) = '1' then
-                                eof <= '1';
-                            elsif rx_data(7 downto 0) = x"FE" and rx_charisk(0) = '1' then
-                                rx_error_marker_arr(rx) <= '1';
-                                eof <= '1';
-                            end if;
-                            
-                            if eof = '1' then
-                                rx_state <= IDLE;
-                                word_cnt <= 0;
-                                fifo_wr_en_arr2d(rx) <= (others => '0');
-                            end if;
-                            
-                    end case;
+                                
+                                mac_match := (others => '0');
+                                
+                            when SENDING =>
+                                for i in 0 to NUM_VALID_ROUTES - 1 loop
+                                    if dest_mac = port_mac_arr(g_ETH_PORT_ROUTES(rx)(i)) or dest_mac = BROADCAST_MAC then
+                                        fifo_wr_en_arr2d(rx)(g_ETH_PORT_ROUTES(rx)(i)) <= '1';
+                                        mac_match(i) := '1';
+                                    else
+                                        fifo_wr_en_arr2d(rx)(g_ETH_PORT_ROUTES(rx)(i)) <= '0';
+                                    end if;
+                                end loop;
+                                
+                                if or_reduce(mac_match) = '0' and unsigned(no_match_route) < g_NUM_PORTS then
+                                    -- when no mac is matched, route it to a user defined default port (can be useful for inspection)
+                                    fifo_wr_en_arr2d(rx)(to_integer(unsigned(no_match_route))) <= '1';
+                                end if;
+                                
+                                if word_cnt /= 3 then
+                                    word_cnt <= word_cnt - 1;
+                                    learned_rx_mac_arr(rx)(16  * word_cnt + 7 downto 16  * word_cnt) <= rx_data(15 downto 8);
+                                    learned_rx_mac_arr(rx)(16  * word_cnt + 15 downto 16  * word_cnt + 8) <= rx_data(7 downto 0);                            
+                                end if;
+                                
+                                if word_cnt = 0 then
+                                    word_cnt <= 3;
+                                end if;
+                                
+                                if rx_data(7 downto 0) = x"FD" and rx_charisk(0) = '1' then
+                                    eof <= '1';
+                                elsif rx_data(7 downto 0) = x"FE" and rx_charisk(0) = '1' then
+                                    rx_error_marker_arr(rx) <= '1';
+                                    eof <= '1';
+                                end if;
+                                
+                                if eof = '1' then
+                                    rx_state <= IDLE;
+                                    word_cnt <= 0;
+                                    fifo_wr_en_arr2d(rx) <= (others => '0');
+                                end if;
+                                
+                        end case;
+                    
+                    end if;
                 end if;
             end if;
         end process;
@@ -388,7 +442,7 @@ begin
                 )
                 port map(
                     sleep         => '0',
-                    rst           => reset_gbe,
+                    rst           => reset_gbe or fifo_reset,
                     wr_clk        => gbe_clk_i,
                     wr_en         => fifo_wr_en_extended,
                     din           => rx_data_dly,
@@ -498,6 +552,65 @@ begin
         end process;
         
     end generate;
+
+    gen_debug : if g_DEBUG generate
+        signal dbg_port_sel             : std_logic_vector(7 downto 0) := (others => '0');
+        signal dbg_port_sel_int         : integer range 0 to 255 := 0;
+        signal dbg_rx_state             : t_rx_state := IDLE;
+        signal dbg_rx_data              : t_mgt_16b_rx_data;
+        signal dbg_rx_sof_err           : std_logic;
+        signal dbg_rx_error_marker      : std_logic;
+        signal dbg_fifo_ovf             : std_logic;        
+    begin 
+        
+        dbg_port_sel_int <= to_integer(unsigned(dbg_port_sel));
+        
+        process (gbe_clk_i)
+        begin
+            if rising_edge(gbe_clk_i) then
+                if dbg_port_sel_int < g_NUM_PORTS then
+                    dbg_rx_state <= dbg_rx_states(dbg_port_sel_int);
+                    dbg_rx_data <= mgt_rx_64b_to_16b(mgt_rx_data_i(dbg_port_sel_int));
+                    dbg_rx_sof_err <= rx_sof_error_arr(dbg_port_sel_int);
+                    dbg_rx_error_marker <= rx_error_marker_arr(dbg_port_sel_int);
+                    dbg_fifo_ovf <= or_reduce(fifo_ovf_arr2d(dbg_port_sel_int));
+                else
+                    dbg_rx_state <= IDLE;
+                    dbg_rx_data <= MGT_16B_RX_DATA_NULL;
+                    dbg_rx_sof_err <= '0';
+                    dbg_rx_error_marker <= '0';
+                    dbg_fifo_ovf <= '0';
+                end if;
+            end if;
+        end process;
+         
+        
+--        std_logic_vector(to_unsigned(t_daq_state'pos(daq_state), 4))
+        
+        i_vio_eth_switch : vio_eth_switch
+            port map(
+                clk        => gbe_clk_i,
+                probe_out0 => dbg_port_sel
+            );        
+        
+        i_ila_eth_switch : ila_eth_switch
+            port map(
+                clk     => gbe_clk_i,
+                probe0  => std_logic_vector(to_unsigned(t_rx_state'pos(dbg_rx_state), 2)),
+                probe1  => dbg_rx_data.rxdata,
+                probe2  => dbg_rx_data.rxbyteisaligned,
+                probe3  => dbg_rx_data.rxbyterealign,
+                probe4  => dbg_rx_data.rxcommadet,
+                probe5  => dbg_rx_data.rxchariscomma,
+                probe6  => dbg_rx_data.rxcharisk,
+                probe7  => dbg_rx_data.rxdisperr,
+                probe8  => dbg_rx_data.rxnotintable,
+                probe9  => dbg_rx_sof_err,
+                probe10 => dbg_rx_error_marker,
+                probe11 => dbg_fifo_ovf
+            );
+        
+    end generate; 
 
     --===============================================================================================
     -- this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py (do not edit)

@@ -203,6 +203,9 @@
     <node id="GBT_IC_RX_USE_EC" address="0x4" mask="0x00000001" permission="rw" ignore="&STATION;!=0"
           description="When this option is set, the sub lpGBT IC communication goes fully through the boss lpBGT via the bidirectional EC channel. When unset, the sub lpGBT IC communication goes to the boss lpGBT EC, but comes back through the sub lpGBT Ic channel. With the proper configuration sequence, it completely avoids blind IC transactions with the sub lpGBT."
           fw_signal="gbt_ic_rx_use_ec" fw_default="0b1"/>
+    <node id="GBT_PRBS_TX_EN" address="0x4" mask="0x00000002" permission="rw"
+          description="Enable / disable GBT PRBS31 TX (should be disabled in normal operation). When enabled, this feature replaces all elink data (except IC and EC) with a PRBS31 sequence which can be checked by backend GBT RX PRBS31 checker when loopback is enabled on the chip."
+          fw_signal="gbt_prbs_tx_en" fw_default="0b0"/>          
   </node>
 
   <node id="RELEASE" address="0x30">
@@ -1172,11 +1175,16 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_unf"
           sw_val_bad="self == 1"/>
 
-    <node id="GBT${GBT}_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
+    <node id="GBT${GBT}_FEC_ERR_CNT" address="0x10" mask="0x0000ffff" permission="r"
           description="Number of FEC errors corrected by the GBT decoder"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_correction_cnt"
           sw_val_warn="self > 0"/>
+
+    <node id="GBT${GBT}_PRBS_ERR_CNT" address="0x10" mask="0xffff0000" permission="r"
+          description="Number of PRBS errors after the FEC. This is only meaningful if GBT PRBS TX mode is enabled and loopback is enabled on the GBT chip"
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_prbs_err_cnt"/>
 
     <node id="GBT${GBT}_TX_PHASE" address="0x0" mask="0x0007f000" permission="rw"
           description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
@@ -1217,7 +1225,7 @@
           description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
-    <node id="VFAT${VFAT_IDX}" address="0x10"
+    <node id="VFAT${VFAT_IDX}" address="0x40"
           description="Link status of VFAT ${VFAT_IDX} on ${OH_IDX}"
           generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_IDX">
 

@@ -150,6 +150,8 @@ package ttc_pkg is
         bx    : std_logic_vector(11 downto 0);
     end record;
 
+    constant TTC_DAQ_CNTRS_NULL : t_ttc_daq_cntrs := (l1id => (others => '0'), orbit => (others => '0'), bx => (others => '0'));
+
 end ttc_pkg;
 --============================================================================
 --                                                                 Package end 

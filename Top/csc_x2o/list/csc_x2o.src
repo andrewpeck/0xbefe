@@ -17,7 +17,7 @@ boards/x2o/bd/x2o_bd.src
 
 # =============== Project ===============
 Top/csc_x2o/project_config.vhd
-boards/x2o/hdl/pkg/csc_vu13p_board_config_pkg.vhd
+boards/x2o/hdl/pkg/csc_vu13p_rev2_board_config_pkg.vhd
 boards/x2o/hdl/csc_x2o.vhd top=csc_x2o
 
 

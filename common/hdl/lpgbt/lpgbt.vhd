@@ -65,9 +65,11 @@ entity lpgbt is
 
         rx_data_arr_o               : out t_lpgbt_rx_frame_array(g_NUM_LINKS - 1 downto 0);
 
-        --===========--              
-        --   Status  --              
-        --===========-- 
+        --=====================--              
+        --   Status / Control --              
+        --=====================-- 
+
+        prbs_mode_en_i              : in  std_logic;
         
         link_status_arr_o           : out t_gbt_link_status_arr(g_NUM_LINKS - 1 downto 0)
 
@@ -79,6 +81,8 @@ architecture lpgbt_arch of lpgbt is
     --------- TX datapath ---------
     signal tx_dp_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal tx_dp_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+    signal tx_data_arr              : t_lpgbt_tx_frame_array(g_NUM_LINKS - 1 downto 0);
+    signal tx_prbs_data             : std_logic_vector(31 downto 0);
     signal tx_frames        : t_std64_array(g_NUM_LINKS - 1 downto 0);
     
     --------- TX gearbox ---------
@@ -105,7 +109,8 @@ architecture lpgbt_arch of lpgbt is
     signal rx_dp_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_corr_flags    : t_std234_array(g_NUM_LINKS - 1 downto 0);
     signal rx_corr_flag     : std_logic_vector(g_NUM_LINKS - 1 downto 0);
-    signal rx_corr_cnt      : t_std8_array(g_NUM_LINKS - 1 downto 0);
+    signal rx_corr_cnt              : t_std16_array(g_NUM_LINKS - 1 downto 0);
+    signal rx_data_arr              : t_lpgbt_rx_frame_array(g_NUM_LINKS - 1 downto 0);
 
     --------- RX frame aligner ---------
     signal rx_fa_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
@@ -115,6 +120,11 @@ architecture lpgbt_arch of lpgbt is
     signal rx_slide         : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_slide_frameclk: std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_slide_cnt     : t_std8_array(g_NUM_LINKS - 1 downto 0);
+
+    --------- RX PRBS ---------
+    signal rx_prbs_err_arr          : t_std7_array(g_NUM_LINKS - 1 downto 0); -- error flag per elink group
+    signal rx_prbs_err              : std_logic_vector(g_NUM_LINKS - 1 downto 0); -- aggregated prbs error flag
+    signal rx_prbs_err_cnt          : t_std16_array(g_NUM_LINKS - 1 downto 0);
     
 begin 
 
@@ -123,6 +133,8 @@ begin
     --============================================================--
 
     g_gbt_tx_link : for i in 0 to g_NUM_LINKS - 1 generate
+
+        tx_data_arr(i) <= tx_data_arr_i(i) when prbs_mode_en_i = '0' else (tx_data => tx_prbs_data, tx_ec_data => tx_data_arr_i(i).tx_ec_data, tx_ic_data => tx_data_arr_i(i).tx_ic_data);
 
         gen_skip_even_tx : if (not g_SKIP_ODD_TX) or (i mod 2 = 0) generate
 
@@ -153,9 +165,9 @@ begin
                     downlinkClkEn_i             => '1',
                     downlinkRst_i               => tx_dp_reset(i),
                     
-                    downlinkUserData_i          => tx_data_arr_i(i).tx_data,
-                    downlinkEcData_i            => tx_data_arr_i(i).tx_ec_data,
-                    downlinkIcData_i            => tx_data_arr_i(i).tx_ic_data,
+                    downlinkUserData_i          => tx_data_arr(i).tx_data,
+                    downlinkEcData_i            => tx_data_arr(i).tx_ec_data,
+                    downlinkIcData_i            => tx_data_arr(i).tx_ic_data,
                     
                     downLinkFrame_o             => tx_frames(i),
                     
@@ -264,6 +276,8 @@ begin
     --                         LpGBT RX                           --
     --============================================================--
     
+    rx_data_arr_o <= rx_data_arr;
+    
     g_gbt_rx_link : for i in 0 to g_NUM_LINKS - 1 generate
 
         --------- Resets ---------
@@ -359,9 +373,9 @@ begin
                 uplinkFrame_i                   => rx_gb_out_data(i),
                 
                 uplinkUserData_o(229 downto 224)=> open,
-                uplinkUserData_o(223 downto 0)  => rx_data_arr_o(i).rx_data,
-                uplinkEcData_o                  => rx_data_arr_o(i).rx_ec_data,
-                uplinkIcData_o                  => rx_data_arr_o(i).rx_ic_data,
+                uplinkUserData_o(223 downto 0)  => rx_data_arr(i).rx_data,
+                uplinkEcData_o                  => rx_data_arr(i).rx_ec_data,
+                uplinkIcData_o                  => rx_data_arr(i).rx_ic_data,
 
                 uplinkSelectDataRate_i          => '1',
                 uplinkSelectFEC_i               => '0',
@@ -381,7 +395,7 @@ begin
             
             i_corr_cnt : entity work.counter
                 generic map(
-                    g_COUNTER_WIDTH  => 8,
+                    g_COUNTER_WIDTH  => 16,
                     g_ALLOW_ROLLOVER => false
                 )
                 port map(
@@ -441,7 +455,72 @@ begin
         g_no_mgt_reset_on_even : if g_RESET_MGT_ON_EVEN = 0 generate
             mgt_ctrl_arr_o(i).rxreset <= '0';
         end generate;
+
+        --------- PRBS31 checkers ---------
+        
+        g_prbs_checker_group : for g in 0 to 6 generate
+            signal rx_prbs_data     : std_logic_vector(31 downto 0);
+            signal rx_prbs_err_data : std_logic_vector(31 downto 0);
+        begin
+            
+            rx_prbs_data <= rx_data_arr(i).rx_data(g * 32 + 31 downto g * 32);
+            
+            i_rx_prbs_check : entity work.PRBS_ANY
+                generic map(
+                    CHK_MODE    => true,
+                    INV_PATTERN => true,
+                    POLY_LENGHT => 31,
+                    POLY_TAP    => 28,
+                    NBITS       => 32
+                )
+                port map(
+                    RST      => reset_i or reset_rx_i,
+                    CLK      => rx_frame_clk_i,
+                    DATA_IN  => rx_prbs_data,
+                    EN       => '1',
+                    DATA_OUT => rx_prbs_err_data
+                );
+
+            rx_prbs_err_arr(i)(g) <= or_reduce(rx_prbs_err_data);        
+
+        end generate;    
+            
+        rx_prbs_err(i) <= or_reduce(rx_prbs_err_arr(i));
+        
+        i_prbs_cnt : entity work.counter
+            generic map(
+                g_COUNTER_WIDTH    => 16,
+                g_ALLOW_ROLLOVER   => false
+            )
+            port map(
+                ref_clk_i => rx_frame_clk_i,
+                reset_i   => reset_i or reset_rx_i or cnt_reset_i,
+                en_i      => rx_prbs_err(i),
+                count_o   => rx_prbs_err_cnt(i)
+            );
+        
+        link_status_arr_o(i).gbt_prbs_err_cnt <= rx_prbs_err_cnt(i); 
         
     end generate;    
+
+    --============================================================--
+    --                       TX PRBS31 generator                  --
+    --============================================================--
+
+    i_tx_prbs : entity work.PRBS_ANY
+        generic map(
+            CHK_MODE    => false,
+            INV_PATTERN => true,
+            POLY_LENGHT => 31,
+            POLY_TAP    => 28,
+            NBITS       => 32
+        )
+        port map(
+            RST      => reset_i or reset_tx_i,
+            CLK      => tx_frame_clk_i,
+            DATA_IN  => x"00000000",
+            EN       => '1',
+            DATA_OUT => tx_prbs_data
+        );
     
 end lpgbt_arch;

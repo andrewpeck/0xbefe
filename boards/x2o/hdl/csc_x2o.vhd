@@ -3,8 +3,8 @@
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 --
 -- Create Date:    2020-05-28
--- Module Name:    GEM_APEX
--- Description:    This is the top level of the GEM APEX project
+-- Module Name:    GEM_X2O
+-- Description:    This is the top level of the GEM X2O project
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ---- general notes about the board
@@ -42,6 +42,19 @@ entity csc_x2o is
         c2c_mgt_clk_p   : in std_logic;
         c2c_mgt_clk_n   : in std_logic;
  
+        tcds2_backplane_clk_p   : in  std_logic;
+        tcds2_backplane_clk_n   : in  std_logic;
+ 
+        tcds2_mgt_tx_p          : out std_logic;
+        tcds2_mgt_tx_n          : out std_logic;
+        tcds2_mgt_rx_p          : in  std_logic;
+        tcds2_mgt_rx_n          : in  std_logic;
+ 
+        lmk_refclk_0_p          : out std_logic;
+        lmk_refclk_0_n          : out std_logic;
+        lmk_refclk_1_p          : out std_logic;
+        lmk_refclk_1_n          : out std_logic;
+ 
         refclk0_p_i     : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0); -- async 156.25MHz clocks (one per quad)
         refclk0_n_i     : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
         refclk1_p_i     : in  std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);  -- sync clocks
@@ -55,6 +68,7 @@ architecture csc_x2o_arch of csc_x2o is
         port(
             clk_50_o          : out std_logic;
             clk_100_o         : out std_logic;
+            clk_125_o         : out std_logic;
             user_axil_clk_o   : out std_logic;
             axi_reset_b_o     : out std_logic;
             user_axil_araddr  : out std_logic_vector(31 downto 0);
@@ -146,6 +160,7 @@ architecture csc_x2o_arch of csc_x2o is
     -- DAQ and other
     signal clk_50               : std_logic;
     signal clk_100              : std_logic;
+    signal clk_125              : std_logic;
     signal slink_mgt_ref_clk    : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
 
@@ -169,6 +184,7 @@ begin
             c2c_mgt_clk_n     => c2c_mgt_clk_n,
             clk_50_o          => clk_50,
             clk_100_o         => clk_100,
+            clk_125_o         => clk_125,
             user_axil_clk_o   => axil_clk,
             user_axil_awaddr  => axil_m2s.awaddr,
             user_axil_awprot  => axil_m2s.awprot,
@@ -232,22 +248,59 @@ begin
     -- Clocks
     --================================--
 
-    i_ttc_clks : entity work.ttc_clocks
-        generic map(
-            g_CLK_STABLE_FREQ           => 100_000_000,
-            g_GEM_STATION               => 1,
-            g_LPGBT_2P56G_LOOPBACK_TEST => false,
-            g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)
-        )
-        port map(
-            clk_stable_i        => axil_clk,
-            clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
-            clk_gbt_mgt_ready_i => '1',
-            clocks_o            => ttc_clks,
-            ctrl_i              => ttc_clk_ctrl(0),
-            status_o            => ttc_clk_status
-        );
 
+
+    --================================--
+    -- TTC / TCDS2
+    --================================--
+
+    assert CFG_BOARD_TYPE = x"4" or CFG_BOARD_TYPE = x"5" report "Unknown X2O revision: board type is not equal to 4 (X2O rev1) or 5 (X2O rev2)" severity failure;
+
+    g_x2o_rev1 : if CFG_BOARD_TYPE = x"4" generate 
+        i_ttc_clks : entity work.ttc_clocks
+            generic map(
+                g_CLK_STABLE_FREQ           => 100_000_000,
+                g_GEM_STATION               => 1,
+                g_LPGBT_2P56G_LOOPBACK_TEST => false,
+                g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)
+            )
+            port map(
+                clk_stable_i        => axil_clk,
+                clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
+                clk_gbt_mgt_ready_i => '1',
+                clocks_o            => ttc_clks,
+                ctrl_i              => ttc_clk_ctrl(0),
+                status_o            => ttc_clk_status
+            );
+    end generate;
+    
+    g_x2o_rev2 : if CFG_BOARD_TYPE = x"5" generate 
+        i_tcds2 : entity work.tcds2
+            generic map(
+                G_USE_40MHZ_CLEANED_IN => true
+            )
+            port map(
+                reset_i             => '0',
+                clk_125_i           => clk_125,
+                mgt_tx_p_o          => tcds2_mgt_tx_p,
+                mgt_tx_n_o          => tcds2_mgt_tx_n,
+                mgt_rx_p_i          => tcds2_mgt_rx_p,
+                mgt_rx_n_i          => tcds2_mgt_rx_n,
+                mgt_refclk_320_i    => refclk1(CFG_TCDS2_MGT_REFCLK1),
+                clk40_cleaned_i     => refclk1_fabric(7),
+                clk_backplane_p_i   => tcds2_backplane_clk_p,
+                clk_backplane_n_i   => tcds2_backplane_clk_n,
+                clk40_out_pri_p_o   => lmk_refclk_0_p,
+                clk40_out_pri_n_o   => lmk_refclk_0_n,
+                clk40_out_sec_p_o   => lmk_refclk_1_p,
+                clk40_out_sec_n_o   => lmk_refclk_1_n,
+                ttc_clks_o          => ttc_clks,
+                ttc_cmds_o          => open, --ttc_cmds,
+                clk_ctrl_i          => ttc_clk_ctrl(0),
+                clk_status_o        => ttc_clk_status
+            );
+    end generate;
+    
     --================================--
     -- MGTs
     --================================--
@@ -295,33 +348,33 @@ begin
             ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
         );
 
-    --================================--
-    -- SLink Rocket
-    --================================--
-
-    i_slink_rocket : entity work.slink_rocket
-        generic map(
-            g_NUM_CHANNELS      => CFG_NUM_SLRS,
-            g_LINE_RATE         => "25.78125",
-            q_REF_CLK_FREQ      => "156.25",
-            g_MGT_TYPE          => "GTY",
-            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
-        )
-        port map(
-            reset_i          => '0',
-            clk_stable_100_i => clk_100,
-            mgt_ref_clk_i    => slink_mgt_ref_clk,
-
-            daqlink_to_daq_o => daqlink_to_daq,
-            daq_to_daqlink_i => daq_to_daqlink,
-
-            ipb_reset_i      => ipb_reset,
-            ipb_clk_i        => ipb_clk,
-            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
-            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
-        );
-
-    slink_mgt_ref_clk <= refclk0(24);
+--    --================================--
+--    -- SLink Rocket
+--    --================================--
+--
+--    i_slink_rocket : entity work.slink_rocket
+--        generic map(
+--            g_NUM_CHANNELS      => CFG_NUM_SLRS,
+--            g_LINE_RATE         => "25.78125",
+--            q_REF_CLK_FREQ      => "156.25",
+--            g_MGT_TYPE          => "GTY",
+--            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+--        )
+--        port map(
+--            reset_i          => '0',
+--            clk_stable_100_i => clk_100,
+--            mgt_ref_clk_i    => slink_mgt_ref_clk,
+--
+--            daqlink_to_daq_o => daqlink_to_daq,
+--            daq_to_daqlink_i => daq_to_daqlink,
+--
+--            ipb_reset_i      => ipb_reset,
+--            ipb_clk_i        => ipb_clk,
+--            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
+--            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
+--        );
+--
+--    slink_mgt_ref_clk <= refclk0(24);
 
     --================================--
     -- PROMless
@@ -406,7 +459,8 @@ begin
                 g_NUM_PORTS         => CFG_ETH_SWITCH_NUM_PORTS,
                 g_PORT_LINKS        => CFG_ETH_SWITCH_LINKS,
                 g_ETH_PORT_ROUTES   => CFG_ETH_SWITCH_PORT_ROUTES,
-                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
+                g_DEBUG             => true
             )
             port map(
                 reset_i       => '0',
@@ -527,7 +581,7 @@ begin
                 from_promless_i         => from_promless(slr)          
             );
 
-        -- DMB link mapping (for now only single link DMBs are supported)
+        -- DMB link mapping
         g_csc_dmb_links : for i in 0 to CFG_NUM_DMBS(slr) - 1 generate
 
             g_dmb : if CFG_DMB_CONFIG_ARR(slr)(i).dmb_type = DMB generate
@@ -578,11 +632,13 @@ begin
 
         -- spy link TX mapping
         g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
-            csc_spy_usrclk                  <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
+            csc_spy_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx);
+            g_spy_links : for spy in 0 to CFG_SPY_LINKS'length(1) - 1 generate
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
+            end generate;
         end generate;
 
         -- no spy link TX
@@ -592,15 +648,15 @@ begin
 
         -- spy link RX mapping
         g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
-            csc_spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdata(15 downto 0);
-            csc_spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyteisaligned;
-            csc_spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxbyterealign;
-            csc_spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcommadet;
-            csc_spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxdisperr(1 downto 0);
-            csc_spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxnotintable(1 downto 0);
-            csc_spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxchariscomma(1 downto 0);
-            csc_spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx).rxcharisk(1 downto 0);
-            csc_spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
+            csc_spy_rx_data.rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxdata(15 downto 0);
+            csc_spy_rx_data.rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxbyteisaligned;
+            csc_spy_rx_data.rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxbyterealign;
+            csc_spy_rx_data.rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxcommadet;
+            csc_spy_rx_data.rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxdisperr(1 downto 0);
+            csc_spy_rx_data.rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxnotintable(1 downto 0);
+            csc_spy_rx_data.rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxchariscomma(1 downto 0);
+            csc_spy_rx_data.rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx).rxcharisk(1 downto 0);
+            csc_spy_rx_status               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).rx);
         end generate;
 
         -- no spy link RX

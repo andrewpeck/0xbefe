@@ -3,3 +3,5 @@ csc/ip/vio_ttc_test/vio_ttc_test.xci
 csc/ip/vio_xdcfeb_switches/vio_xdcfeb_switches.xci
 csc/ip/vio_odmb57_loopback/vio_odmb57_loopback.xci
 csc/ip/vio_csc_debug_link_select/vio_csc_debug_link_select.xci
+common/ip/ila_eth_switch/ila_eth_switch.xci
+common/ip/vio_eth_switch/vio_eth_switch.xci

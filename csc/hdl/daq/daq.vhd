@@ -653,7 +653,7 @@ begin
                 wr_ack        => open,
                 rd_en         => daqfifo_rd_en,
                 dout(65 downto 0)          => daqfifo_dout,
-                dout(71 downto 67)          => open,
+                dout(71 downto 66)          => open,
                 empty         => daqfifo_empty,
                 prog_empty    => daqfifo_prog_empty,
                 rd_data_count => open,
