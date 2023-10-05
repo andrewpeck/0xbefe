@@ -165,6 +165,7 @@ begin
         i_sync_prbs_err_cnt : xpm_cdc_gray
             generic map(
                 DEST_SYNC_FF          => 8,
+                REG_OUTPUT            => 1,
                 WIDTH                 => 32
             )
             port map(
@@ -190,6 +191,7 @@ begin
         i_sync_eyescan_err_cnt : xpm_cdc_gray
             generic map(
                 DEST_SYNC_FF          => 8,
+                REG_OUTPUT            => 1,
                 WIDTH                 => 32
             )
             port map(

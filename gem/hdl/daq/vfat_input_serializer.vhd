@@ -31,7 +31,6 @@ entity vfat_input_serializer is
         -- outputs
         data_valid_o        : out std_logic;
         data_o              : out std_logic_vector(191 downto 0);
-        crc_err_o           : out std_logic;
         zero_packet_o       : out std_logic;
         overflow_o          : out std_logic;
         underflow_o         : out std_logic
@@ -59,11 +58,13 @@ begin
     --======== Output ========--
     
     process(rd_clk_i)
+        variable invalid_bc : std_logic;
     begin
         if (rising_edge(rd_clk_i)) then
+            invalid_bc := '0' when to_integer(unsigned(data_arr(vfat_idx)(159 downto 144))) >= 1 and to_integer(unsigned(data_arr(vfat_idx)(159 downto 144))) <= to_integer(unsigned(C_TTC_NUM_BXs)) else '1';
+
             data_valid_o <= not buffer_empty_arr(vfat_idx);
-            data_o <= "000" & std_logic_vector(to_unsigned(vfat_idx, 5)) & "0000000" & crc_err_arr(vfat_idx) & data_arr(vfat_idx);
-            crc_err_o <= crc_err_arr(vfat_idx);
+            data_o <= "000" & std_logic_vector(to_unsigned(vfat_idx, 5)) & "000000" & invalid_bc & crc_err_arr(vfat_idx) & data_arr(vfat_idx);
             zero_packet_o <= not or_reduce(data_arr(vfat_idx) and x"00000000ffffffffffffffffffffffffffffffff0000");
             
             overflow_o <= or_reduce(buffer_ovf_arr);

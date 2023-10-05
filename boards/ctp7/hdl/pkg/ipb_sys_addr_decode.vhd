@@ -15,7 +15,7 @@ use work.ipbus.all;
 package ipb_sys_addr_decode is
 
     type t_ipb_sys_slv is record
-        dummy            : integer;
+        system           : integer;
         none             : integer;
     end record;
 
@@ -23,21 +23,26 @@ package ipb_sys_addr_decode is
 
     -- IPbus slave index definition
     constant C_IPB_SYS_SLV : t_ipb_sys_slv := (
-        dummy => 0,
-        none => 1
+        system => 0,
+        none => C_NUM_IPB_SYS_SLAVES
     );
 
     function ipb_sys_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer;
-    
+
 end ipb_sys_addr_decode;
 
 package body ipb_sys_addr_decode is
 
-	function ipb_sys_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer is
-		variable sel : integer;
-	begin
-  
-		return C_IPB_SYS_SLV.none;
-	end ipb_sys_addr_sel;
+    function ipb_sys_addr_sel(signal addr : in std_logic_vector(31 downto 0)) return integer is
+        variable sel : integer;
+    begin
+
+        if    std_match(addr, "--------00000000----------------") then sel := C_IPB_SYS_SLV.system;
+        else  sel:= C_IPB_SYS_SLV.none;
+        end if;
+
+        return sel;
+
+    end ipb_sys_addr_sel;
 
 end ipb_sys_addr_decode;

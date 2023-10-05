@@ -63,6 +63,8 @@ $(UPDATE_LIST): config
 			elif [[ $@ == *"ge11"* ]] ; then \
 				system="ge11" ; \
 				type="-l long" ; \
+				unset PYTHONHOME ; \
+				unset PYTHONPATH ; \
 			else \
 				system="unknown" ; \
 				type="" ; \

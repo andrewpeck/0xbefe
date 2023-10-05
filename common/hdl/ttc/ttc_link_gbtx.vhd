@@ -126,8 +126,8 @@ begin
             tx_data_arr_i               => (others => (others => '0')),
             tx_bitslip_cnt_i            => (others => (others => '0')),
 
-            rx_bitslip_cnt_i            => (others => gbt_rx_phase),
-            rx_bitslip_auto_i           => (others => gbt_rx_phase_auto),
+            -- rx_bitslip_cnt_i            => (others => gbt_rx_phase),
+            -- rx_bitslip_auto_i           => (others => gbt_rx_phase_auto),
             rx_data_valid_arr_o         => open,
             rx_data_arr_o(0)            => gbt_rx_data,
             rx_data_widebus_arr_o       => open,

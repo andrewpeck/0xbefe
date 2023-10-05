@@ -1,4 +1,4 @@
-generate_project:ge210_cvp13:
+GEN:ge210_cvp13:
     extends: .generate_project
     variables:
       extends: .vars

@@ -52,10 +52,10 @@ entity gem_amc is
         ttc_clocks_i            : in  t_ttc_clks;
         ttc_clk_status_i        : in  t_ttc_clk_status;
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
-        ttc_data_p_i            : in  std_logic;      -- TTC protocol backplane signals
-        ttc_data_n_i            : in  std_logic;
-        external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
-        ttc_cmds_i              : in  t_ttc_cmds;
+        ttc_data_p_i            : in  std_logic := '1';      -- TTC protocol backplane signals
+        ttc_data_n_i            : in  std_logic := '0';
+        external_trigger_i      : in  std_logic := '0';      -- should be on TTC clk domain
+        ttc_cmds_i              : in  t_ttc_cmds := TTC_CMDS_NULL;
 
         -- Trigger RX GTX / GTH links (3.2Gbs, 16bit @ 160MHz w/ 8b10b encoding)
         gt_trig0_rx_clk_arr_i   : in  std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
@@ -576,6 +576,7 @@ begin
     i_daq : entity work.daq
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
             g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO  => false,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,

@@ -36,6 +36,8 @@ package ttc_pkg is
 
     type t_ttc_cmds is record
         l1a        : std_logic;
+        real_l1a   : std_logic; -- notify that the l1a signal is "real" and originates from the selected TTC source
+        fake_l1a   : std_logic; -- notify that the l1a signal is "fake" and originates from the fake multi-BX readout
         bc0        : std_logic;
         ec0        : std_logic;
         oc0        : std_logic;
@@ -47,7 +49,7 @@ package ttc_pkg is
         test_sync  : std_logic;
     end record;
 
-    constant TTC_CMDS_NULL : t_ttc_cmds := (l1a => '0', bc0 => '0', ec0 => '0', oc0 => '0', resync => '0', hard_reset => '0', start => '0', stop => '0', calpulse => '0', test_sync => '0');
+    constant TTC_CMDS_NULL : t_ttc_cmds := (l1a => '0', real_l1a => '0', fake_l1a => '0', bc0 => '0', ec0 => '0', oc0 => '0', resync => '0', hard_reset => '0', start => '0', stop => '0', calpulse => '0', test_sync => '0');
 
     type t_ttc_cmds_arr is array(integer range <>) of t_ttc_cmds;
 
@@ -90,6 +92,7 @@ package ttc_pkg is
         cmd_enable       : std_logic;
         calib_mode       : std_logic;
         l1a_delay        : std_logic_vector(9 downto 0);
+        fake_multi_bx    : std_logic_vector(3 downto 0);
     end record;
 
     type t_phase_monitor_status is record
@@ -125,10 +128,11 @@ package ttc_pkg is
     end record;
 
     type t_ttc_status is record
-        clk_status  : t_ttc_clk_status;
-        bc0_status  : t_bc0_status;
-        single_err  : std_logic_vector(15 downto 0);
-        double_err  : std_logic_vector(15 downto 0);
+        clk_status    : t_ttc_clk_status;
+        bc0_status    : t_bc0_status;
+        single_err    : std_logic_vector(15 downto 0);
+        double_err    : std_logic_vector(15 downto 0);
+        fake_multi_bx : std_logic_vector(3 downto 0);
     end record;
 
     type t_ttc_cmd_cntrs is record

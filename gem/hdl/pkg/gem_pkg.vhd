@@ -130,36 +130,35 @@ package gem_pkg is
     --=====================================--
     
     type t_daq_input_status is record
-        vfat_fifo_ovf           : std_logic;
-        vfat_fifo_unf           : std_logic;
-        evtfifo_empty           : std_logic;
-        evtfifo_near_full       : std_logic;
-        evtfifo_full            : std_logic;
-        evtfifo_underflow       : std_logic;
-        evtfifo_near_full_cnt   : std_logic_vector(15 downto 0);
-        evtfifo_wr_rate         : std_logic_vector(16 downto 0);
-        infifo_empty            : std_logic;
-        infifo_near_full        : std_logic;
-        infifo_full             : std_logic;
-        infifo_underflow        : std_logic;
-        infifo_near_full_cnt    : std_logic_vector(15 downto 0);
-        infifo_wr_rate          : std_logic_vector(14 downto 0);
-        tts_state               : std_logic_vector(3 downto 0);
-        err_event_too_big       : std_logic;
-        err_evtfifo_full        : std_logic;
-        err_infifo_underflow    : std_logic;
-        err_infifo_full         : std_logic;
-        err_corrupted_vfat_data : std_logic;
-        err_vfat_block_too_big  : std_logic;
-        err_vfat_block_too_small: std_logic;
-        err_event_bigger_than_24: std_logic;
-        err_mixed_oh_bc         : std_logic;
-        err_mixed_vfat_bc       : std_logic;
-        err_mixed_vfat_ec       : std_logic;
-        cnt_corrupted_vfat      : std_logic_vector(31 downto 0);
-        eb_event_num            : std_logic_vector(23 downto 0);
-        eb_max_timer            : std_logic_vector(23 downto 0);
-        eb_last_timer           : std_logic_vector(23 downto 0);
+        vfat_fifo_ovf              : std_logic;
+        vfat_fifo_unf              : std_logic;
+        evtfifo_empty              : std_logic;
+        evtfifo_near_full          : std_logic;
+        evtfifo_full               : std_logic;
+        evtfifo_underflow          : std_logic;
+        evtfifo_near_full_cnt      : std_logic_vector(15 downto 0);
+        evtfifo_wr_rate            : std_logic_vector(16 downto 0);
+        infifo_empty               : std_logic;
+        infifo_near_full           : std_logic;
+        infifo_full                : std_logic;
+        infifo_underflow           : std_logic;
+        infifo_near_full_cnt       : std_logic_vector(15 downto 0);
+        infifo_wr_rate             : std_logic_vector(14 downto 0);
+        tts_state                  : std_logic_vector(3 downto 0);
+        err_event_too_big          : std_logic;
+        err_evtfifo_full           : std_logic;
+        err_infifo_underflow       : std_logic;
+        err_infifo_full            : std_logic;
+        err_invalid_bc_vfat_block  : std_logic;
+        err_invalid_crc_vfat_block : std_logic;
+        err_event_too_many_vfat    : std_logic;
+        err_mixed_vfat_bc          : std_logic;
+        err_mixed_vfat_ec          : std_logic;
+        cnt_invalid_bc_vfat_block  : std_logic_vector(31 downto 0);
+        cnt_invalid_crc_vfat_block : std_logic_vector(31 downto 0);
+        eb_event_num               : std_logic_vector(23 downto 0);
+        eb_max_timer               : std_logic_vector(23 downto 0);
+        eb_last_timer              : std_logic_vector(23 downto 0);
     end record;
 
     type t_daq_input_status_arr is array(integer range <>) of t_daq_input_status;
@@ -169,6 +168,11 @@ package gem_pkg is
         eb_zero_supression_en   : std_logic;
         eb_calib_mode           : std_logic;
         eb_calib_channel        : std_logic_vector(6 downto 0);
+        eb_keep_invalid_bc      : std_logic;
+        eb_keep_invalid_crc     : std_logic;
+        eb_evt_boundary_bc      : std_logic;
+        eb_evt_boundary_ec      : std_logic;
+        eb_evt_boundary_ec_next : std_logic;
     end record;
     
     type t_daq_input_control_arr is array(integer range <>) of t_daq_input_control;
@@ -189,7 +193,7 @@ package gem_pkg is
     type t_chamber_infifo_rd_array is array(integer range <>) of t_chamber_infifo_rd;
 
     type t_chamber_evtfifo_rd is record
-        dout          : std_logic_vector(83 downto 0);
+        dout          : std_logic_vector(91 downto 0);
         rd_en         : std_logic;
         empty         : std_logic;
         valid         : std_logic;

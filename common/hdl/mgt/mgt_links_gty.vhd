@@ -213,6 +213,11 @@ begin
         g_chan : for chan in 0 to g_NUM_CHANNELS - 1 generate
             signal tx_pipe  : t_mgt_64b_tx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
             signal rx_pipe  : t_mgt_64b_rx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
+
+            -- the goal is to give slack to the router, avoid inferring SRL
+            attribute SHREG_EXTRACT : string;
+            attribute SHREG_EXTRACT of tx_pipe : signal is "no";
+            attribute SHREG_EXTRACT of rx_pipe : signal is "no";
         begin
             
             -- RX pipe

@@ -60,7 +60,6 @@ architecture lpgbt_10g_tx_arch of lpgbt_10g_tx is
         interleaverBypass : in  std_logic;
         fecMode           : in  std_logic;
         txDataRate        : in  std_logic;
-        fecDisable        : in  std_logic;
         scramblerReset    : in  std_logic;
         upLinkFrame       : out std_logic_vector(255 downto 0)
     );
@@ -140,7 +139,6 @@ begin
             interleaverBypass     => '0',
             fecMode               => '0',
             txDataRate            => '1',
-            fecDisable            => '0',
             scramblerReset        => tx_dp_reset,
             upLinkFrame           => tx_dp_frame
         );

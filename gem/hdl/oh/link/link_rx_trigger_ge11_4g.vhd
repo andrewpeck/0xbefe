@@ -42,13 +42,16 @@ entity link_rx_trigger_ge11_4g is
         missed_comma_err_o  : out std_logic;
         not_in_table_err_o  : out std_logic;
         fifo_ovf_o          : out std_logic;
-        fifo_unf_o          : out std_logic
+        fifo_unf_o          : out std_logic;
+
+        fifo_bc0_i          : in  std_logic := '1';
+        fifo_bc0_o          : out std_logic
     );
 end link_rx_trigger_ge11_4g;
 
 architecture Behavioral of link_rx_trigger_ge11_4g is    
 
-    -- trigger links will send a K-char every 4 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0x1C, 0xF7, 0xFB, 0xFD
+    -- trigger links will send a K-char every 5 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0x1C, 0xF7, 0xFB, 0xFD
     -- in case there is an overflow in that particular BX, the K-char for this BX will be 0xFE
 
     -- in order of priority
@@ -75,12 +78,22 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal frame_200            : std_logic_vector(84 downto 0); -- 80 data bits + 1 bit for error (not in table) + 2 bits for charisk + 2 bits for chariscomma (from the comma state only)
     signal frame_40             : std_logic_vector(84 downto 0); -- 80 data bits + 1 bit for error (not in table) + 2 bits for charisk + 2 bits for chariscomma (from the comma state only)
     
+    signal fifo_wr_rst_busy     : std_logic;
+    signal fifo_rd_rst_busy     : std_logic;
     signal fifo_wr_en           : std_logic;
+    signal fifo_rd_en           : std_logic;
     signal fifo_empty           : std_logic;
     signal fifo_valid           : std_logic;
     signal fifo_ovf_200         : std_logic;
     signal fifo_ovf             : std_logic;
     signal fifo_unf             : std_logic;
+
+    -- multi-link alignment
+
+    constant LINK_ALIGNING_TIMEOUT : integer := 2; -- do not delay this link by more than 2 BX
+
+    signal link_aligned         : std_logic := '0';
+    signal link_aligning        : integer range 0 to LINK_ALIGNING_TIMEOUT := 0;
 
     -- frame decoding
     signal frame_counter        : integer range 0 to FRAME_MARKERS'length - 1;
@@ -155,7 +168,7 @@ begin
 
     --== Glue the words from a single BX together ==--
     
-    -- lift the internal reset when we see the first K char
+    -- lift the internal reset when we see the first BC0 marker
     process(rx_usrclk_i)
     begin
         if rising_edge(rx_usrclk_i) then
@@ -164,7 +177,7 @@ begin
                 reset_cntdown <= ERR_DELAY_AFTER_RESET;
                 check_errors_200 <= '0';
             else
-                if rx_data.rxcharisk = "01" then
+                if rx_data.rxcharisk = "01" and rx_data.rxchariscomma = "01" and rx_data.rxdata(7 downto 0) = BC0_FRAME_MARKER then
                     reset_200 <= '0';
                 else
                     reset_200 <= reset_200;
@@ -224,7 +237,7 @@ begin
                         frame_200(15 downto 0) <= rx_data.rxdata;
                         frame_200(81 downto 80) <= rx_data.rxcharisk;
                         frame_200(83 downto 82) <= rx_data.rxchariscomma;
-                        frame_200(84) <= '0';
+                        frame_200(84) <= '0' when rx_data.rxnotintable = "00" else '1';
                         fifo_wr_en <= '0';
                     when DATA_0 =>
                         frame_200(31 downto 16) <= rx_data.rxdata;
@@ -270,11 +283,13 @@ begin
             sleep         => '0',
             rst           => reset_200,
             wr_clk        => rx_usrclk_i,
-            wr_en         => fifo_wr_en,
+            wr_en         => fifo_wr_en and not fifo_wr_rst_busy,
+            wr_rst_busy   => fifo_wr_rst_busy,
             din           => frame_200,
             overflow      => fifo_ovf_200,
             rd_clk        => ttc_clk_40_i,
-            rd_en         => '1',
+            rd_rst_busy   => fifo_rd_rst_busy,
+            rd_en         => fifo_rd_en,
             dout          => frame_40,
             underflow     => fifo_unf,
             empty         => fifo_empty,
@@ -288,7 +303,46 @@ begin
     
     fifo_ovf_o <= fifo_ovf;
     fifo_unf_o <= fifo_unf;
-    
+
+    --== Align the frames accross multiple links ==--
+
+    process(ttc_clk_40_i)
+    begin
+        if rising_edge(ttc_clk_40_i) then
+            if reset_40 = '1' or fifo_rd_rst_busy = '1' then
+                fifo_rd_en    <= '0';
+                link_aligned  <= '0';
+                link_aligning <= 0;
+            elsif fifo_valid = '1' then
+                if link_aligned = '1' then
+                    fifo_rd_en <= '1';
+                elsif link_aligning /= 0 then
+                    if fifo_bc0_i = '1' or link_aligning = LINK_ALIGNING_TIMEOUT then
+                        fifo_rd_en    <= '1';
+                        link_aligned  <= '1';
+                    else
+                        fifo_rd_en    <= '0';
+                        link_aligning <= link_aligning + 1;
+                    end if;
+                else
+                    if frame_40(7 downto 0) = BC0_FRAME_MARKER and frame_40(81 downto 80) = "01" and frame_40(83 downto 82) = "01" then
+                        if fifo_bc0_i = '1' then
+                            fifo_rd_en   <= '1';
+                            link_aligned <= '1';
+                        else
+                            fifo_rd_en    <= '0';
+                            link_aligning <= 1;
+                        end if;
+                    else
+                        fifo_rd_en <= '1';
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
+
+    fifo_bc0_o <= '1' when frame_40(7 downto 0) = BC0_FRAME_MARKER else '0';
+
     --== Decode the frame ==--
     
     -- manage frame counter
