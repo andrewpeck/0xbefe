@@ -3,7 +3,7 @@ include:
       file: '/hog.yml'
       ref: 'v7.29.0'
 
-    - local: '/Top/csc_apex/gitlab-ci.yml'
+    # - local: '/Top/csc_apex/gitlab-ci.yml' # not needed
     - local: '/Top/csc_cvp13/gitlab-ci.yml'
     - local: '/Top/csc_x2o/gitlab-ci.yml'
     # - local: '/Top/csc_x2o_r1/gitlab-ci.yml' # special build
@@ -27,9 +27,9 @@ include:
     # - local: '/Top/oh_ge21.75/gitlab-ci.yml'
 
     # intermediate (devel) builds
-    # - local: '/Top/csc_apex/gitlab-ci-devel.yml' # FIXME CSC issues
-    # - local: '/Top/csc_cvp13/gitlab-ci-devel.yml' # FIXME CSC issues
-    # - local: '/Top/csc_x2o/gitlab-ci-devel.yml' # FIXME CSC issues
+    # - local: '/Top/csc_apex/gitlab-ci-devel.yml' # not needed
+    - local: '/Top/csc_cvp13/gitlab-ci-devel.yml'
+    - local: '/Top/csc_x2o/gitlab-ci-devel.yml'
     # - local: '/Top/csc_x2o_r1/gitlab-ci-devel.yml' # special build
     # - local: '/Top/csc_x2o_tamu/gitlab-ci-devel.yml' # special build
     - local: '/Top/ge11_ctp7/gitlab-ci-devel.yml'
