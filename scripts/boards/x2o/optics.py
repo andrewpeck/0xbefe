@@ -21,7 +21,7 @@ def x2o_get_qsfps():
     qsfps = x2o_manager.peripheral.autodetect_optics(verbose=False)
     return qsfps
 
-def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
+def x2o_optics(qsfps=None, show_opts=False, show_other=True):
     if qsfps is None:
         qsfps = x2o_get_qsfps()
 
@@ -30,8 +30,8 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
     cols = ["Cage", "Type", "Part", "Temperature", "RX power", "Alarms", "CDR"]
     if show_opts:
         cols.append("Options")
-    if show_rx_squelch:
-        cols.append("RX Squelch Disabled")
+    if show_other:
+        cols.append("Other")
 
     rows = []
     for i in range(X2O_NUM_CAGES):
@@ -45,7 +45,7 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
         rx_power = "----"
         alarms = "----"
         options = "----"
-        rx_squelch_dis = "----"
+        other = "----"
         cdr_status = "----"
         if i in qsfp_present_cages:
             qsfp = qsfps[i]
@@ -95,8 +95,14 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
                     if ii < len(opts_arr) - 1:
                         options += "\n"
 
-            if show_rx_squelch:
-                rx_squelch_dis = hex(qsfp.rx_squelch_disabled())
+            if show_other:
+                other = "RX squelch dis: %s" % hex(qsfp.rx_squelch_disabled())
+                emph_01 = qsfp.read_reg(3, 236)
+                emph_23 = qsfp.read_reg(3, 237)
+                amp_01 = qsfp.read_reg(3, 238)
+                amp_23 = qsfp.read_reg(3, 239)
+                other += "\nRX emphasis: %d %d %d %d" % ((emph_01 >> 4) & 0xf, emph_01 & 0xf, (emph_23 >> 4) & 0xf, emph_23 & 0xf)
+                other += "\nRX amplitude: %d %d %d %d" % ((amp_01 >> 4) & 0xf, amp_01 & 0xf, (amp_23 >> 4) & 0xf, amp_23 & 0xf)
 
             cdr_status = "TX: " + hex(qsfp.tx_cdr_enabled()) + ", RX: " + hex(qsfp.rx_cdr_enabled())
 
@@ -105,8 +111,8 @@ def x2o_optics(qsfps=None, show_opts=False, show_rx_squelch=True):
         row = [cage, type, part, temp, rx_power, alarms, cdr_status]
         if show_opts:
             row.append(options)
-        if show_rx_squelch:
-            row.append(rx_squelch_dis)
+        if show_other:
+            row.append(other)
         rows.append(row)
 
     grid_style = FULL_TABLE_GRID_STYLE
@@ -337,4 +343,4 @@ if __name__ == '__main__':
             print("Disable TX on cage %d" % cage)
             x2o_disable_tx(qsfps[cage])
 
-    x2o_optics(qsfps, show_opts=args.show_opts, show_rx_squelch=True)
+    x2o_optics(qsfps, show_opts=args.show_opts, show_other=True)
