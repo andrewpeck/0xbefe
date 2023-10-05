@@ -2,6 +2,9 @@
 # BEFE wrapper
 common/hdl/ttc/tcds2.vhd
 
+# TCLink MGT (generated and copied over to BEFE, would be better to generate it in the tclink dir before creating the project)
+common/ip/gtye4_slave_timing/gtye4_slave_timing.xcix
+
 # Interface
 tcds2/components/constants/firmware/hdl/constants_tcds2.vhd
 tcds2/components/tcds2_link/firmware/hdl/tcds2_link_pkg.vhd
@@ -21,9 +24,6 @@ tcds2/components/tcds2_link/firmware/hdl/ttc2_frame_splitter.vhd
 tcds2/components/tcds2_link/firmware/hdl/tts2_frame_builder.vhd
 
 tcds2/components/tcds2_link/firmware/hdl/tcds2_link_speed_pkg.vhd
-
-# TCLink MGT
-tclink/firmware/source/transceiver/ip_mgt_timing/gtye4_slave_timing.xcix
 
 # TCLink
 tclink/firmware/source/datapath/cdc_user/cdc_tx.vhd
