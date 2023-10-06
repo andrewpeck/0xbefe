@@ -269,7 +269,7 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
                     write_backend_reg(dinl_sbit_inj_node,dinl)
                     write_backend_reg(dinh_sbit_inj_node,dinh)
                     # Set FIFO sel - Bits [15:8] OH number, bits [7:0] VFAT number
-                    fifo_sel_addr = oh_select<<8 | vfat
+                    fifo_sel_addr = oh << 8 | vfat
                     write_backend_reg(fifo_sel_sbit_inj_node,fifo_sel_addr)
                     # Pulse load sbits enable
                     write_backend_reg(write_en_sbit_inj_node,1)
