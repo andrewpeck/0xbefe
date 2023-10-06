@@ -49,7 +49,7 @@
             fw_signal="gbt_status.gbt_rx_sync_status.had_unf"
             sw_val_bad="self == 1"/>
 
-      <node id="GBT_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
+      <node id="GBT_FEC_ERR_CNT" address="0x1" mask="0x0000ffff" permission="r"
             description="Number of FEC errors corrected by the GBT decoder"
             fw_signal="gbt_status.gbt_rx_correction_cnt"
             sw_val_warn="self > 0"/>
