@@ -399,8 +399,8 @@ begin
     
         -- DMB links
         signal csc_dmb_rx_usrclk_arr    : std_logic_vector(CFG_NUM_DMBS(slr) - 1 downto 0);
-        signal csc_dmb_rx_data_arr      : t_mgt_16b_rx_data_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
-        signal csc_dmb_rx_status_arr    : t_mgt_status_arr(CFG_NUM_DMBS(slr) - 1 downto 0);
+        signal csc_dmb_rx_data_arr2d    : t_mgt_64b_rx_data_arr_arr(CFG_NUM_DMBS(slr) - 1 downto 0)(3 downto 0);
+        signal csc_dmb_rx_status_arr2d  : t_mgt_status_arr_arr(CFG_NUM_DMBS(slr) - 1 downto 0)(3 downto 0);
         
         -- GBT links
         signal csc_gbt_rx_data_arr   : t_std40_array(CFG_NUM_GBT_LINKS(slr) - 1 downto 0);
@@ -423,12 +423,13 @@ begin
             generic map(
                 g_SLR               => slr,
                 g_NUM_OF_DMBs       => CFG_NUM_DMBS(slr),
+                g_DMB_CONFIG_ARR    => CFG_DMB_CONFIG_ARR(slr),
                 g_NUM_GBT_LINKS     => CFG_NUM_GBT_LINKS(slr),
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQLINK_CLK_FREQ  => 100_000_000,
                 g_USE_SLINK_ROCKET  => true,
-                g_DISABLE_TTC_DATA  => true
+                g_EXT_TTC_RECEIVER  => true
             )
             port map(
                 -- Resets
@@ -446,8 +447,9 @@ begin
                 
                 -- DMB links
                 dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
-                dmb_rx_data_arr_i       => csc_dmb_rx_data_arr,
-                dmb_rx_status_arr_i     => csc_dmb_rx_status_arr,
+                odmb_rx_usrclk_i        => mgt_master_txusrclk.odmb57,
+                dmb_rx_data_arr2d_i     => csc_dmb_rx_data_arr2d,
+                dmb_rx_status_arr2d_i   => csc_dmb_rx_status_arr2d,
     
                 -- GBT links
                 gbt_rx_data_arr_i       => csc_gbt_rx_data_arr,
@@ -487,19 +489,37 @@ begin
 
         -- DMB link mapping (for now only single link DMBs are supported)
         g_csc_dmb_links : for i in 0 to CFG_NUM_DMBS(slr) - 1 generate
-            csc_dmb_rx_usrclk_arr(i)               <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
-            csc_dmb_rx_data_arr(i).rxdata          <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxdata(15 downto 0);
-            csc_dmb_rx_data_arr(i).rxbyteisaligned <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxbyteisaligned;
-            csc_dmb_rx_data_arr(i).rxbyterealign   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxbyterealign;
-            csc_dmb_rx_data_arr(i).rxcommadet      <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxcommadet;
-            csc_dmb_rx_data_arr(i).rxdisperr       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxdisperr(1 downto 0);
-            csc_dmb_rx_data_arr(i).rxnotintable    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxnotintable(1 downto 0);
-            csc_dmb_rx_data_arr(i).rxchariscomma   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxchariscomma(1 downto 0);
-            csc_dmb_rx_data_arr(i).rxcharisk       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxcharisk(1 downto 0);
-            csc_dmb_rx_status_arr(i)               <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
-            
-            -- send some dummy data on the TX of the same fiber
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= MGT_64B_TX_DATA_NULL;
+
+            g_dmb : if CFG_DMB_CONFIG_ARR(slr)(i).dmb_type = DMB generate
+                csc_dmb_rx_usrclk_arr(i) <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
+                
+                csc_dmb_rx_data_arr2d(i)(0).rxdata(15 downto 0)         <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxdata(15 downto 0);
+                csc_dmb_rx_data_arr2d(i)(0).rxbyteisaligned             <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxbyteisaligned;
+                csc_dmb_rx_data_arr2d(i)(0).rxbyterealign               <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxbyterealign;
+                csc_dmb_rx_data_arr2d(i)(0).rxcommadet                  <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxcommadet;
+                csc_dmb_rx_data_arr2d(i)(0).rxdisperr(1 downto 0)       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxdisperr(1 downto 0);
+                csc_dmb_rx_data_arr2d(i)(0).rxnotintable(1 downto 0)    <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxnotintable(1 downto 0);
+                csc_dmb_rx_data_arr2d(i)(0).rxchariscomma(1 downto 0)   <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxchariscomma(1 downto 0);
+                csc_dmb_rx_data_arr2d(i)(0).rxcharisk(1 downto 0)       <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx).rxcharisk(1 downto 0);
+                
+                csc_dmb_rx_status_arr2d(i)(0) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
+                
+                -- send some dummy data on the TX of the same fiber
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= MGT_64B_TX_DATA_NULL;
+            end generate;
+
+            g_odmb7 : if CFG_DMB_CONFIG_ARR(slr)(i).dmb_type = ODMB7 generate
+                csc_dmb_rx_usrclk_arr(i) <= mgt_master_txusrclk.odmb57;
+                
+                g_odmb7_fiber : for f in 0 to CFG_DMB_CONFIG_ARR(slr)(i).num_fibers - 1 generate
+                    csc_dmb_rx_data_arr2d(i)(f) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
+                    csc_dmb_rx_status_arr2d(i)(f) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);
+                end generate;
+                
+                -- send some dummy data on the TX of the same fiber
+                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).tx_fiber).tx) <= MGT_64B_TX_DATA_NULL;
+            end generate;
+
         end generate; 
 
         g_csc_gbt_links : for gbt in 0 to CFG_NUM_GBT_LINKS(slr) - 1 generate
@@ -644,8 +664,9 @@ begin
                 probe4 : in std_logic_vector(15 downto 0);
                 probe5 : in std_logic;
                 probe6 : in std_logic;
-                probe7 : in std_logic_vector(2 downto 0);
-                probe8 : in std_logic_vector(1 downto 0)
+                probe7 : in std_logic;
+                probe8 : in std_logic_vector(2 downto 0);
+                probe9 : in std_logic_vector(1 downto 0)
             );
         end component;        
         
@@ -998,8 +1019,9 @@ begin
                 probe4 => rx_disperr,
                 probe5 => and_reduce(rx_byteisaligned),
                 probe6 => or_reduce(rx_byterealign),
-                probe7 => "000", -- bufstatus
-                probe8 => "00" -- rxclkcorr
+                probe7 => or_reduce(rx_commadet),
+                probe8 => "000", -- bufstatus
+                probe9 => "00" -- rxclkcorr
             );
 
         -- PRBS checker ILA

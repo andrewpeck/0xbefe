@@ -34,8 +34,9 @@ entity gty_qpll0_dmb_qpll1_gbe_156p25 is
         clks_o          : out t_mgt_qpll_clk_out;
         status_o        : out t_mgt_qpll_status;
 
-        drp_i           : in  t_drp_in;
-        drp_o           : out t_drp_out        
+        drp_clk_i       : in  std_logic;
+        drp_i           : in  t_drp_mosi;
+        drp_o           : out t_drp_miso        
     );
 end gty_qpll0_dmb_qpll1_gbe_156p25;
 
@@ -193,7 +194,7 @@ begin
             BGRCALOVRD        => "10000",
             BGRCALOVRDENB     => '1',
             DRPADDR           => drp_i.addr,
-            DRPCLK            => drp_i.clk,
+            DRPCLK            => drp_clk_i,
             DRPDI             => drp_i.di,
             DRPEN             => drp_i.en,
             DRPWE             => drp_i.we,

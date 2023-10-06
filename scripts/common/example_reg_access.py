@@ -18,7 +18,8 @@ def main():
     # if you just pass a string to writeReg or readReg like above, the XML node is looked up internally each time
     board_id_reg = get_node('BEFE.SYSTEM.CTRL.BOARD_ID')
     write_reg(board_id_reg, 0xbefe)
-    board_id = read_reg(link_reset_reg)
+    board_id = read_reg(board_id_reg)
+    print("Board ID: 0x%x" % board_id)
 
 if __name__ == '__main__':
     main()

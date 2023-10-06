@@ -15,6 +15,7 @@ use ieee.numeric_std.all;
 use work.common_pkg.all;
 use work.mgt_pkg.all;
 use work.board_config_package.all;
+use work.project_config.all;
 use work.ipbus.all;
 use work.registers.all;
 

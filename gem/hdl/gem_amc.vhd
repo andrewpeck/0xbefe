@@ -41,7 +41,7 @@ entity gem_amc is
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQ_CLK_FREQ       : integer;
         g_IS_SLINK_ROCKET    : boolean;
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_EXT_TTC_RECEIVER   : boolean := true -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
     );
     port(
         reset_i                 : in   std_logic;
@@ -52,9 +52,10 @@ entity gem_amc is
         ttc_clocks_i            : in  t_ttc_clks;
         ttc_clk_status_i        : in  t_ttc_clk_status;
         ttc_clk_ctrl_o          : out t_ttc_clk_ctrl;
-        ttc_data_p_i            : in  std_logic;      -- TTC protocol backplane signals
-        ttc_data_n_i            : in  std_logic;
-        external_trigger_i      : in  std_logic;      -- should be on TTC clk domain
+        ttc_data_p_i            : in  std_logic := '1';      -- TTC protocol backplane signals
+        ttc_data_n_i            : in  std_logic := '0';
+        external_trigger_i      : in  std_logic := '0';      -- should be on TTC clk domain
+        ttc_cmds_i              : in  t_ttc_cmds := TTC_CMDS_NULL;
 
         -- Trigger RX GTX / GTH links (3.2Gbs, 16bit @ 160MHz w/ 8b10b encoding)
         gt_trig0_rx_clk_arr_i   : in  std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
@@ -194,6 +195,7 @@ architecture gem_amc_arch of gem_amc is
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     signal emtf_tx_ready_arr        : std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
     signal emtf_tx_had_not_ready_arr: std_logic_vector(g_NUM_TRIG_TX_LINKS - 1 downto 0);
+    signal self_trigger             : std_logic;
 
     signal ge_clusters_arr          : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal me0_clusters_arr         : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -208,6 +210,8 @@ architecture gem_amc_arch of gem_amc is
     signal gbt_rx_valid_arr             : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
     signal gbt_tx_bitslip_arr           : t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    signal gbt_rx_bitslip_arr           : t_std6_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    signal gbt_rx_bitslip_auto_arr      : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
 
     signal gbt_link_status_arr          : t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     signal gbt_ready_arr                : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -340,7 +344,7 @@ begin
 
     i_ttc : entity work.ttc
         generic map (
-            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_EXT_TTC_RECEIVER  => g_EXT_TTC_RECEIVER,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
@@ -348,9 +352,10 @@ begin
             ttc_clks_i          => ttc_clocks_i,
             ttc_clks_status_i   => ttc_clk_status_i,
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
+            ttc_cmds_i          => ttc_cmds_i,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
-            local_l1a_req_i     => external_trigger_i,
+            local_l1a_req_i     => external_trigger_i or self_trigger,
             local_l1a_reset_i   => '0',
             ttc_cmds_o          => ttc_cmd,
             ttc_daq_cntrs_o     => ttc_counters,
@@ -486,7 +491,7 @@ begin
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
                 g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-                g_DEBUG             => True--CFG_DEBUG_SBIT_ME0
+                g_DEBUG             => CFG_DEBUG_SBIT_ME0
             )
             port map(
                 reset_i             => reset,
@@ -522,6 +527,7 @@ begin
             ttc_cmds_i         => ttc_cmd,
             sbit_clusters_i    => sbit_clusters_arr,
             sbit_link_status_i => sbit_links_status_arr,
+            self_trigger_o     => self_trigger,
             trig_led_o         => led_trigger_o,
             trig_tx_data_arr_o => emtf_data_arr,
             ipb_reset_i        => ipb_reset,
@@ -568,6 +574,7 @@ begin
     i_daq : entity work.daq
         generic map(
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
             g_DAQ_CLK_FREQ      => g_DAQ_CLK_FREQ,
             g_INCLUDE_SPY_FIFO  => false,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -644,23 +651,25 @@ begin
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
-            reset_i                 => reset,
-            clk_i                   => ttc_clocks_i.clk_40,
+            reset_i                     => reset,
+            clk_i                       => ttc_clocks_i.clk_40,
+                                        
+            gbt_link_status_arr_i       => gbt_link_status_arr,
+            vfat3_link_status_arr_i     => vfat3_link_status_arr,
+                                        
+            vfat_mask_arr_o             => vfat_mask_arr,
+            gbt_tx_bitslip_arr_o        => gbt_tx_bitslip_arr,
+            gbt_rx_bitslip_arr_o        => gbt_rx_bitslip_arr,
+            gbt_rx_bitslip_auto_arr_o   => gbt_rx_bitslip_auto_arr,
 
-            gbt_link_status_arr_i   => gbt_link_status_arr,
-            vfat3_link_status_arr_i => vfat3_link_status_arr,
-
-            vfat_mask_arr_o         => vfat_mask_arr,
-            gbt_tx_bitslip_arr_o    => gbt_tx_bitslip_arr,
-
-            spy_rx_usrclk_i         => spy_rx_usrclk_i,
-            spy_rx_data_i           => spy_rx_data_i,
-            spy_status_i            => spy_status_i,
-
-            ipb_reset_i             => ipb_reset,
-            ipb_clk_i               => ipb_clk_i,
-            ipb_miso_o              => ipb_miso_arr(C_IPB_SLV.oh_links),
-            ipb_mosi_i              => ipb_mosi_arr_i(C_IPB_SLV.oh_links)
+            spy_rx_usrclk_i             => spy_rx_usrclk_i,
+            spy_rx_data_i               => spy_rx_data_i,
+            spy_status_i                => spy_status_i,
+                                        
+            ipb_reset_i                 => ipb_reset,
+            ipb_clk_i                   => ipb_clk_i,
+            ipb_miso_o                  => ipb_miso_arr(C_IPB_SLV.oh_links),
+            ipb_mosi_i                  => ipb_mosi_arr_i(C_IPB_SLV.oh_links)
         );
 
     --===================--
@@ -734,7 +743,7 @@ begin
                 TX_ENCODING         => 0,
                 RX_ENCODING_EVEN    => 0,
                 RX_ENCODING_ODD     => g_GBT_WIDEBUS,
-                g_USE_RX_SYNC_FIFOS => true
+                g_USE_RX_SYNC_FIFOS => false
             )
             port map(
                 reset_i                     => reset or manual_gbt_reset,
@@ -750,6 +759,8 @@ begin
                 tx_data_arr_i               => gbt_tx_data_arr,
                 tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
 
+--                rx_bitslip_cnt_i            => gbt_rx_bitslip_arr,
+--                rx_bitslip_auto_i           => gbt_rx_bitslip_auto_arr,
                 rx_data_valid_arr_o         => gbt_rx_valid_arr,
                 rx_data_arr_o               => gbt_rx_data_arr,
                 rx_data_widebus_arr_o       => gbt_rx_data_widebus_arr,
@@ -837,6 +848,7 @@ begin
             )
             port map(
                 gbt_frame_clk_i             => ttc_clocks_i.clk_40,
+                ttc_cmds_i                  => ttc_cmd,
 
                 gbt_rx_data_arr_i           => gbt_rx_data_arr,
                 gbt_rx_data_widebus_arr_i   => gbt_rx_data_widebus_arr,

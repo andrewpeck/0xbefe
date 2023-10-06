@@ -45,8 +45,8 @@ entity csc_tests is
 
         -- DMB links
         dmb_rx_usrclk_i             : in  std_logic;
-        dmb_rx_data_arr_i           : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
-        dmb_rx_status_arr_i         : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
+        dmb_rx_data_arr2d_i         : in  t_mgt_64b_rx_data_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
+        dmb_rx_status_arr2d_i       : in  t_mgt_status_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
                 
         -- IPbus
         ipb_reset_i                 : in  std_logic;
@@ -172,9 +172,9 @@ begin
 
     --== DMB link PRBS test ==--
     g_dmb_rx_links : for dmb in 0 to g_NUM_OF_DMBs - 1 generate
-        dmb_data_arr(dmb)(15 downto 0) <= dmb_rx_data_arr_i(dmb).rxdata;
+        dmb_data_arr(dmb)(15 downto 0) <= dmb_rx_data_arr2d_i(dmb)(0).rxdata(15 downto 0);
         dmb_data_arr(dmb)(63 downto 16) <= (others => '0');
-        dmb_charisk_arr(dmb)(1 downto 0) <= dmb_rx_data_arr_i(dmb).rxcharisk;
+        dmb_charisk_arr(dmb)(1 downto 0) <= dmb_rx_data_arr2d_i(dmb)(0).rxcharisk(1 downto 0);
         dmb_charisk_arr(dmb)(7 downto 2) <= (others => '0');
     end generate;
     

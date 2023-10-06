@@ -752,7 +752,10 @@ class TopScreenDaq(TopScreen):
         in_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         in_unf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.INPUT_FIFO_HAD_UFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         evt_ovf = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_FIFO_HAD_OFLOW" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
-        evt_size_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        if self.is_csc:
+            evt_size_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_SIZE_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
+        elif self.is_gem:
+            evt_size_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVENT_TOO_BIG" % (self.gem_csc, self.dmb_oh, idx), verbose=False)
         evt_64b_err = rw.read_reg("BEFE.%s.DAQ.%s%d.STATUS.EVT_64BIT_ALIGN_ERR" % (self.gem_csc, self.dmb_oh, idx), verbose=False) if self.is_csc else 0
 
         if 0xdeaddead in [in_mask, in_ovf, in_unf, evt_ovf, evt_size_err, evt_64b_err]:

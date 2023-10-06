@@ -1,6 +1,7 @@
 
 # Project config
 Top/me0_cvp13/project_config.vhd
+#Top/me0_cvp13/project_config_stack_test.vhd
 
 # Common libs
 common/hdl/common.src
@@ -10,9 +11,6 @@ common/hdl/sca.src
 
 # GEM source
 gem/hdl/gem.src
-
-# Trigger Source
-gem/hdl/sbit_me0.src
 
 # GEM CVP13 source
 boards/cvp13/hdl/gem_cvp13.src

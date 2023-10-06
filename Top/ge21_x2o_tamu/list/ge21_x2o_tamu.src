@@ -18,9 +18,14 @@ boards/x2o/ip/x2o_ip.src
 boards/x2o/bd/x2o_bd.src
 
 # =============== Project ===============
-Top/ge21_x2o_tamu/project_config.vhd
+#Top/ge21_x2o_tamu/project_config.vhd
+Top/ge21_x2o_tamu/project_config_prod_test_lpgbt.vhd
+#Top/ge21_x2o_tamu/project_config_prod_test_10g.vhd
+#Top/ge21_x2o_tamu/project_config_prod_test_12p5g.vhd
+#Top/ge21_x2o_tamu/project_config_prod_test_25g.vhd
 boards/x2o/hdl/pkg/gem_vu13p_tamu_board_config_pkg.vhd
-boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
+#boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
+boards/x2o/hdl/gem_x2o_prod_test.vhd top=gem_x2o
 
 
 # =========== Generated source ===========

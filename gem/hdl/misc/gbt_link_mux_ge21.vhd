@@ -14,6 +14,7 @@ use ieee.numeric_std.all;
 
 use work.common_pkg.all;
 use work.gem_pkg.all;
+use work.ttc_pkg.all;
 
 entity gbt_link_mux_ge21 is
     generic(
@@ -24,6 +25,9 @@ entity gbt_link_mux_ge21 is
     port(
         -- clock
         gbt_frame_clk_i             : in  std_logic;
+        
+        -- TTC commands
+        ttc_cmds_i                  : in  t_ttc_cmds;
         
         -- links
         gbt_rx_data_arr_i           : in  t_gbt_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -162,7 +166,6 @@ begin
 
         g_OH_v1: if g_OH_VERSION < 2 generate
             real_gbt_tx_data(i * 2 + 1)(79 downto 48) <= (others => '0');
-            real_gbt_tx_data(i * 2 + 0)(71 downto 64) <= (others => '0');
             
             real_gbt_tx_data(i * 2 + 1)(47 downto 40) <= vfat3_tx_data_arr_i(i)(11);
             real_gbt_tx_data(i * 2 + 1)(39 downto 32) <= vfat3_tx_data_arr_i(i)(10);
@@ -180,7 +183,6 @@ begin
 
         g_OH_v2: if g_OH_VERSION = 2 generate
             real_gbt_tx_data(i * 2 + 1)(31 downto 0) <= (others => '0');
-            real_gbt_tx_data(i * 2 + 0)(71 downto 64) <= (others => '0');
             
             real_gbt_tx_data(i * 2 + 1)(63 downto 56) <= vfat3_tx_data_arr_i(i)(11);
             real_gbt_tx_data(i * 2 + 0)(31 downto 24) <= vfat3_tx_data_arr_i(i)(10);
@@ -196,6 +198,9 @@ begin
             real_gbt_tx_data(i * 2 + 0)(15 downto 8) <= vfat3_tx_data_arr_i(i)(0);
 	    
         end generate;
+
+        -- Bits [71:64] are not used in either v1 or v2, so we can use these for a GBT-based TTC link (alternaltive to a real TTC input in labs)
+        real_gbt_tx_data(i * 2 + 0)(71 downto 64) <= ttc_cmds_i.l1a & ttc_cmds_i.bc0 & ttc_cmds_i.ec0 & ttc_cmds_i.oc0 & ttc_cmds_i.resync & ttc_cmds_i.hard_reset & ttc_cmds_i.calpulse & ttc_cmds_i.test_sync;
 
     end generate;
 

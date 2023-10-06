@@ -16,11 +16,12 @@ use ieee.numeric_std.all;
 
 entity gearbox is
     generic(
-        g_IMPL_TYPE         : string  := "FIFO"; -- for now only a FIFO implementation is available, a more latency optimized version will be implemented later if needed
-        g_INPUT_DATA_WIDTH  : integer := 8;
-        g_OUTPUT_DATA_WIDTH : integer := 16;
-        g_HIGH_WORD_FIRST   : boolean := true; -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior)
-        g_REGISTER_OUTPUT   : boolean := false 
+        g_IMPL_TYPE             : string  := "FIFO"; -- for now only a FIFO implementation is available, a more latency optimized version will be implemented later if needed
+        g_INPUT_DATA_WIDTH      : integer := 8;
+        g_OUTPUT_DATA_WIDTH     : integer := 16;
+        g_HIGH_WORD_FIRST       : boolean := true; -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior)
+        g_REGISTER_OUTPUT       : boolean := false;
+        g_FIFO_WAIT_NOT_EMPTY   : boolean := false -- if set to true, and using FIFO implementation, the rd_en is delayed until empty is asserted low after reset
     );
     port(
         reset_i     : in  std_logic;
@@ -43,10 +44,16 @@ architecture gearbox_arch of gearbox is
     signal din          : std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
     signal dout         : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
     signal reset        : std_logic;
+    signal reset_rd     : std_logic;
+    signal rd_en        : std_logic;
 
     signal dout_reg     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
     signal valid_reg    : std_logic;
     signal underflow_reg: std_logic;
+
+    signal wr_rst_busy  : std_logic;
+    signal rd_rst_busy  : std_logic;
+    signal empty        : std_logic;
 
 begin
 
@@ -76,7 +83,8 @@ begin
     end generate;
     
     -- sync reset on write clock
-    i_sync_reset : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => wr_clk_i, sync_o => reset);
+    i_sync_reset_wr : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => wr_clk_i, sync_o => reset);
+    i_sync_reset_rd : entity work.synch generic map(N_STAGES => 3, IS_RESET => true) port map(async_i => reset_i, clk_i => rd_clk_i, sync_o => reset_rd);
     
     -- swap the word order (note: we have to take care whether it's gear down or gear up)
     g_high_word_first_wiring : if g_HIGH_WORD_FIRST generate
@@ -95,6 +103,25 @@ begin
         end generate;
     end generate;
 
+    g_wait_not_empty : if g_FIFO_WAIT_NOT_EMPTY generate
+        process (rd_clk_i)
+        begin
+            if rising_edge(rd_clk_i) then
+                if reset_rd = '1' or rd_rst_busy = '1' then
+                    rd_en <= '0';
+                else
+                    if empty = '0' then
+                        rd_en <= '1';
+                    end if;
+                end if;
+            end if;
+        end process;
+    end generate;
+
+    g_no_wait_not_empty : if not g_FIFO_WAIT_NOT_EMPTY generate
+        rd_en <= not rd_rst_busy;
+    end generate;
+    
     g_fifo_impl: if g_IMPL_TYPE = "FIFO" generate
         i_serdes_fifo : xpm_fifo_async
             generic map(
@@ -113,23 +140,23 @@ begin
                 sleep         => '0',
                 rst           => reset,
                 wr_clk        => wr_clk_i,
-                wr_en         => valid_i,
+                wr_en         => valid_i and not wr_rst_busy,
                 din           => din,
                 full          => open,
                 prog_full     => open,
                 wr_data_count => open,
                 overflow      => overflow_o,
-                wr_rst_busy   => open,
+                wr_rst_busy   => wr_rst_busy,
                 almost_full   => open,
                 wr_ack        => open,
                 rd_clk        => rd_clk_i,
-                rd_en         => '1',
+                rd_en         => rd_en,
                 dout          => dout,
-                empty         => open,
+                empty         => empty,
                 prog_empty    => open,
                 rd_data_count => open,
                 underflow     => underflow_reg,
-                rd_rst_busy   => open,
+                rd_rst_busy   => rd_rst_busy,
                 almost_empty  => open,
                 data_valid    => valid_reg,
                 injectsbiterr => '0',

@@ -24,12 +24,13 @@ entity csc_fed is
     generic(
         g_SLR                : integer;
         g_NUM_OF_DMBs        : integer;
+        g_DMB_CONFIG_ARR     : t_dmb_config_arr;
         g_NUM_GBT_LINKS      : integer;
         g_NUM_IPB_SLAVES     : integer;
         g_IPB_CLK_PERIOD_NS  : integer;
         g_DAQLINK_CLK_FREQ   : integer;
         g_USE_SLINK_ROCKET   : boolean;
-        g_DISABLE_TTC_DATA   : boolean := false -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_EXT_TTC_RECEIVER   : boolean := false -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
     );
     port(
         -- Resets
@@ -47,8 +48,9 @@ entity csc_fed is
         
         -- DMB links
         dmb_rx_usrclk_i         : in  std_logic;
-        dmb_rx_data_arr_i       : in  t_mgt_16b_rx_data_arr(g_NUM_OF_DMBs - 1 downto 0);
-        dmb_rx_status_arr_i     : in  t_mgt_status_arr(g_NUM_OF_DMBs - 1 downto 0);
+        odmb_rx_usrclk_i        : in  std_logic;
+        dmb_rx_data_arr2d_i     : in  t_mgt_64b_rx_data_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
+        dmb_rx_status_arr2d_i   : in  t_mgt_status_arr_arr(g_NUM_OF_DMBs - 1 downto 0)(3 downto 0);
 
         -- GBT links
         gbt_rx_data_arr_i       : in  t_std40_array(g_NUM_GBT_LINKS - 1 downto 0);
@@ -229,7 +231,7 @@ begin
 
     i_ttc : entity work.ttc
         generic map(
-            g_DISABLE_TTC_DATA  => g_DISABLE_TTC_DATA,
+            g_EXT_TTC_RECEIVER  => g_EXT_TTC_RECEIVER,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
@@ -237,6 +239,7 @@ begin
             ttc_clks_i          => ttc_clocks_i,
             ttc_clks_status_i   => ttc_clk_status_i,
             ttc_clks_ctrl_o     => ttc_clk_ctrl_o,
+            ttc_cmds_i          => TTC_CMDS_NULL,
             ttc_data_p_i        => ttc_data_p_i,
             ttc_data_n_i        => ttc_data_n_i,
             local_l1a_req_i     => daq_l1a_request or external_trigger_i,
@@ -258,6 +261,7 @@ begin
     i_daq : entity work.daq
         generic map(
             g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_DMB_CONFIG_ARR    => g_DMB_CONFIG_ARR,
             g_DAQ_CLK_FREQ      => g_DAQLINK_CLK_FREQ,
             g_IS_SLINK_ROCKET   => g_USE_SLINK_ROCKET,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
@@ -275,7 +279,8 @@ begin
             l1a_request_o    => daq_l1a_request,
             l1a_reset_req_o  => daq_l1a_reset,
             dmb_clk_i        => dmb_rx_usrclk_i,
-            dmb_link_arr_i   => dmb_rx_data_arr_i,
+            odmb_clk_i       => odmb_rx_usrclk_i,
+            dmb_link_arr2d_i => dmb_rx_data_arr2d_i,
             spy_clk_i        => spy_usrclk_i,
             spy_link_o       => spy_gbe_daq_data,
             ipb_reset_i      => ipb_reset,
@@ -339,12 +344,12 @@ begin
     i_link_monitor : entity work.link_monitor
         generic map(
             g_NUM_OF_DMBs       => g_NUM_OF_DMBs,
+            g_DMB_CONFIG_ARR    => g_DMB_CONFIG_ARR,
             g_NUM_GBT_LINKS     => g_NUM_GBT_LINKS,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i                 => reset or link_reset,
-            clk_i                   => dmb_rx_usrclk_i,
 
             -- TTC
             ttc_clks_i              => ttc_clocks_i,
@@ -352,8 +357,9 @@ begin
         
             -- DMB links
             dmb_rx_usrclk_i         => dmb_rx_usrclk_i,
-            dmb_rx_data_arr_i       => dmb_rx_data_arr_i,
-            dmb_rx_status_arr_i     => dmb_rx_status_arr_i,
+            odmb_rx_usrclk_i        => odmb_rx_usrclk_i,
+            dmb_rx_data_arr2d_i     => dmb_rx_data_arr2d_i,
+            dmb_rx_status_arr2d_i   => dmb_rx_status_arr2d_i,
 
             -- GBT links
             gbt_link_status_arr_i   => gbt_link_status_arr,
@@ -400,8 +406,8 @@ begin
             
             -- DMB links
             dmb_rx_usrclk_i        => dmb_rx_usrclk_i,
-            dmb_rx_data_arr_i      => dmb_rx_data_arr_i,
-            dmb_rx_status_arr_i    => dmb_rx_status_arr_i,  
+            dmb_rx_data_arr2d_i    => dmb_rx_data_arr2d_i,
+            dmb_rx_status_arr2d_i  => dmb_rx_status_arr2d_i,  
             
             -- IPbus
             ipb_reset_i            => ipb_reset,
@@ -438,6 +444,8 @@ begin
             tx_data_arr_i               => gbt_tx_data_arr,
             tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
 
+            rx_bitslip_cnt_i            => (others => (others => '0')),
+            rx_bitslip_auto_i           => (others => '1'),
             rx_data_valid_arr_o         => gbt_rx_valid_arr,
             rx_data_arr_o               => gbt_rx_data_arr,
             rx_data_widebus_arr_o       => open,
@@ -518,18 +526,57 @@ begin
                 dbg_dmb_link_select <= to_integer(unsigned(dbg_dmb_link_sel_slv));
             end if;
 
-            dbg_dmb_rx_data <= dmb_rx_data_arr_i(dbg_dmb_link_select);
-            dbg_dmb_rx_status <= dmb_rx_status_arr_i(dbg_dmb_link_select);
-            
+            dbg_dmb_rx_data.rxdata <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxdata(15 downto 0);
+            dbg_dmb_rx_data.rxbyteisaligned <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxbyteisaligned;
+            dbg_dmb_rx_data.rxbyterealign <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxbyterealign;
+            dbg_dmb_rx_data.rxcommadet <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxcommadet;
+            dbg_dmb_rx_data.rxdisperr <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxdisperr(1 downto 0);
+            dbg_dmb_rx_data.rxnotintable <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxnotintable(1 downto 0);
+            dbg_dmb_rx_data.rxchariscomma <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxchariscomma(1 downto 0);
+            dbg_dmb_rx_data.rxcharisk <= dmb_rx_data_arr2d_i(dbg_dmb_link_select)(0).rxcharisk(1 downto 0);
+
+            dbg_dmb_rx_status <= dmb_rx_status_arr2d_i(dbg_dmb_link_select)(0);
+
         end if;
     end process;
 
-    i_ila_dmb0_link : entity work.ila_mgt_rx_16b_wrapper
+    i_ila_dmb_link : entity work.ila_mgt_rx_16b_wrapper
         port map(
             clk_i        => dmb_rx_usrclk_i,
             rx_data_i    => dbg_dmb_rx_data,
             mgt_status_i => dbg_dmb_rx_status
         );
+
+    g_odmb_debug : for dmb in 0 to g_NUM_OF_DMBs - 1 generate
+        signal dbg_odmb_rx_data     : t_mgt_128b_rx_data;
+        signal dbg_odmb_rx_status   : t_mgt_status;
+    begin
+
+        g_odmb : if g_DMB_CONFIG_ARR(dmb).dmb_type = ODMB7 generate
+
+            g_odmb_fiber : for f in 0 to g_DMB_CONFIG_ARR(dmb).num_fibers - 1 generate
+                dbg_odmb_rx_data.rxdata(32 * f + 31 downto 32 * f) <= dmb_rx_data_arr2d_i(dmb)(f).rxdata(31 downto 0);
+                dbg_odmb_rx_data.rxdisperr(4 * f + 3 downto 4 * f) <= dmb_rx_data_arr2d_i(dmb)(f).rxdisperr(3 downto 0);
+                dbg_odmb_rx_data.rxnotintable(4 * f + 3 downto 4 * f) <= dmb_rx_data_arr2d_i(dmb)(f).rxnotintable(3 downto 0);
+                dbg_odmb_rx_data.rxchariscomma(4 * f + 3 downto 4 * f) <= dmb_rx_data_arr2d_i(dmb)(f).rxchariscomma(3 downto 0);
+                dbg_odmb_rx_data.rxcharisk(4 * f + 3 downto 4 * f) <= dmb_rx_data_arr2d_i(dmb)(f).rxcharisk(3 downto 0);
+            end generate;
+
+            dbg_odmb_rx_data.rxbyteisaligned <= dmb_rx_data_arr2d_i(dmb)(0).rxbyteisaligned and dmb_rx_data_arr2d_i(dmb)(1).rxbyteisaligned and dmb_rx_data_arr2d_i(dmb)(2).rxbyteisaligned and dmb_rx_data_arr2d_i(dmb)(3).rxbyteisaligned;
+            dbg_odmb_rx_data.rxbyterealign <= dmb_rx_data_arr2d_i(dmb)(0).rxbyteisaligned or dmb_rx_data_arr2d_i(dmb)(1).rxbyteisaligned or dmb_rx_data_arr2d_i(dmb)(2).rxbyteisaligned or dmb_rx_data_arr2d_i(dmb)(3).rxbyteisaligned;
+
+            dbg_odmb_rx_status <= MGT_STATUS_NULL;   
+
+            i_ila_odmb_link : entity work.ila_mgt_rx_128b_wrapper
+                port map(
+                    clk_i        => odmb_rx_usrclk_i,
+                    rx_data_i    => dbg_odmb_rx_data,
+                    mgt_status_i => dbg_odmb_rx_status
+                );
+                
+       end generate;
+        
+    end generate;
 
     i_ila_gbe_rx_link : entity work.ila_mgt_rx_16b_wrapper
         port map(

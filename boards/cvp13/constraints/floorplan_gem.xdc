@@ -1,12 +1,21 @@
-# create_pblock pcie
-# add_cells_to_pblock [get_pblocks pcie] [get_cells -quiet [list {i_pcie*}]]
-# resize_pblock [get_pblocks pcie] -add {CLOCKREGION_X3Y4:CLOCKREGION_X7Y7}
+# create per-SLR Pblocks for hard SLR floorplan constraints
+create_pblock PBLOCK_SLR0
+resize_pblock PBLOCK_SLR0 -add SLR0
+create_pblock PBLOCK_SLR1
+resize_pblock PBLOCK_SLR1 -add SLR1
+create_pblock PBLOCK_SLR2
+resize_pblock PBLOCK_SLR2 -add SLR2
+create_pblock PBLOCK_SLR3
+resize_pblock PBLOCK_SLR3 -add SLR3
 
-# create_pblock gem
-# add_cells_to_pblock [get_pblocks gem] [get_cells -quiet [list {i_gem*}]]
-# resize_pblock [get_pblocks gem] -add {CLOCKREGION_X3Y8:CLOCKREGION_X7Y11}
+# System blocks
+set_property -quiet KEEP_HIERARCHY TRUE [get_cells -quiet i_pcie]
+add_cells_to_pblock -quiet PBLOCK_SLR1 [get_cells -quiet i_pcie]
+set_property -quiet KEEP_HIERARCHY TRUE [get_cells -quiet i_mgts/i_slow_control]
+add_cells_to_pblock -quiet PBLOCK_SLR2 [get_cells -quiet i_mgts/i_slow_control]
 
-set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_pcie*}]]
-
-set_property USER_SLR_ASSIGNMENT SLR2 [get_cells -quiet [list {g_slrs[0]*}]]
-set_property USER_SLR_ASSIGNMENT SLR3 [get_cells -quiet [list {g_slrs[1]*}]]
+# GEM user blocks
+set_property -quiet KEEP_HIERARCHY TRUE [get_cells -quiet g_slrs[0]*]
+add_cells_to_pblock -quiet PBLOCK_SLR2 [get_cells -quiet g_slrs[0]*]
+set_property -quiet KEEP_HIERARCHY TRUE [get_cells -quiet g_slrs[1]*]
+add_cells_to_pblock -quiet PBLOCK_SLR3 [get_cells -quiet g_slrs[1]*]

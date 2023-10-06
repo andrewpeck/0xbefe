@@ -35,13 +35,26 @@ entity gem_x2o is
         GLOBAL_SHA      : std_logic_vector (31 downto 0)
     );
     port(
-        c2c_mgt_clk_p   : in std_logic;
-        c2c_mgt_clk_n   : in std_logic;
+        c2c_mgt_clk_p           : in  std_logic;
+        c2c_mgt_clk_n           : in  std_logic;
  
-        refclk0_p_i     : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0); -- async 156.25MHz clocks (one per quad)
-        refclk0_n_i     : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
-        refclk1_p_i     : in  std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);  -- sync clocks
-        refclk1_n_i     : in  std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0)
+        tcds2_backplane_clk_p   : in  std_logic;
+        tcds2_backplane_clk_n   : in  std_logic;
+ 
+        tcds2_mgt_tx_p          : out std_logic;
+        tcds2_mgt_tx_n          : out std_logic;
+        tcds2_mgt_rx_p          : in  std_logic;
+        tcds2_mgt_rx_n          : in  std_logic;
+ 
+        lmk_refclk_0_p          : out std_logic;
+        lmk_refclk_0_n          : out std_logic;
+        lmk_refclk_1_p          : out std_logic;
+        lmk_refclk_1_n          : out std_logic;
+ 
+        refclk0_p_i             : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0); -- async 156.25MHz clocks (one per quad)
+        refclk0_n_i             : in  std_logic_vector(CFG_NUM_REFCLK0 - 1 downto 0);
+        refclk1_p_i             : in  std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0);  -- sync clocks
+        refclk1_n_i             : in  std_logic_vector(CFG_NUM_REFCLK1 - 1 downto 0)
     );
 end gem_x2o;
 
@@ -51,6 +64,7 @@ architecture gem_x2o_arch of gem_x2o is
         port(
             clk_50_o          : out std_logic;
             clk_100_o         : out std_logic;
+            clk_125_o         : out std_logic;
             user_axil_clk_o   : out std_logic;
             axi_reset_b_o     : out std_logic;
             user_axil_araddr  : out std_logic_vector(31 downto 0);
@@ -111,7 +125,8 @@ architecture gem_x2o_arch of gem_x2o is
     signal ttc_clks             : t_ttc_clks;
     signal ttc_clk_status       : t_ttc_clk_status;
     signal ttc_clk_ctrl         : t_ttc_clk_ctrl_arr(CFG_NUM_GEM_BLOCKS - 1 downto 0);
-
+    signal ttc_cmds             : t_ttc_cmds := TTC_CMDS_NULL;
+    
     -- c2c
     signal c2c_channel_up       : std_logic;
     signal c2c_init_clk         : std_logic;
@@ -143,6 +158,7 @@ architecture gem_x2o_arch of gem_x2o is
     -- DAQ and other
     signal clk_50               : std_logic;
     signal clk_100              : std_logic;
+    signal clk_125              : std_logic;
     signal slink_mgt_ref_clk    : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
 
@@ -166,6 +182,7 @@ begin
             c2c_mgt_clk_n     => c2c_mgt_clk_n,
             clk_50_o          => clk_50,
             clk_100_o         => clk_100,
+            clk_125_o         => clk_125,
             user_axil_clk_o   => axil_clk,
             user_axil_awaddr  => axil_m2s.awaddr,
             user_axil_awprot  => axil_m2s.awprot,
@@ -220,29 +237,54 @@ begin
     ipb_clk <= axil_clk;
 
     --================================--
-    -- Wiring
+    -- TTC / TCDS2
     --================================--
 
---    reset <= not reset_b_i;
+    assert CFG_BOARD_TYPE = x"4" or CFG_BOARD_TYPE = x"5" report "Unknown X2O revision: board type is not equal to 4 (X2O rev1) or 5 (X2O rev2)" severity failure;
 
-    --================================--
-    -- Clocks
-    --================================--
-
-    i_ttc_clks : entity work.ttc_clocks
-        generic map(
-            g_CLK_STABLE_FREQ           => 100_000_000,
-            g_GEM_STATION               => CFG_GEM_STATION(0),
-            g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq))
-        )
-        port map(
-            clk_stable_i        => axil_clk,
-            clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
-            clk_gbt_mgt_ready_i => '1',
-            clocks_o            => ttc_clks,
-            ctrl_i              => ttc_clk_ctrl(0),
-            status_o            => ttc_clk_status
-        );
+    g_x2o_rev1 : if CFG_BOARD_TYPE = x"4" generate 
+        i_ttc_clks : entity work.ttc_clocks
+            generic map(
+                g_CLK_STABLE_FREQ           => 100_000_000,
+                g_GEM_STATION               => CFG_GEM_STATION(0),
+                g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq))
+            )
+            port map(
+                clk_stable_i        => axil_clk,
+                clk_gbt_mgt_txout_i => mgt_master_txoutclk.gbt,
+                clk_gbt_mgt_ready_i => '1',
+                clocks_o            => ttc_clks,
+                ctrl_i              => ttc_clk_ctrl(0),
+                status_o            => ttc_clk_status
+            );
+    end generate;
+    
+    g_x2o_rev2 : if CFG_BOARD_TYPE = x"5" generate 
+        i_tcds2 : entity work.tcds2
+            generic map(
+                G_USE_40MHZ_CLEANED_IN => true
+            )
+            port map(
+                reset_i             => '0',
+                clk_125_i           => clk_125,
+                mgt_tx_p_o          => tcds2_mgt_tx_p,
+                mgt_tx_n_o          => tcds2_mgt_tx_n,
+                mgt_rx_p_i          => tcds2_mgt_rx_p,
+                mgt_rx_n_i          => tcds2_mgt_rx_n,
+                mgt_refclk_320_i    => refclk1(CFG_TCDS2_MGT_REFCLK1),
+                clk40_cleaned_i     => refclk1_fabric(7),
+                clk40_backplane_p_i => tcds2_backplane_clk_p,
+                clk40_backplane_n_i => tcds2_backplane_clk_n,
+                clk40_out_pri_p_o   => lmk_refclk_0_p,
+                clk40_out_pri_n_o   => lmk_refclk_0_n,
+                clk40_out_sec_p_o   => lmk_refclk_1_p,
+                clk40_out_sec_n_o   => lmk_refclk_1_n,
+                ttc_clks_o          => ttc_clks,
+                ttc_cmds_o          => ttc_cmds,
+                clk_ctrl_i          => ttc_clk_ctrl(0),
+                clk_status_o        => ttc_clk_status
+            );
+    end generate;
 
     --================================--
     -- MGTs
@@ -291,33 +333,33 @@ begin
             ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
         );
 
-    --================================--
-    -- SLink Rocket
-    --================================--
-
-    i_slink_rocket : entity work.slink_rocket
-        generic map(
-            g_NUM_CHANNELS      => CFG_NUM_GEM_BLOCKS,
-            g_LINE_RATE         => "25.78125",
-            q_REF_CLK_FREQ      => "156.25",
-            g_MGT_TYPE          => "GTY",
-            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
-        )
-        port map(
-            reset_i          => reset_powerup,
-            clk_stable_100_i => clk_100,
-            mgt_ref_clk_i    => slink_mgt_ref_clk,
-
-            daq_to_daqlink_i => daq_to_daqlink,
-            daqlink_to_daq_o => daqlink_to_daq,
-            
-            ipb_reset_i      => ipb_reset,
-            ipb_clk_i        => ipb_clk,
-            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
-            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
-        );
-
-    slink_mgt_ref_clk <= refclk0(24);
+--    --================================--
+--    -- SLink Rocket
+--    --================================--
+--
+--    i_slink_rocket : entity work.slink_rocket
+--        generic map(
+--            g_NUM_CHANNELS      => CFG_NUM_GEM_BLOCKS,
+--            g_LINE_RATE         => "25.78125",
+--            q_REF_CLK_FREQ      => "156.25",
+--            g_MGT_TYPE          => "GTY",
+--            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+--        )
+--        port map(
+--            reset_i          => reset_powerup,
+--            clk_stable_100_i => clk_100,
+--            mgt_ref_clk_i    => slink_mgt_ref_clk,
+--
+--            daq_to_daqlink_i => daq_to_daqlink,
+--            daqlink_to_daq_o => daqlink_to_daq,
+--            
+--            ipb_reset_i      => ipb_reset,
+--            ipb_clk_i        => ipb_clk,
+--            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
+--            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
+--        );
+--
+--    slink_mgt_ref_clk <= refclk0(24);
 
     --================================--
     -- PROMless
@@ -393,13 +435,13 @@ begin
         signal gem_gt_trig_tx_clk       : std_logic;
         signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX - 1 downto 0);
         signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX - 1 downto 0);
-    
+
         -------------------- Spy / LDAQ readout link ---------------------------------
-        signal spy_rx_data              : t_mgt_64b_rx_data;
-        signal spy_tx_data              : t_mgt_64b_tx_data;
-        signal spy_rx_usrclk            : std_logic;
-        signal spy_tx_usrclk            : std_logic;
-        signal spy_status               : t_mgt_status;
+        signal spy_rx_data              : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
+        signal spy_tx_data              : t_mgt_64b_tx_data := MGT_64B_TX_DATA_NULL;
+        signal spy_rx_usrclk            : std_logic := '0';
+        signal spy_tx_usrclk            : std_logic := '0';
+        signal spy_status               : t_mgt_status := MGT_STATUS_NULL;
 
     begin
         
@@ -418,8 +460,7 @@ begin
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
-                g_IS_SLINK_ROCKET   => true,
-                g_DISABLE_TTC_DATA  => true
+                g_IS_SLINK_ROCKET   => true
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -429,9 +470,7 @@ begin
                 ttc_clocks_i            => ttc_clks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl(slr),
-                ttc_data_p_i            => '1',
-                ttc_data_n_i            => '0',
-                external_trigger_i      => '0',
+                ttc_cmds_i              => ttc_cmds,
     
                 gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
                 gt_trig0_rx_data_arr_i  => gem_gt_trig0_rx_data_arr,
@@ -523,25 +562,17 @@ begin
         g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             spy_tx_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx);
             mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= spy_tx_data;
-        else generate
-            spy_tx_usrclk <= '0';
-            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).tx) <= MGT_64B_TX_DATA_NULL;
         end generate;
 
         -- spy link RX mapping
         g_spy_link_rx : if CFG_USE_SPY_LINK_RX(slr) generate
             spy_rx_usrclk <= mgt_rx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
             spy_rx_data <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-        else generate
-            spy_rx_usrclk <= '0';
-            spy_rx_data <= MGT_64B_RX_DATA_NULL;
         end generate;
 
         -- spy link statuses mapping
         g_spy_link : if CFG_USE_SPY_LINK_TX(slr) or CFG_USE_SPY_LINK_RX(slr) generate
             spy_status <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(slr)).rx);
-        else generate
-            spy_status <= MGT_STATUS_NULL;
         end generate;
 
         -- MGT mapping to EMTF links

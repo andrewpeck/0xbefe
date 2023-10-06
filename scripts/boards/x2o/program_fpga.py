@@ -11,7 +11,7 @@ from board.manager import *
 ######## gather the config params ########
 board_type = os.environ.get('BOARD_TYPE')
 if board_type.lower() != "x2o":
-    print("BOARD_TYPE is not set to apex: please source the env.sh script with correct parameters. Exiting...")
+    print("BOARD_TYPE is not set to x2o: please source the env.sh script with correct parameters. Exiting...")
     exit(1)
 
 flavor = os.environ.get('BEFE_FLAVOR')

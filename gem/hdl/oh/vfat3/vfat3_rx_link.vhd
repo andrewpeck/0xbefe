@@ -101,10 +101,10 @@ begin
     daq_data_en <= '1' when ((daq_word_cntdown /= "00000") or (data_i = VFAT3_DAQ_HEADER_I) or (data_i = VFAT3_DAQ_HEADER_IW)) else '0';
     daq_data_o <= data_i; -- when daq_data_en = '1' else (others => '0');
     daq_data_en_o <= daq_data_en and not mask_i;
-    daq_crc_error_o <= event_done and not crc_ok;
-    daq_event_done_o <= event_done;
+    daq_crc_error_o <= event_done and not crc_ok and not mask_i;
+    daq_event_done_o <= event_done and not mask_i;
     slow_ctrl_data_o <= '1' when data_i = VFAT3_SC1_WORD else '0';
-    slow_ctrl_data_en_o <= '1' when (data_i = VFAT3_SC1_WORD or data_i = VFAT3_SC0_WORD) and (daq_data_en = '0') and (mask_i = '0') else '0';
+    slow_ctrl_data_en_o <= '1' when (data_i = VFAT3_SC1_WORD or data_i = VFAT3_SC0_WORD) and (daq_data_en = '0') else '0';
 
     cnt_events_o <= std_logic_vector(cnt_events);
     cnt_crc_errors_o  <= std_logic_vector(cnt_crc_errors);
@@ -114,7 +114,7 @@ begin
     process (ttc_clk_i.clk_40)
     begin
         if (rising_edge(ttc_clk_i.clk_40)) then
-            if (reset_i = '1' or mask_i = '1') then
+            if reset_i = '1' then
                 daq_word_cntdown <= (others => '0');
                 event_done <= '0';
                 crc_init <= '1';

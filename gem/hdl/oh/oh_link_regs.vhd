@@ -30,34 +30,38 @@ entity oh_link_regs is
     );
     port(
         -- reset
-        reset_i                 : in  std_logic;
-        clk_i                   : in  std_logic;
+        reset_i                     : in  std_logic;
+        clk_i                       : in  std_logic;
 
         -- Link statuses
-        gbt_link_status_arr_i   : in t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
-        vfat3_link_status_arr_i : in t_oh_vfat_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
+        gbt_link_status_arr_i       : in t_gbt_link_status_arr(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+        vfat3_link_status_arr_i     : in t_oh_vfat_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- Control
-        vfat_mask_arr_o         : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-        gbt_tx_bitslip_arr_o    : out t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+        vfat_mask_arr_o             : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        gbt_tx_bitslip_arr_o        : out t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+        gbt_rx_bitslip_arr_o        : out t_std6_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);        
+        gbt_rx_bitslip_auto_arr_o   : out std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);        
 
         -- Spy link
-        spy_rx_usrclk_i         : in  std_logic;
-        spy_rx_data_i           : in  t_mgt_64b_rx_data;
-        spy_status_i            : in  t_mgt_status;
-
-        -- IPbus
-        ipb_reset_i             : in  std_logic;
-        ipb_clk_i               : in  std_logic;
-        ipb_miso_o              : out ipb_rbus;
-        ipb_mosi_i              : in  ipb_wbus
+        spy_rx_usrclk_i             : in  std_logic;
+        spy_rx_data_i               : in  t_mgt_64b_rx_data;
+        spy_status_i                : in  t_mgt_status;
+                                    
+        -- IPbus                    
+        ipb_reset_i                 : in  std_logic;
+        ipb_clk_i                   : in  std_logic;
+        ipb_miso_o                  : out ipb_rbus;
+        ipb_mosi_i                  : in  ipb_wbus
     );
 end oh_link_regs;
 
 architecture oh_link_regs_arch of oh_link_regs is
     
-    signal vfat_mask_arr        : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-    signal gbt_tx_bitslip_arr   : t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    signal vfat_mask_arr            : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    signal gbt_tx_bitslip_arr       : t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    signal gbt_rx_bitslip_arr       : t_std6_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+    signal gbt_rx_bitslip_auto_arr  : std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     
     signal spy_mgt_buf_ovf          : std_logic_vector(15 downto 0);
     signal spy_mgt_buf_unf          : std_logic_vector(15 downto 0);
@@ -86,6 +90,8 @@ begin
     
     vfat_mask_arr_o <= vfat_mask_arr;
     gbt_tx_bitslip_arr_o <= gbt_tx_bitslip_arr;
+    gbt_rx_bitslip_arr_o <= gbt_rx_bitslip_arr;
+    gbt_rx_bitslip_auto_arr_o <= gbt_rx_bitslip_auto_arr;
     
     --================================--
     -- Spy link counters  

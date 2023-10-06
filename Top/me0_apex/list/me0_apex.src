@@ -10,9 +10,6 @@ common/hdl/sca.src
 # GEM source
 gem/hdl/gem.src
 
-# ME0 Trigger source
-gem/hdl/sbit_me0.src
-
 # GEM APEX source
 boards/apex/hdl/apex_common.src
 boards/apex/hdl/gem_apex.src
@@ -33,7 +30,12 @@ gem/hdl/trigger/generated/me0_apex/sbit_me0.vhd
 common/hdl/slink_rocket/generated/me0_apex/slink_rocket.vhd
 common/hdl/slink_rocket.src
 
-#dummy promless just to keep compiler happy
+# modules not used on the apex-me0 flavor, but required for VHDL synthesis
+# use a dummy version without generated registers
+common/hdl/misc/ttc_tx.vhd
+common/hdl/ttc/ttc_link_gbtx.vhd
+
+# dummy promless just to keep compiler happy
 common/hdl/misc/promless_bram.vhd
 
 # GEM IP

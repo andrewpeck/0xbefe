@@ -74,14 +74,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
     elink_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XE_COUNT_ME0") # S-bit counter for elink
     channel_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.TEST_SBIT0XS_COUNT_ME0") # S-bit counter for specific channel
     reset_sbit_counter_node = get_backend_node("BEFE.GEM.SBIT_ME0.CTRL.SBIT_TEST_RESET")  # To reset all S-bit counters
-    reset_sbit_vfat_node = get_backend_node("BEFE.GEM.SBIT_ME0.CTRL.MODULE_RESET")  # To reset VFAT S-bit rate registers
+    reset_sbit_vfat_node = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d.CNT.RESET" % (oh_select)) # To reset VFAT S-bit rate registers
 
     dac_node = {}
     vfat_counter_node = {}
     dac = "CFG_THR_ARM_DAC"
     for vfat in vfat_list:
         dac_node[vfat] = get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%d.%s"%(oh_select, vfat, dac))
-        vfat_counter_node[vfat] = get_backend_node("BEFE.GEM.SBIT_ME0.ME0_OH%d.ME0_VFAT%d_SBIT_RATE"%(oh_select,vfat)) # S-bit counter for enitre VFAT
+        vfat_counter_node[vfat] = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d.CNT.VFAT%d_SBITS"%(oh_select,vfat)) # S-bit counter for enitre VFAT
 
     print ("\nRunning Sbit Noise Scans for VFATs:")
     print (vfat_list)

@@ -40,6 +40,20 @@ set_property IOSTANDARD LVDS [get_ports ttc_data_n_i]
 set_false_path -from [get_clocks clk_out4_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_false_path -from [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 
+## 125MHz clock oscillator
+set_property PACKAGE_PIN AT18 [get_ports clk_125_p_i]
+set_property PACKAGE_PIN AU18 [get_ports clk_125_n_i]
+set_property IOSTANDARD LVDS [get_ports clk_125_p_i]
+set_property IOSTANDARD LVDS [get_ports clk_125_n_i]
+
+create_clock -period 8 -name clk_125 [get_ports clk_125_p_i]
+
+## synthesizer B clock input 2
+set_property PACKAGE_PIN F20 [get_ports clk_synthb_in_p_o]
+set_property PACKAGE_PIN F19 [get_ports clk_synthb_in_n_o]
+set_property IOSTANDARD LVDS [get_ports clk_synthb_in_p_o]
+set_property IOSTANDARD LVDS [get_ports clk_synthb_in_n_o]
+
 ####################### GT reference clock constraints #########################
 
 create_clock -period 3.125 [get_ports {refclk_F_0_p_i[0]}]
