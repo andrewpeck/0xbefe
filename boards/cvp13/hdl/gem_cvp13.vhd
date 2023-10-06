@@ -250,7 +250,8 @@ begin
             g_NUM_USR_BLOCKS => CFG_NUM_GEM_BLOCKS,
             g_USR_BLOCK_SEL_BIT_TOP => 25,
             g_USR_BLOCK_SEL_BIT_BOT => 24,
-            g_USE_QDMA => CFG_PCIE_USE_QDMA
+            g_USE_QDMA => CFG_PCIE_USE_QDMA,
+            g_IS_SLINK_ROCKET => false
         )
         port map(
             reset_i               => '0', -- TODO: connect it to the FPGA reset

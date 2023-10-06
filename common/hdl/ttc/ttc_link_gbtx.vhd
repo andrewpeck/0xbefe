@@ -137,6 +137,7 @@ begin
             mgt_tx_data_arr_o           => open,
             mgt_rx_data_arr_i           => (others => gt_gbt_rx_data_i),
 
+            prbs_mode_en_i              => '0',
             link_status_arr_o(0)        => gbt_status
         );
 
