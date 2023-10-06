@@ -3,7 +3,7 @@
 common/hdl/ttc/tcds2.vhd
 
 # TCLink MGT (generated and copied over to BEFE, would be better to generate it in the tclink dir before creating the project)
-common/ip/gtye4_slave_timing/gtye4_slave_timing.xcix
+common/ip/gtye4_slave_timing/gtye4_slave_timing.xci
 
 # Interface
 tcds2/components/constants/firmware/hdl/constants_tcds2.vhd
