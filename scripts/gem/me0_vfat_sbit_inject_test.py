@@ -11,7 +11,7 @@ import numpy as np
 from read_ntuple import *
 
 def get_exp_clusters(events,s_bit_cluster_mapping):
-    # events should be a dict with vfat# as keys and [sbits] as corresponding values/hits
+    # events should be a dict with eta# as keys and [sbits] as corresponding values/hits
     clusters = {}
     pos = 0
     size = 0
@@ -52,7 +52,6 @@ def bits_to_int(data,order="little"):
     return data_int
 
 def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions, sbit_list, trigger, n_bxs, s_bit_cluster_mapping, verbose):
-    
     resultDir = "results"
     try:
         os.makedirs(resultDir) # create directory for results
@@ -246,10 +245,11 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
     sbit_inj_cnt = 0
     n_bx_cl = 0
     n_clusters = 0
+    n_clusters_error = 0
     n_cluster_size_error = 0
     n_cluster_pos_error = 0
     max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-
+    max_clusters = 8
     for i in range(np.ceil(n_bxs/512).astype(int)):
         while fifo_rst_flag==1:
             sleep(0.1)
@@ -328,7 +328,6 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
         n = 0
         status_str = ""
         min_cluster = 0
-
         while (not cl_fifo_empty):
             fifo_data = read_backend_reg(fifo_data_sbit_monitor_node)
             cluster1_sbit_monitor_value = fifo_data & 0x0000ffff
@@ -403,14 +402,14 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
 
     print ("\nTime taken: %.2f seconds for %d BXs" % ((time()-t0), n_bxs))
     file_out.write("\nTime taken: %.2f seconds for %d BXs\n" % ((time()-t0), n_bxs))
-
-    #if n_clusters_error == 0:
-        #print (Colors.GREEN + "Nr. of cluster expected = %d, Nr. of clusters recorded = %d"%(n_cluster_expected, n_clusters) + Colors.ENDC)
-    #else:
-        #print (Colors.RED + "Nr. of cluster expected = %d, Nr. of clusters recorded = %d"%(n_cluster_expected, n_clusters) + Colors.ENDC)
-    print ("Nr. of clusters recorded = %d"%(n_clusters))
-    #file_out.write("Nr. of cluster expected = %d, Nr. of clusters recorded = %d\n"%(n_cluster_expected, n_clusters))
-    file_out.write("Nr. of clusters recorded = %d\n"%(n_clusters))
+    
+    if n_clusters==0:
+        print(Colors.RED + 'No clusters detected' + Colors.ENDC)
+        file_out.write('No clusters detected\n')
+    else:
+        print ("Nr. of clusters recorded = %d"%(n_clusters))
+        file_out.write("Nr. of clusters recorded = %d\n"%(n_clusters))
+    
     if n_cluster_size_error == 0:
         print (Colors.GREEN + "Nr. of cluster size mismatches = %d"%n_cluster_size_error + Colors.ENDC)
     else:
