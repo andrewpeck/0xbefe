@@ -70,7 +70,7 @@ def read_central_adc_calib_file():
         if "#" in line:
             continue
         if "CHIPID" in line:    
-            vars = line.split(",")
+            vars = line.split("\n")[0].split(",")
             continue
         try:
             chip_id = int(line.split(",")[0], 16)
@@ -83,7 +83,7 @@ def read_central_adc_calib_file():
         for (i,v) in enumerate(vars):
             if v == "CHIPID":
                 continue
-            adc_calib[chip_id][v] = float(line.split(",")[i])
+            adc_calib[chip_id][v] = float(line.split("\n")[0].split(",")[i])
     adc_calib_file.close()
     return adc_calib
 
@@ -197,7 +197,7 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
     no_calib = 0
     if chip_id not in adc_calib:
         no_calib = 1
-    if "CAL_ADC_%dN_SLOPE"%gain not in adc_calib or "CAL_ADC_%dN_SLOPE_TEMP"%gain not in adc_calib or "CAL_ADC_%dN_OFFSET"%gain not in adc_calib or "CAL_ADC_%dN_OFFSET_TEMP"%gain not in adc_calib:
+    if "ADC_%dN_SLOPE"%gain not in adc_calib or "ADC_%dN_SLOPE_TEMP"%gain not in adc_calib or "ADC_%dN_OFFSET"%gain not in adc_calib or "ADC_%dN_OFFSET_TEMP"%gain not in adc_calib:
         no_calib = 1
 
     if no_calib:
@@ -207,7 +207,7 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
         #voltage = (adc - 38.4)/(1.85 * 512)
         voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
     else:
-        voltage = adc * (adc_calib[chip_id]["CAL_ADC_%dN_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["CAL_ADC_%dN_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["CAL_ADC_%dN_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["CAL_ADC_%dN_OFFSET_TEMP"%gain]
+        voltage = adc * (adc_calib[chip_id]["ADC_%dN_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["ADC_%dN_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["ADC_%dN_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["ADC_%dN_OFFSET_TEMP"%gain]
 
     return voltage
 
@@ -219,8 +219,8 @@ def current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current
         dac = round(current/LSB)
         R_out = 0
     else:
-        dac = round(current * (adc_calib[chip_id]["CAL_CDAC%d_SLOPE"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_SLOPE_TEMP"%channel]) + adc_calib[chip_id]["CAL_CDAC%d_OFFSET"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_OFFSET_TEMP"%channel])
-        R_out = (adc_calib[chip_id]["CAL_CDAC%d_R0"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_R0_TEMP"%channel]) / dac
+        dac = round(current * (adc_calib[chip_id]["CDAC%d_SLOPE"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_SLOPE_TEMP"%channel]) + adc_calib[chip_id]["CDAC%d_OFFSET"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_OFFSET_TEMP"%channel])
+        R_out = (adc_calib[chip_id]["CDAC%d_R0"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_R0_TEMP"%channel]) / dac
     return dac, R_out
 
 
@@ -230,8 +230,8 @@ def get_current_from_dac(chip_id, adc_calib, junc_temp, channel, R_load, dac):
         LSB = 3.55e-06
         actual_current = dac * LSB
     else:
-        current = (dac - (adc_calib[chip_id]["CAL_CDAC%d_OFFSET"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_OFFSET_TEMP"%channel]))/ (adc_calib[chip_id]["CAL_CDAC%d_SLOPE"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_SLOPE_TEMP"%channel])
-        R_out = (adc_calib[chip_id]["CAL_CDAC%d_R0"%channel] + junc_temp * adc_calib[chip_id]["CAL_CDAC%d_R0_TEMP"%channel]) / dac
+        current = (dac - (adc_calib[chip_id]["CDAC%d_OFFSET"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_OFFSET_TEMP"%channel]))/ (adc_calib[chip_id]["CDAC%d_SLOPE"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_SLOPE_TEMP"%channel])
+        R_out = (adc_calib[chip_id]["CDAC%d_R0"%channel] + junc_temp * adc_calib[chip_id]["CDAC%d_R0_TEMP"%channel]) / dac
         actual_current = (current * R_out) / (R_out + R_load)
     return actual_current
 
@@ -260,7 +260,7 @@ def get_vmon(chip_id, adc_calib, junc_temp, voltage):
     if chip_id not in adc_calib:
         vmon_voltage = voltage
     else:
-       vmon_voltage = voltage * (adc_calib[chip_id]["CAL_VDDMON_SLOPE"] + junc_temp * adc_calib[chip_id]["CAL_VDDMON_SLOPE_TEMP"]) 
+       vmon_voltage = voltage * (adc_calib[chip_id]["VDDMON_SLOPE"] + junc_temp * adc_calib[chip_id]["VDDMON_SLOPE_TEMP"]) 
     return vmon_voltage
 
 
@@ -269,7 +269,7 @@ def get_temp_sensor(chip_id, adc_calib, junc_temp, voltage):
     if chip_id not in adc_calib:
         temp = 0
     else:
-        temp = (voltage * adc_calib[chip_id]["CAL_TEMPERATURE_SLOPE"]) + adc_calib[chip_id]["CAL_TEMPERATURE_OFFSET"]
+        temp = (voltage * adc_calib[chip_id]["TEMPERATURE_SLOPE"]) + adc_calib[chip_id]["TEMPERATURE_OFFSET"]
     return temp
 
 
