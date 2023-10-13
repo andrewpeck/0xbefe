@@ -3,38 +3,7 @@ from time import sleep
 import sys
 import argparse
 import statistics
-
-def adc_conversion_lpgbt(adc):
-    gain = 1.87
-    offset = 531.1
-    #voltage = adc/1024.0
-    #voltage = (adc - 38.4)/(1.85 * 512)
-    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
-    return voltage
-
-def read_efuse(reg_adr):
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEREAD"), 0x1)
-    valid = 0
-    while (valid==0):
-        if system!="dryrun":
-            valid = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEDATAVALID"))
-        else:
-            valid = 1
-        
-    fuse_block_adr = reg_adr & 0xfffc
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH"), 0xff&(fuse_block_adr>>8))
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL"), 0xff&(fuse_block_adr>>0)) 
-    read=4*[0]
-    read[0] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESA")) 
-    read[1] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESB")) 
-    read[2] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESC")) 
-    read[3] = lpgbt_readReg(getNode("LPGBT.RO.FUSE_READ.FUSEVALUESD")) 
-
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEREAD"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL"), 0x0)
-    read_word = (read[0]) | (read[1]<<8) | (read[2] << 16) | (read[3] << 24)
-    return read_word
+from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, boss):
 
@@ -59,14 +28,7 @@ def main(system, oh_ver, boss):
         #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.CHIPID0")) << 0))
 
         # Reading from EFuses
-        CHIPID_A = read_efuse(0x00)
-        CHIPID_B = read_efuse(0x08) >> 6
-        CHIPID_C = read_efuse(0x0c) >> 12
-        CHIPID_D = read_efuse(0x10) >> 18
-        CHIPID_E = read_efuse(0x14) >> 24
-        chip_id = statistics.mode([CHIPID_A, CHIPID_B, CHIPID_C, CHIPID_D, CHIPID_E])
-        if (CHIPID_B == 0 and CHIPID_C == 0 and CHIPID_D == 0 and CHIPID_E == 0):
-            chip_id = CHIPID_A
+        chip_id = read_chip_id(system, oh_ver)
         print ("\t0x%08X" % chip_id)
 
         print ("USER ID:")
@@ -74,7 +36,7 @@ def main(system, oh_ver, boss):
         #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID2")) << 16 | \
         #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID1")) << 8  | \
         #                    lpgbt_readReg(getNode("LPGBT.RWF.CHIPID.USERID0")) << 0))
-        user_id = read_efuse(0x04)
+        user_id = read_efuse(system, 0x04)
         print ("\t0x%08X"%user_id)
 
     print ("Lock mode:")
@@ -295,13 +257,13 @@ def main(system, oh_ver, boss):
     print ("VCO Cap Select:")
     print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTH")) << 1 | lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTL"))))
 
-   #print ("Configuring adc...")
-   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)
-   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x15)
-   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.CONVERT"), 0x1)
-   #lpgbt_writeReg(getNode("LPGBT.RW.ADC.GAINSELECT"), 0x1)
+    #print ("Configuring adc...")
+    adc_calib = read_central_adc_calib_file()
+    junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
+    vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
+    init_adc(oh_ver, vref_tune)
+    gain = 2
 
-    init_adc(oh_ver)
     print ("ADC Readings:")
     
     if oh_ver == 1:
@@ -324,8 +286,9 @@ def main(system, oh_ver, boss):
                 if (i==13):  conv=1/0.42; name="VDDA (internal signal)"
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
                 if (i==15):  conv=1/0.50; name="VREF (internal signal)"
-                read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
+                read = read_adc(i, gain, system)
+                voltage = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, read, gain)
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, voltage, conv*voltage, name))
         elif boss == 0:
             for i in range(16):
                 name = ""
@@ -345,8 +308,9 @@ def main(system, oh_ver, boss):
                 if (i==13):  conv=1/0.42; name="VDDA (internal signal)"
                 if (i==14):  conv=1; name="Temperature sensor (internal signal)"
                 if (i==15):  conv=1/0.50; name="VREF (internal signal)"
-                read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
+                read = read_adc(i, gain, system)
+                voltage = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, read, gain)
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, voltage, conv*voltage, name))
     elif oh_ver == 2:
         if boss == 1:
             for i in range(16):
@@ -367,8 +331,9 @@ def main(system, oh_ver, boss):
                 if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
                 if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
-                read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
+                read = read_adc(i, gain, system)
+                voltage = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, read, gain)
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, voltage, conv*voltage, name))
         elif boss == 0:
             for i in range(16):
                 name = ""
@@ -388,8 +353,9 @@ def main(system, oh_ver, boss):
                 if (i == 13):  conv = 1/0.42; name = "VDDA (internal signal)"
                 if (i == 14):  conv = 1; name = "Temperature sensor (internal signal)"
                 if (i == 15):  conv = 1/0.50; name = "VREF (internal signal)"
-                read = read_adc(i, system)
-                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, adc_conversion_lpgbt(read), conv*adc_conversion_lpgbt(read), name))
+                read = read_adc(i, gain, system)
+                voltage = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, read, gain)
+                print ("\tch %X: 0x%03X = %f, reading = %f (%s)" % (i, read, voltage, conv*voltage, name))
 
     powerdown_adc(oh_ver)
     print ("")
@@ -445,52 +411,6 @@ def main(system, oh_ver, boss):
         lpgbt_write_config_file(oh_ver, dataDir+"/status_boss_ohv%d.txt"%oh_ver, status=1)
     else:
         lpgbt_write_config_file(oh_ver, dataDir+"/status_sub_ohv%d.txt"%oh_ver, status=1)
-
-
-def init_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1) # enable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1) # resets temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1) # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1) # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1) # enable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1) # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1) # vref enable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
-    sleep (0.01)
-
-def powerdown_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0) # disable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0) # disable temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0) # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0) # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0) # disable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0) # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0) # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0) # vref disable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
-
-def read_adc(channel, system):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-    done = 0
-    while (done==0):
-        if system!="dryrun":
-            done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-        else:
-            done=1
-    val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-    val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
-
-    return val
 
 if __name__ == "__main__":
 

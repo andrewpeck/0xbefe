@@ -9,28 +9,7 @@ import datetime
 import math
 import numpy as np
 from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
-
-def adc_conversion_lpgbt(adc):
-    gain = 1.87
-    offset = 531.1
-    #voltage = adc/1024.0
-    #voltage = (adc - 38.4)/(1.85 * 512)
-    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
-    return voltage
-
-def poly5(x, a, b, c, d, e, f):
-    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
-
-def get_vin(vout, fit_results):
-    vin_range = np.linspace(0, 1, 1000)
-    vout_range = poly5(vin_range, *fit_results)
-    diff = 9999
-    vin = 0
-    for i in range(0,len(vout_range)):
-        if abs(vout - vout_range[i])<=diff:
-            diff = abs(vout - vout_range[i])
-            vin = vin_range[i]
-    return vin
+from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, niter, gain, plot, temp_cal):
 
@@ -38,25 +17,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     # PT (ie platinum) has linear temperature-resistance relationship
     # RTD sensors made of platinum are called PRT (Platinum Resistance Themometer)
 
-    init_adc(oh_ver)
+    chip_id = read_chip_id(system, oh_ver)
+    adc_calib = read_central_adc_calib_file()
+    junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
+    vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
+    init_adc(oh_ver, vref_tune)
     print("Temperature Readings:")
 
-    adc_calib_results = []
-    adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
-    if not os.path.isdir(adc_calibration_dir):
-        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
-    list_of_files = glob.glob(adc_calibration_dir+"ME0_OH%d_GBT%d_adc_calibration_results_*.txt"%(oh_select, gbt_select))
-    if len(list_of_files)==0:
-        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
-    elif len(list_of_files)>1:
-        print ("Mutliple ADC calibration results found, using latest file")
-    if len(list_of_files)!=0:
-        latest_file = max(list_of_files, key=os.path.getctime)
-        adc_calib_file = open(latest_file)
-        adc_calib_results = adc_calib_file.readlines()[0].split()
-        adc_calib_results_float = [float(a) for a in adc_calib_results]
-        adc_calib_results_array = np.array(adc_calib_results_float)
-        adc_calib_file.close()
+    adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file()
 
     resultDir = "results"
     try:
@@ -93,19 +61,19 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
         channel = 6
     elif device == "VTRX":
         channel = 0
-    DAC = 0
+
     if temp_cal == "10k":
-        DAC = 20
+        current = (0.71/10000) # in A
     elif temp_cal == "1k":
-        DAC = 60
-    LSB = 3.55e-06
-    I = DAC * LSB
+        current = (0.21/10000) # in A
+    DAC, R_out = current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current)
+    #if temp_cal == "10k":
+    #    DAC = 20
+    #elif temp_cal == "1k":
+    #    DAC = 60
     find_temp = temp_res_fit(temp_cal=temp_cal)
 
-    reg_data = convert_adc_reg(channel)
-    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1)  # Enables current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data)
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC)  # Sets output current for the current DAC.
+    init_current_dac(channel, DAC)
     sleep(0.01)
 
     start_time = int(time())
@@ -122,12 +90,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
             read_adc_iter = 0
 
         if read_adc_iter:
-            Vout = read_adc(channel, gain, system)
-            if len(adc_calib_results)!=0:
-                Vin = get_vin(Vout, adc_calib_results_array)
-            else:
-                Vin = Vout
-            R_m = Vin/I
+            adc_value = read_adc(channel, gain, system)
+            Vout = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value, gain)
+            R_m = get_resistance_from_current_dac(chip_id, adc_calib, Vout, current, R_out, adc_calib_results, adc_calib_results_array)
             temp = find_temp(np.log10(R_m))
 
             second = time() - start_time
@@ -155,18 +120,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     ax1.plot(minutes, T, color="turquoise")
     fig1.savefig(figure_name, bbox_inches="tight")
 
-    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0)  # Enables current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0)  #Sets output current for the current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0)
+    powerdown_current_dac()
     sleep(0.01)
 
     powerdown_adc(oh_ver)
-
-def convert_adc_reg(adc):
-    reg_data = 0
-    bit = adc
-    reg_data |= (0x01 << bit)
-    return reg_data
 
 def temp_res_fit(temp_cal="10k", power=2):
 
@@ -207,70 +164,6 @@ def live_plot(ax, x, y):
     ax.plot(x, y, "turquoise")
     plt.draw()
     plt.pause(0.01)
-
-
-def init_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)  # enable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1)  # resets temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1)  # enable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1)  # vref enable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
-    sleep(0.01)
-
-
-def powerdown_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0)  # disable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0)  # disable temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0)  # disable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0)  # vref disable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
-
-
-def read_adc(channel, gain, system):
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-
-    gain_settings = {
-        2: 0x00,
-        8: 0x01,
-        16: 0x10,
-        32: 0x11
-    }
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-
-    vals = []
-    for i in range(0,100):
-        done = 0
-        while (done==0):
-            if system!="dryrun":
-                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-            else:
-                done=1
-        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = adc_conversion_lpgbt(val)
-        vals.append(val)
-    mean_val = sum(vals)/len(vals)
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
-
-    return mean_val
-
 
 if __name__ == "__main__":
 
