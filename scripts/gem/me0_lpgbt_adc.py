@@ -60,8 +60,10 @@ def get_local_adc_calib_from_file():
 
 def read_central_adc_calib_file():
     scripts_dir = get_befe_scripts_dir()
-    adc_calib_file = open(scripts_gem_dir+"/resources/lpgbt_calibration.csv")
     adc_calib = {}
+    if not os.path.isfile(scripts_gem_dir+"/resources/lpgbt_calibration.csv"):
+        return adc_calib
+    adc_calib_file = open(scripts_gem_dir+"/resources/lpgbt_calibration.csv")
     vars = []
 
     for line in adc_calib_file.readlines():
