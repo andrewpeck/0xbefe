@@ -132,9 +132,8 @@ def get_adc_val(system):
                 done=1
         val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
         val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = adc_conversion_lpgbt(val)
         vals.append(val)
-    mean_val = sum(vals)/len(vals)
+    mean_val = round(sum(vals)/len(vals))
     return mean_val
 
 
