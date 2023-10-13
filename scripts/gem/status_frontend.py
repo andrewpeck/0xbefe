@@ -13,7 +13,7 @@ def main():
 
     # Writing GBT status to text file
     scripts_gem_dir = get_befe_scripts_dir() + "/gem"
-    resultDir = scripts_gem_dir = "/results"
+    resultDir = scripts_gem_dir + "/results"
     gbtDir = resultDir+"/gbt_data"
     try:
         os.makedirs(gbtDir) # create directory for GBT data
