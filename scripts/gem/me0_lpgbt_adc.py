@@ -69,10 +69,13 @@ def read_central_adc_calib_file():
     for line in adc_calib_file.readlines():
         if "#" in line:
             continue
-        if "CHIPID" in line:
+        if "CHIPID" in line:    
             vars = line.split(",")
             continue
-        chip_id = int(line.split(",")[0], 16)
+        try:
+            chip_id = int(line.split(",")[0], 16)
+        except:
+            chip_id = int(line.split(",")[0])
         adc_calib[chip_id] = {}
         for (i,v) in enumerate(vars):
             if v == "CHIPID":
