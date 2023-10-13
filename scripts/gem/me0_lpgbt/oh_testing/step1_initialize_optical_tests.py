@@ -14,12 +14,9 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Enter OH serial numbers for both slot 1 and 2" + Colors.ENDC) 
         sys.exit()
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "me0_lpgbt/oh_testing/results/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "me0_lpgbt/oh_testing/results"
+    me0Dir = resultDir + "/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
     try:
         os.makedirs(me0Dir) # create directory for OH under test
     except FileExistsError: # skip if directory already exists

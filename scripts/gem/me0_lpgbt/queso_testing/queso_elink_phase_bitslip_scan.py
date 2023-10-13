@@ -1,4 +1,5 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+from common.utils import get_befe_scripts_dir
 import gem.gem_utils as gem_utils
 from time import sleep, time
 import datetime
@@ -133,12 +134,9 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
         set_bitslips(queso_bitslip_nodes, phase_bitslip_list)
     else:
         print ("Scanning phase and bitslips:")
-        resultDir = "me0_lpgbt/queso_testing/results"
-        try:
-            os.makedirs(resultDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        dataDir = "me0_lpgbt/queso_testing/results/phase_bitslip_results"
+        scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+        resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+        dataDir = resultDir + "/phase_bitslip_results"
         try:
             os.makedirs(dataDir) # create directory for results
         except FileExistsError: # skip if directory already exists

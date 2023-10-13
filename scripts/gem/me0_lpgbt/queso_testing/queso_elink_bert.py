@@ -5,6 +5,7 @@ import sys
 import argparse
 import math
 import json
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
 
@@ -33,13 +34,8 @@ def init_lpgbt_fec_error_counter(oh_ver):
         rw_reg_lpgbt.mpoke(0x1C9, 0x0)
 
 def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, batch = None):
-
-    resultDir = "me0_lpgbt/queso_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
     if batch is None:
         dataDir = resultDir + "/bert_results"
     else:

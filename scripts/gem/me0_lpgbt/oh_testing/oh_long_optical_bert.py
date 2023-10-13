@@ -5,6 +5,7 @@ import numpy as np
 import json
 import re
 import math
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 # slot to OH mapping
@@ -120,11 +121,8 @@ if __name__ == "__main__":
     for oh in oh_gbt_vfat_map:
         oh_ver_list += [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
-    resultDir = "me0_lpgbt/oh_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/me0_lpgbt/oh_testing/results"
 
     try:
         dataDir = resultDir + "/%s_tests"%batch

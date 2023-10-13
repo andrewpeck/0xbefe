@@ -3,6 +3,7 @@ from time import time, sleep
 import argparse
 import os, sys, glob, csv, json
 import numpy as np
+from common.utils import get_befe_scripts_dir
 from common.rw_reg import *
 import datetime
 
@@ -209,11 +210,8 @@ if __name__ == "__main__":
         print("")
         sys.exit()
 
-    resultDir = "me0_lpgbt/queso_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
 
     try:
         dataDir = resultDir+"/%s_tests"%batch # directory name if batch variable exists

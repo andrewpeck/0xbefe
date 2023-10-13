@@ -6,6 +6,7 @@ import csv
 import datetime
 import os
 import gem.me0_lpgbt.rpi_chc as rpi_chc
+from common.utils import get_befe_scripts_dir
 
 class Colors:
     WHITE   = "\033[97m"
@@ -115,12 +116,8 @@ if __name__ == '__main__':
 
     # channel 0 and 1 for OH
     # channel 2 and 3 for FPGA
-
-    resultDir = "me0_lpgbt/queso_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
     current_monitor_dir = resultDir + "/current_monitor_results"
     try:
         os.makedirs(current_monitor_dir) # create directory for current monitor data

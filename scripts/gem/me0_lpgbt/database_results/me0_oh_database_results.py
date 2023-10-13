@@ -4,14 +4,15 @@ import json
 import xmltodict
 import argparse
 import numpy as np
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
-input_dir = 'me0_lpgbt/database_results/input/'
-if not os.path.exists(input_dir):
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+inputDir = scripts_gem_dir + '/me0_lpgbt/database_results/input'
+if not os.path.exists(inputDir):
     print(Colors.RED + 'Input file directory does not exist. Run generate_inputs.py first to create input files.' + Colors.ENDC)
-results_dir = 'me0_lpgbt/database_results/results/'
-if not os.path.exists(results_dir):
-    os.makedirs(results_dir)
+
+resultDir = scripts_gem_dir + '/me0_lpgbt/database_results/results'
 
 def get_json_data(fn):
     with open(fn,'r') as fp:
@@ -26,7 +27,7 @@ def print_json_data(fn):
         print()
 
 def get_input_data(oh_sn,vtrxp_sn):
-    input_fn = input_dir + 'input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
+    input_fn = inputDir + '/input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
     try:
         with open(input_fn,'r') as input_file:
             data = json.load(input_file)
@@ -294,7 +295,7 @@ def main():
                 print('%s: '%key, value)
         print()
         # save to xml file
-        results_fn = 'me0_lpgbt/database_results/results/ME0_OH_%s.xml'%oh_sn
+        results_fn = resultDir + '/ME0_OH_%s.xml'%oh_sn
         print('Saving to xml file at directory: %s'%results_fn)
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(oh_data,results_file,pretty=True)
@@ -306,16 +307,10 @@ def main():
                 print('%s: '%key, value)
         print()
         # save to xml file
-        results_fn = 'me0_lpgbt/database_results/results/VTRXP_%s.xml'%vtrxp_sn
+        results_fn = resultDir + '/VTRXP_%s.xml'%vtrxp_sn
         print('Saving to xml file at directory: %s'%results_fn)
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(vtrxp_data,results_file,pretty=True)
-
-    resultDir = "me0_lpgbt/database_results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
 
 if __name__ == '__main__':
     main()

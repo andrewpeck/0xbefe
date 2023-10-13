@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import datetime
 import sys
@@ -34,12 +35,9 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
         set_bitslip(bitslip_list, queso_bitslip_nodes)
     else:
         print ("Scanning bitslips:")
-        resultDir = "me0_lpgbt/queso_testing/results"
-        try:
-            os.makedirs(resultDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        dataDir = "me0_lpgbt/queso_testing/results/bitslip_results"
+        scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+        resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+        dataDir = resultDir + "/bitslip_results"
         try:
             os.makedirs(dataDir) # create directory for results
         except FileExistsError: # skip if directory already exists
