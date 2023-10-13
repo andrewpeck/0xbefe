@@ -47,7 +47,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     Vout_range = []
 
     R_load = 1e3
-    DAC_range = range(0, 256, 1)
+    DAC_range = range(1, 256, 1)
 
     chip_id = read_chip_id(system, oh_ver)
     adc_calib = read_central_adc_calib_file()
