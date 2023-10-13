@@ -78,21 +78,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             adc_value_vdda = read_adc(13, gain, system)
             adc_value_vref = read_adc(15, gain, system)
 
-            v2v5_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_v2v5, gain)
-            vssa_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vssa, gain)
-            vddtx_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vddtx, gain)
-            vddrx_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vddrx, gain)
-            vdd_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vdd, gain)
-            vdda_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vdda, gain)
-            vref_Vin_raw = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vref, gain)
-
-            v2v5_Vin = get_vmon(chip_id, adc_calib, junc_temp, v2v5_Vin_raw)
-            vssa_Vin = get_vmon(chip_id, adc_calib, junc_temp, vssa_Vin_raw)
-            vddtx_Vin = get_vmon(chip_id, adc_calib, junc_temp, vddtx_Vin_raw)
-            vddrx_Vin = get_vmon(chip_id, adc_calib, junc_temp, vddrx_Vin_raw)
-            vdd_Vin = get_vmon(chip_id, adc_calib, junc_temp, vdd_Vin_raw)
-            vdda_Vin = get_vmon(chip_id, adc_calib, junc_temp, vdda_Vin_raw)
-            vref_Vin = get_vmon(chip_id, adc_calib, junc_temp, vref_Vin_raw)
+            v2v5_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_v2v5, gain)
+            vssa_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vssa, gain)
+            vddtx_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vddtx, gain)
+            vddrx_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vddrx, gain)
+            vdd_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vdd, gain)
+            vdda_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vdda, gain)
+            vref_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vref, gain)
 
             if oh_ver == 1:
                 if gbt_select%2 == 0:
