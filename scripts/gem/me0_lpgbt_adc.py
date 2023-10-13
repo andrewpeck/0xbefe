@@ -72,12 +72,12 @@ def read_central_adc_calib_file():
         if "CHIPID" in line:
             vars = line.split(",")
             continue
-        chip_id = line.split(",")[0]
+        chip_id = int(line.split(",")[0], 16)
         adc_calib[chip_id] = {}
         for (i,v) in enumerate(vars):
             if v == "CHIPID":
                 continue
-            adc_calib[chip_id][v] = line.split(",")[i]
+            adc_calib[chip_id][v] = float(line.split(",")[i])
     adc_calib_file.close()
     return adc_calib
 
