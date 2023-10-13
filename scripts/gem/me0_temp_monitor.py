@@ -24,7 +24,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     init_adc(oh_ver, vref_tune)
     print("Temperature Readings:")
 
-    adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file()
+    adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file(oh_select, gbt_select)
 
     resultDir = "results"
     try:

@@ -37,7 +37,7 @@ def get_vin(vout, fit_results):
     return vin
 
 
-def get_local_adc_calib_from_file():
+def get_local_adc_calib_from_file(oh_select, gbt_select):
     adc_calib_results = []
     scripts_dir = get_befe_scripts_dir()
     adc_calibration_dir = scripts_dir = get_befe_scripts_dir()+"/gem/results/me0_lpgbt_data/adc_calibration_data/"
