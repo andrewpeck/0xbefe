@@ -79,7 +79,6 @@ def read_central_adc_calib_file():
                 chip_id = int(line.split(",")[0])
             except:
                 chip_id = int(float(line.split(",")[0]))
-        print (line.split(",")[0], chip_id)
         adc_calib[chip_id] = {}
         for (i,v) in enumerate(vars):
             if v == "CHIPID":
