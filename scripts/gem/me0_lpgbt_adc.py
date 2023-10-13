@@ -197,7 +197,7 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
     no_calib = 0
     if chip_id not in adc_calib:
         no_calib = 1
-    if "ADC_%dN_SLOPE"%gain not in adc_calib or "ADC_%dN_SLOPE_TEMP"%gain not in adc_calib or "ADC_%dN_OFFSET"%gain not in adc_calib or "ADC_%dN_OFFSET_TEMP"%gain not in adc_calib:
+    if "ADC_X%d_SLOPE"%gain not in adc_calib[chip_id] or "ADC_X%d_SLOPE_TEMP"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET_TEMP"%gain not in adc_calib[chip_id]:
         no_calib = 1
 
     if no_calib:
@@ -207,7 +207,7 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
         #voltage = (adc - 38.4)/(1.85 * 512)
         voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
     else:
-        voltage = adc * (adc_calib[chip_id]["ADC_%dN_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["ADC_%dN_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["ADC_%dN_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["ADC_%dN_OFFSET_TEMP"%gain]
+        voltage = adc * (adc_calib[chip_id]["ADC_X%d_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["ADC_X%d_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_OFFSET_TEMP"%gain]
 
     return voltage
 
