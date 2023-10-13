@@ -41,7 +41,7 @@ if __name__ == "__main__":
     logfile.write("Step 1: Slow Control Error Rate Test\n\n")
     
     os.system("python3 vfat_slow_control_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -r TEST_REG -t 30")
-    list_of_files = glob.glob("results/vfat_data/vfat_slow_control_test_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_slow_control_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     slow_control_results_file = open(latest_file)
     write_flag = 0
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     logfile.write("Step 2: DAQ Error Rate Test\n\n")
     
     os.system("python3 vfat_daq_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -t 30")
-    list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     daq_results_file = open(latest_file)
     write_flag = 0
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running S-bit Error test for VFAT17 Elink7\n" + Colors.ENDC)
     logfile.write("Running S-bit Error test for VFAT17 Elink7\n\n")
     os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 17 -e 7 -t 1 -b 20 -l -f")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file1 = open(latest_file)
     write_flag = 0
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "\nRunning S-bit Error test for VFAT19 Elink7\n" + Colors.ENDC)
     logfile.write("\nRunning S-bit Error test for VFAT19 Elink7\n\n")
     os.system("python3 me0_vfat_sbit_test.py -s backend -q ME0 -o 0 -v 19 -e 7 -t 1 -b 20 -l -f")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_test_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_test_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     sbit_results_file2 = open(latest_file)
     write_flag = 0
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "\nRunning DAC Scans for all VFATs\n" + Colors.ENDC)
     logfile.write("\nRunning DAC Scans for all VFATs\n\n")
     os.system("python3 vfat_dac_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -f ../resources/DAC_scan_reg_list.txt")
-    list_of_files = glob.glob("results/vfat_data/vfat_dac_scan_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_dac_scan_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "\nPlotting DAC Scans for all VFATs\n" + Colors.ENDC)
@@ -165,19 +165,19 @@ if __name__ == "__main__":
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 1")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 2")
     os.system("python3 me0_lpgbt_adc_calibration_scan.py -s backend -q ME0 -o 0 -g 3")
-    list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT0*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/adc_calibration_data/*GBT0*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot1_boss.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT1*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/adc_calibration_data/*GBT1*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot1_sub.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT2*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/adc_calibration_data/*GBT2*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot2_boss.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/adc_calibration_data/*GBT3*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/adc_calibration_data/*GBT3*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/adc_calib_slot2_sub.pdf"%(latest_file, dataDir))
@@ -189,20 +189,20 @@ if __name__ == "__main__":
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 1-m 5")
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 2-m 5")
     os.system("python3 me0_voltage_monitor.py -s backend -q ME0 -o 0 -g 3-m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT0*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_voltage_data/*GBT0*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot1_boss.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT1*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_voltage_data/*GBT1*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot1_sub.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT2*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_voltage_data/*GBT2*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot2_boss.pdf"%(latest_file, dataDir))
     time.sleep(5)
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_voltage_data/*GBT3*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_voltage_data/*GBT3*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/voltage_slot2_sub.pdf"%(latest_file, dataDir))
@@ -212,11 +212,11 @@ if __name__ == "__main__":
     logfile.write("Running RSSI Scan\n\n")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 1 -v 2.56 -m 5")
     os.system("python3 me0_rssi_monitor.py -s backend -q ME0 -o 0 -g 3 -v 2.56 -m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT1*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT1*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rssi_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT3*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT3*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rssi_slot2.pdf"%(latest_file, dataDir))
@@ -226,19 +226,19 @@ if __name__ == "__main__":
     logfile.write("Running GEB Current and Temperature Scan\n\n")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 0 -m 5")
     os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o 0 -g 2 -m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT0_pg_current*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT0_pg_current*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/pg_current_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT0_rt_voltage*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT0_rt_voltage*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rt_voltage_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT2_pg_current*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT2_pg_current*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/pg_current_slot2.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_asense_data/*GBT2_rt_voltage*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT2_rt_voltage*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/rt_voltage_slot2.pdf"%(latest_file, dataDir))
@@ -248,11 +248,11 @@ if __name__ == "__main__":
     logfile.write("Running OH Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t OH -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t OH -m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT1_temp_OH*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT1_temp_OH*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/oh_temp_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT3_temp_OH*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT3_temp_OH*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/oh_temp_slot2.pdf"%(latest_file, dataDir))
@@ -262,11 +262,11 @@ if __name__ == "__main__":
     logfile.write("Running VTRx+ Temperature Scan\n\n")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 1 -t VTRX -m 5")
     os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o 0 -g 3 -t VTRX -m 5")
-    list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT1_temp_VTRX*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT1_temp_VTRX*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vtrx+_temp_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/temp_monitor_data/*GBT3_temp_VTRX*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT3_temp_VTRX*.pdf")
     if len(list_of_files)>0:
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vtrx+_temp_slot2.pdf"%(latest_file, dataDir))

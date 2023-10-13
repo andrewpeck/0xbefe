@@ -436,7 +436,7 @@ if __name__ == "__main__":
     os.system("python3 init_frontend.py")
     os.system("python3 status_frontend.py >> %s"%log_fn)
     logfile = open(log_fn,"a")
-    list_of_files = glob.glob("results/gbt_data/gbt_status_data/gbt_status_*.json")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
     test_failed = False
     init_status = {}
