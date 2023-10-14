@@ -64,23 +64,26 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
         channel = 6
     elif device == "VTRX":
         channel = 0
+    elif device == "lpGBT":
+        channel = 14
 
     if temp_cal == "10k":
         current = (0.71/10000) # in A
     elif temp_cal == "1k":
         current = (0.21/1000) # in A
-    DAC, R_out = current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current)
-    #if temp_cal == "10k":
-    #    DAC = 20
-    #elif temp_cal == "1k":
-    #    DAC = 60
-    if chip_id in adc_calib and device == "OH": 
-        find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
-    else:
-        find_temp = temp_res_fit(temp_cal=temp_cal)
+    if device != "lpGBT":
+        DAC, R_out = current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current)
+        #if temp_cal == "10k":
+        #    DAC = 20
+        #elif temp_cal == "1k":
+        #    DAC = 60
+        if chip_id in adc_calib and device == "OH": 
+            find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
+        else:
+            find_temp = temp_res_fit(temp_cal=temp_cal)
 
-    init_current_dac(channel, DAC)
-    sleep(0.01)
+        init_current_dac(channel, DAC)
+        sleep(0.01)
 
     start_time = int(time())
     end_time = int(time()) + (60 * run_time_min)
@@ -98,8 +101,12 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
         if read_adc_iter:
             adc_value = read_adc(channel, gain, system)
             Vout = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value, gain)
-            R_m = get_resistance_from_current_dac(chip_id, adc_calib, Vout, current, R_out, adc_calib_results, adc_calib_results_array)
-            temp = find_temp(np.log10(R_m))
+            if device != "lpGBT":
+                R_m = get_resistance_from_current_dac(chip_id, adc_calib, Vout, current, R_out, adc_calib_results, adc_calib_results_array)
+                temp = find_temp(np.log10(R_m))
+            else:
+                R_m = 0
+                temp = get_temp_sensor(chip_id, adc_calib, junc_temp, Vout)
 
             second = time() - start_time
             T.append(temp)
@@ -126,8 +133,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     ax1.plot(minutes, T, color="turquoise")
     fig1.savefig(figure_name, bbox_inches="tight")
 
-    powerdown_current_dac()
-    sleep(0.01)
+    if device != "lpGBT":
+        powerdown_current_dac()
+        sleep(0.01)
 
     powerdown_adc(oh_ver)
 
@@ -182,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX")
+    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX or lpGBT")
     parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
@@ -228,8 +236,8 @@ if __name__ == "__main__":
         boss = 1
     else:
         boss = 0
-    if boss:
-        print (Colors.YELLOW + "Only sub lpGBT allowed" + Colors.ENDC)
+    if args.temp != "lpGBT" and boss:
+        print (Colors.YELLOW + "Only sub lpGBT allowed for OH and VTRx+ temperature" + Colors.ENDC)
         sys.exit()
 
     if args.gain not in ["2", "8", "16", "32"]:
