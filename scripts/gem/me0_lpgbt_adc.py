@@ -259,7 +259,7 @@ def get_resistance_from_current_dac(chip_id, adc_calib, voltage, current, R_out,
 def get_vmon(chip_id, adc_calib, junc_temp, voltage):
     vmon_voltage = -9999
     if chip_id not in adc_calib:
-        vmon_voltage = voltage
+        vmon_voltage = voltage/0.428
     else:
        vmon_voltage = voltage * (adc_calib[chip_id]["VDDMON_SLOPE"] + junc_temp * adc_calib[chip_id]["VDDMON_SLOPE_TEMP"]) 
     return vmon_voltage

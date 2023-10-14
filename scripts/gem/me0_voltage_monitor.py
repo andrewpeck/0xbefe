@@ -91,19 +91,19 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                     v2v5_converted = v2v5_Vin*3.0
                 else:
                     v2v5_converted = -9999
-                vssa_converted = vssa_Vin/0.42
+                vssa_converted = vssa_Vin/0.428
             elif oh_ver == 2:
                 if gbt_select%2 == 0:
                     v2v5_converted = -9999
                 else:
                     v2v5_converted = v2v5_Vin*3.0
                 vssa_converted = vssa_Vin
-            vddtx_converted = vddtx_Vin/0.42
-            vddrx_converted = vddrx_Vin/0.42
-            vdd_converted = vdd_Vin/0.42
-            vdda_converted = vdda_Vin/0.42
+            vddtx_converted = get_vmon(chip_id, adc_calib, junc_temp, vddtx_Vin)
+            vddrx_converted = get_vmon(chip_id, adc_calib, junc_temp, vddrx_Vin)
+            vdd_converted = get_vmon(chip_id, adc_calib, junc_temp, vdd_Vin)
+            vdda_converted = get_vmon(chip_id, adc_calib, junc_temp, vdda_Vin)
             vref_converted = vref_Vin/0.5
-            
+
             second = time() - start_time
             v2v5.append(v2v5_converted)
             vssa.append(vssa_converted)
