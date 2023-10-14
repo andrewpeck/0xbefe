@@ -197,8 +197,9 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
     no_calib = 0
     if chip_id not in adc_calib:
         no_calib = 1
-    if "ADC_X%d_SLOPE"%gain not in adc_calib[chip_id] or "ADC_X%d_SLOPE_TEMP"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET_TEMP"%gain not in adc_calib[chip_id]:
-        no_calib = 1
+    else:
+        if "ADC_X%d_SLOPE"%gain not in adc_calib[chip_id] or "ADC_X%d_SLOPE_TEMP"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET"%gain not in adc_calib[chip_id] or "ADC_X%d_OFFSET_TEMP"%gain not in adc_calib[chip_id]:
+            no_calib = 1
 
     if no_calib:
         gain = 1.87
@@ -225,7 +226,7 @@ def current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current
 
 
 def get_current_from_dac(chip_id, adc_calib, junc_temp, channel, R_load, dac):
-    actual_current= - 9999
+    actual_current= -9999
     if chip_id not in adc_calib:
         LSB = 3.55e-06
         actual_current = dac * LSB
@@ -251,7 +252,7 @@ def get_resistance_from_current_dac(chip_id, adc_calib, voltage, current, R_out,
             Vin = voltage
         resistance = Vin/current
     else:
-        resistance = (voltage * R_out) / (voltage - current * R_out)
+        resistance = (voltage * R_out) / ((current * R_out) - voltage)
     return resistance
 
 

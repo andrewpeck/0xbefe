@@ -24,7 +24,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     init_adc(oh_ver, vref_tune)
     print("Temperature Readings:")
 
-    adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file(oh_select, gbt_select)
+    adc_calib_results = []
+    adc_calib_results_array = []
+    if chip_id not in adc_calib:
+        adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file(oh_select, gbt_select)
 
     resultDir = "results"
     try:
@@ -65,7 +68,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     if temp_cal == "10k":
         current = (0.71/10000) # in A
     elif temp_cal == "1k":
-        current = (0.21/10000) # in A
+        current = (0.21/1000) # in A
     DAC, R_out = current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current)
     #if temp_cal == "10k":
     #    DAC = 20

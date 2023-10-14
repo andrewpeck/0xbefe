@@ -47,7 +47,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     Vout_range = []
 
     R_load = 1e3
-    DAC_range = range(1, 256, 1)
+    DAC_range = range(0, 256, 1)
 
     chip_id = read_chip_id(system, oh_ver)
     adc_calib = read_central_adc_calib_file()
@@ -56,7 +56,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     init_adc(oh_ver, vref_tune)
 
     for DAC in DAC_range:
-        current = get_current_from_dac(chip_id, adc_calib, junc_temp, channel, R_load, DAC)
+        current = get_current_from_dac(-9999, adc_calib, junc_temp, channel, R_load, DAC)
         Vin = current * R_load
 
         init_current_dac(channel, DAC)
