@@ -195,7 +195,7 @@ if __name__ == "__main__":
                     for slot,oh_sn in geb_dict.items():
                         if geb_oh_map[slot]["OH"]==int(oh) and int(gbt) in geb_oh_map[slot]["GBT"]:
                             full_results[oh_sn]['LPGBT_%s_INITIALIZATION_STATUS'%gbt_type] = int(status)
-        os.system('cp %s %s/'%(latest_file,dataDir))
+        os.system('cp %s %s/gbt_status.json'%(latest_file,dataDir))
         logfile = open(log_fn, "a")
         for slot,oh_sn in geb_dict.items():
             xml_results[oh_sn]["INITIALIZATION"] = int(full_results[oh_sn]['LPGBT_M_INITIALIZATION_STATUS'] & full_results[oh_sn]['LPGBT_S_INITIALIZATION_STATUS'])
