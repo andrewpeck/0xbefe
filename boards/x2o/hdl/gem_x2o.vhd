@@ -218,7 +218,8 @@ begin
             g_USR_BLOCK_SEL_BIT_BOT => 24,
             g_DEBUG => true,
             g_IPB_CLK_ASYNC => false,
-            g_IPB_TIMEOUT => 6000
+            g_IPB_TIMEOUT => 6000,
+            g_REPORT_AXI_ERRORS => false
         )
         port map(
             axi_aclk_i     => axil_clk,
