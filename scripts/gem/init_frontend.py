@@ -23,7 +23,7 @@ def init_gem_frontend():
                 if gbt_ready == 0:
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
                     continue
-                gbt_config = get_config("CONFIG_GE21_OH_GBT_CONFIGS")[gbt][oh]
+                gbt_config = get_config("CONFIG_GE21_OH_GBT_CONFIGS")[gbt][oh] if gem_station == 2 else get_config("CONFIG_GE11_OH_GBT_CONFIGS")[gbt][oh] if gem_station == 1 else None
                 print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_GE*_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
