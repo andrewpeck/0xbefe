@@ -15,7 +15,7 @@ if __name__ == "__main__":
         sys.exit()
     voltage = float(args.voltage)
 
-    scripts_gem_dir = get_befe_scripts_dir + '/gem'
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results" # gem results dir
     me0Dir = resultDir + '/me0_lpgbt_data'
     try:

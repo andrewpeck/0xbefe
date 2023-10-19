@@ -1,5 +1,6 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
-from time import sleep, time
+from common.utils import get_befe_scripts_dir
+fro time import sleep, time
 import sys
 import argparse
 import csv

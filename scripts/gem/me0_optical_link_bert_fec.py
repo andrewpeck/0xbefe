@@ -8,7 +8,7 @@ import math
 from common.utils import get_befe_scripts_dir
 
 def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, ber_limit, cl, vfat_list, verbose):
-    scripts_gem_dir = get_befe_scripts_dir()
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results"
     me0Dir = resultDir + "/me0_lpgbt_data"
     try:

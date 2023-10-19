@@ -393,7 +393,7 @@ def main(system, oh_ver, boss):
         print ("Number of CRC calculations which resulted in invalid checksum: %d\n"%(lpgbt_readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
     
     # Writing lpGBT configuration to text file
-    scripts_gem_dir = get_befe_scripts_dir()
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results"
     me0Dir = resultDir + "/me0_lpgbt_data"
     try:

@@ -1,6 +1,7 @@
 import sys, os, glob
 import time
 import argparse
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 if __name__ == "__main__":

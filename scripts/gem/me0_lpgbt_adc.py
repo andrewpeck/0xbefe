@@ -13,6 +13,7 @@ gain_settings = {
         32: 0x11
     }
 
+scripts_dir = get_befe_scripts_dir()
 
 def convert_adc_reg(adc):
     reg_data = 0
@@ -39,8 +40,7 @@ def get_vin(vout, fit_results):
 
 def get_local_adc_calib_from_file(oh_select, gbt_select):
     adc_calib_results = []
-    scripts_dir = get_befe_scripts_dir()
-    adc_calibration_dir = scripts_dir = get_befe_scripts_dir()+"/gem/results/me0_lpgbt_data/adc_calibration_data/"
+    adc_calibration_dir = scripts_dir + "/gem/results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
         print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
     list_of_files = glob.glob(adc_calibration_dir+"ME0_OH%d_GBT%d_adc_calibration_results_*.txt"%(oh_select, gbt_select))
@@ -59,7 +59,6 @@ def get_local_adc_calib_from_file(oh_select, gbt_select):
 
 
 def read_central_adc_calib_file():
-    scripts_dir = get_befe_scripts_dir()
     adc_calib = {}
     if not os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
         return adc_calib
