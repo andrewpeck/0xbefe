@@ -6,25 +6,16 @@ import argparse
 import random
 import glob
 import json
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, all, verbose):
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+resultDir = scripts_gem_dir + "/results"
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
-    try:
-        os.makedirs(vfatDir) # create directory for VFAT data
-    except FileExistsError: # skip if directory already exists
-        pass
-    dataDir = "results/vfat_data/vfat_sbit_noise_results"
-    try:
-        os.makedirs(dataDir) # create directory for data
-    except FileExistsError: # skip if directory already exists
-        pass
+def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_channel_mapping, parallel, all, verbose):
+    vfatDir = resultDir + "/vfat_data"
+    dataDir = vfatDir + "/vfat_sbit_noise_results"
+
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -292,6 +283,17 @@ if __name__ == "__main__":
     sbit_list.append("all")
     sbit_list += ["all_elink0", "all_elink1", "all_elink2", "all_elink3", "all_elink4", "all_elink5", "all_elink6", "all_elink7"]
 
+    vfatDir = resultDir + "/vfat_data"
+    try:
+        os.makedirs(vfatDir) # create directory for VFAT data
+    except FileExistsError: # skip if directory already exists
+        pass
+    dataDir = vfatDir + "/vfat_sbit_noise_results"
+    try:
+        os.makedirs(dataDir) # create directory for data
+    except FileExistsError: # skip if directory already exists
+        pass
+
     s_bit_channel_mapping = {}
     print ("")
     if not args.latest_map:
@@ -299,10 +301,10 @@ if __name__ == "__main__":
         with open(default_file) as input_file:
             s_bit_channel_mapping = json.load(input_file)
     else:
-        if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+        if not os.path.isdir(vfatDir + "/vfat_sbit_mapping_results"):
             print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
             sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+        list_of_files = glob.glob(vfatDir + "/vfat_sbit_mapping_results/*.py")
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
             sys.exit()

@@ -6,25 +6,16 @@ import argparse
 import random
 import glob
 import json
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+resultDir = scripts_gem_dir + "/results"
+
 def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, calpulse_only, l1a_bxgap, trim, s_bit_channel_mapping):
-    
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
-    try:
-        os.makedirs(vfatDir) # create directory for VFAT data
-    except FileExistsError: # skip if directory already exists
-        pass
-    dataDir = "results/vfat_data/vfat_sbit_scurve_results"
-    try:
-        os.makedirs(dataDir) # create directory for data
-    except FileExistsError: # skip if directory already exists
-        pass
+    vfatDir = resultDir + "/vfat_data"
+    dataDir = vfatDir + "/vfat_sbit_scurve_results"
+
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -229,7 +220,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
 
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit SCurve")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
@@ -343,6 +333,16 @@ if __name__ == "__main__":
     l1a_timegap = l1a_bxgap * 25 * 0.001 # in microseconds
     print ("Gap between consecutive L1A or CalPulses = %d BX = %.2f us" %(l1a_bxgap, l1a_timegap))
 
+    vfatDir = resultDir + "/vfat_data"
+    try:
+        os.makedirs(vfatDir) # create directory for VFAT data
+    except FileExistsError: # skip if directory already exists
+        pass
+    dataDir = vfatDir + "/vfat_sbit_scurve_results"
+    try:
+        os.makedirs(dataDir) # create directory for data
+    except FileExistsError: # skip if directory already exists
+        pass
     s_bit_channel_mapping = {}
     print ("")
     if not args.latest_map:
@@ -350,10 +350,10 @@ if __name__ == "__main__":
         with open(default_file) as input_file:
             s_bit_channel_mapping = json.load(input_file)
     else:
-        if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+        if not os.path.isdir(vfatDir + "/vfat_sbit_mapping_results"):
             print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
             sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+        list_of_files = glob.glob(vfatDir + "/vfat_sbit_mapping_results/*.py")
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
             sys.exit()

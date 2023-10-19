@@ -2,12 +2,14 @@ import sys, os, glob
 import time
 import argparse
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+from common.utils import get_befe_scripts_dir
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Testing DAQ CRC Tests with Powercycles")
     parser.add_argument("-n", "--niter", action="store", dest="n", help="n = number of iterations")
     args = parser.parse_args()
+
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 
     n = int(args.n)
     n_nonzero_errors = {}
@@ -33,7 +35,7 @@ if __name__ == "__main__":
         # DAQ CRC Error Test	
         os.system("python3 vfat_daq_test.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 100000")
         time.sleep(2)
-        list_of_files = glob.glob("results/vfat_data/vfat_daq_test_results/*.txt")
+        list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_test_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         result_file = open(latest_file)
         for line in result_file.readlines():

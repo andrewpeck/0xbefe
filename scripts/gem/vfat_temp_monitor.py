@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import sys
 import argparse
@@ -20,24 +21,20 @@ def convert_to_temp(V):
     return temp
 
 def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, calData):
-
-    print("Temperature Readings:")
-
-    resultDir = "results"
+    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scritps_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
-        os.makedirs(resultDir) # create directory for results
+        os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    me0Dir = "results/vfat_data"
-    try:
-        os.makedirs(me0Dir) # create directory for ME0 lpGBT data
-    except FileExistsError: # skip if directory already exists
-        pass
-    dataDir = "results/vfat_data/vfat_temp_monitor"
+    dataDir = vfatDir + "/vfat_temp_monitor"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+
+    print("Temperature Readings:")
 
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")

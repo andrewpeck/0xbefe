@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import os, glob
 import datetime
 import numpy as np
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
@@ -18,17 +19,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     init_adc(oh_ver, vref_tune)
     print("ADC Readings:")
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_voltage_data"
+    dataDir = me0Dir + "/lpgbt_voltage_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -37,8 +35,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir + "/"
-    filename = foldername + "ME0_OH%d_GBT%d_voltage_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_voltage_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
     minutes, v2v5, vssa, vddtx, vddrx, vdd, vdda, vref = [], [], [], [], [], [], [], []

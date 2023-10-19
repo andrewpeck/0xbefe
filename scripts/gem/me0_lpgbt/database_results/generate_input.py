@@ -2,8 +2,7 @@ import os,sys
 from glob import glob
 import json
 import argparse
-
-output_path = 'me0_lpgbt/database_results/input/'
+from common.utils import get_befe_scripts_dir
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Input Files for OptoHybrid Production Tests")
@@ -18,10 +17,9 @@ def main():
         print('Parsing results from file not implemented. Choose -u/--user for user prompted input.')
         sys.exit()
     
-    try:
-        os.makedirs(output_path)
-    except FileExistsError:
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
+    inputDir = dbDir + '/input'
 
     if args.user:
         oh_sn = input('Enter OH SERIAL NUMBER(s): ')
@@ -281,7 +279,8 @@ def main():
             print('\nSection VTRXP.RUN is automatically generated from OH %s info.\n'%oh_sn)
             comments_vtrxp = input('Enter any comments for VTRXP %s (mounted on OH %s): '%(vtrxp_sn,oh_sn))
 
-            filename = output_path + 'input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
+
+            filename = inputDir + '/input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
             print('\nGenerating input JSON file at: %s\n'%filename)
 
             # populate JSON data dict

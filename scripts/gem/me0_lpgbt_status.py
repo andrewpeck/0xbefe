@@ -3,6 +3,7 @@ from time import sleep
 import sys
 import argparse
 import statistics
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, boss):
@@ -392,17 +393,14 @@ def main(system, oh_ver, boss):
         print ("Number of CRC calculations which resulted in invalid checksum: %d\n"%(lpgbt_readReg(getNode("LPGBT.RO.PUSM.FAILEDCRCCOUNTER"))))
     
     # Writing lpGBT configuration to text file
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir()
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_status_data"
+    dataDir = me0Dir + "/lpgbt_status_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

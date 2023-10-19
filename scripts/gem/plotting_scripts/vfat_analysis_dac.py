@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from time import time
+from common.utils import get_befe_scripts_dir
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
 
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     oh = plot_filename_prefix.split("_vfat")[0]
     print(Colors.GREEN + "\nDAC scan results stored in: %s" % directoryName + Colors.ENDC)
 
-    calFile = "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_adc0.txt"
+    calFile = get_befe_scripts_dir() + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_adc0.txt"
     if not os.path.isfile(calFile):
         print(Colors.YELLOW + "Calib file for ADC0 must be present in the correct directory" + Colors.ENDC)
         sys.exit()

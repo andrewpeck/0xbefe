@@ -87,28 +87,28 @@ if __name__ == "__main__":
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
-                batch = line.split()[2]
+                test_type = line.split()[2]
                 if not power_only:
-                    if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
-                        print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "debug"' + Colors.ENDC)
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "debug"' + Colors.ENDC)
                         sys.exit()
             continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
             if not power_only:
-                if batch in ["prototype", "pre_production"]:
+                if test_type in ["prototype", "pre_production"]:
                     if int(oh_sn) not in range(1, 1001):
                         print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
                         sys.exit() 
-                elif batch in ["pre_series", "production", "long_production"]:
+                elif test_type in ["pre_series", "production", "long_production"]:
                     if int(oh_sn) not in range(1001, 2019):
                         print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
                         sys.exit()
             queso_dict[queso_nr] = oh_sn
             if not power_only:
                 results_oh_sn[oh_sn] = {}
-                results_oh_sn[oh_sn]["TEST_TYPE"] = batch
+                results_oh_sn[oh_sn]["TEST_TYPE"] = test_type
     input_file.close()
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
@@ -212,12 +212,7 @@ if __name__ == "__main__":
 
     scripts_gem_dir = get_befe_scripts_dir() + "/gem"
     resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
-
-    try:
-        dataDir = resultDir+"/%s_tests"%batch # directory name if batch variable exists
-    except NameError:
-        dataDir = resultDir+"/initialization_results" # default value for non-production tests
-    
+    dataDir = resultDir+"/%s_tests"%test_type # directory name if test_type variable exists    
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -509,10 +504,10 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
         os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
-        list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
+        list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
-        list_of_files = glob.glob("me0_lpgbt/queso_testing/results/phase_bitslip_results/vfat_elink_phase_bitslip_log_OH%d*.txt"%ohid)
+        list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_log_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cat %s >> %s"%(latest_file, log_fn))
         logfile = open(log_fn,"a")

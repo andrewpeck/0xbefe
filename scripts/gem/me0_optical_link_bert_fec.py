@@ -5,20 +5,17 @@ import argparse
 import random
 import datetime
 import math
+from common.utils import get_befe_scripts_dir
 
 def check_fec_errors(gem, system, oh_ver, boss, path, opr, ohid, gbtid, runtime, ber_limit, cl, vfat_list, verbose):
-
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir()
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results"
+    dataDir = me0Dir + "/lpgbt_optical_link_bert_fec_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

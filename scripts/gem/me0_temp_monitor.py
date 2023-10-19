@@ -29,17 +29,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     if chip_id not in adc_calib:
         adc_calib_results, adc_calib_results_array = get_local_adc_calib_from_file(oh_select, gbt_select)
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/temp_monitor_data"
+    dataDir = me0Dir + "/temp_monitor_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -48,8 +45,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir + "/"
-    filename = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_data_" + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_data_" + now + ".txt"
 
     open(filename, "w+").close()
     minutes, T = [], []

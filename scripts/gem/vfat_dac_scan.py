@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import sys
 import argparse
@@ -62,18 +63,14 @@ def parseList(inFile):
     return dacList
 
 def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, upper_list, step, niter, adc_ref, vref_list):
-
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_dac_scan_results"
+    dataDir = vfatDir + "/vfat_dac_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

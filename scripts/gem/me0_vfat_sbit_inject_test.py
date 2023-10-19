@@ -8,6 +8,7 @@ import json
 # from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 import numpy as np
+from common.utils import get_befe_scripts_dir
 from read_ntuple import *
 
 def get_exp_clusters(events,s_bit_cluster_mapping):
@@ -52,21 +53,19 @@ def bits_to_int(data,order="little"):
     return data_int
 
 def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions, sbit_list, trigger, n_bxs, s_bit_cluster_mapping, verbose):
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_inject_test_results"
+    dataDir = vfatDir + "/vfat_sbit_inject_test_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+    
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -426,32 +425,19 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
     file_out.close()
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit Injection Test")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
-    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-e", "--eta", action="store", dest="eta", nargs="+", help="eta = list of eta partitions (0-7)")
     parser.add_argument("-b", "--sbit", action="store", dest="sbit", nargs="+", help='sbit = list of s-bits (0-191) to inject')
     parser.add_argument("-n", "--n_bxs", action="store", dest="n_bxs", help="n_bxs = Number of bunch crossings.")
-    # parser.add_argument("-e", "--elink", action="store", dest="elink", nargs="+", help="elink = list of ELINKs (0-7) for S-bits")
-    # parser.add_argument("-c", "--channels", action="store", dest="channels", nargs="+", help="channels = list of channels for chosen VFAT and ELINK (list allowed only for 1 elink, by default all channels used for the elinks)")
     parser.add_argument("-t", "--trigger", action="store", dest="trigger", default="sbit", help="trigger = l1a or sbit")
-    # parser.add_argument("-m", "--cal_mode", action="store", dest="cal_mode", default = "current", help="cal_mode = voltage or current (default = current)")
-    # parser.add_argument("-d", "--cal_dac", action="store", dest="cal_dac", help="cal_dac = Value of CAL_DAC register (default = 50 for voltage pulse mode and 150 for current pulse mode)")
-    # parser.add_argument("-p", "--parallel", action="store", dest="parallel", help="parallel = all (inject calpulse in all channels) or select (inject calpulse in selected channels) simultaneously (only possible in voltage mode, not a preferred option)")
-    # parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
-    # parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
-    # parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
-    # parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
-    # parser.add_argument("-m", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     parser.add_argument("-r", "--from_root", action="store_true", dest="from_root", help='from_root = read in sbit data from a root file, must provide file address in arg "-f --file_path"')
     parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
     parser.add_argument("-i", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
-    parser.add_argument("-p", "--verbose", action="store_true",dest="verbose",help="verbose = print verbose")    
-
+    parser.add_argument("-p", "--verbose", action="store_true",dest="verbose",help="verbose = print verbose")
     args = parser.parse_args()
 
     if args.system == "backend":

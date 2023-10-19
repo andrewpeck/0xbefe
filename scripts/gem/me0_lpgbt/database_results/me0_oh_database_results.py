@@ -8,11 +8,11 @@ from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-inputDir = scripts_gem_dir + '/me0_lpgbt/database_results/input'
-if not os.path.exists(inputDir):
-    print(Colors.RED + 'Input file directory does not exist. Run generate_inputs.py first to create input files.' + Colors.ENDC)
-
-resultDir = scripts_gem_dir + '/me0_lpgbt/database_results/results'
+dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
+inputDir = dbDir + '/input'
+resultDir = dbDir + '/results'
+quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
+gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
 
 def get_json_data(fn):
     with open(fn,'r') as fp:
@@ -154,7 +154,7 @@ def main():
     
     # Check if data directories exist
     if args.test_type!='acceptance':
-        queso_data_dir = 'me0_lpgbt/queso_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
+        queso_data_dir = quesoDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
         if not os.path.exists(queso_data_dir):
             print(Colors.RED + 'QUESO results data directory: %s not found. Please ensure correct list of OH SERIAL NUMBERS and order.'%queso_data_dir + Colors.ENDC)
             sys.exit()
@@ -162,8 +162,8 @@ def main():
         queso_init_fn = queso_data_dir + 'queso_initialization_results.json'
         queso_bert_fn = queso_data_dir + 'queso_elink_bert_results.json'
     if len(oh_sn_list) > 4:
-        geb_data1_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str1)
-        geb_data2_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str2)
+        geb_data2_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str2)
+        geb_data1_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str1)
         if not os.path.exists(geb_data1_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data1_dir + Colors.ENDC)
             sys.exit()
@@ -175,7 +175,7 @@ def main():
         vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
         vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
     else:
-        geb_data_dir = 'me0_lpgbt/oh_testing/results/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
+        geb_data_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
         if not os.path.exists(geb_data_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
             sys.exit()
