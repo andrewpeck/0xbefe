@@ -466,6 +466,9 @@ if __name__ == "__main__":
         if end_tests.lower() in ['y','yes']:
             print('\nTerminating and logging results at directory:\n%s'%results_fn)
             logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+            for oh_sn in results_oh_sn:
+                results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
+                results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
             results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()]
             with open(results_fn,"w") as results_file:
                 json.dump(results_oh_sn,results_file,indent=2)
@@ -554,6 +557,9 @@ if __name__ == "__main__":
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging results at directory:\n%s'%results_fn)
                 logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+                for oh_sn in results_oh_sn:
+                    results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
+                    results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
                 results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()]
                 with open(results_fn,"w") as results_oh_sn_file:
                     json.dump(results_oh_sn,results_oh_sn_file,indent=2)
@@ -644,6 +650,9 @@ if __name__ == "__main__":
 
     print('\nTerminating and logging database results at directory:\n%s'%results_fn)
     logfile.write('\nTerminating and logging database results at directory:\n%s\n'%results_fn)
+    for oh_sn in results_oh_sn:
+        results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
+        results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
     results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()]
     with open(results_fn,"w") as results_oh_sn_file:
         json.dump(results_oh_sn,results_oh_sn_file,indent=2)

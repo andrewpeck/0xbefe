@@ -92,12 +92,6 @@ def main():
     parser.add_argument("-o", "--oh_sns", action="store", nargs="+", dest="oh_sns", help="OH_SNS = list of OH SERIAL NUMBERS matching a test batch of up to 8 OHs.")
     parser.add_argument("-vxp", "--vtrxp_sns", action="store", nargs="+", dest="vtrxp_sns", help="VTRXP_SNS = list of VTRx+ SERIAL NUMBERS for indexing.")
     parser.add_argument("-t", "--test_type", action="store", dest="test_type", help="TEST_TYPE = name of test batch; valid entries: [pre_production, pre_series, production, acceptance]")
-    # parser.add_argument("-qf1", "--queso_file1", action="store", dest="queso_file1", help="QUESO_FILE1 = input file path for QUESO INITIALIZATION test results")
-    # parser.add_argument("-qf2", "--queso_file2", action="store", dest="queso_file2", help="QUESO_FILE2 = input file path for QUESO ELINK BER test results")
-    # parser.add_argument("-gf1", "--geb_file1", action="store", dest="geb_file1", help="GEB_FILE1 = input file path 1 for GEB test results")
-    # parser.add_argument("-gf2", "--geb_file2", action="store", dest="geb_file2", help="GEB_FILE2 = input file path 2 for GEB test results")
-    # parser.add_argument("-vf1", "--vtrxp_file1", action="store", dest="vtrxp_file1", help="VTRXP_FILE1 = input file path 1 for VTRx+ test results")
-    # parser.add_argument("-vf2", "--vtrxp_file2", action="store", dest="vtrxp_file2", help="VTRXP_FILE2 = input file path 2 for VTRx+ test results")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="VERBOSE = print combined results output when saving to xml")
     args = parser.parse_args()
 
