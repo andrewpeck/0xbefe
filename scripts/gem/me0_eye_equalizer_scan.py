@@ -5,6 +5,7 @@ import sys
 import os
 import glob
 import argparse
+from common.utils import get_befe_scripts_dir
 
 def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_res0, boss):
 
@@ -37,17 +38,14 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     eq_res1_node = getNode("LPGBT.RWF.EQUALIZER.EQRES1")
     eq_res0_node = getNode("LPGBT.RWF.EQUALIZER.EQRES0")
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_eye_scan_results"
+    dataDir = me0Dir + "/lpgbt_eye_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

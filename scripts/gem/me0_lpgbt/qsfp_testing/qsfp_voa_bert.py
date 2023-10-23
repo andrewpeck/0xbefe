@@ -5,6 +5,7 @@ import random
 import datetime
 import math
 import paramiko
+from common.utils import get_befe_scripts_dir
       
 if __name__ == "__main__":
     # Parsing arguments
@@ -15,6 +16,8 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-v", "--vfat_lt", action="store_true", dest="vfat_lt", help="vfat_lt = if you want to set the VFATs to low threshold")
     args = parser.parse_args()
+
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 
     # VOA Control Parameters
     attenuation_list = [8, 9, 10, 11, 12, 13, 13.2, 13.4, 13.6, 13.8, 14, 14.2, 14.4, 14.6, 14.8, 15.0, 15.2, 15.4]
@@ -72,7 +75,7 @@ if __name__ == "__main__":
 
         # Run FEC BERT
         os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o %s -g %s -p %s -r run -b %s"%(args.ohid, args.gbtid[0], args.path, args.ber))
-        list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+        list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
         latest_file = max(list_of_files, key=os.path.getctime)
         result_file = open(latest_file)  
         result_read = 0  

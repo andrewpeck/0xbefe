@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import sys
 import argparse
@@ -7,18 +8,14 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
 def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runtime, l1a_bxgap, cl, calpulse):
-    
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scritps_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_daq_test_results"
+    dataDir = vfatDir + "/vfat_daq_test_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

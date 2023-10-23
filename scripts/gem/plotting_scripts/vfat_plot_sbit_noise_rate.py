@@ -36,7 +36,7 @@ if __name__ == "__main__":
             continue
         vfat = int(line.split()[0])
         sbit = line.split()[1]
-        if sbit!="all":
+        if "all" not in str(sbit):
             sbit = int(sbit)
         thr = int(line.split()[2])
         fired = float(line.split()[3])
@@ -102,6 +102,9 @@ if __name__ == "__main__":
         threshold = []
         noise_rate = []
         noise_rate_vfat = []
+        noise_rate_vfat_elink = []
+        for elink in range(0,8):
+            noise_rate_vfat_elink.append([])
         n_sbits = 0
 
         for sbit in noise_result[vfat]:
@@ -109,9 +112,11 @@ if __name__ == "__main__":
                 threshold.append(thr)
                 noise_rate.append(0)
                 noise_rate_vfat.append(0)
+                for elink in range(0,8):
+                    noise_rate_vfat_elink[elink].append(0)
             break
         for sbit in noise_result[vfat]:
-            if sbit == "all":
+            if "all" in str(sbit):
                 continue
             n_sbits += 1
             for i in range(0,len(threshold)):
@@ -121,6 +126,8 @@ if __name__ == "__main__":
         for i in range(0,len(threshold)):
             thr = threshold[i]
             noise_rate_vfat[i] += noise_result[vfat]["all"][thr]/time
+            for elink in range(0,8):
+                noise_rate_vfat_elink[elink][i] += noise_result[vfat]["all_elink%d"%elink][thr]/time
 
         map_plot_data = []
         map_plot_data_x = []
@@ -139,7 +146,7 @@ if __name__ == "__main__":
                     map_plot_data.append(0)
                 else:
                     map_plot_data.append(noise_result[vfat][sbit][thr]/time)
-                #if sbit=="all":
+                #if "all" in  str(sbit):
                 #    continue
                 #data.append(noise_result[vfat][sbit][thr]/time)
                 if (noise_result[vfat][sbit][thr]/time) > z_max:
@@ -321,7 +328,7 @@ if __name__ == "__main__":
 
         fig2, ax2 = plt.subplots(8, 8, figsize=(80,80))
         for sbit in noise_result[vfat]:
-            if sbit=="all":
+            if "all" in str(sbit):
                 continue
             noise_rate_sbit = []
             for i in range(0,len(threshold)):
@@ -343,6 +350,25 @@ if __name__ == "__main__":
         fig2.tight_layout()
         fig2.savefig((directoryName+"/sbit_noise_rate_channels_"+oh+"_VFAT%02d.pdf")%vfat)
         plt.close(fig2)
+
+        fig6, ax6 = plt.subplots(2, 4, figsize=(40,20))
+        for elink in range(0,8):
+            ax6[int(elink/4), elink%4].set_xlabel("Threshold (DAC)", loc='right')
+            ax6[int(elink/4), elink%4].set_ylabel("S-Bit rate (Hz)", loc='top')
+            ax6[int(elink/4), elink%4].set_yscale("log")
+            ax6[int(elink/4), elink%4].set_ylim(1e-1, 1e8)
+            ax6[int(elink/4), elink%4].grid()
+            ax6[int(elink/4), elink%4].plot(threshold, noise_rate_vfat_elink[elink], "o", markersize=12)
+            #leg = ax.legend(loc="center right", ncol=2)
+            ax6[int(elink/4), elink%4].set_title("VFAT%02d, Elink %02d"%(vfat, elink))
+            ax6[int(elink/4), elink%4].text(-0.12, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2[int(elink/4), elink%4].transAxes)
+            ax6[int(elink/4), elink%4].text(-0.01, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2[int(elink/4), elink%4].transAxes)
+    
+        #ax2.text(-0.14, 1.01, 'CMS', fontweight='bold', fontsize=28, transform=ax2.transAxes)
+        #ax2.text(0.03, 1.01, 'Preliminary',fontstyle='italic', fontsize=26, transform=ax2.transAxes)
+        fig6.tight_layout()
+        fig6.savefig((directoryName+"/sbit_noise_rate_elink_or_"+oh+"_VFAT%02d.pdf")%vfat)
+        plt.close(fig6)
 
         vfatCnt0+=1
 

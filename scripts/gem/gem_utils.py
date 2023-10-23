@@ -223,6 +223,16 @@ def check_gbt_link_ready(ohIdx, gbtIdx):
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)  
             terminate()
 
+def get_gbt_link_status():
+    max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    gbts_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_GBTS_PER_OH")
+    status_dict = {}
+    for ohIdx in range(max_ohs):
+        status_dict[ohIdx] = {}
+        for gbtIdx in range(gbts_per_oh):
+            status_dict[ohIdx][gbtIdx] = int(read_reg("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (ohIdx, gbtIdx)))
+    return status_dict
+
 def me0_vfat_to_gbt_elink_gpio(vfat):
     gbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][0]
     gbtid = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]

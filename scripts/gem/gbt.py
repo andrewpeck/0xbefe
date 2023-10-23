@@ -135,11 +135,10 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
             print_red("Can't find the file %s" % filename)
             return
 
-        timeStart = clock()
-
+        timeStart = process_time()
         regs = downloadConfig(ohSelect, gbtSelect, filename)
-
-        totalTime = clock() - timeStart
+        totalTime = process_time() - timeStart
+        
         print('time took = ' + str(totalTime) + 's')
 
         if (command == 'v3b-phase-scan'):
@@ -302,6 +301,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
     for elink, vfat in elinkToVfatMap[gbtSelect].items():
         subheading('Scanning elink %d phase, corresponding to VFAT%d' % (elink, vfat))
         goodPhases = []
+        err_list = []
         for phase in range(0, 15):
             setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase)
 
@@ -310,6 +310,7 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
             # print the results
             color = Colors.GREEN
             prefix = 'GOOD: '
+            err_list.append((linkGood == 0) + (syncErrCnt > 0) + (cfgRunGood == 0) + (daqCrcErrCnt > 0))
             if (linkGood == 0) or (syncErrCnt > 0) or (cfgRunGood == 0) or (daqCrcErrCnt > 0):
                 color = Colors.RED
                 prefix = '>>>>>>>> BAD <<<<<<<< '
@@ -319,7 +320,8 @@ def phaseScan(isLpGbt, elinkToVfatMap, ohSelect, gbtSelect, gbtRegs, numSlowCont
             print(color + prefix + 'Phase = %d, VFAT%d LINK_GOOD=%d, SYNC_ERR_CNT=%d, CFG_RUN_GOOD=%d, DAQ_CRC_ERR_CNT=%d' % (phase, vfat, linkGood, syncErrCnt, cfgRunGood, daqCrcErrCnt) + Colors.ENDC)
 
         # select the best phase for this elink
-        bestPhase = getBestPhase(goodPhases)
+        #bestPhase = getBestPhase(goodPhases)
+        bestPhase = getBestPhase(err_list)
         print("Setting phase = %d" % bestPhase)
         setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, bestPhase)
 
@@ -399,7 +401,8 @@ def setElinkPhase(isLpGbt, ohSelect, gbtSelect, gbtRegs, elink, phase):
             wReg(ADDR_IC_EXEC_WRITE, 1)
             sleep(0.000001) # writing is too fast for CVP13 :)
 
-def getBestPhase(goodPhases):
+#def getBestPhase(goodPhases):
+def getBestPhase(err_list):
     lower_edge_min = -1
     upper_edge_max = 15
     center = 0

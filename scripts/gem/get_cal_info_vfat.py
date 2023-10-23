@@ -4,6 +4,7 @@ import argparse
 import cx_Oracle
 import pandas as pd
 import os
+from common.utils import get_befe_scripts_dir
 from collections import OrderedDict
 
 def getVfatList(inFile): # parse input file
@@ -120,17 +121,14 @@ def main(gem, oh_select, id_type, write):
             vfatCalInfo_results.append(result)
         vfatCalInfo_mod = pd.DataFrame(vfatCalInfo_results)
 
-        resultDir = "results"
-        try:
-            os.makedirs(resultDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        vfatDir = "results/vfat_data"
+        scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+        resultDir = scripts_gem_dir + "/results"
+        vfatDir = resultDir + "/vfat_data"
         try:
             os.makedirs(vfatDir) # create directory for vfat data
         except FileExistsError: # skip if directory already exists
             pass
-        calDataDir = "results/vfat_data/vfat_calib_data"
+        calDataDir = vfatDir + "/vfat_calib_data"
         try:
             os.makedirs(calDataDir) # create directory for calibration datas
         except FileExistsError: # skip if directory already exists

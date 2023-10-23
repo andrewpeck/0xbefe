@@ -1,6 +1,7 @@
 import sys, os, glob
 import time
 import argparse
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 if __name__ == "__main__":
@@ -14,12 +15,9 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Enter OH serial numbers for both slot 1 and 2" + Colors.ENDC) 
         sys.exit()
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "me0_lpgbt/oh_testing/results/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "me0_lpgbt/oh_testing/results"
+    me0Dir = resultDir + "/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
     try:
         os.makedirs(me0Dir) # create directory for OH under test
     except FileExistsError: # skip if directory already exists
@@ -58,20 +56,20 @@ if __name__ == "__main__":
     logfile.write("Step 2: Checking lpGBT Status\n\n")
 
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 0 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_boss_slot1.txt"%(latest_file, dataDir))
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 1 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_sub_slot1.txt"%(latest_file, dataDir))
     
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 2 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_boss*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_boss_slot2.txt"%(latest_file, dataDir))
     os.system("python3 me0_lpgbt_status.py -s backend -q ME0 -o 0 -g 3 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_sub*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/status_sub_slot2.txt"%(latest_file, dataDir))
       
@@ -176,13 +174,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running Eye diagram for Slot 1, Boss lpGBT" + Colors.ENDC)
     logfile.write("Running Eye diagram for Slot 1, Boss lpGBT")
     os.system("python3 me0_eye_scan.py -s backend -q ME0 -o 0 -g 0 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("python3 plotting_scripts/me0_eye_scan_plot.py -f %s -s > out.txt"%latest_file)
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/downlink_optical_eye_boss_slot1.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     eye_result_slot1_boss_file = open(latest_file)
     result = eye_result_slot1_boss_file.readlines()[0]
@@ -193,13 +191,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running Eye diagram for Slot 2, Boss lpGBT" + Colors.ENDC)
     logfile.write("Running Eye diagram for Slot 2, Boss lpGBT")
     os.system("python3 me0_eye_scan.py -s backend -q ME0 -o 0 -g 2 > out.txt")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("python3 plotting_scripts/me0_eye_scan_plot.py -f %s -s > out.txt"%latest_file)
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/downlink_optical_eye_boss_slot2.pdf"%(latest_file, dataDir))
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     eye_result_slot2_boss_file = open(latest_file)
     result = eye_result_slot2_boss_file.readlines()[0]
@@ -220,7 +218,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running Downlink Optical BERT for Slot 1 Boss lpGBT\n" + Colors.ENDC)
     logfile.write("Running Downlink Optical BERT for Slot 1 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 -p downlink -r run -b 1e-12 -z")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -229,7 +227,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running Downlink Optical BERT for Slot 2 Boss lpGBT\n" + Colors.ENDC)
     logfile.write("Running Downlink Optical BERT for Slot 2 Boss lpGBT\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 2 -p downlink -r run -b 1e-12 -z")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -248,7 +246,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n" + Colors.ENDC)
     logfile.write("Running Uplink Optical BERT for Slot 1 and Slot 2, Boss and Sub lpGBTs\n\n")
     os.system("python3 me0_optical_link_bert_fec.py -s backend -q ME0 -o 0 -g 0 1 2 3 -p uplink -r run -b 1e-12 -z")
-    list_of_files = glob.glob("results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_optical_link_bert_fec_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -267,7 +265,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running DAQ Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running DAQ Phase Scan on all VFATs\n\n")
     os.system("python3 me0_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -c")
-    list_of_files = glob.glob("results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_phase_scan_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -279,14 +277,14 @@ if __name__ == "__main__":
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 7 - S-bit Phase Scan, Mapping, Cluster Mapping
+    # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
     print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
     logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
 
     print (Colors.BLUE + "Running S-bit Phase Scan on all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Phase Scan on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_phase_scan.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -a")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_phase_scan_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -296,7 +294,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "\n\nRunning S-bit Bitslipping on all VFATs\n" + Colors.ENDC)
     logfile.write("\n\nRunning S-bit Bitslipping on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_bitslip.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_bitslip_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -306,7 +304,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "\n\nRunning S-bit Mapping on all VFATs\n" + Colors.ENDC)
     logfile.write("\n\nRunning S-bit Mapping on all VFATs\n\n")
     os.system("python3 me0_vfat_sbit_mapping.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_mapping_results/*_data_*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     logfile.close()
     os.system("cat %s >> %s"%(latest_file, filename))
@@ -318,7 +316,7 @@ if __name__ == "__main__":
     logfile.close()
     os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -l -f >> %s"%filename)
     logfile = open(filename, "a")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cp %s %s/vfat_clustermap.txt"%(latest_file, dataDir))
 

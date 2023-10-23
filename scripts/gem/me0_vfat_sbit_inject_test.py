@@ -8,10 +8,11 @@ import json
 # from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 import numpy as np
+from common.utils import get_befe_scripts_dir
 from read_ntuple import *
 
 def get_exp_clusters(events,s_bit_cluster_mapping):
-    # events should be a dict with vfat# as keys and [sbits] as corresponding values/hits
+    # events should be a dict with eta# as keys and [sbits] as corresponding values/hits
     clusters = {}
     pos = 0
     size = 0
@@ -52,22 +53,19 @@ def bits_to_int(data,order="little"):
     return data_int
 
 def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions, sbit_list, trigger, n_bxs, s_bit_cluster_mapping, verbose):
-    
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_inject_test_results"
+    dataDir = vfatDir + "/vfat_sbit_inject_test_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+    
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -246,35 +244,42 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
     sbit_inj_cnt = 0
     n_bx_cl = 0
     n_clusters = 0
+    n_clusters_error = 0
     n_cluster_size_error = 0
     n_cluster_pos_error = 0
-    # max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
-    # for oh in range(max_ohs):
+    max_ohs = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_OF_OH")
+    max_clusters = 8
     for i in range(np.ceil(n_bxs/512).astype(int)):
         while fifo_rst_flag==1:
             sleep(0.1)
-        # Loop through vfats
-        for vfat in range(24):
-            # Loop through bxs
-            for bx in range(i*512,min((i+1)*512,n_bxs)):
-                dinl = bits_to_int(sbit_inj_data[bx,vfat,:32])
-                dinh = bits_to_int(sbit_inj_data[bx,vfat,32:64])
-                # Set data bus
-                write_backend_reg(dinl_sbit_inj_node,dinl)
-                write_backend_reg(dinh_sbit_inj_node,dinh)
-                # Set FIFO sel - Bits [15:8] OH number, bits [7:0] VFAT number
-                fifo_sel_addr = oh_select<<8 | vfat
-                write_backend_reg(fifo_sel_sbit_inj_node,fifo_sel_addr)
-                # Pulse load sbits enable
-                write_backend_reg(write_en_sbit_inj_node,1)
-                # read_flags()
-                check_err_flag()
-                sbit_inj_cnt += 1
-                if verbose:
-                    print("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#016x"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
-                    print("s-bits written: %d"%sbit_inj_cnt)
-                file_out.write("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#032x\n"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
-                file_out.write("s-bits written: %d\n"%sbit_inj_cnt)
+        # Loop over ohs
+        for oh in range(max_ohs):
+            # Loop over vfats
+            for vfat in range(24):
+                # Loop through bxs
+                for bx in range(i*512,min((i+1)*512,n_bxs)):
+                    if oh==oh_select:
+                        dinl = bits_to_int(sbit_inj_data[bx,vfat,:32])
+                        dinh = bits_to_int(sbit_inj_data[bx,vfat,32:64])
+                    else:
+                        dinl = 0
+                        dinh = 0
+                    # Set data bus
+                    write_backend_reg(dinl_sbit_inj_node,dinl)
+                    write_backend_reg(dinh_sbit_inj_node,dinh)
+                    # Set FIFO sel - Bits [15:8] OH number, bits [7:0] VFAT number
+                    fifo_sel_addr = oh << 8 | vfat
+                    write_backend_reg(fifo_sel_sbit_inj_node,fifo_sel_addr)
+                    # Pulse load sbits enable
+                    write_backend_reg(write_en_sbit_inj_node,1)
+                    # read_flags()
+                    check_err_flag()
+                    sbit_inj_cnt += 1
+                    if verbose:
+                        print("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#016x"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
+                        print("s-bits written: %d"%sbit_inj_cnt)
+                    file_out.write("Writing to FIFO for OH#%d: VFAT#: %d, BX#: %d, DATA = %#032x\n"%(oh_select,vfat,bx,np.uint64(dinh<<32|dinl)))
+                    file_out.write("s-bits written: %d\n"%sbit_inj_cnt)
         sleep(1)
         # Read flag registers
         sbit_inj_fifo_data_cnt = read_backend_reg(fifo_data_cnt_sbit_inj_node)
@@ -322,7 +327,6 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
         n = 0
         status_str = ""
         min_cluster = 0
-
         while (not cl_fifo_empty):
             fifo_data = read_backend_reg(fifo_data_sbit_monitor_node)
             cluster1_sbit_monitor_value = fifo_data & 0x0000ffff
@@ -397,14 +401,14 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
 
     print ("\nTime taken: %.2f seconds for %d BXs" % ((time()-t0), n_bxs))
     file_out.write("\nTime taken: %.2f seconds for %d BXs\n" % ((time()-t0), n_bxs))
-
-    #if n_clusters_error == 0:
-        #print (Colors.GREEN + "Nr. of cluster expected = %d, Nr. of clusters recorded = %d"%(n_cluster_expected, n_clusters) + Colors.ENDC)
-    #else:
-        #print (Colors.RED + "Nr. of cluster expected = %d, Nr. of clusters recorded = %d"%(n_cluster_expected, n_clusters) + Colors.ENDC)
-    print ("Nr. of clusters recorded = %d"%(n_clusters))
-    #file_out.write("Nr. of cluster expected = %d, Nr. of clusters recorded = %d\n"%(n_cluster_expected, n_clusters))
-    file_out.write("Nr. of clusters recorded = %d\n"%(n_clusters))
+    
+    if n_clusters==0:
+        print(Colors.RED + 'No clusters detected' + Colors.ENDC)
+        file_out.write('No clusters detected\n')
+    else:
+        print ("Nr. of clusters recorded = %d"%(n_clusters))
+        file_out.write("Nr. of clusters recorded = %d\n"%(n_clusters))
+    
     if n_cluster_size_error == 0:
         print (Colors.GREEN + "Nr. of cluster size mismatches = %d"%n_cluster_size_error + Colors.ENDC)
     else:
@@ -421,32 +425,19 @@ def vfat_sbit(gem, system, oh_select, from_root, root_data, hits, eta_partitions
     file_out.close()
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit Injection Test")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
-    #parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
     parser.add_argument("-e", "--eta", action="store", dest="eta", nargs="+", help="eta = list of eta partitions (0-7)")
     parser.add_argument("-b", "--sbit", action="store", dest="sbit", nargs="+", help='sbit = list of s-bits (0-191) to inject')
     parser.add_argument("-n", "--n_bxs", action="store", dest="n_bxs", help="n_bxs = Number of bunch crossings.")
-    # parser.add_argument("-e", "--elink", action="store", dest="elink", nargs="+", help="elink = list of ELINKs (0-7) for S-bits")
-    # parser.add_argument("-c", "--channels", action="store", dest="channels", nargs="+", help="channels = list of channels for chosen VFAT and ELINK (list allowed only for 1 elink, by default all channels used for the elinks)")
     parser.add_argument("-t", "--trigger", action="store", dest="trigger", default="sbit", help="trigger = l1a or sbit")
-    # parser.add_argument("-m", "--cal_mode", action="store", dest="cal_mode", default = "current", help="cal_mode = voltage or current (default = current)")
-    # parser.add_argument("-d", "--cal_dac", action="store", dest="cal_dac", help="cal_dac = Value of CAL_DAC register (default = 50 for voltage pulse mode and 150 for current pulse mode)")
-    # parser.add_argument("-p", "--parallel", action="store", dest="parallel", help="parallel = all (inject calpulse in all channels) or select (inject calpulse in selected channels) simultaneously (only possible in voltage mode, not a preferred option)")
-    # parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
-    # parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
-    # parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
-    # parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="500", help="bxgap = Nr. of BX between two L1As (default = 500 i.e. 12.5 us)")
-    # parser.add_argument("-m", "--latest_map", action="store_true", dest="latest_map", help="latest_map = use the latest sbit mapping")
     parser.add_argument("-r", "--from_root", action="store_true", dest="from_root", help='from_root = read in sbit data from a root file, must provide file address in arg "-f --file_path"')
     parser.add_argument("-f", "--file_path", action="store", dest="file_path", help="file_path = the .root file path to be read")
     parser.add_argument("-i", "--hits", action="store", dest="hits", default="digi", help="hits = digi or rec")
-    parser.add_argument("-p", "--verbose", action="store_true",dest="verbose",help="verbose = print verbose")    
-
+    parser.add_argument("-p", "--verbose", action="store_true",dest="verbose",help="verbose = print verbose")
     args = parser.parse_args()
 
     if args.system == "backend":

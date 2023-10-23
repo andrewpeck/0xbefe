@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import datetime
 import sys
@@ -9,7 +10,7 @@ def set_bitslip(bitslip_list, queso_bitslip_nodes):
         for elink in queso_bitslip_nodes[vfat]:
             write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip_list[vfat][elink])
 
-def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
+def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
     
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
     queso_bitslip_nodes = {}
@@ -34,17 +35,9 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
         set_bitslip(bitslip_list, queso_bitslip_nodes)
     else:
         print ("Scanning bitslips:")
-        resultDir = "me0_lpgbt/queso_testing/results"
-        try:
-            os.makedirs(resultDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        quesoDir = "me0_lpgbt/queso_testing/results/bitslip_results"
-        try:
-            os.makedirs(quesoDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        dataDir = "me0_lpgbt/queso_testing/results/bitslip_results/queso%d"%queso_select
+        scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+        resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+        dataDir = resultDir + "/bitslip_results"
         try:
             os.makedirs(dataDir) # create directory for results
         except FileExistsError: # skip if directory already exists
@@ -52,7 +45,7 @@ def scan_set_bitslip(system, oh_select, queso_select, vfat_list, bitslip_list):
         now = str(datetime.datetime.now())[:16]
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
-        file_out = open(dataDir+"/queso%d_vfat_elink_bitslip_results_"%(queso_select)+now+".txt", "w")
+        file_out = open(dataDir+"/vfat_elink_bitslip_results_"+now+".txt", "w")
 
         bitslip_list = {}
         prbs_min_err_list = {}
@@ -126,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
-    parser.add_argument("-u", "--queso", action="store", dest="queso", help="queso = QUESO number")
+    #parser.add_argument("-u", "--queso", action="store", dest="queso", help="queso = QUESO number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-p", "--bitslip", action="store", dest="bitslip", help="bitslip = Best value of the elinkRX bitslip")
     parser.add_argument("-f", "--bitslip_file", action="store", dest="bitslip_file", help="bitslip_file = Text file with best value of the elinkRX bitslip")
@@ -207,7 +200,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        scan_set_bitslip(args.system, int(args.ohid), int(args.queso), vfat_list, bitslip_list)
+        scan_set_bitslip(args.system, int(args.ohid), vfat_list, bitslip_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

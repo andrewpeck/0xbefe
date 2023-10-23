@@ -1,0 +1,43 @@
+{   
+    "OH": {
+        "RUN": {
+            "RUN_TYPE": "ME0 OH QC Hardware",
+            "RUN_NUMBER": 1,
+            "RUN_BEGIN_TIMESTAMP": "2023-07-25 00:00:00",
+            "RUN_END_TIMESTAMP": "2023-07-25 00:10:00",
+            "LOCATION": "UCLA",
+            "INITIATED_BY_USER": "David Gotler",
+            "COMMENT_DESCRIPTION": "comment description"
+        },
+        "DATA": [
+            {
+                "BATCH": "pre_series",
+                "THERMAL_TESTING_DONE": 1,
+                "THERMAL_TESTING_PASS": 1,
+                "POWER_CYCLE_TESTING_DONE": 1,
+                "POWER_CYCLE_TESTING_PASS": 1,
+                "LINK_RESET_TESTING_DONE": 1,
+                "LINK_RESET_TESTING_PASS": 1,
+                "VISUAL_INSPECTION_NO_SHORTS": 1,
+                "PASSED_ALL_TESTS": 1
+            },
+            {
+                "SHIPPING_BOX": 1,
+                "BOARD_LOCATION": "UCLA",
+                "BOARD_STATE": "GOOD",
+                "BOARD_PURPOSE": "Teststand"
+            }
+        ]
+    },
+    "VTRXP": {
+        "RUN": {
+            "RUN_TYPE": "ME0 VTRxp QC Hardware",
+            "RUN_NUMBER": 1,
+            "RUN_BEGIN_TIMESTAMP": "2023-07-25 00:00:00",
+            "RUN_END_TIMESTAMP": "2023-07-25 00:10:00",
+            "LOCATION": "UCLA",
+            "INITIATED_BY_USER": "David Gotler",
+            "COMMENT_DESCRIPTION": "comment description"
+        }
+    }
+}
