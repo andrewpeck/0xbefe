@@ -314,17 +314,17 @@ begin
                 probe6 => me0_clusters_probe(0)(6).size & me0_clusters_probe(0)(6).address,
                 probe7 => me0_clusters_probe(0)(7).size & me0_clusters_probe(0)(7).address,
                 probe8 => sbits_probe,
-                probe9 => sbit_inj_fifo_din,--vfat_sbits_arr(0)(1),
-                probe10 => sbit_inj_data_arr(0)(0),--vfat_sbits_arr(0)(8),
-                probe11 => sbit_inj_data_arr(0)(23),--vfat_sbits_arr(0)(9),
+                probe9 => vfat_sbits_arr(0)(1),
+                probe10 => vfat_sbits_arr(0)(8),
+                probe11 => vfat_sbits_arr(0)(9),
                 probe12 => vfat_sbits_arr(0)(16),
                 probe13 => vfat_sbits_arr(0)(17),
-                probe14 => load_sbits_en,--ttc_cmds_i.calpulse,
-                probe15 => sbit_inj_fifo_rd_en,--ttc_cmds_i.l1a,
-                probe16 => sbit_inj_fifo_wr_cnt_arr(0)(0),--me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf,
-                probe17 => sbit_inj_fifo_wr_cnt_arr(0)(23),--me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf,
-                probe18 => sbit_inj_fifo_data_cnt(15 downto 0),--me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf,
-                probe19 => "000"&sbit_inj_fifo_empty_and&"000"&sbit_inj_fifo_full_and&"000"&sbit_inj_fifo_sync_flag&sbit_inj_fifo_err_flag --me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
+                probe14 => ttc_cmds_i.calpulse,
+                probe15 => ttc_cmds_i.l1a,
+                probe16 => me0_clusters_probe_raw(0).cnt & me0_clusters_probe_raw(0).adr & me0_clusters_probe_raw(0).prt & me0_clusters_probe_raw(0).vpf,
+                probe17 => me0_clusters_probe_raw(1).cnt & me0_clusters_probe_raw(1).adr & me0_clusters_probe_raw(1).prt & me0_clusters_probe_raw(1).vpf,
+                probe18 => me0_clusters_probe_raw(2).cnt & me0_clusters_probe_raw(2).adr & me0_clusters_probe_raw(2).prt & me0_clusters_probe_raw(2).vpf,
+                probe19 => me0_clusters_probe_raw(3).cnt & me0_clusters_probe_raw(3).adr & me0_clusters_probe_raw(3).prt & me0_clusters_probe_raw(3).vpf
             );
 
     end generate;
@@ -446,14 +446,10 @@ begin
     ---------------------------------------------------------------------------------            
 
     cluster_packer_me0 : if (true) generate
-
     begin
         each_oh: for oh in 0 to g_NUM_OF_OHs - 1 generate
-
             signal vfat_sbits_type_change : sbits_array_t(23 downto 0);
             signal me0_clusters      : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
-
-            
         begin
             i_sbit_inj : entity work.sbit_inj_me0
                 generic map(
@@ -469,7 +465,6 @@ begin
                     reset_i                 => reset_fifo,
                     ttc_clk_i               => ttc_clk_i,
                     ttc_cmds_i              => ttc_cmds_i,
-                    
                     -- sbit inject fifo inputs
                     fifo_din_i     => sbit_inj_fifo_din,
                     fifo_rd_en_i   => sbit_inj_fifo_rd_en,
@@ -497,13 +492,12 @@ begin
                 each_sbit: for sbit in 0 to 63 generate
                     -- MUX injected or real sbits and map to correct dt for cluster
                     -- map onto self (t_vfat3_sbits_arr to sbits_array_t)
-                    vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1')
-                        else vfat_sbits_alligned(oh)(vfat)(sbit);
+                    vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1') else vfat_sbits_alligned(oh)(vfat)(sbit);
                 end generate;
             end generate;
             
             g_probe : if oh = 0 generate
-                sbits_probe <= vfat_sbits_type_change(17); --17 selected arbitrarily, can change if want to probe other vfat
+                sbits_probe <= vfat_sbits_type_change(1); --1 selected to probe missing clusters, can change if want to probe other vfat
                 me0_clusters_probe_raw <= me0_clusters;
             end generate;
 
