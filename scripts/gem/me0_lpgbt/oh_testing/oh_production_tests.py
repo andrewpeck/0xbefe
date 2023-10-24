@@ -816,8 +816,10 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 8 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
-    print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
-    logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
+    # print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
+    # logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
+    print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping, Mapping\n" + Colors.ENDC)
+    logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping\n\n")
     time.sleep(1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
@@ -1031,7 +1033,7 @@ if __name__ == "__main__":
             os.system('cp %s %s/me0_oh%d_vfat_sbit_mapping.py'%(latest_file,dataDir,oh_select))
 
         for slot,oh_sn in geb_dict.items():
-            xml_results[oh_sn]['VFAT_SBIT_MAPPING'] = full_results[oh_sn]['VFAT_SBIT_MAPPING'] = [{'STATUS':1,'BAD_CHANNELS':[],'ROTATED_ELINKS':[],'BAD_CHANNELS_CLUSTER':[]} for _ in range(6)]
+            xml_results[oh_sn]['VFAT_SBIT_MAPPING'] = full_results[oh_sn]['VFAT_SBIT_MAPPING'] = [{'STATUS':1,'BAD_CHANNELS':[],'ROTATED_ELINKS':[]} for _ in range(6)]
 
         if bad_channels:
             for vfat in bad_channels:
@@ -1087,82 +1089,85 @@ if __name__ == "__main__":
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%test_type.replace("_","-"))
         time.sleep(1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-            logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
-            os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f "%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-            list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            with open(latest_file,"r") as mapping_file:
-                for line in mapping_file.readlines()[2:]:
-                    data = line.split()
-                    data = data[:3] + data[3].split(',') + data[4].split(',')
-                    data.remove('')
-                    vfat = int(data[0])
-                    channel = int(data[1])
-                    cluster_address = int(data[11])
+    # if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    #     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
+    #         print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
+    #         logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
+    #         os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f "%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
+    #         list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
+    #         latest_file = max(list_of_files, key=os.path.getctime)
+    #         with open(latest_file,"r") as mapping_file:
+    #             for line in mapping_file.readlines()[2:]:
+    #                 data = line.split()
+    #                 data = data[:3] + data[3].split(',') + data[4].split(',')
+    #                 data.remove('')
+    #                 vfat = int(data[0])
+    #                 channel = int(data[1])
+    #                 cluster_address = int(data[11])
 
 
-                    # sbit_status = 1 if sbit != -9999 else 0
-                    cluster_status = 1 if cluster_address != -9999 else 0
+    #                 # sbit_status = 1 if sbit != -9999 else 0
+    #                 cluster_status = 1 if cluster_address != -9999 else 0
                     
-                    for slot,oh_sn in geb_dict.items():
-                        if vfat in geb_oh_map[slot]['VFAT']:
-                            i = geb_oh_map[slot]['VFAT'].index(vfat)
-                            if cluster_status:
-                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
-                            else:
-                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
-                                xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["BAD_CHANNELS_CLUSTER"]+=[channel]
-                            break
+    #                 for slot,oh_sn in geb_dict.items():
+    #                     if vfat in geb_oh_map[slot]['VFAT']:
+    #                         i = geb_oh_map[slot]['VFAT'].index(vfat)
+    #                         if cluster_status:
+    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
+    #                         else:
+    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
+    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["BAD_CHANNELS_CLUSTER"]+=[channel]
+    #                         break
 
-            os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
+    #         os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
 
-        for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(xml_results[oh_sn]["VFAT_SBIT_MAPPING"]):
-                if not result['STATUS']:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
-                        logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
-                        test_failed = True
-                        test_failed_override = True
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-        for oh_sn in xml_results:
-            xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
-        if test_failed_override:
-            test_failed = False
-            test_failed_override = False
-        while test_failed:
-            end_tests = input('\nWould you like to exit testing? >> ')
-            if end_tests.lower() in ['y','yes']:
-                print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
-                logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
-                print('\nLogging full results at directory: %s\n'%full_results_fn)
-                logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
-                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
-                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
-                vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
-                with open(xml_results_fn,"w") as xml_results_file:
-                    json.dump(xml_results,xml_results_file,indent=2)
-                with open(full_results_fn,'w') as full_results_file:
-                    json.dump(full_results,full_results_file,indent=2)
-                with open(vtrxp_results_fn,'w') as vtrxp_results_file:
-                    json.dump(vtrxp_results,vtrxp_results_file,indent=2)
-                logfile.close()
-                sys.exit()
-            elif end_tests.lower() in ['n','no']:
-                test_failed = False
-            else:
-                print('Valid entries: y, yes, n, no')
-    else:
-        print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+    #     for slot,oh_sn in geb_dict.items():
+    #         for i,result in enumerate(xml_results[oh_sn]["VFAT_SBIT_MAPPING"]):
+    #             if not result['STATUS']:
+    #                 if not test_failed:
+    #                     print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
+    #                     logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
+    #                     test_failed = True
+    #                     test_failed_override = True
+    #                 print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+    #                 logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+    #     for oh_sn in xml_results:
+    #         xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
+    #     if test_failed_override:
+    #         test_failed = False
+    #         test_failed_override = False
+    #     while test_failed:
+    #         end_tests = input('\nWould you like to exit testing? >> ')
+    #         if end_tests.lower() in ['y','yes']:
+    #             print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
+    #             logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
+    #             print('\nLogging full results at directory: %s\n'%full_results_fn)
+    #             logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
+    #             xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
+    #             full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
+    #             vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
+    #             with open(xml_results_fn,"w") as xml_results_file:
+    #                 json.dump(xml_results,xml_results_file,indent=2)
+    #             with open(full_results_fn,'w') as full_results_file:
+    #                 json.dump(full_results,full_results_file,indent=2)
+    #             with open(vtrxp_results_fn,'w') as vtrxp_results_file:
+    #                 json.dump(vtrxp_results,vtrxp_results_file,indent=2)
+    #             logfile.close()
+    #             sys.exit()
+    #         elif end_tests.lower() in ['n','no']:
+    #             test_failed = False
+    #         else:
+    #             print('Valid entries: y, yes, n, no')
+    # else:
+    #     print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
+    #     logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%test_type.replace("_","-"))
+    #     time.sleep(1)
 
-    print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
+    # print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
+
+    print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n\n")
 
     time.sleep(1)
     print ("#####################################################################################################################################\n")
