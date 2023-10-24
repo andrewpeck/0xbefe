@@ -6,6 +6,7 @@ import sys
 import argparse
 import random
 import json
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
 config_boss_filename_v1 = ""
@@ -27,7 +28,6 @@ def getConfig (filename):
     f.close()
     return reg_map
 
-
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, min_error_limit, n_allowed_missing_hits, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
@@ -41,17 +41,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 print ("VFAT %02d: Phase set for ELINK %02d to: %s" % (vfat, elink, hex(set_bestphase)))
         return
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_phase_scan_results"
+    dataDir = vfatDir + "/vfat_sbit_phase_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -469,7 +466,6 @@ def setVfatSbitPhase(system, oh_select, vfat, sbit_elink, phase):
     sleep(0.000001) # writing too fast for CVP13
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="ME0 VFAT S-Bit Phase Scan")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
@@ -564,10 +560,10 @@ if __name__ == "__main__":
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
     print("Initialization Done\n")
 
-    config_boss_filename_v1 = "../resources/me0_boss_config_ohv1.txt"
-    config_sub_filename_v1 = "../resources/me0_sub_config_ohv1.txt"
-    config_boss_filename_v2 = "../resources/me0_boss_config_ohv2.txt"
-    config_sub_filename_v2 = "../resources/me0_sub_config_ohv2.txt"
+    config_boss_filename_v1 = get_befe_scripts_dir() + "/resources/me0_boss_config_ohv1.txt"
+    config_sub_filename_v1 = get_befe_scripts_dir() + "/resources/me0_sub_config_ohv1.txt"
+    config_boss_filename_v2 = get_befe_scripts_dir() + "/resources/me0_boss_config_ohv2.txt"
+    config_sub_filename_v2 = get_befe_scripts_dir() + "/resources/me0_sub_config_ohv2.txt"
     
     if not os.path.isfile(config_boss_filename_v1):
         print (Colors.YELLOW + "Missing config file for boss for OH-v1" + Colors.ENDC)

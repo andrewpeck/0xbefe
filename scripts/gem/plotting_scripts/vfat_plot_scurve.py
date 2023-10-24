@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -120,7 +121,7 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "invalid Current Pulse SF" + Colors.ENDC)
         sys.exit()
 
-    calib_path = "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    calib_path = get_befe_scripts_dir() + "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}

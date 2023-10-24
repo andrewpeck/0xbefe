@@ -6,6 +6,7 @@ import csv
 import datetime
 import os
 import gem.me0_lpgbt.rpi_chc as rpi_chc
+from common.utils import get_befe_scripts_dir
 
 class Colors:
     WHITE   = "\033[97m"
@@ -55,11 +56,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Monitor the currents of OH and FPGA')
     parser.add_argument("-c", "--config", action="store_true", dest="config", help="if you only want to configure, not run the monitor")
     parser.add_argument("-t", "--runtime", action="store", dest="runtime", help="runtime = time given in minutes")
+    parser.add_argument("-n", "--niter", action="store", dest="niter", help="niter = nr. of current readings")
     args = parser.parse_args()
 
     # Set up RPi
     global gbt_rpi_chc
     gbt_rpi_chc = rpi_chc.rpi_chc()
+
+    if args.runtime is not None and args.niter is not None:
+        print(Colors.RED + "ERROR: Cannot give runtime and nr. of readings at the same time" + Colors.ENDC)
+        terminate()
+    if args.runtime is None and args.niter is None:
+        print(Colors.RED + "ERROR: Need to give either runtime or nr. of readings" + Colors.ENDC)
+        terminate()
     
     initialize_success = 1
     if initialize_success:
@@ -107,12 +116,8 @@ if __name__ == '__main__':
 
     # channel 0 and 1 for OH
     # channel 2 and 3 for FPGA
-
-    resultDir = "me0_lpgbt/queso_testing/results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
     current_monitor_dir = resultDir + "/current_monitor_results"
     try:
         os.makedirs(current_monitor_dir) # create directory for current monitor data
@@ -130,17 +135,29 @@ if __name__ == '__main__':
     print ("")
     start_time = time.time()
     time_passed = 0
-    while (time_passed < (int(args.runtime) * 60)):
-        oh_1v2 = readAdc(0)
-        oh_2v5 = readAdc(1)
-        fpga_1v35 = readAdc(2)
-        fpga_2v5 = readAdc(3)
-        with open(filename, "a") as f:
-            writer = csv.writer(f)
-            writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
-        print("gbt_1v2 current: %.4f A, gbt_2v5 current: %.4f A, fpga_1v35 current: %.4f A, fpga_2v5 current: %.4f A"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
-        time.sleep(30)
-        time_passed = time.time() - start_time
+    if args.runtime is not None:
+        while (time_passed < (int(args.runtime) * 60)):
+            oh_1v2 = readAdc(0)
+            oh_2v5 = readAdc(1)
+            fpga_1v35 = readAdc(2)
+            fpga_2v5 = readAdc(3)
+            with open(filename, "a") as f:
+                writer = csv.writer(f)
+                writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
+            print("gbt_1v2 current: %.4f A, gbt_2v5 current: %.4f A, fpga_1v35 current: %.4f A, fpga_2v5 current: %.4f A"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
+            time.sleep(30)
+            time_passed = time.time() - start_time
+    if args.niter is not None:
+        for i in range(int(args.niter)):
+            oh_1v2 = readAdc(0)
+            oh_2v5 = readAdc(1)
+            fpga_1v35 = readAdc(2)
+            fpga_2v5 = readAdc(3)
+            with open(filename, "a") as f:
+                writer = csv.writer(f)
+                writer.writerow([oh_1v2, oh_2v5, fpga_1v35, fpga_2v5])
+            print("gbt_1v2 current: %.4f A, gbt_2v5 current: %.4f A, fpga_1v35 current: %.4f A, fpga_2v5 current: %.4f A"%(oh_1v2, oh_2v5, fpga_1v35, fpga_2v5))
+            time.sleep(0.1)
 
     # Terminate RPi
     terminate()

@@ -33,6 +33,9 @@ hdl-prj.json
 /scripts/befe_config.py
 /scripts/results
 
+/scripts/gem/run.sh
+
+
 *.so
 
 /boards/*/bd/*
@@ -56,3 +59,4 @@ sigasi*
 scratch
 
 .idea
+.vscode/*

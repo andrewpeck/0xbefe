@@ -1,4 +1,5 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+from common.utils import get_befe_scripts_dir
 import gem.gem_utils as gem_utils
 from time import sleep, time
 import datetime
@@ -41,17 +42,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                 print ("VFAT %02d: Phase set for ELINK %02d to: %s" % (vfat, elink, hex(set_bestphase)))
         return
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_phase_scan_results"
+    dataDir = vfatDir + "/vfat_sbit_phase_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

@@ -4,6 +4,7 @@ from time import sleep, time
 import sys
 import argparse
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
+from common.utils import get_befe_scripts_dir
 import datetime
 
 config_boss_filename_v1 = ""
@@ -132,7 +133,7 @@ def phase_check(system, oh_select, vfat, sc_depth, crc_depth, phase, working_pha
 
     return link_state, sync_error, cfg_run_error, daq_error
 
-def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_depth, l1a_bxgap, bestphase_list):
+def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_depth, fixed_crc, l1a_bxgap, bestphase_list):
     print ("ME0 Phase Scan")
 
     if bestphase_list!={}:
@@ -142,18 +143,14 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
             setVfatRxPhase(system, oh_select, vfat, set_bestphase)
             print ("Phase set for VFAT#%02d to: %s" % (vfat, hex(set_bestphase)))
         return
-
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_phase_scan_results"
+    dataDir = vfatDir + "/vfat_phase_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -239,7 +236,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         n_errors = 0
         for phase in range(0, 15):
             n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
-        if n_errors == 0:
+        if n_errors == 0 and not fixed_crc:
             print ("\nNo bad phase detected, redoing the phase scan with higher statistics:")
             for phase in range(0, 15):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*100, phase, working_phases_sc, daq_err, cyclic_running_node)
@@ -247,7 +244,7 @@ def gbt_phase_scan(gem, system, oh_select, daq_err, vfat_list, sc_depth, crc_dep
         n_errors = 0
         for phase in range(0, 15):
             n_errors += (not link_good[vfat][phase]==1) + (not sync_err_cnt[vfat][phase]==0) + (not cfg_run[vfat][phase]==0) + (not daq_crc_error[vfat][phase]==0)
-        if n_errors == 0:
+        if n_errors == 0 and not fixed_crc:
             print ("\nNo bad phase detected again, redoing the phase scan with even higher statistics:")
             for phase in range(0, 15):
                 link_good[vfat][phase], sync_err_cnt[vfat][phase], cfg_run[vfat][phase], daq_crc_error[vfat][phase] = phase_check(system, oh_select, vfat, sc_depth, crc_depth*10000, phase, working_phases_sc, daq_err, cyclic_running_node)
@@ -492,6 +489,7 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-sd", "--sc_depth", action="store", dest="sc_depth", default="10000", help="sc_depth = number of times to check for slow control errors")
     parser.add_argument("-cd", "--crc_depth", action="store", dest="crc_depth", default="10000", help="crc_depth = number of times to check for crc errors")
+    parser.add_argument("-x", "--fixed_crc", action="store_true", dest="fixed_crc", help="fixed_crc = only test for the starting number of CRC errors")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="40", help="bxgap = Nr. of BX between two L1As (default = 40 i.e. 1 us)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
     parser.add_argument("-f", "--bestphase_file", action="store", dest="bestphase_file", help="bestphase_file = Text file with best value of the elinkRX phase for each VFAT (in hex), calculated from phase scan by default")
@@ -591,7 +589,7 @@ if __name__ == "__main__":
     
     # Running Phase Scan
     try:
-        gbt_phase_scan(args.gem, args.system, int(args.ohid), args.daq_err, vfat_list, int(args.sc_depth), int(args.crc_depth), l1a_bxgap, bestphase_list)
+        gbt_phase_scan(args.gem, args.system, int(args.ohid), args.daq_err, vfat_list, int(args.sc_depth), int(args.crc_depth), args.fixed_crc, l1a_bxgap, bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

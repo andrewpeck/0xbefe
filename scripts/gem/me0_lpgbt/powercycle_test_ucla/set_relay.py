@@ -50,6 +50,7 @@ if __name__ == "__main__":
         if not read_status:
             print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
             sys.exit()
+        sleep(0.5)
 
 
 

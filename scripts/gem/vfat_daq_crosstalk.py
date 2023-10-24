@@ -4,21 +4,18 @@ import datetime
 import sys
 import argparse
 import random
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
 def vfat_crosstalk(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, l1a_bxgap):
-
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_daq_crosstalk_results"
+    dataDir = vfatDir + "/vfat_daq_crosstalk_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

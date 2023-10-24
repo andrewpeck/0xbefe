@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except these files (if you want to add more files, which should be compatible with all setups, list them here)
+!.gitignore
+!input_OH_1001_VTRXP_000001_example.json
