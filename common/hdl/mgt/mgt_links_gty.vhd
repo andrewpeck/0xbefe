@@ -758,7 +758,7 @@ begin
                     generic map(
                         CLKFBOUT_MULT       => 8,
                         CLKFBOUT_PHASE      => 0.0,
-                        CLKIN_PERIOD        => 156.25,
+                        CLKIN_PERIOD        => 6.4,
                         CLKOUT0_DIVIDE      => 4,
                         CLKOUT0_DUTY_CYCLE  => 0.5,
                         CLKOUT0_PHASE       => 0.0,
