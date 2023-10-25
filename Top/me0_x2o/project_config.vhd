@@ -36,7 +36,7 @@ package project_config is
     --== Link configuration ==--
     --========================--
 
-    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => false);
+    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => true);
     constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => false);
     constant CFG_SPY_LINK : t_spy_link_config := (0 => 8, others => TXRX_NULL);
 
@@ -68,10 +68,10 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 74
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 75
         ----------------------------- quad 225 (SLR 1) -----------------------------                                         
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 76
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 77
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 78
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 79
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_10GBE_156  , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 76
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 77
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 78
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 79
         ----------------------------- quad 226 (SLR 1) -----------------------------
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT      , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 80
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 81

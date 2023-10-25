@@ -57,7 +57,7 @@ package board_config_package is
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
-    constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE                     : boolean := true; -- true = 10 GbE; false = 1 GbE
     constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := true; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
@@ -443,6 +443,23 @@ package board_config_package is
 
     constant CFG_MGT_TRIG_3P2 : t_mgt_type_config := (
         link_type               => MGT_3P2G_8B10B,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_TRIG_4P0 : t_mgt_type_config := (
+        link_type               => MGT_4P0G_8B10B,
         cpll_refclk_01          => 1, 
         qpll0_refclk_01         => 1,
         qpll1_refclk_01         => 1,

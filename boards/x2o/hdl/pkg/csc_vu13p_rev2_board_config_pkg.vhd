@@ -23,7 +23,7 @@ package board_config_package is
     constant CFG_BOARD_TYPE         : std_logic_vector(3 downto 0) := x"5"; -- 0 = GLIB; 1 = CTP7; 2 = CVP13; 3 = APEX; 4 = X2O rev1; 5 = X2O rev2
 
     ------------ Board specific constants ------------
-    constant CFG_BOARD_MAX_LINKS    : integer := 16; --120;
+    constant CFG_BOARD_MAX_LINKS    : integer := 24; --120;
 
     ------------ DAQ configuration ------------
     constant CFG_DAQ_MAX_DMBS               : integer := 15; -- the number of DMBs that are supported by the DAQ module (the CFG_NUM_DMBS can be less than or equal to this number)
@@ -271,6 +271,16 @@ package board_config_package is
         (072-72, 072-72, false, true ), -- fiber 101 (SLR 1)
         (075-72, 075-72, false, false), -- fiber 102 (SLR 1)
         (074-72, 074-72, false, true ), -- fiber 103 (SLR 1)
+        --========= QSFP cage #4 =========--
+        (023, 023, false, true ), -- fiber 16 (SLR 1)
+        (022, 022, false, false), -- fiber 17 (SLR 1)
+        (021, 021, false, true ), -- fiber 18 (SLR 1)
+        (020, 020, false, false), -- fiber 19 (SLR 1)
+        --========= QSFP cage #5 =========--
+        (019, 019, false, true ), -- fiber 20 (SLR 1)
+        (018, 018, false, false), -- fiber 21 (SLR 1)
+        (017, 017, false, true ), -- fiber 22 (SLR 1)
+        (016, 016, false, false), -- fiber 23 (SLR 1)        
         --=== DUMMY fiber - use for unconnected channels ===--
         others => (MGT_NULL, MGT_NULL, false, false)
     );

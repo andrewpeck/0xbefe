@@ -183,6 +183,7 @@ architecture mgt_links_gty_arch of mgt_links_gty is
     signal tx_phalign_done_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal rx_phalign_done_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0);
     signal rxchbond_arr             : t_std5_array(g_NUM_CHANNELS-1 downto 0) := (others => (others => '0'));
+    signal rxusrclk_locked_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '1');
                                     
     signal ibert_scanreset_arr      : std_logic_vector(g_NUM_CHANNELS-1 downto 0) := (others => '0');
     
@@ -499,20 +500,22 @@ begin
         
         end generate;
 
-        --================================--
-        -- Trigger 3.2Gb/s MGT type
-        --================================--
-        g_chan_trig_3p2 : if g_LINK_CONFIG(chan).mgt_type.link_type = MGT_3P2G_8B10B generate
+        --=====================================--
+        -- Trigger 3.2Gb/s or 4.0Gb/s MGT type
+        --=====================================--
+        g_chan_trig_3p2 : if (g_LINK_CONFIG(chan).mgt_type.link_type = MGT_3P2G_8B10B) or (g_LINK_CONFIG(chan).mgt_type.link_type = MGT_4P0G_8B10B) generate
                 
             -- TX user clocks
-            chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_160;
-            chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_160;
+            chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_160;  -- not used (4.0Gb/s would need 200M, but that is not available)
+            chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_160; -- not used (4.0Gb/s would need 200M, but that is not available)
             
-            -- RX user clocks when using elastic buffer
-            g_rx_use_buf : if g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
+            -- RX user clocks when using elastic buffer when using 3.2Gb/s
+            g_rx_use_buf_3p2 : if (g_LINK_CONFIG(chan).mgt_type.rx_use_buf) and (g_LINK_CONFIG(chan).mgt_type.link_type = MGT_3P2G_8B10B) generate
                 chan_clks_in_arr(chan).rxusrclk <= ttc_clks_i.clk_160;
                 chan_clks_in_arr(chan).rxusrclk2 <= ttc_clks_i.clk_160;
             end generate;
+
+            assert (g_LINK_CONFIG(chan).mgt_type.link_type = MGT_3P2G_8B10B) or (not g_LINK_CONFIG(chan).mgt_type.rx_use_buf) report "4.0Gb/s trigger links are only supported with buffer bypass" severity failure;
 
             -- RX user clocks when elastic buffer is bypassed
             g_rx_no_buf : if not g_LINK_CONFIG(chan).mgt_type.rx_use_buf generate
@@ -723,41 +726,70 @@ begin
             chan_clks_in_arr(chan).txusrclk <= ttc_clks_i.clk_120;
             chan_clks_in_arr(chan).txusrclk2 <= ttc_clks_i.clk_120;
             
-            -- master clocks       
+            -- GBT master clocks
             g_master_clks : if g_LINK_CONFIG(chan).is_master generate
                 master_txoutclk.gbt <= chan_clks_out_arr(chan).txoutclk;
                 master_txusrclk.gbt <= chan_clks_in_arr(chan).txusrclk2;
-                master_rxusrclk.gbt <= '0';
+                master_rxusrclk.gbt <= chan_clks_in_arr(chan).txusrclk2; -- just set it to the txusrclk2 in case it is used somewhere
             end generate;
             
-            -- RX master clock       
+            -- RX master clocks for operation with 32bit wide bus     
             g_rx_master_clk : if g_LINK_CONFIG(chan).is_master generate
+                signal rxoutclk_buf : std_logic;
+                signal pll_clkfb    : std_logic;
+                signal pll_out0     : std_logic;
+            begin
+
+                ---------------------------------------------
+                
                 i_bufg_master_rxoutclk : BUFG_GT
                     port map(
-                        O       => master_rxoutclk.odmb57, -- 312.5MHz
+                        O       => rxoutclk_buf, -- 156.25MHz
                         CE      => '1',
                         CEMASK  => '0',
                         CLR     => '0',
                         CLRMASK => '0',
                         DIV     => "000",
-                        I       => chan_clks_out_arr(chan).rxoutclk -- 312.5MHz
-                    );                  
-
-                i_bufg_master_rxoutclk_div2 : BUFG_GT
-                    port map(
-                        O       => master_rxoutclk_div2.odmb57, -- 156.25MHz
-                        CE      => '1',
-                        CEMASK  => '0',
-                        CLR     => '0',
-                        CLRMASK => '0',
-                        DIV     => "001",
-                        I       => chan_clks_out_arr(chan).rxoutclk -- 312.5MHz
-                    );                  
+                        I       => chan_clks_out_arr(chan).rxoutclk -- 156.25MHz
+                    );
                 
+                -- PLL to double the frequency of the refclk from 156.25MHz to 312.5MHz
+                i_rxusrclk_pll : PLLE4_BASE
+                    generic map(
+                        CLKFBOUT_MULT       => 8,
+                        CLKFBOUT_PHASE      => 0.0,
+                        CLKIN_PERIOD        => 156.25,
+                        CLKOUT0_DIVIDE      => 4,
+                        CLKOUT0_DUTY_CYCLE  => 0.5,
+                        CLKOUT0_PHASE       => 0.0,
+                        DIVCLK_DIVIDE       => 1,
+                        IS_CLKFBIN_INVERTED => '0',
+                        IS_CLKIN_INVERTED   => '0',
+                        IS_PWRDWN_INVERTED  => '0',
+                        IS_RST_INVERTED     => '0',
+                        REF_JITTER          => 0.01
+                    )
+                    port map(
+                        CLKFBOUT    => pll_clkfb,
+                        CLKOUT0     => pll_out0, -- 312.5MHz
+                        LOCKED      => rxusrclk_locked_arr(chan),
+                        CLKFBIN     => pll_clkfb,
+                        CLKIN       => rxoutclk_buf,
+                        CLKOUTPHYEN => '0',
+                        PWRDWN      => '0',
+                        RST         => reset_i or ctrl_arr_i(chan).rxreset or sc_rx_reset_arr(chan)
+                    );
+
+                i_bufg_rxoutclk_2x : BUFG
+                    port map(
+                        O => master_rxoutclk.odmb57,
+                        I => pll_out0
+                    );
+
                 master_rxusrclk.odmb57 <= master_rxoutclk.odmb57;
-                master_rxusrclk2.odmb57 <= master_rxoutclk_div2.odmb57;
+                master_rxusrclk2.odmb57 <= master_rxoutclk.odmb57;
             end generate;
-            
+                            
             -- ODMB57 links always use elastic buffers, so take the user clocks from the master rxoutclk
             chan_clks_in_arr(chan).rxusrclk <= master_rxusrclk.odmb57;
             chan_clks_in_arr(chan).rxusrclk2 <= master_rxusrclk2.odmb57;
@@ -775,9 +807,9 @@ begin
                     g_TX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq,
                     g_RX_REFCLK_FREQ => g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq,
                     g_TXOUTCLKSEL    => get_gbt_txoutclksel(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq),
-                    -- TODO: DO NOT USE RXPROGDIV, because it is sourced from CDR!!!
-                    g_RXOUTCLKSEL    => "101", -- from RXPROGDIV (same frequency as the required rxusrclk = 312.5MHz, note that rxusrclk must be half of that)
-                    g_USE_TX_SYNC    => g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign
+                    g_RXOUTCLKSEL    => "011", -- refclk: 156.25MHz
+                    g_USE_TX_SYNC    => g_LINK_CONFIG(chan).mgt_type.tx_multilane_phalign,
+                    g_RX_CHAN_BOND_MASTER   => g_LINK_CONFIG(chan).chbond_master = chan
                 )
                 port map(
                     clk_stable_i   => clk_stable_i,
@@ -795,6 +827,8 @@ begin
                     rx_fast_ctrl_i => rx_fast_ctrl_arr(chan),
                     rx_init_i      => rx_init_arr(chan),
                     rx_status_o    => rx_status_arr(chan),
+                    rx_chan_bond_i => rxchbond_arr(g_LINK_CONFIG(chan).chbond_master),
+                    rx_chan_bond_o => rxchbond_arr(chan),
                     misc_ctrl_i    => misc_ctrl_arr(chan),
                     misc_status_o  => misc_status_arr(chan),
                     tx_data_i      => tx_data_arr(chan),
@@ -1501,6 +1535,32 @@ begin
             
         end generate;
 
+        --================================--
+        -- Trigger 4.0Gb/s QPLL 
+        --================================--
+
+        g_qpll_trig_4p0 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_4P0G generate
+            
+            i_qpll_trig_4p0 : entity work.gty_qpll_trig_4p0
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+            
+            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 4.0Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
+
         --================================================--
         -- Trigger 3.2Gb/s on QPLL0 and GBTX on QPLL1 
         --================================================--
@@ -1875,7 +1935,7 @@ begin
                 check_usrclk_i       => rx_status_arr(chan).rxpmaresetdone,
                 txrxresetdone_i      => rx_status_arr(chan).rxresetdone,
                 txprogdivresetdone_i => '1',               
-                usrclk_locked_i      => ttc_clks_locked_i,
+                usrclk_locked_i      => ttc_clks_locked_i and rxusrclk_locked_arr(chan),
                 cpll_locked_i        => cpll_status_arr(chan).cplllock,
                 qpll0_locked_i       => qpll_status_arr(chan).qplllock(0),
                 qpll1_locked_i       => qpll_status_arr(chan).qplllock(1),

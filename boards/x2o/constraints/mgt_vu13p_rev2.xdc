@@ -26,6 +26,17 @@ set_property LOC GTYE4_CHANNEL_X1Y29 [get_cells {i_mgts/g_channels[13].g_chan_*/
 set_property LOC GTYE4_CHANNEL_X1Y30 [get_cells {i_mgts/g_channels[14].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y31 [get_cells {i_mgts/g_channels[15].g_chan_*/i_gty_channel}]
 
+# 126 
+set_property LOC GTYE4_CHANNEL_X0Y24 [get_cells {i_mgts/g_channels[16].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y25 [get_cells {i_mgts/g_channels[17].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y26 [get_cells {i_mgts/g_channels[18].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y27 [get_cells {i_mgts/g_channels[19].g_chan_*/i_gty_channel}]
+# 127
+set_property LOC GTYE4_CHANNEL_X0Y28 [get_cells {i_mgts/g_channels[20].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y29 [get_cells {i_mgts/g_channels[21].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y30 [get_cells {i_mgts/g_channels[22].g_chan_*/i_gty_channel}]
+set_property LOC GTYE4_CHANNEL_X0Y31 [get_cells {i_mgts/g_channels[23].g_chan_*/i_gty_channel}]
+
 ###############################################################
 ####################### REFCLK0 (async) #######################
 ###############################################################

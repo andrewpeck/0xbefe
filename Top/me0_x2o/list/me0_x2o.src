@@ -27,6 +27,7 @@ boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
 gem/hdl/pkg/generated/me0_x2o/registers.vhd
 common/hdl/mgt/generated/me0_x2o/mgt_slow_control.vhd
 common/hdl/ttc/generated/me0_x2o/ttc.vhd
+common/hdl/misc/generated/me0_x2o/ttc_tx.vhd
 common/hdl/misc/generated/me0_x2o/board_system.vhd
 gem/hdl/misc/generated/me0_x2o/gem_system_regs.vhd
 gem/hdl/tests/generated/me0_x2o/gem_tests.vhd
