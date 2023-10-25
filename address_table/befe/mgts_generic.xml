@@ -178,14 +178,14 @@
     </node>
 
     <node id="CONFIG" address="0x30">
-      <node id="LINK_TYPE" address="0x0" mask="0x0000000f" permission="r"
+      <node id="LINK_TYPE" address="0x3" mask="0x0000003f" permission="r"
             description="MGT channel type"
-            fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).mgt_type.link_type), 4))"
-            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_TTC', 'MGT_ODMB57_BIDIR', 'MGT_GBE', 'MGT_10GBE', 'MGT_TX_GBE_RX_LPGBT', 'MGT_TX_10GBE_RX_LPGBT', 'MGT_25GBE', 'MGT_TX_10GBE_RX_TRIG_3P2']"/>
-      <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).mgt_type.link_type), 6))"
+            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_TTC', 'MGT_ODMB57_BIDIR', 'MGT_GBE', 'MGT_10GBE', 'MGT_TX_GBE_RX_LPGBT', 'MGT_TX_10GBE_RX_LPGBT', 'MGT_25GBE', 'MGT_TX_10GBE_RX_TRIG_3P2', 'MGT_4P0G_8B10B']"/>
+      <node id="QPLL_INST_TYPE" address="0x3" mask="0x00003f00" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
-            fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"
-            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX']"/>
+            fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 6))"
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX', 'QPLL_4P0G']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>

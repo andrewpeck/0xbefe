@@ -541,7 +541,7 @@ begin
                 
                 -- DMB links
                 dmb_rx_usrclk_i         => mgt_master_rxusrclk.dmb,
-                odmb_rx_usrclk_i        => mgt_master_txusrclk.odmb57,
+                odmb_rx_usrclk_i        => mgt_master_rxusrclk.odmb57,
                 dmb_rx_data_arr2d_i     => csc_dmb_rx_data_arr2d,
                 dmb_rx_status_arr2d_i   => csc_dmb_rx_status_arr2d,
     
@@ -603,7 +603,7 @@ begin
             end generate;
 
             g_odmb7 : if CFG_DMB_CONFIG_ARR(slr)(i).dmb_type = ODMB7 generate
-                csc_dmb_rx_usrclk_arr(i) <= mgt_master_txusrclk.odmb57;
+                csc_dmb_rx_usrclk_arr(i) <= mgt_master_rxusrclk.odmb57;
                 
                 g_odmb7_fiber : for f in 0 to CFG_DMB_CONFIG_ARR(slr)(i).num_fibers - 1 generate
                     csc_dmb_rx_data_arr2d(i)(f) <= mgt_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_DMB_CONFIG_ARR(slr)(i).rx_fibers(0)).rx);

@@ -34,6 +34,7 @@ common/hdl/mgt/gty_qpll_gbtx_156p25_ref.vhd
 common/hdl/mgt/gty_qpll_lpgbt.vhd
 common/hdl/mgt/gty_qpll_lpgbt_156p25_ref.vhd
 common/hdl/mgt/gty_qpll_trig_3p2.vhd
+common/hdl/mgt/gty_qpll_trig_4p0.vhd
 common/hdl/mgt/gty_qpll0_trig_3p2_qpll1_gbtx.vhd
 common/hdl/mgt/gty_qpll_odmb57_200.vhd
 common/hdl/mgt/gty_qpll_odmb57_156p25.vhd

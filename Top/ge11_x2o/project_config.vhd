@@ -21,14 +21,14 @@ package project_config is
     -- GEM configuration                
     --================================--
 
-    constant CFG_GEM_STATION            : t_int_per_gem := (others => 2);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
-    constant CFG_OH_VERSION             : t_int_per_gem := (others => 2);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => 2); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
-    constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (others => 2);  -- number of GBTs per OH
-    constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (others => 12); -- number of VFATs per OH
-    constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => 1);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)
+    constant CFG_GEM_STATION            : t_int_per_gem := (others => 1);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
+    constant CFG_OH_VERSION             : t_int_per_gem := (others => 1);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
+    constant CFG_NUM_OF_OHs             : t_int_per_gem := (others => 1); -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+    constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (others => 3);  -- number of GBTs per OH
+    constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (others => 24); -- number of VFATs per OH
+    constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => 0);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)
 
-    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (others => OH_TRIG_LINK_TYPE_GBT); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21
+    constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (others => OH_TRIG_LINK_TYPE_4P0G); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21
     constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
     constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
 
@@ -51,10 +51,7 @@ package project_config is
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (
         0 =>
         ( ------------------------------------------------ SLR0 ------------------------------------------------
-            (((0, 0), (1, 1), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), -- OH0, SLR 0
-            (((2, 2), (3, 3), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), -- OH1, SLR 0
-            (((4, 4), (5, 5), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), -- OH2, SLR 0
-            (((6, 6), (7, 7), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)), -- OH3, SLR 0
+            (((0, 0), (1, 1), (2, 2), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((TXRX_NULL, 12), (TXRX_NULL, 13))), -- OH0, SLR 0
             others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
         ),
         others => (others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)))
@@ -66,10 +63,10 @@ package project_config is
 
     constant CFG_MGT_LINK_CONFIG : t_mgt_config_arr := (
         ----------------------------- quad 224 (SLR 1) -----------------------------
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 72
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 73
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 74
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 75
+        (mgt_type => CFG_MGT_TRIG_4P0, qpll_inst_type => QPLL_4P0G       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 72
+        (mgt_type => CFG_MGT_TRIG_4P0, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 73
+        (mgt_type => CFG_MGT_TRIG_4P0, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 74
+        (mgt_type => CFG_MGT_TRIG_4P0, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 75
         ----------------------------- quad 225 (SLR 1) -----------------------------
         (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_10GBE_156  , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 76
         (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 77
