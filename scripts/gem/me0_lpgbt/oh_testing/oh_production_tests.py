@@ -1062,6 +1062,10 @@ if __name__ == "__main__":
                             test_failed = True
                         print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+        # Convert results to string
+        # Comment next 2 lines if running cluster mapping too
+        for oh_sn in xml_results:
+            xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1131,6 +1135,7 @@ if __name__ == "__main__":
     #                     test_failed_override = True
     #                 print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
     #                 logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+    #     # Convert results to string
     #     for oh_sn in xml_results:
     #         xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
     #     if test_failed_override:
