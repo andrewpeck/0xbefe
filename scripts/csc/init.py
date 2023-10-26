@@ -17,6 +17,7 @@ def init_csc_backend():
 
     befe_print_fw_info()
 
+    # Reset PLLs, reset and configure MGTs
     print("Resetting all MGT PLLs")
     befe_reset_all_plls()
     time.sleep(0.3)
@@ -30,18 +31,29 @@ def init_csc_backend():
     heading("RX link status")
     befe_print_link_status(links, MgtTxRx.RX)
 
+    # Reset user logic
     print("Resetting user logic")
     write_reg("BEFE.CSC_FED.CSC_SYSTEM.CTRL.GLOBAL_RESET", 1)
     time.sleep(0.3)
     write_reg("BEFE.CSC_FED.CSC_SYSTEM.CTRL.LINK_RESET", 1)
 
-    frontend_bitfile = get_config("CONFIG_CSC_PROMLESS_BITFILE")
-    print("Loading frontend bitfile to the PROMLESS RAM: %s" % frontend_bitfile)
-    if not path.exists(frontend_bitfile):
-        print_red("Frontend bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_CSC_PROMLESS_BITFILE constant in your befe_config.py file" % frontend_bitfile)
+    # Configure XDCFEB PROMless
+    xdcfeb_bitfile = get_config("CONFIG_CSC_XDCFEB_BITFILE")
+    print("Loading XDCFEB bitfile to the PROMLESS RAM: %s" % xdcfeb_bitfile)
+    if not path.exists(xdcfeb_bitfile):
+        print_red("XDCFEB bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_CSC_XDCFEB_BITFILE constant in your befe_config.py file" % xdcfeb_bitfile)
         return
-    promless_load(frontend_bitfile)
+    promless_load(xdcfeb_bitfile, promless_type="CFEB")
 
+    # Configure ALCT PROMless
+    alct_bitfile = get_config("CONFIG_CSC_ALCT_BITFILE")
+    print("Loading ALCT bitfile to the PROMLESS RAM: %s" % alct_bitfile)
+    if not path.exists(alct_bitfile):
+        print_red("ALCT bitfile %s does not exist. Please create a symlink there, or edit the CONFIG_CSC_ALCT_BITFILE constant in your befe_config.py file" % alct_bitfile)
+        return
+    promless_load(alct_bitfile, promless_type="ALCT")
+
+    # Send a hard reset
     print("Sending a hard-reset")
     csc_hard_reset()
     time.sleep(0.3)
