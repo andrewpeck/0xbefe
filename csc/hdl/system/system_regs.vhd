@@ -47,9 +47,13 @@ entity system_regs is
 
         xdcfeb_switches_o           : out t_xdcfeb_switches;
         xdcfeb_rx_data_i            : in  std_logic_vector(31 downto 0);
+
+        alct_switches_o             : out t_alct_switches;
         
-        promless_stats_i            : in  t_promless_stats;
-        promless_cfg_o              : out t_promless_cfg        
+        promless_stats_cfeb_i       : in  t_promless_stats;
+        promless_cfg_cfeb_o         : out t_promless_cfg;        
+        promless_stats_alct_i       : in  t_promless_stats;
+        promless_cfg_alct_o         : out t_promless_cfg        
     );
 end system_regs;
 
@@ -74,7 +78,8 @@ architecture system_regs_arch of system_regs is
     signal ipb_mon_trans_cnt        : std_logic_vector(15 downto 0);
     signal ipb_mon_err_cnt          : std_logic_vector(14 downto 0);
 
-    signal promless_fw_size         : std_logic_vector(31 downto 0);
+    signal promless_fw_size_cfeb    : std_logic_vector(31 downto 0);
+    signal promless_fw_size_alct    : std_logic_vector(31 downto 0);
 
     ----------- XDCFEB -----------------
     signal xdcfeb_switches          : t_xdcfeb_switches;
@@ -90,7 +95,8 @@ begin
     gbt_prbs_tx_en_o <= gbt_prbs_tx_en;
 
     --=== PROMless === --
-    promless_cfg_o.firmware_size <= promless_fw_size;
+    promless_cfg_cfeb_o.firmware_size <= promless_fw_size_cfeb;
+    promless_cfg_alct_o.firmware_size <= promless_fw_size_alct;
 
     --=== XDCFEB === --
     xdcfeb_switches_o <= xdcfeb_switches;

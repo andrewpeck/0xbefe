@@ -112,6 +112,21 @@
                 fw_signal="xdcfeb_rx_data_i"/>
         </node>
 
+        <node id="ALCT" address="0x260">
+          <node id="PROG_DIS" address="0x0" mask="0x00000001" permission="rw"
+                description="when high disables the PROG_B through GBT"
+                fw_signal="alct_switches.prog_dis" fw_default="0b0"/>
+          <node id="GBT_OVERRIDE" address="0x0" mask="0x00000002" permission="rw"
+                description="when high overrides the switches"
+                fw_signal="alct_switches.gbt_override" fw_default="0b0"/>
+          <node id="SEL_GBT" address="0x0" mask="0x00000004" permission="rw"
+                description="when high selects GBT as the programming source, when low PROMs are programming the FPGA"
+                fw_signal="alct_switches.sel_gbt_xprm" fw_default="0b1"/>
+          <node id="SEL_GBT_CCLK_SRC" address="0x0" mask="0x00000008" permission="rw"
+                description="TODO: check schematics, default = 1"
+                fw_signal="alct_switches.sel_gbt_cclk" fw_default="0b1"/>
+        </node>
+
         <node id="TESTS" address="0x300">
           <node id="GBT_LOOPBACK_EN" address="0x0" mask="0x00000001" permission="rw"
                 description="GBT Loopback test enable -- if this is true then all GBT links are redirected to the loopback test
@@ -120,25 +135,46 @@
                 sw_ctrl_configure_set="0x0" sw_ctrl_start_set="0x0"/>
         </node>
 
-        <node id="PROMLESS" address="0x400">
+        <node id="PROMLESS_CFEB" address="0x400">
           <node id="FIRMWARE_SIZE" address="0x10" mask="0xffffffff" permission="rw"
                 description="Number of bytes in the OH firmware"
-                fw_signal="promless_fw_size" fw_default="0x005363f2"/>
+                fw_signal="promless_fw_size_cfeb" fw_default="0x005363f2"/>
           <node id="LOAD_REQUEST_CNT" address="0x0" mask="0x0000ffff" permission="r"
                 description="Number of OH programming requests (note, the counter is 16bit rolling)"
-                fw_signal="promless_stats_i.load_request_cnt"/>
+                fw_signal="promless_stats_cfeb_i.load_request_cnt"/>
           <node id="LOAD_SUCCESS_CNT" address="0x0" mask="0xffff0000" permission="r"
                 description="Number of successful OH programming attempts (note, the counter is 16bit rolling)"
-                fw_signal="promless_stats_i.success_cnt"/>
+                fw_signal="promless_stats_cfeb_i.success_cnt"/>
           <node id="LOAD_FAIL_CNT" address="0x1" mask="0x0000ffff" permission="r"
                 description="Number of failed OH programming attempts (note, the counter is 16bit rolling)"
-                fw_signal="promless_stats_i.fail_cnt"/>
+                fw_signal="promless_stats_cfeb_i.fail_cnt"/>
           <node id="STREAM_GAP_CNT" address="0x1" mask="0xffff0000" permission="r"
                 description="Number of times that a gap has been detected in the bitfile stream before reaching the end (note, the counter is 16bit rolling)"
-                fw_signal="promless_stats_i.gap_detect_cnt"/>
+                fw_signal="promless_stats_cfeb_i.gap_detect_cnt"/>
           <node id="LOADER_OVF_UNF_CNT" address="0x2" mask="0x0000ffff" permission="r"
                 description="Number of times that the promless loader has reported a FIFO overflow or underflow (note, the counter is 16bit rolling)"
-                fw_signal="promless_stats_i.loader_ovf_unf_cnt"/>
+                fw_signal="promless_stats_cfeb_i.loader_ovf_unf_cnt"/>
+        </node>
+
+        <node id="PROMLESS_ALCT" address="0x420">
+          <node id="FIRMWARE_SIZE" address="0x10" mask="0xffffffff" permission="rw"
+                description="Number of bytes in the OH firmware"
+                fw_signal="promless_fw_size_alct" fw_default="0x0023d2e4"/>
+          <node id="LOAD_REQUEST_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                description="Number of OH programming requests (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_alct_i.load_request_cnt"/>
+          <node id="LOAD_SUCCESS_CNT" address="0x0" mask="0xffff0000" permission="r"
+                description="Number of successful OH programming attempts (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_alct_i.success_cnt"/>
+          <node id="LOAD_FAIL_CNT" address="0x1" mask="0x0000ffff" permission="r"
+                description="Number of failed OH programming attempts (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_alct_i.fail_cnt"/>
+          <node id="STREAM_GAP_CNT" address="0x1" mask="0xffff0000" permission="r"
+                description="Number of times that a gap has been detected in the bitfile stream before reaching the end (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_alct_i.gap_detect_cnt"/>
+          <node id="LOADER_OVF_UNF_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                description="Number of times that the promless loader has reported a FIFO overflow or underflow (note, the counter is 16bit rolling)"
+                fw_signal="promless_stats_alct_i.loader_ovf_unf_cnt"/>
         </node>
 
         <node id="REG_ACCESS_MONITOR" address="0x500">

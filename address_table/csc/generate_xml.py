@@ -18,7 +18,10 @@ def main():
 
     reTmplFiles = re.compile('tmpl_(.*)\\.xml')
     reExtEntDecl = re.compile('.*<!ENTITY (.*) SYSTEM "(.*)".*')
-    reEntSubst = re.compile('.*&(.*?);.*')
+    # reEntSubst = re.compile('.*&(.*?);.*')
+    reEntSubst = re.compile('.*&(.*?);[^<>]*(?:<!--(.*)-->)?.*')
+    reParamTopId = p = re.compile('.*PARAM_TOP_ID=(.*?);.*')
+    reParamTopAddr = p = re.compile('.*PARAM_TOP_ADDR=(.*?);.*')
 
     for fname in listdir("."):
         if isfile(fname) and "tmpl_" in fname:
@@ -43,7 +46,7 @@ def main():
                 # if entity declaration
                 m = reExtEntDecl.match(line)
                 if m:
-                    print("%s: %s" % (m.group(1), m.group(2)))
+                    print("External file: %s: %s" % (m.group(1), m.group(2)))
                     fEnt = open(m.group(2), "r")
                     entities[m.group(1)] = fEnt.read()
                     fEnt.close()
@@ -51,7 +54,25 @@ def main():
                 # if entity substitution
                 m = reEntSubst.match(line)
                 if m:
+                    print("Processing %s" % line.replace("\n", ""))
                     line = re.sub('.*&(.*?);.*', entities[m.group(1)], line)
+                    if m.group(2) is not None:
+                        comment = m.group(2)
+                        topId = None
+                        topAddr = None
+                        subTopId = reParamTopId.match(comment)
+                        if subTopId:
+                            topId = subTopId.group(1)
+                        subTopAddr = reParamTopAddr.match(comment)
+                        if subTopAddr:
+                            topAddr = subTopAddr.group(1)
+                        if topId is None or topAddr is None:
+                            print("    WARNING: found a comment next to this module, but wasn't able to parse the replacement top id and top addr, so leaving this module unchanged")
+                        else:
+                            print("    Replacing top node id and address of this module to id=%s address=%s" % (topId, topAddr))
+                            line = re.sub('id="(\w*)"', 'id="%s"' % topId, line, count=1)
+                            line = re.sub('address="(\w*)"', 'address="%s"' % topAddr, line, count=1)
+
 
                 fout.write(line)
 
