@@ -12,7 +12,8 @@ set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_axi_ipbus_bridg
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_tcds2*}]]
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_mgts*}]]
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_board_system*}]]
-set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {g_promless*}]]
+set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_promless_cfeb*}]]
+set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_promless_alct*}]]
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {i_ttc_tx*}]]
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -quiet [list {g_eth_switch*}]]
 

@@ -85,8 +85,10 @@ entity csc_fed is
         board_id_i              : in std_logic_vector(15 downto 0);
         
         -- PROMless
-        to_promless_o           : out t_to_promless;
-        from_promless_i         : in  t_from_promless                
+        to_promless_cfeb_o      : out t_to_promless;
+        from_promless_cfeb_i    : in  t_from_promless;                
+        to_promless_alct_o      : out t_to_promless;
+        from_promless_alct_i    : in  t_from_promless                
     );
 end csc_fed;
 
@@ -129,26 +131,26 @@ architecture csc_fed_arch of csc_fed is
     --================================--
 
     --== Resets ==--
-    signal reset                : std_logic;
-    signal reset_pwrup          : std_logic;
-    signal ipb_reset            : std_logic;
-    signal link_reset           : std_logic;
-    signal manual_link_reset    : std_logic;
-    signal manual_gbt_reset     : std_logic;
-    signal manual_global_reset  : std_logic;
-    signal manual_ipbus_reset   : std_logic;
-
-    --== TTC signals ==--
-    signal ttc_cmd              : t_ttc_cmds;
-    signal ttc_counters         : t_ttc_daq_cntrs;
-    signal ttc_status           : t_ttc_status;
-    signal daq_l1a_request      : std_logic := '0';
-    signal daq_l1a_reset        : std_logic := '0';
-
-    --== Spy path ==--
-    signal spy_gbe_test_en      : std_logic;
-    signal spy_gbe_test_data    : t_mgt_16b_tx_data;
-    signal spy_gbe_daq_data     : t_mgt_16b_tx_data; 
+    signal reset                        : std_logic;
+    signal reset_pwrup                  : std_logic;
+    signal ipb_reset                    : std_logic;
+    signal link_reset                   : std_logic;
+    signal manual_link_reset            : std_logic;
+    signal manual_gbt_reset             : std_logic;
+    signal manual_global_reset          : std_logic;
+    signal manual_ipbus_reset           : std_logic;
+                                        
+    --== TTC signals ==--               
+    signal ttc_cmd                      : t_ttc_cmds;
+    signal ttc_counters                 : t_ttc_daq_cntrs;
+    signal ttc_status                   : t_ttc_status;
+    signal daq_l1a_request              : std_logic := '0';
+    signal daq_l1a_reset                : std_logic := '0';
+                                        
+    --== Spy path ==--                  
+    signal spy_gbe_test_en              : std_logic;
+    signal spy_gbe_test_data            : t_mgt_16b_tx_data;
+    signal spy_gbe_daq_data             : t_mgt_16b_tx_data; 
 
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
@@ -159,7 +161,8 @@ architecture csc_fed_arch of csc_fed is
     signal gbt_prbs_tx_en               : std_logic;
 
     --== GBT elinks ==--
-    signal promless_tx_data             : std_logic_vector(15 downto 0);
+    signal promless_tx_data_cfeb        : std_logic_vector(15 downto 0);
+    signal promless_tx_data_alct        : std_logic_vector(15 downto 0);
 
     -- test module links
     signal test_gbt_wide_rx_data_arr    : t_gbt_wide_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
@@ -171,24 +174,28 @@ architecture csc_fed_arch of csc_fed is
 
     --== XDCFEB ==--
     signal xdcfeb_switches              : t_xdcfeb_switches;
-    signal xdcfeb_switches_regs         : t_xdcfeb_switches;
     signal xdcfeb_rx_data               : std_logic_vector(31 downto 0);
+
+    --== ALCT GBT ==--
+    signal alct_switches                : t_alct_switches;
     
     --== Other ==--
-    signal board_id             : std_logic_vector(15 downto 0);
-
-    --== IPbus ==--
-    signal ipb_miso_arr         : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
-
-    --== PROMless ==--
-    signal promless_stats       : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
-    signal promless_cfg         : t_promless_cfg;
-
-    --== Debug ==--
-    signal dbg_dmb_link_sel_slv : std_logic_vector(5 downto 0) := (others => '0');
-    signal dbg_dmb_link_select  : integer range 0 to g_NUM_OF_DMBs - 1 := 0;
-    signal dbg_dmb_rx_data      : t_mgt_16b_rx_data;
-    signal dbg_dmb_rx_status    : t_mgt_status;
+    signal board_id                     : std_logic_vector(15 downto 0);
+                                    
+    --== IPbus ==--                 
+    signal ipb_miso_arr                 : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
+                                        
+    --== PROMless ==--                  
+    signal promless_stats_cfeb          : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
+    signal promless_cfg_cfeb            : t_promless_cfg;
+    signal promless_stats_alct          : t_promless_stats := (load_request_cnt => (others => '0'), success_cnt => (others => '0'), fail_cnt => (others => '0'), gap_detect_cnt => (others => '0'), loader_ovf_unf_cnt => (others => '0'));
+    signal promless_cfg_alct            : t_promless_cfg;
+                                        
+    --== Debug ==--                     
+    signal dbg_dmb_link_sel_slv         : std_logic_vector(5 downto 0) := (others => '0');
+    signal dbg_dmb_link_select          : integer range 0 to g_NUM_OF_DMBs - 1 := 0;
+    signal dbg_dmb_rx_data              : t_mgt_16b_rx_data;
+    signal dbg_dmb_rx_status            : t_mgt_status;
 
 begin
 
@@ -320,24 +327,14 @@ begin
             manual_link_reset_o    => manual_link_reset,
             loopback_gbt_test_en_o => loopback_gbt_test_en,
             gbt_prbs_tx_en_o       => gbt_prbs_tx_en,
-            xdcfeb_switches_o      => xdcfeb_switches_regs,
+            xdcfeb_switches_o      => xdcfeb_switches,
             xdcfeb_rx_data_i       => xdcfeb_rx_data,
-            promless_stats_i       => promless_stats,
-            promless_cfg_o         => promless_cfg
+            alct_switches_o        => alct_switches,
+            promless_stats_cfeb_i  => promless_stats_cfeb,
+            promless_cfg_cfeb_o    => promless_cfg_cfeb,
+            promless_stats_alct_i  => promless_stats_alct,
+            promless_cfg_alct_o    => promless_cfg_alct
         );
-
-    xdcfeb_switches.prog_b <= not ttc_cmd.hard_reset;
-    xdcfeb_switches.prog_en <= xdcfeb_switches_regs.prog_en;
-    xdcfeb_switches.gbt_override <= xdcfeb_switches_regs.gbt_override; 
-    xdcfeb_switches.sel_gbt <= xdcfeb_switches_regs.sel_gbt; 
-    xdcfeb_switches.sel_8bit <= xdcfeb_switches_regs.sel_8bit; 
-    xdcfeb_switches.sel_master <= xdcfeb_switches_regs.sel_master; 
-    xdcfeb_switches.sel_cclk_src <= xdcfeb_switches_regs.sel_cclk_src; 
-    xdcfeb_switches.sel_gbt_cclk_src <= xdcfeb_switches_regs.sel_gbt_cclk_src;
-    
-    xdcfeb_switches.pattern_en <= xdcfeb_switches_regs.pattern_en;
-    xdcfeb_switches.pattern_data <= xdcfeb_switches_regs.pattern_data;
-    xdcfeb_switches.rx_select <= xdcfeb_switches_regs.rx_select;
 
     --================================--
     -- Link status monitor
@@ -479,9 +476,14 @@ begin
             gbt_ic_tx_data_arr_i        => (others => (others => '1')),
             gbt_ic_rx_data_arr_o        => open,
 
-            promless_tx_data_i          => promless_tx_data,
+            xdcfeb_hard_reset_i         => ttc_cmd.hard_reset,
+            xdcfeb_promless_data_i      => promless_tx_data_cfeb,
             xdcfeb_switches_i           => xdcfeb_switches,
             xdcfeb_rx_data_o            => xdcfeb_rx_data,
+
+            alct_hard_reset_i           => ttc_cmd.hard_reset,
+            alct_promless_data_i        => promless_tx_data_alct(7 downto 0),
+            alct_switches_i             => alct_switches,
 
             gbt_ready_arr_o             => gbt_ready_arr,
             
@@ -490,11 +492,11 @@ begin
             tst_gbt_ready_arr_o         => test_gbt_ready_arr
         );  
 
-    --===========================--
-    --    OH FPGA programming    --
-    --===========================--
+    --========================================--
+    --    XDCFEB and ALCT FPGA programming    --
+    --========================================--
 
-    i_fpga_loader : entity work.promless_fpga_loader
+    i_fpga_loader_cfeb : entity work.promless_fpga_loader
         generic map(
             g_LOADER_CLK_80_MHZ => true
         )
@@ -502,12 +504,28 @@ begin
             reset_i          => reset_i,
             gbt_clk_i        => ttc_clocks_i.clk_40,
             loader_clk_i     => ttc_clocks_i.clk_80,
-            to_promless_o    => to_promless_o,
-            from_promless_i  => from_promless_i,
-            elink_data_o     => promless_tx_data,
+            to_promless_o    => to_promless_cfeb_o,
+            from_promless_i  => from_promless_cfeb_i,
+            elink_data_o     => promless_tx_data_cfeb,
             hard_reset_i     => ttc_cmd.hard_reset,
-            promless_stats_o => promless_stats,
-            promless_cfg_i   => promless_cfg
+            promless_stats_o => promless_stats_cfeb,
+            promless_cfg_i   => promless_cfg_cfeb
+        );
+
+    i_fpga_loader_alct : entity work.promless_fpga_loader
+        generic map(
+            g_LOADER_CLK_80_MHZ => true
+        )
+        port map(
+            reset_i          => reset_i,
+            gbt_clk_i        => ttc_clocks_i.clk_40,
+            loader_clk_i     => ttc_clocks_i.clk_40,
+            to_promless_o    => to_promless_alct_o,
+            from_promless_i  => from_promless_alct_i,
+            elink_data_o     => promless_tx_data_alct, -- only 8 bits are used
+            hard_reset_i     => ttc_cmd.hard_reset,
+            promless_stats_o => promless_stats_alct,
+            promless_cfg_i   => promless_cfg_alct
         );
             
     --================================--

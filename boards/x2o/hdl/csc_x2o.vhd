@@ -169,8 +169,10 @@ architecture csc_x2o_arch of csc_x2o is
     signal daqlink_to_daq           : t_daqlink_to_daq_arr(CFG_NUM_SLRS - 1 downto 0) := (others => DAQLINK_TO_DAQ_NULL);
 
     -------------------- PROMless ---------------------------------
-    signal to_promless              : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
-    signal from_promless            : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others =>FROM_PROMLESS_NULL);
+    signal to_promless_cfeb         : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
+    signal from_promless_cfeb       : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others =>FROM_PROMLESS_NULL);
+    signal to_promless_alct         : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
+    signal from_promless_alct       : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others =>FROM_PROMLESS_NULL);
 
 begin
 
@@ -380,23 +382,49 @@ begin
     -- PROMless
     --================================--
 
-    i_promless : entity work.promless
+    ----------- XDCFEB -----------
+     
+    -- XDCFEBs use Virtex 6 130T for which the max number of configuration bits = 43_719_776 bits / 5_464_972 bytes (UG360)
+    -- uncompressed bit file size is 5_465_085 bytes
+    -- we allocate 170 * 32KB = 5440KB = 5_570_560 Bytes
+    i_promless_cfeb : entity work.promless
         generic map(
             g_NUM_CHANNELS => CFG_NUM_SLRS,
-            g_MAX_SIZE_BYTES   => 8_388_608,
+            g_MAX_SIZE_BYTES   => 5_570_560,
             g_MEMORY_PRIMITIVE => "ultra",
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
             reset_i         => '0',
-            to_promless_i   => to_promless,
-            from_promless_o => from_promless,
+            to_promless_i   => to_promless_cfeb,
+            from_promless_o => from_promless_cfeb,
             ipb_reset_i     => ipb_reset,
             ipb_clk_i       => ipb_clk,
             ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
             ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
         );
-        
+
+    ----------- ALCT -----------
+     
+    -- ME1/1 ALCTs use Spartan 6 LX100 for which the max number of configuration bits = 26_691_232 bits / 3_336_404 bytes (UG360)
+    -- we allocate 102 * 32KB = 3264KB = 3_342_336 Bytes
+    i_promless_alct : entity work.promless
+        generic map(
+            g_NUM_CHANNELS => CFG_NUM_SLRS,
+            g_MAX_SIZE_BYTES   => 3_342_336,
+            g_MEMORY_PRIMITIVE => "ultra",
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+        )
+        port map(
+            reset_i         => '0',
+            to_promless_i   => to_promless_alct,
+            from_promless_o => from_promless_alct,
+            ipb_reset_i     => ipb_reset,
+            ipb_clk_i       => ipb_clk,
+            ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless2),
+            ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless2)
+        );
+
     --================================--
     -- Board System registers
     --================================--
@@ -577,8 +605,10 @@ begin
                 board_id_i              => board_id,
                 
                 -- PROMless
-                to_promless_o           => to_promless(slr),
-                from_promless_i         => from_promless(slr)          
+                to_promless_cfeb_o      => to_promless_cfeb(slr),
+                from_promless_cfeb_i    => from_promless_cfeb(slr),          
+                to_promless_alct_o      => to_promless_alct(slr),
+                from_promless_alct_i    => from_promless_alct(slr)
             );
 
         -- DMB link mapping
