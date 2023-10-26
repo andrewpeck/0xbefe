@@ -43,7 +43,7 @@ package ipb_sys_addr_decode is
         ttc_clk => 6,
         ttc => 7,
         eth_switch => 8,
-        promless2 => 10,
+        promless2 => 9,
 --        mgt_qpll_drp => 5,
 --        mgt_chan_drp => 6,
         none => C_NUM_IPB_SYS_SLAVES
