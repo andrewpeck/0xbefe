@@ -107,7 +107,7 @@ begin
             generic map(
                 CHK_MODE    => false, --generate mode
                 INV_PATTERN => true,
-                POLY_LENGHT => 7, --prbs7
+                POLY_LENGTH => 7, --prbs7
                 POLY_TAP    => 6,
                 NBITS       => 8
             )
@@ -149,7 +149,7 @@ begin
                     generic map(
                         CHK_MODE    => true, --check mode
                         INV_PATTERN => true,
-                        POLY_LENGHT => 7, --prbs7
+                        POLY_LENGTH => 7, --prbs7
                         POLY_TAP    => 6,
                         NBITS       => 8
                     )
