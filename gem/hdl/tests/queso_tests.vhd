@@ -107,8 +107,8 @@ begin
             generic map(
                 CHK_MODE    => false, --generate mode
                 INV_PATTERN => true,
-                POLY_LENGTH => 7, --prbs7
-                POLY_TAP    => 6,
+                POLY_LENGTH => 31, --prbs31
+                POLY_TAP    => 28,
                 NBITS       => 8
             )
             port map(
@@ -149,8 +149,8 @@ begin
                     generic map(
                         CHK_MODE    => true, --check mode
                         INV_PATTERN => true,
-                        POLY_LENGTH => 7, --prbs7
-                        POLY_TAP    => 6,
+                        POLY_LENGTH => 31, --prbs7
+                        POLY_TAP    => 28,
                         NBITS       => 8
                     )
                     port map(
