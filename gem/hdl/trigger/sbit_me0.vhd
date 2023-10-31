@@ -167,18 +167,6 @@ architecture sbit_me0_arch of sbit_me0 is
     signal sbit_inj_fifo_data_cnt       : std_logic_vector(31 downto 0);
     signal sbit_inj_fifo_sync_flag      : std_logic;
 
-    -- cluster mapping from new to legacy clusters
-    function get_adr (partition : in std_logic_vector; strip : in std_logic_vector)
-    return std_logic_vector is
-        variable s : integer;
-        variable p : integer;
-    begin
-        s := to_integer(unsigned(strip));
-        p := to_integer(unsigned(partition));
-
-        return std_logic_vector(to_unsigned(p*192+s, 11));
-    end;
-
     signal me0_clusters_probe_raw : sbit_cluster_array_t (NUM_FOUND_CLUSTERS-1 downto 0);
     signal me0_cluster_count      : t_std11_array(g_NUM_OF_OHs -1 downto 0);
     signal me0_overflow           : std_logic_vector(g_NUM_OF_OHs -1 downto 0);
@@ -535,13 +523,11 @@ begin
                 --me0_clusters_probe_raw <= me0_clusters;
 
                 if (me0_clusters(I).vpf = '1') then
-                    me0_clusters_o(oh)(I).address <= get_adr(me0_clusters(I).prt, me0_clusters(I).adr);
+                    me0_clusters_o(oh)(I).address <= me0_clusters(I).prt & me0_clusters(I).adr;
                     me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;
                 else
-                    me0_clusters_o(oh)(I).address <= (others => '1');
-                    me0_clusters_o(oh)(I).size <= (others => '1');
+                    me0_clusters_o(oh)(I) <= NULL_SBIT_CLUSTER;
                 end if;
-                
                 me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I);
 
             end if;
