@@ -14,7 +14,7 @@ package project_config is
     
     constant CFG_GEM_STATION            : t_int_per_gem := (0 => 0);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
     constant CFG_OH_VERSION             : t_int_per_gem := (0 => 1);  -- for now this is only relevant to GE2/1 where v2 OH has different elink map, and uses widebus mode
-    constant CFG_NUM_OF_OHs             : t_int_per_gem := (0 => 1);  -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
+    constant CFG_NUM_OF_OHs             : t_int_per_gem := (0 => 2);  -- total number of OHs to instanciate (remember to adapt the CFG_OH_LINK_CONFIG_ARR accordingly)
     constant CFG_NUM_GBTS_PER_OH        : t_int_per_gem := (0 => 8);  -- number of GBTs per OH
     constant CFG_NUM_VFATS_PER_OH       : t_int_per_gem := (0 => 24); -- number of VFATs per OH
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (0 => 0);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+) 
@@ -31,8 +31,8 @@ package project_config is
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (
         ( ------------------------------------------------ SLR0 ------------------------------------------------
             (((0, 0),  (TXRX_NULL, 1),  (1, 2),   (TXRX_NULL, 3),  (2, 4),   (TXRX_NULL, 5),  (3, 6),   (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),
-            (((8, 8),  (TXRX_NULL, 9),  (9, 10),  (TXRX_NULL, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL),  (LINK_NULL, LINK_NULL)),
-            (((10, 12), (TXRX_NULL, 13), (11, 14),  (TXRX_NULL, 15), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL),  (LINK_NULL, LINK_NULL)),
+            (((8, 8),  (TXRX_NULL, 9),  (9, 10),  (TXRX_NULL, 11), (10, 12), (TXRX_NULL, 13), (11, 14),   (TXRX_NULL, 15)) ,  (LINK_NULL, LINK_NULL)),
+            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
             others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))         
         ),
