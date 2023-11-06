@@ -181,8 +181,8 @@ architecture gem_ctp7_arch of gem_ctp7 is
 
     -- Trigger TX GTH links (10.24Gbs, 64bit @ 160MHz w/o encoding)
     signal gem_gt_trig_tx_clk       : std_logic;
-    signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX - 1 downto 0);
-    signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX - 1 downto 0);
+    signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX(0) - 1 downto 0);
+    signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX(0) - 1 downto 0);
 
     -- GBT GTX/GTH links (4.8Gbs, 40bit @ 120MHz w/o 8b10b encoding)
     signal gem_gt_gbt_rx_data_arr   : t_std40_array(CFG_NUM_OF_OHs(0) * CFG_NUM_GBTS_PER_OH(0) - 1 downto 0);
@@ -217,7 +217,7 @@ architecture gem_ctp7_arch of gem_ctp7 is
 
     -------------------- EMTF RX test signals ---------------------------------
 
-    signal emtf_tx_data                 : t_std234_array(CFG_NUM_TRIG_TX - 1 downto 0);
+    signal emtf_tx_data                 : t_std234_array(CFG_NUM_TRIG_TX(0) - 1 downto 0);
     signal emtf_rx_data                 : std_logic_vector(233 downto 0);
     signal emtf_rx_ready                : std_logic;
     signal emtf_rx_had_not_ready        : std_logic;
@@ -390,8 +390,8 @@ begin
                 g_GBT_WIDEBUS        => CFG_GBT_WIDEBUS(0),
                 g_NUM_GBTS_PER_OH    => CFG_NUM_GBTS_PER_OH(0),
                 g_NUM_VFATS_PER_OH   => CFG_NUM_VFATS_PER_OH(0),
-                g_USE_TRIG_TX_LINKS  => CFG_USE_TRIG_TX_LINKS,
-                g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX,
+                g_USE_TRIG_TX_LINKS  => CFG_USE_TRIG_TX_LINKS(0),
+                g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX(0),
                 g_OH_TRIG_LINK_TYPE  => CFG_OH_TRIG_LINK_TYPE(0),
                 g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS  => 20,
@@ -497,7 +497,7 @@ begin
         end generate;
 
         -- MGT mapping to EMTF links
-        g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX - 1 generate
+        g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX(0) - 1 generate
             gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)(i)).tx).txdata <= gem_gt_trig_tx_data_arr(i);
             gem_gt_trig_tx_status_arr(i) <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(0)(i)).tx);
         end generate;

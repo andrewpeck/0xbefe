@@ -11,6 +11,7 @@ package project_config is
 
     constant CFG_NUM_GEM_BLOCKS         : integer := 1; -- total number of GEM blocks to instanciate    
     type t_int_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of integer;
+    type t_bool_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of boolean;
     type t_oh_trig_link_type_arr is array (0 to CFG_NUM_GEM_BLOCKS - 1) of t_oh_trig_link_type;
     
     constant CFG_GEM_STATION            : t_int_per_gem := (0 => 2);  -- 0 = ME0; 1 = GE1/1; 2 = GE2/1
@@ -21,8 +22,8 @@ package project_config is
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (0 => 1);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+) 
 
     constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (0 => OH_TRIG_LINK_TYPE_GBT); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21   
-    constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
-    constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
+    constant CFG_USE_TRIG_TX_LINKS      : t_bool_per_gem := (others => false); -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
+    constant CFG_NUM_TRIG_TX            : t_int_per_gem := (others => 8); -- number of trigger transmitters used to connect to EMTF
 
     --========================--
     --== Link configuration ==--

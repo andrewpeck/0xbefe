@@ -361,7 +361,9 @@ begin
 --            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
 --        );
 --
---    slink_mgt_ref_clk <= refclk0(24);
+----    slink_mgt_ref_clk <= refclk0(24); -- rev1?
+--    slink_mgt_ref_clk <= refclk0(6); -- rev2 Q128
+----    slink_mgt_ref_clk <= refclk0(7); -- rev2 Q129
 
     --================================--
     -- PROMless
@@ -390,7 +392,7 @@ begin
     -- TTC TX module
     --================================--
 
-    g_ttc_txL: if CFG_USE_TTC_TX_LINK generate 
+    g_ttc_tx: if CFG_USE_TTC_TX_LINK generate 
         i_ttc_tx : entity work.ttc_tx
             generic map(
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
@@ -456,8 +458,8 @@ begin
 
         -- Trigger TX links (10.24Gbs, 64bit @ 160MHz w/o encoding)
         signal gem_gt_trig_tx_clk       : std_logic;
-        signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX - 1 downto 0);
-        signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX - 1 downto 0);
+        signal gem_gt_trig_tx_data_arr  : t_std64_array(CFG_NUM_TRIG_TX(slr) - 1 downto 0);
+        signal gem_gt_trig_tx_status_arr: t_mgt_status_arr(CFG_NUM_TRIG_TX(slr) - 1 downto 0);
 
         -------------------- Spy / LDAQ readout link ---------------------------------
         signal spy_rx_data              : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
@@ -478,12 +480,12 @@ begin
                 g_OH_TRIG_LINK_TYPE => CFG_OH_TRIG_LINK_TYPE(slr),
                 g_NUM_GBTS_PER_OH   => CFG_NUM_GBTS_PER_OH(slr),
                 g_NUM_VFATS_PER_OH  => CFG_NUM_VFATS_PER_OH(slr),
-                g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS,
-                g_NUM_TRIG_TX_LINKS => CFG_NUM_TRIG_TX,
+                g_USE_TRIG_TX_LINKS => CFG_USE_TRIG_TX_LINKS(slr),
+                g_NUM_TRIG_TX_LINKS => CFG_NUM_TRIG_TX(slr),
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
                 g_DAQ_CLK_FREQ      => 100_000_000,
-                g_IS_SLINK_ROCKET   => true
+                g_IS_SLINK_ROCKET   => false
             )
             port map(
                 reset_i                 => usr_logic_reset,
@@ -599,8 +601,8 @@ begin
         end generate;
 
         -- MGT mapping to EMTF links
-        g_use_emtf_links : if CFG_USE_TRIG_TX_LINKS generate
-            g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX - 1 generate
+        g_use_emtf_links : if CFG_USE_TRIG_TX_LINKS(slr) generate
+            g_emtf_links : for i in 0 to CFG_NUM_TRIG_TX(slr) - 1 generate
                 mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(i)).tx).txdata <= gem_gt_trig_tx_data_arr(i);
                 gem_gt_trig_tx_status_arr(i) <= mgt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_TRIG_TX_LINK_CONFIG_ARR(slr)(i)).tx);
             end generate;
