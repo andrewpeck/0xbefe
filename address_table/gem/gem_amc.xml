@@ -230,10 +230,10 @@
           fw_signal="std_logic_vector(to_unsigned(CFG_NUM_VFATS_PER_OH(g_SLR), 5))"/>
     <node id="USE_TRIG_TX_LINKS" address="0x0" mask="0x00000400" permission="r"
           description="Indicates whether or not trigger TX links are supported by this firmware build"
-          fw_signal="'1' when CFG_USE_TRIG_TX_LINKS else '0'"/>
+          fw_signal="'1' when CFG_USE_TRIG_TX_LINKS(g_SLR) else '0'"/>
     <node id="NUM_TRIG_TX_LINKS" address="0x0" mask="0x01e00000" permission="r"
           description="Number of supported trigger TX links"
-          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX, 4))"/>
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX(g_SLR), 4))"/>
     <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
           description="Indicates whether or not local DAQ link is supported by this firmware build"
           fw_signal="'1' when CFG_USE_SPY_LINK_TX(g_SLR) else '0'"/>
