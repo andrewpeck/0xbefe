@@ -807,6 +807,7 @@ begin
                 tx_data_arr_i        => lpgbt_tx_data_arr,
                 rx_data_arr_o        => lpgbt_rx_data_arr,
                 prbs_mode_en_i       => gbt_prbs_tx_en,
+                tx_bitslip_cnt_i     => gbt_tx_bitslip_arr,
                 link_status_arr_o    => gbt_link_status_arr
             );
     end generate;

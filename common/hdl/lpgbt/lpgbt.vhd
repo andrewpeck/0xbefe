@@ -70,6 +70,7 @@ entity lpgbt is
         --=====================--
 
         prbs_mode_en_i              : in  std_logic;
+        tx_bitslip_cnt_i            : in  t_std7_array(g_NUM_LINKS - 1 downto 0);
 
         link_status_arr_o           : out t_gbt_link_status_arr(g_NUM_LINKS - 1 downto 0)
 
@@ -89,6 +90,7 @@ architecture lpgbt_arch of lpgbt is
     signal tx_data_arr      : t_lpgbt_tx_frame_array(g_NUM_LINKS - 1 downto 0);
     signal tx_prbs_data     : std_logic_vector(31 downto 0);
     signal tx_frames        : t_std64_array(g_NUM_LINKS - 1 downto 0);
+    signal tx_frames_slipped: t_std64_array(g_NUM_LINKS - 1 downto 0);
 
     --------- TX gearbox ---------
     signal tx_gb_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
@@ -188,6 +190,21 @@ begin
                     downlinkReady_o             => tx_dp_ready(i)
                 );
 
+            --------- TX bitslip for chip clk phase control ---------
+
+            i_tx_bitslip: entity work.bitslip
+                generic map(
+                    g_DATA_WIDTH           => 64,
+                    g_SLIP_CNT_WIDTH       => 6,
+                    g_TRANSMIT_LOW_TO_HIGH => false
+                )
+                port map(
+                    clk_i      => tx_frame_clk_i,
+                    slip_cnt_i => tx_bitslip_cnt_i(i)(5 downto 0),
+                    data_i     => tx_frames(i),
+                    data_o     => tx_frames_slipped(i)
+                );
+
             --------- TX gearbox ---------
 
             i_tx_gearbox : entity work.txGearbox
@@ -203,7 +220,7 @@ begin
 
                     rst_gearbox_i  => tx_gb_reset(i),
 
-                    dat_inFrame_i  => tx_frames(i),
+                    dat_inFrame_i  => tx_frames_slipped(i),
                     dat_outFrame_o => tx_gb_out_data(i),
 
                     sta_gbRdy_o    => tx_gb_ready(i)
