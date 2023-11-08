@@ -464,8 +464,7 @@ if __name__ == "__main__":
     eta_partitions = np.arange(8)
     sbits = np.arange(192)
     for eta in eta_partitions:
-        s_bit_cluster_mapping[eta] = np.logical_or(eta << 8,sbits).tolist()
-
+        s_bit_cluster_mapping[eta] = (eta << 8 | sbits).tolist()
     if args.from_root:
         if args.file_path is None:
             print(Colors.YELLOW + "Must provide a path to .root file" + Colors.ENDC)
