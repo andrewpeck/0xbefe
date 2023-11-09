@@ -523,7 +523,7 @@ begin
                 --me0_clusters_probe_raw <= me0_clusters;
 
                 if (me0_clusters(I).vpf = '1') then
-                    me0_clusters_o(oh)(I).address <= me0_clusters(I).prt & me0_clusters(I).adr;
+                    me0_clusters_o(oh)(I).address <= me0_clusters(I).prt & me0_clusters(I).adr(7 downto 0);
                     me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;
                 else
                     me0_clusters_o(oh)(I) <= NULL_SBIT_CLUSTER;
