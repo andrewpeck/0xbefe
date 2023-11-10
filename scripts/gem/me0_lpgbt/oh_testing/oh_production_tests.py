@@ -870,8 +870,8 @@ if __name__ == "__main__":
                             print (Colors.RED + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
                             test_failed = True
-                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e))
+                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot]['VFAT'][v],e) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][v],e))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"] = str(xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"])
         while test_failed:
@@ -915,7 +915,7 @@ if __name__ == "__main__":
                 for line in bitslip_file.readlines():
                     if read_next:
                         if "VFAT" in line:
-                            vfat = int(line.split()[1].replace(":",""))
+                            vfat = int(line.split()[1].replace(":","").removesuffix(','))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
