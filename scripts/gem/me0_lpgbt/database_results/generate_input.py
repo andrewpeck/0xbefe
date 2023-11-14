@@ -22,11 +22,6 @@ def main():
     dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
     inputDir = dbDir + '/input'
     resultDir = dbDir + '/results'
-    xmlDir = resultDir + '/xml_data'
-    try:
-        os.makedirs(xmlDir) # Create register xml data directory
-    except FileExistsError: # Skip if already exists
-        pass
 
     if args.user:
         oh_sn = input('Enter OH SERIAL NUMBER(s): ')
@@ -43,13 +38,13 @@ def main():
 
         for b in range(num_batches):
             if multiple_ohs:
-                options = input('Would you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option 2 >> '%(b,num_batches))
+                options = input('\nWould you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option 2 >> '%(b+1,num_batches))
                 while options=='help':
                     print('\nGENERAL PARAMETERS: ["RUN_NUMBER", "RUN_BEGIN_TIMESTAMP","RUN_END_TIMESTAMP", "LOCATION", "USER", "BATCH", "SHIPPING_BOX", "BOARD_LOCATION"]\n')
-                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option 2 >> ')
+                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option (2) >> ')
                 while options.lower() not in ['1', '2', '3', 'help']:
                     print('\nInvalid input. Valid entries are [1, 2, 3, help]\n')
-                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option 2 >> ')
+                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option (2) >> ')
                 if options=='1':
                     print('Will generate JSON files for all OHs based of one batch of responses.\n')
                     one_for_all = True
@@ -68,13 +63,13 @@ def main():
             oh_sn_batch_list = oh_sn_list[b*8:min(b*8+8,num_ohs)]
             oh_sn_str = '_'.join(oh_sn_batch_list)
 
-            input_OHSNs_Dir = inputDir + 'OH_SNs_%s'%oh_sn_str
+            input_OHSNs_Dir = inputDir + '/OH_SNs_%s'%oh_sn_str
             try:
                 os.makedirs(input_OHSNs_Dir) # create batch directory for input files
             except FileExistsError: # skip if already exists
                 pass
 
-            data_OHSNs_Dir = xmlDir + 'OH_SNs_%s'%oh_sn_str
+            data_OHSNs_Dir = resultDir + '/OH_SNs_%s'%oh_sn_str
             try:
                 os.makedirs(data_OHSNs_Dir) # create batch directory for data files
             except FileExistsError:
