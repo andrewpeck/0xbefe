@@ -1,6 +1,6 @@
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 from common.utils import get_befe_scripts_dir
-fro time import sleep, time
+from time import sleep, time
 import sys
 import argparse
 import csv
@@ -123,7 +123,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
             
     file.close()
 
-    figure_name = foldername + "ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_plot_" + now + ".pdf"
+    figure_name = dataDir + "/ME0_OH%d_GBT%d_temp_"%(oh_select, gbt_select) + device + "_plot_" + now + ".pdf"
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("minutes")
     ax1.set_ylabel("T (C)")

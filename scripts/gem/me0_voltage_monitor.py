@@ -127,7 +127,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
     file_out.close()
 
-    figure_name1 = foldername + "ME0_OH%d_GBT%d_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name1 = dataDir + "/ME0_OH%d_GBT%d_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig3, ax3 = plt.subplots()
     ax3.set_xlabel("minutes")
     ax3.set_ylabel("Voltage (V)")

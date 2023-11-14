@@ -1921,7 +1921,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
 
             print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2101,7 +2101,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
@@ -2175,7 +2175,7 @@ if __name__ == "__main__":
             
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
 
             print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2356,7 +2356,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
             else:
@@ -2465,7 +2465,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             if os.path.isdir(latest_dir):
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
