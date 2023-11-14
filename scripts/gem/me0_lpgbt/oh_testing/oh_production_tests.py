@@ -19,12 +19,13 @@ from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 geb_oh_map = {}
 for slot in range(1,9):
-    o = (slot - 1)%4
+    o = 2*((slot - 1)%4)
     geb_oh_map[str(slot)] = {}
     geb_oh_map[str(slot)]["OH"] = (slot - 1) // 4
-    geb_oh_map[str(slot)]["GBT"] = [2*o, 2*o + 1]
-    geb_oh_map[str(slot)]["VFAT"] = [2*o, 2*o+1, 2*o+8, 2*o+9, 2*o+16, 2*o+17]
+    geb_oh_map[str(slot)]["GBT"] = [o, o + 1]
+    geb_oh_map[str(slot)]["VFAT"] = [o, o+1, o+8, o+9, o+16, o+17]
 
+# Constant for missing val
 NULL = -9999
 
 if __name__ == "__main__":

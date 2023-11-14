@@ -11,6 +11,12 @@ scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
 inputDir = dbDir + '/input'
 resultDir = dbDir + '/results'
+xmlDir = resultDir + '/xml_data'
+try:
+    os.makedirs(xmlDir) # create directory for data
+except FileExistsError: # skip if directory already exists
+    pass
+
 quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
 gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
 
@@ -26,14 +32,15 @@ def print_json_data(fn):
             print('%s: '%key, value)
         print()
 
-def get_input_data(oh_sn,vtrxp_sn):
-    input_fn = inputDir + '/input_OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
-    try:
-        with open(input_fn,'r') as input_file:
+def get_input_data(inputDataDir):
+    list_of_files = glob(inputDataDir+'/*')
+    input_dataset = {}
+    for filename in list_of_files:
+        with open(filename,'r') as input_file:
             data = json.load(input_file)
-    except FileNotFoundError:
-        print(Colors.RED + 'Input file not found for OH: %s, VTRx+: %s'%(oh_sn,vtrxp_sn) + Colors.ENDC)
-    return data['OH'],data['VTRXP']
+        input_dataset[filename.removesuffix('.json')] = data
+    
+    return input_dataset
 
 def combine_data(sn,input_data,*dataset,hardware='OH'):
     data_out = {}
@@ -95,7 +102,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="VERBOSE = print combined results output when saving to xml")
     args = parser.parse_args()
 
-    # Check valid serial numbers
+    # Check for valid args
     if not (args.oh_sns and args.vtrxp_sns):
         if not args.oh_sns:
             print(Colors.RED + 'Missing OH SERIAL NUMBERS.' + Colors.ENDC)
@@ -108,7 +115,7 @@ def main():
         sys.exit()
     elif len(args.oh_sns)!= len(args.vtrxp_sns):
         print(Colors.RED + 'Must provide a list of VTRXP SERIAL NUMBERs ordered according to the OHs on which they are installed.' + Colors.ENDC)
-
+    # Check valid serial numbers for batch
     for oh_sn in args.oh_sns:
         try:
             if args.test_type=='pre_production':
@@ -152,7 +159,6 @@ def main():
         if not os.path.exists(queso_data_dir):
             print(Colors.RED + 'QUESO results data directory: %s not found. Please ensure correct list of OH SERIAL NUMBERS and order.'%queso_data_dir + Colors.ENDC)
             sys.exit()
-
         queso_init_fn = queso_data_dir + 'queso_initialization_results.json'
         queso_bert_fn = queso_data_dir + 'queso_elink_bert_results.json'
     if len(oh_sn_list) > 4:
@@ -175,6 +181,32 @@ def main():
             sys.exit()
         geb_data_fn = geb_data_dir + 'me0_oh_database_results.json'
         vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
+
+    # input data directory
+    inputDataDir = inputDir + '/OH_SNs_%s'%oh_sn_str
+    # output data directory
+    dataDir = xmlDir + '/OH_SNs_%s'%oh_sn_str
+
+    # Check if directories exist
+    if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
+        print(Colors.YELLOW + 'Could not find data directories for /OH_SNs_%s. Run generate_input.py to generate necessary input files and data directories.'%oh_sn_str + Colors.ENDC)
+        sys.exit()
+    
+    # Get input data
+    input_dataset = get_input_data(inputDataDir)
+    # check for input data
+    input_data_found = [False for _ in range(len(oh_sn_list))]
+    for i,(oh_sn,vtrxp_sn) in enumerate(zip(oh_sn_list,vtrxp_sn_list)):
+        if 'OH_%s_VTRXP_%s'%(oh_sn,vtrxp_sn) in input_dataset:
+            input_data_found[i] = True
+        else:
+            print(Colors.RED + "Missing INPUT data for OH %s and VTRXP %s"%(oh_sn,vtrxp_sn) + Colors.ENDC)
+    if not np.all(input_data_found):
+        print(Colors.RED + 'Please run generate_input.py again. Only data present for the following:'+Colors.ENDC)
+        print(', '.join(input_dataset))
+        sys.exit()
+
+    # -- Begin creating datasets --
 
     oh_dataset = []
     if args.test_type!='acceptance':
@@ -207,12 +239,12 @@ def main():
                     print(Colors.RED + "Missing QUESO ELINK BERT RESULTS data for OH %s"%oh_sn + Colors.ENDC)
         
         if not np.all(queso_data_found):
-                print(Colors.RED + 'Please check results files for missing data.' + Colors.ENDC)
+                print(Colors.RED + 'Please check QUESO results files for missing data.' + Colors.ENDC)
                 sys.exit()
         else:
             oh_dataset += [queso_init_data,queso_bert_data]
 
-    # Load and check geb data
+    # Load and check geb (oh + vtrxp) data
     if len(oh_sn_list) > 4:
         try:
             geb_data = get_json_data(geb_data1_fn)
@@ -255,23 +287,32 @@ def main():
     oh_vtrxp_mismatch = [False for _ in range(len(oh_sn_list))]
     for i,(oh_sn,vtrxp_sn) in enumerate(zip(oh_sn_list,vtrxp_sn_list)):
         for j,(geb_result,vtrxp_result) in enumerate(zip(geb_data,vtrxp_dataset)):
+            # Check for oh sn present in geb data
             if geb_result['SERIAL_NUMBER']==oh_sn:
                 geb_data_found[i] = True
+                oh_i = j
+            # Check for vtrxp sn present in geb data
             if vtrxp_result['SERIAL_NUMBER']==vtrxp_sn:
                 vtrxp_data_found[i] = True
-            if geb_result['VTRXP_SERIAL_NUMBER']!=vtrxp_result['SERIAL_NUMBER']:
-                oh_vtrxp_mismatch[i] = True
-                print(Colors.RED + 'Mismatch VTRXP SERIAL NUMBER. In OH results: %s, In VTRXP results: %s'%(geb_data['VTRXP_SERIAL_NUMBER'],vtrxp_dataset['SERIAL_NUMBER']) + Colors.ENDC)
-            if geb_data_found[i] & vtrxp_data_found[i]:
+                vtrxp_i = j
+            if geb_data_found[i] and vtrxp_data_found[i]:
                 break
-            elif j==len(queso_bert_data)-1:
-                if geb_data_found[i] == False:
-                    print(Colors.RED + "Missing GEB RESULTS data for OH %s"%oh_sn + Colors.ENDC)
-                if vtrxp_data_found[i] == False:
-                    print(Colors.RED + "Missing RESULTS data for VTRXP %s"%vtrxp_sn + Colors.ENDC)
-                
+
+        if not geb_data_found[i]:
+            print(Colors.RED + "Missing GEB RESULTS data for OH %s"%oh_sn + Colors.ENDC)
+        if not vtrxp_data_found[i]:
+            print(Colors.RED + "Missing RESULTS data for VTRXP %s"%vtrxp_sn + Colors.ENDC)
+        
+        # Check for correct vtrxp sn in oh dataset
+        if geb_data[oh_i]['VTRXP_SERIAL_NUMBER']!=vtrxp_dataset[vtrxp_i]['SERIAL_NUMBER']:
+            oh_vtrxp_mismatch[i] = True
+            print(Colors.RED + 'Mismatch VTRXP SERIAL NUMBER. In OH results: %s, In VTRXP results: %s'%(geb_data['VTRXP_SERIAL_NUMBER'],vtrxp_dataset['SERIAL_NUMBER']) + Colors.ENDC)
+
     if not np.all(geb_data_found):
-        print(Colors.RED + 'Please check results files for missing data.' + Colors.ENDC)
+        print(Colors.RED + 'Please check GEB results files for missing data.' + Colors.ENDC)
+        sys.exit()
+    if not np.all(vtrxp_data_found):
+        print(Colors.RED + 'Please check VTRXP results files for missing data.' + Colors.ENDC)
         sys.exit()
     elif np.any(oh_vtrxp_mismatch):
         print(Colors.RED + 'VTRx+ SERIAL NUMBER order must match the OHs on which they are mounted.' + Colors.ENDC)
@@ -280,7 +321,8 @@ def main():
         oh_dataset+=[geb_data]
 
     for oh_sn,vtrxp_sn in zip(oh_sn_list,vtrxp_sn_list):
-        input_oh,input_vtrxp = get_input_data(oh_sn,vtrxp_sn)
+        input_oh = input_dataset['OH_%s_VTRXP_%s'%(oh_sn,vtrxp_sn)]['OH']
+        input_vtrxp = input_dataset['OH_%s_VTRXP_%s'%(oh_sn,vtrxp_sn)]['VTRXP']
         print(Colors.BLUE + "Merging results data for OH %s"%oh_sn + Colors.ENDC)
         oh_data = combine_data(oh_sn,input_oh,*oh_dataset,hardware='OH')
         if args.verbose:
@@ -289,7 +331,7 @@ def main():
                 print('%s: '%key, value)
         print()
         # save to xml file
-        results_fn = resultDir + '/ME0_OH_%s.xml'%oh_sn
+        results_fn = dataDir + '/ME0_OH_%s.xml'%oh_sn
         print('Saving to xml file at directory: %s'%results_fn)
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(oh_data,results_file,pretty=True)
@@ -301,7 +343,7 @@ def main():
                 print('%s: '%key, value)
         print()
         # save to xml file
-        results_fn = resultDir + '/VTRXP_%s.xml'%vtrxp_sn
+        results_fn = dataDir + '/VTRXP_%s.xml'%vtrxp_sn
         print('Saving to xml file at directory: %s'%results_fn)
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(vtrxp_data,results_file,pretty=True)
