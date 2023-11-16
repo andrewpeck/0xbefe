@@ -81,7 +81,7 @@ if __name__ == "__main__":
     #    print(Colors.YELLOW + "Type can only be daq or sbit" + Colors.ENDC)
     #    sys.exit()
 
-    directoryName        = args.filename.split(".txt")[0]
+    directoryName        = args.filename.removesuffix(".txt")
     plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)

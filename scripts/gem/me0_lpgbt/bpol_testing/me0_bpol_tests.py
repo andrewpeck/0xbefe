@@ -226,7 +226,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/daq_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/daq_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_scurve_ENC.pdf"%(latest_dir, dataDir))
