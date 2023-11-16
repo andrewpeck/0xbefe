@@ -2432,7 +2432,7 @@ if __name__ == "__main__":
                     vfat = int(line.split()[0])
                     sbit = line.split()[1]
                     threshold = int(line.split()[2])
-                    fired = int(line.split()[3])
+                    fired = float(line.split()[3])
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
