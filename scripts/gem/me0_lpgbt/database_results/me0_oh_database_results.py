@@ -11,11 +11,6 @@ scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
 inputDir = dbDir + '/input'
 resultDir = dbDir + '/results'
-xmlDir = resultDir + '/xml_data'
-try:
-    os.makedirs(xmlDir) # create directory for data
-except FileExistsError: # skip if directory already exists
-    pass
 
 quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
 gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
@@ -38,7 +33,8 @@ def get_input_data(inputDataDir):
     for filename in list_of_files:
         with open(filename,'r') as input_file:
             data = json.load(input_file)
-        input_dataset[filename.removesuffix('.json')] = data
+        oh_vtrxp_key = filename.removesuffix('.json').split('/')[-1]
+        input_dataset[oh_vtrxp_key] = data
     
     return input_dataset
 
@@ -48,9 +44,11 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
     data_out["ROOT"]["HEADER"]={}
     data_out["ROOT"]["HEADER"]['TYPE']={}
     if hardware=='OH':
+        sn_str = 'ME0-OH-v2-%s'%sn
         data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_OH_QC'
         data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 OH QC Hardware'
     elif hardware=='VTRXP':
+        sn_str = 'ME0-VTRXP-%s'%sn
         data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_VTRXP_QC'
         data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 VTRxp QC Hardware'
     else:
@@ -60,9 +58,9 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
 
     data_out["ROOT"]['DATA_SET']={}
     if hardware=='OH':
-        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 Opto Hybrid','SERIAL_NUMBER':sn}
+        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 Opto Hybrid','SERIAL_NUMBER':sn_str}
     elif hardware=='VTRXP':
-        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 VTRxp','SERIAL_NUMBER':sn}
+        data_out['ROOT']['DATA_SET']['PART']={'KIND_OF_PART':'ME0 VTRxPlus','SERIAL_NUMBER':sn_str}
     data_out["ROOT"]['DATA_SET']['DATA']={}
     if hardware=='OH':
         data_out["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][0])
@@ -185,7 +183,7 @@ def main():
     # input data directory
     inputDataDir = inputDir + '/OH_SNs_%s'%oh_sn_str
     # output data directory
-    dataDir = xmlDir + '/OH_SNs_%s'%oh_sn_str
+    dataDir = resultDir + '/OH_SNs_%s'%oh_sn_str
 
     # Check if directories exist
     if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
@@ -329,7 +327,7 @@ def main():
             print('\ncombined data for OH %s:\n----------------------'%oh_sn)
             for key,value in oh_data.items():
                 print('%s: '%key, value)
-        print()
+                print()
         # save to xml file
         results_fn = dataDir + '/ME0_OH_%s.xml'%oh_sn
         print('Saving to xml file at directory: %s'%results_fn)
@@ -341,10 +339,10 @@ def main():
             print('\ncombined data for VTRx+ %s:\n----------------------'%vtrxp_sn)
             for key,value in vtrxp_data.items():
                 print('%s: '%key, value)
-        print()
+                print()
         # save to xml file
         results_fn = dataDir + '/VTRXP_%s.xml'%vtrxp_sn
-        print('Saving to xml file at directory: %s'%results_fn)
+        print('Saving to xml file at directory: %s\n'%results_fn)
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(vtrxp_data,results_file,pretty=True)
 

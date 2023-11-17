@@ -24,7 +24,7 @@ def main():
     resultDir = dbDir + '/results'
 
     if args.user:
-        oh_sn = input('Enter OH SERIAL NUMBER(s): ')
+        oh_sn = input('\nEnter OH SERIAL NUMBER(s): ')
         oh_sn_list = oh_sn.split()
         if len(oh_sn_list)>1:
             multiple_ohs = True
@@ -38,13 +38,22 @@ def main():
 
         for b in range(num_batches):
             if multiple_ohs:
-                options = input('\nWould you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option 2 >> '%(b+1,num_batches))
+                if num_batches > 1:
+                    options = input('\nWould you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> '%(b+1,num_batches))
+                else:
+                    options = input('\nWould you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> ')
                 while options=='help':
                     print('\nGENERAL PARAMETERS: ["RUN_NUMBER", "RUN_BEGIN_TIMESTAMP","RUN_END_TIMESTAMP", "LOCATION", "USER", "BATCH", "SHIPPING_BOX", "BOARD_LOCATION"]\n')
-                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option (2) >> ')
+                    if num_batches > 1:
+                        options = input('\nWould you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> '%(b+1,num_batches))
+                    else:
+                        options = input('\nWould you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> ')
                 while options.lower() not in ['1', '2', '3', 'help']:
                     print('\nInvalid input. Valid entries are [1, 2, 3, help]\n')
-                    options = input('Would you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\nOptionally type "help" to view what is copied in option (2) >> ')
+                    if num_batches > 1:
+                        options = input('\nWould you like to duplicate responses to all OHs in this batch (%d/%d)? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> '%(b+1,num_batches))
+                    else:
+                        options = input('\nWould you like to duplicate responses to all OHs? (1)\nAssign some genereral parameters to all OHs? (2)\nOr assign unique values to each OH? (3)\n\nOptionally type "help" to view what is copied in option (2) \n>> ')
                 if options=='1':
                     print('Will generate JSON files for all OHs based of one batch of responses.\n')
                     one_for_all = True
@@ -369,8 +378,8 @@ def main():
             # -- end of batch --
 
             # Register oh's,vtrxp's xml file
-            oh_xml_fn = data_OHSNs_Dir + '/ME0-OH.xml'
-            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0-VTRXP.xml'
+            oh_xml_fn = data_OHSNs_Dir + '/ME0_OH_components.xml'
+            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0-VTRXP_components.xml'
 
             with open(oh_xml_fn,'w') as xmlfile:
                 xmltodict.unparse(reg_oh_data,xmlfile,pretty=True,indent='  ')
@@ -378,4 +387,8 @@ def main():
                 xmltodict.unparse(reg_vtrxp_data,xmlfile,pretty=True,indent='  ')
             
 if __name__=='__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nKeyboard termination pressed')
+        sys.exit()
