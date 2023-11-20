@@ -478,8 +478,8 @@ if __name__ == "__main__":
     if current_pulse_sf == -9999:
         print(Colors.YELLOW + "invalid Current Pulse SF" + Colors.ENDC)
         sys.exit()
-
-    calib_path = get_befe_scripts_dir() + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    calib_path = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}
