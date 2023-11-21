@@ -58,7 +58,7 @@ end sbit_monitor;
 
 architecture sbit_monitor_arch of sbit_monitor is
 
-  constant ZERO_SBITS : t_oh_clusters := (others => (address => "111" & x"ff", size => "000"));
+  constant ZERO_SBITS : t_oh_clusters := (others => NULL_SBIT_CLUSTER);
 
   signal ready_to_trigger : std_logic := '1';
 

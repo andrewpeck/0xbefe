@@ -123,8 +123,7 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir+"/"
-    filename = foldername + "eye_data_" + now + ".txt"    
+    filename = dataDir + "/eye_data_" + now + ".txt"    
     f = open (filename, "w+")
     f.write ("eye_data=[\n")
     for y  in range (ymin,ymax):

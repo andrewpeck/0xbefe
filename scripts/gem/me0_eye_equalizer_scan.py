@@ -58,7 +58,6 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir+"/"
 
     print ("\n")
     # Start Loop Over Equalizer Settings
@@ -137,7 +136,7 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
                             print ("Counter value max=%d \n" % cntvalmax)
                             
                             
-                            filename = foldername + "eye_data_eqa_"+eq_attn_setting+"_eqc_"+eq_cap_setting+"_eqr3_"+eq_res3_setting+"_eqr2_"+eq_res2_setting+"_eqr1_"+eq_res1_setting+"_eqr0_"+eq_res0_setting+".txt"
+                            filename = dataDir + "/eye_data_eqa_"+eq_attn_setting+"_eqc_"+eq_cap_setting+"_eqr3_"+eq_res3_setting+"_eqr2_"+eq_res2_setting+"_eqr1_"+eq_res1_setting+"_eqr0_"+eq_res0_setting+".txt"
                             f = open(filename, "w+")
                             f.write("eye_data=[\n")
                             for y  in range (ymin,ymax):

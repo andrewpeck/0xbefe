@@ -81,7 +81,7 @@ if __name__ == "__main__":
     #    print(Colors.YELLOW + "Type can only be daq or sbit" + Colors.ENDC)
     #    sys.exit()
 
-    directoryName        = args.filename.split(".txt")[0]
+    directoryName        = args.filename.removesuffix(".txt")
     plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)
@@ -121,7 +121,8 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "invalid Current Pulse SF" + Colors.ENDC)
         sys.exit()
 
-    calib_path = get_befe_scripts_dir() + "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    calib_path = scripts_gem_dir + "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}
