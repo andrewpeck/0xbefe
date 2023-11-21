@@ -7,39 +7,26 @@ from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 # slot to OH mapping
+#   SLOT    OH      GBT     VFAT
+#   1       0       0, 1    0, 1,  8,  9, 16, 17
+#   2       0       2, 3    2, 3, 10, 11, 18, 19
+#   3       0       4, 5    4, 5, 12, 13, 20, 21
+#   4       0       6, 7    6, 7, 14, 15, 22, 23
+#   5       1       0, 1    0, 1,  8,  9, 16, 17
+#   6       1       2, 3    2, 3, 10, 11, 18, 19
+#   7       1       4, 5    4, 5, 12, 13, 20, 21
+#   8       1       6, 7    6, 7, 14, 15, 22, 23
+
 geb_oh_map = {}
-geb_oh_map["1"] = {}
-geb_oh_map["1"]["OH"] = 0
-geb_oh_map["1"]["GBT"] = [0, 1]
-geb_oh_map["1"]["VFAT"] = [0, 1, 8, 9, 16, 17]
-geb_oh_map["2"] = {}
-geb_oh_map["2"]["OH"] = 0
-geb_oh_map["2"]["GBT"] = [2, 3]
-geb_oh_map["2"]["VFAT"] = [2, 3, 10, 11, 18, 19]
-geb_oh_map["3"] = {}
-geb_oh_map["3"]["OH"] = 0
-geb_oh_map["3"]["GBT"] = [4, 5]
-geb_oh_map["3"]["VFAT"] = [4, 5, 12, 13, 20, 21]
-geb_oh_map["4"] = {}
-geb_oh_map["4"]["OH"] = 0
-geb_oh_map["4"]["GBT"] = [6, 7]
-geb_oh_map["4"]["VFAT"] = [6, 7, 14, 15, 22, 23]
-geb_oh_map["5"] = {}
-geb_oh_map["5"]["OH"] = 1
-geb_oh_map["5"]["GBT"] = [0, 1]
-geb_oh_map["5"]["VFAT"] = [0, 1, 8, 9, 16, 17]
-geb_oh_map["6"] = {}
-geb_oh_map["6"]["OH"] = 1
-geb_oh_map["6"]["GBT"] = [2, 3]
-geb_oh_map["6"]["VFAT"] = [2, 3, 10, 11, 18, 19]
-geb_oh_map["7"] = {}
-geb_oh_map["7"]["OH"] = 1
-geb_oh_map["7"]["GBT"] = [4, 5]
-geb_oh_map["7"]["VFAT"] = [4, 5, 12, 13, 20, 21]
-geb_oh_map["8"] = {}
-geb_oh_map["8"]["OH"] = 1
-geb_oh_map["8"]["GBT"] = [6, 7]
-geb_oh_map["8"]["VFAT"] = [6, 7, 14, 15, 22, 23]
+for slot in range(1,9):
+    o = 2*((slot - 1)%4)
+    geb_oh_map[str(slot)] = {}
+    geb_oh_map[str(slot)]["OH"] = (slot - 1) // 4
+    geb_oh_map[str(slot)]["GBT"] = [o, o + 1]
+    geb_oh_map[str(slot)]["VFAT"] = [o, o+1, o+8, o+9, o+16, o+17]
+
+# Constant for missing val
+NULL = -9999
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
@@ -68,7 +55,7 @@ if __name__ == "__main__":
         oh_sn = line.split()[2]
         vtrx_sn = line.split()[3]
         pigtail = float(line.split()[4])
-        if oh_sn != "-9999":
+        if oh_sn != str(NULL):
             if test_type in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
                     print(Colors.YELLOW + "Valid %s OH serial number between 1 and 1000"%test_type.replace('_','-') + Colors.ENDC)
@@ -473,7 +460,7 @@ if __name__ == "__main__":
                             xml_results[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT'] = errors
                         elif "Bit Error Ratio" in line:
                             if errors:
-                                xml_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = -9999
+                                xml_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = NULL
                             else:
                                 xml_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_BER_UPPER_LIMIT'] = float(line.split()[-1])
                     elif "BER Test Results" in line:
@@ -572,7 +559,7 @@ if __name__ == "__main__":
                             xml_results[oh_sn]['LPGBT_%s_UPLINK_ERROR_COUNT'%gbt_type] = full_results[oh_sn]['LPGBT_%s_UPLINK_ERROR_COUNT'%gbt_type] = errors
                         elif "Bit Error Ratio" in line:
                             if errors:
-                                xml_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = full_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = -9999
+                                xml_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = full_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = NULL
                             else:
                                 xml_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = full_results[oh_sn]['LPGBT_%s_UPLINK_BER_UPPER_LIMIT'%gbt_type] = float(line.split()[-1])
                     elif "BER Test Results" in line:
@@ -870,8 +857,8 @@ if __name__ == "__main__":
                             print (Colors.RED + "\nStep 7: S-Bit Phase Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 7: S-Bit Phase Scan Failed\n")
                             test_failed = True
-                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot],['VFAT'][v],e))
+                        print(Colors.RED + 'ERROR encountered at OH %s VFAT %d ELINK %d'%(oh_sn,geb_oh_map[slot]['VFAT'][v],e) + Colors.ENDC)
+                        logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][v],e))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"] = str(xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"])
         while test_failed:
@@ -915,7 +902,7 @@ if __name__ == "__main__":
                 for line in bitslip_file.readlines():
                     if read_next:
                         if "VFAT" in line:
-                            vfat = int(line.split()[1].replace(":",""))
+                            vfat = int(line.split()[1].replace(":","").removesuffix(','))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
@@ -924,7 +911,7 @@ if __name__ == "__main__":
                             elink = int(line.split()[1].replace(":",""))
                         elif "Bit slip" in line:
                             bitslip = int(line.split()[-1])
-                            status = 1 if bitslip!=-9999 else 0
+                            status = 1 if bitslip!=NULL else 0
                             if 'VFAT_SBIT_BITSLIP' in xml_results[oh_sn]:
                                 if xml_results[oh_sn]['VFAT_SBIT_BITSLIP'][i] == {}:
                                     xml_results[oh_sn]['VFAT_SBIT_BITSLIP'][i]={'STATUS':status,'Bitslips':[bitslip]}
@@ -1110,8 +1097,8 @@ if __name__ == "__main__":
     #                 cluster_address = int(data[11])
 
 
-    #                 # sbit_status = 1 if sbit != -9999 else 0
-    #                 cluster_status = 1 if cluster_address != -9999 else 0
+    #                 # sbit_status = 1 if sbit != NULL else 0
+    #                 cluster_status = 1 if cluster_address != NULL else 0
                     
     #                 for slot,oh_sn in geb_dict.items():
     #                     if vfat in geb_oh_map[slot]['VFAT']:
@@ -1422,7 +1409,7 @@ if __name__ == "__main__":
                     try:
                         xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = full_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = [float(p) for p in adc_calib_file.read().split()]
                     except:
-                        xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = full_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = -9999
+                        xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = full_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type] = NULL
                 list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/adc_calibration_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
@@ -1432,7 +1419,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]['GBT']:
                 gbt_type = 'M' if gbt%2==0 else 'S'
-                if xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type]==-9999:
+                if xml_results[oh_sn]['LPGBT_%s_OH_CALIB'%gbt_type]==NULL:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: ADC Calibration Scan Failed" + Colors.ENDC)
                         logfile.write("\nStep 11: ADC Calibration Scan Failed\n")
@@ -1495,7 +1482,7 @@ if __name__ == "__main__":
                             voltages[gbt_type_long][key]=[]
                     for line in voltage_scan_file.readlines():
                         for key,val in zip(voltages[gbt_type_long],line.split()[1:]):
-                            if float(val)!=-9999:
+                            if val!=str(NULL):
                                 voltages[gbt_type_long][key]+=[float(val)]
                 list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_voltage_data/*GBT%d*.pdf"%gbt)
                 if len(list_of_files)>0:
@@ -1507,21 +1494,21 @@ if __name__ == "__main__":
                     if values != []:
                         full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = np.mean(values)
                     else:
-                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = -9999
+                        full_results[oh_sn]['LPGBT_%s_OH_VOLTAGE_SCAN'%gbt_type][key] = NULL
 
             if voltages['SUB']['V2V5']!=[]:
                 xml_results[oh_sn]['OH_2V5_VOLTAGE'] = np.mean(voltages['SUB']['V2V5'])
             else:
-                xml_results[oh_sn]['OH_2V5_VOLTAGE'] = -9999
+                xml_results[oh_sn]['OH_2V5_VOLTAGE'] = NULL
             if voltages['BOSS']['VDD']!=[]:
                 xml_results[oh_sn]['OH_1V2_VOLTAGE'] = np.mean(voltages['BOSS']['VDD'])
             else:
-                xml_results[oh_sn]['OH_1V2_VOLTAGE'] = -9999
+                xml_results[oh_sn]['OH_1V2_VOLTAGE'] = NULL
 
         voltage_ranges = {'V2V5':[2.4,2.8],'VSSA':[1.05,1.45],'VDDTX':[1.05,1.45],'VDDRX':[1.05,1.45],'VDD':[1.05,1.45],'VDDA':[1.05,1.45],'VREF':[0.85,1.15]}
         for oh_sn in xml_results:
             for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']]):
-                if reading == -9999:
+                if reading == NULL:
                     if not test_failed:
                         print (Colors.RED + "\nStep 11: lpGBT Voltage Scan Failed\n" + Colors.ENDC)
                         logfile.write("\nStep 11: lpGBT Voltage Scan Failed\n\n")
@@ -1578,7 +1565,7 @@ if __name__ == "__main__":
                 key = rssi_file.readline().split()[2]
                 rssi=[]
                 for line in rssi_file.readlines():
-                    if float(line.split()[1]) != -9999:
+                    if line.split()[1] != str(NULL):
                         rssi += [float(line.split()[1])]
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_vtrx+_rssi_data/*GBT%d*.pdf"%gbt)
             if len(list_of_files)>0:
@@ -1587,9 +1574,9 @@ if __name__ == "__main__":
             if rssi != []:
                 vtrxp_results[vtrxp_dict[slot]]['RSSI'] = np.mean(rssi)
             else:
-                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = -9999
+                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = NULL
         for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['RSSI'] == -9999:
+            if vtrxp_results[vtrxp_dict[slot]]['RSSI'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
@@ -1652,13 +1639,13 @@ if __name__ == "__main__":
                 asense["_".join(line[15:17]).removeprefix('(').removesuffix(')')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1:]):
-                        if float(value) != -9999:
+                        if value != str(NULL):
                             asense[key]+=[float(value)]
             for key,values in asense.items():
                 if values:
                     full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
                 else:
-                    full_results[oh_sn]["ASENSE_SCAN"][key]=-9999
+                    full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
             
             if int(slot)%2==0:
                 prev_slot = int(slot) - 1
@@ -1688,33 +1675,33 @@ if __name__ == "__main__":
                 os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
         for oh_sn in full_results:
             # Convert to temperature but pass missing value keys
-            V_to_T = lambda v: 115*v - 22 if v!=-9999 else v
+            V_to_T = lambda v: 115*v - 22 if v!=NULL else v
             try:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
                 xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
             except KeyError:
-                xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = -9999
-                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = -9999
+                xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = NULL
+                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
             except KeyError:
-                xml_results[oh_sn]['DCDC_2V5_CURRENT'] = -9999
+                xml_results[oh_sn]['DCDC_2V5_CURRENT'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
                 xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
             except KeyError:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = -9999
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = -9999
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
             except KeyError:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = -9999
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
         asense_ranges = {'DCDC_1V2D_CURRENT':3,'DCDC_1V2A_CURRENT':3,'DCDC_2V5_CURRENT':0.5,'DCDC_2V5_TEMP':35,'DCDC_1V2D_TEMP':35,'DCDC_1V2A_TEMP':35}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
-                    if xml_results[oh_sn][key] == -9999:
+                    if xml_results[oh_sn][key] == NULL:
                         if not test_failed:
                             print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
@@ -1777,7 +1764,7 @@ if __name__ == "__main__":
                     temperatures[key]=[]
                 for line in temp_file.readlines():
                     for key,value in zip(temperatures,line.split()[1:]):
-                        if float(value) != -9999:
+                        if float(value) != NULL:
                             temperatures[key]+=[float(value)]
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.pdf"%gbt)
             if len(list_of_files)>0:
@@ -1786,11 +1773,11 @@ if __name__ == "__main__":
             if temperatures['Temperature'] != []:
                 xml_results[oh_sn]["OH_TEMP"] = np.mean(temperatures['Temperature'])
             else:
-                xml_results[oh_sn]["OH_TEMP"] = -9999
+                xml_results[oh_sn]["OH_TEMP"] = NULL
             full_results[oh_sn]['OH_TEMP'] = xml_results[oh_sn]['OH_TEMP']
         temperature_range = 45
         for oh_sn in xml_results:
-            if xml_results[oh_sn]['OH_TEMP'] == -9999:
+            if xml_results[oh_sn]['OH_TEMP'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: OH Temperature Scan Failed\n")
@@ -1850,7 +1837,7 @@ if __name__ == "__main__":
                     temperatures[key]=[]
                 for line in vtrx_temp_file.readlines():
                     for key,value in zip(temperatures,line.split()[1:]):
-                        if float(value)!=-9999:
+                        if float(value)!=NULL:
                             temperatures[key]+=[float(value)]
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
             if len(list_of_files)>0:
@@ -1859,10 +1846,10 @@ if __name__ == "__main__":
             if temperatures['Temperature']!=[]:
                 vtrxp_results[vtrxp_dict[slot]]['TEMP'] = np.mean(temperatures['Temperature'])
             else:
-                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = -9999
+                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = NULL
         temperature_range = 45
         for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['TEMP'] == -9999:
+            if vtrxp_results[vtrxp_dict[slot]]['TEMP'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
@@ -1934,7 +1921,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
 
             print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2114,7 +2101,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
@@ -2188,7 +2175,7 @@ if __name__ == "__main__":
             
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
 
             print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2369,7 +2356,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
             else:
@@ -2445,7 +2432,7 @@ if __name__ == "__main__":
                     vfat = int(line.split()[0])
                     sbit = line.split()[1]
                     threshold = int(line.split()[2])
-                    fired = int(float(line.split()[3]))
+                    fired = float(line.split()[3])
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
@@ -2478,7 +2465,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-            latest_dir = latest_file.split(".txt")[0]
+            latest_dir = latest_file.removesuffix(".txt")
             if os.path.isdir(latest_dir):
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
@@ -2552,4 +2539,4 @@ if __name__ == "__main__":
         json.dump(vtrxp_results,vtrxp_results_file,indent=2)
 
     logfile.close()
-    os.system("rm -rf out.txt")
+    os.system("rm out.txt")

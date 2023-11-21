@@ -37,8 +37,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir + "/"
-    filename = foldername + "ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
     minutes, asense0, asense1, asense2, asense3 = [], [], [], [], []
@@ -132,8 +131,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         asense2_label = "PG1.2VA current"
         asense3_label = "Rt4 voltage"
 
-    figure_name1 = foldername + "ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
-    figure_name2 = foldername + "ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name1 = dataDir + "/ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name2 = dataDir + "/ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig3, ax3 = plt.subplots()
     fig4, ax4 = plt.subplots()
     ax3.set_xlabel("minutes")

@@ -93,7 +93,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     ax.plot(Vin_range, Vout_range, "turquoise", marker='o')
     ax.plot(Vin_range_fit, Vout_range_fit, "red")
     plt.draw()
-    figure_name = foldername + "ME0_OH%d_GBT%d_calibration_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name = dataDir + "/ME0_OH%d_GBT%d_calibration_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig.savefig(figure_name, bbox_inches="tight")
 
     powerdown_adc(oh_ver)

@@ -43,7 +43,7 @@ if __name__ == "__main__":
     dd_dir_name = args.down_res_dir
     oh = args.nom_res_dir.split("/")[-1].split("_vfat")[0]
 
-    scripts_gem_dir = get_befe_scripts_dir()
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     for vfat_input_file in nd_file_list:
         filename = vfat_input_file.split("/")[-1]
-        vfat = int(filename.split("_VFAT")[1].split(".txt")[0])
+        vfat = int(filename.split("_VFAT")[1].removesuffix(".txt"))
         nd_file_in = open(vfat_input_file, "r")
         try:
             ud_file_in = open(ud_dir_name+"/"+filename, "r")
