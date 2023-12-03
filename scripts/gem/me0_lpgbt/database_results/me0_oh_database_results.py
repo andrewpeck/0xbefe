@@ -332,7 +332,7 @@ def main():
         results_fn = dataDir + '/ME0_OH_%s.xml'%oh_sn
         print('Saving to xml file at directory: %s'%results_fn)
         with open(results_fn,'w') as results_file:
-            xmltodict.unparse(oh_data,results_file,pretty=True)
+            xmltodict.unparse(oh_data,results_file,pretty=True,indent='  ')
         
         vtrxp_data = combine_data(vtrxp_sn,input_vtrxp,vtrxp_dataset,hardware='VTRXP')
         if args.verbose:
@@ -344,7 +344,7 @@ def main():
         results_fn = dataDir + '/VTRXP_%s.xml'%vtrxp_sn
         print('Saving to xml file at directory: %s\n'%results_fn)
         with open(results_fn,'w') as results_file:
-            xmltodict.unparse(vtrxp_data,results_file,pretty=True)
+            xmltodict.unparse(vtrxp_data,results_file,pretty=True,indent='  ')
 
 if __name__ == '__main__':
     main()

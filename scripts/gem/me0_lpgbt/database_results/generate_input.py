@@ -379,7 +379,7 @@ def main():
 
             # Register oh's,vtrxp's xml file
             oh_xml_fn = data_OHSNs_Dir + '/ME0_OH_components.xml'
-            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0-VTRXP_components.xml'
+            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0_VTRXP_components.xml'
 
             with open(oh_xml_fn,'w') as xmlfile:
                 xmltodict.unparse(reg_oh_data,xmlfile,pretty=True,indent='  ')
