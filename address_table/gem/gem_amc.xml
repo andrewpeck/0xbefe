@@ -1237,6 +1237,10 @@
             description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (this counter stops at max value)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
             sw_val_warn="self > 0"/>
+      <node id="NOT_IN_TABLE_CNT" address="0x1" mask="0x000000ff" permission="r"
+            description="This counter counts the number of invalid words received from this VFAT (this counter stops at max value)"
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).not_in_table_cnt"
+            sw_val_warn="self > 0"/>
 
     </node>
 

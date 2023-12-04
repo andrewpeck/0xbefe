@@ -110,24 +110,25 @@ architecture optohybrid_arch of optohybrid is
     end component;
         
     --== VFAT3 signals ==--
-    signal vfat3_rx_ready           : std_logic_vector(23 downto 0);
-    signal vfat3_sync_ok            : std_logic_vector(23 downto 0);
-    signal vfat3_rx_num_bitslips    : t_std3_array(23 downto 0);
-    signal vfat3_rx_sync_err_cnt    : t_std4_array(23 downto 0);
+    signal vfat3_rx_ready             : std_logic_vector(23 downto 0);
+    signal vfat3_sync_ok              : std_logic_vector(23 downto 0);
+    signal vfat3_rx_num_bitslips      : t_std3_array(23 downto 0);
+    signal vfat3_rx_sync_err_cnt      : t_std4_array(23 downto 0);
     
-    signal vfat3_tx_data            : t_std8_array(23 downto 0);
-    signal vfat3_rx_aligned_data    : t_std8_array(23 downto 0);
+    signal vfat3_tx_data              : t_std8_array(23 downto 0);
+    signal vfat3_rx_aligned_data      : t_std8_array(23 downto 0);
     
-    signal vfat3_sc_tx_en           : std_logic_vector(23 downto 0);
-    signal vfat3_sc_tx_rd_en        : std_logic_vector(23 downto 0);
+    signal vfat3_sc_tx_en             : std_logic_vector(23 downto 0);
+    signal vfat3_sc_tx_rd_en          : std_logic_vector(23 downto 0);
     
-    signal vfat3_daq_data           : t_std8_array(23 downto 0);
-    signal vfat3_daq_data_en        : std_logic_vector(23 downto 0);
-    signal vfat3_daq_crc_err        : std_logic_vector(23 downto 0);
-    signal vfat3_daq_event_done     : std_logic_vector(23 downto 0);
+    signal vfat3_daq_data             : t_std8_array(23 downto 0);
+    signal vfat3_daq_data_en          : std_logic_vector(23 downto 0);
+    signal vfat3_daq_crc_err          : std_logic_vector(23 downto 0);
+    signal vfat3_daq_event_done       : std_logic_vector(23 downto 0);
     
-    signal vfat3_daq_cnt_crc_err_arr: t_std8_array(23 downto 0);
-    signal vfat3_daq_cnt_evt_arr    : t_std16_array(23 downto 0);
+    signal vfat3_daq_cnt_evt_arr      : t_std16_array(23 downto 0);
+    signal vfat3_daq_cnt_crc_err_arr  : t_std8_array(23 downto 0);
+    signal vfat3_not_in_table_cnt_arr : t_std8_array(23 downto 0);
     
     --== FPGA register access requests ==--
 
@@ -231,13 +232,15 @@ begin
                 slow_ctrl_data_en_o => vfat3_sc_rx_data_en_o(i),
 
                 cnt_events_o        => vfat3_daq_cnt_evt_arr(i),
-                cnt_crc_errors_o    => vfat3_daq_cnt_crc_err_arr(i)
+                cnt_crc_errors_o    => vfat3_daq_cnt_crc_err_arr(i),
+                cnt_not_in_table_o  => vfat3_not_in_table_cnt_arr(i)
             );
     
         vfat3_link_status_o(i).sync_good        <= vfat3_rx_ready(i);
         vfat3_link_status_o(i).sync_error_cnt   <= vfat3_rx_sync_err_cnt(i);
         vfat3_link_status_o(i).daq_event_cnt    <= vfat3_daq_cnt_evt_arr(i);
         vfat3_link_status_o(i).daq_crc_err_cnt  <= vfat3_daq_cnt_crc_err_arr(i);
+        vfat3_link_status_o(i).not_in_table_cnt <= vfat3_not_in_table_cnt_arr(i);
             
         vfat3_daq_links_o(i).data_en      <= vfat3_daq_data_en(i);
         vfat3_daq_links_o(i).data         <= vfat3_daq_data(i);
