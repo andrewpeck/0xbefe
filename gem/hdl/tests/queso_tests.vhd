@@ -13,6 +13,7 @@ entity queso_tests is
     generic(
         g_IPB_CLK_PERIOD_NS : integer;
         g_NUM_OF_OHs        : integer;
+        g_NUM_GBTS_PER_OH   : integer;
         g_NUM_VFATS_PER_OH  : integer;
         g_QUESO_PRBS        : boolean
     );
@@ -46,8 +47,8 @@ architecture Behavioral of queso_tests is
 
 
     -- unmasked elinks
-    signal elink_unmasked    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal elink_mapped      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapped_unmasked    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapped             : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal rx_prbs_err_arr_o   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
@@ -121,13 +122,26 @@ begin
         
         -- Send prbs word to tx fannout in ME0 mux
         test_vfat3_tx_data_arr_o <= tx_prbs_data;
-         
+
+        -- Unmasking of data for each elink (done after bitslipping)
+        g_queso_link_unmask : entity work.queso_link_unmask
+            generic map(
+                g_NUM_OF_OHs                => g_NUM_OF_OHs;
+                g_NUM_GBTS_PER_OH           => g_NUM_GBTS_PER_OH
+            );
+            port map(
+                -- clock
+                gbt_frame_clk_i             => gbt_frame_clk_i;
+        
+                -- links
+                gbt_rx_data_arr_i           => elink_mapped;
+            
+                queso_data_unmasked_arr_o   => elink_mapped_unmasked
+            );
+        end queso_link_unmask;
     ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate
-
-                --unmask each rx elink with unique xor 
-                elink_unmasked(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); --xor std_logic_vector(to_unsigned(OH*24 + ELINK,8)) --needs fixing
 
                 --bitslip logic vector to account for any rotation in data packet
                 g_rotate : entity work.bitslip
@@ -139,7 +153,7 @@ begin
                     port map(
                         clk_i       => gbt_frame_clk_i,
                         slip_cnt_i  => elink_mapping_arr_i(OH)(ELINK),
-                        data_i      => elink_unmasked(OH)(ELINK),
+                        data_i      => test_vfat3_rx_data_arr_i(OH)(ELINK),
                         data_o      => elink_mapped(OH)(ELINK)
                     );
 
@@ -156,7 +170,7 @@ begin
                     port map(
                         RST      => reset_i,
                         CLK      => gbt_frame_clk_i,
-                        DATA_IN  => elink_mapped(OH)(ELINK), --unmasked & mapped data is checked
+                        DATA_IN  => elink_mapped_unmasked(OH)(ELINK), --unmasked & mapped data is checked
                         EN       => queso_test_en_i, 
                         DATA_OUT => rx_prbs_err_arr_o(OH*216 + ELINK) --error array (each bit)
                     );

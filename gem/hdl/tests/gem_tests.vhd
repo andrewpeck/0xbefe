@@ -235,6 +235,7 @@ begin
         generic map(
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
+            g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_NUM_VFATS_PER_OH  => 24,
             g_QUESO_PRBS        => g_QUESO_PRBS 
         )
