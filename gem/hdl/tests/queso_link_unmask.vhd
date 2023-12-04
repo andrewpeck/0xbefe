@@ -69,7 +69,7 @@ entity queso_link_unmask is
         gbt_frame_clk_i             : in  std_logic;
 
         -- links
-        gbt_rx_data_arr_i           : in  t_lpgbt_rx_frame_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
+        gbt_rx_data_arr_i           : in  t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
  
         queso_data_unmasked_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0)
 
@@ -82,9 +82,6 @@ architecture queso_link_unmask_arch of queso_link_unmask is
 begin
 
     --inversions incorperated in ASIAGO config
-
-    gbt_ready_arr_o <= gbt_rx_ready_arr;
-    gbt_tx_data_arr_o <= gbt_tx_data_arr;
 
     g_ohs : for i in 0 to g_NUM_OF_OHs - 1 generate
 

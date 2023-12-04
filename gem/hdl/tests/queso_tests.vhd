@@ -126,19 +126,18 @@ begin
         -- Unmasking of data for each elink (done after bitslipping)
         g_queso_link_unmask : entity work.queso_link_unmask
             generic map(
-                g_NUM_OF_OHs                => g_NUM_OF_OHs;
+                g_NUM_OF_OHs                => g_NUM_OF_OHs,
                 g_NUM_GBTS_PER_OH           => g_NUM_GBTS_PER_OH
-            );
+            )
             port map(
                 -- clock
-                gbt_frame_clk_i             => gbt_frame_clk_i;
+                gbt_frame_clk_i             => gbt_frame_clk_i,
         
                 -- links
-                gbt_rx_data_arr_i           => elink_mapped;
-            
+                gbt_rx_data_arr_i           => elink_mapped,
                 queso_data_unmasked_arr_o   => elink_mapped_unmasked
             );
-        end queso_link_unmask;
+       
     ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate
@@ -158,12 +157,12 @@ begin
                     );
 
 
-                --instantiate prbs7 8 bit checker
+                --instantiate prbs31 8 bit checker
                 i_rx_prbs_check : entity work.PRBS_ANY
                     generic map(
                         CHK_MODE    => true, --check mode
                         INV_PATTERN => true,
-                        POLY_LENGTH => 31, --prbs7
+                        POLY_LENGTH => 31, --prbs31
                         POLY_TAP    => 28,
                         NBITS       => 8
                     )
