@@ -1,1 +1,1 @@
-../update-project.tcl
+../pre-synthesis-default.tcl
