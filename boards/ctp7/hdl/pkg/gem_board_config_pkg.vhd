@@ -24,7 +24,7 @@ package board_config_package is
 
     ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 72;
-    constant CFG_BOARD_MAX_OHS      : integer := 12;
+    constant CFG_BOARD_MAX_OHS      : integer := 16;
     constant CFG_BOARD_MAX_SLRS     : integer := 1;
 
     ------------ DAQ configuration ------------

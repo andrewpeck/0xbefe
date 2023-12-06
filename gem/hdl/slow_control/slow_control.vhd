@@ -83,16 +83,16 @@ architecture slow_control_arch of slow_control is
     
     -- general
     signal sca_reset                : std_logic;
-    signal sca_reset_mask           : std_logic_vector(31 downto 0);
-    signal sca_ready_arr            : std_logic_vector(31 downto 0);
-    signal sca_critical_error_arr   : std_logic_vector(31 downto 0);
-    signal sca_ttc_hr_enable        : std_logic_vector(31 downto 0);
+    signal sca_reset_mask           : std_logic_vector(15 downto 0);
+    signal sca_ready_arr            : std_logic_vector(15 downto 0);
+    signal sca_critical_error_arr   : std_logic_vector(15 downto 0);
+    signal sca_ttc_hr_enable        : std_logic_vector(15 downto 0);
     
     -- manual commands
     signal manual_hard_reset            : std_logic;
     signal sca_user_command             : t_sca_command;
     signal sca_user_command_en          : std_logic;
-    signal sca_user_command_en_mask     : std_logic_vector(31 downto 0); -- command_en signal will only be sent to the channels that are enabled in this bitmask
+    signal sca_user_command_en_mask     : std_logic_vector(15 downto 0); -- command_en signal will only be sent to the channels that are enabled in this bitmask
     signal sca_user_command_done_arr    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
     signal sca_user_command_done_latch  : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
     signal sca_user_command_done_all    : std_logic;
@@ -109,7 +109,7 @@ architecture slow_control_arch of slow_control is
     signal sca_last_sca_error   : std_logic_vector(6 downto 0);
     
     -- jtag
-    signal jtag_enabled_mask        : std_logic_vector(31 downto 0);
+    signal jtag_enabled_mask        : std_logic_vector(15 downto 0);
     signal jtag_cmd_length          : std_logic_vector(6 downto 0);
     signal jtag_tdo                 : std_logic_vector(31 downto 0);
     signal jtag_tms                 : std_logic_vector(31 downto 0);
@@ -133,7 +133,7 @@ architecture slow_control_arch of slow_control is
 
     ------------- GBTx IC -------------
 
-    signal ic_link_select       : std_logic_vector(5 downto 0);
+    signal ic_link_select       : std_logic_vector(6 downto 0);
     signal ic_rx_elink          : std_logic_vector(1 downto 0);
     signal ic_tx_elink          : std_logic_vector(1 downto 0);
     signal ic_rw_address        : std_logic_vector(15 downto 0);

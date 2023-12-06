@@ -21,7 +21,7 @@
           description="Trigger counter reset"
           fw_write_pulse_signal="reset_cnt"
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
-    <node id="OH_KILL_MASK" address="0x2" mask="0x00ffffff" permission="rw"
+    <node id="OH_KILL_MASK" address="0x2" mask="0x0000ffff" permission="rw"
           description="OH trigger kill mask (kills all sbits from the corresponding OHs)"
           fw_signal="oh_mask"
           fw_default="0x000000"/>
@@ -635,7 +635,7 @@
           fw_signal="tts_override" fw_default="0x0"
           sw_val_warn="self != 0"
           sw_enum="['DISABLED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
-    <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
+    <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0x00ffff00" permission="rw"
           description="This is a bitmask telling AMC to enable certain inputs (least
                        significant bit is input 0). Only first is enabled by default"
           fw_signal="input_mask" fw_default="0x1"/>
@@ -1294,19 +1294,19 @@
       <node id="OH_FPGA_HARD_RESET" address="0x1" permission="w"
             description="Writing to this register will trigger OH FPGA hard reset"
             fw_write_pulse_signal="manual_hard_reset"/>
-      <node id="TTC_HARD_RESET_EN" address="0x2" permission="rw"
+      <node id="TTC_HARD_RESET_EN" address="0x2" mask="0x0000ffff" permission="rw"
             description="This is a bitmask (one bit per OH) that determines whether or not TTC hard reset commands are forwarded to the SCA to reset the OH FPGA (Nth bit set to 1 will enable TTC hard resets to the Nth OH)"
-            fw_signal="sca_ttc_hr_enable" fw_default="0xffffffff"/>
-      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0xffffffff" permission="rw"
+            fw_signal="sca_ttc_hr_enable" fw_default="0xffff"/>
+      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0x0000ffff" permission="rw"
             description="This bitmask defines which SCAs will be reset uppon receipt of MODULE_RESET command."
-            fw_signal="sca_reset_mask" fw_default="0xffffffff"/>
+            fw_signal="sca_reset_mask" fw_default="0xffff"/>
     </node>
 
     <node id="STATUS" address="0x100">
-      <node id="READY" address="0x0" mask="0xffffffff" permission="r"
+      <node id="READY" address="0x0" mask="0x0000ffff" permission="r"
             description="Bits in this register indicate that the SCA controller for the corresponding link has good communication with the SCA chip"
             fw_signal="sca_ready_arr"/>
-      <node id="CRITICAL_ERROR" address="0x1" mask="0xffffffff" permission="r"
+      <node id="CRITICAL_ERROR" address="0x1" mask="0x0000ffff" permission="r"
             description="Bits in this register indicate that the SCA controller for the corresponding link has encountered a critical error (needs reset)"
             fw_signal="sca_critical_error_arr"/>
       <node id="NOT_READY_CNT_OH${OH_IDX}" address="0x2" mask="0x0000ffff" permission="r"
@@ -1338,7 +1338,7 @@
     </node>
 
     <node id="MANUAL_CONTROL" address="0x1000">
-      <node id="LINK_ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+      <node id="LINK_ENABLE_MASK" address="0x0" mask="0x0000ffff" permission="rw"
             description="This is a bitmask of enabled links for the SCA manual command.
                          Multiple channels can be enabled at the same time, which will
                          result in a broadcast command to these channels when writing to the command registers"
@@ -1383,7 +1383,7 @@
 
     <node id="JTAG" address="0x2500">
       <node id="CTRL" address="0x0">
-        <node id="ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+        <node id="ENABLE_MASK" address="0x0" mask="0x0000ffff" permission="rw"
               description="This is a bitmask of enabled links for the SCA JTAG commands.
                            Multiple channels can be enabled at the same time, which will
                            result in a broadcast command to these channels when writing to the TDO and TMS registers"
@@ -1478,7 +1478,7 @@
     <node id="GBT_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
           description="GBTx/lpGBT I2C address of the chip to communicate with, as defined by the external pins (or internal registers) of the chip"
           fw_signal="ic_gbt_i2c_addr" fw_default="0b0000001"/>
-    <node id="GBT_LINK_SELECT" address="0x6" mask="0x0000003f" permission="rw"
+    <node id="GBT_LINK_SELECT" address="0x6" mask="0x0000007f" permission="rw"
           description="Selects the GBT link to use"
           fw_signal="ic_link_select" fw_default="0b000000"/>
     <node id="READ_DATA" address="0x7" permission="r"

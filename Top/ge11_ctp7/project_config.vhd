@@ -30,58 +30,24 @@ package project_config is
 
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (
     0 => (
-            (((0,  0),  (1,  1),  (2,  2),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 40), (tx => TXRX_NULL, rx => 41))), 
+            (((0,  0),  (1,  1),  (2,  2),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 40), (tx => TXRX_NULL, rx => 41))),
             (((3,  3),  (4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 42), (tx => TXRX_NULL, rx => 43))),
-            (((6,  6),  (7,  7),  (8,  8),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 44), (tx => TXRX_NULL, rx => 45))), 
+            (((6,  6),  (7,  7),  (8,  8),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 44), (tx => TXRX_NULL, rx => 45))),
             (((9,  9),  (10, 10), (11, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 46), (tx => TXRX_NULL, rx => 47))),
-                                                                                                     
-            (((12, 12), (13, 13), (14, 14), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 48), (tx => TXRX_NULL, rx => 49))), 
-            (((15, 15), (16, 16), (17, 17), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 50), (tx => TXRX_NULL, rx => 51))), 
-            (((18, 18), (19, 19), (20, 20), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 52), (tx => TXRX_NULL, rx => 53))), 
-            (((21, 21), (22, 22), (23, 23), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 54), (tx => TXRX_NULL, rx => 55))), 
-                                                                                                     
-            (((24, 24), (25, 25), (26, 26), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 56), (tx => TXRX_NULL, rx => 57))), 
-            (((27, 27), (28, 28), (29, 29), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 58), (tx => TXRX_NULL, rx => 59))), 
-            (((30, 30), (31, 31), (32, 32), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 68), (tx => TXRX_NULL, rx => 69))), 
-            (((33, 33), (34, 34), (35, 35), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 70), (tx => TXRX_NULL, rx => 71)))
-        ) 
-    );
 
---    constant CFG_OH_LINK_CONFIG_ARR_GE21 : t_oh_link_config_arr := (
---    0 => (
---            (((0,  0),  (1,  1),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 40), (tx => TXRX_NULL, rx => 41))), 
---            (((2,  2),  (3,  3),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 42), (tx => TXRX_NULL, rx => 43))),
---            (((4,  4),  (5,  5),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 44), (tx => TXRX_NULL, rx => 45))), 
---            (((6,  6),  (7,  7),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 46), (tx => TXRX_NULL, rx => 47))),
---            (((8,  8),  (9,  9),  LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 48), (tx => TXRX_NULL, rx => 49))), 
---            (((10, 10), (11, 11), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 50), (tx => TXRX_NULL, rx => 51))),
---                                                                                                      
---            (((12, 12), (13, 13), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 52), (tx => TXRX_NULL, rx => 53))), 
---            (((14, 14), (15, 15), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 54), (tx => TXRX_NULL, rx => 55))), 
---            (((16, 16), (17, 17), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 56), (tx => TXRX_NULL, rx => 57))), 
---            (((18, 18), (19, 19), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 58), (tx => TXRX_NULL, rx => 59))), 
---            (((20, 20), (21, 21), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 68), (tx => TXRX_NULL, rx => 69))), 
---            (((22, 22), (23, 23), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 70), (tx => TXRX_NULL, rx => 71)))
---        ) 
---    );
---
---    constant CFG_OH_LINK_CONFIG_ARR_ME0 : t_oh_link_config_arr := (
---    0 => (
---            (((0,  0),  (TXRX_NULL, 1),  (1,  2),  (TXRX_NULL, 3),  (2,  4),  (TXRX_NULL, 5),  (3,  6),  (TXRX_NULL, 7)),  (LINK_NULL, LINK_NULL)),
---            (((12, 12), (TXRX_NULL, 13), (13, 14), (TXRX_NULL, 15), (14, 16), (TXRX_NULL, 17), (15, 18), (TXRX_NULL, 19)), (LINK_NULL, LINK_NULL)),
---            (((24, 24), (TXRX_NULL, 25), (25, 26), (TXRX_NULL, 27), (26, 28), (TXRX_NULL, 29), (27, 30), (TXRX_NULL, 31)), (LINK_NULL, LINK_NULL)),
---            
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL)),
---            ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
---        )
---    );
+            (((12, 12), (13, 13), (14, 14), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 48), (tx => TXRX_NULL, rx => 49))),
+            (((15, 15), (16, 16), (17, 17), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 50), (tx => TXRX_NULL, rx => 51))),
+            (((18, 18), (19, 19), (20, 20), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 52), (tx => TXRX_NULL, rx => 53))),
+            (((21, 21), (22, 22), (23, 23), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 54), (tx => TXRX_NULL, rx => 55))),
+
+            (((24, 24), (25, 25), (26, 26), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 56), (tx => TXRX_NULL, rx => 57))),
+            (((27, 27), (28, 28), (29, 29), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 58), (tx => TXRX_NULL, rx => 59))),
+            (((30, 30), (31, 31), (32, 32), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 68), (tx => TXRX_NULL, rx => 69))),
+            (((33, 33), (34, 34), (35, 35), LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), ((tx => TXRX_NULL, rx => 70), (tx => TXRX_NULL, rx => 71))),
+
+            others => ((LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL, LINK_NULL), (LINK_NULL, LINK_NULL))
+        )
+    );
 
     constant CFG_TRIG_TX_LINK_CONFIG_ARR : t_trig_tx_link_config_arr_arr := (
         0 => (48, 49, 50, 51, 52, 53, 54, 59)
