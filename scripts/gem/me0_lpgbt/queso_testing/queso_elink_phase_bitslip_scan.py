@@ -238,13 +238,13 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list):
                         char = Colors.YELLOW + "x" + Colors.ENDC
                     phase_print += "%s" %char
                 if widths[elink]<3:
-                    phase_print += Colors.RED + " (center=%d, width=%d, bitslip at center=%d) BAD" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_print += Colors.RED + " (center=%d, width=%d, bitslip at center=%d) BAD" % (centers[elink], widths[elink], phase_bitslip_list[vfat][elink]["bitslip"]) + Colors.ENDC
                     phase_bitslip_list[vfat][elink]["status"] = "BAD"
                 elif widths[elink]<5:
-                    phase_print += Colors.YELLOW + " (center=%d, width=%d, bitslip at center=%d) WARNING" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_print += Colors.YELLOW + " (center=%d, width=%d, bitslip at center=%d) WARNING" % (centers[elink], widths[elink], phase_bitslip_list[vfat][elink]["bitslip"]) + Colors.ENDC
                     phase_bitslip_list[vfat][elink]["status"] = "WARNING"
                 else:
-                    phase_print += Colors.GREEN + " (center=%d, width=%d, bitslip at center=%d) GOOD" % (centers[elink], widths[elink], bitslip_list_perphase[vfat][elink][phase]) + Colors.ENDC
+                    phase_print += Colors.GREEN + " (center=%d, width=%d, bitslip at center=%d) GOOD" % (centers[elink], widths[elink], phase_bitslip_list[vfat][elink]["bitslip"]) + Colors.ENDC
                     phase_bitslip_list[vfat][elink]["status"] = "GOOD"
                 print(phase_print)
                 logfile_out.write(phase_print + "\n")
