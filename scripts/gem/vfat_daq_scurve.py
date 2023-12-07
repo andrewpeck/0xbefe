@@ -4,7 +4,7 @@ import datetime
 import sys
 import argparse
 import random
-from common.utils import get_befe_ccripts_dir
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
 def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, trim):
