@@ -66,7 +66,7 @@ def init_gem_frontend():
                 sleep(0.1)
         sleep(2)
 
-        # Reset sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
+        # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
@@ -79,10 +79,10 @@ def init_gem_frontend():
                     continue
 
                 selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                writeGbtRegAddrs(0x053, 0x02) # Configure GPIO as output
-                writeGbtRegAddrs(0x055, 0x00) # Set GPIO low - resets sub lpGBT
+                writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
+                writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
                 sleep(0.1)
-                writeGbtRegAddrs(0x053, 0x00) # Configure GPIO as input
+                writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
                 sleep(0.1)
         sleep(2)
 
