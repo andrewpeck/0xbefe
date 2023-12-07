@@ -45,7 +45,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
                 slope = abs(slope_adc[vfat])
                 intercept = 0
     if slope==-9999 or intercept==-9999: # use average values
-        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using avergae values"%vfat + Colors.ENDC)
+        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using average values"%vfat + Colors.ENDC)
         if mode=="voltage":
             slope = -0.22 # fC/DAC
             intercept = 56.1 # fC
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         sys.exit()
 
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-    calib_path = scripts_gem_dir + "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    calib_path = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}

@@ -9,9 +9,10 @@ import glob
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit_cluster_mapping, sbits_all, verbose):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -298,17 +299,17 @@ if __name__ == "__main__":
             s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
         file_in.close()
     else:
-        if not os.path.isdir("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
+        if not os.path.isdir(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+        list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()
         elif len(list_of_files)>1:
             print ("Mutliple S-bit cluster mapping results found, using latest file")
         latest_file = max(list_of_files, key=os.path.getctime)
-        print ("Using S-bit cluster mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/")[1]))
+        print ("Using S-bit cluster mapping file: %s\n"%(latest_file.split(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/")[1]))
         file_in = open(latest_file)
         for line in file_in.readlines():
             if "VFAT" in line:

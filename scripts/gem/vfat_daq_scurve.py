@@ -4,12 +4,12 @@ import datetime
 import sys
 import argparse
 import random
-from common.utils import get_befe_scripts_dir
+from common.utils import get_befe_ccripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
 def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, trim):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data

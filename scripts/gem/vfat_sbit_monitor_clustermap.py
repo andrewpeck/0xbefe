@@ -9,6 +9,8 @@ import json
 import glob
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, s_bit_channel_mapping):
     print ("LPGBT VFAT S-Bit Cluster Mapping\n")
 
@@ -153,8 +155,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     else:
         write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
 
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -270,10 +272,10 @@ if __name__ == "__main__":
             with open(default_file) as input_file:
                 s_bit_channel_mapping = json.load(input_file)
         else:
-            if not os.path.isdir("results/vfat_data/vfat_sbit_mapping_results"):
+            if not os.path.isdir(scripts_gem_dir + "/results/vfat_data/vfat_sbit_mapping_results"):
                 print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
                 sys.exit()
-            list_of_files = glob.glob("results/vfat_data/vfat_sbit_mapping_results/*.py")
+            list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_mapping_results/*.py")
             if len(list_of_files)==0:
                 print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
                 sys.exit()
