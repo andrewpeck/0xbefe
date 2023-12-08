@@ -2295,7 +2295,7 @@ if __name__ == "__main__":
     logfile.write("Step 15: S-bit Crosstalk\n\n")
     time.sleep(1)
 
-    if test_type in ["prototype", "pre_production", "pre_series"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)

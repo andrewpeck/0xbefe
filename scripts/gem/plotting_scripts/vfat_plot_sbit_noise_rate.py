@@ -20,7 +20,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     directoryName        = args.filename.removesuffix(".txt")
-    plot_filename_prefix = (directoryName.split("/"))[3]
+    plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)
 

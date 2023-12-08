@@ -271,7 +271,7 @@ if __name__ == "__main__":
         sys.exit()
     
     directoryName        = args.inFile.removesuffix(".txt")
-    plot_filename_prefix = (directoryName.split("/"))[3]
+    plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     print(Colors.GREEN + "\nDAC scan results stored in: %s" % directoryName + Colors.ENDC)
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
