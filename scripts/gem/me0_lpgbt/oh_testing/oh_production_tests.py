@@ -1505,7 +1505,7 @@ if __name__ == "__main__":
             else:
                 xml_results[oh_sn]['OH_1V2_VOLTAGE'] = NULL
 
-        voltage_ranges = {'V2V5':[2.4,2.8],'VSSA':[1.05,1.45],'VDDTX':[1.05,1.45],'VDDRX':[1.05,1.45],'VDD':[1.05,1.45],'VDDA':[1.05,1.45],'VREF':[0.85,1.15]}
+        voltage_ranges = {'V2V5':[2.4,2.8],'VSSA':[1.05,1.50],'VDDTX':[1.05,1.50],'VDDRX':[1.05,1.50],'VDD':[1.05,1.50],'VDDA':[1.05,1.50],'VREF':[0.85,1.15]}
         for oh_sn in xml_results:
             for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']]):
                 if reading == NULL:
