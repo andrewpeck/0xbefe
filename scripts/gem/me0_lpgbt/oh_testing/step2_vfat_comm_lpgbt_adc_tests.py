@@ -132,7 +132,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "\nPlotting DAC Scans for all VFATs\n" + Colors.ENDC)
     logfile.write("\nPlotting DAC Scans for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_dac.py -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         if os.path.isdir(dataDir + "/dac_scan_results"):
             os.system("rm -rf " + dataDir + "/dac_scan_results")

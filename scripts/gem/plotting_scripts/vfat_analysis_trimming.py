@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     for vfat_input_file in nd_file_list:
         filename = vfat_input_file.split("/")[-1]
-        vfat = int(filename.split("_VFAT")[1].removesuffix(".txt"))
+        vfat = int(filename.split("_VFAT")[1].replace('.txt',''))
         nd_file_in = open(vfat_input_file, "r")
         try:
             ud_file_in = open(ud_dir_name+"/"+filename, "r")

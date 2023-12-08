@@ -33,7 +33,7 @@ def get_input_data(inputDataDir):
     for filename in list_of_files:
         with open(filename,'r') as input_file:
             data = json.load(input_file)
-        oh_vtrxp_key = filename.removesuffix('.json').split('/')[-1]
+        oh_vtrxp_key = filename.replace('.json','').split('/')[-1]
         input_dataset[oh_vtrxp_key] = data
     
     return input_dataset

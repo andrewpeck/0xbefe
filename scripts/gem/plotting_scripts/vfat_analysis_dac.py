@@ -270,7 +270,7 @@ if __name__ == "__main__":
         print(Colors.RED + "Input file not found" + Colors.ENDC)
         sys.exit()
     
-    directoryName        = args.inFile.removesuffix(".txt")
+    directoryName        = args.inFile.replace('.txt','')
     plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     print(Colors.GREEN + "\nDAC scan results stored in: %s" % directoryName + Colors.ENDC)

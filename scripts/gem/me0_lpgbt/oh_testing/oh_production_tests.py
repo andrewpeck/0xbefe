@@ -649,7 +649,7 @@ if __name__ == "__main__":
                         if line=='\n':
                             read_next = False
                             continue
-                        vfat = int(line.split()[1].removesuffix(':'))
+                        vfat = int(line.split()[1].replace(':',''))
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]['VFAT']:
                                 break
@@ -737,8 +737,8 @@ if __name__ == "__main__":
                 for line in ps_file.readlines():
                     if read_next:
                         vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
-                        phase = int(line.split()[2].replace('(center=','').removesuffix(','))
-                        width = int(line.split()[3].replace('width=','').removesuffix(')'))
+                        phase = int(line.split()[2].replace('(center=','').replace(',',''))
+                        width = int(line.split()[3].replace('width=','').replace(',',''))
                         status =  1 if line.split()[4] == "GOOD" else 0
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]["VFAT"]:
@@ -825,9 +825,9 @@ if __name__ == "__main__":
                         if 'VFAT' in line:
                             vfat = int(line.split()[1])
                         elif 'ELINK' in line:
-                            elink = int(line.split()[1].removesuffix(':'))
-                            phase = int(line.split()[3].replace('(center=','').removesuffix(','))
-                            width = int(line.split()[4].replace('width=','').removesuffix(')'))
+                            elink = int(line.split()[1].replace(':',''))
+                            phase = int(line.split()[3].replace('(center=','').replace(',',''))
+                            width = int(line.split()[4].replace('width=','').replace(',',''))
                             status = 1 if line.split()[5] == "GOOD" else 0
 
                             for slot,oh_sn in geb_dict.items():
@@ -902,7 +902,7 @@ if __name__ == "__main__":
                 for line in bitslip_file.readlines():
                     if read_next:
                         if "VFAT" in line:
-                            vfat = int(line.split()[1].replace(":","").removesuffix(','))
+                            vfat = int(line.split()[1].replace(":","").replace(',',''))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
@@ -995,7 +995,7 @@ if __name__ == "__main__":
                         read_next = True
                     elif read_next:
                         if 'Channel' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel = int(line.split()[5])
                             if vfat in bad_channels:
                                 bad_channels[vfat]+=[channel]
@@ -1003,7 +1003,7 @@ if __name__ == "__main__":
                                 bad_channels[vfat]={}
                                 bad_channels[vfat]=[channel]
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             elink = int(line.split()[3])
                             if vfat in rotated_elinks:
                                 rotated_elinks[vfat]+=[elink]
@@ -1190,19 +1190,19 @@ if __name__ == "__main__":
                     if read_next:
                         logfile.write(line)
                         if 'link is' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             link_good = 1 if line.split()[-1] == 'GOOD' else 0
                         if 'sync errors' in line:
                             sync_errors = int(line.split()[-1])
                         elif 'bus errors' in line:
-                            bus_errors = int(line.split()[6].removesuffix(','))
+                            bus_errors = int(line.split()[6].replace(',',''))
                         elif "mismatch" in line:
-                            mismatch_errors = int(line.split()[7].removesuffix(','))
+                            mismatch_errors = int(line.split()[7].replace(',',''))
                         elif 'CRC errors' in line:
-                            crc_errors = float(line.split()[10].removesuffix(','))
+                            crc_errors = float(line.split()[10].replace(',',''))
                             crc_errors = int(np.ceil(crc_errors)) if (crc_errors > 0 and crc_errors < 1) else int(crc_errors)
                         elif 'Timeout errors' in line:
-                            timeout_errors = float(line.split()[10].removesuffix(','))
+                            timeout_errors = float(line.split()[10].replace(',',''))
                             timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
@@ -1297,7 +1297,7 @@ if __name__ == "__main__":
                     if read_next:
                         logfile.write(line)
                         if 'link is' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             link_good = 1 if line.split()[-1]=='GOOD' else 0
                             daq_l1a_counter_mismatch = 0 # reset mismatch flag
                         elif 'sync errors' in line:
@@ -1633,10 +1633,10 @@ if __name__ == "__main__":
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
                 asense = {}
-                asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
-                asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                asense["_".join(line[15:17]).removeprefix('(').removesuffix(')')]=[]
+                asense["_".join(line[3:5]).replace('(PG','').replace(',','').replace('V','').replace('.','V')] = []
+                asense["_".join(line[7:9]).replace('(','').replace(',','')]=[]
+                asense["_".join(line[11:13]).replace('(PG','').replace(',','').replace('V','').replace('.','V')] = []
+                asense["_".join(line[15:17]).replace('(','').replace(',','')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1:]):
                         if value != str(NULL):
@@ -1921,7 +1921,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
 
             print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2060,11 +2060,11 @@ if __name__ == "__main__":
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.removesuffix(','))
+                                channels_obs[i] = int(ch.replace(',',''))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
@@ -2101,7 +2101,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
@@ -2175,7 +2175,7 @@ if __name__ == "__main__":
             
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
 
             print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2315,11 +2315,11 @@ if __name__ == "__main__":
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.removesuffix(','))
+                                channels_obs[i] = int(ch.replace(',',''))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
@@ -2356,7 +2356,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
             else:
@@ -2436,7 +2436,7 @@ if __name__ == "__main__":
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
-                        elink = int(sbit.removeprefix("all_elink"))
+                        elink = int(sbit.replace('all_elink',''))
                         if fired == 0 or threshold==255:
                             # save the first threshold with no hits or max threshold if failed
                             if elink not in sbit_noise[vfat]:
@@ -2465,7 +2465,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             if os.path.isdir(latest_dir):
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")

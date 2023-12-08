@@ -439,7 +439,7 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Mode can only be voltage or current" + Colors.ENDC)
         sys.exit()
 
-    directoryName        = args.filename.removesuffix(".txt")
+    directoryName        = args.filename.replace('.txt','')
     plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     resultfile = open(args.filename)
