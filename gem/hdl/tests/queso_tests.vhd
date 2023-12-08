@@ -126,12 +126,11 @@ begin
         -- Unmasking of data for each elink (done after bitslipping)
         g_queso_link_unmask : entity work.queso_link_unmask
             generic map(
-                g_NUM_OF_OHs                => g_NUM_OF_OHs,
-                g_NUM_GBTS_PER_OH           => g_NUM_GBTS_PER_OH
+                g_NUM_OF_OHs                => g_NUM_OF_OHs
             )
             port map(
                 -- clock
-                gbt_frame_clk_i             => gbt_frame_clk_i,
+                clk_i             => gbt_frame_clk_i,
         
                 -- links
                 gbt_rx_data_arr_i           => elink_mapped,
