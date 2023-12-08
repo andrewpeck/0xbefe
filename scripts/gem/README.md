@@ -119,7 +119,7 @@ For more information on usage, run `# python3 get_cal_info_vfat.py -h`.
 
 ## Update python version
 
-Some scripts, mainly `oh_production_tests.py`, require `python` version > `3.8` for newer functionalities. You can update the `python` version through your system but this can lead to breaking system functionalities if done incorrectly. 
+You may want to run scripts on the newest `python` version. You can update the `python` version through your system but this can lead to breaking system functionalities if done incorrectly. 
 
 We advise setting up a virtual environment through `miniconda`, a lightweight version of `anaconda` without any bloatware or IDE's. Follow the instructions on https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html for installing.
 
@@ -132,7 +132,7 @@ Now, create a new environment for running scripts with the following command.
 ```
 $ conda create -n cmsme0_env python=3.11 numpy matplotlib scipy pandas colorama awkward tqdm uproot xmltodict
 ```
-This will create an environment called `cmsme0_env`, and install `python` version `3.11` (latest) along with some necessary packages.
+This will create an environment called `cmsme0_env`, and install `python` version `3.11` (latest) along with some necessary packages. If `conda` fails to make the environment, try a different python version; `3.10` or `3.9`.
 
 To activate this environment, just run
 ```
