@@ -15,7 +15,8 @@ entity queso_tests is
         g_NUM_OF_OHs        : integer;
         g_NUM_GBTS_PER_OH   : integer;
         g_NUM_VFATS_PER_OH  : integer;
-        g_QUESO_PRBS        : boolean
+        g_QUESO_PRBS        : boolean;
+        g_BITMASK_EN        : boolean
     );
     port(
         -- reset
@@ -122,21 +123,25 @@ begin
         
         -- Send prbs word to tx fannout in ME0 mux
         test_vfat3_tx_data_arr_o <= tx_prbs_data;
-
-        -- Unmasking of data for each elink (done after bitslipping)
-        g_queso_link_unmask : entity work.queso_link_unmask
-            generic map(
-                g_NUM_OF_OHs                => g_NUM_OF_OHs
-            )
-            port map(
-                -- clock
-                clk_i             => gbt_frame_clk_i,
         
-                -- links
-                gbt_rx_data_arr_i           => elink_mapped,
-                queso_data_unmasked_arr_o   => elink_mapped_unmasked
-            );
-       
+        if g_BITMASK_EN generate
+        begin
+            -- Unmasking of data for each elink (done after bitslipping)
+            g_queso_link_unmask : entity work.queso_link_unmask
+                generic map(
+                    g_NUM_OF_OHs                => g_NUM_OF_OHs
+                )
+                port map(
+                    -- clock
+                    clk_i             => gbt_frame_clk_i,
+        
+                    -- links
+                    gbt_rx_data_arr_i           => elink_mapped,
+                    queso_data_unmasked_arr_o   => elink_mapped_unmasked
+                );
+        else generate
+            elink_mapped_unmasked <= elink_mapped;
+            
     ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate

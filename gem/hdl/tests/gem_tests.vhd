@@ -237,7 +237,8 @@ begin
             g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_GBTS_PER_OH   => g_NUM_GBTS_PER_OH,
             g_NUM_VFATS_PER_OH  => 24,
-            g_QUESO_PRBS        => g_QUESO_PRBS 
+            g_QUESO_PRBS        => g_QUESO_PRBS,
+            g_BITMASK_EN        => false 
         )
         port map(
             reset_i                     => reset, --resets prbs generator

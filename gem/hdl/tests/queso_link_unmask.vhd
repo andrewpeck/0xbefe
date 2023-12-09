@@ -61,7 +61,7 @@ use work.gem_pkg.all;
 
 entity queso_link_unmask is
     generic(
-        g_NUM_OF_OHs      : integer;
+        g_NUM_OF_OHs      : integer
     );
     port(
         -- clock
