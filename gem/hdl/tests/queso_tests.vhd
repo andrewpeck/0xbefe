@@ -20,23 +20,23 @@ entity queso_tests is
     );
     port(
         -- reset
-        reset_i                          : in std_logic;
-	counter_reset                    : in std_logic;
+        reset_i       : in std_logic;
+	    counter_reset : in std_logic;
                 
         -- Test enable
-        queso_test_en_i                  : in std_logic;
+        queso_test_en_i : in std_logic;
 
         --==lpGBT signals==--
         --clock
-        gbt_frame_clk_i                  : in  std_logic;
+        gbt_frame_clk_i : in  std_logic;
         
         -- elinks
-        test_vfat3_rx_data_arr_i         : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-        test_vfat3_tx_data_arr_o         : out std_logic_vector(7 downto 0);
+        test_vfat3_rx_data_arr_i : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+        test_vfat3_tx_data_arr_o : out std_logic_vector(7 downto 0);
 
-        elink_mapping_arr_i              : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
+        elink_mapping_arr_i      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
         --prbs error counter
-        elink_error_cnt_arr_o            : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff errors per elink
+        elink_error_cnt_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff errors per elink
     );
 end queso_tests;
 
@@ -48,11 +48,11 @@ architecture Behavioral of queso_tests is
 
 
     -- unmasked elinks
-    signal elink_mapped_unmasked    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal elink_mapped             : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapped_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapped          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal rx_prbs_err_arr_o   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
+    signal rx_prbs_err_arr_o : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
     signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
    
 
@@ -65,44 +65,13 @@ architecture Behavioral of queso_tests is
 		probe2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
 		probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
-	END COMPONENT  ;
+	END COMPONENT;
 
  
 begin
 
-
-    --=======QUESO Crawl Counter, no PRBS=======--
-    g_QUESO_COUNT_EN : if not g_QUESO_PRBS generate
-        --===Generate TX data===--
-        -- generator (fanned out to all elinks)
-       i_crawl_gen : entity work.counter
-                generic map(
-                    g_COUNTER_WIDTH  => 8,
-                    g_ALLOW_ROLLOVER => true
-                )
-                port map(
-                    ref_clk_i => gbt_frame_clk_i,
-                    reset_i   => counter_reset or reset_i,
-                    en_i      => '1',
-                    count_o   => tx_crawl_data
-                );
-        
-        test_vfat3_tx_data_arr_o <= tx_crawl_data;
-
-        --===Rx send directly to registers===--
-        each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
-            each_elink : for ELINK in 0 to 215 generate
-
-                --send raw test data directly to error counting registers(now just displays count)
-                elink_error_cnt_arr_o(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); 
-
-            end generate;
-        end generate;
-
-    end generate;
-
     --=======QUESO Full PRBS test=======--
-    g_QUESO_PRBS_EN : if g_QUESO_PRBS generate
+    g_QUESO_PRBS_COUNT_EN : if g_QUESO_PRBS generate
     ----====Generate TX data====-----
         -- generator (fanned out to all elinks)
         i_tx_prbs_gen : entity work.PRBS_ANY
@@ -129,20 +98,20 @@ begin
             -- Unmasking of data for each elink (done after bitslipping)
             g_queso_link_unmask : entity work.queso_link_unmask
                 generic map(
-                    g_NUM_OF_OHs                => g_NUM_OF_OHs
+                    g_NUM_OF_OHs => g_NUM_OF_OHs
                 )
                 port map(
                     -- clock
-                    clk_i             => gbt_frame_clk_i,
-        
+                    clk_i                     => gbt_frame_clk_i,
                     -- links
-                    gbt_rx_data_arr_i           => elink_mapped,
-                    queso_data_unmasked_arr_o   => elink_mapped_unmasked
+                    gbt_rx_data_arr_i         => elink_mapped,
+                    queso_data_unmasked_arr_o => elink_mapped_unmasked
                 );
         else generate
             elink_mapped_unmasked <= elink_mapped;
+        end generate;
             
-    ----====Take in RX and apply prbs checker + error counter====------
+        ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate
 
@@ -200,9 +169,37 @@ begin
                 
                 elink_error_cnt_arr_o(OH)(ELINK) <= rx_err_cnt_arr(OH)(ELINK);
 
-            end generate;
-        end generate;
-    end generate;
+            end generate each_elink;
+        end generate each_oh;
+
+    --=======QUESO Crawl Counter, no PRBS=======--
+    else generate
+        --===Generate TX data===--
+        -- generator (fanned out to all elinks)
+       i_crawl_gen : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 8,
+                    g_ALLOW_ROLLOVER => true
+                )
+                port map(
+                    ref_clk_i => gbt_frame_clk_i,
+                    reset_i   => counter_reset or reset_i,
+                    en_i      => '1',
+                    count_o   => tx_crawl_data
+                );
+        
+        test_vfat3_tx_data_arr_o <= tx_crawl_data;
+
+        --===Rx send directly to registers===--
+        each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
+            each_elink : for ELINK in 0 to 215 generate
+
+                --send raw test data directly to error counting registers(now just displays count)
+                elink_error_cnt_arr_o(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); 
+
+            end generate each_elink;
+        end generate each_oh;
+    end generate g_QUESO_PRBS_COUNT_EN;
 
 --	ila_queso_debug : ila_queso
 --	PORT MAP (

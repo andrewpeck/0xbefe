@@ -65,7 +65,7 @@ entity queso_link_unmask is
     );
     port(
         -- clock
-        clk_i : in  std_logic;
+        clk_i                     : in  std_logic;
         -- links
         queso_rx_data_arr_i       : in  t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
         queso_data_unmasked_arr_o : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0)
@@ -78,15 +78,11 @@ begin
 
     --inversions incorperated in ASIAGO config
     g_ohs : for i in 0 to g_NUM_OF_OHs - 1 generate
-
-        --======================================================--
-        --========================= RX =========================--
-        --======================================================--
-    
-        --========================= QUESO TEST RX =========================--
         process (clk_i)
         begin
             if rising_edge(clk_i) then
+                --========================= QUESO TEST RX =========================--
+                -- DAQ --
                 queso_data_unmasked_arr_o(i)(00)  <= queso_rx_data_arr_i(i)(00)  xor x"28"; -- VFAT00 (GBT0 elink 25)
                 queso_data_unmasked_arr_o(i)(09)  <= queso_rx_data_arr_i(i)(09)  xor x"14"; -- VFAT01 (GBT0 elink 27)
                 queso_data_unmasked_arr_o(i)(18)  <= queso_rx_data_arr_i(i)(18)  xor x"28"; -- VFAT02 (GBT2 elink 25)
@@ -111,7 +107,7 @@ begin
                 queso_data_unmasked_arr_o(i)(189) <= queso_rx_data_arr_i(i)(189) xor x"32"; -- VFAT21 (GBT5 elink 06)
                 queso_data_unmasked_arr_o(i)(198) <= queso_rx_data_arr_i(i)(198) xor x"0a"; -- VFAT22 (GBT7 elink 24)
                 queso_data_unmasked_arr_o(i)(207) <= queso_rx_data_arr_i(i)(207) xor x"32"; -- VFAT23 (GBT7 elink 06) 
-        
+                -- SBITS --
                 queso_data_unmasked_arr_o(i)(01)  <= queso_rx_data_arr_i(i)(01)  xor x"29"; -- VFAT00 pair 0 (GBT0 elink 16)
                 queso_data_unmasked_arr_o(i)(02)  <= queso_rx_data_arr_i(i)(02)  xor x"2a"; -- VFAT00 pair 1 (GBT0 elink 18)
                 queso_data_unmasked_arr_o(i)(03)  <= queso_rx_data_arr_i(i)(03)  xor x"2b"; -- VFAT00 pair 2 (GBT0 elink 20)
