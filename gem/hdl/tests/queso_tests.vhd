@@ -93,7 +93,7 @@ begin
         -- Send prbs word to tx fannout in ME0 mux
         test_vfat3_tx_data_arr_o <= tx_prbs_data;
         
-        if g_BITMASK_EN generate
+        g_BITMASK : if g_BITMASK_EN generate
         begin
             -- Unmasking of data for each elink (done after bitslipping)
             g_queso_link_unmask : entity work.queso_link_unmask
@@ -109,7 +109,7 @@ begin
                 );
         else generate
             elink_mapped_unmasked <= elink_mapped;
-        end generate;
+        end generate g_BITMASK;
             
         ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
