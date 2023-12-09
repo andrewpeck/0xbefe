@@ -738,7 +738,7 @@ if __name__ == "__main__":
                     if read_next:
                         vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
                         phase = int(line.split()[2].replace('(center=','').replace(',',''))
-                        width = int(line.split()[3].replace('width=','').replace(',',''))
+                        width = int(line.split()[3].replace('width=','').replace(')',''))
                         status =  1 if line.split()[4] == "GOOD" else 0
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]["VFAT"]:
@@ -827,7 +827,7 @@ if __name__ == "__main__":
                         elif 'ELINK' in line:
                             elink = int(line.split()[1].replace(':',''))
                             phase = int(line.split()[3].replace('(center=','').replace(',',''))
-                            width = int(line.split()[4].replace('width=','').replace(',',''))
+                            width = int(line.split()[4].replace('width=','').replace(')',''))
                             status = 1 if line.split()[5] == "GOOD" else 0
 
                             for slot,oh_sn in geb_dict.items():
@@ -1505,7 +1505,7 @@ if __name__ == "__main__":
             else:
                 xml_results[oh_sn]['OH_1V2_VOLTAGE'] = NULL
 
-        voltage_ranges = {'V2V5':[2.4,2.8],'VSSA':[1.05,1.40],'VDDTX':[1.05,1.40],'VDDRX':[1.05,1.40],'VDD':[1.05,1.40],'VDDA':[1.05,1.40],'VREF':[0.85,1.15]}
+        voltage_ranges = {'V2V5':[2.4,2.8],'VSSA':[1.05,1.45],'VDDTX':[1.05,1.45],'VDDRX':[1.05,1.45],'VDD':[1.05,1.45],'VDDA':[1.05,1.45],'VREF':[0.85,1.15]}
         for oh_sn in xml_results:
             for voltage,reading in zip(['V2V5','VDD'],[xml_results[oh_sn]['OH_2V5_VOLTAGE'],xml_results[oh_sn]['OH_1V2_VOLTAGE']]):
                 if reading == NULL:
@@ -1633,10 +1633,10 @@ if __name__ == "__main__":
             with open(latest_file) as asense_file:
                 line = asense_file.readline().split()
                 asense = {}
-                asense["_".join(line[3:5]).replace('(PG','').replace(',','').replace('V','').replace('.','V')] = []
-                asense["_".join(line[7:9]).replace('(','').replace(',','')]=[]
-                asense["_".join(line[11:13]).replace('(PG','').replace(',','').replace('V','').replace('.','V')] = []
-                asense["_".join(line[15:17]).replace('(','').replace(',','')]=[]
+                asense["_".join(line[3:5]).replace('(PG','').replace(')','').replace('V','').replace('.','V')] = []
+                asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
+                asense["_".join(line[11:13]).replace('(PG','').replace(')','').replace('V','').replace('.','V')] = []
+                asense["_".join(line[15:17]).replace('(','').replace(')','')]=[]
                 for line in asense_file.readlines():
                     for key,value in zip(asense,line.split()[1:]):
                         if value != str(NULL):
@@ -2436,7 +2436,7 @@ if __name__ == "__main__":
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
-                        elink = int(sbit.replace('all_elink',''))
+                        elink = int(sbit.removeprefix("all_elink"))
                         if fired == 0 or threshold==255:
                             # save the first threshold with no hits or max threshold if failed
                             if elink not in sbit_noise[vfat]:
