@@ -104,7 +104,7 @@ begin
                     -- clock
                     clk_i                     => gbt_frame_clk_i,
                     -- links
-                    gbt_rx_data_arr_i         => elink_mapped,
+                    queso_rx_data_arr_i         => elink_mapped,
                     queso_data_unmasked_arr_o => elink_mapped_unmasked
                 );
         else generate
