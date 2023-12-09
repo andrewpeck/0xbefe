@@ -94,7 +94,6 @@ begin
         test_vfat3_tx_data_arr_o <= tx_prbs_data;
         
         g_BITMASK : if g_BITMASK_EN generate
-        begin
             -- Unmasking of data for each elink (done after bitslipping)
             g_queso_link_unmask : entity work.queso_link_unmask
                 generic map(
@@ -102,9 +101,9 @@ begin
                 )
                 port map(
                     -- clock
-                    clk_i                     => gbt_frame_clk_i,
+                    clk_i => gbt_frame_clk_i,
                     -- links
-                    queso_rx_data_arr_i         => elink_mapped,
+                    queso_rx_data_arr_i       => elink_mapped,
                     queso_data_unmasked_arr_o => elink_mapped_unmasked
                 );
         else generate
