@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # Step 1 - Run init_frontend
     print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         logfile.close()
@@ -223,18 +223,18 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Initialization %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Initialization %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Initialization Complete\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 2 - Check lpGBT status
     print (Colors.BLUE + "Step 2: Checking lpGBT Registers\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         read_next = False
@@ -338,6 +338,12 @@ if __name__ == "__main__":
                                 xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(calib_data)
                             else:
                                 xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
+            # Check for missing calib data
+            for oh_sn in xml_results:
+                if 'LPGBT_M_ADC_CALIB' not in xml_results[oh_sn]:
+                    xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
+                if 'LPGBT_S_ADC_CALIB' not in xml_results[oh_sn]:
+                    xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
         
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -385,20 +391,20 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Checking lpGBT Status %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Checking lpGBT Status %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
     
-    time.sleep(1)
+    time.sleep(0.1)
     print(Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
     # Step 3 - Downlink eye diagrams
     print(Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink Eye Diagram\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -453,19 +459,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping downlink eye diagram for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - Downlink Optical BERT
     print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -475,7 +481,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
             print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBTs\n\n"%oh_select)
@@ -515,7 +521,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
         for slot,oh_sn in geb_dict.items():
             if xml_results[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT']:
@@ -550,19 +556,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Downlink Optical BERT for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 4: Downlink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: Downlink Optical BERT Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - Uplink Optical BERT
     print (Colors.BLUE + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 5: Uplink Optical BERT\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -572,7 +578,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
             print(Colors.BLUE + "Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n\n"%oh_select)
@@ -614,7 +620,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -652,19 +658,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Uplink Optical BERT for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 6 - VFAT Reset
     print (Colors.BLUE + "Step 6: VFAT Reset\n" + Colors.ENDC)
     logfile.write("Step 6: VFAT Reset\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -673,7 +679,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
             
             print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
             logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
@@ -749,19 +755,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Reset for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 6: VFAT Reset Complete\n" + Colors.ENDC)
     logfile.write("\nStep 6: VFAT Reset Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 7 - DAQ Phase Scan
     print (Colors.BLUE + "Step 7: DAQ Phase Scan\n" + Colors.ENDC)
     logfile.write("Step 7: DAQ Phase Scan\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -832,12 +838,12 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Phase Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Phase Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 7: DAQ Phase Scan Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: DAQ Phase Scan Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -846,7 +852,7 @@ if __name__ == "__main__":
     # logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
     print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping, Mapping\n" + Colors.ENDC)
     logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -925,7 +931,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Phase Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1007,7 +1013,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Bitslip for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1117,7 +1123,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     # if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
     #     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1192,7 +1198,7 @@ if __name__ == "__main__":
     # else:
     #     print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
     #     logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%test_type.replace("_","-"))
-    #     time.sleep(1)
+    #     time.sleep(0.1)
 
     # print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
     # logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
@@ -1200,14 +1206,14 @@ if __name__ == "__main__":
     print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 9 - Slow Control Error Rate Test
     print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 9: Slow Control Error Rate Test\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1303,19 +1309,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Slow Control Error Rate Test for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Slow Control Error Rate Test for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 10 - DAQ Error Rate Test
     print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 10: DAQ Error Rate Test\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1405,19 +1411,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Error Rate Test for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Error Rate Test for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 11 - ADC Measurements
     print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
     logfile.write("Step 11: ADC Measurements\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1429,7 +1435,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping VFAT Configuration for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Configuration for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1494,7 +1500,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping ADC Calibration Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1586,7 +1592,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping lpGBT Voltage Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
@@ -1654,7 +1660,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping RSSI Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping RSSI Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1782,7 +1788,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping GEB Current and Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1855,7 +1861,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping OH Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1927,7 +1933,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping VTRx+ Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
@@ -1940,14 +1946,14 @@ if __name__ == "__main__":
     print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
     logfile.write("\nStep 11: ADC Measurements Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 12 - DAQ SCurve 
     print (Colors.BLUE + "Step 12: DAQ SCurve\n" + Colors.ENDC)
     logfile.write("Step 12: DAQ SCurve\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2065,19 +2071,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ SCurve for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ SCurve for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 12: DAQ SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 12: DAQ SCurve Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 13 - DAQ Crosstalk
     print (Colors.BLUE + "Step 13: DAQ Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 13: DAQ Crosstalk\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2189,19 +2195,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Crosstalk for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Crosstalk for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 13: DAQ Crosstalk Complete\n" + Colors.ENDC)
     logfile.write("\nStep 13: DAQ Crosstalk Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 14 - S-bit SCurve
     print (Colors.BLUE + "Step 14: S-bit SCurve\n" + Colors.ENDC)
     logfile.write("Step 14: S-bit SCurve\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
@@ -2320,19 +2326,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit SCurves for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 14: S-bit SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 14: S-bit SCurve Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 15 - S-bit Crosstalk
     print (Colors.BLUE + "Step 15: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 15: S-bit Crosstalk\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2443,19 +2449,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit crosstalk for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit crosstalk for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
     
     print (Colors.GREEN + "\nStep 15: S-bit Crosstalk Complete\n" + Colors.ENDC)
     logfile.write("\nStep 15: S-bit Crosstalk Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 16 - S-bit Noise Rate
     print (Colors.BLUE + "Step 16: S-bit Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 16: S-bit Noise Rate\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2554,12 +2560,12 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit Noise Rate for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit Noise Rate for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print(Colors.GREEN + "\nStep 16: S-bit Noise Rate Complete\n" + Colors.ENDC)
     logfile.write("\nStep 16: S-bit Noise Rate Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
