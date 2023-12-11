@@ -5,6 +5,7 @@ import numpy as np
 import json
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+from gem.me0_lpgbt_adc import read_central_adc_calib_file
 
 # slot to OH mapping
 #   SLOT    OH      GBT     VFAT
@@ -37,10 +38,9 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
 
-    geb_dict = {}
-    slot_name_dict = {}
-    vtrxp_dict = {}
-    pigtail_dict = {}
+    geb_dict         = {}
+    input_oh_dict    = {}
+    input_vtrxp_dict = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
@@ -52,8 +52,9 @@ if __name__ == "__main__":
             continue
         slot = line.split()[0]
         slot_name = line.split()[1]
-        oh_sn = line.split()[2]
-        vtrx_sn = line.split()[3]
+        geb_sn = line.split()[2]
+        oh_sn = line.split()[3]
+        vtrxp_sn = line.split()[4]
         pigtail = float(line.split()[4])
         if oh_sn != str(NULL):
             if test_type in ["prototype", "pre_production"]:
@@ -72,9 +73,8 @@ if __name__ == "__main__":
                 print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
                 sys.exit()
             geb_dict[slot] = oh_sn
-            slot_name_dict[slot] = slot_name
-            vtrxp_dict[slot] = vtrx_sn
-            pigtail_dict[slot] = pigtail
+            input_oh_dict[slot] = {'GEB_SERIAL_NUMBER':geb_sn, 'GEB_SLOT':slot_name, 'VTRXP_SERIAL_NUMBER':vtrxp_sn}
+            input_vtrxp_dict[slot] = {'OH_SERIAL_NUMBER':oh_sn,'PIGTAIL_LENGTH':pigtail}
     input_file.close()
 
     if len(geb_dict) == 0:
@@ -133,14 +133,13 @@ if __name__ == "__main__":
     # initialize results dictionaries indexed by oh serial #
     for slot,oh_sn in geb_dict.items():
         xml_results[oh_sn] = {}
-        xml_results[oh_sn]["VTRXP_SERIAL_NUMBER"] = vtrxp_dict[slot]
-        vtrxp_results[vtrxp_dict[slot]] = {}
-        vtrxp_results[vtrxp_dict[slot]]['OH_SERIAL_NUMBER'] = oh_sn
-        vtrxp_results[vtrxp_dict[slot]]["PIGTAIL_LENGTH"] = pigtail_dict[slot]
-
+        xml_results[oh_sn].update(input_oh_dict[slot])
         xml_results[oh_sn]["TEST_TYPE"] = test_type
-        xml_results[oh_sn]["GEB_SLOT"] = slot_name_dict[slot]
         xml_results[oh_sn]['VFAT_SLOTS'] = str(geb_oh_map[slot]['VFAT'])
+        
+        vtrxp_results[input_oh_dict[slot]['VTRXP_SERIAL_NUMBER']] = {}
+        vtrxp_results[input_oh_dict[slot]['VTRXP_SERIAL_NUMBER']].update(input_vtrxp_dict[slot])
+
         full_results[oh_sn] = xml_results[oh_sn].copy()
 
     debug = True if test_type=="debug" else False
@@ -239,6 +238,7 @@ if __name__ == "__main__":
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         read_next = False
+        chip_id_list = []
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -256,6 +256,7 @@ if __name__ == "__main__":
                             gbt_type = 'M' if gbt%2==0 else 'S'
                             chip_id = line.split()[0]
                             xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
+                            chip_id_list.append(chip_id)
                             read_next = False
 
         config_files = {}
@@ -309,6 +310,34 @@ if __name__ == "__main__":
 
                 status_file.close()
                 config_file.close()
+        print
+        print('\nRetrieving lpGBT ADC Calibration Values')
+        logfile.write('\nRetrieving lpGBT ADC Calibration Values\n')
+        calib_db = read_central_adc_calib_file()
+        if not calib_db:
+            print(Colors.RED + 'Failed to read calibration file' + Colors.ENDC)
+            logfile.write('Failed to read calibration file\n')
+            for oh_sn in xml_results:
+                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
+                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
+        else:
+            # loop through large database file only once to save time
+            for chip_id,calib_data in calib_db.items():
+                # check for active chip id's
+                if chip_id in chip_id_list:
+                    for oh_sn in xml_results:
+                        # save main lpgbt calib data
+                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] = chip_id:
+                            if calib_data:
+                                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(calib_data)
+                            else:
+                                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
+                        # save sub lpgbt calib data
+                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] = chip_id:
+                            if calib_data:
+                                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(calib_data)
+                            else:
+                                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
         
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -320,7 +349,17 @@ if __name__ == "__main__":
                         test_failed = True
                     gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                    
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                if test_type in ['pre_series', 'production', 'acceptance']:
+                    if xml_results['LPGBT_%s_ADC_CALIB'] == NULL:
+                        if not test_failed:
+                            print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
+                            logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
+                            test_failed = True
+                        gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
+                        print(Colors.RED + 'Missing ADC Calibration data for OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('Missing ADC Calibration data for OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1550,7 +1589,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for slot,oh_sn in geb_dict.items():
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
             print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
@@ -1572,11 +1611,11 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rssi_OH%s.pdf"%(latest_file, dataDir, oh_sn))
             if rssi != []:
-                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = np.mean(rssi)
+                vtrxp_results[vtrxp_sn]['RSSI'] = np.mean(rssi)
             else:
-                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = NULL
+                vtrxp_results[vtrxp_sn]['RSSI'] = NULL
         for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['RSSI'] == NULL:
+            if vtrxp_results[vtrxp_sn]['RSSI'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
