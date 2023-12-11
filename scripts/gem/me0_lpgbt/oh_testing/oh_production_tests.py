@@ -327,13 +327,13 @@ if __name__ == "__main__":
                 if chip_id in chip_id_list:
                     for oh_sn in xml_results:
                         # save main lpgbt calib data
-                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] = chip_id:
+                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] == chip_id:
                             if calib_data:
                                 xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(calib_data)
                             else:
                                 xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
                         # save sub lpgbt calib data
-                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] = chip_id:
+                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == chip_id:
                             if calib_data:
                                 xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(calib_data)
                             else:
