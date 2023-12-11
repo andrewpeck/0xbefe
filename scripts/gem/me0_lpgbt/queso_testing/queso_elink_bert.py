@@ -540,9 +540,12 @@ if __name__ == "__main__":
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
-            if int(oh_sn) not in range(1, 1019):
-                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
-                sys.exit() 
+            if batch == "pre_production" and int(oh_sn) not in range(1, 1001):
+                print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
+                sys.exit()
+            elif batch in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
+                print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
+                sys.exit()
             queso_dict[queso_nr] = oh_sn
     input_file.close()
     if len(queso_dict) == 0:
