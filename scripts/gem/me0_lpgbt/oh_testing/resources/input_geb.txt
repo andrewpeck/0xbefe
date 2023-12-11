@@ -1,10 +1,10 @@
 # TEST_TYPE: pre_production
-# SLOT_NUM  SLOT_NAME   OH_SER_NUM  VTRX+_SER_NUM   PIGTAIL_LEN
-1           NARROW_1    1           000001          84
-2           NARROW_2    2           000002          65    
-3           WIDE_1      3           000003          49
-4           WIDE_2      4           000004          32.5
-5           NARROW_1    -9999       -9999           84
-6           NARROW_2    -9999       -9999           65
-7           WIDE_1      -9999       -9999           49
-8           WIDE_2      -9999       -9999           32.5
+# SLOT_NUM  SLOT_NAME   GEB_SER_NUM OH_SER_NUM  VTRX+_SER_NUM   PIGTAIL_LEN
+1           NARROW_1    ME0NP-v1-1  1           000001          84
+2           NARROW_2    ME0NP-v1-1  2           000002          65    
+3           WIDE_1      ME0WP-v1-1  3           000003          49
+4           WIDE_2      ME0WP-v1-1  4           000004          32.5
+5           NARROW_1    -9999       -9999       -9999           84
+6           NARROW_2    -9999       -9999       -9999           65
+7           WIDE_1      -9999       -9999       -9999           49
+8           WIDE_2      -9999       -9999       -9999           32.5
