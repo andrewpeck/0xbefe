@@ -310,7 +310,7 @@ if __name__ == "__main__":
 
                 status_file.close()
                 config_file.close()
-        print
+        print('')
         print('\nRetrieving lpGBT ADC Calibration Values')
         logfile.write('\nRetrieving lpGBT ADC Calibration Values\n')
         calib_db = read_central_adc_calib_file()
