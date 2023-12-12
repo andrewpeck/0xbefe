@@ -356,7 +356,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                 if test_type in ['pre_series', 'production', 'acceptance']:
-                    if xml_results['LPGBT_%s_ADC_CALIB'%gbt_type] == NULL:
+                    if xml_results[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type] == NULL:
                         if not test_failed:
                             print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
                             logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
