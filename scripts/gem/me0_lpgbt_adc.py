@@ -315,10 +315,10 @@ def powerdown_adc(oh_ver):
     lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
 
 
-def read_adc(channel, gain, system):
+def read_adc(channel, gain, system, differential_signal_n = 0xf):
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), differential_signal_n)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
     mean_val = get_adc_val(system)
