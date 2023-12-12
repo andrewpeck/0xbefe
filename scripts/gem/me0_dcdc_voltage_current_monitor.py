@@ -43,7 +43,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     if gbt == 0:
         minutes, vin, v_1v2d, i_1v2d, i_diff_1v2d = [], [], [], [], []
     elif gbt == 2:
-        minutes, v_1v2a, i_1v2a, i_diff_1v2a = [], [], [], [], []
+        minutes, v_1v2a, i_1v2a, i_diff_1v2a = [], [], [], []
 
     run_time_min = float(run_time_min)
 
