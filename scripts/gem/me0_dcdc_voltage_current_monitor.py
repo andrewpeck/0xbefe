@@ -185,8 +185,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         fig4.savefig(figure_name4, bbox_inches="tight")
         fig5.savefig(figure_name5, bbox_inches="tight")
     elif gbt == 2:
-        figure_name4 = dataDir + "/ME0_OH%d_GBT%d_1V2A_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
-        figure_name5 = dataDir + "/ME0_OH%d_GBT%d_1V2A_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        figure_name3 = dataDir + "/ME0_OH%d_GBT%d_1V2A_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        figure_name4 = dataDir + "/ME0_OH%d_GBT%d_1V2A_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
         fig3, ax3 = plt.subplots()
         fig4, ax4 = plt.subplots()
         ax3.set_xlabel("minutes")
