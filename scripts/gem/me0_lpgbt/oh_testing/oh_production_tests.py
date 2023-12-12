@@ -1627,7 +1627,7 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
-            elif vtrxp_results[vtrxp_dict[slot]]['RSSI'] < 250:
+            elif vtrxp_results[input_vtrxp_dict[slot]]['RSSI'] < 250:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
@@ -1888,19 +1888,19 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             if temperatures['Temperature']!=[]:
-                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = np.mean(temperatures['Temperature'])
+                vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] = np.mean(temperatures['Temperature'])
             else:
-                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = NULL
+                vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] = NULL
         temperature_range = 45
         for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['TEMP'] == NULL:
+            if vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
                     test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-            elif vtrxp_results[vtrxp_dict[slot]]['TEMP'] > temperature_range:
+            elif vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
