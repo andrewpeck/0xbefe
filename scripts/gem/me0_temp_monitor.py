@@ -57,6 +57,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     ax.set_xlabel('minutes')
     ax.set_ylabel('T (C)')
     
+    channel = -9999
     if device == "OH":
         channel = 6
     elif device == "VTRX":
@@ -263,17 +264,17 @@ if __name__ == "__main__":
         if not boss:
             print (Colors.YELLOW + "Only boss lpGBT allowed for GEB temperature" + Colors.ENDC)
             sys.exit()
-            if args.temp == "GEB_1V2D":
-                if int(args.gbtid)%4 != 0:
-                    print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
-                    sys.exit()
-            elif args.temp in ["GEB_1V2A", "GEB_2.5VD"]:
-                if int(args.gbtid)%4 == 0:
-                    print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
-                    sys.exit()
-            else:
-                print (Colors.YELLOW + "Incorrect GEB temperature" + Colors.ENDC)
+        if args.temp == "GEB_1V2D":
+            if int(args.gbtid)%4 != 0:
+                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
                 sys.exit()
+        elif args.temp in ["GEB_1V2A", "GEB_2.5VD"]:
+            if int(args.gbtid)%4 == 0:
+                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
+                sys.exit()
+        else:
+            print (Colors.YELLOW + "Incorrect GEB temperature" + Colors.ENDC)
+            sys.exit()
     else:
         print (Colors.YELLOW + "Incorrect temperature to read" + Colors.ENDC)
         sys.exit()
