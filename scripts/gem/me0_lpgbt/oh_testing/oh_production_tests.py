@@ -344,7 +344,6 @@ if __name__ == "__main__":
                     xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
                 if 'LPGBT_S_ADC_CALIB' not in xml_results[oh_sn]:
                     xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
-        
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'M' if gbt%2==0 else 'S'
@@ -357,7 +356,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                 if test_type in ['pre_series', 'production', 'acceptance']:
-                    if xml_results['LPGBT_%s_ADC_CALIB'] == NULL:
+                    if xml_results['LPGBT_%s_ADC_CALIB'%gbt_type] == NULL:
                         if not test_failed:
                             print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
                             logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
