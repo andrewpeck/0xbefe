@@ -136,6 +136,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 v_1v2a.append(v_1v2a_converted)
                 i_1v2a.append(i_1v2a_converted)
                 i_diff_1v2a.append(i_diff_1v2a_converted)
+            second = time() - start_time
             minutes.append(second/60.0)
             
             if plot:
