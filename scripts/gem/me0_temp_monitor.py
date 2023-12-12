@@ -268,7 +268,7 @@ if __name__ == "__main__":
             if int(args.gbtid)%4 != 0:
                 print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
                 sys.exit()
-        elif args.temp in ["GEB_1V2A", "GEB_2.5VD"]:
+        elif args.temp in ["GEB_1V2A", "GEB_2V5"]:
             if int(args.gbtid)%4 == 0:
                 print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
                 sys.exit()
