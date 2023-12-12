@@ -85,7 +85,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                     adc_value_1v2d_p = read_adc(3, gain, system)
                     adc_value_1v2d_n = read_adc(1, gain, system)
                     adc_value_1v2d_pn = read_adc(3, gain, system, 1)
-            elif oh_ver == 2:
+                elif oh_ver == 2:
                     adc_value_vin = read_adc(6, gain, system)
                     adc_value_1v2d_p = read_adc(3, gain, system)
                     adc_value_1v2d_n = read_adc(0, gain, system)
@@ -95,7 +95,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                     adc_value_1v2a_p = read_adc(3, gain, system)
                     adc_value_1v2a_n = read_adc(1, gain, system)
                     adc_value_1v2a_pn = read_adc(3, gain, system, 1)
-            elif oh_ver == 2:
+                elif oh_ver == 2:
                     adc_value_1v2a_p = read_adc(3, gain, system)
                     adc_value_1v2a_n = read_adc(0, gain, system)
                     adc_value_1v2a_pn = read_adc(3, gain, system, 0)
