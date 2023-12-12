@@ -154,6 +154,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
 
 def temp_res_fit(temp_cal="10k", type="nominal", power=2):
 
+    B_list = []
+    T_list = []
     if temp_cal=="10k":
         if type == "OH_new":
             B_list = [3380, 3422, 3435, 3453]  # OH: NTCG103JX103DT1S
