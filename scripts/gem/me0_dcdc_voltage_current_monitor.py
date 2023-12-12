@@ -28,7 +28,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = me0Dir + "/lpgbt_asense_data"
+    dataDir = me0Dir + "/lpgbt_dcdc_voltage_current_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -37,10 +37,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = dataDir + "/ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_dcdc_voltage_current_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
-    minutes, asense0, asense1, asense2, asense3 = [], [], [], [], []
+    if gbt == 0:
+        minutes, vin, v_1v2d, i_1v2d, i_diff_1v2d = [], [], [], [], []
+    elif gbt == 2:
+        minutes, v_1v2a, i_1v2a, i_diff_1v2a = [], [], [], [], []
 
     run_time_min = float(run_time_min)
 
@@ -49,7 +52,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     ax1.set_ylabel("PG Current (A)")
     fig2, ax2 = plt.subplots()
     ax2.set_xlabel("minutes")
-    ax2.set_ylabel("Rt Voltage (V)")
+    ax2.set_ylabel("PG Voltage (V)")
     #ax.set_xticks(range(0,run_time_min+1))
     #ax.set_xlim([0,run_time_min])
     start_time = int(time())
@@ -57,9 +60,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
     file_out = open(filename, "w")
     if gbt == 0:
-        file_out.write("Time (min) \t Asense0 (PG2.5V current) (A) \t Asense1 (Rt2 voltage) (V) \t Asense2 (PG1.2V current) (A) \t Asense3 (Rt1 voltage) (V)\n")
+        file_out.write("Time (min) \t V_IN Voltage (V) \t 1.2VD Voltage (V) \t 1.2VD Current (A) \t 1.2VD Current (Differential Measurement) (A)\n")
     elif gbt == 2:
-        file_out.write("Time (min) \t Asense0 (PG1.2VD current) (A) \t Asense1 (Rt3 voltage) (V) \t Asense2 (PG1.2VA current) (A) \t Asense3 (Rt4 voltage) (V)\n")
+        file_out.write("Time (min) \t 1.2VA Voltage (V) \t 1.2VA Current (A) \t 1.2VA Current (Differential Measurement) (A)\n")
     t0 = time()
     nrun = 0
     first_reading = 1
@@ -69,43 +72,72 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             read_adc_iter = 0
 
         if read_adc_iter:
-            if oh_ver == 1:
-                adc_value0 = read_adc(4, gain, system)
-                adc_value1 = read_adc(2, gain, system)
-                adc_value2 = read_adc(1, gain, system)
-                adc_value3 = read_adc(3, gain, system)
-            if oh_ver == 2:
-                adc_value0 = read_adc(6, gain, system)
-                adc_value1 = read_adc(1, gain, system)
-                adc_value2 = read_adc(0, gain, system)
-                adc_value3 = read_adc(3, gain, system)
+            if gbt == 0:
+                if oh_ver == 1:
+                    adc_value_vin = read_adc(4, gain, system)
+                    adc_value_1v2d_p = read_adc(3, gain, system)
+                    adc_value_1v2d_n = read_adc(1, gain, system)
+                    adc_value_1v2d_pn = read_adc(3, gain, system, 1)
+            elif oh_ver == 2:
+                    adc_value_vin = read_adc(6, gain, system)
+                    adc_value_1v2d_p = read_adc(3, gain, system)
+                    adc_value_1v2d_n = read_adc(0, gain, system)
+                    adc_value_1v2d_pn = read_adc(3, gain, system, 0)
+            elif gbt == 2:
+                if oh_ver == 1:
+                    adc_value_1v2a_p = read_adc(3, gain, system)
+                    adc_value_1v2a_n = read_adc(1, gain, system)
+                    adc_value_1v2a_pn = read_adc(3, gain, system, 1)
+            elif oh_ver == 2:
+                    adc_value_1v2a_p = read_adc(3, gain, system)
+                    adc_value_1v2a_n = read_adc(0, gain, system)
+                    adc_value_1v2a_pn = read_adc(3, gain, system, 0)
 
-            asense0_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value0, gain)
-            asense1_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value1, gain)
-            asense2_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value2, gain)
-            asense3_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value3, gain)
-
-            asense0_converted = asense_current_conversion(asense0_Vin)
-            asense1_converted = asense1_Vin
-            asense2_converted = asense_current_conversion(asense2_Vin)
-            asense3_converted = asense3_Vin
-            second = time() - start_time
-            asense0.append(asense0_converted)
-            asense1.append(asense1_converted)
-            asense2.append(asense2_converted)
-            asense3.append(asense3_converted)
+            if gbt == 0:
+                adc_value_vin_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vin, gain)
+                adc_value_1v2d_p_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_p, gain)
+                adc_value_1v2d_n_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_n, gain)
+                adc_value_1v2d_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_pn, gain)
+                vin_converted = adc_value_vin_Vin * ((750 + 10000)/750)
+                v_1v2d_p_converted = adc_value_1v2d_p_Vin * 2
+                v_1v2d_n_converted = adc_value_1v2d_n_Vin * 2
+                v_1v2d_pn_converted = adc_value_1v2d_pn_Vin * 2
+                v_1v2d_converted = (v_1v2d_p_converted + v_1v2d_n_converted)/2.0
+                i_1v2d_converted = (v_1v2d_p_converted - v_1v2d_n_converted)/0.01
+                i_diff_1v2d_converted = v_1v2d_pn_converted/0.01
+                vin.append(vin_converted)
+                v_1v2d.append(v_1v2d_converted)
+                i_1v2d.append(i_1v2d_converted)
+                i_diff_1v2d.append(i_diff_1v2d_converted)
+            elif gbt == 2:
+                adc_value_1v2a_p_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_p, gain)
+                adc_value_1v2a_n_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_n, gain)
+                adc_value_1v2a_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_pn, gain)
+                v_1v2a_p_converted = adc_value_1v2a_p_Vin * 2
+                v_1v2a_n_converted = adc_value_1v2a_n_Vin * 2
+                v_1v2a_pn_converted = adc_value_1v2a_pn_Vin * 2
+                v_1v2a_converted = (v_1v2a_p_converted + v_1v2a_n_converted)/2.0
+                i_1v2a_converted = (v_1v2a_p_converted - v_1v2a_n_converted)/0.01
+                i_diff_1v2a_converted = v_1v2a_pn_converted/0.01
+                v_1v2a.append(v_1v2a_converted)
+                i_1v2a.append(i_1v2a_converted)
+                i_diff_1v2a.append(i_diff_1v2a_converted)
             minutes.append(second/60.0)
             
             if plot:
-                live_plot_current(ax1, minutes, asense0, asense2, run_time_min, gbt)
-                live_plot_temp(ax2, minutes, asense1, asense3, run_time_min, gbt)
+                if gbt == 0:
+                    live_plot_current(ax1, minutes, vin, v_1v2d, run_time_min, gbt)
+                    live_plot_voltage(ax2, minutes, i_1v2d, i_diff_1v2d, run_time_min, gbt)
+                elif gbt == 2:
+                    live_plot_current(ax1, minutes, v_1v2a, None, run_time_min, gbt)
+                    live_plot_voltage(ax2, minutes, i_1v2a, i_diff_1v2a, run_time_min, gbt)
 
-            file_out.write(str(second/60.0) + "\t" + str(asense0_converted) + "\t" + str(asense1_converted) + "\t" + str(asense2_converted) + "\t" + str(asense3_converted) + "\n" )
             if gbt == 0:
-                print("Time: " + "{:.2f}".format(second/60.0) + " min \t Asense0 (PG2.5V current): " + "{:.3f}".format(asense0_converted) + " A \t Asense1 (Rt2 voltage): " + "{:.3f}".format(asense1_converted) + " V \t Asense2 (PG1.2V current): " + "{:.3f}".format(asense2_converted) + " A \t Asense3 (Rt1 voltage): " + "{:.3f}".format(asense3_converted) + " V \n" )
+                file_out.write(str(second/60.0) + "\t" + str(vin_converted) + "\t" + str(v_1v2d_converted) + "\t" + str(i_1v2d_converted) + "\t" + str(i_diff_1v2d_converted) + "\n" )
+                print("Time: " + "{:.2f}".format(second/60.0) + " min \t V_IN Voltage: " + "{:.3f}".format(vin_converted) + " V \t 1.2VD Voltage: " + "{:.3f}".format(v_1v2d_converted) + " V \t 1.2VD Current: " + "{:.3f}".format(i_1v2d_converted) + " A \t 1.2VD Current (Differential Measurement): " + "{:.3f}".format(i_diff_1v2d_converted) + " A \n" )
             elif gbt == 2:
-                print("Time: " + "{:.2f}".format(second/60.0) + " min \t Asense0 (PG1.2VD current): " + "{:.3f}".format(asense0_converted) + " A \t Asense1 (Rt3 voltage): " + "{:.3f}".format(asense1_converted) + " V \t Asense2 (PG1.2VA current): " + "{:.3f}".format(asense2_converted) + " A \t Asense3 (Rt4 voltage): " + "{:.3f}".format(asense3_converted) + " V \n" )
-
+                file_out.write(str(second/60.0) + "\t" + str(v_1v2a_converted) + "\t" + str(v_1v2d_converted) + "\t" + str(i_1v2a_converted) + "\t" + str(i_diff_1v2a_converted) + "\n" )
+                print("Time: " + "{:.2f}".format(second/60.0) + " min \t 1.2VA Voltage: " + "{:.3f}".format(v_1v2a_converted) + " V \t 1.2VA Current: " + "{:.3f}".format(i_1v2a_converted) + " A \t 1.2VA Current (Differential Measurement): " + "{:.3f}".format(i_diff_1v2a_converted) + " A \n" )
             t0 = time()
             if first_reading:
                 first_reading = 0
@@ -116,57 +148,63 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
     file_out.close()
 
-    asense0_label = ""
-    asense1_label = ""
-    asense2_label = ""
-    asense3_label = ""
-    if gbt==0:
-        asense0_label = "PG2.5V current"
-        asense1_label = "Rt2 voltage"
-        asense2_label = "PG1.2V current"
-        asense3_label = "Rt1 voltage"
-    if gbt==2:
-        asense0_label = "PG1.2VD current"
-        asense1_label = "Rt3 voltage"
-        asense2_label = "PG1.2VA current"
-        asense3_label = "Rt4 voltage"
-
-    figure_name1 = dataDir + "/ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
-    figure_name2 = dataDir + "/ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
-    fig3, ax3 = plt.subplots()
-    fig4, ax4 = plt.subplots()
-    ax3.set_xlabel("minutes")
-    ax3.set_ylabel("PG Current (A)")
-    ax4.set_xlabel("minutes")
-    ax4.set_ylabel("Rt Voltage (V)")
-    ax3.plot(minutes, asense0, color="red", label=asense0_label)
-    ax3.plot(minutes, asense2, color="blue", label=asense2_label)
-    ax3.legend(loc="center right")
-    ax4.plot(minutes, asense1, color="red", label=asense1_label)
-    ax4.plot(minutes, asense3, color="blue", label=asense3_label)
-    ax4.legend(loc="center right")
-    fig3.savefig(figure_name1, bbox_inches="tight")
-    fig4.savefig(figure_name2, bbox_inches="tight")
-
+    if gbt == 0:
+        figure_name3 = dataDir + "/ME0_OH%d_GBT%d_Vin_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        figure_name4 = dataDir + "/ME0_OH%d_GBT%d_1V2D_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        figure_name5 = dataDir + "/ME0_OH%d_GBT%d_1V2D_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        fig3, ax3 = plt.subplots()
+        fig4, ax4 = plt.subplots()
+        fig5, ax5 = plt.subplots()
+        ax3.set_xlabel("minutes")
+        ax3.set_ylabel("Vin Voltage (V)")
+        ax4.set_xlabel("minutes")
+        ax4.set_ylabel("1.2VD Voltage (V)")
+        ax5.set_xlabel("minutes")
+        ax5.set_ylabel("1.2VD Current (V)")
+        ax3.plot(minutes, vin, color="red")
+        ax4.plot(minutes, v_1v2d, color="red")
+        ax5.plot(minutes, i_1v2d, color="red", label="1.2VD Current")
+        ax5.plot(minutes, i_diff_1v2d, color="blue", label="1.2VD Current Differential")
+        ax5.legend(loc="center right")
+        fig3.savefig(figure_name3, bbox_inches="tight")
+        fig4.savefig(figure_name4, bbox_inches="tight")
+        fig5.savefig(figure_name5, bbox_inches="tight")
+    eliif gbt == 2:
+        figure_name4 = dataDir + "/ME0_OH%d_GBT%d_1V2A_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        figure_name5 = dataDir + "/ME0_OH%d_GBT%d_1V2A_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+        fig3, ax3 = plt.subplots()
+        fig4, ax4 = plt.subplots()
+        ax3.set_xlabel("minutes")
+        ax3.set_ylabel("1.2VA Voltage (V)")
+        ax4.set_xlabel("minutes")
+        ax4.set_ylabel("1.2VA Current (V)")
+        ax3.plot(minutes, v_1v2a, color="red")
+        ax4.plot(minutes, i_1v2a, color="red", label="1.2VA Current")
+        ax4.plot(minutes, i_diff_1v2a, color="blue", label="1.2VA Current Differential")
+        ax5.legend(loc="center right")
+        fig3.savefig(figure_name3, bbox_inches="tight")
+        fig4.savefig(figure_name4, bbox_inches="tight")
+        
     powerdown_adc(oh_ver)
 
-def live_plot_current(ax1, x, y0, y2, run_time_min, gbt):
-    line0, = ax1.plot(x, y0, "red")
-    line2, = ax1.plot(x, y2, "black")
-    if gbt in [0,1]:
-        ax1.legend((line0, line2), ("PG2.5V current", "PG1.2V current"), loc="center right")
-    else:
-        ax1.legend((line0, line2), ("PG1.2VD current", "PG1.2VA current"), loc="center right")
+def live_plot_current(ax1, x, i1, i2, run_time_min, gbt):
+    line1, = ax1.plot(x, i1, "red")
+    line2, = ax1.plot(x, i2, "black")
+    if gbt == 0:
+        ax1.legend((line1, line2), ("1.2VD current", "1.2VD current differential"), loc="center right")
+    elif gbt == 2:
+        ax1.legend((line1, line2), ("1.2VA current", "1.2VA current differential"), loc="center right")
     plt.draw()
     plt.pause(0.01)
 
-def live_plot_temp(ax2, x, y1, y3, run_time_min, gbt):
-    line1, = ax2.plot(x, y1, "red")
-    line3, = ax2.plot(x, y3, "black")
-    if gbt in [0,1]:
-        ax2.legend((line1, line3), ("Rt2 voltage", "Rt1 voltage"), loc="center right")
-    else:
-        ax2.legend((line1, line3), ("Rt3 voltage", "Rt4 voltage"), loc="center right")
+def live_plot_voltage(ax2, x, v1, v2, run_time_min, gbt):
+    line1, = ax2.plot(x, v1, "red")
+    if v2 is not None:
+        line2, = ax2.plot(x, v2, "black")
+    if gbt == 0:
+        ax2.legend((line1, line2), ("V_in voltage", "1.2VD voltage"), loc="center right")
+    elif gbt == 2:
+        ax2.legend((line1), ("1.2VA voltage"), loc="center right")
     plt.draw()
     plt.pause(0.01)
 
@@ -183,7 +221,7 @@ def asense_current_conversion(Vin):
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="Asense monitoring for ME0 Optohybrid")
+    parser = argparse.ArgumentParser(description="DC-DC voltage and current monitoring for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = chc or queso or backend or dryrun")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
@@ -195,13 +233,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.system == "chc":
-        print("Using Rpi CHeeseCake for asense monitoring")
+        print("Using Rpi CHeeseCake for dc-dc voltage and current monitoring")
     elif args.system == "queso":
-        print("Using QUESO for asense monitoring")
+        print("Using QUESO for dc-dc voltage and current  monitoring")
     elif args.system == "backend":
-        print ("Using Backend for asense monitoring")
+        print ("Using Backend for dc-dc voltage and current  monitoring")
     elif args.system == "dryrun":
-        print("Dry Run - not actually running asense monitoring")
+        print("Dry Run - not actually running dc-dc voltage and current  monitoring")
     else:
         print(Colors.YELLOW + "Only valid options: chc, queso, backend, dryrun" + Colors.ENDC)
         sys.exit()
