@@ -72,6 +72,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             read_adc_iter = 0
 
         if read_adc_iter:
+            adc_value_vin = -9999
+            adc_value_1v2d_p = -9999
+            adc_value_1v2d_n = -9999
+            adc_value_1v2d_pn = -9999
+            adc_value_1v2a_p = -9999
+            adc_value_1v2a_n = -9999
+            adc_value_1v2a_pn = -9999
             if gbt == 0:
                 if oh_ver == 1:
                     adc_value_vin = read_adc(4, gain, system)
@@ -93,6 +100,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                     adc_value_1v2a_n = read_adc(0, gain, system)
                     adc_value_1v2a_pn = read_adc(3, gain, system, 0)
 
+            vin_converted = -9999
+            v_1v2d_converted = -9999
+            i_1v2d_converted = -9999
+            i_diff_1v2d_converted = -9999
+            v_1v2a_converted = -9999
+            i_1v2a_converted = -9999
+            i_diff_1v2a_converted = -9999
             if gbt == 0:
                 adc_value_vin_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vin, gain)
                 adc_value_1v2d_p_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_p, gain)
