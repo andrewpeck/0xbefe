@@ -40,6 +40,7 @@ def get_vin(vout, fit_results):
 
 def get_local_adc_calib_from_file(oh_select, gbt_select):
     adc_calib_results = []
+    adc_calib_results_array = []
     adc_calibration_dir = scripts_dir + "/gem/results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
         print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
