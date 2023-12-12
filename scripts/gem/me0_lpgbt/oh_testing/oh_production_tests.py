@@ -1619,7 +1619,7 @@ if __name__ == "__main__":
                 vtrxp_results[vtrxp_sn]['RSSI'] = np.mean(rssi)
             else:
                 vtrxp_results[vtrxp_sn]['RSSI'] = NULL
-        for slot,oh_sn in geb_dict.items():
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
             if vtrxp_results[vtrxp_sn]['RSSI'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
@@ -1627,7 +1627,7 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
-            elif vtrxp_results[input_vtrxp_dict[slot]]['RSSI'] < 250:
+            elif vtrxp_results[vtrxp_sn]['RSSI'] < 250:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
@@ -1863,7 +1863,7 @@ if __name__ == "__main__":
         time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for slot,oh_sn in geb_dict.items():
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
             print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
@@ -1888,19 +1888,19 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             if temperatures['Temperature']!=[]:
-                vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] = np.mean(temperatures['Temperature'])
+                vtrxp_results[vtrxp_sn]['TEMP'] = np.mean(temperatures['Temperature'])
             else:
-                vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] = NULL
+                vtrxp_results[vtrxp_sn]['TEMP'] = NULL
         temperature_range = 45
-        for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] == NULL:
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
+            if vtrxp_results[vtrxp_sn]['TEMP'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
                     test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-            elif vtrxp_results[input_vtrxp_dict[slot]]['TEMP'] > temperature_range:
+            elif vtrxp_results[vtrxp_sn]['TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
