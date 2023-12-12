@@ -196,7 +196,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         ax3.plot(minutes, v_1v2a, color="red")
         ax4.plot(minutes, i_1v2a, color="red", label="1.2VA Current")
         ax4.plot(minutes, i_diff_1v2a, color="blue", label="1.2VA Current Differential")
-        ax5.legend(loc="center right")
+        ax4.legend(loc="center right")
         fig3.savefig(figure_name3, bbox_inches="tight")
         fig4.savefig(figure_name4, bbox_inches="tight")
 
