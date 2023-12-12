@@ -253,23 +253,25 @@ if __name__ == "__main__":
         boss = 1
     else:
         boss = 0
-    if args.temp in ["OH", "VTRX"] and boss:
-        print (Colors.YELLOW + "Only sub lpGBT allowed for OH and VTRx+ temperature" + Colors.ENDC)
-        sys.exit()
-    elif "GEB" in args.temp and not boss:
-        print (Colors.YELLOW + "Only boss lpGBT allowed for GEB temperature" + Colors.ENDC)
-        sys.exit()
-        if args.temp == "GEB_1V2D":
-            if int(args.gbtid)%4 != 0:
-                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
-                sys.exit()
-        elif args.temp in ["GEB_1V2A", "GEB_2.5VD"]:
-            if int(args.gbtid)%4 == 0:
-                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
-                sys.exit()
-        else:
-            print (Colors.YELLOW + "Incorrect GEB temperature" + Colors.ENDC)
+    if args.temp in ["OH", "VTRX"]:
+        if boss:
+            print (Colors.YELLOW + "Only sub lpGBT allowed for OH and VTRx+ temperature" + Colors.ENDC)
             sys.exit()
+    elif "GEB" in args.temp:
+        if not boss:
+            print (Colors.YELLOW + "Only boss lpGBT allowed for GEB temperature" + Colors.ENDC)
+            sys.exit()
+            if args.temp == "GEB_1V2D":
+                if int(args.gbtid)%4 != 0:
+                    print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
+                    sys.exit()
+            elif args.temp in ["GEB_1V2A", "GEB_2.5VD"]:
+                if int(args.gbtid)%4 == 0:
+                    print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
+                    sys.exit()
+            else:
+                print (Colors.YELLOW + "Incorrect GEB temperature" + Colors.ENDC)
+                sys.exit()
     else:
         print (Colors.YELLOW + "Incorrect temperature to read" + Colors.ENDC)
         sys.exit()
