@@ -85,7 +85,7 @@ def main():
                 pass
 
             for i,oh_sn in enumerate(oh_sn_batch_list):
-                vtrxp_sn = input('Enter VTRXP SERIAL NUMBER for OH %s: '%oh_sn)
+                vtrxp_sn = input('Enter VTRxPlus SERIAL NUMBER for OH %s: '%oh_sn)
                 
                 print('\nSection: OH.RUN:\n----------------')
                 
@@ -140,7 +140,7 @@ def main():
                         'MUNUFACTURER': 'Pactron',
                         'CHILDREN':{
                             'PART':{
-                                'SERIAL_NUMBER':'ME0-VTRXP-%s'%vtrxp_sn,
+                                'SERIAL_NUMBER':'ME0-VTRxPlus-%s'%vtrxp_sn,
                                 'KIND_OF_PART': 'ME0 VTRxPlus'
                                     }
                                     }
@@ -148,7 +148,7 @@ def main():
                 )
                 reg_vtrxp_data['ROOT']['PARTS']['PART'].append(
                     {
-                        'SERIAL_NUMBER': 'ME0-VTRXP-%s'%vtrxp_sn,
+                        'SERIAL_NUMBER': 'ME0-VTRxPlus-%s'%vtrxp_sn,
                         'LOCATION': location,
                         'KIND_OF_PART': 'ME0 VTRxPlus',
                         'RECORD_INSERTION_USER': user,
@@ -339,24 +339,24 @@ def main():
                         options = input('Enter BOARD PURPOSE for OH %s (%s): '%(oh_sn,board_purpose_dict_str))
                     board_purpose = board_purpose_dict[options]
 
-                print('\nSection VTRXP.RUN is automatically generated from OH %s info.\n'%oh_sn)
-                comments_vtrxp = input('Enter any comments for VTRXP %s (mounted on OH %s): '%(vtrxp_sn,oh_sn))
+                print('\nSection VTRxPlus.RUN is automatically generated from OH %s info.\n'%oh_sn)
+                comments_vtrxp = input('Enter any comments for VTRxPlus %s (mounted on OH %s): '%(vtrxp_sn,oh_sn))
 
                 # JSON input file
-                json_filename = input_OHSNs_Dir + '/OH_%s_VTRXP_%s.json'%(oh_sn,vtrxp_sn)
+                json_filename = input_OHSNs_Dir + '/OH_%s_VTRxPlus_%s.json'%(oh_sn,vtrxp_sn)
                 print('\nGenerating input JSON file at: %s\n'%json_filename)
 
                 # populate JSON data dict
-                data = {'OH':{'RUN':{}, 'DATA':[{},{}]}, 'VTRXP':{'RUN':{}}}
+                data = {'OH':{'RUN':{}, 'DATA':[{},{}]}, 'VTRxPlus':{'RUN':{}}}
                 data['OH']['RUN']['RUN_TYPE'] = "ME0 OH QC Hardware"
-                data['VTRXP']['RUN']['RUN_TYPE'] = "ME0 VTRxp QC Hardware"
-                data['OH']['RUN']['RUN_NUMBER'] = data['VTRXP']['RUN']['RUN_NUMBER'] = run_number
-                data['OH']['RUN']['RUN_BEGIN_TIMESTAMP'] = data['VTRXP']['RUN']['RUN_BEGIN_TIMESTAMP'] = run_begin_timestamp
-                data['OH']['RUN']['RUN_END_TIMESTAMP'] = data['VTRXP']['RUN']['RUN_END_TIMESTAMP'] = run_end_timestamp
-                data['OH']['RUN']['LOCATION'] = data['VTRXP']['RUN']['LOCATION'] = location
-                data['OH']['RUN']['INITIATED_BY_USER'] = data['VTRXP']['RUN']['INITIATED_BY_USER'] = user
+                data['VTRxPlus']['RUN']['RUN_TYPE'] = "ME0 VTRxPlus QC Hardware"
+                data['OH']['RUN']['RUN_NUMBER'] = data['VTRxPlus']['RUN']['RUN_NUMBER'] = run_number
+                data['OH']['RUN']['RUN_BEGIN_TIMESTAMP'] = data['VTRxPlus']['RUN']['RUN_BEGIN_TIMESTAMP'] = run_begin_timestamp
+                data['OH']['RUN']['RUN_END_TIMESTAMP'] = data['VTRxPlus']['RUN']['RUN_END_TIMESTAMP'] = run_end_timestamp
+                data['OH']['RUN']['LOCATION'] = data['VTRxPlus']['RUN']['LOCATION'] = location
+                data['OH']['RUN']['INITIATED_BY_USER'] = data['VTRxPlus']['RUN']['INITIATED_BY_USER'] = user
                 data['OH']['RUN']['COMMENT_DESCRIPTION'] = comments_oh
-                data['VTRXP']['RUN']['COMMENT_DESCRIPTION'] = comments_vtrxp
+                data['VTRxPlus']['RUN']['COMMENT_DESCRIPTION'] = comments_vtrxp
                 data['OH']['DATA'][0]['BATCH'] = batch
                 data['OH']['DATA'][0]['THERMAL_TESTING_DONE'] = thermal_testing
                 data['OH']['DATA'][0]['THERMAL_TESTING_PASS'] = thermal_testing_pass
@@ -379,7 +379,7 @@ def main():
 
             # Register oh's,vtrxp's xml file
             oh_xml_fn = data_OHSNs_Dir + '/ME0_OH_components.xml'
-            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0_VTRXP_components.xml'
+            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0_VTRxPlus_components.xml'
 
             with open(oh_xml_fn,'w') as xmlfile:
                 xmltodict.unparse(reg_oh_data,xmlfile,pretty=True,indent='  ')

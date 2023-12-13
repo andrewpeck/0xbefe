@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
                 sys.exit()
             geb_dict[slot] = oh_sn
-            input_oh_dict[slot] = {'GEB_SERIAL_NUMBER':geb_sn, 'GEB_SLOT':slot_name, 'VTRXP_SERIAL_NUMBER':vtrxp_sn}
+            input_oh_dict[slot] = {'GEB_SERIAL_NUMBER':geb_sn, 'GEB_SLOT':slot_name, 'VTRXPLUS_SERIAL_NUMBER':vtrxp_sn}
             input_vtrxp_dict[slot] = {'OH_SERIAL_NUMBER':oh_sn,'PIGTAIL_LENGTH':pigtail}
     input_file.close()
 
@@ -138,8 +138,8 @@ if __name__ == "__main__":
         xml_results[oh_sn]["TEST_TYPE"] = test_type
         xml_results[oh_sn]['VFAT_SLOTS'] = str(geb_oh_map[slot]['VFAT'])
         
-        vtrxp_results[input_oh_dict[slot]['VTRXP_SERIAL_NUMBER']] = {}
-        vtrxp_results[input_oh_dict[slot]['VTRXP_SERIAL_NUMBER']].update(input_vtrxp_dict[slot])
+        vtrxp_results[input_oh_dict[slot]['VTRXPLUS_SERIAL_NUMBER']] = {}
+        vtrxp_results[input_oh_dict[slot]['VTRXPLUS_SERIAL_NUMBER']].update(input_vtrxp_dict[slot])
 
         full_results[oh_sn] = xml_results[oh_sn].copy()
 
