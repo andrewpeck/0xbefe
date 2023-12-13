@@ -10,7 +10,7 @@ import numpy as np
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt_adc import *
 
-def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
+def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, gain_diff, plot):
 
     gbt = gbt_select%4
     print("ADC Readings:")
@@ -84,21 +84,21 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                     adc_value_vin = read_adc(4, gain, system)
                     adc_value_1v2d_p = read_adc(3, gain, system)
                     adc_value_1v2d_n = read_adc(1, gain, system)
-                    adc_value_1v2d_pn = read_adc(3, gain, system, 1)
+                    adc_value_1v2d_pn = read_adc(3, gain_diff, system, 1)
                 elif oh_ver == 2:
                     adc_value_vin = read_adc(6, gain, system)
                     adc_value_1v2d_p = read_adc(3, gain, system)
                     adc_value_1v2d_n = read_adc(0, gain, system)
-                    adc_value_1v2d_pn = read_adc(3, gain, system, 0)
+                    adc_value_1v2d_pn = read_adc(3, gain_diff, system, 0)
             elif gbt == 2:
                 if oh_ver == 1:
                     adc_value_1v2a_p = read_adc(3, gain, system)
                     adc_value_1v2a_n = read_adc(1, gain, system)
-                    adc_value_1v2a_pn = read_adc(3, gain, system, 1)
+                    adc_value_1v2a_pn = read_adc(3, gain_diff, system, 1)
                 elif oh_ver == 2:
                     adc_value_1v2a_p = read_adc(3, gain, system)
                     adc_value_1v2a_n = read_adc(0, gain, system)
-                    adc_value_1v2a_pn = read_adc(3, gain, system, 0)
+                    adc_value_1v2a_pn = read_adc(3, gain_diff, system, 0)
 
             vin_converted = -9999
             v_1v2d_converted = -9999
@@ -111,7 +111,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 adc_value_vin_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_vin, gain)
                 adc_value_1v2d_p_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_p, gain)
                 adc_value_1v2d_n_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_n, gain)
-                adc_value_1v2d_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_pn, gain)
+                adc_value_1v2d_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2d_pn, gain_diff)
                 vin_converted = adc_value_vin_Vin * ((750 + 10000)/750)
                 v_1v2d_p_converted = adc_value_1v2d_p_Vin * 2
                 v_1v2d_n_converted = adc_value_1v2d_n_Vin * 2
@@ -126,7 +126,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
             elif gbt == 2:
                 adc_value_1v2a_p_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_p, gain)
                 adc_value_1v2a_n_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_n, gain)
-                adc_value_1v2a_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_pn, gain)
+                adc_value_1v2a_pn_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value_1v2a_pn, gain_diff)
                 v_1v2a_p_converted = adc_value_1v2a_p_Vin * 2
                 v_1v2a_n_converted = adc_value_1v2a_n_Vin * 2
                 v_1v2a_pn_converted = adc_value_1v2a_pn_Vin * 2
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
-    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32")
+    parser.add_argument("-a", "--gain", action="store", dest="gain", default = "2", help="gain = Gain for ADC: 2, 8, 16, 32, default is 2 for single ended measurements and 16 for differential current measurement")
     args = parser.parse_args()
 
     if args.system == "chc":
@@ -291,6 +291,7 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Allowed values of gain = 2, 8, 16, 32" + Colors.ENDC)
         sys.exit()
     gain = int(args.gain)
+    gain_diff = 16 # for differential current measurement
 
     # Initialization 
     rw_initialize(args.gem, args.system, oh_ver, boss, args.ohid, args.gbtid)
@@ -306,7 +307,7 @@ if __name__ == "__main__":
         check_lpgbt_mode(boss, args.ohid, args.gbtid)
         
     try:
-        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, args.plot)
+        main(args.system, oh_ver, int(args.ohid), int(args.gbtid), boss, args.minutes, int(args.niter), gain, gain_diff, args.plot)
     except KeyboardInterrupt:
         print(Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
