@@ -314,12 +314,12 @@ if __name__ == "__main__":
         print('\nRetrieving lpGBT ADC Calibration Values')
         logfile.write('\nRetrieving lpGBT ADC Calibration Values\n')
         calib_db = read_central_adc_calib_file()
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = {}
+            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = {}
         if not calib_db:
             print(Colors.RED + 'Failed to read calibration file' + Colors.ENDC)
             logfile.write('Failed to read calibration file\n')
-            for oh_sn in xml_results:
-                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
-                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
         else:
             # loop through large database file only once to save time
             for chip_id,calib_data in calib_db.items():
@@ -328,22 +328,11 @@ if __name__ == "__main__":
                     for oh_sn in xml_results:
                         # save main lpgbt calib data
                         if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] == chip_id:
-                            if calib_data:
-                                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(calib_data)
-                            else:
-                                xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
+                            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'].update(calib_data)
                         # save sub lpgbt calib data
                         elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == chip_id:
-                            if calib_data:
-                                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(calib_data)
-                            else:
-                                xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
-            # Check for missing calib data
-            for oh_sn in xml_results:
-                if 'LPGBT_M_ADC_CALIB' not in xml_results[oh_sn]:
-                    xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
-                if 'LPGBT_S_ADC_CALIB' not in xml_results[oh_sn]:
-                    xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
+                            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'].update(calib_data)
+        # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'M' if gbt%2==0 else 'S'
@@ -356,7 +345,7 @@ if __name__ == "__main__":
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
                 if test_type in ['pre_series', 'production', 'acceptance']:
-                    if xml_results[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type] == NULL:
+                    if not xml_results[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type]:
                         if not test_failed:
                             print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
                             logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
@@ -364,7 +353,11 @@ if __name__ == "__main__":
                         gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                         print(Colors.RED + 'Missing ADC Calibration data for OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write('Missing ADC Calibration data for OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-
+        # Convert calib results to string
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_M_ADC_CALIB'])
+            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_S_ADC_CALIB'])
+        
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
