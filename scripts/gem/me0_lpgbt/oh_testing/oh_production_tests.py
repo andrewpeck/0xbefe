@@ -3,9 +3,10 @@ import time
 import argparse
 import numpy as np
 import json
+import csv
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
-from gem.me0_lpgbt_adc import read_central_adc_calib_file
+from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 
 # slot to OH mapping
 #   SLOT    OH      GBT     VFAT
@@ -256,7 +257,7 @@ if __name__ == "__main__":
                             gbt_type = 'M' if gbt%2==0 else 'S'
                             chip_id = line.split()[0]
                             xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
-                            chip_id_list.append(chip_id)
+                            chip_id_list.append(int(chip_id,16))
                             read_next = False
 
         config_files = {}
@@ -310,9 +311,15 @@ if __name__ == "__main__":
 
                 status_file.close()
                 config_file.close()
-        print('')
         print('\nRetrieving lpGBT ADC Calibration Values')
         logfile.write('\nRetrieving lpGBT ADC Calibration Values\n')
+
+        calib_active_fn = scripts_gem_dir + '/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv'
+        if not os.path.exists('/'.join(calib_active_fn.split('/')[:-1])):
+            os.mkdir('/'.join(calib_active_fn.split('/')[:-1]))
+        elif os.path.isfile(calib_active_fn):
+            os.system("rm %s"%calib_active_fn)
+        calib_db_active = []
         calib_db = read_central_adc_calib_file()
         if not calib_db:
             print(Colors.RED + 'Failed to read calibration file' + Colors.ENDC)
@@ -325,15 +332,15 @@ if __name__ == "__main__":
             for chip_id,calib_data in calib_db.items():
                 # check for active chip id's
                 if chip_id in chip_id_list:
+                    calib_db_active.append({'CHIPID':'%X'%chip_id, **calib_data})
                     for oh_sn in xml_results:
-                        # save main lpgbt calib data
-                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] == chip_id:
+                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] == '0x%08X'%chip_id:
                             if calib_data:
                                 xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(calib_data)
                             else:
                                 xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
                         # save sub lpgbt calib data
-                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == chip_id:
+                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == '0x%08X'%chip_id:
                             if calib_data:
                                 xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(calib_data)
                             else:
@@ -344,6 +351,12 @@ if __name__ == "__main__":
                     xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = NULL
                 if 'LPGBT_S_ADC_CALIB' not in xml_results[oh_sn]:
                     xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = NULL
+        # Save lpgbt adc calibration to smaller file to speed up runtime
+        with open(calib_active_fn,'w') as calib_file:
+            writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
+            writer.writeheader()
+            writer.writerows(calib_db_active)
+        # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'M' if gbt%2==0 else 'S'
@@ -2584,3 +2597,4 @@ if __name__ == "__main__":
 
     logfile.close()
     os.system("rm out.txt")
+    os.system("rm %s"%calib_active_fn)

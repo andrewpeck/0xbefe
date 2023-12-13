@@ -61,9 +61,13 @@ def get_local_adc_calib_from_file(oh_select, gbt_select):
 
 def read_central_adc_calib_file():
     adc_calib = {}
-    if not os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+    if os.path.isfile(scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"):
+        adc_calib_fn = scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"
+    elif os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+        adc_calib_fn = scripts_dir+"/resources/lpgbt_calibration.csv"
+    else:
         return adc_calib
-    adc_calib_file = open(scripts_dir+"/resources/lpgbt_calibration.csv")
+    adc_calib_file = open(adc_calib_fn)
     vars = []
 
     for line in adc_calib_file.readlines():

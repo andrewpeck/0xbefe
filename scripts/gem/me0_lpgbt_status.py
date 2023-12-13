@@ -259,7 +259,8 @@ def main(system, oh_ver, boss):
     print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTH")) << 1 | lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTL"))))
 
     #print ("Configuring adc...")
-    adc_calib = read_central_adc_calib_file()
+    # adc_calib = read_central_adc_calib_file()
+    adc_calib = {}
     junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
     vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
     init_adc(oh_ver, vref_tune)
