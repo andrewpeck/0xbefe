@@ -61,9 +61,13 @@ def get_local_adc_calib_from_file(oh_select, gbt_select):
 
 def read_central_adc_calib_file():
     adc_calib = {}
-    if not os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+    if os.path.isfile(scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"):
+        adc_calib_fn = scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"
+    elif os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+        adc_calib_fn = scripts_dir+"/resources/lpgbt_calibration.csv"
+    else:
         return adc_calib
-    adc_calib_file = open(scripts_dir+"/resources/lpgbt_calibration.csv")
+    adc_calib_file = open(adc_calib_fn)
     vars = []
 
     for line in adc_calib_file.readlines():
@@ -203,11 +207,14 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
             no_calib = 1
 
     if no_calib:
-        gain = 1.87
-        offset = 531.1
-        #voltage = adc/1024.0
-        #voltage = (adc - 38.4)/(1.85 * 512)
-        voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+        if gain == 2:
+            gain = 1.87
+            offset = 531.1
+            #voltage = adc/1024.0
+            #voltage = (adc - 38.4)/(1.85 * 512)
+            voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+        else:
+            voltage = (adc/1024.0)/gain
     else:
         voltage = adc * (adc_calib[chip_id]["ADC_X%d_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["ADC_X%d_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_OFFSET_TEMP"%gain]
 
