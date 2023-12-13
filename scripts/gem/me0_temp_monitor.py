@@ -91,8 +91,13 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
         #    DAC = 20
         #elif temp_cal == "1k":
         #    DAC = 60
-        if chip_id in adc_calib and device == "OH": 
-            find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
+        if device == "OH":
+            if chip_id in adc_calib:
+                find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
+            else:
+                find_temp = temp_res_fit(temp_cal=temp_cal)
+        elif "GEB" in device:
+            find_temp = temp_res_fit(temp_cal=temp_cal, type="GEB")
         else:
             find_temp = temp_res_fit(temp_cal=temp_cal)
 
@@ -157,17 +162,17 @@ def temp_res_fit(temp_cal="10k", type="nominal", power=2):
 
     B_list = []
     T_list = []
-    if temp_cal=="10k":
+    if temp_cal == "10k":
         if type == "OH_new":
             B_list = [3380, 3422, 3435, 3453]  # OH: NTCG103JX103DT1S
             T_list = [50, 75, 85, 100]
-        elif type == "OH":
-            B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+ 10k: NTCG063UH103HTBX
-            T_list = [50, 75, 85, 100]
-        elif "GEB" in type:
+        elif type == "GEB":
             B_list = [3380, 3434, 3455]  # GEB: NCP03XH103F05RL
             T_list = [50, 85, 100]
-    elif temp_cal=="1k": 
+        else:
+            B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+ 10k: NTCG063UH103HTBX
+            T_list = [50, 75, 85, 100]
+    elif temp_cal == "1k": 
         B_list = [3500, 3539, 3545, 3560]  # VTRX+ 1k: NCP03XM102E05RL
         T_list = [50, 80, 85, 100]
     R_list = []
