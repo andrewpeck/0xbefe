@@ -108,6 +108,7 @@ if __name__ == "__main__":
             queso_dict[queso_nr] = oh_sn
             if not power_only:
                 results_oh_sn[oh_sn] = {}
+                results_oh_sn[oh_sn]["QUESO_SERIAL_NUMBER"] = queso_nr
                 results_oh_sn[oh_sn]["TEST_TYPE"] = test_type
     input_file.close()
     if len(queso_dict) == 0:
