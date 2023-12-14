@@ -112,7 +112,8 @@ architecture Behavioral of gem_tests is
 
 
     --QUESO TESTS
-    signal elink_mapping_arr          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapping_arr_0          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_mapping_arr_1          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal queso_prbs_err_arr        : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal queso_reset                : std_logic;
     signal queso_prbs_en              : std_logic := '0';
@@ -247,7 +248,8 @@ begin
             gbt_frame_clk_i             => ttc_clk_i.clk_40,
             test_vfat3_rx_data_arr_i    => test_vfat3_rx_data_arr_i,
             test_vfat3_tx_data_arr_o    => test_vfat3_tx_data_arr_o,
-            elink_mapping_arr_i         => elink_mapping_arr,
+            elink_mapping_arr_0         => elink_mapping_arr_0,
+            elink_mapping_arr_1         => elink_mapping_arr_1,
             elink_error_cnt_arr_o       => queso_prbs_err_arr-- counts up to ff errors per elink
         );
 

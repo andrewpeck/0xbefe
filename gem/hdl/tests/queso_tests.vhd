@@ -34,7 +34,8 @@ entity queso_tests is
         test_vfat3_rx_data_arr_i : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
         test_vfat3_tx_data_arr_o : out std_logic_vector(7 downto 0);
 
-        elink_mapping_arr_i      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
+        elink_mapping_arr_0      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
+        elink_mapping_arr_1      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
         --prbs error counter
         elink_error_cnt_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff errors per elink
     );
@@ -48,8 +49,11 @@ architecture Behavioral of queso_tests is
 
 
     -- unmasked elinks
-    signal elink_mapped_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal elink_mapped          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_rot0          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_rot0_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_rot1_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+
+
     -- error counter for prbs
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal rx_prbs_err_arr_o : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
@@ -103,8 +107,8 @@ begin
                     -- clock
                     clk_i => gbt_frame_clk_i,
                     -- links
-                    queso_rx_data_arr_i       => elink_mapped,
-                    queso_data_unmasked_arr_o => elink_mapped_unmasked
+                    queso_rx_data_arr_i       => elink_rot0,
+                    queso_data_unmasked_arr_o => elink_rot0_unmasked
                 );
         else generate
             elink_mapped_unmasked <= elink_mapped;
@@ -115,7 +119,7 @@ begin
             each_elink : for ELINK in 0 to 215 generate
 
                 --bitslip logic vector to account for any rotation in data packet
-                g_rotate : entity work.bitslip
+                g_rotate_0 : entity work.bitslip
                     generic map(
                         g_DATA_WIDTH              => 8,
                         g_SLIP_CNT_WIDTH          => 8,
@@ -123,11 +127,23 @@ begin
                     )
                     port map(
                         clk_i       => gbt_frame_clk_i,
-                        slip_cnt_i  => elink_mapping_arr_i(OH)(ELINK),
+                        slip_cnt_i  => elink_mapping_arr_0(OH)(ELINK),
                         data_i      => test_vfat3_rx_data_arr_i(OH)(ELINK),
-                        data_o      => elink_mapped(OH)(ELINK)
+                        data_o      => elink_rot0(OH)(ELINK)
                     );
 
+                g_rotate_1 : entity work.bitslip
+                    generic map(
+                        g_DATA_WIDTH              => 8,
+                        g_SLIP_CNT_WIDTH          => 8,
+                        g_TRANSMIT_LOW_TO_HIGH    => false
+                    )
+                    port map(
+                        clk_i       => gbt_frame_clk_i,
+                        slip_cnt_i  => elink_mapping_arr_1(OH)(ELINK),
+                        data_i      => elink_rot0_unmasked(OH)(ELINK),
+                        data_o      => elink_rot1_unmasked(OH)(ELINK)
+                    );
 
                 --instantiate prbs31 8 bit checker
                 i_rx_prbs_check : entity work.PRBS_ANY
