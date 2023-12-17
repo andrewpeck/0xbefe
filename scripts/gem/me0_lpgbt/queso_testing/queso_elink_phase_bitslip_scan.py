@@ -138,6 +138,9 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
         pass
+    now = str(datetime.datetime.now())[:16]
+    now = now.replace(":", "_")
+    now = now.replace(" ", "_")
     logfile_out = open(dataDir+"/vfat_elink_phase_bitslip_log_OH%d"%oh_select+now+".txt", "w")
 
     if phase_bitslip_list != {}:
@@ -146,9 +149,6 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         set_bitslips(queso_bitslip_nodes, phase_bitslip_list)
     else:
         print ("Scanning phase and bitslips:")
-        now = str(datetime.datetime.now())[:16]
-        now = now.replace(":", "_")
-        now = now.replace(" ", "_")
         file_out = open(dataDir+"/vfat_elink_phase_bitslip_results_OH%d"%oh_select+now+".txt", "w")
 
         phase_bitslip_list = {}
