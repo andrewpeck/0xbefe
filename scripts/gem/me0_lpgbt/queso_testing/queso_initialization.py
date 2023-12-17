@@ -498,7 +498,7 @@ if __name__ == "__main__":
     logfile.write("\n######################################################\n\n")
     sleep(2)
 
-    # Set elink phases for QUESO
+    # Set elink phases and bitslips for QUESO
     print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
     logfile.write("Set Elink Phases and Bitslips\n\n")
     logfile.close()
