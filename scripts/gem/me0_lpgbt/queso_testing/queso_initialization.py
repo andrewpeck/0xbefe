@@ -522,11 +522,12 @@ if __name__ == "__main__":
             lpgbt_elink = int(line.split()[2])
             phase = int(line.split()[5], 16)
             width = int(line.split()[6])
-            bitslip = int(line.split()[7])
-            status = 1 if line.split()[8]=='GOOD' else 0
+            bitslip_0 = int(line.split()[7], 16)
+            bitslip_1 = int(line.split()[8], 16)
+            status = 1 if line.split()[9]=='GOOD' else 0
             if lpgbt not in bitslip_results:
                 bitslip_results[lpgbt] = {}
-            bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip':bitslip}
+            bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip_0':bitslip_0,'Bitslip_1':bitslip_1}
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
