@@ -131,21 +131,21 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             rw_terminate()
 
+    scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+    dataDir = resultDir + "/phase_bitslip_results"
+    try:
+        os.makedirs(dataDir) # create directory for results
+    except FileExistsError: # skip if directory already exists
+        pass
     logfile_out = open(dataDir+"/vfat_elink_phase_bitslip_log_OH%d"%oh_select+now+".txt", "w")
-    
+
     if phase_bitslip_list != {}:
         print ("Setting phases and bitslips:")
         set_phases(oh_select, phase_bitslip_list)
         set_bitslips(queso_bitslip_nodes, phase_bitslip_list)
     else:
         print ("Scanning phase and bitslips:")
-        scripts_gem_dir = get_befe_scripts_dir() + "/gem"
-        resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
-        dataDir = resultDir + "/phase_bitslip_results"
-        try:
-            os.makedirs(dataDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
         now = str(datetime.datetime.now())[:16]
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
