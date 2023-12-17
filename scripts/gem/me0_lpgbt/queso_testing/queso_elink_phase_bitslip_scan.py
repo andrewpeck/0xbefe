@@ -131,6 +131,8 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
             print (Colors.RED + "ERROR: OH lpGBT links are not READY, check fiber connections" + Colors.ENDC)
             rw_terminate()
 
+    logfile_out = open(dataDir+"/vfat_elink_phase_bitslip_log_OH%d"%oh_select+now+".txt", "w")
+    
     if phase_bitslip_list != {}:
         print ("Setting phases and bitslips:")
         set_phases(oh_select, phase_bitslip_list)
@@ -148,7 +150,6 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
         file_out = open(dataDir+"/vfat_elink_phase_bitslip_results_OH%d"%oh_select+now+".txt", "w")
-        logfile_out = open(dataDir+"/vfat_elink_phase_bitslip_log_OH%d"%oh_select+now+".txt", "w")
 
         phase_bitslip_list = {}
         prbs_min_err_list = {}
