@@ -138,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
     parser.add_argument("-b", "--bitslips", action="store", nargs="+", dest="bitslips", help="bitslips = Best value of the two elinkRX bitslip values")
     parser.add_argument("-f", "--bitslip_file", action="store", dest="bitslip_file", help="bitslip_file = Text file with best value of the elinkRX bitslip")
-    parser.add_argument("-s", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
+    parser.add_argument("-l", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
     args = parser.parse_args()
 
     if args.system == "backend":

@@ -315,7 +315,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--phase", action="store", dest="phase", help="phase = Best value of the elinkRX bitslip")
     parser.add_argument("-b", "--bitslips", action="store", nargs="+", dest="bitslips", help="bitslips = Best value of the two elinkRX bitslip values")
     parser.add_argument("-f", "--phase_bitslip_file", action="store", dest="phase_bitslip_file", help="phase_bitslip_file = Text file with best value of the elinkRX phase and bitslip")
-    parser.add_argument("-s", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
+    parser.add_argument("-l", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
     args = parser.parse_args()
 
     if args.system == "backend":
