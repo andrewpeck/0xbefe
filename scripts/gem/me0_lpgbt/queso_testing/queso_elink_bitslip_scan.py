@@ -20,6 +20,7 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list, single):
         queso_bitslip_nodes[vfat] = {}
         queso_prbs_nodes[vfat] = {}
         for elink in range(0,9):
+            queso_bitslip_nodes[vfat][elink] = {}
             queso_bitslip_nodes[vfat][elink]["bitslip_0"] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP_0"%(oh_select, vfat, elink))
             queso_bitslip_nodes[vfat][elink]["bitslip_1"] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP_1"%(oh_select, vfat, elink))
             queso_prbs_nodes[vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
