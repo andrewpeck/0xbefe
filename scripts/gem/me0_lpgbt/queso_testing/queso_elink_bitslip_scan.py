@@ -114,7 +114,7 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list, single):
                     bitslip_list[vfat][elink]["bitslip_0"] = 0
                     bitslip_list[vfat][elink]["bitslip_1"] = 0
                 if prbs_min_err_list[vfat][elink] != 0:
-                    print (Colors.YELLOW + "PRBS errors not zero best bitslip for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink]) + Colors.ENDC)
+                    print (Colors.YELLOW + "PRBS errors not zero for best bitslip for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink]) + Colors.ENDC)
 
         print ("Setting bitslips:")
         set_bitslip(bitslip_list, queso_bitslip_nodes)

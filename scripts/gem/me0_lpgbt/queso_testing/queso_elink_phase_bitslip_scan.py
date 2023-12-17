@@ -280,8 +280,8 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
                     phase_bitslip_list[vfat][elink]["bitslip_0"] = 0
                     phase_bitslip_list[vfat][elink]["bitslip_1"] = 0
                 if prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]] != 0:
-                    print (Colors.YELLOW + "PRBS errors not zero best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
-                    logfile_out.write(Colors.YELLOW + "PRBS errors not zero best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d\n"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
+                    print (Colors.YELLOW + "PRBS errors not zero for best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
+                    logfile_out.write(Colors.YELLOW + "PRBS errors not zero for best bitslip for the best phase for VFAT %d Elink %d, min PRBS errors = %d\n"%(vfat, elink, prbs_min_err_list[vfat][elink][phase_bitslip_list[vfat][elink]["phase"]]) + Colors.ENDC)
 
         print ("Setting phase and bitslips")
         logfile_out.write("Setting phase and bitslips\n")
