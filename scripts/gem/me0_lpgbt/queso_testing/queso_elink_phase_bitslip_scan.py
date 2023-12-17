@@ -349,13 +349,13 @@ if __name__ == "__main__":
         vfat_list.append(v_int)
 
     phase_bitslip_list = {}
-    if (args.bitslip is not None and args.phase is None) or (args.bitslip is None and args.phase is not None):
+    if (args.bitslips is not None and args.phase is None) or (args.bitslips is None and args.phase is not None):
         print(Colors.YELLOW + "If you are providing a fixed value of phase or bitslips you have to provide both" + Colors.ENDC)
         sys.exit()
-    if (args.bitslip is not None and args.phase is not None) and args.phase_bitslip_file is not None:
+    if (args.bitslips is not None and args.phase is not None) and args.phase_bitslip_file is not None:
         print(Colors.YELLOW + "Only give either phase-bitslip values or file but not both" + Colors.ENDC)
         sys.exit()
-    if args.bitslip is not None and args.phase is not None:
+    if args.bitslips is not None and args.phase is not None:
         for vfat in vfat_list:
             phase_bitslip_list[vfat] = {}
             for elink in range(0,9):
