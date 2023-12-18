@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 import pandas as pd
 import datetime
 from collections import OrderedDict
+from common.utils import get_befe_scripts_dir
 
 def read_threshold_file(file_in, vfat):
     vfat_data = pd.read_csv(file_in, names=["vfatCH", "threshold", "ENC"], sep="    ", skiprows=[0,1], skipfooter=3, engine="python")
@@ -42,20 +43,17 @@ if __name__ == "__main__":
     dd_dir_name = args.down_res_dir
     oh = args.nom_res_dir.split("/")[-1].split("_vfat")[0]
 
-    resultDir = "results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/vfat_data"
-    try:
-        os.makedirs(me0Dir) # create directory for ME0 lpGBT data
+        os.makedirs(vfatDir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
     if "_sbit_" in nd_dir_name:
-        dataDir = "results/vfat_data/vfat_sbit_trimming_results"
+        dataDir = vfatDir + "/vfat_sbit_trimming_results"
     else:
-        dataDir = "results/vfat_data/vfat_daq_trimming_results"
+        dataDir = vfatDir + "/vfat_daq_trimming_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -89,7 +87,7 @@ if __name__ == "__main__":
 
     for vfat_input_file in nd_file_list:
         filename = vfat_input_file.split("/")[-1]
-        vfat = int(filename.split("_VFAT")[1].split(".txt")[0])
+        vfat = int(filename.split("_VFAT")[1].removesuffix(".txt"))
         nd_file_in = open(vfat_input_file, "r")
         try:
             ud_file_in = open(ud_dir_name+"/"+filename, "r")

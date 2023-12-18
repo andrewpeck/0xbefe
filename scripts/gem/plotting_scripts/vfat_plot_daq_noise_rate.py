@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--filename", action="store", dest="filename", help="Noise rate result filename")
     args = parser.parse_args()
 
-    directoryName        = args.filename.split(".txt")[0]
+    directoryName        = args.filename.removesuffix(".txt")
     plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)

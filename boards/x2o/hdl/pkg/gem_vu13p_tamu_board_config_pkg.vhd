@@ -58,6 +58,7 @@ package board_config_package is
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
     constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := true; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
 
@@ -77,7 +78,7 @@ package board_config_package is
 
     constant CFG_NUM_REFCLK0      : integer := 30;
     constant CFG_NUM_REFCLK1      : integer := 8; 
-    constant CFG_MGT_NUM_CHANNELS : integer := CFG_BOARD_MAX_LINKS;
+    constant CFG_MGT_NUM_CHANNELS : integer := 120;
     
     constant MGT_NULL : integer := CFG_MGT_NUM_CHANNELS;
         
@@ -98,133 +99,153 @@ package board_config_package is
     -- note that MGT_NULL is used as a placeholder for fiber links that are not connected to the FPGA
     constant CFG_FIBER_TO_MGT_MAP : t_fiber_to_mgt_link_map := (
         --========= QSFP cage #0 =========--
-        (003, 007, true , true ), -- fiber 0 (SLR 0)
-        (005, 001, true , true ), -- fiber 1 (SLR 0)
-        (001, 003, true , true ), -- fiber 2 (SLR 0)
-        (009, 005, true , true ), -- fiber 3 (SLR 0)
+        (014, 008, false, true ), -- fiber 0 (SLR 0)
+        (012, 010, true , true ), -- fiber 1 (SLR 0)
+        (010, 012, false, true ), -- fiber 2 (SLR 0)
+        (008, 014, false, true ), -- fiber 3 (SLR 0)
         --========= QSFP cage #1 =========--
-        (007, 009, true , true ), -- fiber 4 (SLR 0)
-        (011, 015, true , true ), -- fiber 5 (SLR 0)
-        (013, 011, true , true ), -- fiber 6 (SLR 0)
-        (015, 013, true , true ), -- fiber 7 (SLR 0)
+        (006, 002, false, true ), -- fiber 4 (SLR 0)
+        (000, 000, false, true ), -- fiber 5 (SLR 0)
+        (004, 004, false, true ), -- fiber 6 (SLR 0)
+        (002, 006, false, true ), -- fiber 7 (SLR 0)
         --========= QSFP cage #2 =========--
-        (014, 008, true , true ), -- fiber 8 (SLR 0)
-        (012, 010, true , true ), -- fiber 9 (SLR 0)
-        (010, 012, true , true ), -- fiber 10 (SLR 0)
-        (008, 014, true , true ), -- fiber 11 (SLR 0)
+        (003, 007, true , false), -- fiber 8 (SLR 0)
+        (005, 001, true , false), -- fiber 9 (SLR 0)
+        (001, 003, true , false), -- fiber 10 (SLR 0)
+        (009, 005, true , false), -- fiber 11 (SLR 0)
         --========= QSFP cage #3 =========--
-        (006, 002, true , true ), -- fiber 12 (SLR 0)
-        (000, 000, true , true ), -- fiber 13 (SLR 0)
-        (004, 004, true , true ), -- fiber 14 (SLR 0)
-        (002, 006, true , true ), -- fiber 15 (SLR 0)
+        (007, 009, false, false), -- fiber 12 (SLR 0)
+        (011, 015, true , false), -- fiber 13 (SLR 0)
+        (013, 011, true , false), -- fiber 14 (SLR 0)
+        (015, 013, true , false), -- fiber 15 (SLR 0)
         --========= QSFP cage #4 =========--
-        (017, 023, true , true ), -- fiber 16 (SLR 1)
-        (019, 021, true , true ), -- fiber 17 (SLR 1)
-        (021, 019, true , true ), -- fiber 18 (SLR 1)
-        (023, 017, true , true ), -- fiber 19 (SLR 1)
+        (017, 023, false, false), -- fiber 16 (SLR 1)
+        (019, 021, false, false), -- fiber 17 (SLR 1)
+        (021, 019, false, false), -- fiber 18 (SLR 1)
+        (023, 017, false, false), -- fiber 19 (SLR 1)
         --========= QSFP cage #6 =========--
-        (025, 031, true , true ), -- fiber 20 (SLR 2)
-        (027, 029, true , true ), -- fiber 21 (SLR 2)
-        (029, 027, true , true ), -- fiber 22 (SLR 2)
-        (031, 025, true , true ), -- fiber 23 (SLR 2)
+        (038, 032, true , false), -- fiber 20 (SLR 2)
+        (036, 034, true , false), -- fiber 21 (SLR 2)
+        (034, 036, true , false), -- fiber 22 (SLR 2)
+        (032, 038, true , false), -- fiber 23 (SLR 2)
         --========= QSFP cage #7 =========--
-        (033, 039, true , true ), -- fiber 24 (SLR 2)
-        (035, 037, true , true ), -- fiber 25 (SLR 2)
-        (037, 035, true , true ), -- fiber 26 (SLR 2)
-        (039, 033, true , true ), -- fiber 27 (SLR 2)
+        (030, 024, true , false), -- fiber 24 (SLR 2)
+        (028, 026, true , false), -- fiber 25 (SLR 2)
+        (026, 028, true , false), -- fiber 26 (SLR 2)
+        (024, 030, true , false), -- fiber 27 (SLR 2)
         --========= QSFP cage #8 =========--
-        (038, 032, true , true ), -- fiber 28 (SLR 2)
-        (036, 034, true , true ), -- fiber 29 (SLR 2)
-        (034, 036, true , true ), -- fiber 30 (SLR 2)
-        (032, 038, true , true ), -- fiber 31 (SLR 2)
+        (025, 031, true , true ), -- fiber 28 (SLR 2)
+        (027, 029, true , true ), -- fiber 29 (SLR 2)
+        (029, 027, true , true ), -- fiber 30 (SLR 2)
+        (031, 025, true , true ), -- fiber 31 (SLR 2)
         --========= QSFP cage #9 =========--
-        (030, 024, true , true ), -- fiber 32 (SLR 2)
-        (028, 026, true , true ), -- fiber 33 (SLR 2)
-        (026, 028, true , true ), -- fiber 34 (SLR 2)
-        (024, 030, true , true ), -- fiber 35 (SLR 2)
+        (033, 039, true , true ), -- fiber 32 (SLR 2)
+        (035, 037, true , true ), -- fiber 33 (SLR 2)
+        (037, 035, true , true ), -- fiber 34 (SLR 2)
+        (039, 033, true , true ), -- fiber 35 (SLR 2)
         --========= QSFP cage #10 =========--
-        (041, 047, true , true ), -- fiber 36 (SLR 3)
-        (043, 045, true , true ), -- fiber 37 (SLR 3)
-        (045, 043, true , true ), -- fiber 38 (SLR 3)
-        (047, 041, true , true ), -- fiber 39 (SLR 3)
+        (050, 048, true , false), -- fiber 36 (SLR 3)
+        (052, 054, true , false), -- fiber 37 (SLR 3)
+        (048, 052, true , false), -- fiber 38 (SLR 3)
+        (046, 050, true , false), -- fiber 39 (SLR 3)
         --========= QSFP cage #11 =========--
-        (049, 049, true , true ), -- fiber 40 (SLR 3)
-        (055, 051, true , true ), -- fiber 41 (SLR 3)
-        (053, 053, true , true ), -- fiber 42 (SLR 3)
-        (051, 055, true , true ), -- fiber 43 (SLR 3)
+        (044, 040, true , false), -- fiber 40 (SLR 3)
+        (042, 042, true , false), -- fiber 41 (SLR 3)
+        (054, 044, true , false), -- fiber 42 (SLR 3)
+        (040, 046, true , false), -- fiber 43 (SLR 3)
         --========= QSFP cage #12 =========--
-        (050, 048, true , true ), -- fiber 44 (SLR 3)
-        (052, 054, true , true ), -- fiber 45 (SLR 3)
-        (048, 052, true , true ), -- fiber 46 (SLR 3)
-        (046, 050, true , true ), -- fiber 47 (SLR 3)
+        (041, 047, false, true ), -- fiber 44 (SLR 3)
+        (043, 045, false, true ), -- fiber 45 (SLR 3)
+        (045, 043, false, true ), -- fiber 46 (SLR 3)
+        (047, 041, false, true ), -- fiber 47 (SLR 3)
         --========= QSFP cage #13 =========--
-        (044, 040, true , true ), -- fiber 48 (SLR 3)
-        (042, 042, true , true ), -- fiber 49 (SLR 3)
-        (054, 044, true , true ), -- fiber 50 (SLR 3)
-        (040, 046, true , true ), -- fiber 51 (SLR 3)
+        (049, 049, false, true ), -- fiber 48 (SLR 3)
+        (055, 051, false, true ), -- fiber 49 (SLR 3)
+        (053, 053, false, true ), -- fiber 50 (SLR 3)
+        (051, 055, false, true ), -- fiber 51 (SLR 3)
         --========= QSFP cage #14 =========--
-        (111, 115, true , true ), -- fiber 52 (SLR 3)
-        (113, 113, true , true ), -- fiber 53 (SLR 3)
-        (115, 111, true , true ), -- fiber 54 (SLR 3)
-        (109, 109, true , true ), -- fiber 55 (SLR 3)
+        (104, 110, false, true ), -- fiber 52 (SLR 3)
+        (118, 108, false, true ), -- fiber 53 (SLR 3)
+        (106, 106, false, true ), -- fiber 54 (SLR 3)
+        (108, 104, false, true ), -- fiber 55 (SLR 3)
         --========= QSFP cage #15 =========--
-        (107, 101, true , true ), -- fiber 56 (SLR 3)
-        (105, 103, true , true ), -- fiber 57 (SLR 3)
-        (103, 105, true , true ), -- fiber 58 (SLR 3)
-        (101, 107, true , true ), -- fiber 59 (SLR 3)
+        (110, 118, false, true ), -- fiber 56 (SLR 3)
+        (112, 116, false, true ), -- fiber 57 (SLR 3)
+        (116, 114, false, true ), -- fiber 58 (SLR 3)
+        (114, 112, false, true ), -- fiber 59 (SLR 3)
         --========= QSFP cage #16 =========--
-        (100, 106, true , true ), -- fiber 60 (SLR 3)
-        (114, 104, true , true ), -- fiber 61 (SLR 3)
-        (102, 102, true , true ), -- fiber 62 (SLR 3)
-        (104, 100, true , true ), -- fiber 63 (SLR 3)
+        (115, 119, true , false), -- fiber 60 (SLR 3)
+        (117, 117, true , false), -- fiber 61 (SLR 3)
+        (119, 115, true , false), -- fiber 62 (SLR 3)
+        (113, 113, true , false), -- fiber 63 (SLR 3)
         --========= QSFP cage #17 =========--
-        (106, 114, true , true ), -- fiber 64 (SLR 3)
-        (108, 112, true , true ), -- fiber 65 (SLR 3)
-        (112, 110, true , true ), -- fiber 66 (SLR 3)
-        (110, 108, true , true ), -- fiber 67 (SLR 3)
+        (111, 105, true , false), -- fiber 64 (SLR 3)
+        (109, 107, true , false), -- fiber 65 (SLR 3)
+        (107, 109, true , false), -- fiber 66 (SLR 3)
+        (105, 111, true , false), -- fiber 67 (SLR 3)
+        --========= QSFP cage #18 =========--
+        (088, 094, false, true ), -- fiber 68 (SLR 2)
+        (090, 092, false, true ), -- fiber 69 (SLR 2)
+        (092, 090, false, true ), -- fiber 70 (SLR 2)
+        (094, 088, false, true ), -- fiber 71 (SLR 2)
+        --========= QSFP cage #19 =========--
+        (096, 102, false, true ), -- fiber 72 (SLR 2)
+        (098, 100, false, true ), -- fiber 73 (SLR 2)
+        (100, 098, false, true ), -- fiber 74 (SLR 2)
+        (102, 096, false, true ), -- fiber 75 (SLR 2)
+        --========= QSFP cage #20 =========--
+        (103, 097, false, false), -- fiber 76 (SLR 2)
+        (101, 099, false, false), -- fiber 77 (SLR 2)
+        (099, 101, false, false), -- fiber 78 (SLR 2)
+        (097, 103, false, false), -- fiber 79 (SLR 2)
+        --========= QSFP cage #21 =========--
+        (095, 089, false, false), -- fiber 80 (SLR 2)
+        (093, 091, false, false), -- fiber 81 (SLR 2)
+        (091, 093, false, false), -- fiber 82 (SLR 2)
+        (089, 095, false, false), -- fiber 83 (SLR 2)
         --========= QSFP cage #22 =========--
-        (087, 081, true , true ), -- fiber 68 (SLR 1)
-        (085, 083, true , true ), -- fiber 69 (SLR 1)
-        (083, 085, true , true ), -- fiber 70 (SLR 1)
-        (081, 087, true , true ), -- fiber 71 (SLR 1)
+        (072, 078, false, false), -- fiber 84 (SLR 1)
+        (074, 076, false, false), -- fiber 85 (SLR 1)
+        (076, 074, false, false), -- fiber 86 (SLR 1)
+        (078, 072, false, false), -- fiber 87 (SLR 1)
         --========= QSFP cage #23 =========--
-        (079, 073, true , true ), -- fiber 72 (SLR 1)
-        (077, 075, true , true ), -- fiber 73 (SLR 1)
-        (075, 077, true , true ), -- fiber 74 (SLR 1)
-        (073, 079, true , true ), -- fiber 75 (SLR 1)
+        (080, 086, false, false), -- fiber 88 (SLR 1)
+        (082, 084, false, false), -- fiber 89 (SLR 1)
+        (084, 082, false, false), -- fiber 90 (SLR 1)
+        (086, 080, false, false), -- fiber 91 (SLR 1)
         --========= QSFP cage #24 =========--
-        (072, 078, true , true ), -- fiber 76 (SLR 1)
-        (074, 076, true , true ), -- fiber 77 (SLR 1)
-        (076, 074, true , true ), -- fiber 78 (SLR 1)
-        (078, 072, true , true ), -- fiber 79 (SLR 1)
+        (087, 081, false, true ), -- fiber 92 (SLR 1)
+        (085, 083, false, true ), -- fiber 93 (SLR 1)
+        (083, 085, false, true ), -- fiber 94 (SLR 1)
+        (081, 087, false, true ), -- fiber 95 (SLR 1)
         --========= QSFP cage #25 =========--
-        (080, 086, true , true ), -- fiber 80 (SLR 1)
-        (082, 084, true , true ), -- fiber 81 (SLR 1)
-        (084, 082, true , true ), -- fiber 82 (SLR 1)
-        (086, 080, true , true ), -- fiber 83 (SLR 1)
+        (079, 073, false, true ), -- fiber 96 (SLR 1)
+        (077, 075, false, true ), -- fiber 97 (SLR 1)
+        (075, 077, false, true ), -- fiber 98 (SLR 1)
+        (073, 079, false, true ), -- fiber 99 (SLR 1)
         --========= QSFP cage #26 =========--
-        (071, 069, true , true ), -- fiber 84 (SLR 0)
-        (069, 067, true , true ), -- fiber 85 (SLR 0)
-        (067, 071, true , true ), -- fiber 86 (SLR 0)
-        (063, 065, true , true ), -- fiber 87 (SLR 0)
+        (058, 062, true , false), -- fiber 100 (SLR 0)
+        (060, 060, true , false), -- fiber 101 (SLR 0)
+        (056, 058, true , false), -- fiber 102 (SLR 0)
+        (062, 056, true , false), -- fiber 103 (SLR 0)
         --========= QSFP cage #27 =========--
-        (065, 061, true , true ), -- fiber 88 (SLR 0)
-        (057, 059, true , true ), -- fiber 89 (SLR 0)
-        (061, 057, true , true ), -- fiber 90 (SLR 0)
-        (059, 063, true , true ), -- fiber 91 (SLR 0)
+        (064, 070, true , false), -- fiber 104 (SLR 0)
+        (066, 068, true , false), -- fiber 105 (SLR 0)
+        (068, 066, false, false), -- fiber 106 (SLR 0)
+        (070, 064, true , false), -- fiber 107 (SLR 0)
         --========= QSFP cage #28 =========--
-        (058, 062, true , true ), -- fiber 92 (SLR 0)
-        (060, 060, true , true ), -- fiber 93 (SLR 0)
-        (056, 058, true , true ), -- fiber 94 (SLR 0)
-        (062, 056, true , true ), -- fiber 95 (SLR 0)
+        (071, 069, false, true ), -- fiber 108 (SLR 0)
+        (069, 067, false, true ), -- fiber 109 (SLR 0)
+        (067, 071, false, true ), -- fiber 110 (SLR 0)
+        (063, 065, true , true ), -- fiber 111 (SLR 0)
         --========= QSFP cage #29 =========--
-        (064, 070, true , true ), -- fiber 96 (SLR 0)
-        (066, 068, true , true ), -- fiber 97 (SLR 0)
-        (068, 066, true , true ), -- fiber 98 (SLR 0)
-        (070, 064, true , true ), -- fiber 99 (SLR 0)
+        (065, 061, false, true ), -- fiber 112 (SLR 0)
+        (057, 059, false, true ), -- fiber 113 (SLR 0)
+        (061, 057, false, true ), -- fiber 114 (SLR 0)
+        (059, 063, false, true ), -- fiber 115 (SLR 0)
         --=== DUMMY fiber - use for unconnected channels ===--
         others => (MGT_NULL, MGT_NULL, false, false)
-    );
+    ); 
     
     --================================--
     -- MGT configuration
@@ -246,6 +267,40 @@ package board_config_package is
         tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_10GBE : t_mgt_type_config := (
+        link_type               => MGT_10GBE,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 1,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 64,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_25GBE : t_mgt_type_config := (
+        link_type               => MGT_25GBE,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 0,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 128,
         tx_multilane_phalign    => false, 
         rx_use_buf              => true,
         rx_use_chan_bonding     => false
@@ -283,6 +338,23 @@ package board_config_package is
         tx_multilane_phalign    => false, 
         rx_use_buf              => false,
         rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_ODMB57_BIDIR : t_mgt_type_config := (
+        link_type               => MGT_ODMB57_BIDIR,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 32,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => true
     );
         
     type t_mgt_config_arr is array (0 to CFG_MGT_NUM_CHANNELS - 1) of t_mgt_config;

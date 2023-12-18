@@ -29,6 +29,10 @@
           description="Sector ID that gets embedded in the TX links to EMTF"
           fw_signal="sector_id"
           fw_default="0x0"/>
+    <node id="SELF_TRIGGER_EN" address="0x2" mask="0x10000000" permission="rw"
+        description="Writing 1 enables self triggerring, meaning that valid clusters from unmasked OHs will result in TTC L1A being fired, which goes to the VFATs and DAQ"
+        fw_signal="self_trig_en"
+        fw_default="0x0"/>
   </node>
 
   <node id="STATUS" address="0x10"
@@ -605,7 +609,7 @@
           <node id="ELINK_BITSLIP_0" mask="0x00ff0000" permission="rw" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
                 fw_signal="elink_mapping_arr_0(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
-          <node id="ELINK_BITSLIP_0" mask="0xff000000" permission="rw" address="0x0"
+          <node id="ELINK_BITSLIP_1" mask="0xff000000" permission="rw" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
                 fw_signal="elink_mapping_arr_1(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
                 
@@ -943,12 +947,32 @@
 
     <node id="CONTROL"  address="0x0">
       <node id="EOE_TIMEOUT" address="0x3"  mask="0x00ffffff" permission="rw"
-            description="Units = clock cycles @ 160MHz.
+            description="Units = clock cycles @ 80MHz.
                          If no new data was received in this amount of time, AMC
                          will close the current event and report it to DAQ. This is one
                          of the two ways to close an event, the other is to get new
                          data with different BX number"
             fw_signal="input_control_arr(${OH_IDX}).eb_timeout_delay" fw_default="0x000100"/>
+      <node id="KEEP_INVALID_BC" address="0x3" mask="0x01000000" permission="rw"
+            description="If this is true, VFAT blocks with an invalid BC will be packed into the event under construction. Enabling this option is useful for debugging at the expense of bandwidth usage. Note that the error flags are filled regardless of this option."
+            fw_signal="input_control_arr(${OH_IDX}).eb_keep_invalid_bc" fw_default="0x1"
+            sw_units="bool"/>
+      <node id="KEEP_INVALID_CRC" address="0x3" mask="0x02000000" permission="rw"
+            description="If this is true, VFAT blocks with an invalid CRC will be packed into the event under construction. Enabling this option is useful for debugging at the expense of bandwidth usage. Note that the error flags are filled regardless of this option."
+            fw_signal="input_control_arr(${OH_IDX}).eb_keep_invalid_crc" fw_default="0x1"
+            sw_units="bool"/>
+      <node id="EVENT_BOUNDARY_ON_BC" address="0x3" mask="0x04000000" permission="rw"
+            description="If this is true, the per-chamber datastream will be split into events when the BC of the current VFAT is different from the BC of the previous VFAT."
+            fw_signal="input_control_arr(${OH_IDX}).eb_evt_boundary_bc" fw_default="0x1"
+            sw_units="bool"/>
+      <node id="EVENT_BOUNDARY_ON_EC" address="0x3" mask="0x08000000" permission="rw"
+            description="If this is true, the per-chamber datastream will be split into events when the EC of the current VFAT is different from the EC of the previous VFAT."
+            fw_signal="input_control_arr(${OH_IDX}).eb_evt_boundary_ec" fw_default="0x0"
+            sw_units="bool"/>
+      <node id="EVENT_BOUNDARY_ON_EC_NEXT" address="0x3" mask="0x10000000" permission="rw"
+            description="If this is true, the per-chamber datastream will be split into events when the EC of the current VFAT the expected one for the next event."
+            fw_signal="input_control_arr(${OH_IDX}).eb_evt_boundary_ec_next" fw_default="0x0"
+            sw_units="bool"/>
     </node>
 
     <node id="STATUS"  address="0x0">
@@ -962,37 +986,19 @@
             fw_signal="input_status_arr(${OH_IDX}).err_mixed_vfat_bc"
             sw_units="bool"
             sw_val_bad="self == 1"/>
-      <node id="OH_MIXED_BC"         mask="0x00000008" permission="r" address="0x0"
-            description="There was at least one event with mixed OH BX IDs (OH BX
-                         ID is reported for every VFAT block, but not sent to
-                         AMC13)."
-            fw_signal="input_status_arr(${OH_IDX}).err_mixed_oh_bc"
-            sw_units="bool"
-            sw_val_bad="self == 1"/>
-
       <node id="VFAT_TOO_MANY"      mask="0x00000010" permission="r" address="0x0"
-            description="Corruption: more than 24 VFATs in event"
-            fw_signal="input_status_arr(${OH_IDX}).err_event_bigger_than_24"
+          description="There was at least one event with more than the number of VFATs in the system (24 for ME0 and GE1/1; 12 for GE2/1)"
+            fw_signal="input_status_arr(${OH_IDX}).err_event_too_many_vfat"
             sw_units="bool"
             sw_val_bad="self == 1"/>
-      <node id="VFAT_SMALL_BLOCK"   mask="0x00000020" permission="r" address="0x0"
-            description="Corruption: VFAT block smaller than 192bits"
-            fw_signal="input_status_arr(${OH_IDX}).err_vfat_block_too_small"
+      <node id="VFAT_BLOCK_INVALID_BC" mask="0x00000001" permission="r" address="0x0"
+            description="Set if there was at least one event with one VFAT block with an invalid BC"
+            fw_signal="input_status_arr(${OH_IDX}).err_invalid_bc_vfat_block"
             sw_units="bool"
             sw_val_bad="self == 1"/>
-      <node id="VFAT_LARGE_BLOCK"   mask="0x00000040" permission="r" address="0x0"
-            description="Corruption: VFAT block bigger than 192bits"
-            fw_signal="input_status_arr(${OH_IDX}).err_vfat_block_too_big"
-            sw_units="bool"
-            sw_val_bad="self == 1"/>
-      <node id="VFAT_NO_MARKER"     mask="0x00000080" permission="r" address="0x0"
-            description="Corruption: VFAT marker not detected.
-                         There was at least one VFAT block not conforming to the
-                         pattern of Axxx Cxxx Exxx... (see VFAT data format)
-                         Note that this data will still be included in the current event
-                         and sent to AMC13, but it will not be considered in
-                         end-of-event detection"
-            fw_signal="input_status_arr(${OH_IDX}).err_corrupted_vfat_data"
+      <node id="VFAT_BLOCK_INVALID_CRC" mask="0x00000080" permission="r" address="0x0"
+            description="Set if there was at least one event with one VFAT block with an invalid CRC"
+            fw_signal="input_status_arr(${OH_IDX}).err_invalid_crc_vfat_block"
             sw_units="bool"
             sw_val_bad="self == 1"/>
       <node id="INPUT_FIFO_HAD_OFLOW"   mask="0x00000100" permission="r" address="0x0"
@@ -1023,7 +1029,7 @@
             fw_signal="input_status_arr(${OH_IDX}).err_evtfifo_full"
             sw_units="bool"
             sw_val_bad="self == 1"/>
-      <node id="EVT_SIZE_ERR"           mask="0x00000800" permission="r" address="0x0"
+      <node id="EVENT_TOO_BIG" mask="0x00000800" permission="r" address="0x0"
             description="Critical: Event size overflow occurred.
                          This bit is latched if there was an event containing more
                          than 4096 VFAT blocks. Input FIFO and Event FIFO will be
@@ -1092,14 +1098,9 @@
     </node>
 
     <node id="COUNTERS" address="0x0">
-      <node id="CORRUPT_VFAT_BLK_CNT"  address="0x1" permission="r"
-            description="This counter is incremented when a VFAT block does not
-                         conform to the pattern of Axxx Cxxx Exxx... (see VFAT
-                         data format)
-                         Note that this data is still included in events and sent to
-                         AMC13, but it does not participate in end-of-event
-                         detection."
-            fw_signal="input_status_arr(${OH_IDX}).cnt_corrupted_vfat"
+      <node id="VFAT_BLOCK_INVALID_BC_CNT" address="0x1" permission="r"
+            description="This counter is incremented for every VFAT block with an invalid BC"
+            fw_signal="input_status_arr(${OH_IDX}).cnt_invalid_bc_vfat_block"
             sw_val_bad="self != 0"/>
       <node id="EVN"                   address="0x2" mask="0x00ffffff" permission="r"
             description="Current event number of the event builder.
@@ -1142,18 +1143,22 @@
             description="Rate of events being written to Event FIFO in Hz"
             fw_signal="input_status_arr(${OH_IDX}).evtfifo_wr_rate"/>
       <node id="MAX_EOE_TIMER"         address="0x7" mask="0x00ffffff" permission="r"
-            description="Units = clock cycles @ 160MHz.
+            description="Units = clock cycles @ 80MHz.
                          This indicates the maximum amount of time that event
                          builder took to build and close the event. Note: this is
                          mostly for debugging, most of the time it should be equal
                          to 'End of event timeout'"
             fw_signal="input_status_arr(${OH_IDX}).eb_max_timer"/>
       <node id="LAST_EOE_TIMER"        address="0x8" mask="0x00ffffff" permission="r"
-            description="Units = clock cycles @ 160MHz.
+            description="Units = clock cycles @ 80MHz.
                          This shows how long event builder took to build and close
                          the last event. Note: this is mostly for debugging, but could
                          be used to tune the 'end of event timeout'"
             fw_signal="input_status_arr(${OH_IDX}).eb_last_timer"/>
+      <node id="VFAT_BLOCK_INVALID_CRC_CNT" address="0x9" permission="r"
+            description="This counter is incremented for every VFAT block with an invalid CRC"
+            fw_signal="input_status_arr(${OH_IDX}).cnt_invalid_crc_vfat_block"
+            sw_val_bad="self != 0"/>
     </node>
 
   </node>
@@ -1230,8 +1235,20 @@
           sw_monitor_error_value="0"
           sw_val_bad="self == 0"/>
 
+    <node id="GBT${GBT}_RX_PHASE" address="0x8" mask="0x3f000000" permission="rw"
+          description="When RX_PHASE_AUTO is set to 0, this register sets the number of bitslips to use on the GBT RX MGT word, which effectively shifts the RXUSRCLK where the word is aligned,
+                       and can be used to control the CDC to the fabric clock. Valid values: 0-39."
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_rx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})" fw_default="0b000000"/>
+
+    <node id="GBT${GBT}_RX_PHASE_AUTO" address="0x8" mask="0x40000000" permission="rw"
+          description="When this is set to 1, the firmware will try to automatically find a good RX phase for the CDC, however for best performance and deterministic phase,
+                       it is recommended that the phase is scanned by the software, and best setting loaded to the RX_PHASE register, and the auto feature is turned off."
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_rx_bitslip_auto_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})" fw_default="0b1"/>
+
     <node id="VFAT_MASK" address="0x8" mask="0x00ffffff" permission="rw"
-          description="Mask the RX link of the selected VFATs (both slow control and DAQ path will be shut off for these VFATs)."
+          description="Mask the DAQ RX of the selected VFATs (the periodic synchronization checks, slow controls, and VFAT DAQ counters, remain functional)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
     <node id="VFAT${VFAT_IDX}" address="0x10"

@@ -157,7 +157,7 @@ begin
             FULL_RESET_VALUE    => 1,
             USE_ADV_FEATURES    => "1000", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 0; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 0
             READ_DATA_WIDTH     => 18,
-            CDC_SYNC_STAGES     => 2,
+            CDC_SYNC_STAGES     => 4,
             DOUT_RESET_VALUE    => "0",
             ECC_MODE            => "no_ecc"
         )

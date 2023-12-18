@@ -54,6 +54,9 @@ package project_config is
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;
     constant CFG_USE_TTC_TX_LINK : boolean := true;
     constant CFG_TTC_LINKS : t_int_array(0 to 3) := (8, 9, 10, 11);   
+
+    constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
+    constant CFG_TTC_GBTX_LINK      : integer := CFG_BOARD_MAX_LINKS;   
     
     --================================--
     -- MGT configuration
@@ -69,7 +72,7 @@ package project_config is
         --======================== 130 ========================-- 
         (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_DMB_GBE_156, qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => true,  chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_DMB,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
-        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => true,  chbond_master => 0, ibert_inst => false),        
+        (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),        
         (mgt_type => CFG_MGT_GBE,    qpll_inst_type => QPLL_NULL,        qpll_idx => 4,  refclk0_idx => 1, refclk1_idx => 1, is_master => false, chbond_master => 0, ibert_inst => false),
  
         --======================== 131 ========================-- 

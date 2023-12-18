@@ -120,7 +120,7 @@ begin
     sample40_prev   <= sample40 when rising_edge(clocks_i.clk_40);
     sample40_rising <= sample40 and not (sample40_prev(0 downto 0) & sample40(15 downto 1));
     ext_trigger     <= or_reduce(sample40_rising and phase_mask40) when rising_edge(clocks_i.clk_40);
-    ext_trigger_o   <= ext_trigger;
+    ext_trigger_o   <= ext_trigger when rising_edge(clocks_i.clk_40);
 
     -- Debug
     ila_enable : if g_DEBUG generate

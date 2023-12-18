@@ -45,8 +45,8 @@
                   description="DMB${DMB_IDX} link numbers"
                   generate="true" generate_size="&NUM_DMBS;" generate_address_step="0x00000002" generate_idx_var="DMB_IDX">
               <node id="TYPE" address="0x0" mask="0x00000007" permission="r"
-                    description="DMB${DMB_IDX} type: 0 = DMB, 1 = ODMB, 2 = ODMB5, 3 = ODMB7"
-                    sw_enum="['DMB', 'ODMB', 'ODMB5', 'ODMB7']"
+                    description="DMB${DMB_IDX} type: 0 = NONE, 1 = DMB, 2 = ODMB, 3 = ODMB5, 4 = ODMB7"
+                    sw_enum="['NONE', 'DMB', 'ODMB', 'ODMB5', 'ODMB7']"
                     fw_signal="std_logic_vector(to_unsigned(t_dmb_type'POS(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).dmb_type), 3))"/>
               <node id="NUM_RX_LINKS" address="0x0" mask="0x00000038" permission="r"
                     description="Number of RX links that DMB${DMB_IDX} uses"
@@ -60,10 +60,10 @@
               <node id="RX1_LINK" address="0x0" mask="0xff000000" permission="r"
                     description="DMB${DMB_IDX} RX1 link number"
                     fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(1), 8))"/>
-              <node id="RX2_LINK" address="0x0" mask="0xff000000" permission="r"
+              <node id="RX2_LINK" address="0x1" mask="0x000000ff" permission="r"
                     description="DMB${DMB_IDX} RX2 link number"
                     fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(2), 8))"/>
-              <node id="RX3_LINK" address="0x1" mask="0x000000ff" permission="r"
+              <node id="RX3_LINK" address="0x1" mask="0x0000ff00" permission="r"
                     description="DMB${DMB_IDX} RX3 link number"
                     fw_signal="std_logic_vector(to_unsigned(CFG_DMB_CONFIG_ARR(g_SLR)(g_SLR * CFG_NUM_DMBS(g_SLR) + ${DMB_IDX}).rx_fibers(3), 8))"/>
             </node>
@@ -158,7 +158,7 @@
           description="Link monitoring registers"
           fw_is_module="true"
           fw_module_file="../csc/hdl/system/link_monitor.vhd"
-          fw_user_clock_signal="clk_i"
+          fw_user_clock_signal="odmb_rx_usrclk_i"
           fw_bus_clock_signal="ipb_clk_i"
           fw_bus_reset_signal="ipb_reset_i"
           fw_master_bus_signal="ipb_mosi_i"
@@ -173,28 +173,31 @@
 
         <node id="DMB${DMB_IDX}" address="0x10" description="Link(s) of DMB ${DMB_IDX}"
               generate="true" generate_size="&NUM_DMBS;" generate_address_step="0x10" generate_idx_var="DMB_IDX">
-            <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
-                  description="Number of times that MGT elastic buffer has been in overflow"
-                  fw_signal="dmb_mgt_buf_ovf_arr(${DMB_IDX})"
-                  sw_val_good="self == 0"/>
-            <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
-                  description="Number of times that MGT elastic buffer has been in underflow"
-                  fw_signal="dmb_mgt_buf_unf_arr(${DMB_IDX})"
-                  sw_val_good="self == 0"/>
-            <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
-                  description="Number of times that MGT has added a fake idle word to correct for clock drift"
-                  fw_signal="dmb_clk_corr_add_arr(${DMB_IDX})"/>
-            <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
-                  description="Number of times that MGT has dropped an idle word to correct for clock drift"
-                  fw_signal="dmb_clk_corr_drop_arr(${DMB_IDX})"/>
-            <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
-                  description="Number of not-in-table errors"
-                  fw_signal="dmb_not_in_table_arr(${DMB_IDX})"
-                  sw_val_good="self == 0"/>
-            <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
-                  description="Number of disparity errors"
-                  fw_signal="dmb_disperr_arr(${DMB_IDX})"
-                  sw_val_good="self == 0"/>
+            <node id="LINK${DMB_LINK_IDX}" address="0x10" description="Link #${DMB_LINK_IDX} of DMB ${DMB_IDX}"
+                  generate="true" generate_size="4" generate_address_step="0x4" generate_idx_var="DMB_LINK_IDX">
+                <node id="MGT_BUF_OVF_CNT" address="0x0" mask="0x0000ffff" permission="r"
+                      description="Number of times that MGT elastic buffer has been in overflow"
+                      fw_signal="dmb_mgt_buf_ovf_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"
+                      sw_val_good="self == 0"/>
+                <node id="MGT_BUF_UNF_CNT" address="0x0" mask="0xffff0000" permission="r"
+                      description="Number of times that MGT elastic buffer has been in underflow"
+                      fw_signal="dmb_mgt_buf_unf_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"
+                      sw_val_good="self == 0"/>
+                <node id="CLK_CORR_ADD_CNT" address="0x1" mask="0x0000ffff" permission="r"
+                      description="Number of times that MGT has added a fake idle word to correct for clock drift"
+                      fw_signal="dmb_clk_corr_add_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"/>
+                <node id="CLK_CORR_DROP_CNT" address="0x1" mask="0xffff0000" permission="r"
+                      description="Number of times that MGT has dropped an idle word to correct for clock drift"
+                      fw_signal="dmb_clk_corr_drop_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"/>
+                <node id="NOT_IN_TABLE_CNT" address="0x2" mask="0x0000ffff" permission="r"
+                      description="Number of not-in-table errors"
+                      fw_signal="dmb_not_in_table_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"
+                      sw_val_good="self == 0"/>
+                <node id="DISPERR_CNT" address="0x2" mask="0xffff0000" permission="r"
+                      description="Number of disparity errors"
+                      fw_signal="dmb_disperr_arr2d(${DMB_IDX})(${DMB_LINK_IDX})"
+                      sw_val_good="self == 0"/>
+            </node>
         </node>
 
         <node id="SPY" address="0xa00" description="Spy readout link">

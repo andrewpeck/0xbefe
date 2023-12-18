@@ -5,22 +5,19 @@ import argparse
 import random
 import glob
 import json
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
 def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, parallel, set_cal_mode, cal_dac, nl1a, calpulse_only, l1a_bxgap, s_bit_cluster_mapping):
-    
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scritps_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_cluster_test_results"
+    dataDir = vfatDir + "/vfat_sbit_cluster_test_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

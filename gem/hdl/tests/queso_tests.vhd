@@ -111,7 +111,7 @@ begin
                     queso_data_unmasked_arr_o => elink_rot0_unmasked
                 );
         else generate
-            elink_mapped_unmasked <= elink_mapped;
+            elink_rot0_unmasked <= elink_rot0;
         end generate g_BITMASK;
             
         ----====Take in RX and apply prbs checker + error counter====------
@@ -157,7 +157,7 @@ begin
                     port map(
                         RST      => reset_i,
                         CLK      => gbt_frame_clk_i,
-                        DATA_IN  => elink_mapped_unmasked(OH)(ELINK), --unmasked & mapped data is checked
+                        DATA_IN  => elink_rot1_unmasked(OH)(ELINK), --unmasked & mapped data is checked
                         EN       => queso_test_en_i, 
                         DATA_OUT => rx_prbs_err_arr_o(OH*216 + ELINK) --error array (each bit)
                     );

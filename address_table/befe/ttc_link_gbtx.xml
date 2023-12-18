@@ -1,0 +1,67 @@
+<!-- TTC Link GBTX module -->
+<node id="TTC_LINK_GBTX"  address="0x00050000"
+      description="This is a TTC receiver module that can receive TTC commands from a standard GE2/1 GBTX backend TX link"
+      fw_is_module="true"
+      fw_module_file="../common/hdl/ttc/ttc_link_gbtx.vhd"
+      fw_user_clock_signal="ttc_clks_i.clk_40"
+      fw_bus_clock_signal="ipb_clk_i"
+      fw_bus_reset_signal="ipb_reset_i"
+      fw_master_bus_signal="ipb_mosi_i"
+      fw_slave_bus_signal="ipb_miso_o"
+      fw_reg_addr_msb="15"
+      fw_reg_addr_lsb="0">
+
+  <node id="CTRL" address="0x0">
+    <node id="RESET" address="0x0" permission="w"
+          description="Resets the module, including the GBTX core"
+          fw_write_pulse_signal="reset_local"/>
+    <node id="CNT_RESET" address="0x1" permission="w"
+          description="Resets the status counters and latches"
+          fw_write_pulse_signal="cnt_reset"/>
+    <node id="GBT_RX_PHASE" address="0x2" mask="0x0000003f" permission="rw"
+          description="When RX_PHASE_AUTO is set to 0, this register sets the number of bitslips to use on the GBT RX MGT word, which effectively shifts the RXUSRCLK where the word is aligned,
+                       and can be used to control the CDC to the fabric clock. Valid values: 0-39."
+          fw_signal="gbt_rx_phase" fw_default="0b000000"/>
+    <node id="GBT_RX_PHASE_AUTO" address="0x2" mask="0x00000040" permission="rw"
+          description="When this is set to 1, the firmware will try to automatically find a good RX phase for the CDC, however for best performance and deterministic phase,
+                       it is recommended that the phase is scanned by the software, and best setting loaded to the RX_PHASE register, and the auto feature is turned off."
+          fw_signal="gbt_rx_phase_auto" fw_default="0b1"/>
+  </node>
+
+  <node id="STATUS" address="0x100">
+      <node id="GBT_READY" address="0x0" mask="0x00000001" permission="r"
+            description="If this is set to 1 it means that the backend is receiving valid GBT frames from this GBT link"
+            fw_signal="gbt_status.gbt_rx_ready"
+            sw_val_bad="self == 0" sw_enum="['NOT_READY', 'READY']"/>
+
+      <node id="GBT_WAS_NOT_READY" address="0x0" mask="0x00000002" permission="r"
+            description="This flag is latched high whenever the GBT link ready goes low, and is reset with link reset"
+            fw_signal="gbt_status.gbt_rx_had_not_ready"
+            sw_val_warn="self == 1"/>
+
+      <node id="GBT_RX_HAD_OVERFLOW" address="0x0" mask="0x00000004" permission="r"
+            description="This flag is latched high if the GBT RX sync fifo has overflow, and is reset with link reset"
+            fw_signal="gbt_status.gbt_rx_sync_status.had_ovf"
+            sw_val_bad="self == 1"/>
+
+      <node id="GBT_RX_HAD_UNDERFLOW" address="0x0" mask="0x00000008" permission="r"
+            description="This flag is latched high if the GBT RX sync fifo has underflow, and is reset with link reset"
+            fw_signal="gbt_status.gbt_rx_sync_status.had_unf"
+            sw_val_bad="self == 1"/>
+
+      <node id="GBT_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
+            description="Number of FEC errors corrected by the GBT decoder"
+            fw_signal="gbt_status.gbt_rx_correction_cnt"
+            sw_val_warn="self > 0"/>
+
+      <node id="GBT_RX_HEADER_HAD_UNLOCK" address="0x0" mask="0x00080000" permission="r"
+            description="This flag is latched high if the GBT RX header lock has been lost, and is reset with link reset"
+            fw_signal="gbt_status.gbt_rx_header_had_unlock"
+            sw_val_bad="self == 1"/>
+
+      <node id="GBT_RX_NUM_BITSLIPS" address="0x0" mask="0x0ff00000" permission="r"
+            description="Number of bitslips done on the RX data before achieving header lock"
+            fw_signal="gbt_status.gbt_rx_num_bitslips"/>
+  </node>
+
+</node> <!-- End of TTC TX module -->

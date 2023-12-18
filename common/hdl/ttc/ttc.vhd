@@ -29,7 +29,7 @@ use work.registers.all;
 
 entity ttc is
     generic(
-        g_DISABLE_TTC_DATA   : boolean := false; -- set this to true when ttc_data_p_i / ttc_data_n_i are not connected to anything, this will disable ttc data completely (generator can still be used though)
+        g_EXT_TTC_RECEIVER   : boolean := true; -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
         g_IPB_CLK_PERIOD_NS  : integer
     );
     port(
@@ -41,7 +41,10 @@ entity ttc is
         ttc_clks_status_i   : in  t_ttc_clk_status;
         ttc_clks_ctrl_o     : out t_ttc_clk_ctrl;
 
-        -- TTC backplane data signals
+        -- TTC commands (external receiver, used when g_EXT_TTC_RECEIVER = true)
+        ttc_cmds_i          : in  t_ttc_cmds;
+        
+        -- TTC backplane data signals (internal receiver, used when g_EXT_TTC_RECEIVER = false)
         ttc_data_p_i        : in  std_logic;
         ttc_data_n_i        : in  std_logic;
 
@@ -85,6 +88,8 @@ architecture ttc_arch of ttc is
     signal ttc_l1a                  : std_logic;
 
     signal l1a_cmd                  : std_logic;
+    signal real_l1a_cmd             : std_logic;
+    signal fake_l1a_cmd             : std_logic;
     signal bc0_cmd                  : std_logic;
     signal ec0_cmd                  : std_logic;
     signal resync_cmd               : std_logic;
@@ -123,6 +128,15 @@ architecture ttc_arch of ttc is
     signal gen_cyclic_cal_prescale  : std_logic_vector(11 downto 0);
     signal gen_cyclic_l1a_start     : std_logic;
     signal gen_cyclic_l1a_running   : std_logic;
+
+    -- random L1A generator
+    signal random_l1a_reset         : std_logic := '0';
+    signal random_l1a_enable        : std_logic := '0';
+    signal random_l1a_threshold     : std_logic_vector(31 downto 0) := (others => '0');
+    signal random_l1a_req           : std_logic := '0';
+
+    -- fake multi-BX readout mode
+    signal fake_multi_bx_cnt        : unsigned(3 downto 0) := (others => '0');
 
     -- daq counters
     signal oc_reset_armed           : std_logic := '0';
@@ -169,6 +183,8 @@ begin
     ttc_status.clk_status <= ttc_clks_status_i;
     ttc_status_o <= ttc_status;
 
+    ttc_status.fake_multi_bx <= ttc_ctrl.fake_multi_bx; -- propagates to the DAQ EvB
+
     i_reset_sync: 
     entity work.synch
         generic map(
@@ -198,7 +214,7 @@ begin
 
     ------------- TTC commands -------------
     
-    g_ttc_cmd : if not g_DISABLE_TTC_DATA generate
+    g_ttc_cmd : if not g_EXT_TTC_RECEIVER generate
         i_ttc_cmd: entity work.ttc_cmd
             port map(
                 clk_40_i             => ttc_clks_i.clk_40,
@@ -210,14 +226,6 @@ begin
                 ttc_err_single_cnt_o => ttc_status.single_err,
                 ttc_err_double_cnt_o => ttc_status.double_err
             );
-    end generate;
-
-    g_no_ttc_cmd : if g_DISABLE_TTC_DATA generate
-        ttc_cmd <= (others => '0');
-        ttc_l1a <= '0';
-        ttc_status.single_err <= (others => '0');
-        ttc_status.double_err <= (others => '0');
-    end generate;
     
     p_cmd:
     process(ttc_clks_i.clk_40) is
@@ -289,10 +297,50 @@ begin
                     end if;                    
                         end if;
                         
-                    end if;
-                    
+                    end if;          
                 end if;
     end process p_cmd;
+
+    end generate;
+
+    g_no_ttc_cmd : if g_EXT_TTC_RECEIVER generate
+        ttc_status.single_err <= (others => '0');
+        ttc_status.double_err <= (others => '0');
+
+        ttc_l1a <= ttc_cmds_i.l1a;
+        
+        process(ttc_clks_i.clk_40) is
+        begin
+            if (rising_edge(ttc_clks_i.clk_40)) then
+                if (reset = '1') or (ttc_ctrl.cmd_enable = '0') then
+                    bc0_cmd_real        <= '0';
+                    ec0_cmd_real        <= '0';
+                    resync_cmd_real     <= '0';
+                    oc0_cmd_real        <= '0';
+                    start_cmd_real      <= '0';
+                    stop_cmd_real       <= '0';
+                    test_sync_cmd_real  <= '0';
+                    hard_reset_cmd_real <= '0';
+                    calpulse_cmd_real   <= '0';
+                else
+                    bc0_cmd_real        <= ttc_cmds_i.bc0;
+                    ec0_cmd_real        <= ttc_cmds_i.ec0;
+                    resync_cmd_real     <= ttc_cmds_i.resync;
+                    oc0_cmd_real        <= ttc_cmds_i.oc0;
+                    start_cmd_real      <= ttc_cmds_i.start;
+                    stop_cmd_real       <= ttc_cmds_i.stop;
+                    test_sync_cmd_real  <= ttc_cmds_i.test_sync;
+                    hard_reset_cmd_real <= ttc_cmds_i.hard_reset;
+                    if (ttc_ctrl.calib_mode = '0') then
+                        calpulse_cmd_real <= ttc_cmds_i.calpulse;
+                    else
+                        calpulse_cmd_real <= ttc_l1a and ttc_ctrl.l1a_enable;
+                    end if;                    
+                end if;
+            end if;
+        end process;
+        
+    end generate;
 
     i_l1a_delay : entity work.shift_reg
         generic map(
@@ -320,6 +368,17 @@ begin
         );
     
     i_l1a_reset_sync : entity work.synch generic map(N_STAGES => 10, IS_RESET => false) port map(async_i => local_l1a_reset_i, clk_i => ttc_clks_i.clk_40, sync_o  => l1a_req_reset);
+
+    ------------- Random L1A generator -------------
+
+    i_random_trigger_generator : entity work.ttc_random_trigger_generator
+        port map(
+            reset_i     => reset or random_l1a_reset,
+            clk_i       => ttc_clks_i.clk_40,
+            enable_i    => random_l1a_enable,
+            threshold_i => random_l1a_threshold,
+            trigger_o   => random_l1a_req
+        );
     
     ------------- TTC generator -------------
 
@@ -356,6 +415,27 @@ begin
         end if;
     end process;
 
+    ------------- Fake multi-BX readout mode -------------
+
+    process(ttc_clks_i.clk_40)
+    begin
+        if rising_edge(ttc_clks_i.clk_40) then
+            if reset = '1' then
+                fake_multi_bx_cnt <= x"0";
+            else
+                if (real_l1a_cmd = '1') then
+                    fake_multi_bx_cnt <= unsigned(ttc_ctrl.fake_multi_bx);
+                elsif (fake_multi_bx_cnt /= x"0") then
+                    fake_multi_bx_cnt <= fake_multi_bx_cnt - 1;
+                else
+                    fake_multi_bx_cnt <= fake_multi_bx_cnt;
+                end if;
+            end if;
+        end if;
+    end process;
+
+    fake_l1a_cmd <= not real_l1a_cmd when fake_multi_bx_cnt /= x"0" else '0';
+
     ------------- MUX between real and generated TTC commands -------------    
     
     bc0_cmd        <= bc0_cmd_real when gen_enable = '0' else gen_ttc_cmds.bc0;
@@ -367,7 +447,8 @@ begin
     test_sync_cmd  <= test_sync_cmd_real when gen_enable = '0' else gen_ttc_cmds.test_sync;
     hard_reset_cmd <= hard_reset_cmd_real when gen_enable = '0' else gen_ttc_cmds.hard_reset;
     calpulse_cmd   <= calpulse_cmd_real when gen_enable = '0' and gen_enable_cal_only = '0' else gen_ttc_cmds.calpulse;
-    l1a_cmd        <= l1a_cmd_real or l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req;
+    real_l1a_cmd   <= l1a_cmd_real or l1a_req or random_l1a_req when gen_enable = '0' else gen_ttc_cmds.l1a or l1a_req or random_l1a_req;
+    l1a_cmd        <= real_l1a_cmd or fake_l1a_cmd;
 
     ------------- TTC counters -------------
     
@@ -525,6 +606,8 @@ begin
     ttc_daq_cntrs_o.bx    <= bx_cnt;
 
     ttc_cmds_o.l1a        <= l1a_cmd;
+    ttc_cmds_o.real_l1a   <= real_l1a_cmd;
+    ttc_cmds_o.fake_l1a   <= fake_l1a_cmd;
     ttc_cmds_o.bc0        <= bc0_cmd;
     ttc_cmds_o.ec0        <= ec0_cmd;
     ttc_cmds_o.oc0        <= oc0_cmd;

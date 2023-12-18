@@ -1,0 +1,38 @@
+
+# Project config
+Top/ge21_cvp13_qc7/project_config.vhd
+
+# Common libs
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/sca.src
+
+# GEM source
+gem/hdl/gem.src
+
+# GEM CVP13 source
+boards/cvp13/hdl/gem_cvp13.src
+
+# sources with generated registers
+gem/hdl/pkg/generated/ge21_cvp13_qc7/registers.vhd
+common/hdl/mgt/generated/ge21_cvp13_qc7/mgt_slow_control.vhd
+common/hdl/ttc/generated/ge21_cvp13_qc7/ttc.vhd
+common/hdl/misc/generated/ge21_cvp13_qc7/promless_bram.vhd
+common/hdl/misc/generated/ge21_cvp13_qc7/board_system.vhd
+gem/hdl/misc/generated/ge21_cvp13_qc7/gem_system_regs.vhd
+gem/hdl/tests/generated/ge21_cvp13_qc7/gem_tests.vhd
+gem/hdl/oh/generated/ge21_cvp13_qc7/oh_link_regs.vhd
+gem/hdl/daq/generated/ge21_cvp13_qc7/daq.vhd
+gem/hdl/slow_control/generated/ge21_cvp13_qc7/slow_control.vhd
+gem/hdl/trigger/generated/ge21_cvp13_qc7/trigger.vhd
+boards/cvp13/hdl/system/generated/ge21_cvp13_qc7/pcie_slow_control.vhd
+
+gem/hdl/trigger/sbit_me0.vhd # not used, just to keep the IDE happy
+
+# GEM IP
+gem/ip/gem_common_ip.src
+
+# CVP13 IP
+boards/cvp13/ip/gem_cvp13_ip.src
+

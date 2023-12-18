@@ -1,0 +1,6 @@
+
+tclink/firmware/constrs/mgt_locs.xdc
+# need to make sure that this comes before the pin LOCs I think, see tcds2/components/tcds2_interface/firmware/cfg/reorder/constraints.xdc
+
+tclink/firmware/constrs/core_lpgbt10G_timing.xdc
+tclink/firmware/constrs/slave_physical_gtye4.xdc

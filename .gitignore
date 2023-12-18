@@ -40,6 +40,9 @@ webtalk_17138.backup.log
 webtalk_2434.backup.log
 webtalk_70541.backup.log
 
+/scripts/gem/run.sh
+
+
 *.so
 
 /boards/*/bd/*
@@ -63,3 +66,4 @@ sigasi*
 scratch
 
 .idea
+.vscode/*

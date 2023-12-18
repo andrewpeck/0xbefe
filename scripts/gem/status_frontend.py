@@ -12,11 +12,8 @@ def main():
     gem_print_status()
 
     # Writing GBT status to text file
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
+    scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+    resultDir = scripts_gem_dir + "/results"
     gbtDir = resultDir+"/gbt_data"
     try:
         os.makedirs(gbtDir) # create directory for GBT data

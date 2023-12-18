@@ -53,6 +53,11 @@ entity gem_ctp7 is
         ttc_data_p_i                   : in  std_logic;
         ttc_data_n_i                   : in  std_logic;
 
+        clk_125_p_i                    : in  std_logic; -- 125MHz clock oscillator
+        clk_125_n_i                    : in  std_logic;
+        clk_synthb_in_p_o              : out std_logic; -- synthesizer B clock input 2
+        clk_synthb_in_n_o              : out std_logic;
+
         LEDs                           : out std_logic_vector(1 downto 0);
 
         axi_c2c_v7_to_zynq_data        : out std_logic_vector(16 downto 0);
@@ -149,6 +154,7 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal ipb_usr_miso_arr : ipb_rbus_array(C_NUM_IPB_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
     signal ipb_usr_mosi_arr : ipb_wbus_array(C_NUM_IPB_SLAVES - 1 downto 0);
     signal ipb_sys_miso_arr : ipb_rbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0) := (others => IPB_S2M_NULL);
+    signal ipb_sys_mosi_arr : ipb_wbus_array(C_NUM_IPB_SYS_SLAVES - 1 downto 0);
 
     -------------------------- TTC ---------------------------------
     signal ttc_clocks           : t_ttc_clks;
@@ -189,11 +195,11 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal gem_gt_gbt_status_arr    : t_mgt_status_arr(CFG_NUM_OF_OHs(0) * CFG_NUM_GBTS_PER_OH(0) - 1 downto 0);
 
     -------------------- Spy / LDAQ readout link ---------------------------------
-    signal spy_rx_data              : t_mgt_64b_rx_data;
-    signal spy_tx_data              : t_mgt_64b_tx_data;
-    signal spy_tx_usrclk            : std_logic;
-    signal spy_rx_usrclk            : std_logic;
-    signal spy_status               : t_mgt_status;
+    signal spy_rx_data              : t_mgt_64b_rx_data := MGT_64B_RX_DATA_NULL;
+    signal spy_tx_data              : t_mgt_64b_tx_data := MGT_64B_TX_DATA_NULL;
+    signal spy_rx_usrclk            : std_logic := '0';
+    signal spy_tx_usrclk            : std_logic := '0';
+    signal spy_status               : t_mgt_status := MGT_STATUS_NULL;
 
     -------------------- AMC13 DAQLink ---------------------------------
     signal daq_to_daqlink       : t_daq_to_daqlink;
@@ -204,8 +210,10 @@ architecture gem_ctp7_arch of gem_ctp7 is
     signal from_promless        : t_from_promless;
 
     -------------------- Other ---------------------------------
-
     signal gem_powerup_reset    : std_logic;
+    signal usr_logic_reset      : std_logic;
+    signal usr_ttc_reset        : std_logic;
+    signal board_id             : std_logic_vector(15 downto 0);
 
     -------------------- EMTF RX test signals ---------------------------------
 
@@ -317,7 +325,9 @@ begin
             to_promless_i                  => to_promless
         );
 
-    -------------------------- IPBus ---------------------------------
+    --================================--
+    -- AXI-IPBus bridge
+    --================================--
 
     i_axi_ipbus_bridge : entity work.axi_ipbus_bridge
         generic map(
@@ -333,7 +343,7 @@ begin
             ipb_reset_o    => ipb_reset,
             ipb_clk_i      => ipb_clk,
             ipb_sys_miso_i => ipb_sys_miso_arr,
-            ipb_sys_mosi_o => open,
+            ipb_sys_mosi_o => ipb_sys_mosi_arr,
             ipb_usr_miso_i => ipb_usr_miso_arr,
             ipb_usr_mosi_o => ipb_usr_mosi_arr,
             read_active_o  => open,
@@ -342,13 +352,38 @@ begin
 
     ipb_clk <= axi_clk;
 
-    -------------------------- GEM logic ---------------------------------
+    --================================--
+    -- Board System registers
+    --================================--
+
+    i_board_system : entity work.board_system
+        generic map(
+            g_FW_DATE           => GLOBAL_DATE,
+            g_FW_TIME           => GLOBAL_TIME,
+            g_FW_VER            => GLOBAL_VER,
+            g_FW_SHA            => GLOBAL_SHA,
+            g_IPB_CLK_PERIOD_NS => 20
+        )
+        port map(
+            reset_i               => '0',
+            ttc_clk40_i           => ttc_clocks.clk_40,
+            board_id_o            => board_id,
+            usr_logic_reset_o     => usr_logic_reset,
+            ttc_reset_o           => usr_ttc_reset,
+            ipb_reset_i           => ipb_reset,
+            ipb_clk_i             => ipb_clk,
+            ipb_mosi_i            => ipb_sys_mosi_arr(C_IPB_SYS_SLV.system),
+            ipb_miso_o            => ipb_sys_miso_arr(C_IPB_SYS_SLV.system)
+        );
+
+    --================================--
+    -- GEM Logic
+    --================================--
 
     g_gem_logic : if not CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         i_gem : entity work.gem_amc
             generic map(
                 g_SLR                => 0,
-                g_DISABLE_TTC_DATA   => false,
                 g_GEM_STATION        => CFG_GEM_STATION(0),
                 g_NUM_OF_OHs         => CFG_NUM_OF_OHs(0),
                 g_OH_VERSION         => CFG_OH_VERSION(0),
@@ -363,18 +398,18 @@ begin
                 g_DAQ_CLK_FREQ       => 62_500_000, --50_000_000
                 g_IS_SLINK_ROCKET    => false,
                 g_QUESO_TEST_EN      => false
+                g_EXT_TTC_RECEIVER   => false
             )
             port map(
-                reset_i                 => '0',
+                reset_i                 => usr_logic_reset,
                 reset_pwrup_o           => gem_powerup_reset,
 
-                ttc_reset_i             => '0',
+                ttc_reset_i             => usr_ttc_reset,
                 ttc_data_p_i            => ttc_data_p_i,
                 ttc_data_n_i            => ttc_data_n_i,
                 ttc_clocks_i            => ttc_clocks,
                 ttc_clk_status_i        => ttc_clk_status,
                 ttc_clk_ctrl_o          => ttc_clk_ctrl,
-                external_trigger_i      => '0',
 
                 gt_trig0_rx_clk_arr_i   => gem_gt_trig0_rx_clk_arr,
                 gt_trig0_rx_data_arr_i  => gem_gt_trig0_rx_data_arr,
@@ -413,7 +448,7 @@ begin
                 daq_to_daqlink_o        => daq_to_daqlink,
                 daqlink_to_daq_i        => daqlink_to_daq,
 
-                board_id_i              => x"beef",
+                board_id_i              => board_id,
 
                 to_promless_o           => to_promless,
                 from_promless_i         => from_promless
@@ -475,25 +510,17 @@ begin
     g_spy_link_tx : if CFG_USE_SPY_LINK_TX(0) generate
         spy_tx_usrclk <= clk_gth_tx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx);
         gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= spy_tx_data;
-    else generate
-        spy_tx_usrclk <= '0';
-        gth_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).tx) <= MGT_64B_TX_DATA_NULL;
     end generate;
 
     -- spy link RX mapping
     g_spy_link_rx : if CFG_USE_SPY_LINK_RX(0) generate
         spy_rx_usrclk <= clk_gth_rx_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
         spy_rx_data <= gth_rx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
-    else generate
-        spy_rx_usrclk <= '0';
-        spy_rx_data <= MGT_64B_RX_DATA_NULL;
     end generate;
 
     -- spy link statuses mapping
     g_spy_link : if CFG_USE_SPY_LINK_TX(0) or CFG_USE_SPY_LINK_RX(0) generate
         spy_status <= gt_status_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINK(0)).rx);
-    else generate
-        spy_status <= MGT_STATUS_NULL;
     end generate;
 
     -------------------------- LpGBT loopback test without GEM logic ---------------------------------
@@ -677,6 +704,37 @@ begin
                 probe8 => emtf_tx_data(CFG_LPGBT_EMTF_LOOP_TX_LINK)
             );
 
+    end generate;
+
+    -------------------------- 125MHz PASSTHROUGH ---------------------------------
+    g_clk_125_passthrough : if (true) generate
+        signal clk_125       : std_logic;
+        signal clk_synthb_in : std_logic;
+    begin
+        i_clk_125_ibufgds : IBUFGDS
+        port map(
+            I  => clk_125_p_i,
+            IB => clk_125_n_i,
+            O  => clk_125
+        );
+
+        i_clk_synthb_oddr : ODDR
+        port map (
+            Q  => clk_synthb_in,
+            C  => clk_125,
+            CE => '1',
+            D1 => '0', -- pins polarity is reversed
+            D2 => '1',
+            R  => '0',
+            S  => '0'
+        );
+
+        i_clk_synthb_obufds : OBUFDS
+        port map (
+            I  => clk_synthb_in,
+            O  => clk_synthb_in_p_o,
+            OB => clk_synthb_in_n_o
+        );
     end generate;
 
     -------------------------- DEBUG ---------------------------------

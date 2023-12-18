@@ -53,7 +53,10 @@ package project_config is
     constant CFG_TTC_TX_SOURCE_SLR : integer := 0;
     constant CFG_USE_TTC_TX_LINK : boolean := true;
     constant CFG_TTC_LINKS : t_int_array(0 to 3) := (8, 9, 10, 11) ;   
-    
+
+    constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
+    constant CFG_TTC_GBTX_LINK      : integer := CFG_BOARD_MAX_LINKS;
+        
     constant CFG_ODMB57_BIDIR_TEST : boolean := true;
     constant CFG_ODMB7_BIDIR_TX_LINK : t_int_array(0 to 3) := (4, 5, 6, 7);
     constant CFG_ODMB7_BIDIR_RX_LINK : t_int_array(0 to 3) := (4, 5, 6, 7);
@@ -83,10 +86,15 @@ package project_config is
         (mgt_type => CFG_MGT_TTC,          qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => true),        
         (mgt_type => CFG_MGT_TTC,          qpll_inst_type => QPLL_NULL,        qpll_idx => 8,  refclk0_idx => 2, refclk1_idx => 2, is_master => false, chbond_master => 0, ibert_inst => true),        
  
-        (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_GBE_156,     qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => true,  chbond_master => 0, ibert_inst => true),
+        (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_GBE_156,     qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => true),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
         (mgt_type => CFG_MGT_GBE,          qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
+
+--        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_10GBE_156,   qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => true),
+--        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
+--        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false),
+--        (mgt_type => CFG_MGT_10GBE,        qpll_inst_type => QPLL_NULL,        qpll_idx => 12, refclk0_idx => 3, refclk1_idx => 3, is_master => false, chbond_master => 0, ibert_inst => false)
     );
 
 end package project_config;

@@ -7,65 +7,28 @@ import matplotlib.pyplot as plt
 import os, glob
 import datetime
 import numpy as np
-
-def adc_conversion_lpgbt(adc):
-    gain = 1.87
-    offset = 531
-    #voltage = adc/1024.0
-    #voltage = (adc - 38.4)/(1.85 * 512)
-    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
-    return voltage
-
-def poly5(x, a, b, c, d, e, f):
-    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
-
-def get_vin(vout, fit_results):
-    vin_range = np.linspace(0, 1, 1000)
-    vout_range = poly5(vin_range, *fit_results)
-    diff = 9999
-    vin = 0
-    for i in range(0,len(vout_range)):
-        if abs(vout - vout_range[i])<=diff:
-            diff = abs(vout - vout_range[i])
-            vin = vin_range[i]
-    return vin
+from common.utils import get_befe_scripts_dir
+from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
 
     gbt = gbt_select%4
-    init_adc(oh_ver)
     print("ADC Readings:")
 
-    '''
-    adc_calib_results = []
-    adc_calibration_dir = "results/me0_lpgbt_data/adc_calibration_data/"
-    if not os.path.isdir(adc_calibration_dir):
-        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
-    list_of_files = glob.glob(adc_calibration_dir+"ME0_OH%d_GBT%d_adc_calibration_results_*.txt"%(oh_select, gbt_select))
-    if len(list_of_files)==0:
-        print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
-    elif len(list_of_files)>1:
-        print ("Mutliple ADC calibration results found, using latest file")
-    if len(list_of_files)!=0:
-        latest_file = max(list_of_files, key=os.path.getctime)
-        adc_calib_file = open(latest_file)
-        adc_calib_results = adc_calib_file.readlines()[0].split()
-        adc_calib_results_float = [float(a) for a in adc_calib_results]
-        adc_calib_results_array = np.array(adc_calib_results_float)
-        adc_calib_file.close()
-    '''
+    chip_id = read_chip_id(system, oh_ver)
+    adc_calib = read_central_adc_calib_file()
+    junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
+    vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
+    init_adc(oh_ver, vref_tune)
     
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_asense_data"
+    dataDir = me0Dir + "/lpgbt_asense_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -74,8 +37,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir + "/"
-    filename = foldername + "ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_asense_data_"%(oh_select, gbt_select) + now + ".txt"
 
     open(filename, "w+").close()
     minutes, asense0, asense1, asense2, asense3 = [], [], [], [], []
@@ -108,26 +70,20 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
         if read_adc_iter:
             if oh_ver == 1:
-                asense0_Vout = read_adc(4, gain, system)
-                asense1_Vout = read_adc(2, gain, system)
-                asense2_Vout = read_adc(1, gain, system)
-                asense3_Vout = read_adc(3, gain, system)
+                adc_value0 = read_adc(4, gain, system)
+                adc_value1 = read_adc(2, gain, system)
+                adc_value2 = read_adc(1, gain, system)
+                adc_value3 = read_adc(3, gain, system)
             if oh_ver == 2:
-                asense0_Vout = read_adc(6, gain, system)
-                asense1_Vout = read_adc(1, gain, system)
-                asense2_Vout = read_adc(0, gain, system)
-                asense3_Vout = read_adc(3, gain, system)
+                adc_value0 = read_adc(6, gain, system)
+                adc_value1 = read_adc(1, gain, system)
+                adc_value2 = read_adc(0, gain, system)
+                adc_value3 = read_adc(3, gain, system)
 
-            #if len(adc_calib_results)!=0:
-            #    asense0_Vin = get_vin(asense0_Vout, adc_calib_results_array)
-            #    asense1_Vin = get_vin(asense1_Vout, adc_calib_results_array)
-            #    asense2_Vin = get_vin(asense2_Vout, adc_calib_results_array)
-            #    asense3_Vin = get_vin(asense3_Vout, adc_calib_results_array)
-            #else:
-            asense0_Vin = asense0_Vout
-            asense1_Vin = asense1_Vout
-            asense2_Vin = asense2_Vout
-            asense3_Vin = asense3_Vout
+            asense0_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value0, gain)
+            asense1_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value1, gain)
+            asense2_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value2, gain)
+            asense3_Vin = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value3, gain)
 
             asense0_converted = asense_current_conversion(asense0_Vin)
             asense1_converted = asense1_Vin
@@ -175,8 +131,8 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
         asense2_label = "PG1.2VA current"
         asense3_label = "Rt4 voltage"
 
-    figure_name1 = foldername + "ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
-    figure_name2 = foldername + "ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name1 = dataDir + "/ME0_OH%d_GBT%d_pg_current_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name2 = dataDir + "/ME0_OH%d_GBT%d_rt_voltage_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig3, ax3 = plt.subplots()
     fig4, ax4 = plt.subplots()
     ax3.set_xlabel("minutes")
@@ -213,73 +169,6 @@ def live_plot_temp(ax2, x, y1, y3, run_time_min, gbt):
         ax2.legend((line1, line3), ("Rt3 voltage", "Rt4 voltage"), loc="center right")
     plt.draw()
     plt.pause(0.01)
-
-def convert_adc_reg(adc):
-    reg_data = 0
-    bit = adc
-    reg_data |= (0x01 << bit)
-    return reg_data
-
-def init_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)  # enable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1)  # resets temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1)  # enable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1)  # vref enable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
-    sleep(0.01)
-
-
-def powerdown_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0)  # disable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0)  # disable temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0)  # disable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0)  # vref disable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
-
-
-def read_adc(channel, gain, system):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-
-    gain_settings = {
-        2: 0x00,
-        8: 0x01,
-        16: 0x10,
-        32: 0x11
-    }
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-
-    vals = []
-    for i in range(0,100):
-        done = 0
-        while (done==0):
-            if system!="dryrun":
-                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-            else:
-                done=1
-        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = adc_conversion_lpgbt(val)
-        vals.append(val)
-    mean_val = sum(vals)/len(vals)
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
-
-    return mean_val
 
 def asense_current_conversion(Vin):
     # Resistor values

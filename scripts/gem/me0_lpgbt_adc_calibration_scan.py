@@ -7,21 +7,10 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 import numpy as np
-
-def adc_conversion_lpgbt(adc):
-    gain = 1.87
-    offset = 531.1
-    #voltage = adc/1024.0
-    #voltage = (adc - 38.4)/(1.85 * 512)
-    voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
-    return voltage
-
-def poly5(x, a, b, c, d, e, f):
-    return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f
+from common.utils import get_befe_scripts_dir
+from gem.me0_lpgbt_adc import *
 
 def main(system, oh_ver, oh_select, gbt_select, boss, gain):
-
-    init_adc(oh_ver)
 
     if boss == 1: 
         channel = 7 # master_adc_in7
@@ -30,17 +19,14 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
 
     print("ADC Calibration Scan:")
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/adc_calibration_data"
+    dataDir = me0Dir + "/adc_calibration_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -49,45 +35,45 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir + "/"
-    filename = foldername + "ME0_OH%d_GBT%d_adc_calibration_data_"%(oh_select, gbt_select) + now + ".txt"
-    filename_results = foldername + "ME0_OH%d_GBT%d_adc_calibration_results_"%(oh_select, gbt_select) + now + ".txt"
+    filename = dataDir + "/ME0_OH%d_GBT%d_adc_calibration_data_"%(oh_select, gbt_select) + now + ".txt"
+    filename_results = dataDir + "/ME0_OH%d_GBT%d_adc_calibration_results_"%(oh_select, gbt_select) + now + ".txt"
 
     filename_file = open(filename, "w")
     filename_file.write("#DAC    Vin    Vout\n")
     Vin_range = []
     Vout_range = []
 
-    R = 1e3
-    LSB = 3.55e-06
+    R_load = 1e3
     DAC_range = range(0, 256, 1)
 
-    reg_data = convert_adc_reg(channel)
-    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x1)  # Enables current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), reg_data)
+    chip_id = read_chip_id(system, oh_ver)
+    adc_calib = read_central_adc_calib_file()
+    junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
+    vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
+    init_adc(oh_ver, vref_tune)
 
     for DAC in DAC_range:
-        I = DAC * LSB
-        Vin = I * R
+        current = get_current_from_dac(-9999, adc_calib, junc_temp, channel, R_load, DAC)
+        Vin = current * R_load
 
-        lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), DAC)  # Sets output current for the current DAC.
+        init_current_dac(channel, DAC)
         sleep(0.01)
 
         Vout = 0
         if system == "dryrun":
             Vout = Vin
         else:
-            Vout = read_adc(channel, gain, system)
+            adc_value = read_adc(channel, gain, system)
+            Vout = adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc_value, gain)
 
         Vin_range.append(Vin)
         Vout_range.append(Vout)
         print ("  DAC: %d,  Vin: %.4f V,  Vout: %.4f V"%(DAC, Vin, Vout))
         filename_file.write("%d    %.4f    %.4f\n"%(DAC, Vin, Vout))
 
+        powerdown_current_dac()
+
     filename_file.close()
-    lpgbt_writeReg(getNode("LPGBT.RWF.VOLTAGE_DAC.CURDACENABLE"), 0x0)  # Enables current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACSELECT"), 0x0)  # Sets output current for the current DAC.
-    lpgbt_writeReg(getNode("LPGBT.RWF.CUR_DAC.CURDACCHNENABLE"), 0x0)
     sleep(0.01)
 
     print ("\nFitting\n")
@@ -107,76 +93,10 @@ def main(system, oh_ver, oh_select, gbt_select, boss, gain):
     ax.plot(Vin_range, Vout_range, "turquoise", marker='o')
     ax.plot(Vin_range_fit, Vout_range_fit, "red")
     plt.draw()
-    figure_name = foldername + "ME0_OH%d_GBT%d_calibration_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
+    figure_name = dataDir + "/ME0_OH%d_GBT%d_calibration_data_"%(oh_select, gbt_select) + now + "_plot.pdf"
     fig.savefig(figure_name, bbox_inches="tight")
 
     powerdown_adc(oh_ver)
-
-def convert_adc_reg(adc):
-    reg_data = 0
-    bit = adc
-    reg_data |= (0x01 << bit)
-    return reg_data
-
-def init_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x1)  # enable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x1)  # resets temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x1)  # enable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x1)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x1)  # vref enable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x63) # vref tune
-    sleep(0.01)
-
-def powerdown_adc(oh_ver):
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCENABLE"), 0x0)  # disable ADC
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.TEMPSENSRESET"), 0x0)  # disable temp sensor
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDTXMONENA"), 0x0)  # disable dividers
-    if oh_ver == 1:
-        lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDPSTMONENA"), 0x0)  # enable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDRXMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.VDDANMONENA"), 0x0)  # disable dividers
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFENABLE"), 0x0)  # vref disable
-    lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
-
-def read_adc(channel, gain, system):
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
-
-    gain_settings = {
-        2: 0x00,
-        8: 0x01,
-        16: 0x10,
-        32: 0x11
-    }
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
-
-    vals = []
-    for i in range(0,100):
-        done = 0
-        while (done==0):
-            if system!="dryrun":
-                done = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCDONE"))
-            else:
-                done=1
-        val = lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEL"))
-        val |= (lpgbt_readReg(getNode("LPGBT.RO.ADC.ADCVALUEH")) << 8)
-        val = adc_conversion_lpgbt(val)
-        vals.append(val)
-    mean_val = sum(vals)/len(vals)
-
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), 0x0)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0x0)
-
-    return mean_val
 
 if __name__ == "__main__":
 

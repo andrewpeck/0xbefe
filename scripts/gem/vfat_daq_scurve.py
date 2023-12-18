@@ -4,20 +4,18 @@ import datetime
 import sys
 import argparse
 import random
+from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
 def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, trim):
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scritps_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_daq_scurve_results"
+    dataDir = vfatDir + "/vfat_daq_scurve_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

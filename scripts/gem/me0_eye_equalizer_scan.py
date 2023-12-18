@@ -5,6 +5,7 @@ import sys
 import os
 import glob
 import argparse
+from common.utils import get_befe_scripts_dir
 
 def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_res0, boss):
 
@@ -37,17 +38,14 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     eq_res1_node = getNode("LPGBT.RWF.EQUALIZER.EQRES1")
     eq_res0_node = getNode("LPGBT.RWF.EQUALIZER.EQRES0")
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_eye_scan_results"
+    dataDir = me0Dir + "/lpgbt_eye_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -60,7 +58,6 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir+"/"
 
     print ("\n")
     # Start Loop Over Equalizer Settings
@@ -139,7 +136,7 @@ def main(system, oh_ver, count, eq_attn, eq_cap, eq_res3, eq_res2, eq_res1, eq_r
                             print ("Counter value max=%d \n" % cntvalmax)
                             
                             
-                            filename = foldername + "eye_data_eqa_"+eq_attn_setting+"_eqc_"+eq_cap_setting+"_eqr3_"+eq_res3_setting+"_eqr2_"+eq_res2_setting+"_eqr1_"+eq_res1_setting+"_eqr0_"+eq_res0_setting+".txt"
+                            filename = dataDir + "/eye_data_eqa_"+eq_attn_setting+"_eqc_"+eq_cap_setting+"_eqr3_"+eq_res3_setting+"_eqr2_"+eq_res2_setting+"_eqr1_"+eq_res1_setting+"_eqr0_"+eq_res0_setting+".txt"
                             f = open(filename, "w+")
                             f.write("eye_data=[\n")
                             for y  in range (ymin,ymax):

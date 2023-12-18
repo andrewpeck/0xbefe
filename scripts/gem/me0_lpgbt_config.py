@@ -2,6 +2,7 @@ from gem.me0_lpgbt.rw_reg_lpgbt import *
 from time import sleep, time
 import sys
 import argparse
+from common.utils import get_befe_scripts_dir
 from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 
 def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
@@ -95,17 +96,14 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
         print ("lpGBT status is READY")
 
     # Writing lpGBT configuration to text file
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_config_data"
+    dataDir = me0Dir + "/lpgbt_config_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists

@@ -4,6 +4,7 @@ import datetime
 import sys
 import os
 import argparse
+from common.utils import get_befe_scripts_dir
 
 def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
 
@@ -106,17 +107,14 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
 
     print ("Counter value max=%d" % cntvalmax)
     
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_eye_scan_results"
+    dataDir = me0Dir + "/lpgbt_eye_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -125,8 +123,7 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    foldername = dataDir+"/"
-    filename = foldername + "eye_data_" + now + ".txt"    
+    filename = dataDir + "/eye_data_" + now + ".txt"    
     f = open (filename, "w+")
     f.write ("eye_data=[\n")
     for y  in range (ymin,ymax):

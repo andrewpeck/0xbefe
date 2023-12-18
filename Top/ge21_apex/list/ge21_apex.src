@@ -19,6 +19,8 @@ boards/apex/hdl/gem_apex.src
 gem/hdl/pkg/generated/ge21_apex/registers.vhd
 common/hdl/mgt/generated/ge21_apex/mgt_slow_control.vhd
 common/hdl/ttc/generated/ge21_apex/ttc.vhd
+common/hdl/ttc/generated/ge21_apex/ttc_link_gbtx.vhd
+common/hdl/misc/generated/ge21_apex/ttc_tx.vhd
 common/hdl/misc/generated/ge21_apex/board_system.vhd
 common/hdl/misc/generated/ge21_apex/promless_bram.vhd
 gem/hdl/misc/generated/ge21_apex/gem_system_regs.vhd
@@ -36,6 +38,9 @@ gem/ip/gem_common_ip.src
 
 # APEX IP & BD
 boards/apex/ip/apex_ip.src
-boards/apex/ip/apex_ip_rev1.src
+#botttom fpga is rev1
+#boards/apex/ip/apex_ip_rev1.src
+#top fpga is rev2
+boards/apex/ip/apex_ip_rev2.src
 boards/apex/bd/apex_bd.src
 

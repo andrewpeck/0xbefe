@@ -1,4 +1,4 @@
-<!-- Optical links module -->
+<!-- MGT module -->
 <node id="MGTS"  address="0x00010000"
       description="This module contains status and control registers of all the MGTs on the board (regardless of link rate or what they connect to)"
       fw_is_module="true"
@@ -32,6 +32,12 @@
       <node id="QPLL1_RESET" address="0x4" permission="w"
             description="Writing 1 here resets the QPLL1 of this quad"
             fw_write_pulse_signal="qpll_ctrl_arr_o(${MGT}).reset(1)"/>
+      <node id="TX_PCS_RESET" address="0x5" mask="0x80000000" permission="rw"
+            description="Latching TX PCS reset"
+            fw_signal="tx_slow_ctrl_arr_o(${MGT}).txpcsreset" fw_default="0b0"/>
+      <node id="EYESCAN_RESET" address="0x5" mask="0x40000000" permission="rw"
+            description="Latching eyescan reset"
+            fw_signal="es_reset_arr(${MGT})" fw_default="0b0"/>
       <node id="QPLL_POWERDOWN" address="0x5" mask="0x30000000" permission="rw"
             description="Setting this to 1 will powerdown the QPLL (the two bits represent QPLL0 and QPLL1)"
             fw_signal="qpll_ctrl_arr_o(${MGT}).power_down" fw_default="0b00"/>
@@ -69,17 +75,20 @@
             description="Directly wired to the TXMAINCURSOR port of the MGT, refer to the MGT manual for units."
             fw_signal="tx_slow_ctrl_arr(${MGT}).txmaincursor" fw_default="0b0000000"/>
       <node id="RX_PRBS_SEL" address="0x7" mask="0x00000007" permission="rw"
-            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31"
+            description="Controls the RX PRBS mode: 000 -- normal operation (no PRBS checks), 001 -- PRBS7, 010 -- PRBS9, 011 -- PRBS15, 100 -- PRBS23, 101 -- PRBS31"
             fw_signal="rxprbssel_arr_async(${MGT})" fw_default="0b000"/>
-      <node id="TX_PRBS_SEL" address="0x7" mask="0x00000070" permission="rw"
-            description="Controls the TX PRBS mode: 000 -- normal operation (no PRBS), 001 -- PRBS7, 010 -- PRBS15, 011 -- PRBS23, 100 -- PRBS31, 101 -- PCIe compliance patteren, 110 -- square wave with 2 UI (alternating 0s and 1s), 111 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
-            fw_signal="txprbssel_arr_async(${MGT})" fw_default="0b000"/>
+      <node id="TX_PRBS_SEL" address="0x7" mask="0x000000f0" permission="rw"
+            description="Controls the TX PRBS mode: 0000 -- normal operation (no PRBS), 0001 -- PRBS7, 0010 -- PRBS9, 0011 -- PRBS15, 0100 -- PRBS23, 0101 -- PRBS31, 1000 -- PCIe compliance patteren, 1001 -- square wave with 2 UI (alternating 0s and 1s), 1010 -- square wave with 16 UI, 20 UI, 32 UI or 40 UI period depending on data width"
+            fw_signal="txprbssel_arr_async(${MGT})" fw_default="0x0"/>
       <node id="TX_PRBS_FORCE_ERR" address="0x8" permission="w"
             description="Writing anything here forces a PRBS error on the TX"
             fw_write_pulse_signal="tx_slow_ctrl_arr(${MGT}).txprbsforceerr"/>
       <node id="RX_PRBS_CNT_RESET" address="0x9" permission="w"
             description="Writing 1 here resets the PRBS error counters"
             fw_write_pulse_signal="prbs_err_reset_arr(${MGT})"/>
+      <node id="EYESCAN_ERR_CNT_RESET" address="0xa" permission="w"
+            description="Writing 1 here resets the eyescan error counter"
+            fw_write_pulse_signal="es_err_reset_async_arr(${MGT})"/>
     </node>
 
     <node id="STATUS" address="0x20">
@@ -163,17 +172,20 @@
             description="Frequency of the refclk1 used by this MGT"
             fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"
             sw_units="MHz"/>
+      <node id="EYESCAN_ERROR_CNT" address="0x1" permission="r"
+            description="Eyescan error counter"
+            fw_signal="es_err_cnt_arr(${MGT})"/>
     </node>
 
     <node id="CONFIG" address="0x30">
       <node id="LINK_TYPE" address="0x0" mask="0x0000000f" permission="r"
             description="MGT channel type"
             fw_signal="std_logic_vector(to_unsigned(t_mgt_link_type'POS(g_LINK_CONFIG(${MGT}).mgt_type.link_type), 4))"
-            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_GBE', 'MGT_TTC', 'MGT_ODMB57_BIDIR']"/>
+            sw_enum="['MGT_NULL', 'MGT_GBTX', 'MGT_LPGBT', 'MGT_3P2G_8B10B', 'MGT_TX_LPGBT_RX_3P2G_8B10B', 'MGT_DMB', 'MGT_ODMB57', 'MGT_TTC', 'MGT_ODMB57_BIDIR', 'MGT_GBE', 'MGT_10GBE', 'MGT_TX_GBE_RX_LPGBT', 'MGT_TX_10GBE_RX_LPGBT', 'MGT_25GBE', 'MGT_TX_10GBE_RX_TRIG_3P2']"/>
       <node id="QPLL_INST_TYPE" address="0x0" mask="0x000000f0" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
             fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 4))"
-            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX']"/>
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>
@@ -223,6 +235,48 @@
             sw_units="MHz"/>
     </node>
 
+  </node> <!-- End of MGTs -->
+
+  <node id="CHANNEL_DRP" address="0x4000">
+      <node id="MGT_SELECT" address="0x1" mask="0x7f000000" permission="rw"
+            description="Selcts the MGT channel"
+            fw_signal="chan_drp_mgt_select" fw_default="0b0000000"/>
+      <node id="RESET" address="0x0" permission="w"
+            description="Writing anything to this register will trigger a DRP reset for this MGT"
+            fw_write_pulse_signal="chan_drp_mosi.rst"/>
+      <node id="ADDRESS" address="0x1" mask="0x0000ffff" permission="rw"
+            description="Selcts the DRP address to read from or write to"
+            fw_signal="chan_drp_mosi.addr" fw_default="0x0000"/>
+      <node id="WRITE_VALUE" address="0x2" mask="0x0000ffff" permission="rw"
+            description="Writing to this register will execute a DRP write with the given value"
+            fw_signal="chan_drp_mosi.di" fw_default="0x0000"
+            fw_write_pulse_signal="chan_drp_write_strobe"/>
+      <node id="READ_VALUE" address="0x3" mask="0x0000ffff" permission="r"
+            description="Reading this register will trigger a DRP read and return the value from DRP"
+            fw_signal="chan_drp_miso.do"
+            fw_read_pulse_signal="chan_drp_read_strobe"
+            fw_read_ready_signal="chan_drp_miso.rdy"/>
   </node>
 
-</node> <!-- End of system module -->
+  <node id="QPLL_DRP" address="0x4100">
+      <node id="MGT_SELECT" address="0x1" mask="0x7f000000" permission="rw"
+            description="Selcts the MGT channel"
+            fw_signal="qpll_drp_mgt_select" fw_default="0b0000000"/>
+      <node id="RESET" address="0x0" permission="w"
+            description="Writing anything to this register will trigger a DRP reset for this MGT"
+            fw_write_pulse_signal="qpll_drp_mosi.rst"/>
+      <node id="ADDRESS" address="0x1" mask="0x0000ffff" permission="rw"
+            description="Selcts the DRP address to read from or write to"
+            fw_signal="qpll_drp_mosi.addr" fw_default="0x0000"/>
+      <node id="WRITE_VALUE" address="0x2" mask="0x0000ffff" permission="rw"
+            description="Writing to this register will execute a DRP write with the given value"
+            fw_signal="qpll_drp_mosi.di" fw_default="0x0000"
+            fw_write_pulse_signal="qpll_drp_write_strobe"/>
+      <node id="READ_VALUE" address="0x3" mask="0x0000ffff" permission="r"
+            description="Reading this register will trigger a DRP read and return the value from DRP"
+            fw_signal="qpll_drp_miso.do"
+            fw_read_pulse_signal="qpll_drp_read_strobe"
+            fw_read_ready_signal="qpll_drp_miso.rdy"/>
+  </node>
+
+</node> <!-- End of MGT module -->

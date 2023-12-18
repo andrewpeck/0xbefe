@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import datetime
 import sys
@@ -152,17 +153,14 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
     else:
         write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    vfatDir = "results/vfat_data"
+    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scritps_gem_dir + "/results"
+    vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"
+    dataDir = vfatDir + "/vfat_sbit_monitor_cluster_mapping_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
@@ -279,7 +277,7 @@ if __name__ == "__main__":
             if len(list_of_files)==0:
                 print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
                 sys.exit()
-            elif len(list_of_files)>1:
+            elif len(list_of_files)>0:
                 print ("Mutliple S-bit mapping results found, using latest file")
                 latest_file = max(list_of_files, key=os.path.getctime)
                 print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))

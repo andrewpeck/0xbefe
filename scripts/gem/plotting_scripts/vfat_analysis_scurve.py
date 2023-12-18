@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -420,6 +421,13 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="Increase verbosity")
     args = parser.parse_args()
 
+    if args.filename is None:
+        print(Colors.YELLOW + "Input file must be input" + Colors.ENDC)
+        sys.exit()
+    elif not os.path.exists(args.filename):
+        print(Colors.RED + "Input file not found" + Colors.ENDC)
+        sys.exit()
+
     channel_list = []
     if args.channels is None:
         channel_list = range(-1,128)
@@ -431,10 +439,10 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Mode can only be voltage or current" + Colors.ENDC)
         sys.exit()
 
-    directoryName        = args.filename.split(".txt")[0]
+    directoryName        = args.filename.removesuffix(".txt")
     plot_filename_prefix = (directoryName.split("/"))[3]
     oh = plot_filename_prefix.split("_vfat")[0]
-    file = open(args.filename)
+    resultfile = open(args.filename)
 
     try:
         os.makedirs(directoryName) # create directory for scurve analysis results
@@ -470,12 +478,12 @@ if __name__ == "__main__":
     if current_pulse_sf == -9999:
         print(Colors.YELLOW + "invalid Current Pulse SF" + Colors.ENDC)
         sys.exit()
-
-    calib_path = "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    calib_path = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}
-    for line in file.readlines():
+    for line in resultfile.readlines():
         if "vfat" in line:
             continue
         vfat    = int(line.split()[0])
@@ -496,7 +504,7 @@ if __name__ == "__main__":
             scurve_result[vfat][channel][charge] = 0
         else:
             scurve_result[vfat][channel][charge] = float(fired)/float(events)
-    file.close()
+    resultfile.close()
     
     vfatList     = list(scurve_result.keys())
     scurveParams = fit_scurve(vfatList, scurve_result, oh, directoryName, args.verbose, channel_list)

@@ -2,6 +2,7 @@ from gem.me0_lpgbt.rw_reg_lpgbt import *
 from time import sleep, time
 import sys
 import argparse
+from common.utils import get_befe_scripts_dir
 
 FUSE_TIMEOUT_MS = 10 # in ms
 TOTAL_EFUSE_ON_TIME_MS = 0 # in ms
@@ -32,7 +33,7 @@ def main(system, oh_ver, boss, fusing, input_config_file, input_vtrx, input_regi
     elif fusing == "register":
         fuse_register(system, boss, input_register, input_data)
     elif fusing == "user_id":
-        fuse_user_id(system, boss, user_id)
+        fuse_user_id(system, boss, oh_ver, user_id)
     print ("")
     
     if complete==1:
@@ -54,21 +55,19 @@ def main(system, oh_ver, boss, fusing, input_config_file, input_vtrx, input_regi
             fuse_register(system, boss, "0x0FF", hex(crc_registers[3]))
 
     # Write the fuse values of registers in text file
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "results/me0_lpgbt_data"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
+    me0Dir = resultDir + "/me0_lpgbt_data"
     try:
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = "results/me0_lpgbt_data/lpgbt_efuse_data"
+    dataDir = me0Dir + "/lpgbt_efuse_data"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
+
     if boss:
         lpgbt_write_fuse_file(dataDir+"/fuse_boss_ohv%d.txt"%oh_ver)
     else:
@@ -184,11 +183,11 @@ def write_fuse_block_data(system, adr, data, fullblock=False):
 
 def blow_fuse(system, boss):
     global TOTAL_EFUSE_ON_TIME_MS
-    adr = 0;
+    adr = 0
     adr |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDH")) << 8
     adr |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWADDL")) << 0
 
-    rd = 0;
+    rd = 0
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAA")) << 0
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAB")) << 8
     rd |= lpgbt_readReg(getNode("LPGBT.RW.EFUSES.FUSEBLOWDATAC")) << 16
@@ -204,7 +203,7 @@ def blow_fuse(system, boss):
     lpgbt_writeReg(getNode("LPGBT.RW.EFUSES.FUSEBLOW"), 0x1) # fuse blow
 
     # Wait for Fuseblowdone
-    done = 0;
+    done = 0
     t0 = time()
     while (done==0):
         if system!="dryrun":
@@ -350,7 +349,7 @@ def fuse_register(system, boss, input_register, input_data):
     write_blow_and_check_fuse(system, input_register, input_data, False)
     write_fuse_magic(0)
 
-def fuse_user_id(system, boss, user_id):
+def fuse_user_id(system, boss, oh_ver, user_id):
     user_id = int(user_id, 16)
     if boss:
         print (Colors.YELLOW + "Fusing Boss lpGBT with USER ID: " + str(hex(user_id)) + Colors.ENDC)
@@ -367,10 +366,16 @@ def fuse_user_id(system, boss, user_id):
     write_fuse_magic(1)
 
     data_userid = {}
-    data_userid[0x004] = (user_id >> 24)&0xff
-    data_userid[0x005] = (user_id >> 16)&0xff
-    data_userid[0x006] = (user_id >> 8)&0xff
-    data_userid[0x007] = (user_id >> 0)&0xff
+    if oh_ver == 1:
+        data_userid[0x004] = (user_id >> 24)&0xff
+        data_userid[0x005] = (user_id >> 16)&0xff
+        data_userid[0x006] = (user_id >> 8)&0xff
+        data_userid[0x007] = (user_id >> 0)&0xff
+    elif oh_ver == 2:
+        data_userid[0x007] = (user_id >> 24)&0xff
+        data_userid[0x006] = (user_id >> 16)&0xff
+        data_userid[0x005] = (user_id >> 8)&0xff
+        data_userid[0x004] = (user_id >> 0)&0xff
     data = 0
     for r in data_userid:
         data |= data_userid[r] << (8 * (r % 4))

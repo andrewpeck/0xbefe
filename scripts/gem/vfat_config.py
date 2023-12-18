@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import sys
 import argparse
@@ -28,7 +29,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
     vfat_channel_mask[oh_select] = {}
 
     # Generic register list
-    vfat_register_config_file_path = "../resources/vfatConfig.txt"
+    vfat_register_config_file_path = get_befe_scripts_dir() + "/resources/vfatConfig.txt"
     if not os.path.isfile(vfat_register_config_file_path):
         print (Colors.YELLOW + "VFAT config text file not present in resources/" + Colors.ENDC)
         sys.exit()
@@ -37,8 +38,13 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
         vfat_register_config[oh_select][line.split()[0]] = int(line.split()[1])
     vfat_register_config_file.close()
 
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + '/results'
+    vfatDir = resultDir + '/vfat_data'
+    dataDir = vfatDir + '/vfat_calib_data'
+
     # IREF from calib
-    vfat_calib_iref_path = "results/vfat_data/vfat_calib_data/%s_OH%d_vfat_calib_info_iref.txt"%(gem,oh_select)
+    vfat_calib_iref_path = dataDir + "/%s_OH%d_vfat_calib_info_iref.txt"%(gem,oh_select)
     if not os.path.isfile(vfat_calib_iref_path):
         print ("IREF calib file for VFATs not present, using default values")
     else:
@@ -50,7 +56,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
         vfat_calib_iref_file.close()
 
     # VREF from calib
-    vfat_calib_vref_path = "results/vfat_data/vfat_calib_data/%s_OH%d_vfat_calib_info_vref.txt"%(gem, oh_select)
+    vfat_calib_vref_path = dataDir + "/%s_OH%d_vfat_calib_info_vref.txt"%(gem, oh_select)
     if not os.path.isfile(vfat_calib_vref_path):
         print ("VREF calib file for VFATs not present, using default values")
     else:
@@ -63,7 +69,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
 
     # DAC Scan Results
     if use_dac_scan_results:
-        dac_scan_results_base_path = "results/vfat_data/vfat_dac_scan_results"
+        dac_scan_results_base_path = vfatDir + "/vfat_dac_scan_results"
         if os.path.isdir(dac_scan_results_base_path):
             list_of_dirs = []
             for d in glob.glob(dac_scan_results_base_path+"/*"):
@@ -90,9 +96,9 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
     if use_channel_trimming is not None:
         trim_results_base_path = ""
         if use_channel_trimming == "daq":
-            trim_results_path = "results/vfat_data/vfat_daq_trimming_results"
+            trim_results_path = vfatDir + "/vfat_daq_trimming_results"
         elif use_channel_trimming == "sbit":
-            trim_results_path = "results/vfat_data/vfat_sbit_trimming_results"
+            trim_results_path = vfatDir + "/vfat_sbit_trimming_results"
         if os.path.isdir(trim_results_path):
             trim_file_list = glob.glob(trim_results_path+"/*.txt")
             if len(trim_file_list)>0:
@@ -119,7 +125,7 @@ def initialize_vfat_config(gem, oh_select, use_dac_scan_results, use_channel_tri
             print (Colors.YELLOW + "Trimming results not present, not using trimming" + Colors.ENDC)
 
     # VFAT Channel Mask
-    vfat_channel_mask_file_path = "../resources/vfatChannelMask.txt"
+    vfat_channel_mask_file_path = get_befe_scripts_dir() + "/resources/vfatChannelMask.txt"
     if not os.path.isfile(vfat_channel_mask_file_path):
         print (Colors.YELLOW + "VFAT channel mask text file not present in resources/" + Colors.ENDC)
         sys.exit()
@@ -146,7 +152,7 @@ def setVfatchannelTrim(vfatN, ohN, channel, trim_polarity, trim_amp):
 
 def dump_vfat_config(ohN, vfatN):
     dump_vfat_data = {}
-    vfat_register_config_file_path = "../resources/vfatConfig.txt"
+    vfat_register_config_file_path = get_befe_scripts_dir() + "/resources/vfatConfig.txt"
     if not os.path.isfile(vfat_register_config_file_path):
         print (Colors.YELLOW + "VFAT config text file not present in resources/" + Colors.ENDC)
         sys.exit()

@@ -277,6 +277,13 @@ begin
     --=========================--
 
     g_8b10b_trig_links : if ((g_GEM_STATION = 1) or (g_GEM_STATION = 2)) and ((g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_3P2G) or (g_OH_TRIG_LINK_TYPE = OH_TRIG_LINK_TYPE_4P0G)) generate
+
+        signal fifo_bc0_o : std_logic_vector(1 downto 0) := (others => '1');
+        signal fifo_bc0_i : std_logic_vector(1 downto 0) := (others => '1');
+
+    begin
+
+        fifo_bc0_i <= fifo_bc0_o(0) & fifo_bc0_o(1);
     
         gen_trig_links: for i in 0 to 1 generate
 
@@ -302,7 +309,9 @@ begin
                         missed_comma_err_o  => sbit_links_status_o(i).missed_comma,
                         not_in_table_err_o  => sbit_links_status_o(i).not_in_table,
                         fifo_ovf_o          => sbit_links_status_o(i).overflow,
-                        fifo_unf_o          => sbit_links_status_o(i).underflow
+                        fifo_unf_o          => sbit_links_status_o(i).underflow,
+                        fifo_bc0_i          => fifo_bc0_i(i),
+                        fifo_bc0_o          => fifo_bc0_o(i)
                     );
                       
             end generate;

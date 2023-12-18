@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import argparse
+
 from common.utils import *
 import signal
 import sys
@@ -14,7 +16,7 @@ IS_LDAQ = True
 IGNORE_DAQLINK = True
 VERBOSE = False
 DEBUG = False
-WARNING_IS_ERROR = False
+IGNORE_DMB_FED_L1A_MISMATCH = False
 IGNORE_FED_BX_ID = True
 IGNORE_ALCT_BX_ID = True
 CFEB_NUM_TIMESAMPLES = 8
@@ -242,6 +244,29 @@ class EventFragment:
 
         self.print_errors(include_warnings=True)
 
+    def has_alct(self):
+        if isinstance(self, Alct):
+            return True
+        for child in self.children:
+            if child.has_alct():
+                return True
+        return False
+
+    def has_tmb(self):
+        if isinstance(self, Tmb):
+            return True
+        for child in self.children:
+            if child.has_tmb():
+                return True
+        return False
+
+    def has_cfeb(self):
+        if isinstance(self, Cfeb):
+            return True
+        for child in self.children:
+            if child.has_cfeb():
+                return True
+        return False
 
 class Fed(EventFragment):
 
@@ -450,10 +475,10 @@ class Dmb(EventFragment):
         l1a_id = (((header_1 >> 16) & 0xfff) << 12) + (header_1 & 0xfff) # header 1 [27:16] + [11:0] = header 2 [52:48] = trailer 1 [5:0]
         self.l1a_id = l1a_id
         fed_l1a_id = self.fed.get_info_val("L1A_ID")
-        self.add_info("L1A_ID", header_1_idx, 11, 0, value=l1a_id, err_expr="self.value != %d" % fed_l1a_id)
+        self.add_info("L1A_ID", header_1_idx, 11, 0, value=l1a_id, err_expr="(self.value != %d) and not IGNORE_DMB_FED_L1A_MISMATCH" % fed_l1a_id)
         self.add_debug("L1A_ID_HEAD_2_CHECK", header_2_idx, 52, 48, err_expr="self.value != %d & 0x1f" % l1a_id)
 
-        if l1a_id != fed_l1a_id:
+        if (l1a_id != fed_l1a_id) and not IGNORE_DMB_FED_L1A_MISMATCH:
             self.add_error("DMB_FED_L1A_ID_MISMATCH", header_1_idx, 11, 0, "FED L1A ID = %d, DMB L1A ID = %d" % (fed_l1a_id, l1a_id))
 
         # BX ID
@@ -623,7 +648,7 @@ class Dmb(EventFragment):
 
         # CFEBs
         dmb_trail_idx = self.end_idx - 1
-        while dmb_trail_idx - cfeb_start_idx > 25 * CFEB_NUM_TIMESAMPLES:
+        while dmb_trail_idx - cfeb_start_idx >= 25 * CFEB_NUM_TIMESAMPLES:
             # take 25 words * CFEB_NUM_TIMESAMPLES
             cfeb = Cfeb(self, self.words, cfeb_start_idx, cfeb_start_idx + 25 * CFEB_NUM_TIMESAMPLES - 1, self.evt_id, self.verbose)
             cfeb.unpack()
@@ -805,118 +830,165 @@ class Cfeb(EventFragment):
 
 def main():
 
-    rawFilename = ''
-    command = ''
-    evtNumToPrint = -1
-    countNonZero = False
-    printError = False
+    parser = argparse.ArgumentParser()
 
-    if len(sys.argv) < 3:
-        print('Usage: unpack.py <csc_raw_file> <command> [command_params]')
-        print('The filename can contain some regexp features to match multiple files. Supported expressions are: * -- wildcard, ? -- match any single character, [seq] -- matches any char in seq, [!seq] -- matches any char not in seq')
-        print('When using regexp filename, make sure to enclose that in double quotes')
-        print('Commands:')
-        print('    print <evt_number> -- prints the requested event')
-        print('    print_non_zero_event <non_zero_evt_number> -- prints the requested event while only counting events that contain at least one vfat block')
-        print('    print_error -- prints the first even with error')
-        return
-    else:
-        rawFilename = sys.argv[1]
-        command = sys.argv[2]
+    parser.add_argument('-e',
+                        '--error',
+                        action="store_true",
+                        dest='error',
+                        help="Only count events with errors (uses OR logic when combined with --warning, uses AND logic when combining with --alct --cfeb --tmb)")
+
+    parser.add_argument('-w',
+                        '--warning',
+                        action="store_true",
+                        dest='warning',
+                        help="Only count events with warnings (uses OR logic when combined with --error, uses AND logic when combining with --alct --cfeb --tmb)")
+
+    parser.add_argument('-a',
+                        '--alct',
+                        action="store_true",
+                        dest='alct',
+                        help="Only count events that contain an ALCT block (uses AND logic when combining with --alct --cfeb --tmb --error --warning)")
+
+    parser.add_argument('-c',
+                        '--cfeb',
+                        action="store_true",
+                        dest='cfeb',
+                        help="Only count events that contain at least one CFEB block (uses AND logic when combining with --alct --cfeb --tmb --error --warning)")
+
+    parser.add_argument('-t',
+                        '--tmb',
+                        action="store_true",
+                        dest='tmb',
+                        help="Only count events that contain a TMB block (uses AND logic when combining with --alct --cfeb --tmb --error --warning)")
+
+    parser.add_argument('-il',
+                        '--ignore-dmb-fed-l1a',
+                        action="store_true",
+                        dest='ignore_dmb_fed_l1a',
+                        help="Setting this flag will cause the error checker to ignore DMB-FED L1A mismatches (could be useful when starting the FED manually)")
+
+    parser.add_argument('raw_file',
+                        help="CSC raw file path")
+
+    parser.add_argument('event_num',
+                        help="Event number to print or start searching at")
+
+    args = parser.parse_args()
+
+    raw_filename = args.raw_file
+    evt_num_to_print = int(args.event_num)
+    req_err = args.error
+    req_warn = args.warning
+    req_alct = args.alct
+    req_tmb = args.tmb
+    req_cfeb = args.cfeb
+
+    global IGNORE_DMB_FED_L1A_MISMATCH
+    IGNORE_DMB_FED_L1A_MISMATCH = args.ignore_dmb_fed_l1a
+
+    print("====================================================")
+    print("Filename: %s" % raw_filename)
+    print("Event number to print: %d" % evt_num_to_print)
+    print("Require error: %r" % req_err)
+    print("Require warning: %r" % req_warn)
+    print("Require alct: %r" % req_alct)
+    print("Require tmb: %r" % req_tmb)
+    print("Require cfeb: %r" % req_cfeb)
+    print("====================================================")
+    print("")
 
     files = []
 
     # do regexp
-    if ("*" in rawFilename or "?" in rawFilename or "[" in rawFilename):
-        dir = os.path.expanduser(os.path.dirname(rawFilename))
+    if ("*" in raw_filename or "?" in raw_filename or "[" in raw_filename):
+        dir = os.path.expanduser(os.path.dirname(raw_filename))
         for file in sorted(os.listdir(dir)):
-            if fnmatch.fnmatch(file, os.path.basename(rawFilename)):
+            if fnmatch.fnmatch(file, os.path.basename(raw_filename)):
                 files.append(dir + "/" + file)
         if len(files) == 0:
             print_red("No files found..")
             return
     else:
-        files.append(rawFilename)
-        if not os.path.exists(rawFilename):
-            print_red("Input file %s does not exist." % rawFilename)
+        files.append(raw_filename)
+        if not os.path.exists(raw_filename):
+            print_red("Input file %s does not exist." % raw_filename)
             return
 
-
-    if "print" in command and "print_error" not in command:
-        evtNumToPrint = int(sys.argv[3])
-        print("Event num to print: %d" % evtNumToPrint)
-    if "non_zero_event" in command:
-        countNonZero = True
-    if "print_error" in command:
-        printError = True
-        print("Will print errors")
-        evtNumToPrint = int(sys.argv[3])
-        if evtNumToPrint >= 0:
-            print("Will start printing errors only after event #%d" % evtNumToPrint)
-
     events = []
-    i = 0
-    nonZeroI = 0
+    idx = 0
+    alct_idx = 0
+    tmb_idx = 0
+    cfeb_idx = 0
+    err_idx = 0
 
     for file in files:
-        print("Opening file: %s" % file)
+        print_cyan("Opening file: %s" % file)
         f = open(file, 'rb')
-        fileSize = os.fstat(f.fileno()).st_size
+        file_size = os.fstat(f.fileno()).st_size
 
         if not IS_LDAQ:
-            evtHeaderSize = readInitRecord(f, VERBOSE)
+            evt_header_size = readInitRecord(f, VERBOSE)
 
-        print("File size = %d bytes" % fileSize)
+        print("File size = %d bytes" % file_size)
 
         while True:
-            if f.tell() >= fileSize - 1:
+            if f.tell() >= file_size - 1:
                 print_cyan("End of file reached")
                 f.close()
                 break
 
             event = None
             if not IS_LDAQ:
-                event = readEvtRecord(f, fileSize, evtHeaderSize, VERBOSE, DEBUG, i)
+                event = readEvtRecord(f, file_size, evt_header_size, VERBOSE, DEBUG, idx)
             else:
-                event = readFedEvt(f, fileSize, VERBOSE, DEBUG, i)
+                event = readFedEvt(f, file_size, VERBOSE, DEBUG, idx)
 
             if event is not None:
                 #events.append(event)
 
-                if printError:
-                    if i > evtNumToPrint and (event.has_errors() or (WARNING_IS_ERROR and event.has_warnings())):
-                        #event.printEvent()
-                        print_red("Event #%d (ending at byte %d in file %s)" % (i, f.tell(), file))
-                        print("Print the whole event? (y/n)")
-                        yn = input()
-                        if (yn == "y"):
-                            print("")
-                            print("")
-                            print("======================================================================================")
-                            print("")
-                            event.print_event()
+                if (req_err and event.has_errors()) or (req_warn and event.has_warnings()):
+                    err_idx += 1
 
-                        print("Do you want to continue? (y/n)")
-                        yn = input()
-                        if (yn != "y"):
+                if req_alct and event.has_alct():
+                    alct_idx += 1
+
+                if req_tmb and event.has_tmb():
+                    tmb_idx += 1
+
+                if req_cfeb and event.has_cfeb():
+                    cfeb_idx += 1
+
+                if not req_err and not req_warn and not req_alct and not req_tmb and not req_cfeb:
+                    if idx == evt_num_to_print:
+                        ret = ask_to_print_event(event, idx, f.tell(), file)
+                        if not ret:
                             return
-                elif not countNonZero and (i == evtNumToPrint):
-                    event.print_event()
-                    print_red("Event #%d (ending at byte %d in file %s)" % (i, f.tell(), file))
-                    return
-                elif countNonZero and not event.is_empty():
-                    if nonZeroI == evtNumToPrint:
-                        event.print_event()
-                        print_red("Event #%d (ending at byte %d in file %s)" % (i, f.tell(), file))
+                        else:
+                            evt_num_to_print += 1
+
+                elif (((req_err or req_warn) and err_idx > evt_num_to_print) or (not req_err and not req_warn)) and \
+                     ((req_alct and alct_idx > evt_num_to_print) or not req_alct) and \
+                     ((req_tmb and tmb_idx > evt_num_to_print) or not req_tmb) and \
+                     ((req_cfeb and cfeb_idx > evt_num_to_print) or not req_cfeb):
+                    ret = ask_to_print_event(event, idx, f.tell(), file)
+                    if not ret:
                         return
-                    nonZeroI += 1
+                    else:
+                        evt_num_to_print += 1
 
-                i += 1
+                idx += 1
 
-            print("Read event #%d ending at byte %d" % (i, f.tell()))
+            print("Read event #%d ending at byte %d" % (idx, f.tell()))
 
         f.close()
-        print("Number of events with CFEBs: %d" % nonZeroI)
+
+        print_cyan("Summary")
+        print("    Total number of events: %d" % idx)
+        print("    Number of events with errors or warnings: %d" % err_idx)
+        print("    Number of events with ALCT: %d" % alct_idx)
+        print("    Number of events with TMB: %d" % tmb_idx)
+        print("    Number of events with CFEBs: %d" % cfeb_idx)
 
     # # some quick and dirty analysis runs
     # if "analyze_bx_diff" in sys.argv:
@@ -933,6 +1005,21 @@ def main():
     #
     # if "analyze_vfat_bx_matching" in sys.argv:
     #     an.analyzeVfatBxMatching(events)
+
+def ask_to_print_event(event, evt_num, pos_in_file, filename):
+    print_cyan("Event #%d (ending at byte %d in file %s)" % (evt_num, pos_in_file, filename))
+    print("Print the whole event? (y/n)")
+    yn = input()
+    if (yn == "y"):
+        print("")
+        print("")
+        print("======================================================================================")
+        print("")
+        event.print_event()
+
+    print("Do you want to continue? (y/n)")
+    yn = input()
+    return not (yn != "y")
 
 def readInitRecord(f, verbose=False):
     code = readNumber(f, 1)

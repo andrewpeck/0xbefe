@@ -18,8 +18,8 @@ if __name__ == "__main__":
     if not os.path.isfile(args.file):
         print ("Give a valid input text file")
         sys.exit()
-    out_file = args.file.split(".txt")[0] + "_out.txt"
-    plot_file = args.file.split(".txt")[0] + ".pdf"
+    out_file = args.file.removesuffix(".txt") + "_out.txt"
+    plot_file = args.file.removesuffix(".txt") + ".pdf"
     os.system("rm -rf %s %s"%(out_file, plot_file))
 
     eye_data_file = open(args.file)

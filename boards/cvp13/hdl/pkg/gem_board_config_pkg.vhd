@@ -24,7 +24,7 @@ package board_config_package is
     
     ------------ Board specific constants ------------
     constant CFG_BOARD_MAX_LINKS    : integer := 16;
-    constant CFG_BOARD_MAX_OHS      : integer := 4;
+    constant CFG_BOARD_MAX_OHS      : integer := 8;
     constant CFG_BOARD_MAX_SLRS     : integer := 4;
     constant CFG_PCIE_USE_QDMA      : boolean := true;
     
@@ -58,7 +58,8 @@ package board_config_package is
 
     constant CFG_ETH_TEST_FIFO_DEPTH        : integer := 16384;
 
-    constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE                     : boolean := true; -- true = 10 GbE; false = 1 GbE
+    constant CFG_SPY_10GBE_ASYNC_GEARBOX       : boolean := true; -- true = async 64b66b gearbox (use with ultrascale FPGAs), false = sync 64b66b gearbox (use with older FPGAs, including virtex7)
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
     constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
 
@@ -152,6 +153,40 @@ package board_config_package is
         rx_use_chan_bonding     => false
     );
 
+    constant CFG_MGT_10GBE : t_mgt_type_config := (
+        link_type               => MGT_10GBE,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 1,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 64,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_25GBE : t_mgt_type_config := (
+        link_type               => MGT_25GBE,
+        cpll_refclk_01          => 1, 
+        qpll0_refclk_01         => 1,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 0,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        tx_bus_width            => 128,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => true,
+        rx_use_chan_bonding     => false
+    );
+    
     constant CFG_MGT_GBTX : t_mgt_type_config := (
         link_type               => MGT_GBTX,
         cpll_refclk_01          => 0, 
@@ -198,6 +233,40 @@ package board_config_package is
         tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
         rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
         tx_bus_width            => 16,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_TX_10GBE_RX_LPGBT : t_mgt_type_config := (
+        link_type               => MGT_TX_10GBE_RX_LPGBT,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 64,
+        tx_multilane_phalign    => false, 
+        rx_use_buf              => false,
+        rx_use_chan_bonding     => false
+    );
+
+    constant CFG_MGT_TX_10GBE_RX_TRIG_3P2 : t_mgt_type_config := (
+        link_type               => MGT_TX_10GBE_RX_TRIG_3P2,
+        cpll_refclk_01          => 0, 
+        qpll0_refclk_01         => 0,
+        qpll1_refclk_01         => 1,
+        tx_use_qpll             => true, 
+        rx_use_qpll             => true,
+        tx_qpll_01              => 1,
+        rx_qpll_01              => 0,
+        tx_refclk_freq          => CFG_ASYNC_REFCLK_156p25_FREQ,
+        rx_refclk_freq          => CFG_LHC_REFCLK_FREQ,
+        tx_bus_width            => 64,
         tx_multilane_phalign    => false, 
         rx_use_buf              => false,
         rx_use_chan_bonding     => false

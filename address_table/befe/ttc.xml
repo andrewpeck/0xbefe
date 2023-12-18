@@ -51,10 +51,13 @@
     <node id="L1A_DELAY" address="0x4" mask="0x3ff00000" permission="rw"
           description="Setting this to non-zero value will delay the L1A delivery to the frontend (this is useful in calibration mode to separate the L1A from the calpulse in time)"
           fw_signal="ttc_ctrl.l1a_delay" fw_default="0b0000000000"/>
+    <node id="FAKE_MULTI_BX" address="0x4" mask="0x0000f000" permission="rw"
+          description="Setting this to a non-zero value will enable a fake multi-BX readout mode. For each L1A received, FAKE_MULTI_BX consecutive additional L1A will be sent. Such L1A are flagged in the data stream and can be used to reconstruct precise timing in software. USE ONLY IN LOCAL DAQ MODE!"
+          fw_signal="ttc_ctrl.fake_multi_bx" fw_default="0"/>
     <node id="DISABLE_PHASE_ALIGNMENT" address="0x4" mask="0x00000010" permission="rw"
           description="Setting this to 1 will disable the phase alignment to backplane ref clock.
                        This is intended to be used only in setups that don't have an AMC13 and thus no backplane TTC clock, but generate the TTC clock internally in CTP7."
-          fw_signal="ttc_ctrl.clk_ctrl.phase_align_disable" fw_default="0b0"/>
+          fw_signal="ttc_ctrl.clk_ctrl.phase_align_disable" fw_default="0b1"/>
     <node id="PA_DISABLE_INIT_SHIFT_OUT" address="0x4" mask="0x00000020" permission="rw"
           description="If this is set to 0 (default), then when the phase alignment FSM is reset,
                        it will first shift the phase out of lock if it is currently locked,
@@ -329,6 +332,20 @@
     <node id="CYCLIC_START" address="0x6" permission="w"
           description="Writing to this register will trigger a start of the cyclic generator"
           fw_write_pulse_signal="gen_cyclic_l1a_start"/>
+  </node>
+
+  <node id="RANDOM_L1A_GENERATOR" address="0x80"
+        description="This generator can be used to generate pseudo-random L1A for calibration, debugging, or test purposes.">
+    <node id="RESET" address="0x0" permission="w"
+          description="Reset the random L1A generator module."
+          fw_write_pulse_signal="random_l1a_reset"/>
+    <node id="ENABLE" address="0x1" mask="0x00000001" permission="rw"
+          description="Enable the random L1A generator module. It adds L1A on top of the current L1A source(s), i.e. the TTC stream, the TTC generator, or the external copper input."
+          fw_signal="random_l1a_enable" fw_default="0b0"
+          sw_units="bool"/>
+    <node id="THRESHOLD" address="0x2" mask="0xffffffff" permission="rw"
+          description="This register is used to configure the desired random L1A rate. This configuration parameter - technically a threshold on a pseudo-random number generator - can be computed from the desired rate via the formula 'THRESHOLD = L1A_RATE / (40007900 / 2**32)'. Defaults to ~400Hz."
+        fw_signal="random_l1a_threshold" fw_default="0xa7bd"/>
   </node>
 
 </node>

@@ -129,7 +129,7 @@ def vfat_reset(system, oh_select, vfat_list):
         
         print ("")
         
-    # Check VFAT mode before reset
+    # Check VFAT mode after reset
     gem_utils.gem_link_reset()
     sleep(0.1)
     mode_after_reset = {}

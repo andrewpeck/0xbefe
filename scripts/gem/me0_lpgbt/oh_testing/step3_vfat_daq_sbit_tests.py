@@ -1,6 +1,7 @@
 import sys, os, glob
 import time
 import argparse
+from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 
 if __name__ == "__main__":
@@ -14,12 +15,9 @@ if __name__ == "__main__":
         print (Colors.YELLOW + "Enter OH serial numbers for both slot 1 and 2" + Colors.ENDC) 
         sys.exit()
 
-    resultDir = "results"
-    try:
-        os.makedirs(resultDir) # create directory for results
-    except FileExistsError: # skip if directory already exists
-        pass
-    me0Dir = "me0_lpgbt/oh_testing/results/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/me0_lpgbt/oh_testing/results"
+    me0Dir = resultDir + "/OH_slot1_%s_slot2_%s"%(args.slot1, args.slot2)
     try:
         os.makedirs(me0Dir) # create directory for OH under test
     except FileExistsError: # skip if directory already exists
@@ -45,13 +43,13 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Running DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running DAQ SCurves for all VFATs\n\n")
     os.system("python3 vfat_daq_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000")
-    list_of_files = glob.glob("results/vfat_data/vfat_daq_scurve_results/*.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/daq_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/daq_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -73,17 +71,17 @@ if __name__ == "__main__":
     logfile.write("Running DAQ Crosstalk for all VFATs\n\n")
     os.system("python3 vfat_daq_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000")
     logfile.close()
-    list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_result.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
-    list_of_files = glob.glob("results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting DAQ Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/crosstalk_ME0_OH0.pdf %s/daq_crosstalk.pdf"%(latest_dir, dataDir))
     else:
@@ -101,14 +99,14 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit SCurves for all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20 -l")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_scurve_results/*.txt")
+    os.system("python3 me0_vfat_sbit_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -l -f")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -128,19 +126,19 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Crosstalk for all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20 -l")
+    os.system("python3 me0_vfat_sbit_crosstalk.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -l -f")
     logfile.close()
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_crosstalk_results/*_result.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     os.system("cat %s >> %s"%(latest_file, filename))
     logfile = open(filename, "a")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_crosstalk_results/*_data.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/crosstalk_ME0_OH0.pdf %s/sbit_crosstalk.pdf"%(latest_dir, dataDir))
     else:
@@ -158,14 +156,14 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Noise Rate for all VFATs\n\n")
-    os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -z")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_noise_results/*.txt")
+    os.system("python3 me0_vfat_sbit_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -z -f")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_noise_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting S-bit Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
             os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
@@ -189,14 +187,14 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster SCurves for all VFATs\n\n")
-    os.system("python3 vfat_sbit_cluster_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -b 20 -l")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_cluster_scurve_results/*.txt")
+    os.system("python3 vfat_sbit_cluster_scurve.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -n 1000 -l -f")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_cluster_scurve_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_cluster_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_cluster_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -216,14 +214,14 @@ if __name__ == "__main__":
     
     print (Colors.BLUE + "Running S-bit Cluster Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Running S-bit Cluster Noise Rate for all VFATs\n\n")
-    os.system("python3 vfat_sbit_cluster_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -x -z")
-    list_of_files = glob.glob("results/vfat_data/vfat_sbit_cluster_noise_results/*.txt")
+    os.system("python3 vfat_sbit_cluster_noise_rate.py -s backend -q ME0 -o 0 -v 0 1 2 3 8 9 10 11 16 17 18 19 -x -z -f")
+    list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_cluster_noise_results/*.txt")
     latest_file = max(list_of_files, key=os.path.getctime)
     
     print (Colors.BLUE + "Plotting S-bit Cluster Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_cluster_noise_rate.py -f %s"%latest_file)
-    latest_dir = latest_file.split(".txt")[0]
+    latest_dir = latest_file.removesuffix(".txt")
     if os.path.isdir(latest_dir):
         os.system("cp %s/*_total_*.pdf %s/sbit_cluster_noise_rate_total.pdf"%(latest_dir, dataDir))
         os.system("cp %s/2d*.pdf %s/sbit_cluster_2d_threshold_noise_rate.pdf"%(latest_dir, dataDir))

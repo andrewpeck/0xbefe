@@ -1,0 +1,8 @@
+GEN:csc_x2o_tamu:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: csc_x2o_tamu
+    tags:
+      - vivado_2021_1
+      - much_ram

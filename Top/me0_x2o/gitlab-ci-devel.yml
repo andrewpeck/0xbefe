@@ -1,0 +1,9 @@
+GEN:me0_x2o_devel:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: me0_x2o
+      INTERMEDIATE_BUILD: "1"
+    tags:
+      - vivado_2021_1
+      - much_ram

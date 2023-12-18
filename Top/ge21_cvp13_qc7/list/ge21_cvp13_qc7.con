@@ -1,0 +1,5 @@
+
+boards/cvp13/constraints/cvp13.xdc
+boards/cvp13/constraints/floorplan_gem.xdc
+boards/cvp13/constraints/mgt_ge21.xdc
+boards/cvp13/constraints/timing_gem.xdc

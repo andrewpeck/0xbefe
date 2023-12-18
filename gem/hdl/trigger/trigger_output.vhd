@@ -58,7 +58,7 @@ begin
 
     g_oh_mask : for i in 0 to g_NUM_OF_OHs - 1 generate
         oh_triggers(i) <= oh_triggers_i(i) and not oh_mask_i(i);
-        bc0_markers(i) <= sbit_link_status_i(i)(0).bc0_marker and not oh_mask_i(i); -- take the BC0 marker from the first link, alignment of the two links is checked elsewhere
+        bc0_markers(i) <= sbit_link_status_i(i)(0).bc0_marker and sbit_link_status_i(i)(1).bc0_marker and not oh_mask_i(i); -- BC0 markers should be aligned somewhere else... if they are not, make sure to let the trigger processor know about it
         sbit_num_valid(i) <= sbit_num_valid_i(i) when oh_mask_i(i) = '0' else x"0";
         sbit_clusters(i) <= sbit_clusters_i(i) when oh_mask_i(i) = '0' else (others => NULL_SBIT_CLUSTER);
     end generate;

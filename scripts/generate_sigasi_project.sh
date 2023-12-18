@@ -42,3 +42,6 @@ sed -i -e "/xmlns:com.sigasi/a"$'\\\n'"  <Mappings Location=\"Common Libraries/x
 sed -i -e "/<linkedResources>/a"$'\\\n'"		<link>\n			<name>Common Libraries/unisim</name>\n			<type>2</type>\n			<locationURI>SIGASI_TOOLCHAIN_XILINX_VIVADO/data/vhdl/src/unisims</locationURI>\n		</link>"$'\n' .project
 sed -i -e "/<linkedResources>/a"$'\\\n'"		<link>\n			<name>Common Libraries/unimacro</name>\n			<type>2</type>\n			<locationURI>SIGASI_TOOLCHAIN_XILINX_VIVADO/data/vhdl/src/unimacro</locationURI>\n		</link>"$'\n' .project
 sed -i -e "/<linkedResources>/a"$'\\\n'"		<link>\n			<name>Common Libraries/xpm</name>\n			<type>2</type>\n			<locationURI>SIGASI_TOOLCHAIN_XILINX_VIVADO/data/ip/xpm</locationURI>\n		</link>"$'\n' .project
+
+# set the VHDL version to 2008
+echo "<project>=2008" > .settings/com.sigasi.hdt.vhdl.version.prefs

@@ -34,6 +34,28 @@ class Prompt(Cmd):
             else: print(arglist[0] + ' not found!')
         else: print("Incorrect number of arguments!")
 
+    def do_write_all(self, args):
+        """Writes the given value to all registers that match the given string. USAGE: write_all <register name pattern> <register value>"""
+        arglist = args.split()
+        if len(arglist)==2:
+            nodes = get_nodes_containing(arglist[0])
+            if nodes is not None:
+                for reg in nodes:
+                    try:
+                        value = parse_int(arglist[1])
+                    except:
+                        print('Write Value must be a number!')
+                        return
+                    if 'w' in str(reg.permission):
+                        write_reg(reg, value)
+                        print("%d written to %s" % (value, reg.name))
+                    else:
+                        print('No write permission!')
+            else:
+                print(arglist[0] + ' not found!')
+        else:
+            print("Incorrect number of arguments!")
+
     def complete_write(self, text, line, begidx, endidx):
         return complete_reg(text)
 

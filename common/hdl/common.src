@@ -31,8 +31,9 @@ common/hdl/utils/running_mean.vhd
 common/hdl/utils/oneshot.vhd
 common/hdl/utils/gearbox.vhd
 common/hdl/utils/shift_reg.vhd
-common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas.vhd
-common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher.vhd
+common/hdl/utils/shift_reg_multi.vhd
+common/hdl/utils/dmtd_phase_meas/dmtd_phase_meas_befe.vhd
+common/hdl/utils/dmtd_phase_meas/dmtd_with_deglitcher_befe.vhd
 common/hdl/utils/dmtd_phase_meas/multi_dmtd_with_deglitcher.vhd
 common/hdl/utils/crc16_usb.vhd
 common/hdl/utils/crc32_gbe.vhd
@@ -47,12 +48,16 @@ common/hdl/utils/ila_mgt_rx_16b_wrapper.vhd
 common/hdl/utils/ila_mgt_tx_16b_wrapper.vhd
 common/hdl/utils/ila_mgt_rx_64b_wrapper.vhd
 common/hdl/utils/ila_mgt_tx_64b_wrapper.vhd
+common/hdl/utils/ila_mgt_rx_128b_wrapper.vhd
 common/hdl/utils/lfsr.v
+common/hdl/utils/ipbus_drp_bridge.vhd
+common/hdl/utils/drp_mux.vhd
 
 # TTC
 #common/hdl/ttc/ttc.vhd            <-- use the generated version specific to the project
 common/hdl/ttc/ttc_cmd.vhd
 common/hdl/ttc/ttc_generator.vhd
+common/hdl/ttc/ttc_random_trigger_generator.vhd
 common/hdl/ttc/ttc_decoder.vhd
 #common/hdl/ttc/release-1.1/TTC_decoder.vhd
 

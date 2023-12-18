@@ -1,0 +1,37 @@
+# -*- mode: TCL;-*-
+
+# =============== Common ===============
+common/hdl/common.src
+common/hdl/common_xilinx_ultrascale.src
+common/hdl/gbt.src
+common/hdl/slink_rocket.src
+
+# =============== CSC ===============
+csc/hdl/csc.src
+csc/ip/csc_common_ip.src
+
+# =============== X2O ===============
+boards/x2o/hdl/x2o_common.src
+boards/x2o/hdl/x2o_vu13p.src
+boards/x2o/ip/x2o_ip.src
+boards/x2o/bd/x2o_bd.src
+
+# =============== Project ===============
+Top/csc_x2o_tamu/project_config.vhd
+boards/x2o/hdl/pkg/csc_vu13p_tamu_board_config_pkg.vhd
+boards/x2o/hdl/csc_x2o.vhd top=csc_x2o
+
+
+# =========== Generated source ===========
+# sources with generated registers
+csc/hdl/pkg/generated/csc_x2o_tamu/registers.vhd
+common/hdl/mgt/generated/csc_x2o_tamu/mgt_slow_control.vhd
+common/hdl/ttc/generated/csc_x2o_tamu/ttc.vhd
+common/hdl/misc/generated/csc_x2o_tamu/board_system.vhd
+common/hdl/slink_rocket/generated/csc_x2o_tamu/slink_rocket.vhd
+common/hdl/misc/generated/csc_x2o_tamu/ttc_tx.vhd
+csc/hdl/system/generated/csc_x2o_tamu/system_regs.vhd
+csc/hdl/system/generated/csc_x2o_tamu/link_monitor.vhd
+csc/hdl/tests/generated/csc_x2o_tamu/csc_tests.vhd
+csc/hdl/daq/generated/csc_x2o_tamu/daq.vhd
+common/hdl/misc/generated/csc_x2o_tamu/promless_bram.vhd

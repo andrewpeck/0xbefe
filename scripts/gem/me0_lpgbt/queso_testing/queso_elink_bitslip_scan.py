@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+from common.utils import get_befe_scripts_dir
 from time import sleep, time
 import datetime
 import sys
@@ -7,9 +8,10 @@ import argparse
 def set_bitslip(bitslip_list, queso_bitslip_nodes):
     for vfat in queso_bitslip_nodes:
         for elink in queso_bitslip_nodes[vfat]:
-            write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip_list[vfat][elink])
+            write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_0"], bitslip_list[vfat][elink]["bitslip_0"])
+            write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_1"], bitslip_list[vfat][elink]["bitslip_1"])
 
-def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
+def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list, single):
     
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
     queso_bitslip_nodes = {}
@@ -18,7 +20,9 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
         queso_bitslip_nodes[vfat] = {}
         queso_prbs_nodes[vfat] = {}
         for elink in range(0,9):
-            queso_bitslip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
+            queso_bitslip_nodes[vfat][elink] = {}
+            queso_bitslip_nodes[vfat][elink]["bitslip_0"] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP_0"%(oh_select, vfat, elink))
+            queso_bitslip_nodes[vfat][elink]["bitslip_1"] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP_1"%(oh_select, vfat, elink))
             queso_prbs_nodes[vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
 
     # Check if GBT is READY
@@ -34,12 +38,9 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
         set_bitslip(bitslip_list, queso_bitslip_nodes)
     else:
         print ("Scanning bitslips:")
-        resultDir = "me0_lpgbt/queso_testing/results"
-        try:
-            os.makedirs(resultDir) # create directory for results
-        except FileExistsError: # skip if directory already exists
-            pass
-        dataDir = "me0_lpgbt/queso_testing/results/bitslip_results"
+        scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+        resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+        dataDir = resultDir + "/bitslip_results"
         try:
             os.makedirs(dataDir) # create directory for results
         except FileExistsError: # skip if directory already exists
@@ -55,7 +56,8 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
             bitslip_list[vfat] = {}
             prbs_min_err_list[vfat] = {}
             for elink in range(0,9):
-                bitslip_list[vfat][elink] = -9999
+                bitslip_list[vfat][elink]["bitslip_0"] = -9999
+                bitslip_list[vfat][elink]["bitslip_1"] = -9999
                 prbs_min_err_list[vfat][elink] = 9999
 
         # Enable QUESO BERT
@@ -65,27 +67,38 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
         write_backend_reg(queso_reset_node, 1)
         sleep(0.1)
 
+        if not single:
+            bitslip_0_range = range(0,9) 
+        else:
+            bitslip_0_range = range(0,1)
+        bitslip_1_range = range(0,9) 
+
         # Scan over bitslip and check PRBS errors
-        for bitslip in range(0,9):
-            print ("Checking Bitslip %d\n"%bitslip)
+        for bitslip_0 in bitslip_0_range:
+            print ("Checking Bitslip_0 %d"%bitslip_0)
+            for bitslip_1 in bitslip_1_range:
+                print ("  Checking Bitslip_1 %d"%bitslip_1)
 
-            # Set the bitslip for all vfats and elinks
-            for vfat in queso_bitslip_nodes:
-                for elink in queso_bitslip_nodes[vfat]:
-                    write_backend_reg(queso_bitslip_nodes[vfat][elink], bitslip)
-            sleep(0.1)
+                # Set the bitslip for all vfats and elinks
+                for vfat in queso_bitslip_nodes:
+                    for elink in queso_bitslip_nodes[vfat]:
+                        write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_0"], bitslip_0)
+                        write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_1"], bitslip_1)
+                sleep(0.1)
 
-            # Reset and wait
-            write_backend_reg(queso_reset_node, 1)
-            sleep(0.1)
+                # Reset and wait
+                write_backend_reg(queso_reset_node, 1)
+                sleep(0.1)
 
-            # Check PRBS errors
-            for vfat in queso_bitslip_nodes:
-                for elink in queso_bitslip_nodes[vfat]:
-                    prbs_err = read_backend_reg(queso_prbs_nodes[vfat][elink])
-                    if prbs_err <= prbs_min_err_list[vfat][elink]:
-                        bitslip_list[vfat][elink] = bitslip
-                        prbs_min_err_list[vfat][elink] = prbs_err
+                # Check PRBS errors
+                for vfat in queso_bitslip_nodes:
+                    for elink in queso_bitslip_nodes[vfat]:
+                        prbs_err = read_backend_reg(queso_prbs_nodes[vfat][elink])
+                        if prbs_err <= prbs_min_err_list[vfat][elink]:
+                            bitslip_list[vfat][elink]["bitslip_0"] = bitslip_0
+                            bitslip_list[vfat][elink]["bitslip_1"] = bitslip_1
+                            prbs_min_err_list[vfat][elink] = prbs_err
+            print ("")
 
         # Disable QUESO BERT 
         sleep(0.1)
@@ -96,19 +109,20 @@ def scan_set_bitslip(system, oh_select, vfat_list, bitslip_list):
 
         for vfat in queso_bitslip_nodes:
             for elink in queso_bitslip_nodes[vfat]:
-                if bitslip_list[vfat][elink] == -9999:
-                    print (Colors.YELLOW + "Correct bitslip not found for VFAT %d Elink %d"%(vfat, elink) + Colors.ENDC)
-                    bitslip_list[vfat][elink] = 0
+                if bitslip_list[vfat][elink]["bitslip_0"] == -9999 or bitslip_list[vfat][elink]["bitslip_1"] == -9999:
+                    print (Colors.YELLOW + "Correct bitslips not found for VFAT %d Elink %d"%(vfat, elink) + Colors.ENDC)
+                    bitslip_list[vfat][elink]["bitslip_0"] = 0
+                    bitslip_list[vfat][elink]["bitslip_1"] = 0
                 if prbs_min_err_list[vfat][elink] != 0:
-                    print (Colors.YELLOW + "PRBS errors not zero best bitslip for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink]) + Colors.ENDC)
+                    print (Colors.YELLOW + "PRBS errors not zero for best bitslip for VFAT %d Elink %d, min PRBS errors = %d"%(vfat, elink, prbs_min_err_list[vfat][elink]) + Colors.ENDC)
 
         print ("Setting bitslips:")
         set_bitslip(bitslip_list, queso_bitslip_nodes)
 
-        file_out.write("vfat  elink  bitslip\n")
+        file_out.write("vfat  elink  bitslip_0  bitslip_1\n")
         for vfat in queso_bitslip_nodes:
             for elink in queso_bitslip_nodes[vfat]:
-                file_out.write("%d  %d  %01x\n"%(vfat, elink, bitslip_list[vfat][elink]))
+                file_out.write("%d  %d  %01x  %01x\n"%(vfat, elink, bitslip_list[vfat][elink]["bitslip_0"], bitslip_list[vfat][elink]["bitslip_1"]))
         file_out.close()
 
     print ("Bitslips set for all Elink of all VFATs")
@@ -123,8 +137,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     #parser.add_argument("-u", "--queso", action="store", dest="queso", help="queso = QUESO number")
     parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
-    parser.add_argument("-p", "--bitslip", action="store", dest="bitslip", help="bitslip = Best value of the elinkRX bitslip")
+    parser.add_argument("-b", "--bitslips", action="store", nargs="+", dest="bitslips", help="bitslips = Best value of the two elinkRX bitslip values")
     parser.add_argument("-f", "--bitslip_file", action="store", dest="bitslip_file", help="bitslip_file = Text file with best value of the elinkRX bitslip")
+    parser.add_argument("-l", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -158,22 +173,27 @@ if __name__ == "__main__":
         vfat_list.append(v_int)
 
     bitslip_list = {}
-    if args.bitslip is not None and args.bitslip_file is not None:
-        print(Colors.YELLOW + "Only give either bitslip value or file but not both" + Colors.ENDC)
+    if args.bitslips is not None and args.bitslip_file is not None:
+        print(Colors.YELLOW + "Only give either bitslip values or file but not both" + Colors.ENDC)
         sys.exit()
-    if args.bitslip is not None:
+    if args.bitslips is not None:
         for vfat in vfat_list:
             bitslip_list[vfat] = {}
             for elink in range(0,9):
-                bitslip_list[vfat][elink] = 0x0
+                bitslip_list[vfat][elink] = {}
+                bitslip_list[vfat][elink]["bitslip_0"] = 0x0
+                bitslip_list[vfat][elink]["bitslip_1"] = 0x0
         for vfat in vfat_list:
             for elink in range(0,9):
-                bitslip_list[vfat][elink] = int(args.bitslip, 16)
+                bitslip_list[vfat][elink]["bitslip_0"] = int(args.bitslips[0], 16)
+                bitslip_list[vfat][elink]["bitslip_1"] = int(args.bitslips[1], 16)
     if args.bitslip_file is not None:
         for vfat in vfat_list:
             bitslip_list[vfat] = {}
             for elink in range(0,9):
-                bitslip_list[vfat][elink] = 0x0
+                bitslip_list[vfat][elink] = {}
+                bitslip_list[vfat][elink]["bitslip_0"] = 0x0
+                bitslip_list[vfat][elink]["bitslip_1"] = 0x0
         bitslip_list_file = {}
         bitslip_file = open(args.bitslip_file)
         for line in bitslip_file.readlines():
@@ -181,16 +201,21 @@ if __name__ == "__main__":
                 continue
             vfat = int(line.split()[0])
             elink = int(line.split()[1])
-            bitslip = int(line.split()[2], 16)
+            bitslip_0 = int(line.split()[2], 16)
+            bitslip_1 = int(line.split()[3], 16)
             if vfat not in bitslip_list_file:
                 bitslip_list_file[vfat] = {}
-            bitslip_list_file[vfat][elink] = bitslip
+            if elink not in bitslip_list_file[vfat]:
+                bitslip_list_file[vfat][elink] = {}
+            bitslip_list_file[vfat][elink]["bitslip_0"] = bitslip_0
+            bitslip_list_file[vfat][elink]["bitslip_1"] = bitslip_1
         bitslip_file.close()
         for vfat in vfat_list:
             for elink in range(0,9):
                 if vfat in bitslip_list_file:
                     if elink in bitslip_list_file[vfat]:
-                        bitslip_list[vfat][elink] = bitslip_list_file[vfat][elink]
+                        bitslip_list[vfat][elink]["bitslip_0"] = bitslip_list_file[vfat][elink]["bitslip_0"]
+                        bitslip_list[vfat][elink]["bitslip_1"] = bitslip_list_file[vfat][elink]["bitslip_1"]
                     else:
                         print(Colors.YELLOW + "Bitslip for VFAT %d Elink %d not in input file"%(vfat, elink) + Colors.ENDC)
                 else:
@@ -202,7 +227,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        scan_set_bitslip(args.system, int(args.ohid), vfat_list, bitslip_list)
+        scan_set_bitslip(args.system, int(args.ohid), vfat_list, bitslip_list, args.single)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

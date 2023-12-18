@@ -177,9 +177,10 @@ begin                                   --========####   Architecture Body   ###
             
             i_rx_sync_fifo : entity work.gearbox
                 generic map(
-                    g_IMPL_TYPE         => "FIFO",
-                    g_INPUT_DATA_WIDTH  => 40,
-                    g_OUTPUT_DATA_WIDTH => 40
+                    g_IMPL_TYPE           => "FIFO",
+                    g_INPUT_DATA_WIDTH    => 40,
+                    g_OUTPUT_DATA_WIDTH   => 40,
+                    g_FIFO_WAIT_NOT_EMPTY => true
                 )
                 port map(
                     reset_i     => reset_i or not mgt_status_arr_i(i).rx_reset_done,
