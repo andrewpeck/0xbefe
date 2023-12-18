@@ -504,7 +504,7 @@ if __name__ == "__main__":
     logfile.close()
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
+        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(ohid, vfat_list_str))
         list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
