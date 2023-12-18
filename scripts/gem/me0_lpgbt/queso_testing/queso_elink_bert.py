@@ -85,20 +85,16 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         runtime = float(runtime)
 
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
-    queso_bitslip_nodes = {}
     queso_prbs_nodes = {}
     prbs_errors = {}
     for oh_select in oh_gbt_vfat_map:
-        queso_bitslip_nodes[oh_select] = {}
         queso_prbs_nodes[oh_select] = {}
         prbs_errors[oh_select] = {}
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:
-            queso_bitslip_nodes[oh_select][vfat] = {}
             queso_prbs_nodes[oh_select][vfat] = {}
             prbs_errors[oh_select][vfat] = {}
             for elink in range(0, 9):
-                queso_bitslip_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
                 queso_prbs_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
                 prbs_errors[oh_select][vfat][elink] = {}
                 prbs_errors[oh_select][vfat][elink]["lpgbt"] = -9999
