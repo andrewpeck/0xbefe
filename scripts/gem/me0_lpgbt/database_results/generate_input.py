@@ -137,7 +137,7 @@ def main():
                         'LOCATION': location,
                         'KIND_OF_PART': 'ME0 Opto Hybrid',
                         'RECORD_INSERTION_USER': user,
-                        'MUNUFACTURER': 'Pactron',
+                        'MANUFACTURER': 'Pactron',
                         'CHILDREN':{
                             'PART':{
                                 'SERIAL_NUMBER':'ME0-VTRxPlus-%s'%vtrxp_sn,
@@ -152,7 +152,7 @@ def main():
                         'LOCATION': location,
                         'KIND_OF_PART': 'ME0 VTRxPlus',
                         'RECORD_INSERTION_USER': user,
-                        'MUNUFACTURER': 'CERN',
+                        'MANUFACTURER': 'CERN',
                     }
                 )
                 
