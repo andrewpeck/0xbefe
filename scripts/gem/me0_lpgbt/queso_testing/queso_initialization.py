@@ -498,13 +498,13 @@ if __name__ == "__main__":
     logfile.write("\n######################################################\n\n")
     sleep(2)
 
-    # Set elink phases for QUESO
+    # Set elink phases and bitslips for QUESO
     print(Colors.BLUE + "Set Elink Phases and Bitslips\n" + Colors.ENDC)
     logfile.write("Set Elink Phases and Bitslips\n\n")
     logfile.close()
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(ohid, vfat_list_str))
+        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(ohid, vfat_list_str))
         list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
@@ -522,11 +522,12 @@ if __name__ == "__main__":
             lpgbt_elink = int(line.split()[2])
             phase = int(line.split()[5], 16)
             width = int(line.split()[6])
-            bitslip = int(line.split()[7])
-            status = 1 if line.split()[8]=='GOOD' else 0
+            bitslip_0 = int(line.split()[7], 16)
+            bitslip_1 = int(line.split()[8], 16)
+            status = 1 if line.split()[9]=='GOOD' else 0
             if lpgbt not in bitslip_results:
                 bitslip_results[lpgbt] = {}
-            bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip':bitslip}
+            bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip_0':bitslip_0,'Bitslip_1':bitslip_1}
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
             for queso,oh_sn in queso_dict.items():
