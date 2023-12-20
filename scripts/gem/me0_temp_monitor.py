@@ -215,7 +215,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX or lpGBT or GEB_1V2D or or GEB_1V2A or or GEB_2V5")
+    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX or lpGBT or GEB_1V2D or GEB_1V2A or GEB_2V5")
     parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")

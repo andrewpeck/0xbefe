@@ -130,7 +130,7 @@ $ conda init
 
 Now, create a new environment for running scripts with the following command.
 ```
-$ conda create -n cmsme0_env python=3.11 numpy matplotlib scipy pandas paramiko colorama awkward tqdm uproot xmltodict
+$ conda create -n cmsme0_env python=3.11 numpy matplotlib scipy pandas paramiko colorama awkward tqdm uproot lxml xmltodict
 ```
 This will create an environment called `cmsme0_env`, and install `python` version `3.11` (latest) along with some necessary packages. If `conda` fails to make the environment, try a different python version; `3.10` or `3.9`.
 
