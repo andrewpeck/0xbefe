@@ -1886,7 +1886,7 @@ if __name__ == "__main__":
                         slot = -9999
                         for slot_check,oh_sn_check in geb_dict.items():
                             if oh_sn_check == oh_sn:
-                                slot = slot_check
+                                slot = int(slot_check)
                                 break
                         is_error = 0
                         if geb_version == 'v1':
