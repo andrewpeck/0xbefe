@@ -123,6 +123,8 @@ if __name__ == "__main__":
         pass
 
     log_fn = dataDir + "/me0_oh_tests_log.txt"
+    chip_id_fn = dataDir + "/me0_oh_chip_id_list.txt"
+    chip_id_file = open(chip_id_fn, "w")
     logfile = open(log_fn, "w")
     xml_results_fn = dataDir + "/me0_oh_database_results.json"
     vtrxp_results_fn = dataDir + "/me0_vtrxp_database_results.json"
@@ -249,16 +251,18 @@ if __name__ == "__main__":
                 list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_%s*.txt"%gbt_type)
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/status_OH%s_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
+                gbt_type = 'M' if gbt%2==0 else 'S'
                 with open('out.txt','r') as out_file:
                     for line in out_file.readlines():
                         if 'CHIP ID:' in line:
                             read_next = True
                         elif read_next:
-                            gbt_type = 'M' if gbt%2==0 else 'S'
                             chip_id = line.split()[0]
                             xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
                             chip_id_list.append(int(chip_id,16))
                             read_next = False
+                chip_id_file.write("%s    %s    %s\n"%(oh_sn, gbt_type, xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type]))
+        chip_id_file.close()
 
         config_files = {}
         for slot,oh_ver_list in oh_ver_dict.items():
@@ -1768,6 +1772,18 @@ if __name__ == "__main__":
             # Convert to temperature but pass missing value keys
             V_to_T = lambda v: 115*v - 22 if v!=NULL else v
             try:
+                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_VOLTAGE']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_VOLTAGE']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_DVDD_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['DVDD_VOLTAGE']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_DVDD_VOLTAGE'] = NULL
+            try:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = NULL
@@ -1781,9 +1797,11 @@ if __name__ == "__main__":
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+            except KeyError:
                 xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
