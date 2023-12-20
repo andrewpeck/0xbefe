@@ -239,7 +239,7 @@ if __name__ == "__main__":
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         read_next = False
         chip_id_list = []
         for slot,oh_sn in geb_dict.items():
