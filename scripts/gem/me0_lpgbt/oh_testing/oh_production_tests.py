@@ -1708,6 +1708,7 @@ if __name__ == "__main__":
                     else:
                         full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
                 
+                '''
                 if int(slot)%2==0:
                     prev_slot = int(slot) - 1
                     if str(prev_slot) in geb_dict:
@@ -1725,7 +1726,8 @@ if __name__ == "__main__":
                         layer = geb_oh_map[slot]['OH']
                         print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
                         logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
-
+                '''
+                
                 list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
                 if len(list_of_files)>0:
                     latest_file = max(list_of_files, key=os.path.getctime)
@@ -1744,7 +1746,7 @@ if __name__ == "__main__":
 
                 list_of_files = glob.glob(scripts_gem_dir + '/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*.txt')
                 latest_file = max(list_of_files,key=os.path.getctime)
-                os.system('cp %s %s/geb_current_OH%s'%(latest_file,dataDir,oh_sn))
+                os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
                 full_results[oh_sn]['ASENSE_SCAN'] = {}
                 with open(latest_file) as asense_file:
                     asense = {}
@@ -1764,8 +1766,66 @@ if __name__ == "__main__":
                             for key,val in zip(asense,[line.split()[i] for i in [1,3]]):
                                 if val != str(NULL):
                                     asense[key].append(float(val))
+                    for key,values in asense.items():
+                        if values:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
+                        else:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
 
+                if gbt%4==0:
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_Vin_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/Vin_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2D_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2D_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2D_current*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2D_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                elif gbt%4==2:
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2A_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2A_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2A_current*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2A_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+
+                '''
                 # run temp monitor
+                logfile.close()
+                os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t GEB_1V2D -n 10 >> %s"%(oh_select,gbt,log_fn))
+                logfile = open(log_fn,'a')
+                list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
+                latest_file = max(list_of_files,key=os.path.getctime)
+                os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
+                with open(latest_file) as vtrx_temp_file:
+                    keys = vtrx_temp_file.readline().split()[2:7:2]
+                    temperatures = {}
+                    for key in keys:
+                       temperatures[key]=[]
+                    for line in vtrx_temp_file.readlines():
+                       for key,value in zip(temperatures,line.split()[1:]):
+                           if float(value)!=NULL:
+                               temperatures[key]+=[float(value)]
+                list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
+                if len(list_of_files)>0:
+                    latest_file = max(list_of_files, key=os.path.getctime)
+                    os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                if temperatures['Temperature']!=[]:
+                    vtrxp_results[vtrxp_sn]['TEMP'] = np.mean(temperatures['Temperature'])
+                else:
+                    vtrxp_results[vtrxp_sn]['TEMP'] = NULL
+                '''
+
+
+
+
+
 
 
         for oh_sn in full_results:
@@ -1780,9 +1840,9 @@ if __name__ == "__main__":
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_DVDD_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['DVDD_VOLTAGE']
+                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_VOLTAGE']
             except KeyError:
-                xml_results[oh_sn]['DCDC_DVDD_VOLTAGE'] = NULL
+                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
             except KeyError:
@@ -1796,30 +1856,61 @@ if __name__ == "__main__":
             except KeyError:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_1V2D_TEMP']
             except KeyError:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
+                try:
+                    xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_1V2A_TEMP']
             except KeyError:
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
+                try:
+                    xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_2V5_TEMP']
             except KeyError:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
+                try:
+                    xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
-        asense_ranges = {'DCDC_1V2D_CURRENT':3,'DCDC_1V2A_CURRENT':3,'DCDC_2V5_CURRENT':0.5,'DCDC_2V5_TEMP':35,'DCDC_1V2D_TEMP':35,'DCDC_1V2A_TEMP':35}
+        asense_ranges = {'DCDC_Vin_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
                     if xml_results[oh_sn][key] == NULL:
-                        if not test_failed:
-                            print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
-                            logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
-                            test_failed = True
-                        print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                        logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                    elif xml_results[oh_sn][key] > limit:
+                        geb_version = xml_results[oh_sn]['GEB_SERIAL_NUMBER'].split('-')[1] # second element of geb sn stores version
+                        slot = -9999
+                        for slot_check,oh_sn_check in geb_dict.items():
+                            if oh_sn_check == oh_sn:
+                                slot = slot_check
+                                break
+                        is_error = 0
+                        if geb_version == 'v1':
+                            if slot%2 == 1:
+                                if key in ["DCDC_2V5_CURRENT", "DCDC_2V5_TEMP"]:
+                                    is_error = 1
+                            else:
+                                if key in ["DCDC_1V2D_CURRENT", "DCDC_1V2A_CURRENT", "DCDC_1V2D_TEMP", "DCDC_1V2A_TEMP"]:
+                                    is_error = 1
+                        if geb_version == 'v2':
+                            if slot%2 == 1:
+                                if key in ["DCDC_Vin_VOLTAGE", "DCDC_1V2D_VOLTAGE", "DCDC_1V2D_CURRENT", "DCDC_1V2D_TEMP"]:
+                                    is_error = 1
+                            else:
+                                if key in ["DCDC_1V2A_VOLTAGE", "DCDC_1V2A_CURRENT", "DCDC_2V5_TEMP", "DCDC_1V2A_TEMP"]: 
+                                    is_error = 1
+                        if is_error:
+                            if not test_failed:
+                                print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                                logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                                test_failed = True
+                            print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                            logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                    elif xml_results[oh_sn][key] < limit[0] or xml_results[oh_sn][key] > limit[1]:
                         if not test_failed:
                             print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
