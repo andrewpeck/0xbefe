@@ -18,6 +18,16 @@ def check_mpeek(reg, error_counter):
             error_counter += 1
     return value, error_counter
 
+def reset_all_links():
+    befe_reset_all_plls() # Resetting all MGT PLLs
+    sleep(0.3)
+    links = befe_config_links() # Configuring and resetting all links
+    sleep(0.1) 
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1) # Resetting user logic
+    sleep(0.3)
+    gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET"), 1) # Resetting user logic
+    sleep(2)
+
 def main(system, oh_select, gbt_list, niter):
 
     if sys.version_info[0] < 3:
@@ -92,14 +102,7 @@ def main(system, oh_select, gbt_list, niter):
         print ("Iteration: %d\n"%(n+1))
 
         # Link Resets 
-        befe_reset_all_plls() # Resetting all MGT PLLs
-        sleep(0.3)
-        links = befe_config_links() # Configuring and resetting all links
-        sleep(0.1) 
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1) # Resetting user logic
-        sleep(0.3)
-        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET"), 1) # Resetting user logic
-        sleep(2)
+        reset_all_links()
 
         # Reconfigure lpGBTs
         os.system("python3 init_frontend.py")
@@ -118,6 +121,9 @@ def main(system, oh_select, gbt_list, niter):
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_retries_backend_ready_boss[gbt] += 1
+
+                # Link Resets again
+                reset_all_links()
                 # Reconfigure lpGBTs
                 os.system("python3 init_frontend.py")
                 sleep(1)
@@ -187,6 +193,9 @@ def main(system, oh_select, gbt_list, niter):
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_retries_backend_ready_sub[gbt] += 1
+
+                # Link Resets again
+                reset_all_links()
                 # Reconfigure lpGBTs
                 os.system("python3 init_frontend.py")
                 sleep(1)
