@@ -342,7 +342,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="Checking Status of LpGBT Configuration for ME0 Optohybrid")
+    parser = argparse.ArgumentParser(description="Powercycle test for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
