@@ -56,7 +56,7 @@ if __name__ == "__main__":
         geb_sn = line.split()[2]
         oh_sn = line.split()[3]
         vtrxp_sn = line.split()[4]
-        pigtail = float(line.split()[4])
+        pigtail = float(line.split()[5])
         if oh_sn != str(NULL):
             if test_type in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
@@ -1795,39 +1795,39 @@ if __name__ == "__main__":
                         latest_file = max(list_of_files, key=os.path.getctime)
                         os.system("cp %s %s/1V2A_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
 
-                '''
                 # run temp monitor
                 logfile.close()
-                os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t GEB_1V2D -n 10 >> %s"%(oh_select,gbt,log_fn))
-                logfile = open(log_fn,'a')
-                list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
-                latest_file = max(list_of_files,key=os.path.getctime)
-                os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
-                with open(latest_file) as vtrx_temp_file:
-                    keys = vtrx_temp_file.readline().split()[2:7:2]
-                    temperatures = {}
-                    for key in keys:
-                       temperatures[key]=[]
-                    for line in vtrx_temp_file.readlines():
-                       for key,value in zip(temperatures,line.split()[1:]):
-                           if float(value)!=NULL:
-                               temperatures[key]+=[float(value)]
-                list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.pdf"%gbt)
-                if len(list_of_files)>0:
-                    latest_file = max(list_of_files, key=os.path.getctime)
-                    os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
-                if temperatures['Temperature']!=[]:
-                    vtrxp_results[vtrxp_sn]['TEMP'] = np.mean(temperatures['Temperature'])
-                else:
-                    vtrxp_results[vtrxp_sn]['TEMP'] = NULL
-                '''
-
-
-
-
-
-
-
+                for device in ["GEB_1V2D", "GEB_1V2A", "GEB_2V5"]:
+                    if device == "GEB_1V2D" and gbt%4!=0:
+                        continue
+                    if device in ["GEB_1V2A", "GEB_2V5"] and gbt%4==0:
+                        continue
+                    os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t %s -n 10 >> %s"%(oh_select,gbt,device,log_fn))    
+                    logfile = open(log_fn,'a')
+                    list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_%s*.txt'%(gbt,device))
+                    latest_file = max(list_of_files,key=os.path.getctime)
+                    os.system('cp %s %s/%s_temperature_scan_OH%s.txt'%(latest_file,dataDir,device,oh_sn))
+                    with open(latest_file) as geb_temp_file:
+                        keys = geb_temp_file.readline().split()[2:7:2]
+                        geb_temperatures = {}
+                        for key in keys:
+                            if key != "Temperature":
+                                continue
+                           geb_temperatures[device+"_"+key]=[]
+                        for line in geb_temp_file.readlines():
+                           for key,value in zip(geb_temperatures,line.split()[-1]):
+                               if float(value)!=NULL:
+                                  geb_temperatures[key]+=[float(value)]
+                    for key,values in geb_temperatures.items():
+                        if values:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
+                       else:
+                           full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_%s*.pdf"%(gbt,device))
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/%s_temp_OH%s.pdf"%(latest_file,dataDir,device,oh_sn))
+                
         for oh_sn in full_results:
             # Convert to temperature but pass missing value keys
             V_to_T = lambda v: 115*v - 22 if v!=NULL else v
@@ -1856,21 +1856,21 @@ if __name__ == "__main__":
             except KeyError:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_1V2D_TEMP']
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_1V2D_Temperature']
             except KeyError:
                 try:
                     xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
                 except KeyError:
                     xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_1V2A_TEMP']
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_1V2A_Temperature']
             except KeyError:
                 try:
                     xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
                 except KeyError:
                     xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['DCDC_2V5_TEMP']
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_2V5_Temperature']
             except KeyError:
                 try:
                     xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
@@ -1956,7 +1956,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
             logfile = open(log_fn,'a')
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/oh_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as temp_file:
@@ -2029,7 +2029,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
             logfile = open(log_fn,'a')
-            list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
+            list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as vtrx_temp_file:
