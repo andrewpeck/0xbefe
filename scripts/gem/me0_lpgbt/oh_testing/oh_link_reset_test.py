@@ -119,6 +119,8 @@ def main(system, oh_select, gbt_list, niter):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_retries_backend_ready_boss[gbt] += 1
                 # Reconfigure lpGBTs
+                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1) # Resetting user logic
+                sleep(0.3)
                 os.system("python3 init_frontend.py")
                 sleep(1)
                 select_ic_link(oh_select, gbt)
@@ -190,6 +192,8 @@ def main(system, oh_select, gbt_list, niter):
                 # Reconfigure lpGBTs
                 os.system("python3 init_frontend.py")
                 sleep(1)
+                gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET"), 1) # Resetting user logic
+                sleep(0.3)
                 select_ic_link(oh_select, gbt)
                 link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
                 if (link_ready!=1):
