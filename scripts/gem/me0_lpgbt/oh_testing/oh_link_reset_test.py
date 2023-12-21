@@ -70,6 +70,7 @@ def main(system, oh_select, gbt_list, niter):
     n_error_ic_read_sub = {}
 
     for gbt in gbt_list["boss"]:
+        n_retries_backend_ready_boss[gbt] = 0
         n_error_backend_ready_boss[gbt] = 0
         n_error_uplink_fec_boss[gbt] = 0
         n_error_pusm_ready_boss[gbt] = 0
@@ -77,6 +78,7 @@ def main(system, oh_select, gbt_list, niter):
         n_error_reg_list_boss[gbt] = 0
         n_error_ic_read_boss[gbt] = 0
     for gbt in gbt_list["sub"]:
+        n_retries_backend_ready_sub[gbt] = 0
         n_error_backend_ready_sub[gbt] = 0
         n_error_uplink_fec_sub[gbt] = 0
         n_error_pusm_ready_sub[gbt] = 0
@@ -283,7 +285,7 @@ def main(system, oh_select, gbt_list, niter):
                 str_n_error_ic_read_boss += Colors.GREEN
             else:
                 str_n_error_ic_read_boss += Colors.RED
-            str_n_retries_backend_ready_boss += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_boss[gbt])
+            str_n_retries_backend_ready_boss += "  Number of Backend READY Status retries: %d"%(n_retries_backend_ready_boss[gbt])
             str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
             str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
             str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
@@ -343,7 +345,7 @@ def main(system, oh_select, gbt_list, niter):
                 str_n_error_ic_read_sub += Colors.GREEN
             else:
                 str_n_error_ic_read_sub += Colors.RED
-            str_n_retries_backend_ready_sub += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_sub[gbt])
+            str_n_retries_backend_ready_sub += "  Number of Backend READY Status retries: %d"%(n_retries_backend_ready_sub[gbt])
             str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
             str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
             str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
@@ -408,7 +410,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_ic_read_boss += Colors.GREEN
         else:
             str_n_error_ic_read_boss += Colors.RED
-        str_n_retries_backend_ready_boss += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_boss[gbt])
+        str_n_retries_backend_ready_boss += "  Number of Backend READY Status retries: %d"%(n_retries_backend_ready_boss[gbt])
         str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
         str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
         str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
@@ -468,7 +470,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_ic_read_sub += Colors.GREEN
         else:
             str_n_error_ic_read_sub += Colors.RED
-        str_n_retries_backend_ready_sub += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_sub[gbt])
+        str_n_retries_backend_ready_sub += "  Number of Backend READY Status retries: %d"%(n_retries_backend_ready_sub[gbt])
         str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
         str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
         str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
