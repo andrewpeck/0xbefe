@@ -225,6 +225,10 @@ def main():
                     print(Colors.RED + "Missing QUESO INITIALIZATION RESULTS data for OH %s"%oh_sn + Colors.ENDC)
         try:
             queso_bert_data = get_json_data(queso_bert_fn)
+            for data in queso_bert_data:
+                for variable in data:
+                    if type(data[variable]) == list:
+                        data[variable] = str(data[variable])
         except FileNotFoundError:
             print(Colors.RED + 'QUESO ELINK BERT RESULTS file not found.')
             sys.exit()
