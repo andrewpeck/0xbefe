@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -10,6 +11,8 @@ import pandas as pd
 import datetime
 from collections import OrderedDict
 from common.utils import get_befe_scripts_dir
+
+matplotlib.use('Agg')
 
 def read_threshold_file(file_in, vfat):
     vfat_data = pd.read_csv(file_in, names=["vfatCH", "threshold", "ENC"], sep="    ", skiprows=[0,1], skipfooter=3, engine="python")

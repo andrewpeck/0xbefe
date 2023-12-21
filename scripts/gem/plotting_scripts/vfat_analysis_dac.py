@@ -2,12 +2,14 @@ from gem.gem_utils import *
 import argparse
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 from time import time
 from common.utils import get_befe_scripts_dir
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
+matplotlib.use('Agg')
 
 def poly5(x, a, b, c, d, e, f):
     return (a * np.power(x,5)) + (b * np.power(x,4)) + (c * np.power(x,3)) + (d * np.power(x,2)) + (e * x) + f

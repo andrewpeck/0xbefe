@@ -4,12 +4,15 @@ from time import sleep, time
 import sys
 import argparse
 import csv
+import matplotlib
 import matplotlib.pyplot as plt
 import os, glob
 import datetime
 import math
 import numpy as np
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
+
+matplotlib.use('Agg')
 
 REGISTER_DAC_MONITOR_MAP = {
     "V Tsens Int": 37,

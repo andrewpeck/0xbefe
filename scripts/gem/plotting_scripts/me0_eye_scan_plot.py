@@ -1,8 +1,11 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 import os, sys, glob
 import argparse
+
+matplotlib.use('Agg')
 
 if __name__ == "__main__":
 

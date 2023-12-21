@@ -1,4 +1,5 @@
 from gem.gem_utils import *
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -10,6 +11,7 @@ import warnings
 import copy
 
 plt.rcParams.update({"font.size": 24}) # Increase font size
+matplotlib.use('Agg')
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore") # temporarily disable warnings; infinite covariance matrix is returned when calling scipy.optimize.curve_fit(), but fit is fine

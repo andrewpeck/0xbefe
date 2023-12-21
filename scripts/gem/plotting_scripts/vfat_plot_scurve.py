@@ -1,5 +1,6 @@
 from gem.gem_utils import *
 from common.utils import get_befe_scripts_dir
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -10,6 +11,7 @@ import warnings
 import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
+matplotlib.use('Agg')
 
 def getCalData(calib_path):
     slope_adc = {}

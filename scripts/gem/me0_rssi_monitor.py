@@ -4,11 +4,14 @@ from time import sleep, time
 import sys
 import argparse
 import csv
+import matplotlib
 import matplotlib.pyplot as plt
 import os, glob
 import datetime
 import numpy as np
 from gem.me0_lpgbt_adc import *
+
+matplotlib.use('Agg')
 
 def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, voltage, plot):
 
