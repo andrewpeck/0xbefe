@@ -261,7 +261,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
             str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
             str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
-            str_n_error_ic_read_boss += "  Number of Register Value Errors: %d"%n_error_ic_read_boss[gbt]
+            str_n_error_ic_read_boss += "  Number of IC READ Errors: %d"%n_error_ic_read_boss[gbt]
             str_n_error_backend_ready_boss += Colors.ENDC
             str_n_error_uplink_fec_boss += Colors.ENDC
             str_n_error_mode_boss += Colors.ENDC
@@ -313,7 +313,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
             str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
             str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
-            str_n_error_ic_read_sub += "  Number of Register Value Errors: %d"%n_error_ic_read_sub[gbt]
+            str_n_error_ic_read_sub += "  Number of IC READ Errors: %d"%n_error_ic_read_sub[gbt]
             str_n_error_backend_ready_sub += Colors.ENDC
             str_n_error_uplink_fec_sub += Colors.ENDC
             str_n_error_mode_sub += Colors.ENDC
@@ -370,7 +370,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
         str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
         str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
-        str_n_error_ic_read_boss += "  Number of Register Value Errors: %d"%n_error_ic_read_boss[gbt]
+        str_n_error_ic_read_boss += "  Number of IC READ Errors: %d"%n_error_ic_read_boss[gbt]
         str_n_error_backend_ready_boss += Colors.ENDC
         str_n_error_uplink_fec_boss += Colors.ENDC
         str_n_error_mode_boss += Colors.ENDC
@@ -422,7 +422,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
         str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
         str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
-        str_n_error_ic_read_sub += "  Number of Register Value Errors: %d"%n_error_ic_read_sub[gbt]
+        str_n_error_ic_read_sub += "  Number of IC READ Errors: %d"%n_error_ic_read_sub[gbt]
         str_n_error_backend_ready_sub += Colors.ENDC
         str_n_error_uplink_fec_sub += Colors.ENDC
         str_n_error_mode_sub += Colors.ENDC
