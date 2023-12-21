@@ -135,7 +135,7 @@ def main(system, oh_select, gbt_list, niter):
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 11
-                mode_read, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
+                mode_read, n_error_ic_read_boss[gbt] = check_mpeek(0x150, n_error_ic_read_boss[gbt])
                 mode = (mode_read & 0xF0) >> 4
                 pusmstate, n_error_ic_read_boss[gbt] = check_mpeek(0x1D9, n_error_ic_read_boss[gbt])
 
