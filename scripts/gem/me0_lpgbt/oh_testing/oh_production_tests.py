@@ -261,7 +261,10 @@ if __name__ == "__main__":
                             xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
                             chip_id_list.append(int(chip_id,16))
                             read_next = False
-                chip_id_file.write("%s    %s    %s\n"%(oh_sn, gbt_type, xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type]))
+                try:
+                    chip_id_file.write("%s    %s    %s\n"%(oh_sn, gbt_type, xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type]))
+                except:
+                    chip_id_file.write("%s    %s    %d\n"%(oh_sn, gbt_type, -9999))
         chip_id_file.close()
 
         config_files = {}
@@ -344,11 +347,11 @@ if __name__ == "__main__":
                         # save sub lpgbt calib data
                         elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == '0x%08X'%chip_id:
                             xml_results[oh_sn]['LPGBT_S_ADC_CALIB'].update(calib_data)
-        # Save lpgbt adc calibration to smaller file to speed up runtime
-        with open(calib_active_fn,'w') as calib_file:
-            writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
-            writer.writeheader()
-            writer.writerows(calib_db_active)
+            # Save lpgbt adc calibration to smaller file to speed up runtime
+            with open(calib_active_fn,'w') as calib_file:
+                writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
+                writer.writeheader()
+                writer.writerows(calib_db_active)
         # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -1752,18 +1755,18 @@ if __name__ == "__main__":
                     asense = {}
                     line = asense_file.readline().split()
                     if gbt%4==0:
-                        asense['_'.join(line[2:4])] = [] # V_IN_Voltage
-                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2D_Voltage
-                        asense['_'.join(line[7:9]).replace('1.2V','1V2')] = [] # 1V2D_Current
+                        asense['_'.join(line[2:4])] = [] # V_IN_voltage
+                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2D_voltage
+                        asense['_'.join(line[8:10]).replace('1.2V','1V2')] = [] # 1V2D_current
                         for line in asense_file.readlines():
                             for key,val in zip(asense,[line.split()[i] for i in [1,2,3]]):
                                 if val != str(NULL):
                                     asense[key].append(float(val))
                     elif gbt%4==2:
-                        asense['_'.join(line[2:4]).replace('1.2V','1V2')] = [] # 1V2A_Voltage
-                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2A_Current
+                        asense['_'.join(line[2:4]).replace('1.2V','1V2')] = [] # 1V2A_voltage
+                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2A_current
                         for line in asense_file.readlines():
-                            for key,val in zip(asense,[line.split()[i] for i in [1,3]]):
+                            for key,val in zip(asense,[line.split()[i] for i in [1,2]]):
                                 if val != str(NULL):
                                     asense[key].append(float(val))
                     for key,values in asense.items():
@@ -1813,15 +1816,13 @@ if __name__ == "__main__":
                         for key in keys:
                             if key != "Temperature":
                                 continue
-                           geb_temperatures[device+"_"+key]=[]
+                            geb_temperatures[device+"_"+key]=[]
                         for line in geb_temp_file.readlines():
-                           for key,value in zip(geb_temperatures,line.split()[-1]):
-                               if float(value)!=NULL:
-                                  geb_temperatures[key]+=[float(value)]
+                            geb_temperatures[device+"_Temperature"] += [float(line.split()[3])]
                     for key,values in geb_temperatures.items():
                         if values:
                             full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
-                       else:
+                        else:
                            full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
                     list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_%s*.pdf"%(gbt,device))
                     if len(list_of_files)>0:
@@ -1832,15 +1833,15 @@ if __name__ == "__main__":
             # Convert to temperature but pass missing value keys
             V_to_T = lambda v: 115*v - 22 if v!=NULL else v
             try:
-                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_VOLTAGE']
+                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_voltage']
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_VOLTAGE']
+                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_voltage']
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_VOLTAGE']
+                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_voltage']
             except KeyError:
                 xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = NULL
             try:

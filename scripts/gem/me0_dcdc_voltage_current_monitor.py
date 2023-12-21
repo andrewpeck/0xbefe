@@ -60,9 +60,9 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
 
     file_out = open(filename, "w")
     if gbt == 0:
-        file_out.write("Time (min) \t V_IN Voltage (V) \t 1.2VD Voltage (V) \t 1.2VD Current (A) \t 1.2VD Current (Differential Measurement) (A)\n")
+        file_out.write("Time (min) \t V_IN voltage (V) \t 1.2VD voltage (V) \t 1.2VD current (A) \t 1.2VD current (Differential Measurement) (A)\n")
     elif gbt == 2:
-        file_out.write("Time (min) \t 1.2VA Voltage (V) \t 1.2VA Current (A) \t 1.2VA Current (Differential Measurement) (A)\n")
+        file_out.write("Time (min) \t 1.2VA voltage (V) \t 1.2VA current (A) \t 1.2VA current (Differential Measurement) (A)\n")
     t0 = time()
     nrun = 0
     first_reading = 1
@@ -151,7 +151,7 @@ def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain,
                 file_out.write(str(second/60.0) + "\t" + str(vin_converted) + "\t" + str(v_1v2d_converted) + "\t" + str(i_1v2d_converted) + "\t" + str(i_diff_1v2d_converted) + "\n" )
                 print("Time: " + "{:.2f}".format(second/60.0) + " min \t V_IN Voltage: " + "{:.3f}".format(vin_converted) + " V \t 1.2VD Voltage: " + "{:.3f}".format(v_1v2d_converted) + " V \t 1.2VD Current: " + "{:.3f}".format(i_1v2d_converted) + " A \t 1.2VD Current (Differential Measurement): " + "{:.3f}".format(i_diff_1v2d_converted) + " A \n" )
             elif gbt == 2:
-                file_out.write(str(second/60.0) + "\t" + str(v_1v2a_converted) + "\t" + str(v_1v2d_converted) + "\t" + str(i_1v2a_converted) + "\t" + str(i_diff_1v2a_converted) + "\n" )
+                file_out.write(str(second/60.0) + "\t" + str(v_1v2a_converted) + "\t" + str(i_1v2a_converted) + "\t" + str(i_diff_1v2a_converted) + "\n" )
                 print("Time: " + "{:.2f}".format(second/60.0) + " min \t 1.2VA Voltage: " + "{:.3f}".format(v_1v2a_converted) + " V \t 1.2VA Current: " + "{:.3f}".format(i_1v2a_converted) + " A \t 1.2VA Current (Differential Measurement): " + "{:.3f}".format(i_diff_1v2a_converted) + " A \n" )
             t0 = time()
             if first_reading:
