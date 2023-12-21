@@ -81,6 +81,16 @@ def main(system, oh_select, gbt_list, niter):
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET"), 1) # Resetting user logic
         sleep(2)
 
+        # Reconfigure lpGBTs
+        for gbt in gbt_list["boss"]:
+            oh_ver = get_oh_ver(str(oh_select), str(gbt))
+            os.system("python3 me0_lpgbt_config.py -s backend -q ME0 -o %d -g %d -i ../resources/me0_boss_config_ohv%d.txt -w"%(oh_select, gbt, oh_ver))
+        sleep(1)
+        for gbt in gbt_list["sub"]:
+            oh_ver = get_oh_ver(str(oh_select), str(gbt))
+            os.system("python3 me0_lpgbt_config.py -s backend -q ME0 -o %d -g %d -i ../resources/me0_sub_config_ohv%d.txt -w"%(oh_select, gbt, oh_ver))
+        sleep(1)
+
         # Check lpGBT status
         # Boss
         for gbt in gbt_list["boss"]:
