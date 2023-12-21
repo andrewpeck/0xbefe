@@ -2,7 +2,7 @@ import ethernet_relay
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 import gem.gem_utils as gem_utils
 from time import sleep
-import sys
+import sys, os
 import argparse
 
 def main(system, oh_select, gbt_list, relay_number_list, niter):
@@ -29,6 +29,10 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             rw_terminate()
         sleep (0.5)
     sleep(10)
+
+    # Configure lpGBTs
+    os.system("python3 init_frontend.py")
+    sleep(1)
 
     reg_list_boss = {}
     reg_list_sub = {}
@@ -110,9 +114,9 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             sleep(0.5)
         sleep(10)
 
-        # Link reset
-        gem_utils.gem_link_reset()
-        sleep(2)
+        # Configure lpGBTs
+        os.system("python3 init_frontend.py")
+        sleep(1)
 
         # Check lpGBT status
         # Boss
