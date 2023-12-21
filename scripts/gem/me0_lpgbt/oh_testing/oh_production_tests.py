@@ -2639,7 +2639,7 @@ if __name__ == "__main__":
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
-                        elink = int(sbit.removeprefix("all_elink"))
+                        elink = int(sbit.split("all_elink")[1])
                         if fired == 0 or threshold==255:
                             # save the first threshold with no hits or max threshold if failed
                             if elink not in sbit_noise[vfat]:

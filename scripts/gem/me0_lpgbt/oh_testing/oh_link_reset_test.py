@@ -6,6 +6,18 @@ from time import sleep
 import sys, os
 import argparse
 
+def check_mpeek(reg, error_counter):
+    value = 0x00
+    n_iter = 0
+    while n_iter < 3:
+        try:
+            value = mpeek(reg)
+            break
+        except SystemExit:
+            n_iter += 1
+            error_counter += 1
+    return value, error_counter
+
 def main(system, oh_select, gbt_list, niter):
 
     if sys.version_info[0] < 3:
@@ -52,6 +64,8 @@ def main(system, oh_select, gbt_list, niter):
     n_error_mode_sub = {}
     n_error_reg_list_boss = {}
     n_error_reg_list_sub = {}
+    n_error_ic_read_boss = {}
+    n_error_ic_read_sub = {}
 
     for gbt in gbt_list["boss"]:
         n_error_backend_ready_boss[gbt] = 0
@@ -59,12 +73,14 @@ def main(system, oh_select, gbt_list, niter):
         n_error_pusm_ready_boss[gbt] = 0
         n_error_mode_boss[gbt] = 0
         n_error_reg_list_boss[gbt] = 0
+        n_error_ic_read_boss[gbt] = 0
     for gbt in gbt_list["sub"]:
         n_error_backend_ready_sub[gbt] = 0
         n_error_uplink_fec_sub[gbt] = 0
         n_error_pusm_ready_sub[gbt] = 0
         n_error_mode_sub[gbt] = 0
         n_error_reg_list_sub[gbt] = 0
+        n_error_ic_read_sub[gbt] = 0
 
     print ("Begin link break iteration\n")
     # Link reset interations
@@ -113,13 +129,15 @@ def main(system, oh_select, gbt_list, niter):
             if oh_ver == 1:
                 ready_value = 18
                 mode_value = 11
-                mode = (mpeek(0x140) & 0xF0) >> 4
-                pusmstate = mpeek(0x1C7)
+                mode, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
+                mode = (mode & 0xF0) >> 4
+                pusmstate, n_error_ic_read_boss[gbt] = check_mpeek(0x1C7)
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 11
-                mode = (mpeek(0x150) & 0xF0) >> 4
-                pusmstate = mpeek(0x1D9)
+                mode, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
+                mode = (mode & 0xF0) >> 4
+                pusmstate, n_error_ic_read_boss[gbt] = check_mpeek(0x1D9, n_error_ic_read_boss[gbt])
 
             if mode != mode_value:
                 n_error_mode_boss[gbt] += 1
@@ -138,7 +156,7 @@ def main(system, oh_select, gbt_list, niter):
             if oh_ver == 2:
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
-                val = mpeek(reg)
+                val, n_error_ic_read_boss[gbt] = check_mpeek(reg, n_error_ic_read_boss[gbt])
                 if val != reg_list_boss[gbt][reg]:
                     n_error_reg_list_boss[gbt] += 1
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
@@ -169,16 +187,18 @@ def main(system, oh_select, gbt_list, niter):
             # Check lpGBT PUSM READY and MODE
             if oh_ver == 1:
                 for i in range(0,10):
-                    test_read = mpeek(0x00)
+                    test_read, n_error_ic_read_sub[gbt] = check_mpeek(0x00, n_error_ic_read_sub[gbt])
                 ready_value = 18
                 mode_value = 9
-                mode = (mpeek(0x140) & 0xF0) >> 4
-                pusmstate = mpeek(0x1C7)
+                mode, n_error_ic_read_sub[gbt] = check_mpeek(0x140, n_error_ic_read_sub[gbt])
+                mode = (mode & 0xF0) >> 4
+                pusmstate, n_error_ic_read_sub[gbt] = check_mpeek(0x1C7, n_error_ic_read_sub[gbt])
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 9
-                mode = (mpeek(0x150) & 0xF0) >> 4
-                pusmstate = mpeek(0x1D9)
+                mode, n_error_ic_read_sub[gbt] = check_mpeek(0x150, n_error_ic_read_sub[gbt])
+                mode = (mode & 0xF0) >> 4
+                pusmstate, n_error_ic_read_sub[gbt] = check_mpeek(0x1D9, n_error_ic_read_sub[gbt])
 
             if mode != mode_value:
                 n_error_mode_sub[gbt] += 1
@@ -197,11 +217,115 @@ def main(system, oh_select, gbt_list, niter):
             if oh_ver == 2:
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
-                val = mpeek(reg)
+                val, n_error_ic_read_sub[gbt] = check_mpeek(reg, n_error_ic_read_sub[gbt])
                 if val != reg_list_sub[gbt][reg]:
                     n_error_reg_list_sub[gbt] += 1
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
+        print ("")
+
+        for gbt in gbt_list["boss"]:
+            print ("Boss lpGBT %d: "%gbt)
+            str_n_error_backend_ready_boss = ""
+            str_n_error_uplink_fec_boss = ""
+            str_n_error_mode_boss = ""
+            str_n_error_pusm_ready_boss = ""
+            str_n_error_reg_list_boss = ""
+            str_n_error_ic_read_boss = ""
+            if n_error_backend_ready_boss[gbt]==0:
+                str_n_error_backend_ready_boss += Colors.GREEN
+            else:
+                str_n_error_backend_ready_boss += Colors.YELLOW
+            if n_error_uplink_fec_boss[gbt]==0:
+                str_n_error_uplink_fec_boss += Colors.GREEN
+            else:
+                str_n_error_uplink_fec_boss += Colors.YELLOW
+            if n_error_mode_boss[gbt]==0:
+                str_n_error_mode_boss += Colors.GREEN
+            else:
+                str_n_error_mode_boss += Colors.YELLOW
+            if n_error_pusm_ready_boss[gbt]==0:
+                str_n_error_pusm_ready_boss += Colors.GREEN
+            else:
+                str_n_error_pusm_ready_boss += Colors.YELLOW
+            if n_error_reg_list_boss[gbt]==0:
+                str_n_error_reg_list_boss += Colors.GREEN
+            else:
+                str_n_error_reg_list_boss += Colors.YELLOW
+            if n_error_ic_read_boss[gbt]==0:
+                str_n_error_ic_read_boss += Colors.GREEN
+            else:
+                str_n_error_ic_read_boss += Colors.YELLOW
+            str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
+            str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
+            str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
+            str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
+            str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
+            str_n_error_ic_read_boss += "  Number of Register Value Errors: %d"%n_error_ic_read_boss[gbt]
+            str_n_error_backend_ready_boss += Colors.ENDC
+            str_n_error_uplink_fec_boss += Colors.ENDC
+            str_n_error_mode_boss += Colors.ENDC
+            str_n_error_pusm_ready_boss += Colors.ENDC
+            str_n_error_reg_list_boss += Colors.ENDC
+            str_n_error_ic_read_boss += Colors.ENDC
+            print (str_n_error_backend_ready_boss)
+            print (str_n_error_uplink_fec_boss)
+            print (str_n_error_mode_boss)
+            print (str_n_error_pusm_ready_boss)
+            print (str_n_error_reg_list_boss)
+            print (str_n_error_ic_read_boss)
+
+        print ("")
+        for gbt in gbt_list["sub"]:
+            print ("Sub lpGBT %d: "%gbt)
+            str_n_error_backend_ready_sub = ""
+            str_n_error_uplink_fec_sub = ""
+            str_n_error_mode_sub = ""
+            str_n_error_pusm_ready_sub = ""
+            str_n_error_reg_list_sub = ""
+            str_n_error_ic_read_sub = ""
+            if n_error_backend_ready_sub[gbt]==0:
+                str_n_error_backend_ready_sub += Colors.GREEN
+            else:
+                str_n_error_backend_ready_sub += Colors.YELLOW
+            if n_error_uplink_fec_sub[gbt]==0:
+                str_n_error_uplink_fec_sub += Colors.GREEN
+            else:
+                str_n_error_uplink_fec_sub += Colors.YELLOW
+            if n_error_mode_sub[gbt]==0:
+                str_n_error_mode_sub += Colors.GREEN
+            else:
+                str_n_error_mode_sub += Colors.YELLOW
+            if n_error_pusm_ready_sub[gbt]==0:
+                str_n_error_pusm_ready_sub += Colors.GREEN
+            else:
+                str_n_error_pusm_ready_sub += Colors.YELLOW
+            if n_error_reg_list_sub[gbt]==0:
+                str_n_error_reg_list_sub += Colors.GREEN
+            else:
+                str_n_error_reg_list_sub += Colors.YELLOW
+            if n_error_ic_read_sub[gbt]==0:
+                str_n_error_ic_read_sub += Colors.GREEN
+            else:
+                str_n_error_ic_read_sub += Colors.YELLOW
+            str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
+            str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
+            str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
+            str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
+            str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
+            str_n_error_ic_read_sub += "  Number of Register Value Errors: %d"%n_error_ic_read_sub[gbt]
+            str_n_error_backend_ready_sub += Colors.ENDC
+            str_n_error_uplink_fec_sub += Colors.ENDC
+            str_n_error_mode_sub += Colors.ENDC
+            str_n_error_pusm_ready_sub += Colors.ENDC
+            str_n_error_reg_list_sub += Colors.ENDC
+            str_n_error_ic_read_sub += Colors.ENDC
+            print (str_n_error_backend_ready_sub)
+            print (str_n_error_uplink_fec_sub)
+            print (str_n_error_mode_sub)
+            print (str_n_error_pusm_ready_sub)
+            print (str_n_error_reg_list_sub)
+            print (str_n_error_ic_read_sub)
         print ("")
         
     print ("\nEnd of link reset iteration")
@@ -216,6 +340,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_mode_boss = ""
         str_n_error_pusm_ready_boss = ""
         str_n_error_reg_list_boss = ""
+        str_n_error_ic_read_boss = ""
         if n_error_backend_ready_boss[gbt]==0:
             str_n_error_backend_ready_boss += Colors.GREEN
         else:
@@ -236,21 +361,28 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_reg_list_boss += Colors.GREEN
         else:
             str_n_error_reg_list_boss += Colors.YELLOW
+        if n_error_ic_read_boss[gbt]==0:
+            str_n_error_ic_read_boss += Colors.GREEN
+        else:
+            str_n_error_ic_read_boss += Colors.YELLOW
         str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
         str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
         str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
         str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
         str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
+        str_n_error_ic_read_boss += "  Number of Register Value Errors: %d"%n_error_ic_read_boss[gbt]
         str_n_error_backend_ready_boss += Colors.ENDC
         str_n_error_uplink_fec_boss += Colors.ENDC
         str_n_error_mode_boss += Colors.ENDC
         str_n_error_pusm_ready_boss += Colors.ENDC
         str_n_error_reg_list_boss += Colors.ENDC
+        str_n_error_ic_read_boss += Colors.ENDC
         print (str_n_error_backend_ready_boss)
         print (str_n_error_uplink_fec_boss)
         print (str_n_error_mode_boss)
         print (str_n_error_pusm_ready_boss)
         print (str_n_error_reg_list_boss)
+        print (str_n_error_ic_read_boss)
 
     print ("")
     for gbt in gbt_list["sub"]:
@@ -260,6 +392,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_mode_sub = ""
         str_n_error_pusm_ready_sub = ""
         str_n_error_reg_list_sub = ""
+        str_n_error_ic_read_sub = ""
         if n_error_backend_ready_sub[gbt]==0:
             str_n_error_backend_ready_sub += Colors.GREEN
         else:
@@ -280,22 +413,28 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_reg_list_sub += Colors.GREEN
         else:
             str_n_error_reg_list_sub += Colors.YELLOW
+        if n_error_ic_read_sub[gbt]==0:
+            str_n_error_ic_read_sub += Colors.GREEN
+        else:
+            str_n_error_ic_read_sub += Colors.YELLOW
         str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
         str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
         str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
         str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
         str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
+        str_n_error_ic_read_sub += "  Number of Register Value Errors: %d"%n_error_ic_read_sub[gbt]
         str_n_error_backend_ready_sub += Colors.ENDC
         str_n_error_uplink_fec_sub += Colors.ENDC
         str_n_error_mode_sub += Colors.ENDC
         str_n_error_pusm_ready_sub += Colors.ENDC
         str_n_error_reg_list_sub += Colors.ENDC
+        str_n_error_ic_read_sub += Colors.ENDC
         print (str_n_error_backend_ready_sub)
         print (str_n_error_uplink_fec_sub)
         print (str_n_error_mode_sub)
         print (str_n_error_pusm_ready_sub)
         print (str_n_error_reg_list_sub)
-
+        print (str_n_error_ic_read_sub)
     print ("")
 
 if __name__ == "__main__":
