@@ -129,14 +129,14 @@ def main(system, oh_select, gbt_list, niter):
             if oh_ver == 1:
                 ready_value = 18
                 mode_value = 11
-                mode, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
-                mode = (mode & 0xF0) >> 4
+                mode_read, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
+                mode = (mode_read & 0xF0) >> 4
                 pusmstate, n_error_ic_read_boss[gbt] = check_mpeek(0x1C7)
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 11
-                mode, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
-                mode = (mode & 0xF0) >> 4
+                mode_read, n_error_ic_read_boss[gbt] = check_mpeek(0x140, n_error_ic_read_boss[gbt])
+                mode = (mode_read & 0xF0) >> 4
                 pusmstate, n_error_ic_read_boss[gbt] = check_mpeek(0x1D9, n_error_ic_read_boss[gbt])
 
             if mode != mode_value:
@@ -190,14 +190,14 @@ def main(system, oh_select, gbt_list, niter):
                     test_read, n_error_ic_read_sub[gbt] = check_mpeek(0x00, n_error_ic_read_sub[gbt])
                 ready_value = 18
                 mode_value = 9
-                mode, n_error_ic_read_sub[gbt] = check_mpeek(0x140, n_error_ic_read_sub[gbt])
-                mode = (mode & 0xF0) >> 4
+                mode_read, n_error_ic_read_sub[gbt] = check_mpeek(0x140, n_error_ic_read_sub[gbt])
+                mode = (mode_read & 0xF0) >> 4
                 pusmstate, n_error_ic_read_sub[gbt] = check_mpeek(0x1C7, n_error_ic_read_sub[gbt])
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 9
-                mode, n_error_ic_read_sub[gbt] = check_mpeek(0x150, n_error_ic_read_sub[gbt])
-                mode = (mode & 0xF0) >> 4
+                mode_read, n_error_ic_read_sub[gbt] = check_mpeek(0x150, n_error_ic_read_sub[gbt])
+                mode = (mode_read & 0xF0) >> 4
                 pusmstate, n_error_ic_read_sub[gbt] = check_mpeek(0x1D9, n_error_ic_read_sub[gbt])
 
             if mode != mode_value:
