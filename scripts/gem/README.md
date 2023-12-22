@@ -117,7 +117,44 @@ python3 get_cal_info_vfat.py -s backend -q ME0 -o <oh_id> -t <input_type> -w
 ```
 For more information on usage, run `# python3 get_cal_info_vfat.py -h`.
 
+## Update python version
 
+You may want to run scripts on the newest `python` version. You can update the `python` version through your system but this can lead to breaking system functionalities if done incorrectly. 
+
+We advise setting up a virtual environment through `miniconda`, a lightweight version of `anaconda` without any bloatware or IDE's. Follow the instructions on https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html for installing.
+
+Once installed, initialize conda in your terminal by running the following command. Then, run the same command in root as well, so python can be run from root (necessary for `gem` scripts).
+```
+$ conda init
+```
+
+Now, create a new environment for running scripts with the following command.
+```
+$ conda create -n cmsme0_env python=3.11 numpy matplotlib scipy pandas paramiko colorama awkward tqdm uproot lxml xmltodict
+```
+This will create an environment called `cmsme0_env`, and install `python` version `3.11` (latest) along with some necessary packages. If `conda` fails to make the environment, try a different python version; `3.10` or `3.9`.
+
+To activate this environment, just run
+```
+$ conda activate cmsme0_env
+```
+While the environment is active, you can install any additional packages you may need.
+
+To deactivate, run
+```
+$ conda deactivate
+```
+If you want to set up your terminal to activate this environment by default (recommended), continue with the following instructions:
+
+Make sure `conda` does not activate the `base` environment.
+```
+conda config --set auto_activate_base false
+```
+Now, we must add a line to the terminal startup configuration file. For linux, this is the `bashrc` file, located in your home directory. You can edit this with a file editing program of your choice, but here we will use `vim ~/.bashrc`
+
+Add the activation command, `conda activate cmsme0_env` to the end of this file. Additonally, to activate the environment by default in root, add the same line with `sudo vim /root/.bashrc`
+
+Restart your terminal, and you are ready to use an up-to-date `python` version with `miniconda`.
 
 ## Procedure for Channel Trimming
 

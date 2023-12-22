@@ -3,8 +3,10 @@ import time
 import argparse
 import numpy as np
 import json
+import csv
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import *
+from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 
 # slot to OH mapping
 #   SLOT    OH      GBT     VFAT
@@ -37,10 +39,9 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
         sys.exit()
 
-    geb_dict = {}
-    slot_name_dict = {}
-    vtrxp_dict = {}
-    pigtail_dict = {}
+    geb_dict         = {}
+    input_oh_dict    = {}
+    input_vtrxp_dict = {}
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
@@ -52,9 +53,10 @@ if __name__ == "__main__":
             continue
         slot = line.split()[0]
         slot_name = line.split()[1]
-        oh_sn = line.split()[2]
-        vtrx_sn = line.split()[3]
-        pigtail = float(line.split()[4])
+        geb_sn = line.split()[2]
+        oh_sn = line.split()[3]
+        vtrxp_sn = line.split()[4]
+        pigtail = float(line.split()[5])
         if oh_sn != str(NULL):
             if test_type in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
@@ -72,9 +74,8 @@ if __name__ == "__main__":
                 print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
                 sys.exit()
             geb_dict[slot] = oh_sn
-            slot_name_dict[slot] = slot_name
-            vtrxp_dict[slot] = vtrx_sn
-            pigtail_dict[slot] = pigtail
+            input_oh_dict[slot] = {'GEB_SERIAL_NUMBER':geb_sn, 'GEB_SLOT':slot_name, 'VTRXPLUS_SERIAL_NUMBER':vtrxp_sn}
+            input_vtrxp_dict[slot] = {'OH_SERIAL_NUMBER':oh_sn,'PIGTAIL_LENGTH':pigtail}
     input_file.close()
 
     if len(geb_dict) == 0:
@@ -119,9 +120,15 @@ if __name__ == "__main__":
     try:
         os.makedirs(dataDir) # create directory for ohid under test
     except FileExistsError: # skip if directory already exists
-        pass
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%dataDir + Colors.ENDC)
+        if dir_overwrite.lower() in ['y','yes']:
+            pass  
+        else:
+            sys.exit()
 
     log_fn = dataDir + "/me0_oh_tests_log.txt"
+    chip_id_fn = dataDir + "/me0_oh_chip_id_list.txt"
+    chip_id_file = open(chip_id_fn, "w")
     logfile = open(log_fn, "w")
     xml_results_fn = dataDir + "/me0_oh_database_results.json"
     vtrxp_results_fn = dataDir + "/me0_vtrxp_database_results.json"
@@ -133,14 +140,13 @@ if __name__ == "__main__":
     # initialize results dictionaries indexed by oh serial #
     for slot,oh_sn in geb_dict.items():
         xml_results[oh_sn] = {}
-        xml_results[oh_sn]["VTRXP_SERIAL_NUMBER"] = vtrxp_dict[slot]
-        vtrxp_results[vtrxp_dict[slot]] = {}
-        vtrxp_results[vtrxp_dict[slot]]['OH_SERIAL_NUMBER'] = oh_sn
-        vtrxp_results[vtrxp_dict[slot]]["PIGTAIL_LENGTH"] = pigtail_dict[slot]
-
+        xml_results[oh_sn].update(input_oh_dict[slot])
         xml_results[oh_sn]["TEST_TYPE"] = test_type
-        xml_results[oh_sn]["GEB_SLOT"] = slot_name_dict[slot]
         xml_results[oh_sn]['VFAT_SLOTS'] = str(geb_oh_map[slot]['VFAT'])
+        
+        vtrxp_results[input_oh_dict[slot]['VTRXPLUS_SERIAL_NUMBER']] = {}
+        vtrxp_results[input_oh_dict[slot]['VTRXPLUS_SERIAL_NUMBER']].update(input_vtrxp_dict[slot])
+
         full_results[oh_sn] = xml_results[oh_sn].copy()
 
     debug = True if test_type=="debug" else False
@@ -164,7 +170,7 @@ if __name__ == "__main__":
     # Step 1 - Run init_frontend
     print (Colors.BLUE + "Step 1: Initializing\n" + Colors.ENDC)
     logfile.write("Step 1: Initializing\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         logfile.close()
@@ -224,21 +230,22 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Initialization %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Initialization %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 1: Initialization Complete\n" + Colors.ENDC)
     logfile.write("\nStep 1: Initialization Complete\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 2 - Check lpGBT status
     print (Colors.BLUE + "Step 2: Checking lpGBT Registers\n" + Colors.ENDC)
     logfile.write("Step 2: Checking lpGBT Registers\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         read_next = False
+        chip_id_list = []
         for slot,oh_sn in geb_dict.items():
             oh_select = geb_oh_map[slot]["OH"]
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -248,15 +255,21 @@ if __name__ == "__main__":
                 list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_status_data/status_%s*.txt"%gbt_type)
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/status_OH%s_%s.txt"%(latest_file, dataDir, oh_sn, gbt_type))
+                gbt_type = 'M' if gbt%2==0 else 'S'
                 with open('out.txt','r') as out_file:
                     for line in out_file.readlines():
                         if 'CHIP ID:' in line:
                             read_next = True
                         elif read_next:
-                            gbt_type = 'M' if gbt%2==0 else 'S'
                             chip_id = line.split()[0]
                             xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = full_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type] = chip_id
+                            chip_id_list.append(int(chip_id,16))
                             read_next = False
+                try:
+                    chip_id_file.write("%s    %s    %s\n"%(oh_sn, gbt_type, xml_results[oh_sn]['LPGBT_%s_CHIP_ID'%gbt_type]))
+                except:
+                    chip_id_file.write("%s    %s    %d\n"%(oh_sn, gbt_type, -9999))
+        chip_id_file.close()
 
         config_files = {}
         for slot,oh_ver_list in oh_ver_dict.items():
@@ -309,7 +322,41 @@ if __name__ == "__main__":
 
                 status_file.close()
                 config_file.close()
-        
+        print('\nRetrieving lpGBT ADC Calibration Values')
+        logfile.write('\nRetrieving lpGBT ADC Calibration Values\n')
+
+        calib_active_fn = scripts_gem_dir + '/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv'
+        if not os.path.exists('/'.join(calib_active_fn.split('/')[:-1])):
+            os.mkdir('/'.join(calib_active_fn.split('/')[:-1]))
+        elif os.path.isfile(calib_active_fn):
+            os.system("rm %s"%calib_active_fn)
+        calib_db_active = []
+        calib_db = read_central_adc_calib_file()
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = {}
+            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = {}
+        if not calib_db:
+            print(Colors.RED + 'Failed to read calibration file' + Colors.ENDC)
+            logfile.write('Failed to read calibration file\n')
+        else:
+            # loop through large database file only once to save time
+            for chip_id,calib_data in calib_db.items():
+                # check for active chip id's
+                if chip_id in chip_id_list:
+                    calib_db_active.append({'CHIPID':'%X'%chip_id, **calib_data})
+                    for oh_sn in xml_results:
+                        # save main lpgbt calib data
+                        if xml_results[oh_sn]['LPGBT_M_CHIP_ID'] == '0x%08X'%chip_id:
+                            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'].update(calib_data)
+                        # save sub lpgbt calib data
+                        elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == '0x%08X'%chip_id:
+                            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'].update(calib_data)
+            # Save lpgbt adc calibration to smaller file to speed up runtime
+            with open(calib_active_fn,'w') as calib_file:
+                writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
+                writer.writeheader()
+                writer.writerows(calib_db_active)
+        # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
                 gbt_type = 'M' if gbt%2==0 else 'S'
@@ -320,7 +367,21 @@ if __name__ == "__main__":
                         test_failed = True
                     gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                    
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+                if test_type in ['pre_series', 'production', 'acceptance']:
+                    if not xml_results[oh_sn]['LPGBT_%s_ADC_CALIB'%gbt_type]:
+                        if not test_failed:
+                            print(Colors.RED + "\nStep 2: Checking lpGBT Status Failed" + Colors.ENDC)
+                            logfile.write("\nStep 2: Checking lpGBT Status Failed\n")
+                            test_failed = True
+                        gbt_type = 'BOSS' if gbt_type == 'M' else 'SUB'
+                        print(Colors.RED + 'Missing ADC Calibration data for OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
+                        logfile.write('Missing ADC Calibration data for OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+        # Convert calib results to string
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_M_ADC_CALIB'])
+            xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_S_ADC_CALIB'])
+        
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -346,20 +407,20 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Checking lpGBT Status %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Checking lpGBT Status %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
     
-    time.sleep(1)
+    time.sleep(0.1)
     print(Colors.GREEN + "\nStep 2: Checking lpGBT Status Complete\n" + Colors.ENDC)
     logfile.write("\nStep 2: Checking lpGBT Status Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
     # Step 3 - Downlink eye diagrams
     print(Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink Eye Diagram\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -414,19 +475,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping downlink eye diagram for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
     logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 4 - Downlink Optical BERT
     print (Colors.BLUE + "Step 4: Downlink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 4: Downlink Optical BERT\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -436,7 +497,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
             print (Colors.BLUE + "Running Downlink Optical BERT for OH %s BOSS lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Downlink Optical BERT for OH %s BOSS lpGBTs\n\n"%oh_select)
@@ -476,7 +537,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
         for slot,oh_sn in geb_dict.items():
             if xml_results[oh_sn]['LPGBT_M_DOWNLINK_ERROR_COUNT']:
@@ -511,19 +572,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Downlink Optical BERT for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Downlink Optical BERT for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 4: Downlink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 4: Downlink Optical BERT Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 5 - Uplink Optical BERT
     print (Colors.BLUE + "Step 5: Uplink Optical BERT\n" + Colors.ENDC)
     logfile.write("Step 5: Uplink Optical BERT\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -533,7 +594,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 -lt >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
             print(Colors.BLUE + "Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n"%oh_select + Colors.ENDC)
             logfile.write("Running Uplink Optical BERT for OH %s, BOSS and Sub lpGBTs\n\n"%oh_select)
@@ -575,7 +636,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
             logfile = open(log_fn,"a")
-            time.sleep(1)
+            time.sleep(0.1)
 
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -613,116 +674,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Uplink Optical BERT for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Uplink Optical BERT for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 5: Uplink Optical BERT Complete\n" + Colors.ENDC)
     logfile.write("\nStep 5: Uplink Optical BERT Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 6 - VFAT Reset
-    print (Colors.BLUE + "Step 6: VFAT Reset\n" + Colors.ENDC)
-    logfile.write("Step 6: VFAT Reset\n\n")
-    time.sleep(1)
-
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
-            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
-            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
-            logfile.close()
-            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
-            logfile = open(log_fn,"a")
-            time.sleep(1)
-            
-            print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
-            logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
-            logfile.close()
-            os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
-            os.system("python3 clean_log.py -i %s"%log_fn)
-
-            read_next = False
-            with open(log_fn,"r") as logfile:
-                for line in logfile.readlines():
-                    if read_next:
-                        if line=='\n':
-                            read_next = False
-                            continue
-                        vfat = int(line.split()[1].removesuffix(':'))
-                        for slot,oh_sn in geb_dict.items():
-                            if vfat in geb_oh_map[slot]['VFAT']:
-                                break
-                        status_str = line.split(':')[1]
-                        if "VFAT RESET from RUN mode to SLEEP mode" in status_str:
-                            if 'VFAT_RESETS' in xml_results[oh_sn]:
-                                xml_results[oh_sn]['VFAT_RESETS'] += [1]
-                            else:
-                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [1]
-                        else:
-                            if 'VFAT_RESETS' in xml_results[oh_sn]:
-                                xml_results[oh_sn]['VFAT_RESETS'] += [0]
-                            else:
-                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [0]
-                    elif 'VFAT Reset Results' in line:
-                        read_next = True
-
-        logfile = open(log_fn,"a")    
-        print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
-        logfile.write("Unconfiguring all VFATs\n\n")
-        logfile.close()
-        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
-        logfile = open(log_fn,'a')
-
-        for slot,oh_sn in geb_dict.items():
-            for i,result in enumerate(xml_results[oh_sn]['VFAT_RESETS']):
-                if not result:
-                    if not test_failed:
-                        print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 8: VFAT Reset Failed\n\n")
-                        test_failed = True
-                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-        for oh_sn in xml_results:
-            xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
-        while test_failed:
-            end_tests = input('\nWould you like to exit testing? >> ')
-            if end_tests.lower() in ['y','yes']:
-                print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
-                logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
-                print('\nLogging full results at directory: %s\n'%full_results_fn)
-                logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
-                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
-                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
-                vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
-                with open(xml_results_fn,"w") as xml_results_file:
-                    json.dump(xml_results,xml_results_file,indent=2)
-                with open(full_results_fn,'w') as full_results_file:
-                    json.dump(full_results,full_results_file,indent=2)
-                with open(vtrxp_results_fn,'w') as vtrxp_results_file:
-                    json.dump(vtrxp_results,vtrxp_results_file,indent=2)
-                logfile.close()
-                sys.exit()
-            elif end_tests.lower() in ['n','no']:
-                test_failed = False
-            else:
-                print('Valid entries: y, yes, n, no')
-    else:
-        print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%test_type.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping VFAT Reset for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
-
-    print (Colors.GREEN + "\nStep 6: VFAT Reset Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 6: VFAT Reset Complete\n\n")
-
-    time.sleep(1)
-    print ("#####################################################################################################################################\n")
-    logfile.write("#####################################################################################################################################\n\n")
-
-    # Step 7 - DAQ Phase Scan
-    print (Colors.BLUE + "Step 7: DAQ Phase Scan\n" + Colors.ENDC)
-    logfile.write("Step 7: DAQ Phase Scan\n\n")
-    time.sleep(1)
+    # Step 6 - DAQ Phase Scan
+    print (Colors.BLUE + "Step 6: DAQ Phase Scan\n" + Colors.ENDC)
+    logfile.write("Step 6: DAQ Phase Scan\n\n")
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -737,8 +701,8 @@ if __name__ == "__main__":
                 for line in ps_file.readlines():
                     if read_next:
                         vfat = int(line.split()[0].replace("VFAT","").replace(":",""))
-                        phase = int(line.split()[2].replace('(center=','').removesuffix(','))
-                        width = int(line.split()[3].replace('width=','').removesuffix(')'))
+                        phase = int(line.split()[2].replace('(center=','').replace(',',''))
+                        width = int(line.split()[3].replace('width=','').replace(')',''))
                         status =  1 if line.split()[4] == "GOOD" else 0
                         for slot,oh_sn in geb_dict.items():
                             if vfat in geb_oh_map[slot]["VFAT"]:
@@ -793,21 +757,21 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Phase Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Phase Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
-    print (Colors.GREEN + "\nStep 7: DAQ Phase Scan Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 7: DAQ Phase Scan Complete\n\n")
+    print (Colors.GREEN + "\nStep 6: DAQ Phase Scan Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 6: DAQ Phase Scan Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
-    # Step 8 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
-    # print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
-    # logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
-    print (Colors.BLUE + "Step 8: S-bit Phase Scan, Bitslipping, Mapping\n" + Colors.ENDC)
-    logfile.write("Step 8: S-bit Phase Scan, Bitslipping, Mapping\n\n")
-    time.sleep(1)
+    # Step 7 - S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping
+    # print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping,  Mapping, Cluster Mapping\n" + Colors.ENDC)
+    # logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping\n\n")
+    print (Colors.BLUE + "Step 7: S-bit Phase Scan, Bitslipping, Mapping\n" + Colors.ENDC)
+    logfile.write("Step 7: S-bit Phase Scan, Bitslipping, Mapping\n\n")
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -825,9 +789,9 @@ if __name__ == "__main__":
                         if 'VFAT' in line:
                             vfat = int(line.split()[1])
                         elif 'ELINK' in line:
-                            elink = int(line.split()[1].removesuffix(':'))
-                            phase = int(line.split()[3].replace('(center=','').removesuffix(','))
-                            width = int(line.split()[4].replace('width=','').removesuffix(')'))
+                            elink = int(line.split()[1].replace(':',''))
+                            phase = int(line.split()[3].replace('(center=','').replace(',',''))
+                            width = int(line.split()[4].replace('width=','').replace(')',''))
                             status = 1 if line.split()[5] == "GOOD" else 0
 
                             for slot,oh_sn in geb_dict.items():
@@ -886,7 +850,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Phase Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Phase Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -902,7 +866,7 @@ if __name__ == "__main__":
                 for line in bitslip_file.readlines():
                     if read_next:
                         if "VFAT" in line:
-                            vfat = int(line.split()[1].replace(":","").removesuffix(','))
+                            vfat = int(line.split()[1].replace(":","").replace(',',''))
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
                                     i = geb_oh_map[slot]["VFAT"].index(vfat)
@@ -968,7 +932,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Bitslip for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Bitslip for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -995,7 +959,7 @@ if __name__ == "__main__":
                         read_next = True
                     elif read_next:
                         if 'Channel' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel = int(line.split()[5])
                             if vfat in bad_channels:
                                 bad_channels[vfat]+=[channel]
@@ -1003,7 +967,7 @@ if __name__ == "__main__":
                                 bad_channels[vfat]={}
                                 bad_channels[vfat]=[channel]
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             elink = int(line.split()[3])
                             if vfat in rotated_elinks:
                                 rotated_elinks[vfat]+=[elink]
@@ -1078,7 +1042,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     # if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
     #     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1153,22 +1117,119 @@ if __name__ == "__main__":
     # else:
     #     print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
     #     logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%test_type.replace("_","-"))
-    #     time.sleep(1)
+    #     time.sleep(0.1)
 
-    # print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
+    # print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
+    # logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
 
-    print (Colors.GREEN + "\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 8: S-bit Phase Scan, Bitslipping, Mapping Complete\n\n")
+    print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
+    print ("#####################################################################################################################################\n")
+    logfile.write("#####################################################################################################################################\n\n")
+
+    # Step 8 - VFAT Reset
+    print (Colors.BLUE + "Step 8: VFAT Reset\n" + Colors.ENDC)
+    logfile.write("Step 8: VFAT Reset\n\n")
+    time.sleep(0.1)
+
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+        for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
+            print (Colors.BLUE + "Configuring all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Configuring all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 1 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+            logfile = open(log_fn,"a")
+            time.sleep(0.1)
+            
+            print (Colors.BLUE + "Resetting all VFATs for OH %d\n"%oh_select + Colors.ENDC)
+            logfile.write("Resetting all VFATs for OH %d\n\n"%oh_select)
+            logfile.close()
+            os.system("python3 me0_vfat_reset.py -s backend -q ME0 -o %d -v %s >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])),log_fn))
+            os.system("python3 clean_log.py -i %s"%log_fn)
+
+            read_next = False
+            with open(log_fn,"r") as logfile:
+                for line in logfile.readlines():
+                    if read_next:
+                        if line=='\n':
+                            read_next = False
+                            continue
+                        vfat = int(line.split()[1].replace(':',''))
+                        for slot,oh_sn in geb_dict.items():
+                            if vfat in geb_oh_map[slot]['VFAT']:
+                                break
+                        status_str = line.split(':')[1]
+                        if "VFAT RESET from RUN mode to SLEEP mode" in status_str:
+                            if 'VFAT_RESETS' in xml_results[oh_sn]:
+                                xml_results[oh_sn]['VFAT_RESETS'] += [1]
+                            else:
+                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [1]
+                        else:
+                            if 'VFAT_RESETS' in xml_results[oh_sn]:
+                                xml_results[oh_sn]['VFAT_RESETS'] += [0]
+                            else:
+                                xml_results[oh_sn]['VFAT_RESETS'] = full_results[oh_sn]['VFAT_RESETS'] = [0]
+                    elif 'VFAT Reset Results' in line:
+                        read_next = True
+
+        logfile = open(log_fn,"a")    
+        print (Colors.BLUE + "Unconfiguring all VFATs\n" + Colors.ENDC)
+        logfile.write("Unconfiguring all VFATs\n\n")
+        logfile.close()
+        os.system("python3 vfat_config.py -s backend -q ME0 -o %d -v %s -c 0 >> %s"%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"])), log_fn))
+        logfile = open(log_fn,'a')
+
+        for slot,oh_sn in geb_dict.items():
+            for i,result in enumerate(xml_results[oh_sn]['VFAT_RESETS']):
+                if not result:
+                    if not test_failed:
+                        print (Colors.RED + "\nStep 8: VFAT Reset Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 8: VFAT Reset Failed\n\n")
+                        test_failed = True
+                    print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
+                    logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
+        for oh_sn in xml_results:
+            xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing? >> ')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
+                logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
+                print('\nLogging full results at directory: %s\n'%full_results_fn)
+                logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
+                xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
+                full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
+                vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
+                with open(xml_results_fn,"w") as xml_results_file:
+                    json.dump(xml_results,xml_results_file,indent=2)
+                with open(full_results_fn,'w') as full_results_file:
+                    json.dump(full_results,full_results_file,indent=2)
+                with open(vtrxp_results_fn,'w') as vtrxp_results_file:
+                    json.dump(vtrxp_results,vtrxp_results_file,indent=2)
+                logfile.close()
+                sys.exit()
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
+    else:
+        print(Colors.BLUE + "Skipping VFAT Reset for %s tests"%test_type.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping VFAT Reset for %s tests\n"%test_type.replace("_","-"))
+        time.sleep(0.1)
+
+    print (Colors.GREEN + "\nStep 8: VFAT Reset Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 8: VFAT Reset Complete\n\n")
+
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 9 - Slow Control Error Rate Test
     print (Colors.BLUE + "Step 9: Slow Control Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 9: Slow Control Error Rate Test\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1190,19 +1251,19 @@ if __name__ == "__main__":
                     if read_next:
                         logfile.write(line)
                         if 'link is' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             link_good = 1 if line.split()[-1] == 'GOOD' else 0
                         if 'sync errors' in line:
                             sync_errors = int(line.split()[-1])
                         elif 'bus errors' in line:
-                            bus_errors = int(line.split()[6].removesuffix(','))
+                            bus_errors = int(line.split()[6].replace(',',''))
                         elif "mismatch" in line:
-                            mismatch_errors = int(line.split()[7].removesuffix(','))
+                            mismatch_errors = int(line.split()[7].replace(',',''))
                         elif 'CRC errors' in line:
-                            crc_errors = float(line.split()[10].removesuffix(','))
+                            crc_errors = float(line.split()[10].replace(',',''))
                             crc_errors = int(np.ceil(crc_errors)) if (crc_errors > 0 and crc_errors < 1) else int(crc_errors)
                         elif 'Timeout errors' in line:
-                            timeout_errors = float(line.split()[10].removesuffix(','))
+                            timeout_errors = float(line.split()[10].replace(',',''))
                             timeout_errors = int(np.ceil(timeout_errors)) if (timeout_errors > 0 and timeout_errors < 1) else int(timeout_errors)
                             for slot,oh_sn in geb_dict.items():
                                 if vfat in geb_oh_map[slot]["VFAT"]:
@@ -1264,19 +1325,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping Slow Control Error Rate Test for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping Slow Control Error Rate Test for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 9: Slow Control Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 9: Slow Control Error Rate Test Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 10 - DAQ Error Rate Test
     print (Colors.BLUE + "Step 10: DAQ Error Rate Test\n" + Colors.ENDC)
     logfile.write("Step 10: DAQ Error Rate Test\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1297,7 +1358,7 @@ if __name__ == "__main__":
                     if read_next:
                         logfile.write(line)
                         if 'link is' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             link_good = 1 if line.split()[-1]=='GOOD' else 0
                             daq_l1a_counter_mismatch = 0 # reset mismatch flag
                         elif 'sync errors' in line:
@@ -1366,19 +1427,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Error Rate Test for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Error Rate Test for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 10: DAQ Error Rate Test Complete\n" + Colors.ENDC)
     logfile.write("\nStep 10: DAQ Error Rate Test Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 11 - ADC Measurements
     print (Colors.BLUE + "Step 11: ADC Measurements\n" + Colors.ENDC)
     logfile.write("Step 11: ADC Measurements\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1390,7 +1451,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping VFAT Configuration for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VFAT Configuration for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1455,7 +1516,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping ADC Calibration Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping ADC Calibration Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1547,10 +1608,10 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping lpGBT Voltage Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping lpGBT Voltage Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for slot,oh_sn in geb_dict.items():
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
             print (Colors.BLUE + "\nRunning RSSI Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running RSSI Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
@@ -1572,18 +1633,18 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/rssi_OH%s.pdf"%(latest_file, dataDir, oh_sn))
             if rssi != []:
-                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = np.mean(rssi)
+                vtrxp_results[vtrxp_sn]['RSSI'] = np.mean(rssi)
             else:
-                vtrxp_results[vtrxp_dict[slot]]['RSSI'] = NULL
-        for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['RSSI'] == NULL:
+                vtrxp_results[vtrxp_sn]['RSSI'] = NULL
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
+            if vtrxp_results[vtrxp_sn]['RSSI'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
                     test_failed = True
                 print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
-            elif vtrxp_results[vtrxp_dict[slot]]['RSSI'] < 250:
+            elif vtrxp_results[vtrxp_sn]['RSSI'] < 250:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: RSSI Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: RSSI Scan Failed\n")
@@ -1615,100 +1676,246 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping RSSI Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping RSSI Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
-            print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan for slot %s\n"%slot + Colors.ENDC)
-            logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
+
             oh_select = geb_oh_map[slot]["OH"]
             gbt = geb_oh_map[slot]["GBT"][0]
-            logfile.close()
-            os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
-            logfile = open(log_fn,'a')
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
-            latest_file = max(list_of_files,key=os.path.getctime)
-            os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
-            full_results[oh_sn]["ASENSE_SCAN"]={}
-            with open(latest_file) as asense_file:
-                line = asense_file.readline().split()
-                asense = {}
-                asense["_".join(line[3:5]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                asense["_".join(line[7:9]).removeprefix('(').removesuffix(')')]=[]
-                asense["_".join(line[11:13]).removeprefix('(PG').removesuffix(')').replace('V','').replace('.','V')] = []
-                asense["_".join(line[15:17]).removeprefix('(').removesuffix(')')]=[]
-                for line in asense_file.readlines():
-                    for key,value in zip(asense,line.split()[1:]):
-                        if value != str(NULL):
-                            asense[key]+=[float(value)]
-            for key,values in asense.items():
-                if values:
-                    full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
-                else:
-                    full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
-            
-            if int(slot)%2==0:
-                prev_slot = int(slot) - 1
-                if str(prev_slot) in geb_dict:
-                    oh_sn_prev = geb_dict[str(prev_slot)]
-                    full_results[oh_sn]['ASENSE_SCAN'] = full_results[oh_sn_prev]['ASENSE_SCAN'] = {**full_results[oh_sn]['ASENSE_SCAN'],**full_results[oh_sn_prev]['ASENSE_SCAN']}
-                else:
-                    geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
-                    layer = geb_oh_map[slot]['OH']
-                    print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
-                    logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
-            else:
-                next_slot = int(slot) + 1
-                if str(next_slot) not in geb_dict:
-                    geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
-                    layer = geb_oh_map[slot]['OH']
-                    print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
-                    logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
 
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
-            if len(list_of_files)>0:
-                latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/pg_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
-            if len(list_of_files)>0:
-                latest_file = max(list_of_files, key=os.path.getctime)
-                os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+            # get GEB version
+            geb_version = xml_results[oh_sn]['GEB_SERIAL_NUMBER'].split('-')[1] # second element of geb sn stores version
+
+            # GEB Version 1
+            if geb_version == 'v1':
+                print (Colors.BLUE + "\nRunning GEB Current and Temperature Scan for slot %s\n"%slot + Colors.ENDC)
+                logfile.write("Running GEB Current and Temperature Scan for slot %s\n\n"%slot)
+                logfile.close()
+                os.system("python3 me0_asense_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s"%(oh_select,gbt,log_fn))
+                logfile = open(log_fn,'a')
+                list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d*.txt"%gbt)
+                latest_file = max(list_of_files,key=os.path.getctime)
+                os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
+                full_results[oh_sn]["ASENSE_SCAN"]={}
+                with open(latest_file) as asense_file:
+                    line = asense_file.readline().split()
+                    asense = {}
+                    asense["_".join(line[3:5]).replace('(PG','').replace(')','').replace('V','').replace('.','V')] = []
+                    asense["_".join(line[7:9]).replace('(','').replace(')','')]=[]
+                    asense["_".join(line[11:13]).replace('(PG','').replace(')','').replace('V','').replace('.','V')] = []
+                    asense["_".join(line[15:17]).replace('(','').replace(')','')]=[]
+                    for line in asense_file.readlines():
+                        for key,value in zip(asense,line.split()[1:]):
+                            if value != str(NULL):
+                                asense[key]+=[float(value)]
+                for key,values in asense.items():
+                    if values:
+                        full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
+                    else:
+                        full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
+                
+                '''
+                if int(slot)%2==0:
+                    prev_slot = int(slot) - 1
+                    if str(prev_slot) in geb_dict:
+                        oh_sn_prev = geb_dict[str(prev_slot)]
+                        full_results[oh_sn]['ASENSE_SCAN'] = full_results[oh_sn_prev]['ASENSE_SCAN'] = {**full_results[oh_sn]['ASENSE_SCAN'],**full_results[oh_sn_prev]['ASENSE_SCAN']}
+                    else:
+                        geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
+                        layer = geb_oh_map[slot]['OH']
+                        print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
+                        logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
+                else:
+                    next_slot = int(slot) + 1
+                    if str(next_slot) not in geb_dict:
+                        geb_slot = full_results[oh_sn]['GEB_SLOT'].split('_')[0]
+                        layer = geb_oh_map[slot]['OH']
+                        print(Colors.YELLOW + 'WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB'%(layer,geb_slot) + Colors.ENDC)
+                        logfile.write('WARNING: Only 1 OH board installed on LAYER %d %s module\nNot all ASENSE results could be stored for this GEB\n'%(layer,geb_slot))
+                '''
+                
+                list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_pg_current*.pdf"%gbt)
+                if len(list_of_files)>0:
+                    latest_file = max(list_of_files, key=os.path.getctime)
+                    os.system("cp %s %s/pg_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_asense_data/*GBT%d_rt_voltage*.pdf"%gbt)
+                if len(list_of_files)>0:
+                    latest_file = max(list_of_files, key=os.path.getctime)
+                    os.system("cp %s %s/rt_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+        
+            # GEB version 2
+            elif geb_version == 'v2':
+                # run dcdc monitor
+                logfile.close()
+                os.system('python3 me0_dcdc_voltage_current_monitor.py -s backend -q ME0 -o %d -g %d -n 10 >> %s'%(oh_select,gbt,log_fn))
+                logfile = open(log_fn,'a')
+
+                list_of_files = glob.glob(scripts_gem_dir + '/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*.txt')
+                latest_file = max(list_of_files,key=os.path.getctime)
+                os.system('cp %s %s/geb_current_OH%s.txt'%(latest_file,dataDir,oh_sn))
+                full_results[oh_sn]['ASENSE_SCAN'] = {}
+                with open(latest_file) as asense_file:
+                    asense = {}
+                    line = asense_file.readline().split()
+                    if gbt%4==0:
+                        asense['_'.join(line[2:4])] = [] # V_IN_voltage
+                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2D_voltage
+                        asense['_'.join(line[8:10]).replace('1.2V','1V2')] = [] # 1V2D_current
+                        for line in asense_file.readlines():
+                            for key,val in zip(asense,[line.split()[i] for i in [1,2,3]]):
+                                if val != str(NULL):
+                                    asense[key].append(float(val))
+                    elif gbt%4==2:
+                        asense['_'.join(line[2:4]).replace('1.2V','1V2')] = [] # 1V2A_voltage
+                        asense['_'.join(line[5:7]).replace('1.2V','1V2')] = [] # 1V2A_current
+                        for line in asense_file.readlines():
+                            for key,val in zip(asense,[line.split()[i] for i in [1,2]]):
+                                if val != str(NULL):
+                                    asense[key].append(float(val))
+                    for key,values in asense.items():
+                        if values:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
+                        else:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
+
+                if gbt%4==0:
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_Vin_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/Vin_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2D_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2D_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2D_current*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2D_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                elif gbt%4==2:
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2A_voltage*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2A_voltage_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_dcdc_voltage_current_data/*GBT%d_1V2A_current*.pdf"%gbt)
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/1V2A_current_OH%s.pdf"%(latest_file, dataDir,oh_sn))
+
+                # run temp monitor
+                logfile.close()
+                for device in ["GEB_1V2D", "GEB_1V2A", "GEB_2V5"]:
+                    if device == "GEB_1V2D" and gbt%4!=0:
+                        continue
+                    if device in ["GEB_1V2A", "GEB_2V5"] and gbt%4==0:
+                        continue
+                    os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t %s -n 10 >> %s"%(oh_select,gbt,device,log_fn))    
+                    logfile = open(log_fn,'a')
+                    list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_%s*.txt'%(gbt,device))
+                    latest_file = max(list_of_files,key=os.path.getctime)
+                    os.system('cp %s %s/%s_temperature_scan_OH%s.txt'%(latest_file,dataDir,device,oh_sn))
+                    with open(latest_file) as geb_temp_file:
+                        keys = geb_temp_file.readline().split()[2:7:2]
+                        geb_temperatures = {}
+                        for key in keys:
+                            if key != "Temperature":
+                                continue
+                            geb_temperatures[device+"_"+key]=[]
+                        for line in geb_temp_file.readlines():
+                            geb_temperatures[device+"_Temperature"] += [float(line.split()[3])]
+                    for key,values in geb_temperatures.items():
+                        if values:
+                            full_results[oh_sn]["ASENSE_SCAN"][key]=np.mean(values)
+                        else:
+                           full_results[oh_sn]["ASENSE_SCAN"][key]=NULL
+                    list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_%s*.pdf"%(gbt,device))
+                    if len(list_of_files)>0:
+                        latest_file = max(list_of_files, key=os.path.getctime)
+                        os.system("cp %s %s/%s_temp_OH%s.pdf"%(latest_file,dataDir,device,oh_sn))
+                
         for oh_sn in full_results:
             # Convert to temperature but pass missing value keys
             V_to_T = lambda v: 115*v - 22 if v!=NULL else v
             try:
+                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_voltage']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_1V2D_VOLTAGE'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_voltage']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_voltage']
+            except KeyError:
+                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = NULL
+            try:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
-                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2A_current']
+            except KeyError:
                 xml_results[oh_sn]['DCDC_1V2A_CURRENT'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['2V5_current']
             except KeyError:
                 xml_results[oh_sn]['DCDC_2V5_CURRENT'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_1V2D_Temperature']
             except KeyError:
-                xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
-                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
+                try:
+                    xml_results[oh_sn]['DCDC_1V2D_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt3_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_1V2D_TEMP'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+                xml_results[oh_sn]['DCDC_1V2A_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_1V2A_Temperature']
             except KeyError:
-                xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
+                try:
+                    xml_results[oh_sn]['DCDC_1V2A_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt4_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_1V2A_TEMP'] = NULL
+            try:
+                xml_results[oh_sn]['DCDC_2V5_TEMP'] = full_results[oh_sn]["ASENSE_SCAN"]['GEB_2V5_Temperature']
+            except KeyError:
+                try:
+                    xml_results[oh_sn]['DCDC_2V5_TEMP'] = V_to_T(full_results[oh_sn]["ASENSE_SCAN"]['Rt2_voltage'])
+                except KeyError:
+                    xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
-        asense_ranges = {'DCDC_1V2D_CURRENT':3,'DCDC_1V2A_CURRENT':3,'DCDC_2V5_CURRENT':0.5,'DCDC_2V5_TEMP':35,'DCDC_1V2D_TEMP':35,'DCDC_1V2A_TEMP':35}
+        asense_ranges = {'DCDC_Vin_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
                     if xml_results[oh_sn][key] == NULL:
-                        if not test_failed:
-                            print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
-                            logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
-                            test_failed = True
-                        print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                        logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-                    elif xml_results[oh_sn][key] > limit:
+                        geb_version = xml_results[oh_sn]['GEB_SERIAL_NUMBER'].split('-')[1] # second element of geb sn stores version
+                        slot = -9999
+                        for slot_check,oh_sn_check in geb_dict.items():
+                            if oh_sn_check == oh_sn:
+                                slot = int(slot_check)
+                                break
+                        is_error = 0
+                        if geb_version == 'v1':
+                            if slot%2 == 1:
+                                if key in ["DCDC_2V5_CURRENT", "DCDC_2V5_TEMP"]:
+                                    is_error = 1
+                            else:
+                                if key in ["DCDC_1V2D_CURRENT", "DCDC_1V2A_CURRENT", "DCDC_1V2D_TEMP", "DCDC_1V2A_TEMP"]:
+                                    is_error = 1
+                        if geb_version == 'v2':
+                            if slot%2 == 1:
+                                if key in ["DCDC_Vin_VOLTAGE", "DCDC_1V2D_VOLTAGE", "DCDC_1V2D_CURRENT", "DCDC_1V2D_TEMP"]:
+                                    is_error = 1
+                            else:
+                                if key in ["DCDC_1V2A_VOLTAGE", "DCDC_1V2A_CURRENT", "DCDC_2V5_TEMP", "DCDC_1V2A_TEMP"]: 
+                                    is_error = 1
+                        if is_error:
+                            if not test_failed:
+                                print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
+                                logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
+                                test_failed = True
+                            print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
+                            logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                    elif xml_results[oh_sn][key] < limit[0] or xml_results[oh_sn][key] > limit[1]:
                         if not test_failed:
                             print (Colors.RED + "\nStep 11: GEB Current and Temperature Scan Failed" + Colors.ENDC)
                             logfile.write("\nStep 11: GEB Current and Temperature Scan Failed\n")
@@ -1743,7 +1950,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping GEB Current and Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping GEB Current and Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
@@ -1754,7 +1961,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t OH -n 10 >> %s"%(oh_select,gbt,log_fn))
             logfile = open(log_fn,'a')
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt"%gbt)
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_OH*.txt"%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/oh_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as temp_file:
@@ -1782,15 +1989,15 @@ if __name__ == "__main__":
                     print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: OH Temperature Scan Failed\n")
                     test_failed = True
-                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
+                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
             elif xml_results[oh_sn]['OH_TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: OH Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: OH Temperature Scan Failed\n")
                     test_failed = True
-                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1816,10 +2023,10 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping OH Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping OH Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
     
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
-        for slot,oh_sn in geb_dict.items():
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
             print (Colors.BLUE + "\nRunning VTRx+ Temperature Scan for slot %s\n"%slot + Colors.ENDC)
             logfile.write("Running VTRx+ Temperature Scan for slot %s\n\n"%slot)
             oh_select = geb_oh_map[slot]["OH"]
@@ -1827,7 +2034,7 @@ if __name__ == "__main__":
             logfile.close()
             os.system("python3 me0_temp_monitor.py -s backend -q ME0 -o %d -g %d -t VTRX -n 10 >> %s"%(oh_select,gbt,log_fn))
             logfile = open(log_fn,'a')
-            list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d*.txt'%gbt)
+            list_of_files = glob.glob('results/me0_lpgbt_data/temp_monitor_data/*GBT%d_temp_VTRX*.txt'%gbt)
             latest_file = max(list_of_files,key=os.path.getctime)
             os.system('cp %s %s/vtrx_temperature_scan_OH%s.txt'%(latest_file,dataDir,oh_sn))
             with open(latest_file) as vtrx_temp_file:
@@ -1844,25 +2051,25 @@ if __name__ == "__main__":
                 latest_file = max(list_of_files, key=os.path.getctime)
                 os.system("cp %s %s/vtrx+_temp_OH%s.pdf"%(latest_file, dataDir,oh_sn))
             if temperatures['Temperature']!=[]:
-                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = np.mean(temperatures['Temperature'])
+                vtrxp_results[vtrxp_sn]['TEMP'] = np.mean(temperatures['Temperature'])
             else:
-                vtrxp_results[vtrxp_dict[slot]]['TEMP'] = NULL
+                vtrxp_results[vtrxp_sn]['TEMP'] = NULL
         temperature_range = 45
-        for slot,oh_sn in geb_dict.items():
-            if vtrxp_results[vtrxp_dict[slot]]['TEMP'] == NULL:
+        for (slot,oh_sn),vtrxp_sn in zip(geb_dict.items(),vtrxp_results):
+            if vtrxp_results[vtrxp_sn]['TEMP'] == NULL:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
                     test_failed = True
-                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s\n'%(oh_sn,key))
-            elif vtrxp_results[vtrxp_dict[slot]]['TEMP'] > temperature_range:
+                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:MISSING_VALUE encountered at OH %s\n'%oh_sn)
+            elif vtrxp_results[vtrxp_sn]['TEMP'] > temperature_range:
                 if not test_failed:
                     print (Colors.RED + "\nStep 11: VTRx+ Temperature Scan Failed" + Colors.ENDC)
                     logfile.write("\nStep 11: VTRx+ Temperature Scan Failed\n")
                     test_failed = True
-                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,key) + Colors.ENDC)
-                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,key))
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1888,7 +2095,7 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping VTRx+ Temperature Scan for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping VTRx+ Temperature Scan for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         print (Colors.BLUE + "\nUnconfiguring all VFATs\n" + Colors.ENDC)
@@ -1901,14 +2108,14 @@ if __name__ == "__main__":
     print (Colors.GREEN + "\nStep 11: ADC Measurements Complete\n" + Colors.ENDC)
     logfile.write("\nStep 11: ADC Measurements Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 12 - DAQ SCurve 
     print (Colors.BLUE + "Step 12: DAQ SCurve\n" + Colors.ENDC)
     logfile.write("Step 12: DAQ SCurve\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -1921,7 +2128,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
 
             print (Colors.BLUE + "Plotting DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -1989,7 +2196,7 @@ if __name__ == "__main__":
             for result in full_results[oh_sn]['VFAT_DAQ_S_CURVE']:
                 xml_results[oh_sn]['VFAT_DAQ_S_CURVE_ENC'].append(result['ENC'])
                 xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS'].append(result['NUM_BAD_CHANNELS'])
-        for oh_sn in xml_results:
+        for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS']):
                 if result:
                     if not test_failed:
@@ -2026,19 +2233,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ SCurve for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ SCurve for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 12: DAQ SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 12: DAQ SCurve Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
     
     # Step 13 - DAQ Crosstalk
     print (Colors.BLUE + "Step 13: DAQ Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 13: DAQ Crosstalk\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2060,11 +2267,11 @@ if __name__ == "__main__":
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.removesuffix(','))
+                                channels_obs[i] = int(ch.replace(',',''))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
@@ -2101,7 +2308,7 @@ if __name__ == "__main__":
 
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_daq_crosstalk_results/*_data.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/daq_crosstalk_OH%d.pdf"%(latest_dir,oh_select, dataDir,oh_select))
@@ -2150,19 +2357,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping DAQ Crosstalk for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping DAQ Crosstalk for %s tests\n"%test_type.replace("_","-"))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 13: DAQ Crosstalk Complete\n" + Colors.ENDC)
     logfile.write("\nStep 13: DAQ Crosstalk Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 14 - S-bit SCurve
     print (Colors.BLUE + "Step 14: S-bit SCurve\n" + Colors.ENDC)
     logfile.write("Step 14: S-bit SCurve\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():    
@@ -2175,7 +2382,7 @@ if __name__ == "__main__":
             
             list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_scurve_results/*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
 
             print (Colors.BLUE + "Plotting S-bit SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2244,7 +2451,7 @@ if __name__ == "__main__":
             for result in full_results[oh_sn]['VFAT_SBIT_S_CURVE']:
                 xml_results[oh_sn]['VFAT_SBIT_S_CURVE_ENC'].append(result['ENC'])
                 xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS'].append(result['NUM_BAD_CHANNELS'])
-        for oh_sn in xml_results:
+        for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS']):
                 if result:
                     if not test_failed:
@@ -2281,21 +2488,21 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit SCurves for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit SCurves for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print (Colors.GREEN + "\nStep 14: S-bit SCurve Complete\n" + Colors.ENDC)
     logfile.write("\nStep 14: S-bit SCurve Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 15 - S-bit Crosstalk
     print (Colors.BLUE + "Step 15: S-bit Crosstalk\n" + Colors.ENDC)
     logfile.write("Step 15: S-bit Crosstalk\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
@@ -2315,11 +2522,11 @@ if __name__ == "__main__":
                         if 'No Cross Talk observed' in line:
                             no_crosstalk = True
                         elif 'VFAT' in line:
-                            vfat = int(line.split()[1].removesuffix(','))
+                            vfat = int(line.split()[1].replace(',',''))
                             channel_inj = int(line.split()[6])
                             channels_obs = line.split()[9:]
                             for i,ch in enumerate(channels_obs):
-                                channels_obs[i] = int(ch.removesuffix(','))
+                                channels_obs[i] = int(ch.replace(',',''))
                             if vfat in crosstalk:
                                 crosstalk[vfat][channel_inj]=channels_obs
                             else:
@@ -2356,7 +2563,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             if os.path.isdir(latest_dir):
                 os.system("cp %s/crosstalk_ME0_OH%d.pdf %s/sbit_crosstalk_OH%d.pdf"%(latest_dir, oh_select, dataDir, oh_select))
             else:
@@ -2404,19 +2611,19 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit crosstalk for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit crosstalk for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
     
     print (Colors.GREEN + "\nStep 15: S-bit Crosstalk Complete\n" + Colors.ENDC)
     logfile.write("\nStep 15: S-bit Crosstalk Complete\n\n")
     
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
     # Step 16 - S-bit Noise Rate
     print (Colors.BLUE + "Step 16: S-bit Noise Rate\n" + Colors.ENDC)
     logfile.write("Step 16: S-bit Noise Rate\n\n")
-    time.sleep(1)
+    time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
@@ -2436,7 +2643,7 @@ if __name__ == "__main__":
                     if vfat not in sbit_noise:
                         sbit_noise[vfat] = {}
                     if "all_elink" in sbit:
-                        elink = int(sbit.removeprefix("all_elink"))
+                        elink = int(sbit.split("all_elink")[1])
                         if fired == 0 or threshold==255:
                             # save the first threshold with no hits or max threshold if failed
                             if elink not in sbit_noise[vfat]:
@@ -2465,7 +2672,7 @@ if __name__ == "__main__":
             print (Colors.BLUE + "Plotting S-bit Noise Rate for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Plotting S-bit Noise Rate for OH %d all VFATs\n\n"%oh_select)
             os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-            latest_dir = latest_file.removesuffix(".txt")
+            latest_dir = latest_file.replace('.txt','')
             if os.path.isdir(latest_dir):
                 if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
                     os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
@@ -2479,7 +2686,7 @@ if __name__ == "__main__":
             xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = []
             for result in full_results[oh_sn]['VFAT_SBIT_NOISE_SCAN']:
                 xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] += [result['NUM_BAD_ELINKS']]
-        for oh_sn in xml_results:
+        for slot,oh_sn in geb_dict.items():
             for i,result in enumerate(xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS']):
                 if result:
                     if not test_failed:
@@ -2515,12 +2722,12 @@ if __name__ == "__main__":
     else:
         print(Colors.BLUE + "Skipping S-bit Noise Rate for %s tests"%test_type.replace("_"," ") + Colors.ENDC)
         logfile.write("Skipping S-bit Noise Rate for %s tests\n"%test_type.replace("_"," "))
-        time.sleep(1)
+        time.sleep(0.1)
 
     print(Colors.GREEN + "\nStep 16: S-bit Noise Rate Complete\n" + Colors.ENDC)
     logfile.write("\nStep 16: S-bit Noise Rate Complete\n\n")
 
-    time.sleep(1)
+    time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -2540,3 +2747,4 @@ if __name__ == "__main__":
 
     logfile.close()
     os.system("rm out.txt")
+    os.system("rm %s"%calib_active_fn)

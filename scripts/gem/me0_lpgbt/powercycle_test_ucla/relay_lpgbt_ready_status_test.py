@@ -2,7 +2,7 @@ import ethernet_relay
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 import gem.gem_utils as gem_utils
 from time import sleep
-import sys
+import sys, os
 import argparse
 
 def main(system, oh_select, gbt_list, relay_number_list, niter):
@@ -29,6 +29,10 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             rw_terminate()
         sleep (0.5)
     sleep(10)
+
+    # Configure lpGBTs
+    os.system("python3 init_frontend.py")
+    sleep(1)
 
     reg_list_boss = {}
     reg_list_sub = {}
@@ -110,9 +114,9 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             sleep(0.5)
         sleep(10)
 
-        # Link reset
-        gem_utils.gem_link_reset()
-        sleep(2)
+        # Configure lpGBTs
+        os.system("python3 init_frontend.py")
+        sleep(1)
 
         # Check lpGBT status
         # Boss
@@ -260,23 +264,23 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         if n_error_backend_ready_boss[gbt]==0:
             str_n_error_backend_ready_boss += Colors.GREEN
         else:
-            str_n_error_backend_ready_boss += Colors.YELLOW
+            str_n_error_backend_ready_boss += Colors.RED
         if n_error_uplink_fec_boss[gbt]==0:
             str_n_error_uplink_fec_boss += Colors.GREEN
         else:
-            str_n_error_uplink_fec_boss += Colors.YELLOW
+            str_n_error_uplink_fec_boss += Colors.RED
         if n_error_mode_boss[gbt]==0:
             str_n_error_mode_boss += Colors.GREEN
         else:
-            str_n_error_mode_boss += Colors.YELLOW
+            str_n_error_mode_boss += Colors.RED
         if n_error_pusm_ready_boss[gbt]==0:
             str_n_error_pusm_ready_boss += Colors.GREEN
         else:
-            str_n_error_pusm_ready_boss += Colors.YELLOW
+            str_n_error_pusm_ready_boss += Colors.RED
         if n_error_reg_list_boss[gbt]==0:
             str_n_error_reg_list_boss += Colors.GREEN
         else:
-            str_n_error_reg_list_boss += Colors.YELLOW
+            str_n_error_reg_list_boss += Colors.RED
         str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
         str_n_error_uplink_fec_boss += "  Number of Powercycles with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
         str_n_error_mode_boss += "  Number of Mode Errors: %d"%n_error_mode_boss[gbt]
@@ -304,23 +308,23 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         if n_error_backend_ready_sub[gbt]==0:
             str_n_error_backend_ready_sub += Colors.GREEN
         else:
-            str_n_error_backend_ready_sub += Colors.YELLOW
+            str_n_error_backend_ready_sub += Colors.RED
         if n_error_uplink_fec_sub[gbt]==0:
             str_n_error_uplink_fec_sub += Colors.GREEN
         else:
-            str_n_error_uplink_fec_sub += Colors.YELLOW
+            str_n_error_uplink_fec_sub += Colors.RED
         if n_error_mode_sub[gbt]==0:
             str_n_error_mode_sub += Colors.GREEN
         else:
-            str_n_error_mode_sub += Colors.YELLOW
+            str_n_error_mode_sub += Colors.RED
         if n_error_pusm_ready_sub[gbt]==0:
             str_n_error_pusm_ready_sub += Colors.GREEN
         else:
-            str_n_error_pusm_ready_sub += Colors.YELLOW
+            str_n_error_pusm_ready_sub += Colors.RED
         if n_error_reg_list_sub[gbt]==0:
             str_n_error_reg_list_sub += Colors.GREEN
         else:
-            str_n_error_reg_list_sub += Colors.YELLOW
+            str_n_error_reg_list_sub += Colors.RED
         str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
         str_n_error_uplink_fec_sub += "  Number of Powercycles with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
         str_n_error_mode_sub += "  Number of Mode Errors: %d"%n_error_mode_sub[gbt]
@@ -342,7 +346,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
 if __name__ == "__main__":
 
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="Checking Status of LpGBT Configuration for ME0 Optohybrid")
+    parser = argparse.ArgumentParser(description="Powercycle test for ME0 Optohybrid")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend")
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")

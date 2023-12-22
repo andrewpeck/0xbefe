@@ -228,9 +228,9 @@ if __name__ == "__main__":
     except FileExistsError: # skip if directory already exists
         dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%OHDir + Colors.ENDC)
         if dir_overwrite.lower() in ['y','yes']:
-            pass
+            pass  
         else:
-            sys.exit()   
+            sys.exit()
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")

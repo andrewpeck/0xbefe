@@ -7,8 +7,8 @@ import random
 import datetime
      
 def vfat_bert(gem, system, oh_select, vfat_list, reg_list, niter, runtime, verbose):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data

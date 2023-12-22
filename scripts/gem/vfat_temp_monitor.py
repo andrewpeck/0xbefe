@@ -4,6 +4,7 @@ from time import sleep, time
 import sys
 import argparse
 import csv
+import matplotlib
 import matplotlib.pyplot as plt
 import os, glob
 import datetime
@@ -11,18 +12,21 @@ import math
 import numpy as np
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
+matplotlib.use('Agg')
+
 REGISTER_DAC_MONITOR_MAP = {
     "V Tsens Int": 37,
     "V Tsens Ext": 38
 }
+
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 
 def convert_to_temp(V):
     temp = (V-340.0)/1.95
     return temp
 
 def main(system, oh_select, vfat_list, run_time_min, adc_ref, vref_list, niter, calData):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -214,7 +218,7 @@ if __name__ == "__main__":
         for vfat in vfat_list:
             vref_list[vfat] = vref
     else:
-        calib_path = "results/vfat_data/vfat_calib_data/%s_OH%s_vfat_calib_info_vref.txt"%(args.gem, args.ohid)
+        calib_path = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/%s_OH%s_vfat_calib_info_vref.txt"%(args.gem, args.ohid)
         vref_calib = {}
         if os.path.isfile(calib_path):
             calib_file = open(calib_path)
@@ -235,7 +239,7 @@ if __name__ == "__main__":
             print (Colors.YELLOW + "Only allowed options for use_channel_trimming: daq or sbit" + Colors.ENDC)
             sys.exit()
 
-    calFile = "results/vfat_data/vfat_calib_data/ME0_OH"+args.ohid+"_vfat_calib_info_adc0.txt"
+    calFile = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/ME0_OH"+args.ohid+"_vfat_calib_info_adc0.txt"
     if not os.path.isfile(calFile):
         print(Colors.YELLOW + "Calib file for ADC0 must be present in the correct directory" + Colors.ENDC)
         sys.exit()
