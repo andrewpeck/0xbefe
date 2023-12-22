@@ -120,7 +120,11 @@ if __name__ == "__main__":
     try:
         os.makedirs(dataDir) # create directory for ohid under test
     except FileExistsError: # skip if directory already exists
-        pass
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%dataDir + Colors.ENDC)
+        if dir_overwrite.lower() in ['y','yes']:
+            pass  
+        else:
+            sys.exit()
 
     log_fn = dataDir + "/me0_oh_tests_log.txt"
     chip_id_fn = dataDir + "/me0_oh_chip_id_list.txt"
