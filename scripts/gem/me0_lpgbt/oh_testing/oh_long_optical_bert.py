@@ -61,6 +61,7 @@ if __name__ == "__main__":
     vtrx_dict = {}
     pigtail_dict = {}
     input_file = open(args.input_file)
+    batch = ""
     for line in input_file.readlines():
         if "#" in line:
             if "BATCH" in line:
