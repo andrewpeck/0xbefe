@@ -308,8 +308,9 @@ if __name__ == "__main__":
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit mapping first or use default mapping" + Colors.ENDC)
             sys.exit()
-        elif len(list_of_files)>1:
-            print ("Mutliple S-bit mapping results found, using latest file")
+        else:
+            if len(list_of_files)>1:
+                print ("Mutliple S-bit mapping results found, using latest file")
             latest_file = max(list_of_files, key=os.path.getctime)
             print ("Using S-bit mapping file: %s\n"%(latest_file.split("results/vfat_data/vfat_sbit_mapping_results/")[1]))
             with open(latest_file) as input_file:

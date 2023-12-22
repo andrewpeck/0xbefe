@@ -9,9 +9,10 @@ from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 def vfat_sbit(gem, system, oh_select, vfat, elink_list, channel_list, trigger, parallel, set_cal_mode, cal_dac, nl1a, calpulse_only, l1a_bxgap, s_bit_cluster_mapping):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -389,10 +390,10 @@ if __name__ == "__main__":
             s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
         file_in.close()
     else:
-        if not os.path.isdir("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
+        if not os.path.isdir(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+        list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()

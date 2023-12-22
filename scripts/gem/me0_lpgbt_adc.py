@@ -40,6 +40,7 @@ def get_vin(vout, fit_results):
 
 def get_local_adc_calib_from_file(oh_select, gbt_select):
     adc_calib_results = []
+    adc_calib_results_array = []
     adc_calibration_dir = scripts_dir + "/gem/results/me0_lpgbt_data/adc_calibration_data/"
     if not os.path.isdir(adc_calibration_dir):
         print (Colors.YELLOW + "ADC calibration not present, using raw ADC values" + Colors.ENDC)
@@ -60,9 +61,13 @@ def get_local_adc_calib_from_file(oh_select, gbt_select):
 
 def read_central_adc_calib_file():
     adc_calib = {}
-    if not os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+    if os.path.isfile(scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"):
+        adc_calib_fn = scripts_dir+"/gem/results/me0_lpgbt_data/lpgbt_adc_calib_central/lpgbt_calibration_active.csv"
+    elif os.path.isfile(scripts_dir+"/resources/lpgbt_calibration.csv"):
+        adc_calib_fn = scripts_dir+"/resources/lpgbt_calibration.csv"
+    else:
         return adc_calib
-    adc_calib_file = open(scripts_dir+"/resources/lpgbt_calibration.csv")
+    adc_calib_file = open(adc_calib_fn)
     vars = []
 
     for line in adc_calib_file.readlines():
@@ -78,6 +83,7 @@ def read_central_adc_calib_file():
                 chip_id = int(line.split(",")[0])
             except:
                 chip_id = int(float(line.split(",")[0]))
+            chip_id = int("%d"%chip_id, 16)
         adc_calib[chip_id] = {}
         for (i,v) in enumerate(vars):
             if v == "CHIPID":
@@ -201,11 +207,14 @@ def adc_conversion_lpgbt(chip_id, adc_calib, junc_temp, adc, gain):
             no_calib = 1
 
     if no_calib:
-        gain = 1.87
-        offset = 531.1
-        #voltage = adc/1024.0
-        #voltage = (adc - 38.4)/(1.85 * 512)
-        voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+        if gain == 2:
+            gain = 1.87
+            offset = 531.1
+            #voltage = adc/1024.0
+            #voltage = (adc - 38.4)/(1.85 * 512)
+            voltage = (adc - offset + (0.5*gain*offset))/(gain*offset)
+        else:
+            voltage = (adc/1024.0)/gain
     else:
         voltage = adc * (adc_calib[chip_id]["ADC_X%d_SLOPE"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_SLOPE_TEMP"%gain]) + adc_calib[chip_id]["ADC_X%d_OFFSET"%gain] + junc_temp * adc_calib[chip_id]["ADC_X%d_OFFSET_TEMP"%gain]
 
@@ -257,10 +266,11 @@ def get_resistance_from_current_dac(chip_id, adc_calib, voltage, current, R_out,
 
 def get_vmon(chip_id, adc_calib, junc_temp, voltage):
     vmon_voltage = -9999
-    if chip_id not in adc_calib:
-        vmon_voltage = voltage/0.428
-    else:
-       vmon_voltage = voltage * (adc_calib[chip_id]["VDDMON_SLOPE"] + junc_temp * adc_calib[chip_id]["VDDMON_SLOPE_TEMP"]) 
+    vmon_voltage = voltage/0.428
+    #if chip_id not in adc_calib:
+    #    vmon_voltage = voltage/0.428
+    #else:
+    #   vmon_voltage = voltage * (adc_calib[chip_id]["VDDMON_SLOPE"] + junc_temp * adc_calib[chip_id]["VDDMON_SLOPE_TEMP"]) 
     return vmon_voltage
 
 
@@ -313,10 +323,10 @@ def powerdown_adc(oh_ver):
     lpgbt_writeReg(getNode("LPGBT.RWF.CALIBRATION.VREFTUNE"), 0x0) # vref tune
 
 
-def read_adc(channel, gain, system):
+def read_adc(channel, gain, system, differential_signal_n = 0xf):
 
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINPSELECT"), channel)
-    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), 0xf)
+    lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCINNSELECT"), differential_signal_n)
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCGAINSELECT"), gain_settings[gain])
     lpgbt_writeReg(getNode("LPGBT.RW.ADC.ADCCONVERT"), 0x1)
     mean_val = get_adc_val(system)

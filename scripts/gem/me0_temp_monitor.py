@@ -4,6 +4,7 @@ from time import sleep, time
 import sys
 import argparse
 import csv
+import matplotlib
 import matplotlib.pyplot as plt
 import os, glob
 import datetime
@@ -11,6 +12,8 @@ import math
 import numpy as np
 from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 from gem.me0_lpgbt_adc import *
+
+matplotlib.use('Agg')
 
 def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, niter, gain, plot, temp_cal):
 
@@ -57,25 +60,47 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
     ax.set_xlabel('minutes')
     ax.set_ylabel('T (C)')
     
+    channel = -9999
     if device == "OH":
         channel = 6
     elif device == "VTRX":
         channel = 0
     elif device == "lpGBT":
         channel = 14
+    elif device == "GEB_1V2D":
+        if oh_ver == 1:
+            channel = 2
+        elif oh_ver == 2:
+            channel = 1
+    elif device == "GEB_1V2A":
+        if oh_ver == 1:
+            channel = 2
+        elif oh_ver == 2:
+            channel = 1
+    elif device == "GEB_2V5":
+        if oh_ver == 1:
+            channel = 4
+        elif oh_ver == 2:
+            channel = 6
 
     if temp_cal == "10k":
         current = (0.71/10000) # in A
     elif temp_cal == "1k":
         current = (0.21/1000) # in A
+
     if device != "lpGBT":
         DAC, R_out = current_dac_conversion_lpgbt(chip_id, adc_calib, junc_temp, channel, current)
         #if temp_cal == "10k":
         #    DAC = 20
         #elif temp_cal == "1k":
         #    DAC = 60
-        if chip_id in adc_calib and device == "OH": 
-            find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
+        if device == "OH":
+            if chip_id in adc_calib:
+                find_temp = temp_res_fit(temp_cal=temp_cal, type="OH_new")
+            else:
+                find_temp = temp_res_fit(temp_cal=temp_cal)
+        elif "GEB" in device:
+            find_temp = temp_res_fit(temp_cal=temp_cal, type="GEB")
         else:
             find_temp = temp_res_fit(temp_cal=temp_cal)
 
@@ -138,13 +163,19 @@ def main(system, oh_ver, oh_select, gbt_select, boss, device, run_time_min, nite
 
 def temp_res_fit(temp_cal="10k", type="nominal", power=2):
 
-    if temp_cal=="10k":
+    B_list = []
+    T_list = []
+    if temp_cal == "10k":
         if type == "OH_new":
             B_list = [3380, 3422, 3435, 3453]  # OH: NTCG103JX103DT1S
+            T_list = [50, 75, 85, 100]
+        elif type == "GEB":
+            B_list = [3380, 3434, 3455]  # GEB: NCP03XH103F05RL
+            T_list = [50, 85, 100]
         else:
             B_list = [3900, 3934, 3950, 3971]  # OH: NTCG103UH103JT1, VTRX+ 10k: NTCG063UH103HTBX
-        T_list = [50, 75, 85, 100]
-    elif temp_cal=="1k": 
+            T_list = [50, 75, 85, 100]
+    elif temp_cal == "1k": 
         B_list = [3500, 3539, 3545, 3560]  # VTRX+ 1k: NCP03XM102E05RL
         T_list = [50, 80, 85, 100]
     R_list = []
@@ -187,7 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", dest="gbtid", help="gbtid = GBT number")
-    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX or lpGBT")
+    parser.add_argument("-t", "--temp", action="store", dest="temp", help="temp = OH or VTRX or lpGBT or GEB_1V2D or GEB_1V2A or GEB_2V5")
     parser.add_argument("-m", "--minutes", action="store", default = "0", dest="minutes", help="minutes = # of minutes you want to run")
     parser.add_argument("-n", "--niter", action="store", default = "0", dest="niter", help="niter = # of measurements")
     parser.add_argument("-p", "--plot", action="store_true", dest="plot", help="plot = enable live plot")
@@ -225,16 +256,35 @@ if __name__ == "__main__":
         sys.exit()
 
     oh_ver = get_oh_ver(args.ohid, args.gbtid)
-    if oh_ver == 1:
-        print(Colors.YELLOW + "Only OH-v2 is allowed" + Colors.ENDC)
+    if args.temp in ["OH", "VTRX", "lpGBT"] and oh_ver == 1:
+        print(Colors.YELLOW + "Only OH-v2 is allowed for OH, VTRx+ and lpGBT" + Colors.ENDC)
         sys.exit()
     boss = None
     if int(args.gbtid)%2 == 0:
         boss = 1
     else:
         boss = 0
-    if args.temp != "lpGBT" and boss:
-        print (Colors.YELLOW + "Only sub lpGBT allowed for OH and VTRx+ temperature" + Colors.ENDC)
+    if args.temp in ["OH", "VTRX"]:
+        if boss:
+            print (Colors.YELLOW + "Only sub lpGBT allowed for OH and VTRx+ temperature" + Colors.ENDC)
+            sys.exit()
+    elif "GEB" in args.temp:
+        if not boss:
+            print (Colors.YELLOW + "Only boss lpGBT allowed for GEB temperature" + Colors.ENDC)
+            sys.exit()
+        if args.temp == "GEB_1V2D":
+            if int(args.gbtid)%4 != 0:
+                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VD GEB temperature" + Colors.ENDC)
+                sys.exit()
+        elif args.temp in ["GEB_1V2A", "GEB_2V5"]:
+            if int(args.gbtid)%4 == 0:
+                print (Colors.YELLOW + "Incorrect boss lpGBT for 1.2VA and 2.5V GEB temperature" + Colors.ENDC)
+                sys.exit()
+        else:
+            print (Colors.YELLOW + "Incorrect GEB temperature" + Colors.ENDC)
+            sys.exit()
+    else:
+        print (Colors.YELLOW + "Incorrect temperature to read" + Colors.ENDC)
         sys.exit()
 
     if args.gain not in ["2", "8", "16", "32"]:
@@ -256,7 +306,7 @@ if __name__ == "__main__":
             temp_cal = "10k"
         else:
             temp_cal = "1k"
-    elif args.temp == "OH":
+    elif args.temp == "OH" or "GEB" in args.temp:
         temp_cal = "10k"
 
     # Initialization
