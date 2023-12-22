@@ -71,9 +71,10 @@ if __name__ == "__main__":
             continue
         slot = line.split()[0]
         slot_name = line.split()[1]
-        oh_sn = line.split()[2]
-        vtrx_sn = line.split()[3]
-        pigtail = float(line.split()[4])
+        geb_sn = line.split()[2]
+        oh_sn = line.split()[3]
+        vtrxp_sn = line.split()[4]
+        pigtail = float(line.split()[5])
         if oh_sn != "-9999":
             if batch in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
