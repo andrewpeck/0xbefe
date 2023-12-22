@@ -226,7 +226,11 @@ if __name__ == "__main__":
     try:
         os.makedirs(OHDir) # create directory for OHs under test
     except FileExistsError: # skip if directory already exists
-        pass  
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%OHDir + Colors.ENDC)
+        if dir_overwrite.lower() in ['y','yes']:
+            pass
+        else:
+            sys.exit()   
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
