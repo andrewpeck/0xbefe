@@ -1845,9 +1845,9 @@ if __name__ == "__main__":
             except KeyError:
                 xml_results[oh_sn]['DCDC_1V2A_VOLTAGE'] = NULL
             try:
-                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_voltage']
+                xml_results[oh_sn]['DCDC_VIN_VOLTAGE'] = full_results[oh_sn]["ASENSE_SCAN"]['V_IN_voltage']
             except KeyError:
-                xml_results[oh_sn]['DCDC_Vin_VOLTAGE'] = NULL
+                xml_results[oh_sn]['DCDC_VIN_VOLTAGE'] = NULL
             try:
                 xml_results[oh_sn]['DCDC_1V2D_CURRENT'] = full_results[oh_sn]["ASENSE_SCAN"]['1V2D_current']
             except KeyError:
@@ -1882,7 +1882,7 @@ if __name__ == "__main__":
                 except KeyError:
                     xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
-        asense_ranges = {'DCDC_Vin_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
+        asense_ranges = {'DCDC_VIN_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
@@ -1903,7 +1903,7 @@ if __name__ == "__main__":
                                     is_error = 1
                         if geb_version == 'v2':
                             if slot%2 == 1:
-                                if key in ["DCDC_Vin_VOLTAGE", "DCDC_1V2D_VOLTAGE", "DCDC_1V2D_CURRENT", "DCDC_1V2D_TEMP"]:
+                                if key in ["DCDC_VIN_VOLTAGE", "DCDC_1V2D_VOLTAGE", "DCDC_1V2D_CURRENT", "DCDC_1V2D_TEMP"]:
                                     is_error = 1
                             else:
                                 if key in ["DCDC_1V2A_VOLTAGE", "DCDC_1V2A_CURRENT", "DCDC_2V5_TEMP", "DCDC_1V2A_TEMP"]: 

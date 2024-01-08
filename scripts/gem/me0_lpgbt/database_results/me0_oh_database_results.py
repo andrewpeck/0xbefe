@@ -49,7 +49,7 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
         data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 OH QC Hardware'
     elif hardware=='VTRxPlus':
         sn_str = 'ME0-VTRxPlus-%s'%sn
-        data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_VTRxPlus_QC'
+        data_out["ROOT"]["HEADER"]['TYPE']['EXTENSION_TABLE_NAME']='ME0_VTRXPLUS_QC'
         data_out["ROOT"]["HEADER"]['TYPE']['NAME']='ME0 VTRxPlus QC Hardware'
     else:
         raise Exception("Valid entries for keyword:'hardware' are ['OH','VTRxPlus'].")
