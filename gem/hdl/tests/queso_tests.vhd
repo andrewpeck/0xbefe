@@ -37,7 +37,8 @@ entity queso_tests is
         elink_mapping_arr_0      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
         elink_mapping_arr_1      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
         --prbs error counter
-        elink_error_cnt_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff errors per elink
+        elink_error_cnt_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- counts up to ff errors per elink
+        crosstalk_cnt_arr_o      : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff non-zero data per elink
     );
 end queso_tests;
 
@@ -58,6 +59,9 @@ architecture Behavioral of queso_tests is
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal rx_prbs_err_arr_o : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
     signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
+
+    -- counter for crosstalk
+    signal crosstalk_cnt_arr : t_vfat3_queso_arr(g_NUM_OF_OHs-1 downto 0);
    
 
 	COMPONENT ila_queso
@@ -181,8 +185,22 @@ begin
                         en_i      => or_reduce(rx_prbs_err_arr(OH * 216 + ELINK)),
                         count_o   => rx_err_cnt_arr(OH)(ELINK)
                     );
+
+                -- instantiate counter for cross-talk check
+                i_crosstalk_cnt : entity work.counter
+                    generic map(
+                        g_COUNTER_WIDTH  => 8,
+                        g_ALLOW_ROLLOVER => false
+                    )
+                    port map(
+                        ref_clk_i => gbt_frame_clk_i,
+                        reset_i   => counter_reset or reset_i,
+                        en_i      => or_reduce(elink_rot1_unmasked(OH)(ELINK)),
+                        count_o   => crosstalk_cnt_arr(OH)(ELINK)
+                    );
                 
                 elink_error_cnt_arr_o(OH)(ELINK) <= rx_err_cnt_arr(OH)(ELINK);
+                crosstalk_cnt_arr_o(OH)(ELINK)   <= crosstalk_cnt_arr(OH)(ELINK);
 
             end generate each_elink;
         end generate each_oh;

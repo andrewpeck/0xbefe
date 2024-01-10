@@ -599,10 +599,10 @@
           generate="true" generate_size="&NUM_OHS;" generate_address_step="0xff" generate_idx_var="OH_IDX">
       <node id="VFAT${VFAT_IDX}"  address="0x00"
             description="PRBScounters for VFAT${VFAT_IDX}"
-            generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0xa" generate_idx_var="VFAT_IDX">
+            generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x14" generate_idx_var="VFAT_IDX">
         <node id="ELINK${ELINK_IDX}"  address="0x00"
               description="PRBS counter for ELINK${ELINK_IDX}"
-              generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="ELINK_IDX">
+              generate="true" generate_size="9" generate_address_step="0x2" generate_idx_var="ELINK_IDX">
           <node id="PRBS_ERR_COUNT" mask="0x000000ff" permission="r" address="0x0"
                 description="Number of errors on this ELINK"
                 fw_signal="queso_prbs_err_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
@@ -612,7 +612,9 @@
           <node id="ELINK_BITSLIP_1" mask="0xff000000" permission="rw" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
                 fw_signal="elink_mapping_arr_1(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
-                
+          <node id="CROSSTALK_COUNT" mask="0xffffffff" permission="r" address="0x1"
+                description="Counter for non-zero data on each elink"
+                fw_signal="queso_crosstalk_cnt_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
         </node>
       </node>       
     </node>
