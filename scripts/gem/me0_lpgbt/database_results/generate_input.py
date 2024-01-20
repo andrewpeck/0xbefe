@@ -109,7 +109,7 @@ def main():
             try:
                 os.makedirs(input_OHSNs_Dir) # create batch directory for input files
             except FileExistsError: # skip if already exists
-                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%input_OHSNs_Dir + Colors.ENDC)
                 if dir_overwrite.lower() in ['y','yes']:
                     pass  
                 else:
@@ -119,7 +119,7 @@ def main():
             try:
                 os.makedirs(data_OHSNs_Dir) # create batch directory for data files
             except FileExistsError:
-                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%data_OHSNs_Dir + Colors.ENDC)
                 if dir_overwrite.lower() in ['y','yes']:
                     pass  
                 else:

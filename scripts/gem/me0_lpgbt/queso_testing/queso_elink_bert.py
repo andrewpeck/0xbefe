@@ -1,13 +1,14 @@
 from gem.gem_utils import *
 from time import sleep, time
 import datetime
-import sys
+import os, sys
 import argparse
 import math
 import json
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
+from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
@@ -51,7 +52,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     try:
         os.makedirs(OHDir) # create directory for OHs under test
     except FileExistsError: # skip if directory already exists
-        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%OHDir + Colors.ENDC)
         if dir_overwrite.lower() in ['y','yes']:
             pass  
         else:
