@@ -4,28 +4,61 @@ import json
 import xmltodict
 import argparse
 from common.utils import get_befe_scripts_dir
+from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Input Files for OptoHybrid Production Tests")
     parser.add_argument('-u','--user',action='store_true',dest='user',help='USER = create input files from user input parameters')
+    parser.add_argument("-t", "--test_type", action="store", dest="test_type", help="TEST_TYPE = name of test batch; valid entries: [pre_production, pre_series, production, acceptance]")
     parser.add_argument('-f','--filename',action='store',dest='filename',help='FILENAME = input file with input parameters')
     args = parser.parse_args()
 
+    if args.test_type not in ["pre_production", "pre_series", "production", "acceptance"]:
+        print(Colors.YELLOW + 'Must provide valid test type: pre_production, pre_series, production, acceptance' + Colors.ENDC)
+        sys.exit()
+
     if not (args.user ^ bool(args.filename)):
-        print('Must provide an input method (-u/--user for user input OR -f/--filename an input file for parsing)')
+        print(Colors.YELLOW + 'Must provide an input method (-u/--user for user input OR -f/--filename an input file for parsing)' + Colors.ENDC)
         sys.exit()
     if args.filename:
-        print('Parsing results from file not implemented. Choose -u/--user for user prompted input.')
+        print(Colors.YELLOW + 'Parsing results from file not implemented. Choose -u/--user for user prompted input.' + Colors.ENDC)
         sys.exit()
     
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
-    inputDir = dbDir + '/input'
-    resultDir = dbDir + '/results'
+    inputDir = dbDir + '/input/' + args.test_type
+    resultDir = dbDir + '/results/' + args.test_type
+    try:
+        os.makedirs(inputDir) # create batch directory for input files
+    except FileExistsError: # skip if already exists
+        pass
+    try:
+        os.makedirs(resultDir) # create batch directory for input files
+    except FileExistsError: # skip if already exists
+        pass
 
     if args.user:
-        oh_sn = input('\nEnter OH SERIAL NUMBER(s): ')
-        oh_sn_list = oh_sn.split()
+        oh_sn_input = input('\nEnter OH SERIAL NUMBER(s): ')
+        oh_sn_list = oh_sn_input.split()
+
+        for oh_sn in oh_sn_list:
+            try:
+                if args.test_type=='pre_production':
+                    if int(oh_sn) not in range(1,1000):
+                        print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1-1000 for pre-production."%oh_sn + Colors.ENDC)
+                        sys.exit()
+                elif args.test_type=='pre_series':
+                    if int(oh_sn) not in range(1001,1025):
+                        print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1024 for pre-series."%oh_sn + Colors.ENDC)
+                        sys.exit()
+                elif args.test_type in ['production','acceptance']:
+                    if int(oh_sn) not in range(1001,2019):
+                        print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
+                        sys.exit()
+            except ValueError:
+                print(Colors.RED + "OH SERIAL NUMBERS must be an integer. '%s' is an invalid entry."%oh_sn + Colors.ENDC)
+                sys.exit()
+
         if len(oh_sn_list)>1:
             multiple_ohs = True
             one_for_all = False
@@ -76,13 +109,21 @@ def main():
             try:
                 os.makedirs(input_OHSNs_Dir) # create batch directory for input files
             except FileExistsError: # skip if already exists
-                pass
+                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+                if dir_overwrite.lower() in ['y','yes']:
+                    pass  
+                else:
+                    sys.exit()
 
             data_OHSNs_Dir = resultDir + '/OH_SNs_%s'%oh_sn_str
             try:
                 os.makedirs(data_OHSNs_Dir) # create batch directory for data files
             except FileExistsError:
-                pass
+                dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+                if dir_overwrite.lower() in ['y','yes']:
+                    pass  
+                else:
+                    sys.exit()
 
             for i,oh_sn in enumerate(oh_sn_batch_list):
                 vtrxp_sn = input('Enter VTRxPlus SERIAL NUMBER for OH %s: '%oh_sn)

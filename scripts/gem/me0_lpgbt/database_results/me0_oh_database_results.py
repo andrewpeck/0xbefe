@@ -113,6 +113,11 @@ def main():
         sys.exit()
     elif len(args.oh_sns)!= len(args.vtrxp_sns):
         print(Colors.RED + 'Must provide a list of VTRxPlus SERIAL NUMBERs ordered according to the OHs on which they are installed.' + Colors.ENDC)
+    
+    if args.test_type not in ["pre_production", "pre_series", "production", "acceptance"]:
+        print(Colors.YELLOW + 'Must provide valid test type: pre_production, pre_series, production, acceptance' + Colors.ENDC)
+        sys.exit()
+    
     # Check valid serial numbers for batch
     for oh_sn in args.oh_sns:
         try:
@@ -121,12 +126,12 @@ def main():
                     print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1-1000 for pre-production."%oh_sn + Colors.ENDC)
                     sys.exit()
             elif args.test_type=='pre_series':
-                if int(oh_sn) not in range(1001,1021):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1020 for pre-series."%oh_sn + Colors.ENDC)
+                if int(oh_sn) not in range(1001,1025):
+                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1024 for pre-series."%oh_sn + Colors.ENDC)
                     sys.exit()
             elif args.test_type in ['production','acceptance']:
-                if int(oh_sn) not in range(1021,2019):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1021-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
+                if int(oh_sn) not in range(1001,2019):
+                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
                     sys.exit()
         except ValueError:
             print(Colors.RED + "OH SERIAL NUMBERS must be an integer. '%s' is an invalid entry."%oh_sn + Colors.ENDC)
@@ -181,9 +186,9 @@ def main():
         vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
 
     # input data directory
-    inputDataDir = inputDir + '/OH_SNs_%s'%oh_sn_str
+    inputDataDir = inputDir + '/OH_SNs_%s/%s'%(oh_sn_str, args.test_type)
     # output data directory
-    dataDir = resultDir + '/OH_SNs_%s'%oh_sn_str
+    dataDir = resultDir + '/OH_SNs_%s/%s'%(oh_sn_str, args.test_type)
 
     # Check if directories exist
     if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):

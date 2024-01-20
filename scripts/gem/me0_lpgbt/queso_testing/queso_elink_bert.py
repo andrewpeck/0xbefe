@@ -51,7 +51,11 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     try:
         os.makedirs(OHDir) # create directory for OHs under test
     except FileExistsError: # skip if directory already exists
-        pass  
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
+        if dir_overwrite.lower() in ['y','yes']:
+            pass  
+        else:
+            sys.exit()
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
