@@ -122,10 +122,10 @@ def read_chip_id(system, oh_ver):
     if oh_ver == 1:
         return 0
     CHIPID_A = read_efuse(system, 0x00)
-    CHIPID_B = read_efuse(system, 0x08) >> 6
-    CHIPID_C = read_efuse(system, 0x0c) >> 12
-    CHIPID_D = read_efuse(system, 0x10) >> 18
-    CHIPID_E = read_efuse(system, 0x14) >> 24
+    CHIPID_B = (read_efuse(system, 0x08) >> 6) | (value << (32 - 6)) & 0xFFFFFFFF
+    CHIPID_C = (read_efuse(system, 0x0c) >> 12) | (value << (32 - 12)) & 0xFFFFFFFF
+    CHIPID_D = (read_efuse(system, 0x10) >> 18) | (value << (32 - 18)) & 0xFFFFFFFF
+    CHIPID_E = (read_efuse(system, 0x14) >> 24) | (value << (32 - 24)) & 0xFFFFFFFF
     chip_id = statistics.mode([CHIPID_A, CHIPID_B, CHIPID_C, CHIPID_D, CHIPID_E])
     if (CHIPID_B == 0 and CHIPID_C == 0 and CHIPID_D == 0 and CHIPID_E == 0):
         chip_id = CHIPID_A
