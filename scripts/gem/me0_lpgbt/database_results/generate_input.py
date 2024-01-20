@@ -26,8 +26,8 @@ def main():
     
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
-    inputDir = dbDir + '/input/' + args.test_type
-    resultDir = dbDir + '/results/' + args.test_type
+    inputDir = dbDir + '/input/' + args.test_type + "_tests"
+    resultDir = dbDir + '/results/' + args.test_type + "_tests"
     try:
         os.makedirs(inputDir) # create batch directory for input files
     except FileExistsError: # skip if already exists

@@ -186,9 +186,9 @@ def main():
         vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
 
     # input data directory
-    inputDataDir = inputDir + '/OH_SNs_%s/%s'%(oh_sn_str, args.test_type)
+    inputDataDir = inputDir + '%s_tests/OH_SNs_%s'%(args.test_type, oh_sn_str)
     # output data directory
-    dataDir = resultDir + '/OH_SNs_%s/%s'%(oh_sn_str, args.test_type)
+    dataDir = resultDir + '%s_tests/OH_SNs_%s'%(args.test_type, oh_sn_str)
 
     # Check if directories exist
     if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
