@@ -141,10 +141,10 @@ def init_gem_frontend():
                 enable_reg_addr = 0x00 # Register address on VTRx+ for enabling TX channels 
                 check_reg_addr = 0x01 # Register address on the VTRx+ to check for old vs new
                 enable_data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
-                bias_boss_reg_addr = 0x06 # Register address for VTRx+ boss channel bias
-                bias_sub_reg_addr = 0x03 # Register address for VTRx+ sub channel bias
-                bias_boss_data = 0x70 # Data for VTRx+ boss channel bias (default 0x30)
-                bias_sub_data = 0x70 # Data for VTRx+ sub channel bias (default 0x30)
+                #bias_boss_reg_addr = 0x06 # Register address for VTRx+ boss channel bias
+                #bias_sub_reg_addr = 0x03 # Register address for VTRx+ sub channel bias
+                #bias_boss_data = 0x70 # Data for VTRx+ boss channel bias (default 0x30)
+                #bias_sub_data = 0x70 # Data for VTRx+ sub channel bias (default 0x30)
                 
                 old_vtrx = 0
                 if oh_ver == 1: 
@@ -238,6 +238,7 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
 
+                        '''
                         writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
                         writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
                         sleep(0.01)
@@ -269,6 +270,7 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x10F, 0x0)
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
+                        '''
 
                 # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
                 if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
