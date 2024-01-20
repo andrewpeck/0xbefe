@@ -138,9 +138,13 @@ def init_gem_frontend():
 
                 vtrx_i2c_addr = 0x50 # VTRx+ I2C address
 
-                reg_addr = 0x00 # Register address on VTRx+ for enabliing TX channels 
+                enable_reg_addr = 0x00 # Register address on VTRx+ for enabling TX channels 
                 check_reg_addr = 0x01 # Register address on the VTRx+ to check for old vs new
-                data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
+                enable_data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
+                bias_boss_reg_addr = 0x06 # Register address for VTRx+ boss channel bias
+                bias_sub_reg_addr = 0x03 # Register address for VTRx+ sub channel bias
+                bias_boss_data = 0x50 # Data for VTRx+ boss channel bias (default 0x30)
+                bias_sub_data = 0x50 # Data for VTRx+ sub channel bias (default 0x30)
                 
                 old_vtrx = 0
                 if oh_ver == 1: 
@@ -176,8 +180,8 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x100, control_register_data) # I2CM2 data - for control register
                         writeGbtRegAddrs(0x104, 0x0) # Write to I2CM2 control register
                         sleep(0.01) 
-                        writeGbtRegAddrs(0x100, reg_addr) # I2CM2 data - register address to write to on VTRx+
-                        writeGbtRegAddrs(0x101, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x100, enable_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x101, enable_data) # I2CM2 data to write to register on VTRx+
                         writeGbtRegAddrs(0x104, 0x8)  # I2CM2 data stored locally for write command
                         sleep(0.01)
                         writeGbtRegAddrs(0x0FF, vtrx_i2c_addr) # Set I2C address for VTRx+
@@ -221,8 +225,40 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
                         writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
                         sleep(0.01)
-                        writeGbtRegAddrs(0x110, reg_addr) # I2CM2 data - register address to write to on VTRx+
-                        writeGbtRegAddrs(0x111, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x110, enable_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, enable_data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x114, 0xC) # I2CM2 send write command to VTRx+
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, 0x0)
+                        writeGbtRegAddrs(0x111, 0x0)
+                        writeGbtRegAddrs(0x10F, 0x0)
+                        writeGbtRegAddrs(0x114, 0x0)
+                        sleep(0.01)
+
+                        writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, bias_boss_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, bias_boss_data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x114, 0xC) # I2CM2 send write command to VTRx+
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, 0x0)
+                        writeGbtRegAddrs(0x111, 0x0)
+                        writeGbtRegAddrs(0x10F, 0x0)
+                        writeGbtRegAddrs(0x114, 0x0)
+                        sleep(0.01)
+
+                        writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, bias_sub_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, bias_sub_data) # I2CM2 data to write to register on VTRx+
                         writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
                         sleep(0.01)
                         writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+

@@ -45,6 +45,7 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     #gpio_dir_node = ""
     gpio_out_addr = 0
     gpio_out_node = ""
+    gpio_orig_data = -9999
 
     # These 2 resets are only for OH-v2
     if gpio <= 7:
@@ -52,6 +53,7 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
         #gpio_dir_node = gpio_dirL_node
         gpio_out_addr = gpio_outL_addr
         gpio_out_node = gpio_outL_node
+        gpio_orig_data = lpgbt_readReg(gpio_out_node)
         if boss:
             #dir_enable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
             #dir_disable |= 0x20  # To keep GPIO LED on ASIAGO output enabled
@@ -67,6 +69,7 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
         #gpio_dir_node = gpio_dirH_node
         gpio_out_addr = gpio_outH_addr
         gpio_out_node = gpio_outH_node
+        gpio_orig_data = lpgbt_readReg(gpio_out_node)
         if boss:
             data_disable |= (0x00 | data_enable_other_gpio) # keep the other sub lpGBT or VTRx+ GPIO high
         else:
@@ -83,6 +86,11 @@ def lpgbt_sub_vtrx_reset(system, oh_ver, boss, oh_select, gbt_select, reset):
     # Set GPIO to 0 for reset
     lpgbt_writeReg(gpio_out_node, data_disable)
     print("Set GPIO %d to 0 for reset"%gpio)
+    sleep(0.1)
+
+    # Set GPIO back to default 
+    lpgbt_writeReg(gpio_out_node, gpio_orig_data)
+    print("Set GPIO %d to default"%gpio)
     sleep(0.1)
 
     # Disable GPIO as output
