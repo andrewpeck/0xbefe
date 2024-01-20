@@ -143,8 +143,8 @@ def init_gem_frontend():
                 enable_data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
                 bias_boss_reg_addr = 0x06 # Register address for VTRx+ boss channel bias
                 bias_sub_reg_addr = 0x03 # Register address for VTRx+ sub channel bias
-                bias_boss_data = 0x50 # Data for VTRx+ boss channel bias (default 0x30)
-                bias_sub_data = 0x50 # Data for VTRx+ sub channel bias (default 0x30)
+                bias_boss_data = 0x70 # Data for VTRx+ boss channel bias (default 0x30)
+                bias_sub_data = 0x70 # Data for VTRx+ sub channel bias (default 0x30)
                 
                 old_vtrx = 0
                 if oh_ver == 1: 
