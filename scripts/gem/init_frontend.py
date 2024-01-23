@@ -127,7 +127,8 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
-
+                sleep(0.5)
+                
                 # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
                 if gbt%2 == 0 and oh_ver == 2:
                     selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
@@ -135,8 +136,7 @@ def init_gem_frontend():
                     writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
                     sleep(0.1)
                     writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
-                    sleep(0.1)
-                sleep(1)
+                    sleep(2.5)
 
                 # Enable TX channels of VTRx+
                 if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
@@ -283,10 +283,6 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
                         '''
-
-                # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
-                if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
-                    sleep(2.5)
             
             # Read in me0 DAQ phase scan results
             bestphase_list = {}
