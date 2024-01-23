@@ -66,6 +66,7 @@ def init_gem_frontend():
                 sleep(0.1)
         sleep(2)
 
+        '''
         # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
@@ -85,6 +86,7 @@ def init_gem_frontend():
                 writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
                 sleep(0.1)
         sleep(2)
+        '''
 
         # Do some lpGBT read operations from sub lpGBT in OH-v1s to get the EC working
         for oh in range(max_ohs):
@@ -125,6 +127,16 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
+
+                # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
+                if gbt%2 == 0 and oh_ver == 2:
+                    selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                    writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
+                    writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
+                    sleep(0.1)
+                    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
+                    sleep(0.1)
+                sleep(1)
 
                 # Enable TX channels of VTRx+
                 if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
