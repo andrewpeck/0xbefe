@@ -36,7 +36,6 @@ set_property PACKAGE_PIN J26 [get_ports ttc_data_n_i]
 set_property IOSTANDARD LVDS [get_ports ttc_data_p_i]
 set_property IOSTANDARD LVDS [get_ports ttc_data_n_i]
 
-
 set_false_path -from [get_clocks clk_out4_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_false_path -from [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 

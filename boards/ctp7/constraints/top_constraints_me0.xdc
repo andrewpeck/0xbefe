@@ -39,27 +39,41 @@ set_property IOSTANDARD LVDS [get_ports ttc_data_n_i]
 set_false_path -from [get_clocks clk_out4_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_false_path -from [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -to [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 
+## 125MHz clock oscillator
+set_property PACKAGE_PIN AT18 [get_ports clk_125_p_i]
+set_property PACKAGE_PIN AU18 [get_ports clk_125_n_i]
+set_property IOSTANDARD LVDS [get_ports clk_125_p_i]
+set_property IOSTANDARD LVDS [get_ports clk_125_n_i]
+
+create_clock -period 8 -name clk_125 [get_ports clk_125_p_i]
+
+## synthesizer B clock input 2
+set_property PACKAGE_PIN F20 [get_ports clk_synthb_in_p_o]
+set_property PACKAGE_PIN F19 [get_ports clk_synthb_in_n_o]
+set_property IOSTANDARD LVDS [get_ports clk_synthb_in_p_o]
+set_property IOSTANDARD LVDS [get_ports clk_synthb_in_n_o]
+
 ####################### GT reference clock constraints #########################
 
-create_clock -period 6.250 [get_ports {refclk_F_0_p_i[0]}]
-create_clock -period 6.250 [get_ports {refclk_F_0_p_i[1]}]
-create_clock -period 6.250 [get_ports {refclk_F_0_p_i[2]}]
-create_clock -period 6.250 [get_ports {refclk_F_0_p_i[3]}]
+create_clock -period 3.125 [get_ports {refclk_F_0_p_i[0]}]
+create_clock -period 3.125 [get_ports {refclk_F_0_p_i[1]}]
+create_clock -period 3.125 [get_ports {refclk_F_0_p_i[2]}]
+create_clock -period 3.125 [get_ports {refclk_F_0_p_i[3]}]
 
-create_clock -period 3.125 [get_ports {refclk_F_1_p_i[0]}]
-create_clock -period 3.125 [get_ports {refclk_F_1_p_i[1]}]
-create_clock -period 3.125 [get_ports {refclk_F_1_p_i[2]}]
-create_clock -period 3.125 [get_ports {refclk_F_1_p_i[3]}]
+create_clock -period 6.250 [get_ports {refclk_F_1_p_i[0]}]
+create_clock -period 6.250 [get_ports {refclk_F_1_p_i[1]}]
+create_clock -period 6.250 [get_ports {refclk_F_1_p_i[2]}]
+create_clock -period 6.250 [get_ports {refclk_F_1_p_i[3]}]
 
-#create_clock -period 6.250 [get_ports {refclk_B_0_p_i[0]}]
-create_clock -period 6.250 [get_ports {refclk_B_0_p_i[1]}]
-create_clock -period 6.250 [get_ports {refclk_B_0_p_i[2]}]
-create_clock -period 6.250 [get_ports {refclk_B_0_p_i[3]}]
+#create_clock -period 3.125 [get_ports {refclk_B_0_p_i[0]}]
+create_clock -period 3.125 [get_ports {refclk_B_0_p_i[1]}]
+create_clock -period 3.125 [get_ports {refclk_B_0_p_i[2]}]
+create_clock -period 3.125 [get_ports {refclk_B_0_p_i[3]}]
 
-#create_clock -period 3.125 [get_ports {refclk_B_1_p_i[0]}]
-create_clock -period 3.125 [get_ports {refclk_B_1_p_i[1]}]
-create_clock -period 3.125 [get_ports {refclk_B_1_p_i[2]}]
-create_clock -period 3.125 [get_ports {refclk_B_1_p_i[3]}]
+#create_clock -period 3.103 [get_ports {refclk_B_1_p_i[0]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[1]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[2]}]
+create_clock -period 3.103 [get_ports {refclk_B_1_p_i[3]}]
 
 ################################ RefClk Location constraints #####################
 
@@ -427,9 +441,9 @@ create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[35].ge
 #create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[57].gen_gth_*/i_gthe2*TXOUTCLK}]
 #create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[57].gen_gth_*/i_gthe2*RXOUTCLK}]
 
-############## Channel [58] - 10.24 Gbps TX, 10.24 Gbps RX #############
-#create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*TXOUTCLK}]
-#create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*RXOUTCLK}]
+############# Channel [58] - 10.3125 Gbps TX (10 GbE), 4.0 Gbps RX #############
+create_clock -period 3.103 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*TXOUTCLK}]
+create_clock -period 5.000 [get_pins -hier -filter {name=~*gen_gth_single[58].gen_gth_*/i_gthe2*RXOUTCLK}]
 
 ############## Channel [59] - 10.24 Gbps TX, 10.24 Gbps RX #############
 #create_clock -period 3.125 [get_pins -hier -filter {name=~*gen_gth_single[59].gen_gth_*/i_gthe2*TXOUTCLK}]
@@ -461,24 +475,28 @@ set_clock_groups -asynchronous -group [get_clocks clk_80] -group [get_clocks clk
 set_clock_groups -asynchronous -group [get_clocks clk_160] -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_320] -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_120] -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_200] -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0]
 
 set_clock_groups -asynchronous -group [get_clocks clk_40] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_80] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_160] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_320] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_120] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_200] -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0]
 
 set_clock_groups -asynchronous -group [get_clocks clk_40] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_80] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_160] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_320] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_120] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_200] -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0]
 
 set_clock_groups -asynchronous -group [get_clocks clk_40] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_80] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_160] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_320] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 set_clock_groups -asynchronous -group [get_clocks clk_120] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_200] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
 
 set_clock_groups -asynchronous -group [get_clocks clk_40_ttc_p_i] -group [get_clocks clk_39p997]
 set_clock_groups -asynchronous -group [get_clocks clk_40] -group [get_clocks clk_39p997]
@@ -486,6 +504,7 @@ set_clock_groups -asynchronous -group [get_clocks clk_80] -group [get_clocks clk
 set_clock_groups -asynchronous -group [get_clocks clk_160] -group [get_clocks clk_39p997]
 set_clock_groups -asynchronous -group [get_clocks clk_320] -group [get_clocks clk_39p997]
 set_clock_groups -asynchronous -group [get_clocks clk_120] -group [get_clocks clk_39p997]
+set_clock_groups -asynchronous -group [get_clocks clk_200] -group [get_clocks clk_39p997]
 
 #set_clock_groups -asynchronous -group [get_clocks i_gem/i_ttc/clk_40_ttc_p_i] -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0]
 
@@ -497,11 +516,22 @@ set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gt
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/RXOUTCLK}] -group [get_clocks clk_40]
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/RXOUTCLK}] -group [get_clocks clk_320]
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/RXOUTCLK}] -group [get_clocks clk_120]
+set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/RXOUTCLK}] -group [get_clocks clk_200]
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/RXOUTCLK}] -group [get_clocks clkout0]
 
 set_clock_groups -asynchronous -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0] -group [get_clocks clkout0]
 set_clock_groups -asynchronous -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -group [get_clocks clkout0]
 set_clock_groups -asynchronous -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0] -group [get_clocks clkout0]
+
+set_clock_groups -asynchronous -group [get_clocks clk_out1_v7_bd_clk_wiz_0_0] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_out2_v7_bd_clk_wiz_0_0] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
+set_clock_groups -asynchronous -group [get_clocks clk_out3_v7_bd_clk_wiz_0_0] -group [get_clocks clk_out4_v7_bd_clk_wiz_0_0]
+
+# GbE clock async to everything
+set_clock_groups -asynchronous -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[58].gen_gth_tx_1p25g_rx_4p0g.i_gth_single_tx_1p25g_rx_4p0g/i_gthe2/TXOUTCLK}]
+
+# 10 GbE clock async to everything
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {i_system/i_gth_wrapper/gen_gth_single[58].gen_gth_tx_10p3125g_rx_4p0g.i_gth_single_tx_10p3125g_rx_4p0g/i_gthe2/TXOUTCLK}]
 
 set_clock_groups -asynchronous -group [get_clocks {i_system/i_daqlink/gth_amc13_support_i/gth_amc13_init_i/U0/gth_amc13_1_i/gt0_gth_amc13_1_i/gthe2_i/?XOUTCLK}] -group [get_clocks {i_system/i_gth_wrapper/gen_gth_single[*].*/i_gthe2/?XOUTCLK}]
 #set_clock_groups -asynchronous -group [get_clocks {i_system/i_daqlink/gth_amc13_support_i/gth_amc13_init_i/U0/gth_amc13_1_i/gt0_gth_amc13_1_i/gthe2_i/?XOUTCLK}] -group [get_clocks clk_160] 

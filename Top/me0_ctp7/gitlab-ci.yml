@@ -1,0 +1,7 @@
+GEN:me0_ctp7:
+    extends: .generate_project
+    variables:
+      extends: .vars
+      PROJECT_NAME: me0_ctp7
+    tags:
+      - vivado_2021_1
