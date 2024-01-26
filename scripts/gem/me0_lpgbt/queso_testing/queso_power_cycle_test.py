@@ -47,36 +47,36 @@ if __name__ == "__main__":
                             username=router_username, 
                             password=router_password,
                             look_for_keys=False)
-                check_boss = "cd Documents/0xbefe/scripts/gem; python3 me0_lpgbt_rw_register.py -s queso -q ME0 -o 0 -g 0 -r 0x00 -d 0x01"   
-                check_sub = "cd Documents/0xbefe/scripts/gem; python3 me0_lpgbt_rw_register.py -s queso -q ME0 -o 0 -g 1 -r 0x00 -d 0x01"
-                config_boss = "cd Documents/0xbefe/scripts/gem; python3 me0_lpgbt_config.py -s queso -q ME0 -o 0 -g 0 -i ../resources/me0_boss_config_ohv2.txt"
-                config_sub = "cd Documents/0xbefe/scripts/gem; python3 me0_lpgbt_config.py -s queso -q ME0 -o 0 -g 1 -i ../resources/me0_sub_config_ohv2.txt"
+                check_boss = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem/; python3 me0_lpgbt_rw_register.py -s queso -q ME0 -o 0 -g 0 -r 0x00 -d 0x01"   
+                check_sub = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem/; python3 me0_lpgbt_rw_register.py -s queso -q ME0 -o 0 -g 1 -r 0x00 -d 0x01"
+                config_boss = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem/; python3 me0_lpgbt_config.py -s queso -q ME0 -o 0 -g 0 -i ../resources/me0_boss_config_ohv2.txt"
+                config_sub = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem/; python3 me0_lpgbt_config.py -s queso -q ME0 -o 0 -g 1 -i ../resources/me0_sub_config_ohv2.txt"
                 if args.configure_test:
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(config_boss)
                     print("Config Boss for QUESO", queso)
                     print(ssh_stdout)
-                    if "error" in ssh_stdout.lower():
+                    if "ERROR" in ssh_stdout:
                         sys.exit()
                     sleep(2)
                 
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(config_sub)
                     print("Config Sub for QUESO", queso)
                     print(ssh_stdout)
-                    if "error" in ssh_stdout.lower():
+                    if "ERROR" in ssh_stdout:
                         sys.exit()
                     sleep(2)
                 elif args.i2c_test:
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(check_boss)
                     print("Check i2c for Boss for QUESO", queso)
                     print(ssh_stdout)
-                    if "error" in ssh_stdout.lower():
+                    if "ERROR" in ssh_stdout:
                         sys.exit()
                     sleep(2)
                 
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(check_sub)
                     print("Check i2c for Sub for QUESO", queso)
                     print(ssh_stdout)
-                    if "error" in ssh_stdout.lower():
+                    if "ERROR" in ssh_stdout:
                         sys.exit()
                     sleep(2)
                 
