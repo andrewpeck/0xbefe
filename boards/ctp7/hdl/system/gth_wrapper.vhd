@@ -1,14 +1,14 @@
 -------------------------------------------------------------------------------
---                                                                            
---       Unit Name: gth_wrapper                                            
---                                                                            
---     Description: 
 --
---                                                                            
+--       Unit Name: gth_wrapper
+--
+--     Description:
+--
+--
 -------------------------------------------------------------------------------
---                                                                            
---           Notes:                                                           
---                                                                            
+--
+--           Notes:
+--
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -31,15 +31,14 @@ use work.system_package.all;
 --                                                          Entity declaration
 --============================================================================
 entity gth_wrapper is
-  generic
-    (
+  generic (
       g_EXAMPLE_SIMULATION     : integer                := 0;
       g_STABLE_CLOCK_PERIOD    : integer range 4 to 250 := 20;  --Period of the stable clock driving this state-machine, unit is [ns]
       g_NUM_OF_GTH_GTs         : integer                := 64;
       g_NUM_OF_GTH_COMMONs     : integer                := 16;
-      g_GT_SIM_GTRESET_SPEEDUP : string                 := "FALSE"  -- Set to "TRUE" to speed up sim reset
-
-      );
+      g_GT_SIM_GTRESET_SPEEDUP : string                 := "FALSE";  -- Set to "TRUE" to speed up sim reset
+      g_DATA_REG_STAGES        : integer                := 0 -- optional: if set to a non-zero value, the provided number of register stages will be insterted in the data path (this can be used to ease timing where latency is not critical)
+  );
   port (
 
     clk_stable_i : in std_logic;
@@ -60,7 +59,7 @@ entity gth_wrapper is
     ttc_clks_i        : in  t_ttc_clks;
     ttc_clks_locked_i : in  std_logic;
     ttc_clks_reset_o  : out std_logic;
-    
+
     ------------------------
 
     gth_cpll_init_arr_i   : in t_gth_cpll_init_arr(g_NUM_OF_GTH_GTs-1 downto 0);
@@ -104,7 +103,7 @@ entity gth_wrapper is
 
     gth_gbt_common_rxusrclk_o : out std_logic;
     gth_gbt_common_txoutclk_o : out std_logic
-    
+
     );
 end gth_wrapper;
 
@@ -160,8 +159,11 @@ architecture gth_wrapper_arch of gth_wrapper is
   signal s_gth_tx_data_arr : t_mgt_64b_tx_data_arr(g_NUM_OF_GTH_GTs-1 downto 0);
   signal s_gth_rx_data_arr : t_mgt_64b_rx_data_arr(g_NUM_OF_GTH_GTs-1 downto 0);
 
+  signal gth_tx_data_arr : t_mgt_64b_tx_data_arr(g_NUM_OF_GTH_GTs-1 downto 0);
+  signal gth_rx_data_arr : t_mgt_64b_rx_data_arr(g_NUM_OF_GTH_GTs-1 downto 0);
+
   ---------------------
-    
+
   signal s_gth_gbt_common_rxusrclk : std_logic;
 
   signal s_gth_common_clk_in_arr  : t_gth_common_clk_in_arr(g_NUM_OF_GTH_COMMONs-1 downto 0);
@@ -224,6 +226,57 @@ architecture gth_wrapper_arch of gth_wrapper is
 --============================================================================
 
 begin
+
+  g_no_reg_stages : if g_DATA_REG_STAGES = 0 generate
+      gth_tx_data_arr   <= gth_tx_data_arr_i;
+      gth_rx_data_arr_o <= gth_rx_data_arr;
+  end generate;
+
+  g_reg_stages : if g_DATA_REG_STAGES > 0 generate
+      g_chan : for chan in 0 to g_NUM_OF_GTH_GTs - 1 generate
+          signal tx_pipe  : t_mgt_64b_tx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
+          signal rx_pipe  : t_mgt_64b_rx_data_arr(g_DATA_REG_STAGES - 1 downto 0);
+
+          -- the goal is to give slack to the router, avoid inferring SRL
+          attribute SHREG_EXTRACT : string;
+          attribute SHREG_EXTRACT of tx_pipe : signal is "no";
+          attribute SHREG_EXTRACT of rx_pipe : signal is "no";
+      begin
+
+          -- RX pipe
+          gth_rx_data_arr_o(chan) <= rx_pipe(g_DATA_REG_STAGES - 1);
+
+          process(s_gth_gt_clk_in_arr(chan).rxusrclk2)
+          begin
+              if rising_edge(s_gth_gt_clk_in_arr(chan).rxusrclk2) then
+                  rx_pipe(0) <= gth_rx_data_arr(chan);
+
+                  if g_DATA_REG_STAGES > 1 then
+                      for stage in 1 to g_DATA_REG_STAGES - 1 loop
+                          rx_pipe(stage) <= rx_pipe(stage - 1);
+                      end loop;
+                  end if;
+              end if;
+          end process;
+
+          -- TX pipe
+          gth_tx_data_arr(chan) <= tx_pipe(g_DATA_REG_STAGES - 1);
+
+          process(s_gth_gt_clk_in_arr(chan).txusrclk2)
+          begin
+              if rising_edge(s_gth_gt_clk_in_arr(chan).txusrclk2) then
+                  tx_pipe(0) <= gth_tx_data_arr_i(chan);
+
+                  if g_DATA_REG_STAGES > 1 then
+                      for stage in 1 to g_DATA_REG_STAGES - 1 loop
+                          tx_pipe(stage) <= tx_pipe(stage - 1);
+                      end loop;
+                  end if;
+              end if;
+          end process;
+
+      end generate;
+  end generate;
 
   gen_tx_mmcm_sigs : for n in 0 to g_NUM_OF_GTH_GTs-1 generate
 
@@ -411,9 +464,9 @@ begin
   begin
 
 -- From Xilinx UG476
--- The CPLLREFCLKSEL port is required when multiple reference clock sources are 
--- connected to this multiplexer. A single reference clock is most commonly used. 
--- In this case, the CPLLREFCLKSEL port can be tied to 3'b001, and the Xilinx software 
+-- The CPLLREFCLKSEL port is required when multiple reference clock sources are
+-- connected to this multiplexer. A single reference clock is most commonly used.
+-- In this case, the CPLLREFCLKSEL port can be tied to 3'b001, and the Xilinx software
 -- tools handle the complexity of the multiplexers and associated routing.
     s_gth_cpll_ctrl_arr(n).CPLLREFCLKSEL  <= "001";  -- Let the tool figure out proper reference clock routing
     s_gth_cpll_ctrl_arr(n).cplllockdetclk <= clk_stable_i;
@@ -426,27 +479,27 @@ begin
 
     gen_gth_4p8g : if c_gth_config_arr(n).gth_link_type = gth_4p8g generate
 
-      -------------  GT txdata_i Assignments for 20 bit datapath  -------  
-      s_gth_tx_data_arr(n).txdata(31 downto 0)  <=       gth_tx_data_arr_i(n).txdata(37 downto 30) &
-                                                         gth_tx_data_arr_i(n).txdata(27 downto 20) &
-                                                         gth_tx_data_arr_i(n).txdata(17 downto 10) &
-                                                         gth_tx_data_arr_i(n).txdata(7 downto 0);
+      -------------  GT txdata_i Assignments for 20 bit datapath  -------
+      s_gth_tx_data_arr(n).txdata(31 downto 0)  <=       gth_tx_data_arr(n).txdata(37 downto 30) &
+                                                         gth_tx_data_arr(n).txdata(27 downto 20) &
+                                                         gth_tx_data_arr(n).txdata(17 downto 10) &
+                                                         gth_tx_data_arr(n).txdata(7 downto 0);
 
-      s_gth_tx_data_arr(n).txchardispmode(3 downto 0) <= gth_tx_data_arr_i(n).txdata(39) &
-                                                         gth_tx_data_arr_i(n).txdata(29) &
-                                                         gth_tx_data_arr_i(n).txdata(19) &
-                                                         gth_tx_data_arr_i(n).txdata(9);
+      s_gth_tx_data_arr(n).txchardispmode(3 downto 0) <= gth_tx_data_arr(n).txdata(39) &
+                                                         gth_tx_data_arr(n).txdata(29) &
+                                                         gth_tx_data_arr(n).txdata(19) &
+                                                         gth_tx_data_arr(n).txdata(9);
 
-      s_gth_tx_data_arr(n).txchardispval(3 downto 0) <=  gth_tx_data_arr_i(n).txdata(38) &
-                                                         gth_tx_data_arr_i(n).txdata(28) &
-                                                         gth_tx_data_arr_i(n).txdata(18) &
-                                                         gth_tx_data_arr_i(n).txdata(8);
+      s_gth_tx_data_arr(n).txchardispval(3 downto 0) <=  gth_tx_data_arr(n).txdata(38) &
+                                                         gth_tx_data_arr(n).txdata(28) &
+                                                         gth_tx_data_arr(n).txdata(18) &
+                                                         gth_tx_data_arr(n).txdata(8);
 
-      --s_gth_tx_data_arr(n).txcharisk <= gth_tx_data_arr_i(n).txcharisk;
+      --s_gth_tx_data_arr(n).txcharisk <= gth_tx_data_arr(n).txcharisk;
 
-      -------------  GT RXDATA Assignments for 20 bit datapath  -------  
+      -------------  GT RXDATA Assignments for 20 bit datapath  -------
 
-      gth_rx_data_arr_o(n).rxdata(39 downto 0) <=        s_gth_rx_data_arr(n).rxdisperr(3) &
+      gth_rx_data_arr(n).rxdata(39 downto 0) <=        s_gth_rx_data_arr(n).rxdisperr(3) &
                                                          s_gth_rx_data_arr(n).rxcharisk(3) &
                                                          s_gth_rx_data_arr(n).rxdata(31 downto 24) &
                                                          s_gth_rx_data_arr(n).rxdisperr(2) &
@@ -460,13 +513,13 @@ begin
                                                          s_gth_rx_data_arr(n).rxdata(7 downto 0);
 
 
---      gth_rx_data_arr_o(n).rxbyteisaligned <= s_gth_rx_data_arr(n).rxbyteisaligned;
---      gth_rx_data_arr_o(n).rxbyterealign   <= s_gth_rx_data_arr(n).rxbyterealign;
---      gth_rx_data_arr_o(n).rxcommadet      <= s_gth_rx_data_arr(n).rxcommadet;
---      gth_rx_data_arr_o(n).rxdisperr       <= s_gth_rx_data_arr(n).rxdisperr;
---      gth_rx_data_arr_o(n).rxnotintable    <= s_gth_rx_data_arr(n).rxnotintable;
---      gth_rx_data_arr_o(n).rxchariscomma   <= s_gth_rx_data_arr(n).rxchariscomma;
---      gth_rx_data_arr_o(n).rxcharisk       <= s_gth_rx_data_arr(n).rxcharisk;
+--      gth_rx_data_arr(n).rxbyteisaligned <= s_gth_rx_data_arr(n).rxbyteisaligned;
+--      gth_rx_data_arr(n).rxbyterealign   <= s_gth_rx_data_arr(n).rxbyterealign;
+--      gth_rx_data_arr(n).rxcommadet      <= s_gth_rx_data_arr(n).rxcommadet;
+--      gth_rx_data_arr(n).rxdisperr       <= s_gth_rx_data_arr(n).rxdisperr;
+--      gth_rx_data_arr(n).rxnotintable    <= s_gth_rx_data_arr(n).rxnotintable;
+--      gth_rx_data_arr(n).rxchariscomma   <= s_gth_rx_data_arr(n).rxchariscomma;
+--      gth_rx_data_arr(n).rxcharisk       <= s_gth_rx_data_arr(n).rxcharisk;
 
       i_gth_single_4p8g : entity work.gth_single_4p8g
         generic map
@@ -502,12 +555,12 @@ begin
           );
 
     end generate;
-    
+
     gen_gth_10p24g : if c_gth_config_arr(n).gth_link_type = gth_10p24g generate
-      
-      gth_rx_data_arr_o(n).rxdata <= s_gth_rx_data_arr(n).rxdata;
-      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr_i(n).txdata;
-            
+
+      gth_rx_data_arr(n).rxdata <= s_gth_rx_data_arr(n).rxdata;
+      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr(n).txdata;
+
       i_gth_single_10p24g : entity work.gth_single_10p24g
         generic map
         (
@@ -542,19 +595,19 @@ begin
           gth_misc_status_o => s_gth_misc_status_arr(n),
           gth_tx_data_i     => s_gth_tx_data_arr(n),
           gth_rx_data_o     => s_gth_rx_data_arr(n)
-          );        
+          );
     end generate;
 
     gen_gth_tx_10p24g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_10p24g_rx_4p0g generate
-      
-      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
+
+      gth_rx_data_arr(n) <= s_gth_rx_data_arr(n);
       s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
       s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
       s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
       s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
-            
-      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr_i(n).txdata;
-            
+
+      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr(n).txdata;
+
       i_gth_single_tx_10p24g_rx_4p0g : entity work.gth_single_tx_10p24g_rx_4p0g
         generic map
         (
@@ -587,19 +640,19 @@ begin
           gth_misc_status_o => s_gth_misc_status_arr(n),
           gth_tx_data_i     => s_gth_tx_data_arr(n),
           gth_rx_data_o     => s_gth_rx_data_arr(n)
-          );        
+          );
     end generate;
 
     gen_gth_tx_1p25g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_1p25g_rx_4p0g generate
-      
-      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
+
+      gth_rx_data_arr(n) <= s_gth_rx_data_arr(n);
       s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
       s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
       s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
       s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
-            
-      s_gth_tx_data_arr(n) <= gth_tx_data_arr_i(n); 
-            
+
+      s_gth_tx_data_arr(n) <= gth_tx_data_arr(n);
+
       i_gth_single_tx_1p25g_rx_4p0g : entity work.gth_single_tx_1p25g_rx_4p0g
         generic map
         (
@@ -631,18 +684,18 @@ begin
           gth_misc_status_o => s_gth_misc_status_arr(n),
           gth_tx_data_i     => s_gth_tx_data_arr(n),
           gth_rx_data_o     => s_gth_rx_data_arr(n)
-          );        
+          );
     end generate;
 
     gen_gth_tx_10p3125g_rx_4p0g : if c_gth_config_arr(n).gth_link_type = gth_tx_10p3125g_rx_4p0g generate
 
-      gth_rx_data_arr_o(n) <= s_gth_rx_data_arr(n);
+      gth_rx_data_arr(n) <= s_gth_rx_data_arr(n);
       s_gth_rx_status_arr(n).rxnotintable(1 downto 0) <= s_gth_rx_data_arr(n).rxnotintable(1 downto 0);
       s_gth_rx_status_arr(n).rxnotintable(3 downto 2) <= "00";
       s_gth_rx_status_arr(n).rxdisperr(1 downto 0) <= s_gth_rx_data_arr(n).rxdisperr(1 downto 0);
       s_gth_rx_status_arr(n).rxdisperr(3 downto 2) <= "00";
 
-      s_gth_tx_data_arr(n) <= gth_tx_data_arr_i(n);
+      s_gth_tx_data_arr(n) <= gth_tx_data_arr(n);
 
       i_gth_single_tx_10p3125g_rx_4p0g : entity work.gth_single_tx_10p3125g_rx_4p0g
         generic map
@@ -680,8 +733,8 @@ begin
 
     gen_gth_2p56g : if c_gth_config_arr(n).gth_link_type = gth_2p56g generate
 
-      gth_rx_data_arr_o(n).rxdata <= s_gth_rx_data_arr(n).rxdata;
-      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr_i(n).txdata;
+      gth_rx_data_arr(n).rxdata <= s_gth_rx_data_arr(n).rxdata;
+      s_gth_tx_data_arr(n).txdata <= gth_tx_data_arr(n).txdata;
 
       i_gth_single_2p56g : entity work.gth_single_2p56g
         generic map
@@ -714,9 +767,9 @@ begin
           gth_misc_status_o => s_gth_misc_status_arr(n),
           gth_tx_data_i     => s_gth_tx_data_arr(n),
           gth_rx_data_o     => s_gth_rx_data_arr(n)
-          );        
+          );
     end generate;
-    
+
   end generate;
 
 
@@ -775,9 +828,9 @@ begin
     s_gth_common_ctrl_arr(n).QPLLRESET <= gth_common_reset_i(n);
 
     -- From Xilinx UG476
-    -- The QPLLREFCLKSEL port is required when multiple reference clock sources are 
-    -- connected to this multiplexer. A single reference clock is most commonly used. 
-    -- In this case, the QPLLREFCLKSEL port can be tied to 3'b001, and the Xilinx software 
+    -- The QPLLREFCLKSEL port is required when multiple reference clock sources are
+    -- connected to this multiplexer. A single reference clock is most commonly used.
+    -- In this case, the QPLLREFCLKSEL port can be tied to 3'b001, and the Xilinx software
     -- tools handle the complexity of the multiplexers and associated routing.
     s_gth_common_ctrl_arr(n).QPLLREFCLKSEL <= "001";  -- Let the tool figure out proper reference clock routing
 

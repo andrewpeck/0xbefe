@@ -222,6 +222,10 @@ begin
 
         gen_use_rx_sync_fifos : if g_USE_RX_SYNC_FIFOS generate
 
+            signal had_unf : std_logic;
+
+        begin
+
             rx_sync_reset(i) <= reset_i or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
             rx_mgt_clk_sync(i) <= rx_word_common_clk_i;
 
@@ -229,7 +233,8 @@ begin
                 generic map(
                     g_IMPL_TYPE         => "FIFO",
                     g_INPUT_DATA_WIDTH  => 33,
-                    g_OUTPUT_DATA_WIDTH => 33
+                    g_OUTPUT_DATA_WIDTH => 33,
+                    g_REGISTER_OUTPUT   => true
                 )
                 port map(
                     reset_i     => rx_sync_reset(i),
@@ -256,8 +261,10 @@ begin
                     reset_i => reset_i or cnt_reset_i,
                     clk_i   => rx_word_common_clk_i,
                     input_i => rx_sync_unf(i),
-                    latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_unf
+                    latch_o => had_unf
                 );
+
+            link_status_arr_o(i).gbt_rx_sync_status.had_unf <= had_unf when rising_edge(rx_frame_clk_i);
 
         end generate;
 
