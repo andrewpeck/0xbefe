@@ -16,7 +16,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
     if not connect_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
-
+    '''
     # Get first list of registers to compare
     print ("Turning on power and getting initial list of registers and turning off power")
     for relay_number in relay_number_list:
@@ -30,7 +30,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             rw_terminate()
         sleep (0.5)
     sleep(10)
-
+    
     # Configure lpGBTs
     os.system("python3 init_frontend.py")
     sleep(1)
@@ -96,7 +96,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         n_error_pusm_ready_sub[gbt] = 0
         n_error_mode_sub[gbt] = 0
         n_error_reg_list_sub[gbt] = 0
-    
+    '''
     # cheesecake parameters
     router_ip = "169.254.181.119"
     router_username = "pi"
@@ -134,23 +134,26 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         sleep(10)
 
         # -----------------need cheesecake connection from here----------------------
-        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/"
+        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/;"
         ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 0 -r 0x00 -d 0x01"    
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
-        if "ERROR" in output:
-            print("I2C connection ERROR Boss GBT! Exit the Test")
-            rw_terminate()
+        print (output)
+        for line in output:
+            if "ERROR" in line:
+                print("I2C connection ERROR Boss GBT! Exit the Test")
+                rw_terminate()
         sleep(2)
        
-        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/" 
-        ssh_command = "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 1 -r 0x00 -d 0x01"    
+        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/;" 
+        ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 1 -r 0x00 -d 0x01"    
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
-        print (stdout)
-        if "ERROR" in output:
-            print("I2C connection ERROR Sub GBT! Exit the Test")
-            rw_terminate()
+        print (output)
+        for line in output:
+            if "ERROR" in line:
+                print("I2C connection ERROR Sub GBT! Exit the Test")
+                rw_terminate()
         
         print("I2C connection successful, continue...")
         sleep(2)
@@ -294,6 +297,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
 
     print ("\nEnd of powercycle iteration")
     print ("Number of iterations: %d\n"%niter)
+    ssh.close()
 
     '''
     # Results

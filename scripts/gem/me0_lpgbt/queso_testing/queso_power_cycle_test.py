@@ -54,32 +54,45 @@ if __name__ == "__main__":
                 if args.configure_test:
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(config_boss)
                     print("Config Boss for QUESO", queso)
-                    print(ssh_stdout)
-                    if "ERROR" in ssh_stdout:
-                        sys.exit()
+                    output = ssh_stdout.readlines()
+                    print(output)
+                    for line in output:
+                        if "ERROR" in ssh_stdout:
+                            print("ERROR in configuring BOSS GBT")
+                            sys.exit()
                     sleep(2)
                 
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(config_sub)
                     print("Config Sub for QUESO", queso)
-                    print(ssh_stdout)
-                    if "ERROR" in ssh_stdout:
-                        sys.exit()
+                    output = ssh_stdout.readlines()
+                    print(output)
+                    for line in output:
+                        if "ERROR" in ssh_stdout:
+                            print("ERROR in configuring SUB GBT")
+                            sys.exit()
                     sleep(2)
+
                 elif args.i2c_test:
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(check_boss)
                     print("Check i2c for Boss for QUESO", queso)
-                    print(ssh_stdout)
-                    if "ERROR" in ssh_stdout:
-                        sys.exit()
+                    output = ssh_stdout.readlines()
+                    print(output)
+                    for line in output:
+                        if "ERROR" in ssh_stdout:
+                            print("ERROR in i2c BOSS GBT")
+                            sys.exit()
                     sleep(2)
                 
                     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(check_sub)
                     print("Check i2c for Sub for QUESO", queso)
-                    print(ssh_stdout)
-                    if "ERROR" in ssh_stdout:
-                        sys.exit()
+                    output = ssh_stdout.readlines()
+                    print(output)
+                    for line in output:
+                        if "ERROR" in ssh_stdout:
+                            print("ERROR in i2c SUB GBT")
+                            sys.exit()
                     sleep(2)
-                
+               ssh.close()
         # 3. power off
         os.system("python3 me0_lpgbt/queso_testing/queso_initialization.py -i me0_lpgbt/queso_testing/resources/input_queso.txt -o")
         sleep(5)
